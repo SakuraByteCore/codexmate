@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Switcher</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 580px;
+        }
+
+        /* 顶部状态标签 */
+        .status-badge {
+            display: inline-block;
+            border: 1px solid #000000;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            margin-bottom: 28px;
+        }
+
+        /* 主标题 */
+        .main-title {
+            font-size: 56px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            letter-spacing: -0.02em;
+        }
+
+        .main-title .accent {
+            color: #666666;
+        }
+
+        /* 当前状态卡片 */
+        .status-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .status-card {
+            background-color: #F5F5F5;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-label {
+            font-size: 11px;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 模型选择器 */
+        .model-selector {
+            background-color: #FAFAFA;
+            border: 1px solid #E5E5E5;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+
+        .selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .selector-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .selector-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 1px solid #E5E5E5;
+            background: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            border-color: #000000;
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .model-select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            background-color: #FFFFFF;
+            color: #000000;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000000' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        .model-select:focus {
+            border-color: #000000;
+        }
+
+        /* 提供商列表 */
+        .provider-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .provider-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border: 1px solid #E5E5E5;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #FFFFFF;
+        }
+
+        .provider-item:hover {
+            border-color: #000000;
+            transform: translateY(-1px);
+        }
+
+        .provider-item.active {
+            border-color: #000000;
+            background-color: #FAFAFA;
+        }
+
+        .provider-item:active {
+            transform: scale(0.99);
+        }
+
+        .provider-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .provider-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background-color: #F5F5F5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .provider-item.active .provider-icon {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        .provider-name {
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .provider-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .api-key {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 11px;
+            color: #999999;
+            background-color: #F5F5F5;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .api-key:hover {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        .api-key input {
+            font-family: inherit;
+            font-size: inherit;
+            background-color: #FFFFFF;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 4px 8px;
+            width: 120px;
+            color: #000000;
+            outline: none;
+        }
+
+        .btn-delete {
+            font-size: 11px;
+            font-weight: 600;
+            color: #999999;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .provider-item:hover .btn-delete {
+            opacity: 1;
+        }
+
+        .btn-delete:hover {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        /* 添加按钮 */
+        .btn-add {
+            width: 100%;
+            padding: 18px 20px;
+            margin-top: 16px;
+            border: 2px dashed #E5E5E5;
+            border-radius: 16px;
+            background-color: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #999999;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add:hover {
+            border-color: #000000;
+            color: #000000;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal {
+            background-color: #FFFFFF;
+            width: 90%;
+            max-width: 420px;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            font-size: 14px;
+            background-color: #FAFAFA;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            border-color: #000000;
+            background-color: #FFFFFF;
+        }
+
+        .form-input::placeholder {
+            color: #CCCCCC;
+        }
+
+        .btn-template {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            background-color: #FAFAFA;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-template:hover {
+            border-color: #000000;
+            color: #000000;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-cancel {
+            background-color: #F5F5F5;
+            color: #666666;
+        }
+
+        .btn-cancel:hover {
+            background-color: #E5E5E5;
+        }
+
+        .btn-confirm {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        .btn-confirm:hover {
+            background-color: #333333;
+        }
+
+        /* 模型列表 */
+        .model-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .model-list::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
+        }
+
+        .model-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid #E5E5E5;
+            font-size: 13px;
+        }
+
+        .model-item:last-child {
+            border-bottom: none;
+        }
+
+        .model-item:hover {
+            background-color: #FAFAFA;
+        }
+
+        .btn-remove-model {
+            font-size: 11px;
+            color: #999999;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .btn-remove-model:hover {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        /* Toast通知 */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 200;
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast.error {
+            background-color: #FF3B30;
+        }
+
+        .toast.success {
+            background-color: #34C759;
+        }
+
+        /* 配置模式切换器 */
+        .mode-switcher {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #E5E5E5;
+            border-radius: 12px;
+            background-color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn:hover {
+            border-color: #000000;
+        }
+
+        .mode-btn.active {
+            background-color: #000000;
+            border-color: #000000;
+            color: #FFFFFF;
+        }
+
+        /* Claude Code 配置 */
+        .claude-config {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-group .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 12px;
+            font-size: 14px;
+            background-color: #FAFAFA;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .config-group .form-input:focus {
+            border-color: #000000;
+            background-color: #FFFFFF;
+        }
+
+        .config-group select.form-input {
+            cursor: pointer;
+        }
+
+        .form-hint {
+            font-size: 11px;
+            color: #999999;
+            margin-top: 4px;
+        }
+
+        /* Claude Code 配置列表 */
+        .claude-config-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border: 1px solid #E5E5E5;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #FFFFFF;
+        }
+
+        .config-item:hover {
+            border-color: #000000;
+            transform: translateY(-1px);
+        }
+
+        .config-item.active {
+            border-color: #000000;
+            background-color: #FAFAFA;
+        }
+
+        .config-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .config-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background-color: #F5F5F5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .config-item.active .config-icon {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        .config-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .config-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .config-model {
+            font-size: 12px;
+            color: #999999;
+        }
+
+        .config-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .config-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #E5E5E5;
+        }
+
+        .btn-apply-env {
+            width: 100%;
+            padding: 16px 20px;
+            margin-top: 20px;
+            background-color: #000000;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-apply-env:hover {
+            background-color: #333333;
+        }
+
+        .btn-apply-env:active {
+            transform: scale(0.98);
+        }
+
+        /* 加载/错误状态 */
+        .state-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999999;
+            font-size: 14px;
+        }
+
+        .state-message.error {
+            color: #FF3B30;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        [v-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container" v-cloak>
+        <!-- 主标题 -->
+        <h1 class="main-title">
+            Switch<br>
+            <span class="accent">Your Model.</span>
+        </h1>
+
+        <!-- 配置模式切换 -->
+        <div class="mode-switcher">
+            <button :class="['mode-btn', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">
+                Codex 配置
+            </button>
+            <button :class="['mode-btn', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">
+                Claude Code 配置
+            </button>
+        </div>
+
+        <!-- Codex 配置模式 -->
+        <template v-if="configMode === 'codex'">
+            <!-- 当前状态卡片 -->
+            <div class="status-cards">
+                <div class="status-card">
+                    <div class="status-label">提供商</div>
+                    <div class="status-value" :title="currentProvider">{{ currentProvider || '未选择' }}</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">模型</div>
+                    <div class="status-value" :title="currentModel">{{ currentModel }}</div>
+                </div>
+            </div>
+
+            <!-- 模型选择器 -->
+            <div class="model-selector">
+                <div class="selector-header">
+                    <span class="selector-title">选择模型</span>
+                    <div class="selector-actions">
+                        <button class="btn-icon" @click="showModelModal = true" title="添加模型">+</button>
+                        <button class="btn-icon" @click="showModelListModal = true" title="管理模型">≡</button>
+                    </div>
+                </div>
+                <select class="model-select" v-model="currentModel" @change="onModelChange">
+                    <option v-for="model in models" :key="model" :value="model">{{ model }}</option>
+                </select>
+            </div>
+        </template>
+
+        <!-- Claude Code 配置模式 -->
+        <template v-else-if="configMode === 'claude'">
+            <!-- Claude Code 配置列表 -->
+            <div class="claude-config-list">
+                <div v-for="(config, name) in claudeConfigs" :key="name"
+                     :class="['config-item', { active: currentClaudeConfig === name }]"
+                     @click="switchClaudeConfig(name)">
+                    <div class="config-left">
+                        <div class="config-icon">{{ name.charAt(0).toUpperCase() }}</div>
+                        <div class="config-info">
+                            <div class="config-name">{{ name }}</div>
+                            <div class="config-model">{{ config.model }}</div>
+                        </div>
+                    </div>
+                    <div class="config-right">
+                        <div class="btn-delete" @click.stop="deleteClaudeConfig(name)">删除</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 当前配置详情 -->
+            <div v-if="currentClaudeConfig" class="claude-config">
+                <h3 class="config-section-title">{{ currentClaudeConfig }} - 配置详情</h3>
+                <div class="config-group">
+                    <label class="form-label">API Key</label>
+                    <input v-model="claudeConfigs[currentClaudeConfig].apiKey" class="form-input" placeholder="sk-ant-..." @blur="saveCurrentClaudeConfig">
+                    <div class="form-hint">此 Key 将自动同步到 ANTHROPIC_API_KEY 和 ANTHROPIC_AUTH_TOKEN</div>
+                </div>
+                <div class="config-group">
+                    <label class="form-label">ANTHROPIC_BASE_URL</label>
+                    <input v-model="claudeConfigs[currentClaudeConfig].baseUrl" class="form-input" placeholder="https://open.bigmodel.cn/api/anthropic" @blur="saveCurrentClaudeConfig">
+                </div>
+                <div class="config-group">
+                    <label class="form-label">ANTHROPIC_MODEL</label>
+                    <select v-model="claudeConfigs[currentClaudeConfig].model" class="form-input" @change="saveCurrentClaudeConfig">
+                        <option value="glm-4.7">glm-4.7</option>
+                        <option value="claude-sonnet-4-20250514">claude-sonnet-4-20250514</option>
+                        <option value="claude-opus-4-20250514">claude-opus-4-20250514</option>
+                        <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022</option>
+                    </select>
+                </div>
+                <button class="btn-apply-env" @click="applyToSystemEnv">
+                    应用到系统环境变量
+                </button>
+            </div>
+
+            <!-- 添加Claude配置按钮 -->
+            <button class="btn-add" @click="showClaudeConfigModal = true" v-if="configMode === 'claude'">
+                + 添加配置方案
+            </button>
+        </template>
+
+        <!-- 加载状态 -->
+        <div v-if="loading" class="state-message">
+            加载配置中...
+        </div>
+
+        <!-- 错误状态 -->
+        <div v-else-if="initError" class="state-message error">
+            {{ initError }}
+        </div>
+
+        <!-- 提供商列表 (仅Codex模式) -->
+        <div v-else-if="configMode === 'codex'" class="provider-list">
+            <div v-for="(info, name) in providers" :key="name"
+                 :class="['provider-item', { active: currentProvider === name }]"
+                 @click="switchProvider(name)">
+                <div class="provider-left">
+                    <div class="provider-icon">{{ name.charAt(0).toUpperCase() }}</div>
+                    <span class="provider-name">{{ name }}</span>
+                </div>
+                <div class="provider-right">
+                    <div class="api-key" @dblclick.stop="startEdit(name, info.preferred_auth_method)" title="双击编辑">
+                        <input v-if="editingProvider === name"
+                               v-model="editValue"
+                               ref="editInput"
+                               @click.stop
+                               @keyup.enter="saveEdit(name)"
+                               @keyup.esc="cancelEdit"
+                               @blur="saveEdit(name)"
+                               placeholder="输入密钥">
+                        <span v-else>{{ info.auth_method_preview }}</span>
+                    </div>
+                    <div class="btn-delete" @click.stop="deleteProvider(name)">删除</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加按钮 (仅Codex模式) -->
+        <button class="btn-add" @click="showAddModal = true" v-if="!loading && !initError && configMode === 'codex'">
+            + 添加提供商
+        </button>
+
+        <!-- 添加提供商模态框 -->
+        <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
+            <div class="modal">
+                <div class="modal-title">添加提供商</div>
+
+                <button class="btn-template" @click="fillTemplate('88code')">
+                    使用 88code 模板
+                </button>
+
+                <div class="form-group">
+                    <label class="form-label">名称</label>
+                    <input v-model="newProvider.name" class="form-input" placeholder="例如: gpt-4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API 端点</label>
+                    <input v-model="newProvider.base_url" class="form-input" placeholder="https://api.example.com/v1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">认证密钥</label>
+                    <input v-model="newProvider.api_key" class="form-input" placeholder="sk-...">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-cancel" @click="closeAddModal">取消</button>
+                    <button class="btn btn-confirm" @click="addProvider">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加模型模态框 -->
+        <div v-if="showModelModal" class="modal-overlay" @click.self="showModelModal = false">
+            <div class="modal">
+                <div class="modal-title">添加模型</div>
+
+                <div class="form-group">
+                    <label class="form-label">模型名称</label>
+                    <input v-model="newModelName" class="form-input" placeholder="例如: gpt-5">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-cancel" @click="closeModelModal">取消</button>
+                    <button class="btn btn-confirm" @click="addModel">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型列表模态框 -->
+        <div v-if="showModelListModal" class="modal-overlay" @click.self="showModelListModal = false">
+            <div class="modal">
+                <div class="modal-title">管理模型</div>
+
+                <div class="model-list">
+                    <div v-for="model in models" :key="model" class="model-item">
+                        <span>{{ model }}</span>
+                        <span class="btn-remove-model" @click="removeModel(model)">删除</span>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-confirm" @click="showModelListModal = false">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加Claude配置模态框 -->
+        <div v-if="showClaudeConfigModal" class="modal-overlay" @click.self="showClaudeConfigModal = false">
+            <div class="modal">
+                <div class="modal-title">添加Claude Code配置</div>
+
+                <div class="form-group">
+                    <label class="form-label">配置名称</label>
+                    <input v-model="newClaudeConfig.name" class="form-input" placeholder="例如: 智谱GLM">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input v-model="newClaudeConfig.apiKey" class="form-input" placeholder="sk-ant-...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ANTHROPIC_BASE_URL</label>
+                    <input v-model="newClaudeConfig.baseUrl" class="form-input" placeholder="https://open.bigmodel.cn/api/anthropic">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ANTHROPIC_MODEL</label>
+                    <select v-model="newClaudeConfig.model" class="form-input">
+                        <option value="glm-4.7">glm-4.7</option>
+                        <option value="claude-sonnet-4-20250514">claude-sonnet-4-20250514</option>
+                        <option value="claude-opus-4-20250514">claude-opus-4-20250514</option>
+                        <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-cancel" @click="closeClaudeConfigModal">取消</button>
+                    <button class="btn btn-confirm" @click="addClaudeConfig">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast通知 -->
+        <div v-if="message" :class="['toast', messageType]">{{ message }}</div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            window.addEventListener('error', function(e) {
+                console.error('Global error:', e.error);
+            });
+
+            window.addEventListener('unhandledrejection', function(e) {
+                console.error('Unhandled rejection:', e.reason);
+            });
+
+            try {
+                const backend = require('./switcher-gui.js');
+
+                const { createApp, nextTick } = Vue;
+                const app = createApp({
+                    data() {
+                        return {
+                            configMode: 'codex',  // 'codex' or 'claude'
+                            currentProvider: '',
+                            currentModel: 'gpt-5.1-codex-max',
+                            providers: {},
+                            models: [],  // 全局共享的模型列表
+                            providerCurrentModels: {},  // 每个提供商的当前模型
+                            configPath: '',
+                            loading: true,
+                            initError: '',
+                            message: '',
+                            messageType: '',
+                            editingProvider: null,
+                            editValue: '',
+                            showAddModal: false,
+                            showModelModal: false,
+                            showModelListModal: false,
+                            newProvider: { name: '', base_url: '', api_key: '', from_template: null },
+                            newModelName: '',
+                            currentClaudeConfig: '',
+                            claudeConfigs: {},
+                            showClaudeConfigModal: false,
+                            newClaudeConfig: {
+                                name: '',
+                                apiKey: '',
+                                baseUrl: 'https://open.bigmodel.cn/api/anthropic',
+                                model: 'glm-4.7'
+                            }
+                        }
+                    },
+                    mounted() {
+                        this.loadClaudeConfigs();
+                        this.fetchConfig().catch(e => {
+                            console.error('Mount error:', e);
+                            this.loading = false;
+                        });
+                    },
+                    methods: {
+                        closeAddModal() {
+                            this.showAddModal = false;
+                            this.newProvider = { name: '', base_url: '', api_key: '', from_template: null };
+                        },
+                        closeModelModal() {
+                            this.showModelModal = false;
+                            this.newModelName = '';
+                        },
+
+                        switchConfigMode(mode) {
+                            this.configMode = mode;
+                            this.showMessage(`已切换到 ${mode === 'codex' ? 'Codex' : 'Claude Code'} 配置模式`, 'success');
+                        },
+
+                        loadClaudeConfigs() {
+                            try {
+                                const backend = require('./switcher-gui.js');
+                                const configs = backend.getClaudeConfigs();
+                                if (configs) {
+                                    this.claudeConfigs = configs;
+                                    const configNames = Object.keys(configs);
+                                    if (configNames.length > 0 && !this.currentClaudeConfig) {
+                                        this.currentClaudeConfig = configNames[0];
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Load Claude configs error:', e);
+                            }
+                        },
+
+                        switchClaudeConfig(configName) {
+                            this.currentClaudeConfig = configName;
+                        },
+
+                        saveCurrentClaudeConfig() {
+                            try {
+                                const backend = require('./switcher-gui.js');
+                                const config = this.claudeConfigs[this.currentClaudeConfig];
+                                const success = backend.saveClaudeConfigs(this.claudeConfigs);
+                                if (success) {
+                                    this.showMessage('配置已保存', 'success');
+                                } else {
+                                    this.showMessage('保存失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        async applyToSystemEnv() {
+                            try {
+                                const backend = require('./switcher-gui.js');
+                                const config = this.claudeConfigs[this.currentClaudeConfig];
+                                const result = backend.applyToSystemEnv(config);
+                                if (result.success) {
+                                    this.showMessage('已应用到系统环境变量 (需要重启应用生效)', 'success');
+                                } else {
+                                    this.showMessage(result.error || '应用失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        addClaudeConfig() {
+                            if (!this.newClaudeConfig.name || !this.newClaudeConfig.name.trim()) {
+                                return this.showMessage('请输入配置名称', 'error');
+                            }
+                            const name = this.newClaudeConfig.name.trim();
+                            if (this.claudeConfigs[name]) {
+                                return this.showMessage('配置名称已存在', 'error');
+                            }
+
+                            this.claudeConfigs[name] = {
+                                apiKey: this.newClaudeConfig.apiKey,
+                                baseUrl: this.newClaudeConfig.baseUrl,
+                                model: this.newClaudeConfig.model
+                            };
+
+                            try {
+                                const backend = require('./switcher-gui.js');
+                                const success = backend.saveClaudeConfigs(this.claudeConfigs);
+                                if (success) {
+                                    this.currentClaudeConfig = name;
+                                    this.showMessage('配置已添加', 'success');
+                                    this.closeClaudeConfigModal();
+                                } else {
+                                    this.showMessage('保存失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        async deleteClaudeConfig(name) {
+                            if (Object.keys(this.claudeConfigs).length <= 1) {
+                                return this.showMessage('至少保留一个配置', 'error');
+                            }
+
+                            try {
+                                const backend = require('./switcher-gui.js');
+                                delete this.claudeConfigs[name];
+                                const success = backend.saveClaudeConfigs(this.claudeConfigs);
+                                if (success) {
+                                    if (this.currentClaudeConfig === name) {
+                                        this.currentClaudeConfig = Object.keys(this.claudeConfigs)[0];
+                                    }
+                                    this.showMessage('配置已删除', 'success');
+                                } else {
+                                    this.showMessage('删除失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        closeClaudeConfigModal() {
+                            this.showClaudeConfigModal = false;
+                            this.newClaudeConfig = {
+                                name: '',
+                                apiKey: '',
+                                baseUrl: 'https://open.bigmodel.cn/api/anthropic',
+                                model: 'glm-4.7'
+                            };
+                        },
+
+                        async fetchConfig() {
+                            this.loading = true;
+                            this.initError = '';
+                            try {
+                                const data = await backend.getConfig();
+                                if(data && data.error) {
+                                    this.initError = '配置文件错误: ' + data.error;
+                                } else if (data) {
+                                    this.currentProvider = data.current || '';
+                                    this.currentModel = data.currentModel || 'gpt-5.1-codex-max';
+                                    this.providers = data.providers || {};
+                                    this.models = data.models || ['gpt-5.1-codex-max'];
+                                    this.providerCurrentModels = data.providerCurrentModels || {};
+                                    this.configPath = data.path || '';
+                                }
+                            } catch (e) {
+                                console.error('Fetch config error:', e);
+                                this.showMessage('加载失败: ' + e.message, 'error');
+                            } finally {
+                                this.loading = false;
+                            }
+                        },
+
+                        async onModelChange() {
+                            try {
+                                const result = await backend.switchModel(this.currentModel);
+                                if (result && result.success) {
+                                    this.showMessage('已切换到 ' + this.currentModel, 'success');
+                                } else {
+                                    this.showMessage(result.error || '切换失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        async addModel() {
+                            if (!this.newModelName || !this.newModelName.trim()) {
+                                return this.showMessage('请输入模型名称', 'error');
+                            }
+                            if (!this.currentProvider) {
+                                return this.showMessage('请先选择提供商', 'error');
+                            }
+                            try {
+                                const result = await backend.addModel(this.currentProvider, this.newModelName.trim());
+                                if (result && result.success) {
+                                    // 更新全局模型列表
+                                    this.models = result.models || this.models;
+                                    // 切换到新添加的模型并持久化
+                                    this.currentModel = this.newModelName.trim();
+                                    await backend.switchModel(this.currentModel);
+                                    this.showMessage('模型已添加并切换', 'success');
+                                    this.closeModelModal();
+                                } else {
+                                    this.showMessage(result.error || '添加失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        async removeModel(modelName) {
+                            if (!this.currentProvider) {
+                                return this.showMessage('请先选择提供商', 'error');
+                            }
+                            try {
+                                const result = await backend.deleteModel(this.currentProvider, modelName);
+                                if (result && result.success) {
+                                    // 更新全局模型列表
+                                    this.models = result.models || this.models;
+                                    // 如果当前模型被删除，切换到第一个模型
+                                    if (!this.models.includes(this.currentModel)) {
+                                        this.currentModel = this.models[0];
+                                        await backend.switchModel(this.currentModel);
+                                    }
+                                    this.showMessage('模型已删除', 'success');
+                                } else {
+                                    this.showMessage(result.error || '删除失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            }
+                        },
+
+                        async fillTemplate(templateName) {
+                            try {
+                                const data = await backend.getTemplate(templateName);
+                                if (data && data.success) {
+                                    this.newProvider.name = data.template.name;
+                                    this.newProvider.base_url = data.template.base_url;
+                                    this.newProvider.api_key = data.template.preferred_auth_method;
+                                    this.newProvider.from_template = templateName;
+                                    this.showMessage('模板已应用', 'success');
+                                }
+                            } catch(e) {
+                                this.showMessage('加载模板失败', 'error');
+                            }
+                        },
+
+                        async addProvider() {
+                            if(!this.newProvider.name || !this.newProvider.base_url) {
+                                return this.showMessage('名称和URL必填', 'error');
+                            }
+                            this.loading = true;
+                            try {
+                                const ret = await backend.addProvider(this.newProvider);
+                                if(ret && ret.success) {
+                                    this.showMessage('已添加', 'success');
+                                    this.closeAddModal();
+                                    await this.fetchConfig();
+                                } else {
+                                    this.showMessage(ret.error || '添加失败', 'error');
+                                }
+                            } catch(e) {
+                                this.showMessage(e.message, 'error');
+                            } finally {
+                                this.loading = false;
+                            }
+                        },
+
+                        async deleteProvider(name) {
+                            this.loading = true;
+                            try {
+                                const ret = await backend.deleteProvider(name);
+                                if(ret && ret.success) {
+                                    this.showMessage('已删除', 'success');
+                                    await this.fetchConfig();
+                                } else {
+                                    this.showMessage(ret.error || '删除失败', 'error');
+                                }
+                            } catch(e) {
+                                this.showMessage(e.message, 'error');
+                            } finally {
+                                this.loading = false;
+                            }
+                        },
+
+                        async switchProvider(targetName) {
+                            if (this.editingProvider) return;
+                            this.loading = true;
+                            try {
+                                const result = await backend.switchProvider(targetName);
+                                if (result && result.success) {
+                                    this.currentProvider = targetName;
+                                    // 使用返回的targetModel更新当前模型
+                                    if (result.targetModel) {
+                                        this.currentModel = result.targetModel;
+                                    }
+                                    this.showMessage('已切换到 ' + targetName, 'success');
+                                } else {
+                                    this.showMessage(result.error || '切换失败', 'error');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            } finally {
+                                this.loading = false;
+                            }
+                        },
+
+                        startEdit(name, currentVal) {
+                            this.editingProvider = name;
+                            this.editValue = currentVal;
+                            nextTick(() => {
+                                if (this.$refs.editInput && this.$refs.editInput[0]) {
+                                    this.$refs.editInput[0].focus();
+                                }
+                            });
+                        },
+                        cancelEdit() {
+                            this.editingProvider = null;
+                            this.editValue = '';
+                        },
+                        async saveEdit(name) {
+                            if (this.editingProvider !== name) return;
+                            const newValue = this.editValue.trim();
+                            if (newValue === this.providers[name].preferred_auth_method) {
+                                this.cancelEdit();
+                                return;
+                            }
+                            try {
+                                const success = await backend.updateApiKey(name, newValue);
+                                if (success) {
+                                    this.providers[name].preferred_auth_method = newValue;
+                                    let preview = newValue || 'N/A';
+                                    if (preview.length > 12) preview = preview.substring(0, 4) + '...' + preview.substring(preview.length - 4);
+                                    else if (preview.length > 8) preview = preview.substring(0, 8) + '...';
+                                    this.providers[name].auth_method_preview = preview;
+                                    this.showMessage('已更新', 'success');
+                                }
+                            } catch (e) {
+                                this.showMessage(e.message, 'error');
+                            } finally {
+                                this.cancelEdit();
+                            }
+                        },
+                        showMessage(text, type) {
+                            this.message = text;
+                            this.messageType = type || 'info';
+                            setTimeout(() => {
+                                this.message = '';
+                            }, 3000);
+                        }
+                    }
+                });
+
+                app.mount('#app');
+            } catch (e) {
+                console.error('Failed to initialize app:', e);
+                document.body.innerHTML = '<div style="padding:40px;text-align:center;"><h1>应用启动失败</h1><p>' + e.message + '</p></div>';
+            }
+        })();
+    </script>
+</body>
+</html>

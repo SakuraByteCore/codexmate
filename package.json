@@ -1,0 +1,41 @@
+{
+  "name": "codexmate",
+  "version": "0.0.1",
+  "description": "Switch model providers seamlessly",
+  "main": "index.html",
+  "chromium-args": "--disable-dev-tools --disable-web-security",
+  "window": {
+    "title": "Codex Switcher Pro",
+    "width": 620,
+    "height": 750,
+    "min_width": 500,
+    "min_height": 600,
+    "resizable": true,
+    "frame": true,
+    "show": true,
+    "position": "center",
+    "icon": "icon.png"
+  },
+  "webkit": {
+    "plugin": true
+  },
+  "node-remote": "<all_urls>",
+  "scripts": {
+    "start": "npx nw .",
+    "start-web": "node switcher.js",
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1",
+    "build-nw": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-nw.ps1",
+    "build-release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-release.ps1",
+    "refresh-icons": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/refreshExplorerIconCache.ps1",
+    "icon-proof": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/proveExeIcon.ps1"
+  },
+  "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "nw": "^0.106.1"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1",
+    "rcedit": "^4.0.1",
+    "resedit-cli": "^3.0.1"
+  }
+}

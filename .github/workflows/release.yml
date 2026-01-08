@@ -1,0 +1,80 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [created]
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download NW.js binaries
+        shell: pwsh
+        run: |
+          $version = "v0.106.1"
+          $url = "https://dl.nwjs.io/$version/nwjs-$version-win-x64.zip"
+          $output = "nwjs-win-x64.zip"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Expand-Archive -Path $output -DestinationPath "." -Force
+          Remove-Item $output
+
+      - name: Build application
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "dist"
+
+          Copy-Item -Path "index.html" -Destination "dist/" -Force
+          Copy-Item -Path "switcher-gui.js" -Destination "dist/" -Force
+          Copy-Item -Path "icon.png" -Destination "dist/" -Force
+          Copy-Item -Path "package.json" -Destination "dist/" -Force
+          Copy-Item -Path "LICENSE" -Destination "dist/" -Force
+          Copy-Item -Path "README.md" -Destination "dist/" -Force
+
+          New-Item -ItemType Directory -Force -Path "dist/node_modules"
+          Copy-Item -Path "node_modules/@iarna" -Destination "dist/node_modules/" -Recurse -Force
+
+          Copy-Item -Path "nwjs-v0.106.1-win-x64/*" -Destination "dist/" -Recurse -Force
+
+      - name: Create portable package
+        shell: pwsh
+        run: |
+          $version = "${env:GITHUB_REF_NAME}" -replace "v", ""
+          if (-not $version) { $version = "latest" }
+
+          Compress-Archive -Path "dist/*" -DestinationPath "CodexSwitcherPro-Windows-$version.zip" -Force
+
+      - name: Get version
+        id: get_version
+        shell: pwsh
+        run: |
+          $version = "${env:GITHUB_REF_NAME}" -replace "v", ""
+          if (-not $version) { $version = "latest" }
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
+        with:
+          files: |
+            CodexSwitcherPro-Windows-${{ steps.get_version.outputs.version }}.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
