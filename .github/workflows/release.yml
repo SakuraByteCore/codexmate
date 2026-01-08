@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  release:
-    types: [created]
 
 jobs:
   build-and-release:
@@ -60,48 +58,13 @@ jobs:
           $version = "${env:GITHUB_REF_NAME}" -replace "v", ""
           if (-not $version) { $version = "latest" }
 
-          Compress-Archive -Path "dist/*" -DestinationPath "CodexMate-Portable-$version.zip" -Force
-
-      - name: Create installer
-        shell: pwsh
-        run: |
-          # 查找 Inno Setup
-          $isccPaths = @(
-            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
-            "C:\Program Files\Inno Setup 6\ISCC.exe",
-            "C:\Program Files (x86)\Inno Setup 5\ISCC.exe",
-            "C:\Program Files\Inno Setup 5\ISCC.exe"
-          )
-
-          $iscc = $null
-          foreach ($path in $isccPaths) {
-            if (Test-Path $path) {
-              $iscc = $path
-              break
-            }
-          }
-
-          if (-not $iscc) {
-            Write-Host "Inno Setup not found, installing..."
-            choco install innosetup -y
-            $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          }
-
-          # 更新安装脚本中的版本号
-          $version = "${env:GITHUB_REF_NAME}" -replace "v", ""
-          if (-not $version) { $version = "0.0.1" }
-          (Get-Content "scripts/installer.iss") -replace "AppVersion=0\.0\.1", "AppVersion=$version" | Set-Content "scripts/installer.iss"
-
-          # 编译安装程序
-          & $iscc "scripts/installer.iss"
+          Compress-Archive -Path "dist/*" -DestinationPath "CodexMate-$version.zip" -Force
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            CodexMate-Portable-*.zip
-            CodexMate-Setup-*.exe
+          files: CodexMate-*.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
