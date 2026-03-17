@@ -57,6 +57,7 @@ const DEFAULT_WEB_PORT = 3737;
 const DEFAULT_WEB_HOST = '127.0.0.1';
 const DEFAULT_OFFICIAL_BASE_URL = 'https://api.openai.com/v1';
 const DEFAULT_FORWARD_PORT = 15721;
+const FORWARDER_IDLE_TIMEOUT_MS = 120000;
 
 // ============================================================================
 // 配置
@@ -160,8 +161,14 @@ let g_forwardServer = null;
 
 function isOpenAIBaseUrl(url) {
     if (typeof url !== 'string') return false;
-    const lower = url.trim().toLowerCase();
-    return lower.includes('api.openai.com') || lower.includes('.openai.azure.com');
+    let parsed;
+    try {
+        parsed = new URL(url);
+    } catch (e) {
+        return false;
+    }
+    const host = (parsed.hostname || '').toLowerCase();
+    return host === 'api.openai.com' || host.endsWith('.openai.azure.com');
 }
 
 function isOfficialProvider(provider, name = '') {
@@ -265,7 +272,7 @@ function ensureOfficialProviderExists(options = {}) {
     try {
         parsed = toml.parse(content);
     } catch (e) {
-        parsed = buildVirtualDefaultConfig();
+        throw new Error(`config.toml 解析失败，无法创建官方预设: ${e.message || e}`);
     }
 
     if (!parsed.model_providers || typeof parsed.model_providers !== 'object') {
@@ -305,7 +312,10 @@ function cmdSwitchOfficial(options = {}) {
     const targetName = typeof options.name === 'string' && options.name.trim()
         ? options.name.trim()
         : 'openai';
-    ensureOfficialProviderExists({ name: targetName });
+    const ensured = ensureOfficialProviderExists({ name: targetName });
+    if (ensured && ensured.error) {
+        throw new Error(ensured.error);
+    }
     return cmdSwitch(targetName, !!options.silent);
 }
 
@@ -5834,7 +5844,8 @@ function startForwardServer(options = {}) {
 
     const server = http.createServer((req, res) => {
         const upstreamPath = req.url || '/';
-        const url = `${target.origin}${upstreamPath}`;
+        const urlObj = new URL(upstreamPath, target);
+        const url = urlObj.toString();
         const headers = { ...req.headers };
         headers.host = target.host;
 
@@ -5852,7 +5863,7 @@ function startForwardServer(options = {}) {
             method: req.method,
             headers,
             agent: target.protocol === 'https:' ? HTTPS_KEEP_ALIVE_AGENT : HTTP_KEEP_ALIVE_AGENT,
-            timeout: SPEED_TEST_TIMEOUT_MS
+            timeout: FORWARDER_IDLE_TIMEOUT_MS
         }, (proxyRes) => {
             res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
             proxyRes.pipe(res);

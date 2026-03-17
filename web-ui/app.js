@@ -1329,7 +1329,10 @@
                 openOfficialOAuth() {
                     const url = 'https://chatgpt.com/codex';
                     try {
-                        window.open(url, '_blank', 'noopener');
+                        const win = window.open(url, '_blank', 'noopener');
+                        if (!win) {
+                            location.href = url;
+                        }
                     } catch (e) {
                         location.href = url;
                     }
@@ -2972,8 +2975,9 @@
                         const provider = (this.forwardProvider || this.currentProvider || '').trim();
                         const port = Number(this.forwardPort) || 15721;
                         const res = await api('forward-start', { provider, port });
-                        if (res && res.error) {
-                            this.showMessage(res.error, 'error');
+                        if (!res || res.success !== true) {
+                            const message = res && res.error ? res.error : '转发启动失败';
+                            this.showMessage(message, 'error');
                             return;
                         }
                         this.forwardRunning = true;
@@ -2993,8 +2997,9 @@
                     this.forwardLoading = true;
                     try {
                         const res = await api('forward-stop', {});
-                        if (res && res.error) {
-                            this.showMessage(res.error, 'error');
+                        if (!res || res.success !== true) {
+                            const message = res && res.error ? res.error : '停止失败';
+                            this.showMessage(message, 'error');
                             return;
                         }
                         this.forwardRunning = false;

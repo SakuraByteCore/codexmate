@@ -404,7 +404,7 @@
                                         <path d="M12 2v14"/>
                                     </svg>
                                 </button>
-                                <button class="card-action-btn" :class="{ loading: duplicateLoading[provider.name] }" @click="duplicateProvider(provider)" title="复制提供商">
+                                <button class="card-action-btn" :class="{ loading: duplicateLoading[provider.name] }" @click="duplicateProvider(provider)" title="复制提供商" :aria-label="`复制提供商 ${provider.name}`">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="4" y="4" width="12" height="12" rx="2" ry="2"/>
                                         <rect x="8" y="8" width="12" height="12" rx="2" ry="2"/>
