@@ -13,6 +13,14 @@
                             <button type="button" class="usage-range-btn" :class="{ active: sessionsUsageTimeRange === '7d' }" @click="setSessionsUsageTimeRange('7d')">{{ t('usage.range.7d') }}</button>
                             <button type="button" class="usage-range-btn" :class="{ active: sessionsUsageTimeRange === '30d' }" @click="setSessionsUsageTimeRange('30d')">{{ t('usage.range.30d') }}</button>
                             <button type="button" class="usage-range-btn" :class="{ active: sessionsUsageTimeRange === 'all' }" @click="setSessionsUsageTimeRange('all')">{{ t('usage.range.all') }}</button>
+                            <button
+                                type="button"
+                                class="usage-range-btn"
+                                :class="{ active: sessionsUsageCompareEnabled }"
+                                @click="toggleSessionsUsageCompare"
+                                :disabled="sessionsUsageTimeRange === 'all'">
+                                {{ t('usage.compare.toggle') }}
+                            </button>
                             <button type="button" class="usage-range-btn" @click="loadSessionsUsage({ forceRefresh: true, range: sessionsUsageTimeRange })" :disabled="sessionsUsageLoading">{{ sessionsUsageLoading ? t('usage.refreshing') : t('usage.refresh') }}</button>
                             <button type="button" class="usage-range-btn" @click="switchMainTab('dashboard')">{{ t('dashboard.doctor.title') }}</button>
                         </div>
@@ -79,148 +87,70 @@
                             </div>
 
                             <div class="usage-chart-grid">
-                                <section class="usage-card usage-card-wide usage-card-daily">
+                            <section class="usage-card usage-card-daydetail">
                                 <div class="usage-card-head">
                                     <div>
-                                        <div class="usage-card-title">{{ t('usage.daily.title') }}</div>
-                                        <div class="usage-card-subtitle">{{ t('usage.daily.subtitle') }}</div>
+                                        <div class="usage-card-title">{{ t('usage.dayDetail.title', { day: sessionsUsageSelectedDaySummary ? sessionsUsageSelectedDaySummary.dayKey : '--' }) }}</div>
+                                        <div class="usage-card-subtitle">{{ t('usage.dayDetail.subtitle') }}</div>
                                     </div>
-                                    <div class="usage-card-kicker">{{ sessionsUsageTimeRange === 'all' ? t('usage.range.kicker.all') : (sessionsUsageTimeRange === '30d' ? t('usage.range.kicker.30d') : t('usage.range.kicker.7d')) }}</div>
+                                    <div class="usage-daydetail-controls">
+                                        <select
+                                            class="usage-daydetail-select"
+                                            :value="sessionsUsageSelectedDayKey || ''"
+                                            @change="selectSessionsUsageDay(($event.target && $event.target.value) ? String($event.target.value) : '')">
+                                            <option value="">{{ t('usage.dayDetail.pick') }}</option>
+                                            <option v-for="day in sessionUsageDailyTableRows" :key="'day-select-' + day.key" :value="day.key">{{ day.key }}</option>
+                                        </select>
+                                        <button
+                                            type="button"
+                                            class="btn-tool btn-tool-compact"
+                                            :disabled="!sessionsUsageSelectedDaySummary"
+                                            @click="clearSessionsUsageDay">{{ t('usage.dayDetail.clear') }}</button>
+                                    </div>
                                 </div>
-
-                                <div class="usage-daily-legend">
-                                    <span><span class="usage-legend-dot usage-daily-dot usage-daily-dot-tokens"></span>{{ t('usage.legend.tokens') }}</span>
-                                    <span><span class="usage-legend-dot usage-daily-dot usage-daily-dot-cost"></span>{{ t('usage.legend.cost') }}</span>
-                                </div>
-
-                                <div class="usage-daily-bars usage-bars">
-                                    <div v-for="day in (sessionUsageDaily && sessionUsageDaily.rows ? sessionUsageDaily.rows : [])" :key="day.key" class="usage-bar-group">
-                                        <div class="usage-daily-bar-stack" :title="`${day.key} · ${day.tokenTitle} token · ${day.costTitle}`">
-                                            <div class="usage-daily-bar usage-daily-bar-tokens" :style="{ height: day.tokenPercent + '%' }"></div>
-                                            <div class="usage-daily-bar usage-daily-bar-cost" :style="{ height: day.costPercent + '%' }"></div>
+                                <template v-if="sessionsUsageSelectedDaySummary">
+                                    <div class="usage-daydetail-grid">
+                                        <div class="usage-daydetail-metric">
+                                            <div class="usage-daydetail-label">{{ t('usage.table.sessions') }}</div>
+                                            <div class="usage-daydetail-value">{{ sessionsUsageSelectedDaySummary.sessionCount }}</div>
                                         </div>
-                                        <div class="usage-bar-label">{{ day.label }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="usage-daily-table-wrap">
-                                    <table class="usage-daily-table">
-                                        <thead>
-                                            <tr>
-                                                <th>{{ t('usage.table.date') }}</th>
-                                                <th class="right">{{ t('usage.table.sessions') }}</th>
-                                                <th class="right">{{ t('usage.table.messages') }}</th>
-                                                <th class="right">{{ t('usage.table.tokens') }}</th>
-                                                <th class="right">{{ t('usage.table.cost') }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="day in sessionUsageDailyTableRows" :key="day.key">
-                                                <td class="mono">{{ day.key }}</td>
-                                                <td class="right">{{ day.sessionCount }}</td>
-                                                <td class="right">{{ day.messageCount }}</td>
-                                                <td
-                                                    class="right mono usage-copyable"
-                                                    role="button"
-                                                    tabindex="0"
-                                                    :title="t('usage.copyTitle', { value: day.tokenTitle })"
-                                                    @click="(String(day.tokenTitle || '').trim())
-                                                        ? ((typeof fallbackCopyText === 'function' && fallbackCopyText(String(day.tokenTitle || '').trim()))
-                                                            ? showMessage(t('usage.copyTokenDay', { day: day.key }), 'success')
-                                                            : showMessage(t('usage.copyFail'), 'error'))
-                                                        : showMessage(t('usage.copyNone'), 'info')"
-                                                    @keydown.enter.prevent="(String(day.tokenTitle || '').trim())
-                                                        ? ((typeof fallbackCopyText === 'function' && fallbackCopyText(String(day.tokenTitle || '').trim()))
-                                                            ? showMessage(t('usage.copyTokenDay', { day: day.key }), 'success')
-                                                            : showMessage(t('usage.copyFail'), 'error'))
-                                                        : showMessage(t('usage.copyNone'), 'info')"
-                                                    @keydown.space.prevent="(String(day.tokenTitle || '').trim())
-                                                        ? ((typeof fallbackCopyText === 'function' && fallbackCopyText(String(day.tokenTitle || '').trim()))
-                                                            ? showMessage(t('usage.copyTokenDay', { day: day.key }), 'success')
-                                                            : showMessage(t('usage.copyFail'), 'error'))
-                                                        : showMessage(t('usage.copyNone'), 'info')">
-                                                    {{ day.tokenLabel }}
-                                                </td>
-                                                <td
-                                                    class="right mono usage-copyable"
-                                                    role="button"
-                                                    tabindex="0"
-                                                    :title="t('usage.copyTitle', { value: day.costTitle })"
-                                                    @click="(String(day.costTitle || '').trim())
-                                                        ? ((typeof fallbackCopyText === 'function' && fallbackCopyText(String(day.costTitle || '').trim()))
-                                                            ? showMessage(t('usage.copyCostDay', { day: day.key }), 'success')
-                                                            : showMessage(t('usage.copyFail'), 'error'))
-                                                        : showMessage(t('usage.copyNone'), 'info')"
-                                                    @keydown.enter.prevent="(String(day.costTitle || '').trim())
-                                                        ? ((typeof fallbackCopyText === 'function' && fallbackCopyText(String(day.costTitle || '').trim()))
-                                                            ? showMessage(t('usage.copyCostDay', { day: day.key }), 'success')
-                                                            : showMessage(t('usage.copyFail'), 'error'))
-                                                        : showMessage(t('usage.copyNone'), 'info')"
-                                                    @keydown.space.prevent="(String(day.costTitle || '').trim())
-                                                        ? ((typeof fallbackCopyText === 'function' && fallbackCopyText(String(day.costTitle || '').trim()))
-                                                            ? showMessage(t('usage.copyCostDay', { day: day.key }), 'success')
-                                                            : showMessage(t('usage.copyFail'), 'error'))
-                                                        : showMessage(t('usage.copyNone'), 'info')">
-                                                    {{ day.costLabel }}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div class="usage-daily-note">
-                                    {{ t('usage.daily.note') }}
-                                </div>
-                            </section>
-
-                            <section class="usage-card usage-card-heatmap">
-                                <div class="usage-card-head">
-                                    <div>
-                                        <div class="usage-card-title">{{ t('usage.heatmap.title') }}</div>
-                                        <div class="usage-card-subtitle">{{ t('usage.heatmap.subtitle') }}</div>
-                                    </div>
-                                    <div class="usage-card-kicker">{{ sessionsUsageTimeRange === 'all' ? t('usage.range.kicker.all') : (sessionsUsageTimeRange === '30d' ? t('usage.range.kicker.30d') : t('usage.range.kicker.7d')) }}</div>
-                                </div>
-
-                                <div class="usage-gh-heatmap">
-                                    <div class="usage-gh-heatmap-months">
-                                        <div class="usage-gh-heatmap-months-spacer"></div>
-                                        <div class="usage-gh-heatmap-months-row" aria-hidden="true">
-                                            <div v-for="week in (sessionUsageHeatmap.weeks || [])" :key="week.key + '-m'" class="usage-gh-heatmap-month">{{ week.monthLabel }}</div>
+                                        <div class="usage-daydetail-metric">
+                                            <div class="usage-daydetail-label">{{ t('usage.table.messages') }}</div>
+                                            <div class="usage-daydetail-value">{{ sessionsUsageSelectedDaySummary.messageCount }}</div>
                                         </div>
-                                    </div>
-
-                                    <div class="usage-gh-heatmap-body">
-                                        <div class="usage-gh-heatmap-weekdays" aria-hidden="true">
-                                            <div v-for="(label, idx) in sessionUsageHeatmap.weekdayAxis" :key="'gh-wd-' + idx" class="usage-gh-heatmap-weekday">{{ label }}</div>
+                                        <div class="usage-daydetail-metric">
+                                            <div class="usage-daydetail-label">{{ t('usage.table.tokens') }}</div>
+                                            <div class="usage-daydetail-value mono">{{ sessionsUsageSelectedDaySummary.tokenLabel }}</div>
+                                            <div v-if="sessionsUsageSelectedDaySummary.compareEnabled" class="usage-daydetail-sub mono">
+                                                {{ t('usage.compare.prev') }} {{ sessionsUsageSelectedDaySummary.prevTokenLabel }} · {{ t('usage.compare.delta') }} {{ sessionsUsageSelectedDaySummary.deltaTokenLabel }}
+                                            </div>
                                         </div>
-                                        <div class="usage-gh-heatmap-grid">
-                                            <div v-for="week in (sessionUsageHeatmap.weeks || [])" :key="week.key" class="usage-gh-heatmap-week">
-                                                <button
-                                                    v-for="(cell, idx) in (week.days || [])"
-                                                    :key="week.key + '-d-' + idx"
-                                                    type="button"
-                                                    class="usage-gh-heatmap-day"
-                                                    :class="cell && cell.isInRange ? ('level-' + cell.level) : 'out'"
-                                                    :disabled="!(cell && cell.isInRange)"
-                                                    :aria-label="cell ? cell.ariaLabel : ''"
-                                                    :data-tooltip="cell ? cell.title : ''">
-                                                </button>
+                                        <div class="usage-daydetail-metric">
+                                            <div class="usage-daydetail-label">{{ t('usage.table.cost') }}</div>
+                                            <div class="usage-daydetail-value mono">{{ sessionsUsageSelectedDaySummary.costLabel }}</div>
+                                            <div v-if="sessionsUsageSelectedDaySummary.compareEnabled" class="usage-daydetail-sub mono">
+                                                {{ t('usage.compare.prev') }} {{ sessionsUsageSelectedDaySummary.prevCostLabel }} · {{ t('usage.compare.delta') }} {{ sessionsUsageSelectedDaySummary.deltaCostLabel }}
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="usage-heatmap-legend" aria-hidden="true">
-                                    <span class="usage-heatmap-legend-label">{{ t('usage.heatmap.legend.less') }}</span>
-                                    <span class="usage-heatmap-legend-dots">
-                                        <span class="usage-heat-dot out"></span>
-                                        <span class="usage-heat-dot level-1"></span>
-                                        <span class="usage-heat-dot level-2"></span>
-                                        <span class="usage-heat-dot level-3"></span>
-                                        <span class="usage-heat-dot level-4"></span>
-                                    </span>
-                                    <span class="usage-heatmap-legend-label">{{ t('usage.heatmap.legend.more') }}</span>
+                                    <div class="usage-daydetail-section">
+                                        <div class="usage-daydetail-section-title">{{ t('usage.dayDetail.topSessions') }}</div>
+                                        <div class="usage-daydetail-list">
+                                            <div v-for="item in sessionsUsageSelectedDaySummary.topSessions" :key="item.key" class="usage-daydetail-row">
+                                                <div class="usage-daydetail-row-title">{{ item.title }}</div>
+                                                <div class="usage-daydetail-row-meta mono">{{ item.messageCountLabel }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-if="sessionsUsageSelectedDaySummary.topModels.length" class="usage-daydetail-section">
+                                        <div class="usage-daydetail-section-title">{{ t('usage.dayDetail.topModels') }}</div>
+                                        <div class="usage-daydetail-models">
+                                            <span v-for="model in sessionsUsageSelectedDaySummary.topModels" :key="model.key" class="usage-daydetail-model">{{ model.label }}</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div v-else class="usage-daydetail-empty">
+                                    {{ t('usage.dayDetail.empty') }}
                                 </div>
                             </section>
 

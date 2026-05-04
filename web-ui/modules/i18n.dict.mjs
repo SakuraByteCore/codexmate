@@ -579,6 +579,10 @@ const DICT = Object.freeze({
         'sessions.time.30d': '近 30 天',
         'sessions.time.90d': '近 90 天'
         ,
+        'sessions.sort.time': '按时间',
+        'sessions.sort.hot': '按热度',
+        'sessions.sort.hotBadge': '热'
+        ,
         'sessions.filters.copyLink': '复制筛选链接',
         'sessions.filters.urlBuildFail': '无法生成链接',
         'sessions.filters.source': '来源',
@@ -597,6 +601,9 @@ const DICT = Object.freeze({
         'usage.range.7d': '近 7 天',
         'usage.range.30d': '近 30 天',
         'usage.range.all': '全部',
+        'usage.compare.toggle': '对比上周期',
+        'usage.compare.prev': '上周期',
+        'usage.compare.delta': '变化',
         'usage.refresh': '刷新统计',
         'usage.refreshing': '刷新中...',
         'usage.loading': '正在加载 Usage 统计...',
@@ -661,6 +668,14 @@ const DICT = Object.freeze({
         'usage.range.kicker.7d': '近 7 天',
         'usage.copyTokenDay': '已复制：Token（{day}）',
         'usage.copyCostDay': '已复制：预估费用（{day}）'
+        ,
+        'usage.dayDetail.title': '{day} 详情',
+        'usage.dayDetail.subtitle': '选择日期可快速查看当天构成。',
+        'usage.dayDetail.pick': '选择日期',
+        'usage.dayDetail.empty': '请选择一个日期以查看当天构成。',
+        'usage.dayDetail.clear': '清除',
+        'usage.dayDetail.topSessions': 'Top 会话',
+        'usage.dayDetail.topModels': 'Top 模型'
         ,
         'usage.models.title': '使用模型',
         'usage.models.subtitle': '只列真实落盘的 model 名。',
@@ -1618,6 +1633,10 @@ const DICT = Object.freeze({
         'sessions.time.30d': 'Last 30 days',
         'sessions.time.90d': 'Last 90 days'
         ,
+        'sessions.sort.time': 'Sort: time',
+        'sessions.sort.hot': 'Sort: hot',
+        'sessions.sort.hotBadge': 'Hot'
+        ,
         'sessions.filters.copyLink': 'Copy filter link',
         'sessions.filters.urlBuildFail': 'Failed to build link',
         'sessions.filters.source': 'Source',
@@ -1636,6 +1655,9 @@ const DICT = Object.freeze({
         'usage.range.7d': 'Last 7 days',
         'usage.range.30d': 'Last 30 days',
         'usage.range.all': 'All',
+        'usage.compare.toggle': 'Compare previous',
+        'usage.compare.prev': 'Prev',
+        'usage.compare.delta': 'Delta',
         'usage.refresh': 'Refresh stats',
         'usage.refreshing': 'Refreshing...',
         'usage.loading': 'Loading usage stats...',
@@ -1700,6 +1722,14 @@ const DICT = Object.freeze({
         'usage.range.kicker.7d': 'Last 7 days',
         'usage.copyTokenDay': 'Copied: Tokens ({day})',
         'usage.copyCostDay': 'Copied: Estimated cost ({day})'
+        ,
+        'usage.dayDetail.title': '{day} detail',
+        'usage.dayDetail.subtitle': 'Pick a day to inspect its breakdown.',
+        'usage.dayDetail.pick': 'Pick a day',
+        'usage.dayDetail.empty': 'Pick a day to inspect its breakdown.',
+        'usage.dayDetail.clear': 'Clear',
+        'usage.dayDetail.topSessions': 'Top sessions',
+        'usage.dayDetail.topModels': 'Top models'
         ,
         'usage.models.title': 'Models used',
         'usage.models.subtitle': 'Only includes model names present in saved records.',

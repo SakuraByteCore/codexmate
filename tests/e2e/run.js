@@ -29,6 +29,7 @@ const testTaskOrchestration = require('./test-task-orchestration');
 const testInvalidConfig = require('./test-invalid-config');
 const testWebUiAssets = require('./test-web-ui-assets');
 const testWebUiSessionBrowser = require('./test-web-ui-session-browser');
+const testWebUiUsageInteractions = require('./test-web-ui-usage-interactions');
 const testInstallStatus = require('./test-install-status');
 
 async function main() {
@@ -161,6 +162,7 @@ async function main() {
         await testInstallStatus(ctx);
         await testWebUiAssets(ctx);
         await testWebUiSessionBrowser(ctx);
+        await testWebUiUsageInteractions(ctx);
 
     } finally {
         const waitForExit = new Promise((resolve) => {

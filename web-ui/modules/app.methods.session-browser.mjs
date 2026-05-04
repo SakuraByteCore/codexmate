@@ -254,10 +254,25 @@ export function createSessionBrowserMethods(options = {}) {
             localStorage.setItem('codexmateSessionResumeYolo', value);
         },
 
+        normalizeSessionSortMode(value) {
+            const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+            return normalized === 'hot' ? 'hot' : 'time';
+        },
+
         restoreSessionFilterCache() {
             const urlState = readSessionsFilterUrlState();
+            const normalizeSortMode = typeof this.normalizeSessionSortMode === 'function'
+                ? this.normalizeSessionSortMode.bind(this)
+                : ((value) => {
+                    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+                    return normalized === 'hot' ? 'hot' : 'time';
+                });
             if (urlState) {
                 applySessionsFilterUrlState(this, urlState);
+                try {
+                    const sortCache = localStorage.getItem('codexmateSessionSortMode');
+                    this.sessionSortMode = normalizeSortMode(sortCache);
+                } catch (_) {}
                 if (this.mainTab === 'sessions' && typeof this.loadSessions === 'function') {
                     void this.loadSessions();
                 }
@@ -271,9 +286,11 @@ export function createSessionBrowserMethods(options = {}) {
             const queryCache = localStorage.getItem('codexmateSessionQuery');
             const roleCache = localStorage.getItem('codexmateSessionRoleFilter');
             const timeCache = localStorage.getItem('codexmateSessionTimePreset');
+            const sortCache = localStorage.getItem('codexmateSessionSortMode');
             this.sessionQuery = typeof queryCache === 'string' ? queryCache : '';
             this.sessionRoleFilter = normalizeSessionRoleFilter(roleCache);
             this.sessionTimePreset = normalizeSessionTimePreset(timeCache);
+            this.sessionSortMode = normalizeSortMode(sortCache);
             this.refreshSessionPathOptions(this.sessionFilterSource);
             if (this.mainTab === 'sessions' && typeof this.loadSessions === 'function') {
                 const shouldReload = cached.source !== 'all'
@@ -302,6 +319,29 @@ export function createSessionBrowserMethods(options = {}) {
             }
             localStorage.setItem('codexmateSessionRoleFilter', normalizeSessionRoleFilter(this.sessionRoleFilter));
             localStorage.setItem('codexmateSessionTimePreset', normalizeSessionTimePreset(this.sessionTimePreset));
+        },
+
+        onSessionSortChange() {
+            const normalized = this.normalizeSessionSortMode(this.sessionSortMode);
+            this.sessionSortMode = normalized;
+            try {
+                localStorage.setItem('codexmateSessionSortMode', normalized);
+            } catch (_) {}
+        },
+
+        getSessionHotLabel(session) {
+            if (!session || typeof session !== 'object') return '';
+            const updatedAtMs = Date.parse(session.updatedAt || '');
+            if (!Number.isFinite(updatedAtMs)) return '';
+            const ageMs = Date.now() - updatedAtMs;
+            if (!Number.isFinite(ageMs) || ageMs < 0) return '';
+            const messageCount = Number.isFinite(Number(session.messageCount))
+                ? Math.max(0, Math.floor(Number(session.messageCount)))
+                : 0;
+            if (ageMs <= (24 * 60 * 60 * 1000) && messageCount >= 20) {
+                return typeof this.t === 'function' ? this.t('sessions.sort.hotBadge') : '热';
+            }
+            return '';
         },
 
         normalizeSessionPinnedMap(raw) {
@@ -626,7 +666,7 @@ export function createSessionBrowserMethods(options = {}) {
             this.cancelScheduledSessionListMessageCountHydrate();
             const run = () => {
                 this.__sessionListMessageCountHydrateHandle = null;
-                return this.hydrateVisibleSessionListMessageCounts();
+                void this.hydrateVisibleSessionListMessageCounts();
             };
             if (typeof this.scheduleIdleTask === 'function') {
                 this.__sessionListMessageCountHydrateHandle = this.scheduleIdleTask(run, 160);
@@ -738,7 +778,32 @@ export function createSessionBrowserMethods(options = {}) {
             const normalized = typeof nextRange === 'string' ? nextRange.trim().toLowerCase() : '';
             const range = normalized === 'all' ? 'all' : (normalized === '30d' ? '30d' : '7d');
             this.sessionsUsageTimeRange = range;
+            if (range === 'all') {
+                this.sessionsUsageCompareEnabled = false;
+            }
             void this.loadSessionsUsage({ range });
+        },
+
+        toggleSessionsUsageCompare() {
+            if (this.sessionsUsageTimeRange === 'all') {
+                this.sessionsUsageCompareEnabled = false;
+                return;
+            }
+            this.sessionsUsageCompareEnabled = !this.sessionsUsageCompareEnabled;
+            const range = typeof this.sessionsUsageTimeRange === 'string' ? this.sessionsUsageTimeRange.trim().toLowerCase() : '7d';
+            void this.loadSessionsUsage({
+                range,
+                limit: this.sessionsUsageCompareEnabled ? 2000 : undefined
+            });
+        },
+
+        selectSessionsUsageDay(dayKey) {
+            const normalized = typeof dayKey === 'string' ? dayKey.trim() : '';
+            this.sessionsUsageSelectedDayKey = normalized;
+        },
+
+        clearSessionsUsageDay() {
+            this.sessionsUsageSelectedDayKey = '';
         },
 
         async loadSessionsUsage(options = {}) {
@@ -749,7 +814,12 @@ export function createSessionBrowserMethods(options = {}) {
             const range = normalizedRange === 'all' ? 'all' : (normalizedRange === '30d' ? '30d' : '7d');
             const defaultLimit = range === 'all' ? 2000 : (range === '30d' ? 1200 : 600);
             const rawLimit = Number(options.limit);
-            const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(rawLimit, 2000)) : defaultLimit;
+            const compareBoost = this.sessionsUsageCompareEnabled && range !== 'all'
+                ? 2000
+                : defaultLimit;
+            const limit = Number.isFinite(rawLimit)
+                ? Math.max(1, Math.min(rawLimit, 2000))
+                : compareBoost;
             const loadedLimit = Number(this.sessionsUsageLoadedLimit || 0);
             if (this.sessionsUsageLoadedOnce && !options.forceRefresh && loadedLimit >= limit) {
                 return;
@@ -786,7 +856,6 @@ export function createSessionBrowserMethods(options = {}) {
             this.resetSessionListMessageCountHydrate();
             const result = await loadSessionsHelper.call(this, api, options || {});
             this.pruneSessionPinnedMap(this.sessionsList);
-            this.scheduleSessionListMessageCountHydrate();
             return result;
         },
 
@@ -906,7 +975,11 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         async loadActiveSessionDetail(options = {}) {
-            return loadActiveSessionDetailHelper.call(this, api, options);
+            const result = await loadActiveSessionDetailHelper.call(this, api, options);
+            if (this.mainTab === 'sessions' && typeof this.scheduleSessionListMessageCountHydrate === 'function') {
+                this.scheduleSessionListMessageCountHydrate();
+            }
+            return result;
         }
     };
 }

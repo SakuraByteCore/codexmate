@@ -609,9 +609,6 @@ export function createNavigationMethods(options = {}) {
                     return;
                 }
                 if (this.expandVisibleSessionList(undefined, { ensureActive: true })) {
-                    if (typeof this.scheduleSessionListMessageCountHydrate === 'function') {
-                        this.scheduleSessionListMessageCountHydrate();
-                    }
                     this.scheduleSessionListViewportFill();
                 }
             };
@@ -624,9 +621,6 @@ export function createNavigationMethods(options = {}) {
             }
             this.expandVisibleSessionList(undefined, { ensureActive: true });
             this.scheduleSessionListViewportFill();
-            if (typeof this.scheduleSessionListMessageCountHydrate === 'function') {
-                this.scheduleSessionListMessageCountHydrate();
-            }
         },
         onSessionListScroll(event) {
             const nextRef = event && event.currentTarget ? event.currentTarget : this.__sessionListRef;

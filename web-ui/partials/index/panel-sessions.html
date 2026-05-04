@@ -81,6 +81,14 @@
                                 <option value="30d">{{ t('sessions.time.30d') }}</option>
                                 <option value="90d">{{ t('sessions.time.90d') }}</option>
                             </select>
+                            <select
+                                class="session-time-select"
+                                v-model="sessionSortMode"
+                                @change="onSessionSortChange"
+                                :disabled="sessionsLoading">
+                                <option value="time">{{ t('sessions.sort.time') }}</option>
+                                <option value="hot">{{ t('sessions.sort.hot') }}</option>
+                            </select>
                             <button class="btn-tool btn-tool-compact" type="button" @click="copySessionsFilterShareUrl" :disabled="sessionsLoading">
                                 {{ t('sessions.filters.copyLink') }}
                             </button>
@@ -182,6 +190,7 @@
                             <div class="session-item-meta">
                                 <span class="session-source">{{ session.sourceLabel }}</span>
                                 <span class="session-item-time">{{ session.updatedAt || t('sessions.unknownTime') }}</span>
+                                <span v-if="getSessionHotLabel(session)" class="session-item-hot">{{ getSessionHotLabel(session) }}</span>
                                 <span v-if="session.cwd" class="session-item-cwd session-item-sub">{{ session.cwd }}</span>
                             </div>
                         </div>

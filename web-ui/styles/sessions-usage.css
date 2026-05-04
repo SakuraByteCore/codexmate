@@ -117,10 +117,10 @@
     gap: 4px;
     min-height: 88px;
     padding: 12px 14px;
-    border-radius: 14px;
-    background: var(--color-surface-alt);
-    border: 1px solid var(--color-border-soft);
-    box-shadow: var(--shadow-subtle);
+    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: none;
 }
 
 .usage-content {
@@ -173,6 +173,7 @@
 
 .usage-summary-card.usage-copyable:hover {
     border-color: var(--color-border-strong);
+    background: var(--color-surface-alt);
 }
 
 .usage-loading-skeleton {
@@ -261,16 +262,16 @@
 
 .usage-chart-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    grid-template-columns: 1fr;
     gap: 16px;
 }
 
 .usage-card {
     padding: 16px;
-    border-radius: 16px;
+    border-radius: 12px;
     background: var(--color-surface);
-    border: 1px solid var(--color-border-soft);
-    box-shadow: var(--shadow-subtle);
+    border: 1px solid var(--color-border);
+    box-shadow: none;
     min-width: 0;
     overflow: hidden;
 }
@@ -303,7 +304,7 @@
     padding: 0 10px;
     border-radius: 999px;
     border: 1px solid var(--color-border);
-    background: var(--color-surface-alt);
+    background: transparent;
     color: var(--color-text-secondary);
     font-size: 12px;
     font-weight: 600;
@@ -322,7 +323,7 @@
     padding: 0 2px 10px;
     scrollbar-gutter: stable both-edges;
     scrollbar-width: thin;
-    scrollbar-color: rgba(199, 116, 98, 0.72) rgba(199, 116, 98, 0.08);
+    scrollbar-color: rgba(24, 24, 27, 0.26) rgba(24, 24, 27, 0.08);
 }
 
 .usage-bars::-webkit-scrollbar {
@@ -330,18 +331,18 @@
 }
 
 .usage-bars::-webkit-scrollbar-track {
-    background: linear-gradient(90deg, rgba(199, 116, 98, 0.04), rgba(199, 116, 98, 0.1));
+    background: rgba(24, 24, 27, 0.06);
     border-radius: 999px;
 }
 
 .usage-bars::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, rgba(199, 116, 98, 0.68), rgba(180, 94, 78, 0.92));
+    background: rgba(24, 24, 27, 0.26);
     border-radius: 999px;
-    border: 2px solid rgba(248, 243, 238, 0.96);
+    border: 2px solid rgba(255, 255, 255, 0.92);
 }
 
 .usage-bars::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, rgba(199, 116, 98, 0.82), rgba(180, 94, 78, 1));
+    background: rgba(24, 24, 27, 0.34);
 }
 
 .usage-bar-group {
@@ -380,314 +381,143 @@
     grid-column: 1 / -1;
 }
 
-.usage-card-heatmap {
-    grid-column: 2;
-    justify-self: stretch;
-    width: 100%;
-    max-width: 100%;
-}
-
-.usage-daily-legend {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 10px;
-    font-size: 12px;
-    color: var(--color-text-secondary);
-}
-
-.usage-daily-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-}
-
-.usage-daily-dot-tokens {
-    background: var(--color-brand);
-}
-
-.usage-daily-dot-cost {
-    background: linear-gradient(135deg, rgba(139, 107, 214, 0.95), rgba(199, 116, 98, 0.95));
-}
-
-.usage-daily-bar-stack {
-    width: 100%;
-    max-width: 40px;
-    height: 160px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 4px;
-}
-
-.usage-daily-bar {
-    flex: 1;
-    min-height: 4px;
-    border-radius: 10px 10px 4px 4px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
-}
-
-.usage-daily-bar-tokens {
-    background: linear-gradient(180deg, rgba(199, 116, 98, 1) 0%, rgba(180, 94, 78, 1) 100%);
-}
-
-.usage-daily-bar-cost {
-    background: linear-gradient(180deg, rgba(139, 107, 214, 0.92) 0%, rgba(95, 72, 170, 0.98) 100%);
-}
-
-.usage-daily-table-wrap {
-    margin-top: 12px;
-    border-radius: 14px;
-    border: 1px solid var(--color-border-soft);
-    background: var(--color-surface-alt);
-    overflow: auto;
-}
-
-.usage-daily-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 560px;
-}
-
-.usage-daily-table th,
-.usage-daily-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(216, 201, 184, 0.22);
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-}
-
-.usage-daily-table thead th {
-    position: sticky;
-    top: 0;
-    background: rgba(248, 243, 238, 0.92);
-    backdrop-filter: blur(6px);
-    font-weight: 700;
-    color: var(--color-text-primary);
-    z-index: 1;
-}
-
-.usage-daily-table tr:last-child td {
-    border-bottom: none;
-}
-
-.usage-daily-table .right {
-    text-align: right;
-}
-
-.usage-daily-table .mono {
-    font-family: var(--font-family-mono);
-    letter-spacing: -0.01em;
-}
-
-.usage-daily-note {
-    margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: rgba(255, 244, 220, 0.58);
-    border: 1px solid rgba(216, 201, 184, 0.22);
-    color: #7a5110;
-    font-size: 12px;
-    line-height: 1.45;
-}
-
-.usage-gh-heatmap {
-    --usage-heat-cell: 8px;
-    --usage-heat-gap: 2px;
-    --usage-heat-week: calc(var(--usage-heat-cell) + var(--usage-heat-gap));
-    --usage-heat-axis: 22px;
-    margin-top: 6px;
-}
-
-.usage-gh-heatmap-months {
-    display: grid;
-    grid-template-columns: var(--usage-heat-axis) 1fr;
-    align-items: end;
-    margin-bottom: 6px;
-}
-
-.usage-gh-heatmap-months-row {
-    display: flex;
-    gap: var(--usage-heat-gap);
-    min-width: max-content;
-    overflow-x: hidden;
-}
-
-.usage-gh-heatmap-month {
-    width: var(--usage-heat-week);
-    font-size: 11px;
-    color: var(--color-text-tertiary);
-    line-height: 1;
-    height: 12px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-start;
-}
-
-.usage-gh-heatmap-body {
-    display: grid;
-    grid-template-columns: var(--usage-heat-axis) 1fr;
-    gap: 6px;
-}
-
-.usage-gh-heatmap-weekdays {
-    display: grid;
-    grid-template-rows: repeat(7, var(--usage-heat-cell));
-    gap: var(--usage-heat-gap);
-    align-items: center;
-}
-
-.usage-gh-heatmap-weekday {
-    font-size: 11px;
-    color: var(--color-text-tertiary);
-    line-height: 1;
-    height: var(--usage-heat-cell);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 2px;
-}
-
-.usage-gh-heatmap-grid {
-    display: flex;
-    gap: var(--usage-heat-gap);
-    min-width: max-content;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 2px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(70, 86, 110, 0.35) transparent;
-}
-
-.usage-gh-heatmap-grid::-webkit-scrollbar {
-    height: 8px;
-}
-
-.usage-gh-heatmap-grid::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.usage-gh-heatmap-grid::-webkit-scrollbar-thumb {
-    background: rgba(70, 86, 110, 0.22);
-    border-radius: 999px;
-}
-
-.usage-gh-heatmap-week {
-    display: grid;
-    grid-template-rows: repeat(7, var(--usage-heat-cell));
-    gap: var(--usage-heat-gap);
-}
-
-.usage-gh-heatmap-day {
-    width: var(--usage-heat-cell);
-    height: var(--usage-heat-cell);
-    padding: 0;
-    border: 0;
-    border-radius: 2px;
-    background: rgba(70, 86, 110, 0.06);
-    cursor: default;
-    position: relative;
-}
-
-.usage-gh-heatmap-day:disabled {
-    opacity: 0.6;
-}
-
-.usage-gh-heatmap-day.level-0 { background: rgba(70, 86, 110, 0.06); }
-.usage-gh-heatmap-day.level-1 { background: rgba(199, 116, 98, 0.18); }
-.usage-gh-heatmap-day.level-2 { background: rgba(199, 116, 98, 0.34); }
-.usage-gh-heatmap-day.level-3 { background: rgba(199, 116, 98, 0.54); }
-.usage-gh-heatmap-day.level-4 { background: rgba(199, 116, 98, 0.82); }
-.usage-gh-heatmap-day.out { background: rgba(70, 86, 110, 0.03); }
-
-.usage-gh-heatmap-day:not(:disabled):hover {
-    outline: 1px solid rgba(70, 86, 110, 0.28);
-    outline-offset: 1px;
-}
-
-.usage-gh-heatmap-day:focus-visible {
-    outline: 2px solid rgba(201, 94, 75, 0.35);
-    outline-offset: 2px;
-}
-
-.usage-gh-heatmap-day:not(:disabled):hover::after,
-.usage-gh-heatmap-day:focus-visible::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: calc(100% + 10px);
-    background: rgba(19, 22, 28, 0.92);
-    color: #fff;
-    font-size: 12px;
-    line-height: 1.2;
-    padding: 7px 10px;
-    border-radius: 10px;
-    white-space: nowrap;
-    z-index: 40;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
-    pointer-events: none;
-}
-
-.usage-gh-heatmap-day:not(:disabled):hover::before,
-.usage-gh-heatmap-day:focus-visible::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: calc(100% + 4px);
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid rgba(19, 22, 28, 0.92);
-    z-index: 41;
-    pointer-events: none;
-}
-
-.usage-heatmap-legend {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--color-text-secondary);
-}
-
-.usage-heatmap-legend-dots {
+.usage-daydetail-controls {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
+}
+
+.usage-daydetail-select {
+    min-height: 30px;
+    padding: 0 30px 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23505A66' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+
+.usage-daydetail-select:hover {
+    background-color: var(--color-surface-alt);
+}
+
+.usage-daydetail-select:focus {
+    outline: none;
+    box-shadow: var(--shadow-input-focus);
+    border-color: var(--color-brand);
+    background-color: var(--color-surface-alt);
+}
+
+.usage-daydetail-empty {
+    padding: 10px 0 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.usage-daydetail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.usage-daydetail-metric {
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: var(--color-surface-alt);
+}
+
+.usage-daydetail-label {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+}
+
+.usage-daydetail-value {
+    margin-top: 4px;
+    font-size: 18px;
+    font-weight: 750;
+    color: var(--color-text-primary);
+}
+
+.usage-daydetail-sub {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    line-height: 1.25;
+}
+
+.usage-daydetail-section {
+    margin-top: 12px;
+}
+
+.usage-daydetail-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.usage-daydetail-list {
+    display: grid;
+    gap: 8px;
+}
+
+.usage-daydetail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(24, 24, 27, 0.02);
+    border: 1px solid rgba(24, 24, 27, 0.08);
+}
+
+.usage-daydetail-row-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-primary);
+    font-size: 12px;
+}
+
+.usage-daydetail-row-meta {
+    flex-shrink: 0;
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+}
+
+.usage-daydetail-models {
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
+}
+
+.usage-daydetail-model {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(24, 24, 27, 0.06);
+    color: var(--color-text-secondary);
 }
 
 @media (max-width: 900px) {
     .usage-chart-grid {
         grid-template-columns: 1fr;
     }
-
-    .usage-card-heatmap {
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        max-width: 100%;
-    }
 }
-
-.usage-heat-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 4px;
-    border: 1px solid rgba(70, 86, 110, 0.18);
-    background: rgba(70, 86, 110, 0.08);
-}
-
-.usage-heat-dot.level-1 { background: rgba(199, 116, 98, 0.22); }
-.usage-heat-dot.level-2 { background: rgba(199, 116, 98, 0.4); }
-.usage-heat-dot.level-3 { background: rgba(199, 116, 98, 0.62); }
-.usage-heat-dot.level-4 { background: rgba(199, 116, 98, 0.9); }
-.usage-heat-dot.out { background: rgba(70, 86, 110, 0.05); }
 
 .usage-bar.claude {
     background: #8b6bd6;

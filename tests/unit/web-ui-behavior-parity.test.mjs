@@ -403,7 +403,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'showPromptTemplateVarModal',
         'promptTemplateVarDraftName',
         'promptTemplateVarDraftError',
-        'sessionConverting'
+        'sessionConverting',
+        'sessionSortMode',
+        'sessionsUsageCompareEnabled',
+        'sessionsUsageSelectedDayKey'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -455,12 +458,18 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'primeSessionListRender',
         'providerFieldError',
         'emitSessionLoadNativeDialog',
+        'normalizeSessionSortMode',
+        'onSessionSortChange',
+        'getSessionHotLabel',
         'cancelScheduledSessionListMessageCountHydrate',
         'hydrateVisibleSessionListMessageCounts',
         'resetSessionListMessageCountHydrate',
         'resetSessionListRender',
         'scheduleSessionListMessageCountHydrate',
         'scheduleSessionListViewportFill',
+        'toggleSessionsUsageCompare',
+        'selectSessionsUsageDay',
+        'clearSessionsUsageDay',
         'setSessionTrashEnabled',
         'setShareCommandPrefix',
         'setSessionListRef',
@@ -607,6 +616,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionUsageDaily',
         'sessionUsageHeatmap',
         'sessionUsageDailyTableRows',
+        'sessionsUsageSelectedDaySummary',
         'usageCurrentSessionStats',
         'taskOrchestrationSelectedRun',
         'taskOrchestrationSelectedRunNodes',
