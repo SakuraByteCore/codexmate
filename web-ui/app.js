@@ -498,13 +498,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('加载 Claude 配置失败:', e);
                 }
             }
+            {
+                const savedCurrentClaudeConfig = localStorage.getItem('currentClaudeConfig');
+                if (savedCurrentClaudeConfig && this.claudeConfigs[savedCurrentClaudeConfig]) {
+                    this.currentClaudeConfig = savedCurrentClaudeConfig;
+                }
+            }
             if (!this.currentClaudeConfig) {
                 const claudeConfigNames = Object.keys(this.claudeConfigs || {});
                 if (claudeConfigNames.length > 0) {
                     this.currentClaudeConfig = claudeConfigNames[0];
-                    const initialClaudeConfig = this.claudeConfigs[this.currentClaudeConfig];
-                    this.currentClaudeModel = initialClaudeConfig && initialClaudeConfig.model ? initialClaudeConfig.model : '';
                 }
+            }
+            if (this.currentClaudeConfig && !this.currentClaudeModel) {
+                const initialClaudeConfig = this.claudeConfigs[this.currentClaudeConfig];
+                this.currentClaudeModel = initialClaudeConfig && initialClaudeConfig.model ? initialClaudeConfig.model : '';
             }
             const normalizeOpenclawConfigs = (configs) => {
                 const source = configs && typeof configs === 'object' && !Array.isArray(configs)

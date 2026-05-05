@@ -4,6 +4,7 @@ export function createClaudeConfigMethods(options = {}) {
     return {
         switchClaudeConfig(name) {
             this.currentClaudeConfig = name;
+            try { localStorage.setItem('currentClaudeConfig', name || ''); } catch (_) {}
             this.refreshClaudeModelContext();
         },
 
@@ -37,6 +38,9 @@ export function createClaudeConfigMethods(options = {}) {
 
         saveClaudeConfigs() {
             localStorage.setItem('claudeConfigs', JSON.stringify(this.claudeConfigs));
+            if (this.currentClaudeConfig) {
+                try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
+            }
         },
 
         openEditConfigModal(name) {
@@ -143,6 +147,7 @@ export function createClaudeConfigMethods(options = {}) {
 
         async applyClaudeConfig(name) {
             this.currentClaudeConfig = name;
+            try { localStorage.setItem('currentClaudeConfig', name || ''); } catch (_) {}
             this.refreshClaudeModelContext();
             const config = this.claudeConfigs[name];
 

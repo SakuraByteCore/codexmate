@@ -315,6 +315,7 @@ export function createStartupClaudeMethods(options = {}) {
                     if (matchName) {
                         if (this.currentClaudeConfig !== matchName) {
                             this.currentClaudeConfig = matchName;
+                            try { localStorage.setItem('currentClaudeConfig', matchName); } catch (_) {}
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         return;
@@ -323,6 +324,7 @@ export function createStartupClaudeMethods(options = {}) {
                     if (importedName) {
                         if (this.currentClaudeConfig !== importedName) {
                             this.currentClaudeConfig = importedName;
+                            try { localStorage.setItem('currentClaudeConfig', importedName); } catch (_) {}
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         if (!silent) {
@@ -338,12 +340,14 @@ export function createStartupClaudeMethods(options = {}) {
                             : (configNames[0] || '');
                         if (!fallback) {
                             this.currentClaudeConfig = '';
+                            try { localStorage.setItem('currentClaudeConfig', ''); } catch (_) {}
                             this.currentClaudeModel = '';
                             this.resetClaudeModelsState();
                             return;
                         }
                         if (this.currentClaudeConfig !== fallback) {
                             this.currentClaudeConfig = fallback;
+                            try { localStorage.setItem('currentClaudeConfig', fallback); } catch (_) {}
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                     }
