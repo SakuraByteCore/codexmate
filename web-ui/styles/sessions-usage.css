@@ -1004,19 +1004,19 @@
 }
 
 .hourly-heatmap-cell.level-1 {
-    background: #9be9a8;
+    background: var(--color-heatmap-1);
 }
 
 .hourly-heatmap-cell.level-2 {
-    background: #40c463;
+    background: var(--color-heatmap-2);
 }
 
 .hourly-heatmap-cell.level-3 {
-    background: #30a14e;
+    background: var(--color-heatmap-3);
 }
 
 .hourly-heatmap-cell.level-4 {
-    background: #216e39;
+    background: var(--color-heatmap-4);
 }
 
 .hourly-heatmap-legend {
