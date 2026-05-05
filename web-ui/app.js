@@ -112,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 _pendingCodexApplyOptions: null,
                 agentsContent: '',
                 agentsPath: '',
-                agentsPath: '',
                 agentsExists: false,
                 agentsLineEnding: '\n',
                 agentsLoading: false,

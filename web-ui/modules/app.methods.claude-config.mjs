@@ -37,7 +37,7 @@ export function createClaudeConfigMethods(options = {}) {
         },
 
         saveClaudeConfigs() {
-            localStorage.setItem('claudeConfigs', JSON.stringify(this.claudeConfigs));
+            try { localStorage.setItem('claudeConfigs', JSON.stringify(this.claudeConfigs)); } catch (_) {}
             if (this.currentClaudeConfig) {
                 try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
             }

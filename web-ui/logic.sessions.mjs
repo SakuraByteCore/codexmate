@@ -352,7 +352,7 @@ export function buildUsageHourlyHeatmap(sessions = [], options = {}) {
         range,
         grid,
         maxSessionCount: Math.max(1, maxSessionCount),
-        weekdayLabels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        weekdayKeys: [0, 1, 2, 3, 4, 5, 6],
         hourLabels: Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'))
     };
 }

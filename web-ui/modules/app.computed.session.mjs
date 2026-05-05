@@ -588,13 +588,13 @@ export function createSessionComputed() {
             const result = buildUsageHourlyHeatmap(sessions, { range: this.sessionsUsageTimeRange });
             const t = typeof this.t === 'function' ? this.t : null;
             const lang = typeof this.lang === 'string' ? this.lang.trim().toLowerCase() : '';
-            const weekdayLabels = lang === 'en'
-                ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-                : result.weekdayLabels;
-            const max = result.maxSessionCount;
+            const weekdayLabelsZh = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            const weekdayLabelsEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const weekdayLabels = lang === 'en' ? weekdayLabelsEn : weekdayLabelsZh;
+            const max = Math.max(1, result.maxSessionCount);
             const grid = Array.isArray(result.grid) ? result.grid : [];
             const rows = grid.map((cells, dayIndex) => ({
-                weekday: weekdayLabels[dayIndex],
+                weekday: weekdayLabels[dayIndex] || '',
                 cells: cells.map((cell, hourIndex) => {
                     const ratio = cell.sessionCount > 0 ? (cell.sessionCount / max) : 0;
                     const level = cell.sessionCount <= 0
@@ -609,7 +609,7 @@ export function createSessionComputed() {
                             messages: cell.messageCount,
                             tokens: (cell.tokenTotal || 0).toLocaleString('en-US')
                         })
-                        : `${weekdayLabels[dayIndex]} ${hourLabel}:00 · ${cell.sessionCount} sessions · ${cell.messageCount} messages · ${cell.tokenTotal} tokens`;
+                        : `${weekdayLabels[dayIndex] || ''} ${hourLabel}:00 · ${cell.sessionCount} sessions · ${cell.messageCount} messages · ${(cell.tokenTotal || 0).toLocaleString('en-US')} tokens`;
                     return {
                         hour: hourIndex,
                         hourLabel,

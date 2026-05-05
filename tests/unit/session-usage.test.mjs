@@ -119,7 +119,7 @@ test('buildUsageHourlyHeatmap produces 7x24 grid with correct aggregation', () =
     assert.strictEqual(result.range, '7d');
     assert.strictEqual(result.grid.length, 7);
     assert.strictEqual(result.grid[0].length, 24);
-    assert.strictEqual(result.weekdayLabels.length, 7);
+    assert.strictEqual(result.weekdayKeys.length, 7);
     assert.strictEqual(result.hourLabels.length, 24);
 
     const april6Dow = (new Date(Date.UTC(2026, 3, 6)).getUTCDay() + 6) % 7;
