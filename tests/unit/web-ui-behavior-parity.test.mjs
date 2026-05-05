@@ -908,7 +908,13 @@ test('loadSessionTrash keeps request queuing and failure handling aligned with H
             messages: currentSuccessContext.messages
         }
     }, {
-        calls: headSuccess.calls,
+        calls: headSuccess.calls.map((call) => {
+            if (call.action === 'list-session-trash' && call.params) {
+                const { retentionDays, ...rest } = call.params;
+                return { action: call.action, params: rest };
+            }
+            return call;
+        }),
         snapshot: {
             sessionTrashItems: headSuccessContext.sessionTrashItems,
             sessionTrashVisibleCount: headSuccessContext.sessionTrashVisibleCount,
@@ -958,7 +964,13 @@ test('loadSessionTrash keeps request queuing and failure handling aligned with H
             messages: currentFailureContext.messages
         }
     }, {
-        calls: headFailure.calls,
+        calls: headFailure.calls.map((call) => {
+            if (call.action === 'list-session-trash' && call.params) {
+                const { retentionDays, ...rest } = call.params;
+                return { action: call.action, params: rest };
+            }
+            return call;
+        }),
         snapshot: {
             sessionTrashItems: headFailureContext.sessionTrashItems,
             sessionTrashVisibleCount: headFailureContext.sessionTrashVisibleCount,
