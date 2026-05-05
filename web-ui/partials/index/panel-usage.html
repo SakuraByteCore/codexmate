@@ -96,9 +96,8 @@
                                     <div class="usage-daydetail-controls">
                                         <select
                                             class="usage-daydetail-select"
-                                            :value="sessionsUsageSelectedDayKey || ''"
+                                            :value="sessionsUsageSelectedDayKey || (sessionUsageDailyTableRows[0] && sessionUsageDailyTableRows[0].key) || ''"
                                             @change="selectSessionsUsageDay(($event.target && $event.target.value) ? String($event.target.value) : '')">
-                                            <option value="">{{ t('usage.dayDetail.pick') }}</option>
                                             <option v-for="day in sessionUsageDailyTableRows" :key="'day-select-' + day.key" :value="day.key">{{ day.key }}</option>
                                         </select>
                                         <button

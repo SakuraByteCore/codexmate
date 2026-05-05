@@ -849,6 +849,9 @@ export function createSessionBrowserMethods(options = {}) {
                 if (loadSucceeded) {
                     this.sessionsUsageLoadedOnce = true;
                     this.sessionsUsageLoadedLimit = limit;
+                    if (!this.sessionsUsageSelectedDayKey && Array.isArray(this.sessionUsageDailyTableRows) && this.sessionUsageDailyTableRows.length > 0) {
+                        this.sessionsUsageSelectedDayKey = this.sessionUsageDailyTableRows[0].key;
+                    }
                 }
             }
         },
