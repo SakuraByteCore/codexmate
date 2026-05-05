@@ -153,7 +153,8 @@ function createSessionTrashContext(methods) {
         sessionTrashListRequestToken: 0,
         sessionTrashRestoring: {},
         sessionTrashPurging: {},
-        sessionTrashClearing: false
+        sessionTrashClearing: false,
+        sessionTrashRetentionDays: 30
     };
     for (const name of [
         'getSessionTrashActionKey',
@@ -329,6 +330,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'openclawAuthProfilesByProvider',
         'openclawPendingAuthProfileUpdates',
         'sessionTrashEnabled',
+        'sessionTrashRetentionDays',
         'shareCommandPrefix',
         'sessionsUsageLoadedLimit',
         'taskOrchestrationTabEnabled',
@@ -342,6 +344,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionListInitialBatchSize',
         'sessionListLoadStep',
         'sessionTrashEnabled',
+        'sessionTrashRetentionDays',
         'shareCommandPrefix',
         'sessionsUsageError',
         'sessionsUsageList',
@@ -506,6 +509,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'clearSessionFilterChip',
         'isDerivedSession',
         'isDerivedSessionId',
+        'normalizeSessionTrashRetentionDays',
+        'setSessionTrashRetentionDays',
         'resetConfigTemplateDiffState',
         'onConfigTemplateContentInput',
         'buildConfigTemplateDiffFingerprint',
@@ -884,8 +889,15 @@ test('loadSessionTrash keeps request queuing and failure handling aligned with H
         };
     }, () => headMethods.loadSessionTrash.call(headSuccessContext, { forceRefresh: true }));
 
+    const normalizedCurrentCalls = currentSuccess.calls.map((call) => {
+        if (call.action === 'list-session-trash' && call.params) {
+            const { retentionDays, ...rest } = call.params;
+            return { action: call.action, params: rest };
+        }
+        return call;
+    });
     assert.deepStrictEqual({
-        calls: currentSuccess.calls,
+        calls: normalizedCurrentCalls,
         snapshot: {
             sessionTrashItems: currentSuccessContext.sessionTrashItems,
             sessionTrashVisibleCount: currentSuccessContext.sessionTrashVisibleCount,
@@ -928,8 +940,15 @@ test('loadSessionTrash keeps request queuing and failure handling aligned with H
         };
     }, () => headMethods.loadSessionTrash.call(headFailureContext, { forceRefresh: false }));
 
+    const normalizedFailureCalls = currentFailure.calls.map((call) => {
+        if (call.action === 'list-session-trash' && call.params) {
+            const { retentionDays, ...rest } = call.params;
+            return { action: call.action, params: rest };
+        }
+        return call;
+    });
     assert.deepStrictEqual({
-        calls: currentFailure.calls,
+        calls: normalizedFailureCalls,
         snapshot: {
             sessionTrashItems: currentFailureContext.sessionTrashItems,
             sessionTrashVisibleCount: currentFailureContext.sessionTrashVisibleCount,

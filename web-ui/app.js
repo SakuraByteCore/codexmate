@@ -362,6 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionTrashRestoring: {},
                 sessionTrashPurging: {},
                 sessionTrashClearing: false,
+                sessionTrashRetentionDays: 30,
                 claudeImportLoading: false,
                 codexImportLoading: false,
                 codexAuthProfiles: [],
@@ -478,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.restoreSessionPinnedMap();
             this.shareCommandPrefix = this.normalizeShareCommandPrefix(localStorage.getItem('codexmateShareCommandPrefix'));
             this.sessionTrashEnabled = this.normalizeSessionTrashEnabled(localStorage.getItem('codexmateSessionTrashEnabled'));
+            this.sessionTrashRetentionDays = this.normalizeSessionTrashRetentionDays(localStorage.getItem('codexmateSessionTrashRetentionDays'));
             this.configTemplateDiffConfirmEnabled = loadConfigTemplateDiffConfirmEnabledFromStorage(localStorage);
             window.addEventListener('resize', this.onWindowResize);
             window.addEventListener('keydown', this.handleGlobalKeydown);

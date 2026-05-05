@@ -141,6 +141,22 @@
                                     </div>
                                 </section>
 
+                                <section class="settings-card settings-card--wide" :aria-label="t('settings.trash.retention')">
+                                    <div class="settings-card-header">
+                                        <div class="settings-card-title">{{ t('settings.trash.retention') }}</div>
+                                        <div class="settings-card-meta">{{ t('settings.trash.retentionMeta') }}</div>
+                                    </div>
+                                    <div class="settings-card-body">
+                                        <label class="settings-retention-row">
+                                            <span>{{ t('settings.trash.retentionLabel') }}</span>
+                                            <input type="number" min="1" max="365" :value="sessionTrashRetentionDays" @change="setSessionTrashRetentionDays(Number($event.target.value))" class="settings-retention-input" />
+                                        </label>
+                                        <div class="settings-card-hint">
+                                            {{ t('settings.trash.retentionHint') }}
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <section class="settings-card settings-card--wide" :aria-label="t('settings.trash.title')">
                                     <div class="settings-card-header settings-card-header-row">
                                         <div>

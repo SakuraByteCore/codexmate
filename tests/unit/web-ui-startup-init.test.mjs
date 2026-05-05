@@ -31,6 +31,11 @@ test('mounted defers initial loadAll until after window load and a short timer',
         normalizeSessionTrashEnabled(value) {
             return value !== '0' && value !== 'false';
         },
+        normalizeSessionTrashRetentionDays(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric < 1) return 30;
+            return Math.min(365, Math.max(1, Math.floor(numeric)));
+        },
         onWindowResize() {},
         handleGlobalKeydown() {},
         handleBeforeUnload() {},
@@ -131,6 +136,11 @@ test('mounted skips auxiliary startup requests when loadAll fails', async () => 
         },
         normalizeSessionTrashEnabled(value) {
             return value !== '0' && value !== 'false';
+        },
+        normalizeSessionTrashRetentionDays(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric < 1) return 30;
+            return Math.min(365, Math.max(1, Math.floor(numeric)));
         },
         onWindowResize() {},
         handleGlobalKeydown() {},

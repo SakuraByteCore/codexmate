@@ -222,6 +222,7 @@ const DEFAULT_MODELS = ['gpt-5.3-codex', 'gpt-5.1-codex-max', 'gpt-4-turbo', 'gp
 const SPEED_TEST_TIMEOUT_MS = 8000;
 const MAX_SESSION_LIST_SIZE = 300;
 const MAX_SESSION_TRASH_LIST_SIZE = 500;
+const DEFAULT_SESSION_TRASH_RETENTION_DAYS = 30;
 const MAX_EXPORT_MESSAGES = 1000;
 const DEFAULT_SESSION_DETAIL_MESSAGES = 300;
 const MAX_SESSION_DETAIL_MESSAGES = 1000;
@@ -5601,6 +5602,35 @@ function readSessionTrashEntries(options = {}) {
     return normalizedEntries;
 }
 
+function purgeExpiredSessionTrashEntries(retentionDays) {
+    const days = Number.isFinite(Number(retentionDays)) && Number(retentionDays) > 0
+        ? Math.floor(Number(retentionDays))
+        : DEFAULT_SESSION_TRASH_RETENTION_DAYS;
+    const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
+    const entries = readSessionTrashEntries({ cleanup: false });
+    if (entries.length === 0) {
+        return { purged: 0 };
+    }
+    const remaining = [];
+    let purgedCount = 0;
+    for (const entry of entries) {
+        const deletedAtMs = Date.parse(entry.deletedAt || entry.updatedAt || '') || 0;
+        if (deletedAtMs > 0 && deletedAtMs < cutoffMs) {
+            const trashFilePath = resolveSessionTrashFilePath(entry);
+            if (trashFilePath) {
+                try { fs.unlinkSync(trashFilePath); } catch (_) {}
+            }
+            purgedCount += 1;
+        } else {
+            remaining.push(entry);
+        }
+    }
+    if (purgedCount > 0) {
+        writeSessionTrashEntries(remaining);
+    }
+    return { purged: purgedCount };
+}
+
 function buildSessionTrashEntry(summary, options = {}) {
     const source = options.source === 'claude' ? 'claude' : 'codex';
     const sessionId = options.sessionId || summary.sessionId || path.basename(options.originalFilePath || summary.filePath || '', '.jsonl');
@@ -5812,6 +5842,9 @@ async function listSessionTrashItems(params = {}) {
     const limit = Number.isFinite(rawLimit)
         ? Math.max(1, Math.min(rawLimit, MAX_SESSION_TRASH_LIST_SIZE))
         : 200;
+    if (params.autoPurge !== false) {
+        purgeExpiredSessionTrashEntries(params.retentionDays);
+    }
     const allEntries = readSessionTrashEntries();
     let items = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy'
         ? allEntries.filter((entry) => entry.source === source)

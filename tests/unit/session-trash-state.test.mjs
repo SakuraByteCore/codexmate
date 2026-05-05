@@ -677,6 +677,7 @@ test('loadSessionTrash and loadSessionTrashCount keep independent stale-response
         sessionTrashLoading: false,
         sessionTrashCountPendingOptions: null,
         sessionTrashPendingOptions: null,
+        sessionTrashRetentionDays: 30,
         issueSessionTrashCountRequestToken() {
             this.sessionTrashCountRequestToken += 1;
             return this.sessionTrashCountRequestToken;
@@ -785,6 +786,7 @@ test('loadSessionTrash marks latest failures as retryable and clears the failure
         sessionTrashLastLoadFailed: false,
         sessionTrashListRequestToken: 0,
         sessionTrashLoading: false,
+        sessionTrashRetentionDays: 30,
         issueSessionTrashListRequestToken() {
             this.sessionTrashListRequestToken += 1;
             return this.sessionTrashListRequestToken;
@@ -836,6 +838,7 @@ test('listSessionTrashItems rewrites repaired entries onto the latest trash inde
     let writtenEntries = null;
     const listSessionTrashItems = instantiateFunction(listSessionTrashItemsSource, 'listSessionTrashItems', {
         MAX_SESSION_TRASH_LIST_SIZE: 500,
+        purgeExpiredSessionTrashEntries() { return { purged: 0 }; },
         readSessionTrashEntries(options = {}) {
             readCount += 1;
             if (readCount === 1) {
@@ -2157,6 +2160,7 @@ test('loadSessionTrash replays the latest queued refresh after an in-flight requ
         sessionTrashListRequestToken: 0,
         sessionTrashLoading: false,
         sessionTrashPendingOptions: null,
+        sessionTrashRetentionDays: 30,
         issueSessionTrashListRequestToken() {
             this.sessionTrashListRequestToken += 1;
             return this.sessionTrashListRequestToken;
@@ -2199,7 +2203,7 @@ test('loadSessionTrash replays the latest queued refresh after an in-flight requ
     assert.strictEqual(apiCalls.length, 2);
     assert.deepStrictEqual(apiCalls[1], {
         action: 'list-session-trash',
-        params: { limit: 500, forceRefresh: true }
+        params: { limit: 500, forceRefresh: true, retentionDays: 30 }
     });
 
     pendingResponses[1]({
@@ -2268,4 +2272,219 @@ test('session trash restore and purge share the same per-item busy guard', async
 
     assert.deepStrictEqual(apiCalls, []);
     assert.strictEqual(confirmCalls, 0);
+});
+
+test('purgeExpiredSessionTrashEntries removes entries older than retention days', () => {
+    const purgeExpiredSessionTrashEntriesSource = extractFunctionBySignature(
+        cliSource,
+        'function purgeExpiredSessionTrashEntries(retentionDays) {',
+        'purgeExpiredSessionTrashEntries'
+    );
+    let writtenEntries = null;
+    let unlinkCalls = [];
+    const now = Date.now();
+    const purgeExpiredSessionTrashEntries = instantiateFunction(
+        purgeExpiredSessionTrashEntriesSource,
+        'purgeExpiredSessionTrashEntries',
+        {
+            DEFAULT_SESSION_TRASH_RETENTION_DAYS: 30,
+            readSessionTrashEntries() {
+                return [
+                    { trashId: 'fresh', deletedAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString() },
+                    { trashId: 'expired', deletedAt: new Date(now - 31 * 24 * 60 * 60 * 1000).toISOString() },
+                    { trashId: 'expired2', deletedAt: new Date(now - 60 * 24 * 60 * 60 * 1000).toISOString() }
+                ];
+            },
+            resolveSessionTrashFilePath(entry) {
+                return `/tmp/${entry.trashId}.jsonl`;
+            },
+            writeSessionTrashEntries(entries) {
+                writtenEntries = entries;
+            },
+            fs: {
+                unlinkSync(filePath) {
+                    unlinkCalls.push(filePath);
+                }
+            }
+        }
+    );
+
+    const result = purgeExpiredSessionTrashEntries(30);
+
+    assert.strictEqual(result.purged, 2);
+    assert.deepStrictEqual(unlinkCalls, ['/tmp/expired.jsonl', '/tmp/expired2.jsonl']);
+    assert(writtenEntries, 'remaining entries should be written');
+    assert.deepStrictEqual(writtenEntries.map((e) => e.trashId), ['fresh']);
+});
+
+test('purgeExpiredSessionTrashEntries uses default retention when days is invalid', () => {
+    const purgeExpiredSessionTrashEntriesSource = extractFunctionBySignature(
+        cliSource,
+        'function purgeExpiredSessionTrashEntries(retentionDays) {',
+        'purgeExpiredSessionTrashEntries'
+    );
+    let unlinkCalls = [];
+    const now = Date.now();
+    instantiateFunction(
+        purgeExpiredSessionTrashEntriesSource,
+        'purgeExpiredSessionTrashEntries',
+        {
+            DEFAULT_SESSION_TRASH_RETENTION_DAYS: 30,
+            readSessionTrashEntries() {
+                return [
+                    { trashId: 'expired', deletedAt: new Date(now - 31 * 24 * 60 * 60 * 1000).toISOString() }
+                ];
+            },
+            resolveSessionTrashFilePath() {
+                return '/tmp/expired.jsonl';
+            },
+            writeSessionTrashEntries() {},
+            fs: {
+                unlinkSync(filePath) { unlinkCalls.push(filePath); }
+            }
+        }
+    )(undefined);
+
+    assert.strictEqual(unlinkCalls.length, 1);
+});
+
+test('purgeExpiredSessionTrashEntries returns 0 when trash is empty', () => {
+    const purgeExpiredSessionTrashEntriesSource = extractFunctionBySignature(
+        cliSource,
+        'function purgeExpiredSessionTrashEntries(retentionDays) {',
+        'purgeExpiredSessionTrashEntries'
+    );
+    const result = instantiateFunction(
+        purgeExpiredSessionTrashEntriesSource,
+        'purgeExpiredSessionTrashEntries',
+        {
+            DEFAULT_SESSION_TRASH_RETENTION_DAYS: 30,
+            readSessionTrashEntries() { return []; },
+            resolveSessionTrashFilePath() { return ''; },
+            writeSessionTrashEntries() { throw new Error('should not write'); },
+            fs: { unlinkSync() { throw new Error('should not unlink'); } }
+        }
+    )(30);
+
+    assert.deepStrictEqual(result, { purged: 0 });
+});
+
+test('normalizeSessionTrashRetentionDays clamps to 1-365 range', () => {
+    const normalizeSessionTrashRetentionDaysSource = extractMethodAsFunction(
+        appSource,
+        'normalizeSessionTrashRetentionDays'
+    );
+    const normalize = instantiateFunction(
+        normalizeSessionTrashRetentionDaysSource,
+        'normalizeSessionTrashRetentionDays'
+    );
+
+    assert.strictEqual(normalize(30), 30);
+    assert.strictEqual(normalize(0), 30);
+    assert.strictEqual(normalize(-5), 30);
+    assert.strictEqual(normalize('abc'), 30);
+    assert.strictEqual(normalize(1), 1);
+    assert.strictEqual(normalize(365), 365);
+    assert.strictEqual(normalize(366), 365);
+    assert.strictEqual(normalize(999), 365);
+    assert.strictEqual(normalize(15.7), 15);
+});
+
+test('setSessionTrashRetentionDays persists normalized value to localStorage', () => {
+    let storedKey = null;
+    let storedValue = null;
+    const setSessionTrashRetentionDaysFn = instantiateFunction(
+        extractMethodAsFunction(appSource, 'setSessionTrashRetentionDays'),
+        'setSessionTrashRetentionDays',
+        {
+            localStorage: {
+                setItem(key, value) {
+                    storedKey = key;
+                    storedValue = value;
+                }
+            }
+        }
+    );
+    const context = {
+        sessionTrashRetentionDays: 30,
+        normalizeSessionTrashRetentionDays(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric < 1) return 30;
+            return Math.min(365, Math.max(1, Math.floor(numeric)));
+        }
+    };
+
+    setSessionTrashRetentionDaysFn.call(context, 7);
+
+    assert.strictEqual(context.sessionTrashRetentionDays, 7);
+    assert.strictEqual(storedKey, 'codexmateSessionTrashRetentionDays');
+    assert.strictEqual(storedValue, '7');
+});
+
+test('listSessionTrashItems calls auto-purge before listing', async () => {
+    const listSessionTrashItemsSource = extractFunctionBySignature(
+        cliSource,
+        'async function listSessionTrashItems(params = {}) {',
+        'listSessionTrashItems'
+    );
+    let purgeCalledWith = null;
+    const listSessionTrashItems = instantiateFunction(listSessionTrashItemsSource, 'listSessionTrashItems', {
+        MAX_SESSION_TRASH_LIST_SIZE: 500,
+        purgeExpiredSessionTrashEntries(days) {
+            purgeCalledWith = days;
+            return { purged: 0 };
+        },
+        readSessionTrashEntries() {
+            return [{ trashId: 'trash-1', source: 'codex', deletedAt: new Date().toISOString() }];
+        },
+        hydrateSessionTrashEntries: async (entries) => entries,
+        writeSessionTrashEntries() {},
+        resolveSessionTrashFilePath(entry) {
+            return `/tmp/${entry.trashId}.jsonl`;
+        }
+    });
+
+    await listSessionTrashItems({ retentionDays: 7 });
+
+    assert.strictEqual(purgeCalledWith, 7);
+});
+
+test('listSessionTrashItems skips auto-purge when autoPurge is false', async () => {
+    const listSessionTrashItemsSource = extractFunctionBySignature(
+        cliSource,
+        'async function listSessionTrashItems(params = {}) {',
+        'listSessionTrashItems'
+    );
+    let purgeCalled = false;
+    const listSessionTrashItems = instantiateFunction(listSessionTrashItemsSource, 'listSessionTrashItems', {
+        MAX_SESSION_TRASH_LIST_SIZE: 500,
+        purgeExpiredSessionTrashEntries() {
+            purgeCalled = true;
+            return { purged: 0 };
+        },
+        readSessionTrashEntries() { return []; },
+        hydrateSessionTrashEntries: async (entries) => entries,
+        writeSessionTrashEntries() {},
+        resolveSessionTrashFilePath() { return ''; }
+    });
+
+    await listSessionTrashItems({ autoPurge: false });
+
+    assert.strictEqual(purgeCalled, false);
+});
+
+test('retention days i18n keys exist in both locales', () => {
+    const zhRetention = indexHtmlSource.includes("t('settings.trash.retention')") ||
+        indexHtmlSource.includes('t(\'settings.trash.retention\')');
+    assert(zhRetention, 'retention section should reference i18n key');
+
+    assert(cliSource.includes('DEFAULT_SESSION_TRASH_RETENTION_DAYS'), 'backend should define default retention constant');
+    assert(cliSource.includes('purgeExpiredSessionTrashEntries'), 'backend should define auto-purge function');
+});
+
+test('retention input uses number type with min/max constraints', () => {
+    const retentionInput = indexHtmlSource.match(/type="number"[^>]*class="settings-retention-input"/);
+    assert(retentionInput, 'retention input should exist with correct class');
+    assert.match(retentionInput[0], /min="1"/);
+    assert.match(retentionInput[0], /max="365"/);
 });

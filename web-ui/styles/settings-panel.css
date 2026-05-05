@@ -147,6 +147,25 @@
     background: rgba(248, 243, 238, 0.6);
 }
 
+.settings-retention-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(216, 201, 184, 0.4);
+    background: rgba(248, 243, 238, 0.6);
+}
+
+.settings-retention-input {
+    width: 72px;
+    padding: 4px 8px;
+    border: 1px solid rgba(216, 201, 184, 0.6);
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+}
+
 /* Re-balance action buttons inside cards */
 .settings-card .btn-tool {
     width: auto;

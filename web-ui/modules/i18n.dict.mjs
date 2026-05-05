@@ -949,6 +949,10 @@ const DICT = Object.freeze({
         'settings.trash.workspace': '工作区',
         'settings.trash.originalFile': '原文件',
         'settings.trash.loadMore': '加载更多（剩余 {count} 项）',
+        'settings.trash.retention': '自动清理',
+        'settings.trash.retentionMeta': '超过保留天数的回收站记录将自动清除',
+        'settings.trash.retentionLabel': '保留天数',
+        'settings.trash.retentionHint': '范围 1-365 天，默认 30 天。每次加载回收站时自动清理过期记录。',
 
         'settings.templateConfirm.title': '配置模板二次确认',
         'settings.templateConfirm.meta': '降低误写入风险',
@@ -2008,6 +2012,10 @@ const DICT = Object.freeze({
         'settings.trash.workspace': 'Workspace',
         'settings.trash.originalFile': 'Original file',
         'settings.trash.loadMore': 'Load more (remaining {count})',
+        'settings.trash.retention': 'Auto-purge',
+        'settings.trash.retentionMeta': 'Trash entries older than retention days are auto-purged',
+        'settings.trash.retentionLabel': 'Retention days',
+        'settings.trash.retentionHint': 'Range 1-365 days, default 30. Expired entries are purged on each trash load.',
 
         'settings.templateConfirm.title': 'Template apply confirmation',
         'settings.templateConfirm.meta': 'Reduce accidental writes',

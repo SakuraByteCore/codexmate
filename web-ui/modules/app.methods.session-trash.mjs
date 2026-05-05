@@ -270,6 +270,20 @@ export function createSessionTrashMethods(options = {}) {
             }
         },
 
+        normalizeSessionTrashRetentionDays(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric < 1) {
+                return 30;
+            }
+            return Math.min(365, Math.max(1, Math.floor(numeric)));
+        },
+
+        setSessionTrashRetentionDays(days) {
+            const normalized = this.normalizeSessionTrashRetentionDays(days);
+            this.sessionTrashRetentionDays = normalized;
+            try { localStorage.setItem('codexmateSessionTrashRetentionDays', String(normalized)); } catch (_) {}
+        },
+
         getSessionTrashActionKey(item) {
             return item && typeof item.trashId === 'string' ? item.trashId : '';
         },
@@ -294,7 +308,8 @@ export function createSessionTrashMethods(options = {}) {
             try {
                 const res = await api('list-session-trash', {
                     limit: sessionTrashListLimit,
-                    forceRefresh: !!options.forceRefresh
+                    forceRefresh: !!options.forceRefresh,
+                    retentionDays: this.sessionTrashRetentionDays
                 });
                 if (!this.isLatestSessionTrashListRequestToken(requestToken)) {
                     return;
