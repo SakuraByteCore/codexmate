@@ -615,6 +615,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptComposerMissingVars',
         'sessionUsageDaily',
         'sessionUsageHeatmap',
+        'sessionUsageHourlyHeatmap',
         'sessionUsageDailyTableRows',
         'sessionsUsageSelectedDaySummary',
         'usageCurrentSessionStats',

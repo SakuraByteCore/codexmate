@@ -2,6 +2,7 @@ import {
     buildSessionTimelineNodes,
     buildUsageChartGroups,
     buildUsageHeatmap,
+    buildUsageHourlyHeatmap,
     isSessionQueryEnabled
 } from '../logic.mjs';
 import { SESSION_TRASH_PAGE_SIZE } from './app.constants.mjs';
@@ -578,6 +579,53 @@ export function createSessionComputed() {
                 ...heatmap,
                 weeks,
                 weekdayAxis
+            };
+        },
+        sessionUsageHourlyHeatmap() {
+            const sessions = this.sessionUsageCharts && Array.isArray(this.sessionUsageCharts.filteredSessions)
+                ? this.sessionUsageCharts.filteredSessions
+                : this.sessionsUsageList;
+            const result = buildUsageHourlyHeatmap(sessions, { range: this.sessionsUsageTimeRange });
+            const t = typeof this.t === 'function' ? this.t : null;
+            const lang = typeof this.lang === 'string' ? this.lang.trim().toLowerCase() : '';
+            const weekdayLabels = lang === 'en'
+                ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                : result.weekdayLabels;
+            const max = result.maxSessionCount;
+            const grid = Array.isArray(result.grid) ? result.grid : [];
+            const rows = grid.map((cells, dayIndex) => ({
+                weekday: weekdayLabels[dayIndex],
+                cells: cells.map((cell, hourIndex) => {
+                    const ratio = cell.sessionCount > 0 ? (cell.sessionCount / max) : 0;
+                    const level = cell.sessionCount <= 0
+                        ? 0
+                        : (ratio <= 0.25 ? 1 : (ratio <= 0.5 ? 2 : (ratio <= 0.75 ? 3 : 4)));
+                    const hourLabel = String(hourIndex).padStart(2, '0');
+                    const tooltipText = t
+                        ? t('usage.hourlyHeatmap.tooltip', {
+                            weekday: weekdayLabels[dayIndex],
+                            hour: hourLabel,
+                            sessions: cell.sessionCount,
+                            messages: cell.messageCount,
+                            tokens: (cell.tokenTotal || 0).toLocaleString('en-US')
+                        })
+                        : `${weekdayLabels[dayIndex]} ${hourLabel}:00 · ${cell.sessionCount} sessions · ${cell.messageCount} messages · ${cell.tokenTotal} tokens`;
+                    return {
+                        hour: hourIndex,
+                        hourLabel,
+                        sessionCount: cell.sessionCount,
+                        messageCount: cell.messageCount,
+                        tokenTotal: cell.tokenTotal,
+                        level,
+                        tooltip: tooltipText
+                    };
+                })
+            }));
+            return {
+                range: result.range,
+                rows,
+                hourLabels: result.hourLabels,
+                maxSessionCount: result.maxSessionCount
             };
         },
         sessionUsageSummaryCards() {

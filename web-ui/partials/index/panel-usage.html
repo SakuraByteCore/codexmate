@@ -288,6 +288,36 @@
                                 </div>
                             </section>
 
+                            <section class="usage-card usage-card-hourly-heatmap">
+                                <div class="usage-card-title">{{ t('usage.hourlyHeatmap.title') }}</div>
+                                <div class="usage-card-subtitle">{{ t('usage.hourlyHeatmap.subtitle') }}</div>
+                                <div class="hourly-heatmap-wrapper">
+                                    <div class="hourly-heatmap-header">
+                                        <div class="hourly-heatmap-corner"></div>
+                                        <div v-for="h in sessionUsageHourlyHeatmap.hourLabels" :key="'hh-' + h" class="hourly-heatmap-hour-label">{{ h }}</div>
+                                    </div>
+                                    <div v-for="(row, dayIndex) in sessionUsageHourlyHeatmap.rows" :key="'hd-' + dayIndex" class="hourly-heatmap-row">
+                                        <div class="hourly-heatmap-weekday-label">{{ row.weekday }}</div>
+                                        <div
+                                            v-for="(cell, hourIndex) in row.cells"
+                                            :key="'hc-' + dayIndex + '-' + hourIndex"
+                                            :class="['hourly-heatmap-cell', 'level-' + cell.level]"
+                                            :title="cell.tooltip"
+                                            :aria-label="cell.tooltip">
+                                        </div>
+                                    </div>
+                                    <div class="hourly-heatmap-legend">
+                                        <span class="hourly-heatmap-legend-label">{{ t('usage.hourlyHeatmap.legend.less') }}</span>
+                                        <span class="hourly-heatmap-cell level-0"></span>
+                                        <span class="hourly-heatmap-cell level-1"></span>
+                                        <span class="hourly-heatmap-cell level-2"></span>
+                                        <span class="hourly-heatmap-cell level-3"></span>
+                                        <span class="hourly-heatmap-cell level-4"></span>
+                                        <span class="hourly-heatmap-legend-label">{{ t('usage.hourlyHeatmap.legend.more') }}</span>
+                                    </div>
+                                </div>
+                            </section>
+
                             <section class="usage-card usage-card-top-paths">
                                 <div class="usage-card-title">{{ t('usage.paths.title') }}</div>
                                 <div v-if="!sessionUsageCharts.topPaths.length" class="usage-list-value">{{ t('usage.paths.empty') }}</div>

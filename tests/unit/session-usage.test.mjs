@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logic = await import(pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'logic.mjs')));
-const { buildUsageChartGroups, buildUsageHeatmap } = logic;
+const { buildUsageChartGroups, buildUsageHeatmap, buildUsageHourlyHeatmap } = logic;
 
 test('buildUsageChartGroups aggregates codex and claude sessions into day buckets', () => {
     const now = Date.UTC(2026, 3, 6, 12, 0, 0);
@@ -106,4 +106,48 @@ test('buildUsageHeatmap aligns to monday and aggregates sessions per day', () =>
     assert.ok(result.maxSessionCount >= 2);
     const hasDay = result.weeks.some((week) => Array.isArray(week.days) && week.days.some((cell) => cell && cell.dateKey === '2026-04-06' && cell.sessionCount === 2));
     assert.ok(hasDay);
+});
+
+test('buildUsageHourlyHeatmap produces 7x24 grid with correct aggregation', () => {
+    const now = Date.UTC(2026, 3, 6, 12, 0, 0);
+    const result = buildUsageHourlyHeatmap([
+        { source: 'codex', updatedAt: '2026-04-06T08:00:00.000Z', messageCount: 5, totalTokens: 120 },
+        { source: 'claude', updatedAt: '2026-04-06T08:30:00.000Z', messageCount: 7, totalTokens: 230 },
+        { source: 'codex', updatedAt: '2026-04-05T14:00:00.000Z', messageCount: 3, totalTokens: 90 }
+    ], { range: '7d', now });
+
+    assert.strictEqual(result.range, '7d');
+    assert.strictEqual(result.grid.length, 7);
+    assert.strictEqual(result.grid[0].length, 24);
+    assert.strictEqual(result.weekdayLabels.length, 7);
+    assert.strictEqual(result.hourLabels.length, 24);
+
+    const april6Dow = (new Date(Date.UTC(2026, 3, 6)).getUTCDay() + 6) % 7;
+    assert.strictEqual(result.grid[april6Dow][8].sessionCount, 2);
+    assert.strictEqual(result.grid[april6Dow][8].messageCount, 12);
+    assert.strictEqual(result.grid[april6Dow][8].tokenTotal, 350);
+    assert.ok(result.maxSessionCount >= 2);
+});
+
+test('buildUsageHourlyHeatmap ignores sessions outside range', () => {
+    const now = Date.UTC(2026, 3, 6, 12, 0, 0);
+    const result = buildUsageHourlyHeatmap([
+        { source: 'codex', updatedAt: '2026-04-06T08:00:00.000Z', messageCount: 5, totalTokens: 120 },
+        { source: 'codex', updatedAt: '2026-03-01T08:00:00.000Z', messageCount: 99, totalTokens: 999 }
+    ], { range: '7d', now });
+
+    let totalSessions = 0;
+    for (const row of result.grid) {
+        for (const cell of row) {
+            totalSessions += cell.sessionCount;
+        }
+    }
+    assert.strictEqual(totalSessions, 1);
+});
+
+test('buildUsageHourlyHeatmap returns empty grid for no sessions', () => {
+    const result = buildUsageHourlyHeatmap([], { range: '7d' });
+    assert.strictEqual(result.grid.length, 7);
+    assert.strictEqual(result.grid[0].length, 24);
+    assert.strictEqual(result.maxSessionCount, 1);
 });

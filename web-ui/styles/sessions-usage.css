@@ -943,3 +943,98 @@
         align-items: stretch;
     }
 }
+
+.usage-card-hourly-heatmap {
+    overflow-x: auto;
+}
+
+.hourly-heatmap-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+    min-width: 580px;
+}
+
+.hourly-heatmap-header {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+}
+
+.hourly-heatmap-corner {
+    width: 36px;
+    flex-shrink: 0;
+}
+
+.hourly-heatmap-hour-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 10px;
+    color: var(--color-text-muted);
+    text-align: center;
+    line-height: 14px;
+}
+
+.hourly-heatmap-row {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.hourly-heatmap-weekday-label {
+    width: 36px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-align: right;
+    padding-right: 4px;
+}
+
+.hourly-heatmap-cell {
+    flex: 1;
+    min-width: 0;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    cursor: default;
+}
+
+.hourly-heatmap-cell.level-0 {
+    background: var(--color-surface-alt);
+}
+
+.hourly-heatmap-cell.level-1 {
+    background: #9be9a8;
+}
+
+.hourly-heatmap-cell.level-2 {
+    background: #40c463;
+}
+
+.hourly-heatmap-cell.level-3 {
+    background: #30a14e;
+}
+
+.hourly-heatmap-cell.level-4 {
+    background: #216e39;
+}
+
+.hourly-heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: flex-end;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--color-text-muted);
+}
+
+.hourly-heatmap-legend .hourly-heatmap-cell {
+    width: 12px;
+    height: 12px;
+    aspect-ratio: auto;
+}
+
+.hourly-heatmap-legend-label {
+    margin: 0 2px;
+}

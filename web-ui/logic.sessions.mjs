@@ -301,6 +301,62 @@ export function buildUsageHeatmap(sessions = [], options = {}) {
     };
 }
 
+export function buildUsageHourlyHeatmap(sessions = [], options = {}) {
+    const list = Array.isArray(sessions) ? sessions : [];
+    const range = normalizeUsageRange(options.range);
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const todayStart = toUtcDayStartMs(now);
+
+    const normalized = [];
+    for (const session of list) {
+        if (!session || typeof session !== 'object') continue;
+        const source = normalizeSessionSource(session.source, '');
+        if (source !== 'codex' && source !== 'claude') continue;
+        const updatedAtMs = Date.parse(session.updatedAt || '');
+        if (!Number.isFinite(updatedAtMs)) continue;
+        const dayStart = toUtcDayStartMs(updatedAtMs);
+        if (range !== 'all') {
+            const rangeDays = range === '30d' ? 30 : 7;
+            const rangeStart = todayStart - ((rangeDays - 1) * dayMs);
+            if (dayStart < rangeStart || dayStart > todayStart) continue;
+        }
+        const stamp = new Date(updatedAtMs);
+        const weekday = (stamp.getUTCDay() + 6) % 7;
+        const hour = stamp.getUTCHours();
+        const messageCount = Number.isFinite(Number(session.messageCount))
+            ? Math.max(0, Math.floor(Number(session.messageCount)))
+            : 0;
+        const tokenTotal = readSessionTotalTokens(session);
+        normalized.push({ weekday, hour, messageCount, tokenTotal });
+    }
+
+    const grid = Array.from({ length: 7 }, () =>
+        Array.from({ length: 24 }, () => ({ sessionCount: 0, messageCount: 0, tokenTotal: 0 }))
+    );
+    for (const item of normalized) {
+        const cell = grid[item.weekday][item.hour];
+        cell.sessionCount += 1;
+        cell.messageCount += item.messageCount;
+        cell.tokenTotal += item.tokenTotal;
+    }
+
+    let maxSessionCount = 0;
+    for (let day = 0; day < 7; day += 1) {
+        for (let hour = 0; hour < 24; hour += 1) {
+            maxSessionCount = Math.max(maxSessionCount, grid[day][hour].sessionCount);
+        }
+    }
+
+    return {
+        range,
+        grid,
+        maxSessionCount: Math.max(1, maxSessionCount),
+        weekdayLabels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        hourLabels: Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'))
+    };
+}
+
 function buildUsageBuckets(normalizedSessions, options = {}) {
     const range = normalizeUsageRange(options.range);
     const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
