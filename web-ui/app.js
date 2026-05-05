@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ticket: 0
                 },
                 sessionsViewMode: 'browser',
-                sessionsUsageTimeRange: '7d',
+                sessionsUsageTimeRange: (function () { try { const saved = localStorage.getItem('sessionsUsageTimeRange'); if (saved === '7d' || saved === '30d' || saved === 'all') return saved; } catch (_) {} return '7d'; })(),
                 sessionsUsageList: [],
                 sessionsUsageCompareEnabled: false,
                 sessionsUsageSelectedDayKey: '',
