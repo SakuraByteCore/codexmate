@@ -174,6 +174,41 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         });
     }
 
+    function buildUpstreamUrlCandidates(baseUrl, pathSuffix) {
+        const safeSuffix = String(pathSuffix || '').replace(/^\/+/, '');
+        const candidates = [];
+        const push = (url) => {
+            if (url && !candidates.includes(url)) {
+                candidates.push(url);
+            }
+        };
+        push(joinApiUrl(baseUrl, safeSuffix));
+        const trimmed = normalizeBaseUrl(baseUrl);
+        if (trimmed && safeSuffix) {
+            push(`${trimmed}/${safeSuffix}`);
+        }
+        return candidates;
+    }
+
+    async function proxyRequestJsonWithFallbackUrls(baseUrl, pathSuffix, options = {}) {
+        const urls = buildUpstreamUrlCandidates(baseUrl, pathSuffix);
+        if (urls.length === 0) {
+            return { ok: false, error: 'failed to build upstream URL' };
+        }
+        let lastResult = null;
+        for (let index = 0; index < urls.length; index += 1) {
+            const result = await proxyRequestJson(urls[index], options);
+            lastResult = result;
+            if (!result.ok) {
+                return result;
+            }
+            if (!(result.status === 404 || result.status === 405)) {
+                return result;
+            }
+        }
+        return lastResult || { ok: false, error: 'failed to build upstream URL' };
+    }
+
     function extractChatCompletionResult(payload) {
         if (!payload || typeof payload !== 'object') return { text: '' };
         const choice = Array.isArray(payload.choices) ? payload.choices[0] : null;
@@ -206,28 +241,6 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         // - { type:"input_text"|"input_image", ... }（单个 block）
         // - [{ role, content: [{type:"input_text"|"input_image", ...}] }]
         // - [{ type:"input_text"|"input_image", ... }]（视为单条 user 消息）
-        if (typeof input === 'string') {
-            return [{ role: 'user', content: input }];
-        }
-        if (input && typeof input === 'object' && !Array.isArray(input)) {
-            if (typeof input.role === 'string' && input.content != null) {
-                const role = input.role.trim() || 'user';
-                const content = Array.isArray(input.content)
-                    ? toChatContent(input.content)
-                    : input.content;
-                return content ? [{ role, content }] : [];
-            }
-            // 单个 block：{type:"input_text"|"input_image", ...}
-            if (typeof input.type === 'string') {
-                const content = toChatContent([input]);
-                return content ? [{ role: 'user', content }] : [];
-            }
-            return [];
-        }
-        if (!Array.isArray(input)) {
-            return [];
-        }
-
         const toChatContent = (blocks) => {
             if (!Array.isArray(blocks)) return '';
             const out = [];
@@ -261,6 +274,28 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             return out;
         };
 
+        if (typeof input === 'string') {
+            return [{ role: 'user', content: input }];
+        }
+        if (input && typeof input === 'object' && !Array.isArray(input)) {
+            if (typeof input.role === 'string' && input.content != null) {
+                const role = input.role.trim() || 'user';
+                const content = Array.isArray(input.content)
+                    ? toChatContent(input.content)
+                    : input.content;
+                return content ? [{ role, content }] : [];
+            }
+            // 单个 block：{type:"input_text"|"input_image", ...}
+            if (typeof input.type === 'string') {
+                const content = toChatContent([input]);
+                return content ? [{ role: 'user', content }] : [];
+            }
+            return [];
+        }
+        if (!Array.isArray(input)) {
+            return [];
+        }
+
         const messages = [];
         for (const item of input) {
             if (!item || typeof item !== 'object') continue;
@@ -286,6 +321,57 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             return [{ role: 'user', content: fallbackContent }];
         }
         return [];
+    }
+
+    function buildChatCompletionsBodyFromResponsesPayload(payload) {
+        const source = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : {};
+        const messages = normalizeResponsesInputToChatMessages(source.input);
+        const instructions = typeof source.instructions === 'string' ? source.instructions.trim() : '';
+        if (instructions) {
+            messages.unshift({ role: 'system', content: instructions });
+        }
+
+        const chatBody = {
+            model: typeof source.model === 'string' ? source.model : '',
+            messages,
+            stream: false
+        };
+
+        const passthroughKeys = [
+            'frequency_penalty',
+            'presence_penalty',
+            'response_format',
+            'stop',
+            'stream_options',
+            'temperature',
+            'top_p',
+            'tools',
+            'tool_choice',
+            'logprobs',
+            'top_logprobs',
+            'top_logprops',
+            'kbs',
+            'is_online',
+            'user',
+            'seed',
+            'n',
+            'modalities',
+            'audio',
+            'reasoning_effort'
+        ];
+        for (const key of passthroughKeys) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+                chatBody[key] = source[key];
+            }
+        }
+
+        if (Object.prototype.hasOwnProperty.call(source, 'max_tokens')) {
+            chatBody.max_tokens = source.max_tokens;
+        } else if (source.max_output_tokens != null) {
+            chatBody.max_tokens = source.max_output_tokens;
+        }
+
+        return chatBody;
     }
 
     function ensureResponseMetadata(payload) {
@@ -761,15 +847,12 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         'X-Codexmate-Proxy': '1'
                     };
 
-                    const upstreamResponsesUrl = joinApiUrl(upstream.baseUrl, 'responses');
-                    const upstreamResponses = upstreamResponsesUrl
-                        ? await proxyRequestJson(upstreamResponsesUrl, {
-                            method: 'POST',
-                            headers: commonHeaders,
-                            timeoutMs,
-                            body: { ...payload, stream: false }
-                        })
-                        : { ok: false, error: 'failed to build upstream URL' };
+                    const upstreamResponses = await proxyRequestJsonWithFallbackUrls(upstream.baseUrl, 'responses', {
+                        method: 'POST',
+                        headers: commonHeaders,
+                        timeoutMs,
+                        body: { ...payload, stream: false }
+                    });
 
                     // 优先走上游 /responses（如果支持）。若上游报错且不是“端点不支持”，则直接透传错误。
                     if (upstreamResponses.ok && upstreamResponses.status >= 200 && upstreamResponses.status < 300) {
@@ -812,24 +895,9 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     }
 
                     const model = typeof payload.model === 'string' ? payload.model : '';
-                    const messages = normalizeResponsesInputToChatMessages(payload.input);
-                    const chatBody = {
-                        model,
-                        messages,
-                        stream: false
-                    };
-                    if (payload.max_output_tokens != null && chatBody.max_tokens == null) {
-                        chatBody.max_tokens = payload.max_output_tokens;
-                    }
+                    const chatBody = buildChatCompletionsBodyFromResponsesPayload(payload);
 
-                    const upstreamChatUrl = joinApiUrl(upstream.baseUrl, 'chat/completions');
-                    if (!upstreamChatUrl) {
-                        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-                        res.end(JSON.stringify({ error: 'failed to build upstream URL' }));
-                        return;
-                    }
-
-                    const upstreamChat = await proxyRequestJson(upstreamChatUrl, {
+                    const upstreamChat = await proxyRequestJsonWithFallbackUrls(upstream.baseUrl, 'chat/completions', {
                         method: 'POST',
                         headers: commonHeaders,
                         timeoutMs,
@@ -838,6 +906,12 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     if (!upstreamChat.ok) {
                         res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
                         res.end(JSON.stringify({ error: upstreamChat.error || 'proxy request failed' }));
+                        return;
+                    }
+
+                    if (upstreamChat.status >= 400) {
+                        res.writeHead(upstreamChat.status, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(upstreamChat.bodyText || JSON.stringify({ error: 'Upstream error' }));
                         return;
                     }
 
