@@ -360,6 +360,9 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             'reasoning_effort'
         ];
         for (const key of passthroughKeys) {
+            if (key === 'stream_options' && chatBody.stream !== true) {
+                continue;
+            }
             if (Object.prototype.hasOwnProperty.call(source, key)) {
                 chatBody[key] = source[key];
             }

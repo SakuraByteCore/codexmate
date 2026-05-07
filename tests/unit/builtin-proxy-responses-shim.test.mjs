@@ -18,9 +18,32 @@ function listen(server) {
     });
 }
 
-async function closeServer(server) {
+async function closeServer(server, sockets = null) {
     if (!server || !server.listening) return;
-    await new Promise((resolve) => server.close(resolve));
+    await new Promise((resolve) => {
+        let settled = false;
+        const finish = () => {
+            if (settled) return;
+            settled = true;
+            resolve();
+        };
+        server.close(() => finish());
+        const timer = setTimeout(() => {
+            if (sockets && typeof sockets[Symbol.iterator] === 'function') {
+                for (const socket of sockets) {
+                    try { socket.destroy(); } catch (_) {}
+                }
+            }
+            if (typeof server.closeIdleConnections === 'function') {
+                try { server.closeIdleConnections(); } catch (_) {}
+            }
+            if (typeof server.closeAllConnections === 'function') {
+                try { server.closeAllConnections(); } catch (_) {}
+            }
+            finish();
+        }, 1000);
+        if (typeof timer.unref === 'function') timer.unref();
+    });
 }
 
 function requestText(url, { method = 'GET', headers = {}, body } = {}) {
@@ -136,8 +159,7 @@ test('builtin-proxy /v1/responses falls back to chat-only upstream and returns R
         assert.equal(parsed.output[0].content[0].text, 'hello-from-chat');
     } finally {
         if (proxyRuntime) {
-            await closeServer(proxyRuntime.server);
-            for (const socket of proxyRuntime.connections) socket.destroy();
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
         }
         await closeServer(upstream);
     }
@@ -180,8 +202,7 @@ test('builtin-proxy /v1/responses stream=true returns SSE wrapper with done sent
         assert.match(sse.text, /data: \[DONE\]/);
     } finally {
         if (proxyRuntime) {
-            await closeServer(proxyRuntime.server);
-            for (const socket of proxyRuntime.connections) socket.destroy();
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
         }
         await closeServer(upstream);
     }
@@ -276,7 +297,6 @@ test('builtin-proxy /v1/responses preserves Voyage chat-completions fields throu
             presence_penalty: 0,
             response_format: { type: 'text' },
             stop: null,
-            stream_options: null,
             temperature: 1,
             top_p: 1,
             tools: null,
@@ -289,8 +309,7 @@ test('builtin-proxy /v1/responses preserves Voyage chat-completions fields throu
         });
     } finally {
         if (proxyRuntime) {
-            await closeServer(proxyRuntime.server);
-            for (const socket of proxyRuntime.connections) socket.destroy();
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
         }
         await closeServer(upstream);
     }
