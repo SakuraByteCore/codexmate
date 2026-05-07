@@ -28,6 +28,7 @@
 Codex Mate 提供一套本地优先的 CLI + Web UI，用于统一管理：
 
 - Codex 的 provider / model 切换与配置写入
+- 面向 Codex Responses API 的 OpenAI 兼容桥接转换
 - Claude Code 配置方案（写入 `~/.claude/settings.json`）
 - Claude Code `CLAUDE.md` 编辑（写入 `~/.claude/CLAUDE.md`）
 - OpenClaw JSON5 配置与 Workspace `AGENTS.md`
@@ -55,6 +56,7 @@ Codex Mate 提供一套本地优先的 CLI + Web UI，用于统一管理：
 **配置管理**
 - provider / model 切换（`switch` / `use`）
 - Codex `config.toml` 模板确认后写入
+- OpenAI 桥接 provider：将 Codex 写到本地 `/bridge/openai/<provider>/v1`，并为 OpenAI 兼容上游归一化 Responses API 请求
 - Claude Code 多配置方案管理与一键应用
 - Claude Code `CLAUDE.md` 编辑（写入 `~/.claude/CLAUDE.md`）
 - 分享命令前缀切换（`npm start` / `codexmate`），用于复制 provider / Claude 导入命令
@@ -93,6 +95,7 @@ Codex Mate 提供一套本地优先的 CLI + Web UI，用于统一管理：
 **工程能力**
 - MCP stdio 能力（tools/resources/prompts）
 - 自动化钩子（`/hooks/*`）+ 外发 webhook 通知
+- Codex `/v1/responses` 的 OpenAI 桥接转换：优先尝试上游 `/responses`，必要时回退 `/chat/completions`，并归一化 function tools
 - Zip 压缩/解压（优先系统工具，失败回退 JS 库）
 
 ## 自动化（信号 → 行动）
@@ -232,7 +235,7 @@ npm run reset 79
 | `codexmate setup` | 交互式初始化 |
 | `codexmate list` / `codexmate models` | 查看提供商 / 模型 |
 | `codexmate switch <provider>` / `codexmate use <model>` | 切换 provider / model |
-| `codexmate add <name> <URL> [API_KEY]` | 添加提供商 |
+| `codexmate add <name> <URL> [API_KEY] [--bridge openai]` | 添加提供商；`--bridge openai` 会为 OpenAI 风格上游创建本地 Codex Responses 兼容桥接 |
 | `codexmate delete <name>` | 删除提供商 |
 | `codexmate claude <BaseURL> <API_KEY> [model]` | 写入 Claude Code 配置 |
 | `codexmate workflow <list\|get\|validate\|run\|runs>` | MCP 工作流管理 |
@@ -258,6 +261,7 @@ codexmate codex --model gpt-5.3-codex --follow-up "步骤1" --follow-up "步骤2
 ### Codex 配置模式
 - provider / model 切换
 - 模型管理
+- OpenAI 桥接 provider：将 Codex Responses API 转换给 OpenAI 兼容上游
 - `~/.codex/AGENTS.md` 编辑
 
 ### Claude Code 配置模式
@@ -318,6 +322,7 @@ codexmate mcp serve --allow-write
 - `~/.codex/auth.json`
 - `~/.codex/models.json`
 - `~/.codex/provider-current-models.json`
+- `~/.codex/codexmate-openai-bridge.json`
 - `~/.claude/settings.json`
 - `~/.claude/CLAUDE.md`
 - `~/.openclaw/openclaw.json`

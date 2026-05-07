@@ -28,6 +28,7 @@
 Codex Mate is a local-first CLI + Web UI for unified management of:
 
 - Codex provider/model switching and config writes
+- OpenAI-compatible bridge mode for Codex Responses API conversion
 - Claude Code profiles (writes to `~/.claude/settings.json`)
 - Claude Code `CLAUDE.md` editing (writes to `~/.claude/CLAUDE.md`)
 - OpenClaw JSON5 profiles and workspace `AGENTS.md`
@@ -55,6 +56,7 @@ It works on local files directly and does not require cloud hosting. The skills 
 **Configuration**
 - Provider/model switching (`switch`, `use`)
 - Codex `config.toml` template confirmation before write
+- OpenAI bridge providers: write Codex to a local `/bridge/openai/<provider>/v1` endpoint and normalize Responses API requests for OpenAI-compatible upstreams
 - Claude Code profile management and apply
 - Claude Code `CLAUDE.md` editing (writes to `~/.claude/CLAUDE.md`)
 - OpenClaw JSON5 profile management
@@ -89,6 +91,7 @@ It works on local files directly and does not require cloud hosting. The skills 
 - MCP stdio domains (`tools`, `resources`, `prompts`)
 - Automation hooks (`/hooks/*`) + outbound webhook notifiers
 - Built-in proxy controls (`proxy`)
+- OpenAI bridge conversion for Codex `/v1/responses` requests, including upstream `/responses` preference, `/chat/completions` fallback, and function-tool normalization
 - Auth profile management (`auth`)
 - Zip/unzip utilities
 
@@ -229,7 +232,7 @@ npm run reset 79
 | `codexmate setup` | Interactive setup |
 | `codexmate list` / `codexmate models` | List providers / models |
 | `codexmate switch <provider>` / `codexmate use <model>` | Switch provider / model |
-| `codexmate add <name> <URL> [API_KEY]` | Add provider |
+| `codexmate add <name> <URL> [API_KEY] [--bridge openai]` | Add provider; `--bridge openai` creates a local Codex Responses-compatible bridge for OpenAI-style upstreams |
 | `codexmate delete <name>` | Delete provider |
 | `codexmate claude <BaseURL> <API_KEY> [model]` | Write Claude Code config |
 | `codexmate auth <list\|import\|switch\|delete\|status>` | Auth profile management |
@@ -256,6 +259,7 @@ codexmate codex --model gpt-5.3-codex --follow-up "step1" --follow-up "step2"
 ### Codex Mode
 - Provider/model switching
 - Model list management
+- OpenAI bridge providers for Codex Responses API conversion to OpenAI-compatible upstreams
 - `~/.codex/AGENTS.md` editing
 
 ### Claude Code Mode
@@ -310,6 +314,7 @@ codexmate mcp serve --allow-write
 - `~/.codex/auth.json`
 - `~/.codex/models.json`
 - `~/.codex/provider-current-models.json`
+- `~/.codex/codexmate-openai-bridge.json`
 - `~/.claude/settings.json`
 - `~/.claude/CLAUDE.md`
 - `~/.openclaw/openclaw.json`
