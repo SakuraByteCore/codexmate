@@ -289,6 +289,7 @@ test('openai-bridge allows loopback clients to send arbitrary Authorization head
 });
 
 test('openai-bridge falls back to upstream /chat/completions when /responses is not supported', async () => {
+    let capturedChatRequest = null;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses') {
             res.writeHead(405, { 'Content-Type': 'application/json' });
@@ -300,6 +301,7 @@ test('openai-bridge falls back to upstream /chat/completions when /responses is 
             req.on('data', (c) => (body += c));
             req.on('end', () => {
                 const parsed = JSON.parse(body || '{}');
+                capturedChatRequest = parsed;
                 // 确保 responses 的 object input 能被转换为 chat messages
                 assert.equal(parsed.messages && parsed.messages[0] && parsed.messages[0].role, 'user');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -344,6 +346,15 @@ test('openai-bridge falls back to upstream /chat/completions when /responses is 
         body: {
             model: 'gpt-test',
             input: { type: 'input_text', text: 'ping' },
+            tools: [{
+                type: 'function',
+                name: 'lookup',
+                function: {
+                    description: 'Look up data',
+                    parameters: { type: 'object', properties: { query: { type: 'string' } } }
+                }
+            }],
+            tool_choice: { type: 'function', name: 'lookup' },
             stream: false
         }
     });
@@ -352,6 +363,15 @@ test('openai-bridge falls back to upstream /chat/completions when /responses is 
     assert.equal(parsed.object, 'response');
     assert.equal(parsed.model, 'gpt-test');
     assert.ok(Array.isArray(parsed.output));
+    assert.deepStrictEqual(capturedChatRequest.tools, [{
+        type: 'function',
+        function: {
+            name: 'lookup',
+            parameters: { type: 'object', properties: { query: { type: 'string' } } },
+            description: 'Look up data'
+        }
+    }]);
+    assert.deepStrictEqual(capturedChatRequest.tool_choice, { type: 'function', function: { name: 'lookup' } });
 
     await bridge.close();
     await upstream.close();

@@ -369,6 +369,45 @@ function normalizeResponsesInputToChatMessages(input) {
     return [];
 }
 
+
+function normalizeResponsesToolsToChatTools(tools) {
+    if (!Array.isArray(tools)) return tools;
+    return tools
+        .map((tool) => {
+            if (!tool || typeof tool !== 'object') return null;
+            if (tool.type !== 'function') return tool;
+            const sourceFn = tool.function && typeof tool.function === 'object' && !Array.isArray(tool.function)
+                ? tool.function
+                : {};
+            const name = typeof sourceFn.name === 'string' && sourceFn.name.trim()
+                ? sourceFn.name.trim()
+                : (typeof tool.name === 'string' ? tool.name.trim() : '');
+            if (!name) return null;
+            const parameters = sourceFn.parameters && typeof sourceFn.parameters === 'object' && !Array.isArray(sourceFn.parameters)
+                ? sourceFn.parameters
+                : (tool.parameters && typeof tool.parameters === 'object' && !Array.isArray(tool.parameters) ? tool.parameters : {});
+            const fn = { name, parameters };
+            const description = typeof sourceFn.description === 'string'
+                ? sourceFn.description
+                : (typeof tool.description === 'string' ? tool.description : undefined);
+            const strict = typeof sourceFn.strict === 'boolean'
+                ? sourceFn.strict
+                : (typeof tool.strict === 'boolean' ? tool.strict : undefined);
+            if (description !== undefined) fn.description = description;
+            if (strict !== undefined) fn.strict = strict;
+            return { type: 'function', function: fn };
+        })
+        .filter(Boolean);
+}
+
+function normalizeResponsesToolChoiceToChatToolChoice(toolChoice) {
+    if (!toolChoice || typeof toolChoice !== 'object' || Array.isArray(toolChoice)) return toolChoice;
+    if (toolChoice.type === 'function' && typeof toolChoice.name === 'string' && toolChoice.name.trim()) {
+        return { type: 'function', function: { name: toolChoice.name.trim() } };
+    }
+    return toolChoice;
+}
+
 function convertResponsesRequestToChatCompletions(payload) {
     const body = payload && typeof payload === 'object' ? payload : {};
     const model = typeof body.model === 'string' ? body.model.trim() : '';
@@ -401,12 +440,11 @@ function convertResponsesRequestToChatCompletions(payload) {
     if (Array.isArray(body.stop) && body.stop.length) {
         chat.stop = body.stop.filter((item) => typeof item === 'string' && item.trim());
     }
-    // Best-effort: pass through tool definitions (most OpenAI-compatible providers accept these fields).
     if (Array.isArray(body.tools) && body.tools.length) {
-        chat.tools = body.tools;
+        chat.tools = normalizeResponsesToolsToChatTools(body.tools);
     }
     if (body.tool_choice !== undefined) {
-        chat.tool_choice = body.tool_choice;
+        chat.tool_choice = normalizeResponsesToolChoiceToChatToolChoice(body.tool_choice);
     }
     if (body.response_format !== undefined) {
         chat.response_format = body.response_format;
