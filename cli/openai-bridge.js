@@ -408,6 +408,37 @@ function normalizeResponsesToolChoiceToChatToolChoice(toolChoice) {
     return toolChoice;
 }
 
+function normalizeResponsesToolsForResponsesApi(tools) {
+    if (!Array.isArray(tools)) return tools;
+    return tools
+        .map((tool) => {
+            if (!tool || typeof tool !== 'object') return null;
+            if (tool.type !== 'function') return tool;
+            const sourceFn = tool.function && typeof tool.function === 'object' && !Array.isArray(tool.function)
+                ? tool.function
+                : {};
+            const name = typeof sourceFn.name === 'string' && sourceFn.name.trim()
+                ? sourceFn.name.trim()
+                : (typeof tool.name === 'string' ? tool.name.trim() : '');
+            if (!name) return null;
+            const out = { type: 'function', name };
+            const description = typeof sourceFn.description === 'string'
+                ? sourceFn.description
+                : (typeof tool.description === 'string' ? tool.description : undefined);
+            const parameters = sourceFn.parameters && typeof sourceFn.parameters === 'object' && !Array.isArray(sourceFn.parameters)
+                ? sourceFn.parameters
+                : (tool.parameters && typeof tool.parameters === 'object' && !Array.isArray(tool.parameters) ? tool.parameters : undefined);
+            const strict = typeof sourceFn.strict === 'boolean'
+                ? sourceFn.strict
+                : (typeof tool.strict === 'boolean' ? tool.strict : undefined);
+            if (description !== undefined) out.description = description;
+            if (parameters !== undefined) out.parameters = parameters;
+            if (strict !== undefined) out.strict = strict;
+            return out;
+        })
+        .filter(Boolean);
+}
+
 function convertResponsesRequestToChatCompletions(payload) {
     const body = payload && typeof payload === 'object' ? payload : {};
     const model = typeof body.model === 'string' ? body.model.trim() : '';
@@ -640,7 +671,11 @@ function extractResponsesOutputText(payload) {
 
 function toUpstreamNonStreamingResponsesPayload(payload) {
     const body = payload && typeof payload === 'object' ? payload : {};
-    return { ...body, stream: false };
+    const normalized = { ...body, stream: false };
+    if (Array.isArray(body.tools)) {
+        normalized.tools = normalizeResponsesToolsForResponsesApi(body.tools);
+    }
+    return normalized;
 }
 
 function shouldFallbackFromUpstreamResponses(status, bodyText) {
@@ -657,6 +692,7 @@ function shouldFallbackFromUpstreamResponses(status, bodyText) {
     if (/unknown (endpoint|route)/i.test(text)) return true;
     if (/unsupported.*\/?v1\/responses/i.test(text)) return true;
     if (/does not support.*responses/i.test(text)) return true;
+    if (/name['"`]?\s+is a required property/i.test(text) && /tools/i.test(text) && /function/i.test(text)) return true;
 
     // Best-effort parse for structured error codes.
     try {
@@ -668,6 +704,7 @@ function shouldFallbackFromUpstreamResponses(status, bodyText) {
         if (/unknown (endpoint|route)/i.test(msg)) return true;
         if (/unsupported.*\/?v1\/responses/i.test(msg)) return true;
         if (/does not support.*responses/i.test(msg)) return true;
+        if (/name['"`]?\s+is a required property/i.test(msg) && /tools/i.test(msg) && /function/i.test(msg)) return true;
     } catch (_) {}
 
     return false;
