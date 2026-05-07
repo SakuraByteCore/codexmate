@@ -110,7 +110,7 @@ function createTestController() {
 async function startTestProxy(upstreamPort, options = {}) {
     const controller = createTestController();
     const runtime = await controller.createBuiltinProxyServer(
-        { host: '127.0.0.1', port: 0, timeoutMs: 2000 },
+        { host: '127.0.0.1', port: 0, timeoutMs: options.timeoutMs || 2000 },
         {
             providerName: options.providerName || 'test',
             baseUrl: options.baseUrl || `http://127.0.0.1:${upstreamPort}/v1`,
@@ -159,6 +159,112 @@ test('builtin-proxy /v1/responses falls back to chat-only upstream and returns R
         assert.equal(parsed.output[0].type, 'message');
         assert.equal(parsed.output[0].content[0].type, 'output_text');
         assert.equal(parsed.output[0].content[0].text, 'hello-from-chat');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
+test('builtin-proxy /v1/responses falls back to chat when upstream responses times out', async () => {
+    const sockets = new Set();
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            // Simulate gateways that accept /responses but never complete the request.
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    id: 'chatcmpl_after_timeout',
+                    model: 'gpt-test',
+                    choices: [{ message: { role: 'assistant', content: 'fallback-after-timeout' } }]
+                }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    upstream.on('connection', (socket) => {
+        sockets.add(socket);
+        socket.on('close', () => sockets.delete(socket));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort, { timeoutMs: 1000 });
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-test', input: 'ping', stream: false }
+        });
+        assert.equal(resp.status, 200);
+        assert.ok(capturedChatRequest, 'chat fallback should run after responses timeout');
+        assert.equal(capturedChatRequest.stream, false);
+        const parsed = JSON.parse(resp.text);
+        assert.equal(parsed.output[0].content[0].text, 'fallback-after-timeout');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream, sockets);
+    }
+});
+
+test('builtin-proxy /v1/responses stream=true streams chat fallback as Responses SSE', async () => {
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+                res.write('data: {"id":"chatcmpl_stream","model":"gpt-test","choices":[{"delta":{"role":"assistant"}}]}\n\n');
+                res.write('data: {"id":"chatcmpl_stream","model":"gpt-test","choices":[{"delta":{"content":"hello"}}]}\n\n');
+                res.write('data: {"id":"chatcmpl_stream","model":"gpt-test","choices":[{"delta":{"content":"-stream"}}]}\n\n');
+                res.end('data: [DONE]\n\n');
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const sse = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-test', input: 'ping', stream: true }
+        });
+        assert.equal(sse.status, 200);
+        assert.ok(capturedChatRequest, 'streaming chat fallback should be called');
+        assert.equal(capturedChatRequest.stream, true);
+        assert.match(sse.headers['content-type'], /text\/event-stream/i);
+        assert.match(sse.text, /event: response\.created/);
+        assert.match(sse.text, /event: response\.output_text\.delta/);
+        assert.match(sse.text, /"delta":"hello"/);
+        assert.match(sse.text, /"delta":"-stream"/);
+        assert.match(sse.text, /event: response\.completed/);
+        assert.match(sse.text, /data: \[DONE\]/);
     } finally {
         if (proxyRuntime) {
             await closeServer(proxyRuntime.server, proxyRuntime.connections);
