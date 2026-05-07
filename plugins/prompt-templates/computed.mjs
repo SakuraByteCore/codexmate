@@ -98,7 +98,7 @@ function renderTemplate(templateText, values = {}) {
         const name = String(key || '').trim();
         if (!name) return '';
         const value = map[name];
-        return value == null ? '' : String(value);
+        return value == null || String(value).trim() === '' ? _whole : String(value);
     });
 }
 

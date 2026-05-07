@@ -176,7 +176,7 @@
                                         <template v-else>
                                             <div class="prompt-editor-head">
                                                 <div class="prompt-editor-title-row">
-                                                    <input class="form-input prompt-editor-name" type="text" v-model.trim="promptTemplateDraft.name" :disabled="promptTemplateDraft.isBuiltin" :placeholder="t('plugins.promptTemplates.editor.namePlaceholder')" :aria-label="t('plugins.promptTemplates.editor.nameAria')">
+                                                    <input class="form-input prompt-editor-name" type="text" v-model.trim="promptTemplateDraftRaw.name" :disabled="promptTemplateDraft.isBuiltin" :placeholder="t('plugins.promptTemplates.editor.namePlaceholder')" :aria-label="t('plugins.promptTemplates.editor.nameAria')">
                                                     <div v-if="!promptTemplateDraft.isBuiltin" class="prompt-editor-actions">
                                                         <button type="button" class="btn-mini" @click="duplicatePromptTemplate" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.editor.duplicate') }}</button>
                                                         <button type="button" class="btn-mini delete" @click="deletePromptTemplate" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.editor.delete') }}</button>
@@ -189,14 +189,14 @@
                                                 <div v-if="promptTemplateDraft.isBuiltin && (promptTemplateDraft.createdBy || (promptTemplateDraft.maintainers && promptTemplateDraft.maintainers.length))" class="plugins-panel-note">
                                                     {{ t('plugins.meta.attribution', { createdBy: promptTemplateDraft.createdBy || '', maintainers: (promptTemplateDraft.maintainers || []).join(', ') }) }}
                                                 </div>
-                                                <input class="form-input" type="text" v-model.trim="promptTemplateDraft.description" :disabled="promptTemplateDraft.isBuiltin" :placeholder="t('plugins.promptTemplates.editor.descPlaceholder')" :aria-label="t('plugins.promptTemplates.editor.descAria')">
+                                                <input class="form-input" type="text" v-model.trim="promptTemplateDraftRaw.description" :disabled="promptTemplateDraft.isBuiltin" :placeholder="t('plugins.promptTemplates.editor.descPlaceholder')" :aria-label="t('plugins.promptTemplates.editor.descAria')">
                                             </div>
 
                                             <div class="prompt-editor-body">
                                                 <label class="form-label">{{ t('plugins.promptTemplates.editor.templateLabel') }}</label>
                                                 <textarea
                                                     class="form-input prompt-editor-textarea"
-                                                    v-model="promptTemplateDraft.template"
+                                                    v-model="promptTemplateDraftRaw.template"
                                                     :disabled="promptTemplateDraft.isBuiltin"
                                                     rows="10"
                                                     spellcheck="false"
@@ -210,7 +210,6 @@
                                                             <div class="plugins-panel-note">{{ t('plugins.promptTemplates.vars.hint') }}</div>
                                                         </div>
                                                         <div v-if="!promptTemplateDraft.isBuiltin" class="prompt-editor-actions">
-                                                            <button type="button" class="btn-mini" @click="addPromptTemplateVariable" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.vars.add') }}</button>
                                                             <button type="button" class="btn-mini" @click="resetPromptVariableValues" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.vars.reset') }}</button>
                                                         </div>
                                                     </div>
@@ -252,28 +251,3 @@
                     style="display:none"
                     @change="handlePromptTemplatesImportChange">
 
-                <!-- 新增变量（Prompt Templates） -->
-                <div v-if="showPromptTemplateVarModal" class="modal-overlay" @click.self="closePromptTemplateVarModal">
-                    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-prompt-var-modal-title">
-                        <div class="modal-title" id="add-prompt-var-modal-title">{{ t('plugins.promptTemplates.varModal.title') }}</div>
-
-                        <div class="form-group">
-                            <label class="form-label">{{ t('plugins.promptTemplates.varModal.nameLabel') }}</label>
-                            <input
-                                ref="promptTemplateVarNameInput"
-                                v-model.trim="promptTemplateVarDraftName"
-                                :class="['form-input', { invalid: !!promptTemplateVarDraftError }]"
-                                :placeholder="t('placeholder.varNameExample')"
-                                autocomplete="off"
-                                spellcheck="false"
-                                @keydown.enter.prevent="confirmAddPromptTemplateVariable">
-                            <div v-if="promptTemplateVarDraftError" class="form-hint form-error">{{ promptTemplateVarDraftError }}</div>
-                            <div v-else class="form-hint">{{ t('hint.varNameRules') }}</div>
-                        </div>
-
-                        <div class="btn-group">
-                            <button class="btn btn-cancel" @click="closePromptTemplateVarModal">{{ t('plugins.promptTemplates.varModal.cancel') }}</button>
-                            <button class="btn btn-confirm" @click="confirmAddPromptTemplateVariable">{{ t('plugins.promptTemplates.varModal.add') }}</button>
-                        </div>
-                    </div>
-                </div>

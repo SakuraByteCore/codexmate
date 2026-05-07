@@ -371,7 +371,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'healthCheckDialogMessages',
         'healthCheckDialogPrompt',
         'healthCheckDialogSelectedProvider',
-        'healthCheckDialogSending'
+        'healthCheckDialogSending',
+        'promptTemplateVarDraftError',
+        'promptTemplateVarDraftName',
+        'showPromptTemplateVarModal',
     ];
     allowedExtraCurrentKeys.push(
         'lang',
@@ -403,9 +406,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptComposerPickerKeyword',
         'promptComposerSelectedTemplateId',
         'promptComposerVarValuesRaw',
-        'showPromptTemplateVarModal',
-        'promptTemplateVarDraftName',
-        'promptTemplateVarDraftError',
         'sessionConverting',
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
@@ -524,9 +524,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'createPromptTemplate',
         'selectPromptTemplate',
         'resetPromptVariableValues',
-        'addPromptTemplateVariable',
-        'closePromptTemplateVarModal',
-        'confirmAddPromptTemplateVariable',
         'setPromptVariableValue',
         'copyRenderedPrompt',
         'savePromptTemplate',
@@ -572,7 +569,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'buildDefaultHealthCheckPrompt',
         'openHealthCheckDialog',
         'closeHealthCheckDialog',
-        'sendHealthCheckDialogMessage'
+        'sendHealthCheckDialogMessage',
+        'addPromptTemplateVariable',
+        'closePromptTemplateVarModal',
+        'confirmAddPromptTemplateVariable',
     ];
     if (parityAgainstHead) {
         const allowedExtraMethodKeySet = new Set(allowedExtraCurrentMethodKeys);
