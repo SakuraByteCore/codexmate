@@ -314,3 +314,133 @@ test('builtin-proxy /v1/responses preserves Voyage chat-completions fields throu
         await closeServer(upstream);
     }
 });
+
+test('builtin-proxy /v1/responses maps Responses tool items through chat fallback', async () => {
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    id: 'chatcmpl_tool_test',
+                    model: 'gpt-tool',
+                    choices: [{
+                        finish_reason: 'tool_calls',
+                        message: {
+                            role: 'assistant',
+                            content: '',
+                            tool_calls: [{
+                                id: 'call_next',
+                                type: 'function',
+                                function: { name: 'next_step', arguments: '{"ok":true}' }
+                            }]
+                        }
+                    }],
+                    usage: {
+                        prompt_tokens: 11,
+                        completion_tokens: 5,
+                        total_tokens: 16,
+                        prompt_tokens_details: { cached_tokens: 2 }
+                    }
+                }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-tool',
+                input: [
+                    {
+                        type: 'message',
+                        role: 'user',
+                        content: [{ type: 'input_text', text: 'call lookup' }]
+                    },
+                    {
+                        type: 'function_call',
+                        call_id: 'call_lookup',
+                        name: 'lookup',
+                        arguments: { query: 'codexmate' }
+                    },
+                    {
+                        type: 'function_call_output',
+                        call_id: 'call_lookup',
+                        output: { result: 'found' }
+                    }
+                ],
+                tools: [{
+                    type: 'function',
+                    name: 'lookup',
+                    description: 'Look up data',
+                    parameters: { type: 'object', properties: { query: { type: 'string' } } }
+                }],
+                tool_choice: { type: 'function', name: 'lookup' },
+                max_output_tokens: 128,
+                stream: false
+            }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.deepStrictEqual(capturedChatRequest.messages, [
+            { role: 'user', content: [{ type: 'text', text: 'call lookup' }] },
+            {
+                role: 'assistant',
+                content: null,
+                tool_calls: [{
+                    id: 'call_lookup',
+                    type: 'function',
+                    function: { name: 'lookup', arguments: '{"query":"codexmate"}' }
+                }]
+            },
+            { role: 'tool', tool_call_id: 'call_lookup', content: '{"result":"found"}' }
+        ]);
+        assert.deepStrictEqual(capturedChatRequest.tools, [{
+            type: 'function',
+            function: {
+                name: 'lookup',
+                description: 'Look up data',
+                parameters: { type: 'object', properties: { query: { type: 'string' } } }
+            }
+        }]);
+        assert.deepStrictEqual(capturedChatRequest.tool_choice, { type: 'function', function: { name: 'lookup' } });
+        assert.equal(capturedChatRequest.max_tokens, 128);
+
+        const parsed = JSON.parse(resp.text);
+        assert.equal(parsed.status, 'completed');
+        assert.deepStrictEqual(parsed.output, [{
+            type: 'function_call',
+            call_id: 'call_next',
+            name: 'next_step',
+            arguments: '{"ok":true}'
+        }]);
+        assert.deepStrictEqual(parsed.usage, {
+            input_tokens: 11,
+            output_tokens: 5,
+            total_tokens: 16,
+            input_tokens_details: { cached_tokens: 2 }
+        });
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
