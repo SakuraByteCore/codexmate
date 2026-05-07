@@ -77,7 +77,7 @@ export function createClaudeConfigMethods(options = {}) {
 
             const config = this.claudeConfigs[name];
             if (!config.apiKey) {
-                this.showMessage('已保存，未应用', 'info');
+                this.showMessage('已保存（未填写 API Key）', 'info');
                 this.closeEditConfigModal();
                 if (name === this.currentClaudeConfig) {
                     this.refreshClaudeModelContext();
@@ -91,8 +91,7 @@ export function createClaudeConfigMethods(options = {}) {
                     this.showMessage(res.error || '应用配置失败', 'error');
                 } else {
                     this.currentClaudeConfig = name;
-                    const targetTip = res.targetPath ? `（${res.targetPath}）` : '';
-                    this.showMessage(`已保存并应用到 Claude 配置${targetTip}`, 'success');
+                    this.showMessage('Claude 配置已生效', 'success');
                     this.closeEditConfigModal();
                     this.refreshClaudeModelContext();
                 }
@@ -153,7 +152,7 @@ export function createClaudeConfigMethods(options = {}) {
 
             if (!config.apiKey) {
                 if (config.externalCredentialType) {
-                    return this.showMessage('检测到外部 Claude 认证状态；当前仅支持展示，若需由 codexmate 接管请补充 API Key', 'info');
+                    return this.showMessage('使用外部认证，无需 API Key', 'info');
                 }
                 return this.showMessage('请先配置 API Key', 'error');
             }
@@ -163,8 +162,7 @@ export function createClaudeConfigMethods(options = {}) {
                 if (res.error || res.success === false) {
                     this.showMessage(res.error || '应用配置失败', 'error');
                 } else {
-                    const targetTip = res.targetPath ? `（${res.targetPath}）` : '';
-                    this.showMessage(`已应用配置到 Claude 设置: ${name}${targetTip}`, 'success');
+                    this.showMessage('配置已应用', 'success');
                 }
             } catch (_) {
                 this.showMessage('应用配置失败', 'error');
