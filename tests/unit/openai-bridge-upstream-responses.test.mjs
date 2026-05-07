@@ -44,6 +44,50 @@ async function requestText(url, { method = 'GET', headers = {}, body } = {}) {
     });
 }
 
+test('openai-bridge GET /v1 returns local bridge status without probing upstream models', async () => {
+    let upstreamHit = false;
+    const upstream = http.createServer((req, res) => {
+        upstreamHit = true;
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ msg: 'Not Found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'codexmate-bridge-test-'));
+    const settingsFile = path.join(tmpDir, 'bridge.json');
+    await writeFile(settingsFile, JSON.stringify({
+        version: 1,
+        providers: {
+            test: { baseUrl: `http://127.0.0.1:${upstreamPort}/v1`, apiKey: 'sk-upstream' }
+        }
+    }), 'utf-8');
+
+    const handler = createOpenaiBridgeHttpHandler({ settingsFile, expectedToken: 'codexmate' });
+    const bridge = http.createServer((req, res) => {
+        if (!handler(req, res)) {
+            res.statusCode = 404;
+            res.end('not handled');
+        }
+    });
+    const { port: bridgePort } = await listen(bridge);
+
+    const resp = await requestText(`http://127.0.0.1:${bridgePort}/bridge/openai/test/v1`, {
+        headers: { Authorization: 'Bearer codexmate' }
+    });
+    assert.equal(resp.status, 200);
+    assert.deepStrictEqual(JSON.parse(resp.text), {
+        object: 'codexmate.openai_bridge',
+        provider: 'test',
+        status: 'ok',
+        endpoints: ['/v1/responses', '/v1/models']
+    });
+    assert.equal(upstreamHit, false);
+
+    await bridge.close();
+    await upstream.close();
+    await rm(tmpDir, { recursive: true, force: true });
+});
+
 test('openai-bridge prefers upstream /responses and rewraps SSE when stream requested', async () => {
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {

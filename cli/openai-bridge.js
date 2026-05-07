@@ -489,6 +489,9 @@ function buildResponsesPayloadFromChatResult(model, text, toolCalls, upstreamPay
 
 function ensureResponseMetadata(response) {
     const payload = response && typeof response === 'object' ? response : {};
+    if (typeof payload.object !== 'string' || !payload.object.trim()) {
+        payload.object = 'response';
+    }
     if (typeof payload.created_at !== 'number') {
         payload.created_at = Math.floor(Date.now() / 1000);
     }
@@ -804,7 +807,23 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                 ? upstream.headers
                 : {};
 
-            if (!normalizedSuffix || normalizedSuffix === 'models') {
+            if (!normalizedSuffix) {
+                if ((req.method || 'GET').toUpperCase() !== 'GET') {
+                    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({
+                    object: 'codexmate.openai_bridge',
+                    provider: match.provider,
+                    status: 'ok',
+                    endpoints: ['/v1/responses', '/v1/models']
+                }));
+                return;
+            }
+
+            if (normalizedSuffix === 'models') {
                 if ((req.method || 'GET').toUpperCase() !== 'GET') {
                     res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
                     res.end(JSON.stringify({ error: 'Method Not Allowed' }));
