@@ -337,6 +337,11 @@ test('openai-bridge normalizes mixed tool definitions before upstream /responses
                     description: 'Look up data',
                     parameters: { type: 'object', properties: { query: { type: 'string' } } }
                 }
+            }, {
+                type: 'web_search_preview'
+            }, {
+                type: 'function',
+                function: { description: 'missing name should be dropped' }
             }],
             stream: false
         }
@@ -419,6 +424,11 @@ test('openai-bridge falls back to chat when upstream /responses rejects tool fun
                     description: 'Look up data',
                     parameters: { type: 'object', properties: { query: { type: 'string' } } }
                 }
+            }, {
+                type: 'web_search_preview'
+            }, {
+                type: 'function',
+                function: { description: 'missing name should be dropped' }
             }],
             stream: false
         }
@@ -503,6 +513,11 @@ test('openai-bridge falls back to upstream /chat/completions when /responses is 
                     description: 'Look up data',
                     parameters: { type: 'object', properties: { query: { type: 'string' } } }
                 }
+            }, {
+                type: 'web_search_preview'
+            }, {
+                type: 'function',
+                function: { description: 'missing name should be dropped' }
             }],
             tool_choice: { type: 'function', name: 'lookup' },
             stream: false

@@ -375,7 +375,7 @@ function normalizeResponsesToolsToChatTools(tools) {
     return tools
         .map((tool) => {
             if (!tool || typeof tool !== 'object') return null;
-            if (tool.type !== 'function') return tool;
+            if (tool.type !== 'function') return null;
             const sourceFn = tool.function && typeof tool.function === 'object' && !Array.isArray(tool.function)
                 ? tool.function
                 : {};
@@ -413,7 +413,7 @@ function normalizeResponsesToolsForResponsesApi(tools) {
     return tools
         .map((tool) => {
             if (!tool || typeof tool !== 'object') return null;
-            if (tool.type !== 'function') return tool;
+            if (tool.type !== 'function') return null;
             const sourceFn = tool.function && typeof tool.function === 'object' && !Array.isArray(tool.function)
                 ? tool.function
                 : {};
