@@ -2,6 +2,8 @@ import nodeTest from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import https from 'node:https';
+import os from 'node:os';
+import path from 'node:path';
 import { once } from 'node:events';
 import { createRequire } from 'node:module';
 
@@ -77,8 +79,8 @@ function createTestController() {
     return createBuiltinProxyRuntimeController({
         fs,
         https,
-        CONFIG_FILE: '/tmp/codexmate-test-config.toml',
-        BUILTIN_PROXY_SETTINGS_FILE: '/tmp/codexmate-test-proxy.json',
+        CONFIG_FILE: path.join(os.tmpdir(), 'codexmate-test-config.toml'),
+        BUILTIN_PROXY_SETTINGS_FILE: path.join(os.tmpdir(), 'codexmate-test-proxy.json'),
         DEFAULT_BUILTIN_PROXY_SETTINGS: {
             enabled: true,
             host: '127.0.0.1',
@@ -270,7 +272,7 @@ test('builtin-proxy /v1/responses preserves Voyage chat-completions fields throu
                 tools: null,
                 tool_choice: 'none',
                 logprobs: false,
-                top_logprops: null,
+                top_logprobs: 3,
                 kbs: [],
                 is_online: false
             }
@@ -302,7 +304,7 @@ test('builtin-proxy /v1/responses preserves Voyage chat-completions fields throu
             tools: null,
             tool_choice: 'none',
             logprobs: false,
-            top_logprops: null,
+            top_logprobs: 3,
             kbs: [],
             is_online: false,
             max_tokens: 2048

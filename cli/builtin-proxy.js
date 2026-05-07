@@ -480,14 +480,12 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             'presence_penalty',
             'response_format',
             'stop',
-            'stream_options',
             'temperature',
             'top_p',
             'tools',
             'tool_choice',
             'logprobs',
             'top_logprobs',
-            'top_logprops',
             'kbs',
             'is_online',
             'user',
@@ -498,9 +496,6 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             'reasoning_effort'
         ];
         for (const key of passthroughKeys) {
-            if (key === 'stream_options' && chatBody.stream !== true) {
-                continue;
-            }
             if (Object.prototype.hasOwnProperty.call(source, key)) {
                 if (key === 'tools') {
                     chatBody[key] = normalizeResponsesToolsToChatTools(source[key]);
