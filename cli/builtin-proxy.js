@@ -442,13 +442,26 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             .map((tool) => {
                 if (!tool || typeof tool !== 'object') return null;
                 if (tool.type !== 'function') return tool;
-                if (tool.function && typeof tool.function === 'object') return tool;
-                const fn = {
-                    name: typeof tool.name === 'string' ? tool.name : '',
-                    ...(typeof tool.description === 'string' ? { description: tool.description } : {}),
-                    parameters: tool.parameters && typeof tool.parameters === 'object' ? tool.parameters : {}
-                };
-                return fn.name ? { type: 'function', function: fn } : null;
+                const sourceFn = tool.function && typeof tool.function === 'object' && !Array.isArray(tool.function)
+                    ? tool.function
+                    : {};
+                const name = typeof sourceFn.name === 'string' && sourceFn.name.trim()
+                    ? sourceFn.name.trim()
+                    : (typeof tool.name === 'string' ? tool.name.trim() : '');
+                if (!name) return null;
+                const description = typeof sourceFn.description === 'string'
+                    ? sourceFn.description
+                    : (typeof tool.description === 'string' ? tool.description : undefined);
+                const parameters = sourceFn.parameters && typeof sourceFn.parameters === 'object' && !Array.isArray(sourceFn.parameters)
+                    ? sourceFn.parameters
+                    : (tool.parameters && typeof tool.parameters === 'object' && !Array.isArray(tool.parameters) ? tool.parameters : {});
+                const strict = typeof sourceFn.strict === 'boolean'
+                    ? sourceFn.strict
+                    : (typeof tool.strict === 'boolean' ? tool.strict : undefined);
+                const fn = { name, parameters };
+                if (description !== undefined) fn.description = description;
+                if (strict !== undefined) fn.strict = strict;
+                return { type: 'function', function: fn };
             })
             .filter(Boolean);
     }

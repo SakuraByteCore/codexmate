@@ -391,8 +391,10 @@ test('builtin-proxy /v1/responses maps Responses tool items through chat fallbac
                 tools: [{
                     type: 'function',
                     name: 'lookup',
-                    description: 'Look up data',
-                    parameters: { type: 'object', properties: { query: { type: 'string' } } }
+                    function: {
+                        description: 'Look up data',
+                        parameters: { type: 'object', properties: { query: { type: 'string' } } }
+                    }
                 }],
                 tool_choice: { type: 'function', name: 'lookup' },
                 max_output_tokens: 128,
