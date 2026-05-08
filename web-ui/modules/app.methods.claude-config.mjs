@@ -85,13 +85,17 @@ export function createClaudeConfigMethods(options = {}) {
                 return;
             }
 
+            const _claudeKey = `${name}|${config.apiKey || ""}|${config.baseUrl || ""}|${config.model || ""}`;
             try {
                 const res = await api('apply-claude-config', { config });
                 if (res.error || res.success === false) {
                     this.showMessage(res.error || '应用配置失败', 'error');
                 } else {
                     this.currentClaudeConfig = name;
-                    this.showMessage('Claude 配置已生效', 'success');
+                    if (this._lastAppliedClaudeKey !== _claudeKey) {
+                        this.showMessage('Claude 配置已生效', 'success');
+                        this._lastAppliedClaudeKey = _claudeKey;
+                    }
                     this.closeEditConfigModal();
                     this.refreshClaudeModelContext();
                 }
@@ -157,12 +161,16 @@ export function createClaudeConfigMethods(options = {}) {
                 return this.showMessage('请先配置 API Key', 'error');
             }
 
+            const _claudeKey2 = `${name}|${config.apiKey || ""}|${config.baseUrl || ""}|${config.model || ""}`;
             try {
                 const res = await api('apply-claude-config', { config });
                 if (res.error || res.success === false) {
                     this.showMessage(res.error || '应用配置失败', 'error');
                 } else {
-                    this.showMessage('配置已应用', 'success');
+                    if (this._lastAppliedClaudeKey !== _claudeKey2) {
+                        this.showMessage('配置已应用', 'success');
+                        this._lastAppliedClaudeKey = _claudeKey2;
+                    }
                 }
             } catch (_) {
                 this.showMessage('应用配置失败', 'error');

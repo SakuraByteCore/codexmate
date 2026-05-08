@@ -4,34 +4,36 @@
    设计系统 - Design Tokens
    ============================================ */
 :root {
-    /* 色彩系统：中性灰（更贴近 craft/shadcn 观感）+ 品牌强调 */
-    --color-brand: #C77462;
-    --color-brand-dark: #B45E4E;
-    --color-brand-light: rgba(199, 116, 98, 0.12);
-    --color-brand-subtle: rgba(199, 116, 98, 0.18);
+    /* 色彩系统：低饱和暖色 + 桌面助理式柔和层级 */
+    --color-brand: #C87963;
+    --color-brand-dark: #A95845;
+    --color-brand-light: rgba(200, 121, 99, 0.13);
+    --color-brand-subtle: rgba(200, 121, 99, 0.2);
 
-    --color-bg: #FAFAFA;
-    --color-surface: #FFFFFF;
-    --color-surface-alt: #F4F4F5;
+    --color-bg: #F7F0E9;
+    --color-surface: #FFFDFC;
+    --color-surface-alt: #F7EFE8;
     --color-surface-elevated: #FFFFFF;
-    --color-surface-tint: rgba(255, 255, 255, 0.92);
-    --color-text-primary: #18181B;
-    --color-text-secondary: #3F3F46;
-    --color-text-tertiary: #71717A;
-    --color-text-muted: #A1A1AA;
-    --color-border: #E4E4E7;
-    --color-border-soft: rgba(24, 24, 27, 0.12);
-    --color-border-strong: rgba(24, 24, 27, 0.24);
+    --color-surface-tint: rgba(255, 253, 250, 0.86);
+    --color-text-primary: #241F1C;
+    --color-text-secondary: #5A504A;
+    --color-text-tertiary: #82746A;
+    --color-text-muted: #A99B91;
+    --color-border: rgba(137, 111, 94, 0.18);
+    --color-border-soft: rgba(137, 111, 94, 0.13);
+    --color-border-strong: rgba(137, 111, 94, 0.34);
 
     --color-success: #4B8B6A;
     --color-error: #C44536;
 
     --bg-warm-gradient:
-        linear-gradient(180deg, #FAFAFA 0%, #FAFAFA 100%);
+        radial-gradient(circle at 14% 8%, rgba(255, 219, 196, 0.5) 0%, rgba(255, 219, 196, 0) 32%),
+        radial-gradient(circle at 88% 0%, rgba(252, 239, 207, 0.58) 0%, rgba(252, 239, 207, 0) 30%),
+        linear-gradient(135deg, #FFF8F1 0%, #F7F0E9 46%, #F1E8DF 100%);
 
-    --color-bg-topbar-strong: rgba(250, 250, 250, 0.96);
-    --color-bg-topbar-soft: rgba(250, 250, 250, 0.9);
-    --color-bg-topbar-clear: rgba(250, 250, 250, 0);
+    --color-bg-topbar-strong: rgba(255, 248, 241, 0.96);
+    --color-bg-topbar-soft: rgba(255, 248, 241, 0.86);
+    --color-bg-topbar-clear: rgba(255, 248, 241, 0);
 
     /* 字体系统 */
     --font-family-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -64,24 +66,24 @@
     --spacing-xl: 64px;
 
     /* 圆角系统 */
-    --radius-sm: 8px;
-    --radius-md: 10px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
     --radius-full: 50px;
 
-    /* 阴影系统 - 更偏中性与克制 */
-    --shadow-subtle: 0 1px 2px rgba(24, 24, 27, 0.04);
-    --shadow-card: 0 1px 3px rgba(24, 24, 27, 0.06);
-    --shadow-card-hover: 0 8px 26px rgba(24, 24, 27, 0.12);
-    --shadow-float: 0 14px 36px rgba(24, 24, 27, 0.16);
-    --shadow-raised: 0 8px 18px rgba(24, 24, 27, 0.12);
+    /* 阴影系统 - 柔和桌面浮层 */
+    --shadow-subtle: 0 1px 2px rgba(60, 47, 38, 0.05);
+    --shadow-card: 0 12px 30px rgba(92, 68, 52, 0.08);
+    --shadow-card-hover: 0 18px 44px rgba(92, 68, 52, 0.14);
+    --shadow-float: 0 22px 56px rgba(70, 51, 39, 0.18);
+    --shadow-raised: 0 14px 30px rgba(92, 68, 52, 0.14);
     --shadow-modal:
-        0 10px 30px rgba(24, 24, 27, 0.14),
-        0 28px 72px rgba(24, 24, 27, 0.12);
+        0 16px 42px rgba(70, 51, 39, 0.16),
+        0 34px 84px rgba(70, 51, 39, 0.16);
     --shadow-input-focus:
         0 0 0 3px var(--color-brand-light),
-        0 1px 2px rgba(24, 24, 27, 0.06);
+        0 1px 2px rgba(60, 47, 38, 0.06);
 
     /* 动画 - 更细腻的曲线 */
     --transition-instant: 100ms;
@@ -265,4 +267,15 @@ body {
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 26%),
+        radial-gradient(circle at 86% 18%, rgba(255, 232, 206, 0.36), rgba(255, 232, 206, 0) 30%);
+    z-index: 0;
 }

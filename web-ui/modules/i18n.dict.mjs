@@ -357,6 +357,10 @@ const DICT = Object.freeze({
         'plugins.builtin.ruleAck.name': '规则确认回复',
         'plugins.builtin.ruleAck.desc': '请根据【{{rule}}】，收到请回复',
         'plugins.builtin.ruleAck.line1': '请根据【{{rule}}】，收到请回复',
+        'plugins.builtin.issueInject.name': 'Issue 注入',
+        'plugins.builtin.issueInject.desc': '将 {{issue}} 注入到 issue {{num}}',
+        'plugins.builtin.issueInject.line1': '## 需求',
+        'plugins.builtin.issueInject.line2': '## 验证',
 
         // Toasts
         'toast.copy.empty': '没有可复制内容',
@@ -1420,6 +1424,10 @@ const DICT = Object.freeze({
         'plugins.builtin.ruleAck.name': 'Rule acknowledgement',
         'plugins.builtin.ruleAck.desc': 'Please follow 【{{rule}}】, reply when received',
         'plugins.builtin.ruleAck.line1': 'Please follow 【{{rule}}】, reply when received',
+        'plugins.builtin.issueInject.name': 'Issue inject',
+        'plugins.builtin.issueInject.desc': 'Inject {{issue}} into issue {{num}}',
+        'plugins.builtin.issueInject.line1': '## Requirements',
+        'plugins.builtin.issueInject.line2': '## Verification',
 
         // Toasts
         'toast.copy.empty': 'Nothing to copy',

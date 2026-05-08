@@ -629,6 +629,8 @@ export function createCodexConfigMethods(options = {}) {
             this.modelContextWindowInput = modelContextWindow.text;
             this.modelAutoCompactTokenLimitInput = modelAutoCompactTokenLimit.text;
 
+            const _codexKey = `${provider}|${model}|${this.serviceTier || ""}|${this.modelReasoningEffort || ""}|${modelContextWindow.value}|${modelAutoCompactTokenLimit.value}`;
+
             this.codexApplying = true;
             try {
                 const tplRes = await api('get-config-template', {
@@ -665,7 +667,12 @@ export function createCodexConfigMethods(options = {}) {
                 }
 
                 if (options.silent !== true) {
-                    this.showMessage('配置已应用', 'success');
+                    if (this._lastAppliedCodexKey !== _codexKey) {
+                        this.showMessage('配置已应用', 'success');
+                        this._lastAppliedCodexKey = _codexKey;
+                    }
+                } else {
+                    this._lastAppliedCodexKey = _codexKey;
                 }
 
                 const refreshOptions = options.silent === true

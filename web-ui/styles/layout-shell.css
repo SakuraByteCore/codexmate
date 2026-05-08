@@ -3,7 +3,7 @@
    ============================================ */
 body::before,
 body::after {
-    content: none;
+    pointer-events: none;
 }
 
 /* ============================================
@@ -34,7 +34,7 @@ body::after {
     min-height: 100vh;
     height: 100vh;
     overflow: hidden;
-    background: var(--color-bg);
+    background: transparent;
 }
 
 .app-shell.standalone {
@@ -48,16 +48,17 @@ body::after {
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 0;
-    background: var(--color-surface);
-    border-right: 1px solid var(--color-border);
+    padding: 10px 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 253, 250, 0.92) 0%, rgba(255, 248, 241, 0.82) 100%);
+    border-right: 1px solid rgba(137, 111, 94, 0.16);
     border-radius: 0;
-    box-shadow: none;
+    box-shadow: 18px 0 42px rgba(92, 68, 52, 0.08);
     min-height: 100vh;
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    backdrop-filter: none;
+    backdrop-filter: blur(18px) saturate(130%);
 }
 
 .side-rail::-webkit-scrollbar {
@@ -73,11 +74,11 @@ body::after {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 6px;
+    padding: 7px 4px;
 }
 
 .side-section + .side-section {
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid rgba(137, 111, 94, 0.12);
 }
 
 .side-rail-nav {
@@ -129,8 +130,8 @@ body::after {
 }
 
 .lang-choice-btn.active {
-    border-color: rgba(199, 116, 98, 0.55);
-    background: rgba(199, 116, 98, 0.14);
+    border-color: rgba(200, 121, 99, 0.55);
+    background: rgba(200, 121, 99, 0.14);
     color: var(--color-brand-dark);
 }
 
@@ -201,7 +202,7 @@ body::after {
 }
 
 .lang-fab .lang-switch:hover .lang-switch-track {
-    border-color: rgba(199, 116, 98, 0.7);
+    border-color: rgba(200, 121, 99, 0.7);
 }
 
 .side-rail-lang {
@@ -209,10 +210,10 @@ body::after {
     bottom: 0;
     z-index: 2;
     margin-top: auto;
-    padding: 12px 10px;
-    background: transparent;
-    border-top: 1px solid var(--color-border);
-    backdrop-filter: none;
+    padding: 12px 4px 4px;
+    background: linear-gradient(180deg, rgba(255, 248, 241, 0), rgba(255, 248, 241, 0.92) 34%);
+    border-top: 1px solid rgba(137, 111, 94, 0.12);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
 }
@@ -249,7 +250,7 @@ body::after {
 }
 
 .lang-switch:hover .lang-switch-track {
-    border-color: rgba(199, 116, 98, 0.6);
+    border-color: rgba(200, 121, 99, 0.6);
     background: rgba(255, 253, 252, 0.92);
     transform: translateY(-1px);
 }
@@ -297,7 +298,7 @@ body::after {
     content: "";
     position: absolute;
     inset: -20px;
-    background: radial-gradient(circle at 30% 20%, rgba(199, 116, 98, 0.18), rgba(199, 116, 98, 0) 55%);
+    background: radial-gradient(circle at 30% 20%, rgba(200, 121, 99, 0.18), rgba(200, 121, 99, 0) 55%);
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 240ms var(--ease-smooth), transform 240ms var(--ease-smooth);
@@ -322,13 +323,13 @@ body::after {
 .side-item {
     width: 100%;
     text-align: left;
-    padding: 5px;
-    border-radius: 8px;
+    padding: 8px 10px;
+    border-radius: 13px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--color-text-secondary);
     cursor: pointer;
-    transition: border-color var(--transition-fast) var(--ease-smooth), background-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth);
+    transition: border-color var(--transition-fast) var(--ease-smooth), background-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth), box-shadow var(--transition-fast) var(--ease-smooth), transform var(--transition-fast) var(--ease-smooth);
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -351,16 +352,18 @@ body::after {
 }
 
 .side-item:hover {
-    background: var(--color-surface-alt);
+    background: rgba(255, 255, 255, 0.58);
     color: var(--color-text-primary);
+    transform: translateY(-1px);
 }
 
 .side-item.active,
 .side-item.nav-intent-active {
-    border-color: transparent;
-    background: var(--color-brand-light);
+    border-color: rgba(200, 121, 99, 0.28);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(200, 121, 99, 0.14));
     color: var(--color-brand-dark);
-    box-shadow: none;
+    box-shadow: 0 10px 24px rgba(92, 68, 52, 0.08);
 }
 
 .side-item.nav-intent-inactive,
@@ -421,8 +424,8 @@ body::after {
     align-items: flex-start;
     gap: 10px;
     margin-bottom: 0;
-    padding: 20px;
-    border-bottom: 1px solid var(--color-border);
+    padding: 16px 10px 18px;
+    border-bottom: 1px solid rgba(137, 111, 94, 0.12);
 }
 
 .brand-head {
@@ -434,10 +437,10 @@ body::after {
 .brand-logo {
     width: 38px;
     height: 38px;
-    border-radius: 10px;
+    border-radius: 14px;
     object-fit: cover;
     flex-shrink: 0;
-    box-shadow: var(--shadow-subtle);
+    box-shadow: 0 12px 26px rgba(92, 68, 52, 0.12);
 }
 
 .brand-copy {
@@ -497,10 +500,10 @@ body::after {
     justify-content: flex-start;
     gap: 8px;
     padding: 8px 10px;
-    border-radius: 8px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    box-shadow: none;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(137, 111, 94, 0.15);
+    box-shadow: var(--shadow-subtle);
 }
 
 .github-badge:hover {
@@ -511,7 +514,7 @@ body::after {
 }
 
 .github-badge:focus-visible {
-    outline: 3px solid rgba(199, 116, 98, 0.18);
+    outline: 3px solid rgba(200, 121, 99, 0.18);
     outline-offset: 2px;
     border-color: var(--color-brand);
     color: var(--color-text-primary);

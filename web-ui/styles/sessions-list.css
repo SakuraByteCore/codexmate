@@ -205,9 +205,9 @@
     min-width: 0;
     position: relative;
     overflow: hidden;
-    min-height: 80px;
+    min-height: 108px;
     content-visibility: auto;
-    contain-intrinsic-size: 80px;
+    contain-intrinsic-size: 108px;
 }
 
 .session-item-header {
@@ -370,8 +370,8 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    margin-top: 2px;
+    gap: 6px 8px;
+    margin-top: 4px;
     margin-bottom: 2px;
 }
 
@@ -393,9 +393,13 @@
 }
 
 .session-item-cwd {
-    flex: 1 1 160px;
-    min-width: 160px;
+    flex: 1 0 100%;
+    min-width: 0;
     color: var(--color-text-muted);
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
 }
 
 .session-preview {

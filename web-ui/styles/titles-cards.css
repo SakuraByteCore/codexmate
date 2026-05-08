@@ -35,14 +35,14 @@
    ============================================ */
 .segmented-control {
     display: flex;
-    background: var(--color-surface);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.48);
+    border-radius: var(--radius-md);
     padding: 4px;
     margin-bottom: 14px;
     position: relative;
-    box-shadow: none;
-    border: 1px solid var(--color-border);
-    backdrop-filter: none;
+    box-shadow: var(--shadow-subtle);
+    border: 1px solid var(--color-border-soft);
+    backdrop-filter: blur(12px);
 }
 
 .segment {
@@ -54,7 +54,7 @@
     font-weight: var(--font-weight-secondary);
     color: var(--color-text-secondary);
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     transition: color var(--transition-fast) var(--ease-smooth), background-color var(--transition-fast) var(--ease-smooth);
     position: relative;
     z-index: 2;
@@ -67,8 +67,8 @@
 
 .segment.active {
     color: var(--color-brand-dark);
-    background: var(--color-brand-light);
-    box-shadow: inset 0 0 0 1px rgba(199, 116, 98, 0.12);
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 8px 18px rgba(92, 68, 52, 0.08), inset 0 0 0 1px rgba(200, 121, 99, 0.12);
 }
 
 /* ============================================
@@ -77,7 +77,7 @@
 .card-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 8px;
 }
 
@@ -85,9 +85,10 @@
    卡片
    ============================================ */
 .card {
-    background: var(--color-surface);
-    border-radius: 10px;
-    padding: 10px 12px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 251, 247, 0.76));
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -95,18 +96,20 @@
     transition:
         border-color var(--transition-fast) var(--ease-smooth),
         background-color var(--transition-fast) var(--ease-smooth),
-        box-shadow var(--transition-fast) var(--ease-smooth);
-    box-shadow: none;
+        box-shadow var(--transition-fast) var(--ease-smooth),
+        transform var(--transition-fast) var(--ease-smooth);
+    box-shadow: var(--shadow-card);
     user-select: none;
     will-change: auto;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-soft);
     position: relative;
     overflow: hidden;
 }
 
 .card:hover {
     border-color: var(--color-border-strong);
-    box-shadow: none;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
 }
 
 .card::before,
@@ -130,7 +133,7 @@
 .card::after {
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.1) 0%, transparent 55%);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.55) 0%, transparent 58%);
     opacity: 0;
     transition: opacity var(--transition-fast) var(--ease-smooth);
 }
@@ -141,9 +144,10 @@
 }
 
 .card.active {
-    background: var(--color-brand-light);
-    border-color: rgba(199, 116, 98, 0.18);
-    box-shadow: none;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(200, 121, 99, 0.15));
+    border-color: rgba(200, 121, 99, 0.28);
+    box-shadow: 0 14px 34px rgba(92, 68, 52, 0.12);
 }
 
 .card.active::before {
@@ -169,8 +173,8 @@
 .card-icon {
     width: 32px;
     height: 32px;
-    border-radius: 8px;
-    background: rgba(199, 116, 98, 0.1);
+    border-radius: var(--radius-sm);
+    background: rgba(200, 121, 99, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -179,13 +183,13 @@
     color: var(--color-brand-dark);
     flex-shrink: 0;
     transition: background-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth);
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px rgba(200, 121, 99, 0.08);
 }
 
 .card.active .card-icon {
-    background: rgba(199, 116, 98, 0.14);
+    background: rgba(200, 121, 99, 0.18);
     color: var(--color-brand-dark);
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px rgba(200, 121, 99, 0.14);
 }
 
 .card-content {
@@ -304,7 +308,7 @@
 }
 
 .card-action-btn:hover {
-    background: linear-gradient(135deg, rgba(210, 107, 90, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(200, 121, 99, 0.1) 0%, rgba(255, 255, 255, 0.95) 100%);
     color: var(--color-text-primary);
     transform: translateY(-1px);
 }

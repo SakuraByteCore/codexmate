@@ -6,6 +6,7 @@ import {
 } from './storage.mjs';
 import { buildBuiltinCommentPolishTemplate } from './comment-polish/index.mjs';
 import { buildBuiltinRuleAckTemplate } from './rule-ack/index.mjs';
+import { buildBuiltinIssueInjectTemplate } from './issue-inject/index.mjs';
 
 function ensureBuiltinTemplates(rawList, builtins) {
     const list = Array.isArray(rawList) ? rawList.filter(Boolean) : [];
@@ -32,7 +33,8 @@ export async function loadPromptTemplatesOverview(ctx, options = {}) {
     const rawList = readPromptTemplatesFromStorage(localStorage);
     const normalized = ensureBuiltinTemplates(rawList, [
         buildBuiltinCommentPolishTemplate(t),
-        buildBuiltinRuleAckTemplate(t)
+        buildBuiltinRuleAckTemplate(t),
+        buildBuiltinIssueInjectTemplate(t)
     ]);
     app.promptTemplatesListRaw = normalized;
     persistPromptTemplatesToStorage(normalized, localStorage);

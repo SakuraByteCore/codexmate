@@ -32,9 +32,25 @@ test('getSupplementalModelsForBaseUrl returns Anthropic Claude models for offici
     assert(!models.includes('glm-5.1'));
 });
 
+test('getSupplementalModelsForBaseUrl returns provider-specific Claude-compatible Codex catalogs', () => {
+    const deepseekModels = getSupplementalModelsForBaseUrl('https://api.deepseek.com/anthropic');
+    const qwenModels = getSupplementalModelsForBaseUrl('https://coding.dashscope.aliyuncs.com/apps/anthropic');
+    const zaiModels = getSupplementalModelsForBaseUrl('https://api.z.ai/api/anthropic');
+    const modelscopeModels = getSupplementalModelsForBaseUrl('https://api-inference.modelscope.cn');
+
+    assert(deepseekModels.includes('DeepSeek-V3.2'));
+    assert(!deepseekModels.includes('qwen3-coder'));
+    assert(qwenModels.includes('qwen3-coder'));
+    assert(!qwenModels.includes('DeepSeek-V3.2'));
+    assert(zaiModels.includes('glm-5'));
+    assert(modelscopeModels.includes('ZhipuAI/GLM-5'));
+});
+
 test('getSupplementalModelsForBaseUrl does not match unrelated bigmodel hosts or paths', () => {
     assert.deepStrictEqual(getSupplementalModelsForBaseUrl('https://notbigmodel.cn/api/anthropic'), []);
     assert.deepStrictEqual(getSupplementalModelsForBaseUrl('https://open.bigmodel.cn/api/anthropicx'), []);
+    assert.deepStrictEqual(getSupplementalModelsForBaseUrl('https://api.deepseek.com/v1'), []);
+    assert.deepStrictEqual(getSupplementalModelsForBaseUrl('https://coding.dashscope.aliyuncs.com/apps/openai'), []);
 });
 
 test('mergeModelCatalog keeps remote order and appends missing Claude endpoint extras once', () => {

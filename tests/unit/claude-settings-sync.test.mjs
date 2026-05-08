@@ -381,7 +381,7 @@ test('applyClaudeConfig reports informative message for external credential only
     const result = await applyClaudeConfig.call(context, 'imported');
     assert.strictEqual(context.currentClaudeConfig, 'imported');
     assert.strictEqual(refreshCount, 1);
-    assert.deepStrictEqual(messages, [{ msg: '检测到外部 Claude 认证状态；当前仅支持展示，若需由 codexmate 接管请补充 API Key', type: 'info' }]);
+    assert.deepStrictEqual(messages, [{ msg: '使用外部认证，无需 API Key', type: 'info' }]);
     assert.deepStrictEqual(result, messages[0]);
 });
 

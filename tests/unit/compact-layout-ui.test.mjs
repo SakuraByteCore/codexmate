@@ -62,7 +62,9 @@ test('styles keep desktop layout wide and session history readable on large scre
     assert.match(styles, /\.session-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(260px,\s*360px\)\s*minmax\(0,\s*1fr\);/);
     assert.match(styles, /\.session-preview-scroll\s*\{[\s\S]*padding-right:\s*52px;/);
     assert.match(styles, /\.session-timeline\s*\{[\s\S]*right:\s*4px;[\s\S]*width:\s*44px;/);
-    assert.match(styles, /\.session-item\s*\{[\s\S]*min-height:\s*80px;/);
+    assert.match(styles, /\.session-item\s*\{[\s\S]*min-height:\s*108px;[\s\S]*contain-intrinsic-size:\s*108px;/);
+    assert.match(styles, /\.session-item-cwd\s*\{[\s\S]*flex:\s*1 0 100%;[\s\S]*white-space:\s*normal;[\s\S]*overflow:\s*visible;[\s\S]*overflow-wrap:\s*anywhere;/);
+    assert.doesNotMatch(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.session-item\s*\{[\s\S]*height:\s*75px;/);
 
     const html = readBundledWebUiHtml();
     assert.match(html, /class="brand-logo"\s+src="\/res\/logo-pack\.webp"/);
