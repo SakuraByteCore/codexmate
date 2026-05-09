@@ -717,6 +717,7 @@ function isLoopbackAddress(address) {
 }
 
 function writeSse(res, eventName, dataObj) {
+    if (!res || res.writableEnded || res.destroyed) return;
     if (eventName) {
         res.write(`event: ${eventName}\n`);
     }
@@ -725,6 +726,365 @@ function writeSse(res, eventName, dataObj) {
         return;
     }
     res.write(`data: ${JSON.stringify(dataObj)}\n\n`);
+}
+
+function appendChatStreamToolCall(target, toolCall) {
+    if (!toolCall || typeof toolCall !== 'object') return;
+    const index = Number.isFinite(toolCall.index) ? toolCall.index : target.length;
+    if (!target[index]) {
+        target[index] = {
+            id: '',
+            type: 'function',
+            function: { name: '', arguments: '' }
+        };
+    }
+    const current = target[index];
+    if (typeof toolCall.id === 'string' && toolCall.id) current.id = toolCall.id;
+    if (typeof toolCall.type === 'string' && toolCall.type) current.type = toolCall.type;
+    const fn = toolCall.function && typeof toolCall.function === 'object' ? toolCall.function : null;
+    if (fn) {
+        if (typeof fn.name === 'string' && fn.name) current.function.name = fn.name;
+        if (typeof fn.arguments === 'string') current.function.arguments += fn.arguments;
+    }
+}
+
+function writeChatCompletionChunkAsResponsesSse(state, chunk) {
+    if (!chunk || typeof chunk !== 'object') return;
+    if (typeof chunk.model === 'string' && chunk.model) {
+        state.model = chunk.model;
+    }
+    const choices = Array.isArray(chunk.choices) ? chunk.choices : [];
+    for (const choice of choices) {
+        const delta = choice && choice.delta && typeof choice.delta === 'object' ? choice.delta : null;
+        if (!delta) continue;
+
+        if (typeof delta.content === 'string' && delta.content) {
+            if (!state.messageItem) {
+                state.messageItem = {
+                    id: `msg_${crypto.randomBytes(8).toString('hex')}`,
+                    type: 'message',
+                    role: 'assistant',
+                    content: [{ type: 'output_text', text: '' }]
+                };
+                state.output.push(state.messageItem);
+                writeSse(state.res, 'response.output_item.added', {
+                    type: 'response.output_item.added',
+                    output_index: state.output.length - 1,
+                    item: state.messageItem
+                });
+            }
+            state.messageText += delta.content;
+            state.messageItem.content[0].text = state.messageText;
+            writeSse(state.res, 'response.output_text.delta', {
+                type: 'response.output_text.delta',
+                item_id: state.messageItem.id,
+                output_index: state.output.length - 1,
+                content_index: 0,
+                delta: delta.content,
+                sequence_number: state.nextSeq()
+            });
+        }
+
+        if (Array.isArray(delta.tool_calls)) {
+            for (const toolCall of delta.tool_calls) {
+                appendChatStreamToolCall(state.toolCalls, toolCall);
+            }
+        }
+    }
+}
+
+function finishChatStreamResponsesSse(state) {
+    if (!state || state.finished) return;
+    state.finished = true;
+
+    if (state.messageItem) {
+        const outputIndex = state.output.indexOf(state.messageItem);
+        writeSse(state.res, 'response.output_text.done', {
+            type: 'response.output_text.done',
+            item_id: state.messageItem.id,
+            output_index: outputIndex,
+            content_index: 0,
+            text: state.messageText,
+            sequence_number: state.nextSeq()
+        });
+        writeSse(state.res, 'response.output_item.done', {
+            type: 'response.output_item.done',
+            output_index: outputIndex,
+            item: state.messageItem,
+            sequence_number: state.nextSeq()
+        });
+    }
+
+    for (const toolCall of state.toolCalls) {
+        if (!toolCall) continue;
+        const name = toolCall.function && typeof toolCall.function.name === 'string' ? toolCall.function.name : '';
+        if (!name) continue;
+        const item = {
+            type: 'function_call',
+            call_id: toolCall.id || `call_${crypto.randomBytes(8).toString('hex')}`,
+            name,
+            arguments: toolCall.function && typeof toolCall.function.arguments === 'string' ? toolCall.function.arguments : ''
+        };
+        const outputIndex = state.output.length;
+        state.output.push(item);
+        writeSse(state.res, 'response.output_item.added', {
+            type: 'response.output_item.added',
+            output_index: outputIndex,
+            item
+        });
+        writeSse(state.res, 'response.output_item.done', {
+            type: 'response.output_item.done',
+            output_index: outputIndex,
+            item,
+            sequence_number: state.nextSeq()
+        });
+    }
+
+    const response = ensureResponseMetadata({
+        id: state.responseId,
+        model: state.model,
+        created_at: state.createdAt,
+        status: 'completed',
+        output: state.output,
+        output_text: state.messageText
+    });
+    writeSse(state.res, 'response.completed', { type: 'response.completed', response });
+    writeSse(state.res, 'done', '[DONE]');
+    if (!state.res.writableEnded && !state.res.destroyed) {
+        state.res.end();
+    }
+}
+
+function failChatStreamResponsesSse(state, errorMessage) {
+    if (!state || state.finished) return;
+    state.finished = true;
+    writeSse(state.res, 'response.failed', {
+        type: 'response.failed',
+        response: ensureResponseMetadata({
+            id: state.responseId,
+            model: state.model,
+            created_at: state.createdAt,
+            status: 'failed',
+            output: state.output,
+            output_text: state.messageText
+        }),
+        error: String(errorMessage || 'upstream stream failed')
+    });
+    writeSse(state.res, 'done', '[DONE]');
+    if (!state.res.writableEnded && !state.res.destroyed) {
+        state.res.end();
+    }
+}
+
+function formatUpstreamStreamError(errorValue) {
+    if (!errorValue) return 'upstream stream failed';
+    if (typeof errorValue === 'string') return errorValue;
+    if (typeof errorValue === 'object') {
+        if (typeof errorValue.message === 'string' && errorValue.message) return errorValue.message;
+        try { return JSON.stringify(errorValue); } catch (_) {}
+    }
+    return String(errorValue || 'upstream stream failed');
+}
+
+function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
+    const parsed = new URL(targetUrl);
+    const transport = parsed.protocol === 'https:' ? https : http;
+    const bodyText = options.body ? JSON.stringify(options.body) : '';
+    const maxBytes = Number.isFinite(options.maxBytes) && options.maxBytes > 0
+        ? Math.floor(options.maxBytes)
+        : 0;
+    const headers = {
+        'Accept': 'text/event-stream',
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(options.headers || {})
+    };
+    if (options.body) {
+        headers['Content-Length'] = Buffer.byteLength(bodyText, 'utf-8');
+    }
+    const timeoutMs = Number.isFinite(options.timeoutMs)
+        ? Math.max(1000, Number(options.timeoutMs))
+        : 30000;
+    const res = options.res;
+    const fallbackModel = typeof options.model === 'string' ? options.model : '';
+
+    return new Promise((resolve) => {
+        let settled = false;
+        let upstreamReq = null;
+        const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+        };
+        const abortUpstream = () => {
+            if (upstreamReq) {
+                try { upstreamReq.destroy(new Error('client aborted')); } catch (_) {}
+            }
+        };
+        if (res && typeof res.once === 'function') {
+            res.once('close', abortUpstream);
+        }
+
+        upstreamReq = transport.request({
+            protocol: parsed.protocol,
+            hostname: parsed.hostname,
+            port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+            method: options.method || 'POST',
+            path: `${parsed.pathname}${parsed.search}`,
+            headers,
+            agent: parsed.protocol === 'https:' ? options.httpsAgent : options.httpAgent
+        }, (upstreamRes) => {
+            const status = upstreamRes.statusCode || 0;
+            const chunks = [];
+            let size = 0;
+            const contentType = String(upstreamRes.headers && upstreamRes.headers['content-type'] || '');
+
+            const collectChunk = (chunk) => {
+                if (!chunk) return true;
+                if (maxBytes > 0) {
+                    size += chunk.length;
+                    if (size > maxBytes) {
+                        chunks.length = 0;
+                        try { upstreamRes.destroy(new Error('response too large')); } catch (_) {}
+                        try { upstreamReq.destroy(new Error('response too large')); } catch (_) {}
+                        finish({ ok: false, status, error: 'response too large' });
+                        return false;
+                    }
+                }
+                chunks.push(chunk);
+                return true;
+            };
+
+            if (status >= 400) {
+                upstreamRes.on('data', collectChunk);
+                upstreamRes.on('end', () => finish({
+                    ok: false,
+                    status,
+                    bodyText: chunks.length ? Buffer.concat(chunks).toString('utf-8') : ''
+                }));
+                return;
+            }
+
+            if (!res.headersSent) {
+                res.writeHead(200, {
+                    'Content-Type': 'text/event-stream; charset=utf-8',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'X-Accel-Buffering': 'no'
+                });
+                if (typeof res.flushHeaders === 'function') res.flushHeaders();
+            }
+
+            if (!/text\/event-stream/i.test(contentType)) {
+                upstreamRes.on('data', collectChunk);
+                upstreamRes.on('end', () => {
+                    const text = chunks.length ? Buffer.concat(chunks).toString('utf-8') : '';
+                    const parsedJson = parseJsonOrError(text);
+                    if (parsedJson.error) {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: `invalid upstream response: ${parsedJson.error}` });
+                        writeSse(res, 'done', '[DONE]');
+                        if (!res.writableEnded && !res.destroyed) res.end();
+                        finish({ ok: true });
+                        return;
+                    }
+                    const extracted = extractChatCompletionResult(parsedJson.value);
+                    sendResponsesSse(res, buildResponsesPayloadFromChatResult(fallbackModel, extracted.text, extracted.toolCalls, parsedJson.value));
+                    if (!res.writableEnded && !res.destroyed) res.end();
+                    finish({ ok: true });
+                });
+                return;
+            }
+
+            let sequence = 0;
+            const state = {
+                res,
+                responseId: `resp_${crypto.randomBytes(10).toString('hex')}`,
+                model: fallbackModel,
+                createdAt: Math.floor(Date.now() / 1000),
+                output: [],
+                messageItem: null,
+                messageText: '',
+                toolCalls: [],
+                finished: false,
+                sawDone: false,
+                nextSeq: () => {
+                    sequence += 1;
+                    return sequence;
+                }
+            };
+            writeSse(res, 'response.created', {
+                type: 'response.created',
+                response: {
+                    id: state.responseId,
+                    model: state.model,
+                    created_at: state.createdAt
+                }
+            });
+
+            let buffer = '';
+            const handleEventBlock = (block) => {
+                const dataLines = String(block || '')
+                    .split(/\r?\n/)
+                    .filter((line) => line.startsWith('data:'))
+                    .map((line) => line.slice(5).trimStart());
+                if (dataLines.length === 0) return;
+                const data = dataLines.join('\n').trim();
+                if (!data) return;
+                if (data === '[DONE]') {
+                    state.sawDone = true;
+                    finishChatStreamResponsesSse(state);
+                    finish({ ok: true });
+                    return;
+                }
+                const parsedChunk = parseJsonOrError(data);
+                if (!parsedChunk.error) {
+                    if (parsedChunk.value && typeof parsedChunk.value === 'object' && parsedChunk.value.error) {
+                        failChatStreamResponsesSse(state, formatUpstreamStreamError(parsedChunk.value.error));
+                        finish({ ok: true });
+                        return;
+                    }
+                    writeChatCompletionChunkAsResponsesSse(state, parsedChunk.value);
+                }
+            };
+
+            upstreamRes.on('data', (chunk) => {
+                if (!chunk) return;
+                buffer += chunk.toString('utf-8');
+                let boundary = buffer.search(/\r?\n\r?\n/);
+                while (boundary >= 0) {
+                    const block = buffer.slice(0, boundary);
+                    const match = buffer.slice(boundary).match(/^\r?\n\r?\n/);
+                    buffer = buffer.slice(boundary + (match ? match[0].length : 2));
+                    handleEventBlock(block);
+                    boundary = buffer.search(/\r?\n\r?\n/);
+                }
+            });
+            upstreamRes.on('end', () => {
+                if (buffer.trim()) handleEventBlock(buffer);
+                if (!state.finished && !state.sawDone) {
+                    failChatStreamResponsesSse(state, 'upstream stream ended before [DONE]');
+                    finish({ ok: true });
+                    return;
+                }
+                finishChatStreamResponsesSse(state);
+                finish({ ok: true });
+            });
+            upstreamRes.on('aborted', () => {
+                failChatStreamResponsesSse(state, 'upstream stream aborted');
+                finish({ ok: true });
+            });
+            upstreamRes.on('error', (err) => {
+                failChatStreamResponsesSse(state, err && err.message ? err.message : 'upstream stream failed');
+                finish({ ok: true });
+            });
+        });
+        upstreamReq.setTimeout(timeoutMs, () => {
+            try { upstreamReq.destroy(new Error('timeout')); } catch (_) {}
+            finish({ ok: false, error: 'timeout' });
+        });
+        upstreamReq.on('error', (err) => finish({ ok: false, error: err && err.message ? err.message : 'request failed' }));
+        if (bodyText) upstreamReq.write(bodyText);
+        upstreamReq.end();
+    });
 }
 
 async function proxyRequestJson(targetUrl, options = {}) {
@@ -955,6 +1315,44 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             const streamRequested = !!(responsesRequest && typeof responsesRequest === 'object' && responsesRequest.stream === true);
             const acceptHeader = req && req.headers ? (req.headers.accept || req.headers.Accept || '') : '';
             const wantsSse = /text\/event-stream/i.test(String(acceptHeader || ''));
+
+            if (streamRequested && wantsSse) {
+                const converted = convertResponsesRequestToChatCompletions(responsesRequest);
+                if (converted.error) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: converted.error }));
+                    return;
+                }
+                const upstreamUrl = joinApiUrl(upstream.baseUrl, 'chat/completions');
+                const chatBody = { ...converted.chat, stream: true };
+                const streamed = await streamChatCompletionsAsResponsesSse(upstreamUrl, {
+                    method: 'POST',
+                    body: chatBody,
+                    headers: {
+                        ...(authHeader ? { Authorization: authHeader } : {}),
+                        ...upstreamHeaders
+                    },
+                    maxBytes: maxUpstreamBytes,
+                    httpAgent,
+                    httpsAgent,
+                    res,
+                    model: typeof chatBody.model === 'string' ? chatBody.model : ''
+                });
+                if (!streamed.ok) {
+                    if (res.writableEnded || res.destroyed) {
+                        return;
+                    }
+                    if (!res.headersSent) {
+                        res.writeHead(streamed.status && streamed.status >= 400 ? streamed.status : 502, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(streamed.bodyText || JSON.stringify({ error: streamed.error || 'Upstream request failed' }));
+                    } else if (!res.writableEnded && !res.destroyed) {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: streamed.error || streamed.bodyText || 'Upstream request failed' });
+                        writeSse(res, 'done', '[DONE]');
+                        res.end();
+                    }
+                }
+                return;
+            }
 
             // Maxx-style behavior: prefer upstream /responses if supported.
             // Fallback to /chat/completions conversion when upstream does not implement /responses (404/405).
