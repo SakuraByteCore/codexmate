@@ -127,6 +127,42 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         return false;
     }
 
+    function isTransientNetworkError(error) {
+        const text = String(error || '').trim();
+        if (!text) return false;
+        if (/socket hang up/i.test(text)) return true;
+        if (/ECONNRESET|ECONNREFUSED|EPIPE|EPROTO|ETIMEDOUT/i.test(text)) return true;
+        if (/EAI_AGAIN/i.test(text)) return true;
+        if (/UND_ERR_SOCKET/i.test(text)) return true;
+        if (/disconnected before|secure tls|tls handshake/i.test(text)) return true;
+        return false;
+    }
+
+    const TRANSIENT_RETRY_DELAYS_MS = [200, 600];
+
+    async function retryTransientRequest(executor) {
+        let lastResult = null;
+        for (let attempt = 0; attempt <= TRANSIENT_RETRY_DELAYS_MS.length; attempt += 1) {
+            if (attempt > 0) {
+                const delay = TRANSIENT_RETRY_DELAYS_MS[attempt - 1];
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise((r) => {
+                    const t = setTimeout(r, delay);
+                    if (typeof t.unref === 'function') t.unref();
+                });
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const result = await executor(attempt);
+            lastResult = result;
+            if (!result) return result;
+            if (result.ok) return result;
+            if (result.retry) return result;
+            if (result.status && result.status > 0) return result;
+            if (!isTransientNetworkError(result.error)) return result;
+        }
+        return lastResult;
+    }
+
     function proxyRequestJson(targetUrl, options = {}) {
         const parsed = new URL(targetUrl);
         const transport = parsed.protocol === 'https:' ? https : http;
@@ -206,7 +242,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         }
         let lastResult = null;
         for (let index = 0; index < urls.length; index += 1) {
-            const result = await proxyRequestJson(urls[index], options);
+            const result = await retryTransientRequest(() => proxyRequestJson(urls[index], options));
             lastResult = result;
             if (!result.ok) {
                 return result;
@@ -702,9 +738,34 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         }
     }
 
+    function stopChatStreamHeartbeat(state) {
+        if (!state || !state.heartbeatTimer) return;
+        clearInterval(state.heartbeatTimer);
+        state.heartbeatTimer = null;
+    }
+
+    function startChatStreamHeartbeat(state) {
+        if (!state || state.heartbeatTimer) return;
+        const timer = setInterval(() => {
+            if (state.finished) {
+                stopChatStreamHeartbeat(state);
+                return;
+            }
+            const target = state.res;
+            if (!target || target.writableEnded || target.destroyed) {
+                stopChatStreamHeartbeat(state);
+                return;
+            }
+            try { target.write(': keepalive\n\n'); } catch (_) {}
+        }, 15000);
+        if (typeof timer.unref === 'function') timer.unref();
+        state.heartbeatTimer = timer;
+    }
+
     function finishChatStreamResponsesSse(state) {
         if (state.finished) return;
         state.finished = true;
+        stopChatStreamHeartbeat(state);
 
         if (state.messageItem) {
             const outputIndex = state.output.indexOf(state.messageItem);
@@ -759,6 +820,22 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         state.res.end();
     }
 
+    function failResponsesSseRaw(res, message) {
+        if (!res || res.writableEnded || res.destroyed) return;
+        try {
+            writeSse(res, 'response.failed', { type: 'response.failed', error: message || 'upstream stream failed' });
+            writeSse(res, 'done', '[DONE]');
+            res.end();
+        } catch (_) {}
+    }
+
+    function failChatStreamResponsesSse(state, message) {
+        if (!state || state.finished) return;
+        state.finished = true;
+        stopChatStreamHeartbeat(state);
+        failResponsesSseRaw(state.res, message);
+    }
+
     function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
         const parsed = new URL(targetUrl);
         const transport = parsed.protocol === 'https:' ? https : http;
@@ -796,6 +873,29 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 const status = upstreamRes.statusCode || 0;
                 const chunks = [];
                 const contentType = String(upstreamRes.headers && upstreamRes.headers['content-type'] || '');
+                let streamState = null;
+
+                const handleAbort = (reason) => {
+                    if (settled) return;
+                    if (streamState) {
+                        failChatStreamResponsesSse(streamState, reason);
+                        finish({ ok: true });
+                        return;
+                    }
+                    if (res.headersSent) {
+                        failResponsesSseRaw(res, reason);
+                        finish({ ok: true });
+                        return;
+                    }
+                    finish({
+                        ok: false,
+                        status,
+                        error: reason,
+                        bodyText: chunks.length ? Buffer.concat(chunks).toString('utf-8') : ''
+                    });
+                };
+                upstreamRes.on('error', (err) => handleAbort(err && err.message ? err.message : 'upstream stream failed'));
+                upstreamRes.on('aborted', () => handleAbort('upstream stream aborted'));
 
                 if (status === 404 || status === 405) {
                     upstreamRes.on('data', (chunk) => chunk && chunks.push(chunk));
@@ -851,6 +951,11 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         return sequence;
                     }
                 };
+                streamState = state;
+                startChatStreamHeartbeat(state);
+                if (typeof res.on === 'function') {
+                    res.on('close', () => stopChatStreamHeartbeat(state));
+                }
                 writeSse(res, 'response.created', {
                     type: 'response.created',
                     response: {
@@ -914,7 +1019,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         }
         let lastResult = null;
         for (const url of urls) {
-            const result = await streamChatCompletionsAsResponsesSse(url, options);
+            const result = await retryTransientRequest(() => streamChatCompletionsAsResponsesSse(url, options));
             lastResult = result;
             if (result && result.retry) continue;
             return result;

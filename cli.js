@@ -304,8 +304,16 @@ const CLI_INSTALL_TARGETS = Object.freeze([
     }
 ]);
 
-const HTTP_KEEP_ALIVE_AGENT = new http.Agent({ keepAlive: true });
-const HTTPS_KEEP_ALIVE_AGENT = new https.Agent({ keepAlive: true });
+const HTTP_KEEP_ALIVE_AGENT = new http.Agent({
+    keepAlive: true,
+    keepAliveMsecs: 1000,
+    maxFreeSockets: 4
+});
+const HTTPS_KEEP_ALIVE_AGENT = new https.Agent({
+    keepAlive: true,
+    keepAliveMsecs: 1000,
+    maxFreeSockets: 4
+});
 
 const openaiBridgeHandler = createOpenaiBridgeHttpHandler({
     settingsFile: OPENAI_BRIDGE_SETTINGS_FILE,

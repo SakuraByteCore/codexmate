@@ -554,3 +554,104 @@ test('builtin-proxy /v1/responses maps Responses tool items through chat fallbac
         await closeServer(upstream);
     }
 });
+
+test('builtin-proxy /v1/responses stream=true emits response.failed when upstream stream aborts mid-flight', async () => {
+    const sockets = new Set();
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+                res.write('data: {"id":"chatcmpl_partial","model":"gpt-test","choices":[{"delta":{"role":"assistant"}}]}\n\n');
+                res.write('data: {"id":"chatcmpl_partial","model":"gpt-test","choices":[{"delta":{"content":"partial"}}]}\n\n');
+                setTimeout(() => {
+                    try { req.socket.destroy(); } catch (_) {}
+                }, 30);
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    upstream.on('connection', (socket) => {
+        sockets.add(socket);
+        socket.on('close', () => sockets.delete(socket));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const sse = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-test', input: 'ping', stream: true }
+        });
+        assert.equal(sse.status, 200);
+        assert.match(sse.headers['content-type'], /text\/event-stream/i);
+        assert.match(sse.text, /event: response\.created/);
+        assert.match(sse.text, /"delta":"partial"/);
+        assert.match(sse.text, /event: response\.failed/);
+        assert.match(sse.text, /data: \[DONE\]/);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream, sockets);
+    }
+});
+
+test('builtin-proxy /v1/responses retries upstream after a transient connection reset', async () => {
+    let connectionCount = 0;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            connectionCount += 1;
+            if (connectionCount === 1) {
+                try { req.socket.destroy(); } catch (_) {}
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                id: 'chatcmpl_after_reset',
+                model: 'gpt-test',
+                choices: [{ message: { role: 'assistant', content: 'recovered' } }]
+            }));
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-test', input: 'ping', stream: false }
+        });
+        assert.equal(resp.status, 200);
+        assert.ok(connectionCount >= 2, 'transient reset should be retried');
+        const parsed = JSON.parse(resp.text);
+        assert.equal(parsed.output[0].content[0].text, 'recovered');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
