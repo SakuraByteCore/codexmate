@@ -254,7 +254,7 @@ export function createSessionActionMethods(options = {}) {
 
         getShareCommandPrefixInvocation() {
             const prefix = this.normalizeShareCommandPrefix(this.shareCommandPrefix);
-            return prefix === 'codexmate' ? 'codexmate' : 'npm start';
+            return prefix === 'codexmate' ? 'codexmate' : 'npm start --';
         },
 
         setShareCommandPrefix(value) {

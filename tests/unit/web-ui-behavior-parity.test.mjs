@@ -1190,7 +1190,7 @@ test('share, copy, and standalone helpers remain aligned with HEAD', async () =>
 
     assert.deepStrictEqual(currentProvider, headProvider);
     assert.deepStrictEqual(currentProviderEnv.clipboardWrites, [
-        "npm start add demo-provider 'https://provider.example.com' provider-secret && npm start switch demo-provider && npm start use gpt-4.1"
+        "npm start -- add demo-provider 'https://provider.example.com' provider-secret && npm start -- switch demo-provider && npm start -- use gpt-4.1"
     ]);
     assert.deepStrictEqual(currentProviderContext.providerShareLoading, headProviderContext.providerShareLoading);
     assert.deepStrictEqual(currentProviderContext.messages, headProviderContext.messages);
@@ -1232,7 +1232,7 @@ test('share, copy, and standalone helpers remain aligned with HEAD', async () =>
     }, () => headMethods.copyClaudeShareCommand.call(headClaudeContext, 'shared'));
 
     assert.deepStrictEqual(currentClaudeEnv.clipboardWrites, [
-        "npm start claude 'https://claude.example.com' claude-secret claude-3-7"
+        "npm start -- claude 'https://claude.example.com' claude-secret claude-3-7"
     ]);
     assert.deepStrictEqual(currentClaudeContext.claudeShareLoading, headClaudeContext.claudeShareLoading);
     assert.deepStrictEqual(currentClaudeContext.messages, headClaudeContext.messages);
