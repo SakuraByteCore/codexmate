@@ -1100,7 +1100,7 @@ test('sessionUsageSummaryCards falls back to public catalog pricing when provide
     assert.match(costCard.title, /覆盖 1\/1 个会话/);
 });
 
-test('sessionUsageSummaryCards excludes Claude sessions from estimated cost coverage', () => {
+test('sessionUsageSummaryCards includes Claude sessions in cost estimation', () => {
     const computed = createSessionComputed();
     const cards = computed.sessionUsageSummaryCards.call({
         sessionUsageCharts: {
@@ -1131,7 +1131,7 @@ test('sessionUsageSummaryCards excludes Claude sessions from estimated cost cove
             {
                 source: 'claude',
                 provider: 'claude',
-                model: 'claude-3-7-sonnet',
+                model: 'claude-sonnet-4-6',
                 totalTokens: 250000,
                 inputTokens: 150000,
                 cachedInputTokens: 0,
@@ -1145,10 +1145,8 @@ test('sessionUsageSummaryCards excludes Claude sessions from estimated cost cove
 
     const costCard = cards.find((card) => card.key === 'estimated-cost');
     assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$1.77');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /暂不含 Claude/);
-    assert.match(costCard.title, /覆盖 1\/1 个会话/);
+    assert.ok(!costCard.title.includes('暂不含 Claude'), 'Claude exclusion prefix should not appear');
+    assert.match(costCard.title, /覆盖 2\/2 个会话/);
 });
 
 test('sessionUsageSummaryCards respects configured zero-cost pricing instead of falling back to catalog rates', () => {

@@ -153,7 +153,14 @@ const KNOWN_USAGE_MODEL_PRICING = Object.freeze({
     'gpt-5.4': Object.freeze({ input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 0 }),
     'gpt-5.4-mini': Object.freeze({ input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0 }),
     'gpt-5.3-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 }),
-    'gpt-5.2-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 })
+    'gpt-5.2-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 }),
+    'claude-opus-4-6': Object.freeze({ input: 15, output: 75, cacheRead: 1.875, cacheWrite: 0, reasoningOutput: 75 }),
+    'claude-opus-4-7': Object.freeze({ input: 15, output: 75, cacheRead: 1.875, cacheWrite: 0, reasoningOutput: 75 }),
+    'claude-sonnet-4-6': Object.freeze({ input: 3, output: 15, cacheRead: 0.375, cacheWrite: 0, reasoningOutput: 15 }),
+    'claude-haiku-4-5': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.1, cacheWrite: 0, reasoningOutput: 4 }),
+    'claude-3-5-sonnet': Object.freeze({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 0, reasoningOutput: 15 }),
+    'claude-3-5-haiku': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 0, reasoningOutput: 4 }),
+    'claude-3-opus': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 0, reasoningOutput: 75 })
 });
 
 function createUsagePricingEntry(pricing, source) {
@@ -234,22 +241,17 @@ function resolveUsagePricingForSession(session, pricingIndex, fallbackProvider =
     if (knownPricing) {
         return knownPricing;
     }
+    const strippedModel = model.replace(/-\d{8}(?=[-_]|$)/, '');
+    if (strippedModel !== model) {
+        const strippedKnown = pricingIndex.knownByModel instanceof Map ? pricingIndex.knownByModel.get(strippedModel) : null;
+        if (strippedKnown) {
+            return strippedKnown;
+        }
+    }
     return null;
 }
 
-function shouldEstimateUsageCostForSession(session) {
-    if (!session || typeof session !== 'object') {
-        return false;
-    }
-    const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';
-    const provider = typeof session.provider === 'string' ? session.provider.trim().toLowerCase() : '';
-    const model = typeof session.model === 'string' ? session.model.trim().toLowerCase() : '';
-    if (source === 'claude' || provider === 'claude') {
-        return false;
-    }
-    if (/^claude(?:[-_]|$)/.test(model)) {
-        return false;
-    }
+function shouldEstimateUsageCostForSession() {
     return true;
 }
 
