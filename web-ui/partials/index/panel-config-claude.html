@@ -45,8 +45,7 @@
                     <div class="selector-header">
                         <span class="selector-title">{{ t('claude.presetProviders') }}</span>
                     </div>
-                    <div class="btn-group" style="flex-wrap: wrap; gap: 8px;">
-                        <button type="button" class="btn-mini" @click="closeClaudeConfigModal(); showClaudeConfigModal = true">{{ t('claude.customConfig') }}</button>
+                    <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
                         <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Claude Official'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.anthropic.com'; newClaudeConfig.model = 'claude-sonnet-4'; showClaudeConfigModal = true">Claude Official</button>
                         <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DeepSeek'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.deepseek.com/anthropic'; newClaudeConfig.model = 'DeepSeek-V3.2'; showClaudeConfigModal = true">DeepSeek</button>
                         <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Zhipu GLM'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://open.bigmodel.cn/api/anthropic'; newClaudeConfig.model = 'glm-5'; showClaudeConfigModal = true">Zhipu GLM</button>

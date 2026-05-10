@@ -38,6 +38,27 @@
                     {{ t('config.addProvider') }}
                 </button>
 
+                <!-- 服务预设 -->
+                <div class="selector-section" v-if="isCodexConfigMode && codexProviderTemplates.length">
+                    <div class="selector-header">
+                        <span class="selector-title">{{ t('config.providerTemplate.title') }}</span>
+                    </div>
+                    <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
+                        <button
+                            v-for="tpl in codexProviderTemplates"
+                            :key="tpl.name"
+                            type="button"
+                            class="btn-mini"
+                            @click="newProvider.name = tpl.name;
+                                    newProvider.url = tpl.url;
+                                    newProvider._suggestedModel = tpl.model || '';
+                                    newProvider.useTransform = !!tpl.useTransform;
+                                    showAddModal = true">
+                            {{ tpl.label }}
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 模型选择器 -->
                 <div class="selector-section">
                     <div class="selector-header">
