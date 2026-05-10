@@ -577,6 +577,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'addPromptTemplateVariable',
         'closePromptTemplateVarModal',
         'confirmAddPromptTemplateVariable',
+        'onSessionResumeYoloChange'
     ];
     if (parityAgainstHead) {
         const allowedExtraMethodKeySet = new Set(allowedExtraCurrentMethodKeys);
