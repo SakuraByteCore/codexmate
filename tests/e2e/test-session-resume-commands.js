@@ -30,11 +30,11 @@ module.exports = async function testSessionResumeCommands(ctx) {
     const claudeEntry = (claudeSessions.sessions || []).find((item) => item && item.sessionId === claudeSessionId);
     assert(claudeEntry, 'resume e2e missing claude session entry');
     assert(vm.isResumeCommandAvailable(claudeEntry) === true, 'claude session should allow resume command');
-    assert(vm.buildResumeCommand.call({ ...vm, sessionResumeWithYolo: true }, claudeEntry) === `claude -r ${claudeSessionId}`, 'claude resume command mismatch');
+    assert(vm.buildResumeCommand.call({ ...vm, sessionResumeWithYolo: true }, claudeEntry) === `claude --dangerously-skip-permissions -r ${claudeSessionId}`, 'claude resume command mismatch');
 
     const claudeNoId = { source: 'claude', sessionId: '', filePath: claudeSessionPath };
     assert(vm.isResumeCommandAvailable(claudeNoId) === true, 'claude should allow resume from filePath');
-    assert(vm.buildResumeCommand.call({ ...vm, sessionResumeWithYolo: true }, claudeNoId).includes('claude -r '), 'claude resume command should be generated from filePath');
+    assert(vm.buildResumeCommand.call({ ...vm, sessionResumeWithYolo: true }, claudeNoId).includes('claude --dangerously-skip-permissions -r '), 'claude resume command should be generated from filePath');
 
     const geminiSessions = await api('list-sessions', { source: 'gemini', limit: 50, forceRefresh: true });
     const geminiEntry = (geminiSessions.sessions || []).find((item) => item && item.sessionId === geminiSessionId);
