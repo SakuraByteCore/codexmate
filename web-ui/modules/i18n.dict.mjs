@@ -106,7 +106,7 @@ const DICT = Object.freeze({
         'placeholder.modelExample': '例如: gpt-5',
         'placeholder.configNameExample': '例如: 智谱GLM',
         'placeholder.apiKeyExampleClaude': 'sk-ant-...',
-        'placeholder.baseUrlExampleClaude': '',
+        'placeholder.baseUrlExampleClaude': 'https://open.bigmodel.cn/api/anthropic',
         'placeholder.selectProvider': '请选择提供商',
 
         // Roles / labels
@@ -1162,7 +1162,7 @@ const DICT = Object.freeze({
         'placeholder.modelExample': 'e.g. gpt-5',
         'placeholder.configNameExample': 'e.g. My Claude Setup',
         'placeholder.apiKeyExampleClaude': 'sk-ant-...',
-        'placeholder.baseUrlExampleClaude': '',
+        'placeholder.baseUrlExampleClaude': 'https://open.bigmodel.cn/api/anthropic',
         'placeholder.selectProvider': 'Select a provider',
 
         // Roles / labels

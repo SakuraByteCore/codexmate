@@ -192,8 +192,8 @@ export function createClaudeConfigMethods(options = {}) {
             this.newClaudeConfig = {
                 name: '',
                 apiKey: '',
-                baseUrl: 'https://open.bigmodel.cn/api/anthropic',
-                model: 'glm-4.7'
+                baseUrl: '',
+                model: ''
             };
         }
     };

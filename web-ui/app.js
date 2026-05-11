@@ -274,8 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 newClaudeConfig: {
                     name: '',
                     apiKey: '',
-                    baseUrl: 'https://open.bigmodel.cn/api/anthropic',
-                    model: 'glm-4.7'
+                    baseUrl: '',
+                    model: ''
                 },
                 currentOpenclawConfig: '',
                 openclawConfigs: {
