@@ -1038,6 +1038,9 @@ test('createWebServer health-check does not consume init notice before the first
         readPositiveIntegerConfigValue() {
             return 0;
         },
+        readCurrentModels() {
+            return {};
+        },
         consumeInitNotice() {
             consumed += 1;
             return 'startup notice';

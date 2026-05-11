@@ -78,7 +78,7 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
         }
     }]);
     assert.strictEqual(context.showAddModal, false);
-    assert.deepStrictEqual(context.newProvider, { name: '', url: '', key: '', useTransform: false });
+    assert.deepStrictEqual(context.newProvider, { name: '', url: '', key: '', useTransform: false, _suggestedModel: '' });
     assert.deepStrictEqual(loadAllCalls, ['loadAll']);
     assert.strictEqual(messages.length, 1);
     assert.deepStrictEqual(messages[0], {

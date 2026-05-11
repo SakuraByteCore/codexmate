@@ -1,6 +1,6 @@
 ﻿{
   "name": "codexmate",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "description": "Codex/Claude Code/OpenClaw 配置、会话与任务编排 CLI + Web 工具",
   "main": "cli.js",
   "bin": {
@@ -40,6 +40,8 @@
     "test:ci": "node tools/ci/run-check.js all",
     "test:unit": "node tests/unit/run.mjs",
     "test:e2e": "node tests/e2e/run.js",
+    "setup:git": "git remote set-url origin https://github.com/SakuraByteCore/codexmate.git && gh auth setup-git",
+    "reset:dev": "node tools/dev/reset-and-dev.js",
     "pretest": "node tools/ci/ensure-test-deps.js"
   },
   "dependencies": {

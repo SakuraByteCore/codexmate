@@ -335,7 +335,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionsUsageLoadedLimit',
         'taskOrchestrationTabEnabled',
         'taskOrchestration',
-        '_taskOrchestrationPollTimer'
+        '_taskOrchestrationPollTimer',
+        'displayProviderUrl',
+        'isTransformProvider'
     ] : [
         '__mainTabSwitchState',
         'openclawAuthProfilesByProvider',
@@ -366,6 +368,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionListLoadStep',
         'sessionListVisibleCount',
         'showHealthCheckDialog',
+        'sessionResumeWithYolo',
         'healthCheckDialogLastResult',
         'healthCheckDialogLockedProvider',
         'healthCheckDialogMessages',
@@ -409,7 +412,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionConverting',
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
-        'sessionsUsageSelectedDayKey'
+        'sessionsUsageSelectedDayKey',
+        'currentModels'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -573,6 +577,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'addPromptTemplateVariable',
         'closePromptTemplateVarModal',
         'confirmAddPromptTemplateVariable',
+        'onSessionResumeYoloChange'
     ];
     if (parityAgainstHead) {
         const allowedExtraMethodKeySet = new Set(allowedExtraCurrentMethodKeys);
@@ -629,7 +634,13 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'taskOrchestrationQueueStats',
         'taskOrchestrationDraftMetrics',
         'taskOrchestrationDraftChecklist',
-        'taskOrchestrationDraftReadiness'
+        'taskOrchestrationDraftReadiness',
+        'displayProviderUrl',
+        'isTransformProvider',
+        'activeProviderModel',
+        'codexModelOptions',
+        'codexModelHasList',
+        'codexProviderTemplates'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

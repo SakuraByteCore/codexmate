@@ -50,7 +50,7 @@ module.exports = async function testWebUiAssets(ctx) {
         /^text\/html\b/.test(String(bundledIndex.headers['content-type'] || '')),
         '/web-ui/index.html should return html content type'
     );
-    assert(bundledIndex.body.includes('id="settings-panel-trash"'), '/web-ui/index.html should inline settings partials');
+    assert(bundledIndex.body.includes('id="settings-panel-data"'), '/web-ui/index.html should inline settings partials');
     assert(bundledIndex.body.includes('src="/web-ui/app.js"'), '/web-ui/index.html should point to the absolute app entry');
     assert(
         bundledIndex.body.includes('src="/res/vue.global.prod.js"'),

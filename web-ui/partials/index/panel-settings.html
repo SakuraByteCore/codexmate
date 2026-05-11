@@ -7,43 +7,32 @@
                     :aria-labelledby="'tab-settings'">
                     <div class="config-subtabs settings-subtabs" role="tablist" :aria-label="t('settings.tabs.aria')">
                         <button
-                            id="settings-tab-backup"
+                            id="settings-tab-general"
                             role="tab"
-                            aria-controls="settings-panel-backup"
-                            :aria-selected="settingsTab === 'backup'"
-                            :tabindex="settingsTab === 'backup' ? 0 : -1"
-                            :class="['config-subtab', { active: settingsTab === 'backup' }]"
-                            @click="onSettingsTabClick('backup')">
-                            {{ t('settings.tab.backup') }}
+                            aria-controls="settings-panel-general"
+                            :aria-selected="settingsTab === 'general'"
+                            :tabindex="settingsTab === 'general' ? 0 : -1"
+                            :class="['config-subtab', { active: settingsTab === 'general' }]"
+                            @click="onSettingsTabClick('general')">
+                            {{ t('settings.tab.general') }}
                         </button>
                         <button
-                            id="settings-tab-trash"
+                            id="settings-tab-data"
                             role="tab"
-                            aria-controls="settings-panel-trash"
-                            :aria-selected="settingsTab === 'trash'"
-                            :tabindex="settingsTab === 'trash' ? 0 : -1"
-                            :class="['config-subtab', { active: settingsTab === 'trash' }]"
-                            @click="onSettingsTabClick('trash')">
-                            {{ t('settings.tab.trash') }}
-                            <span class="settings-tab-badge">{{ sessionTrashCount }}</span>
-                        </button>
-                        <button
-                            id="settings-tab-device"
-                            role="tab"
-                            aria-controls="settings-panel-device"
-                            :aria-selected="settingsTab === 'device'"
-                            :tabindex="settingsTab === 'device' ? 0 : -1"
-                            :class="['config-subtab', { active: settingsTab === 'device' }]"
-                            @click="onSettingsTabClick('device')">
-                            {{ t('settings.tab.device') }}
+                            aria-controls="settings-panel-data"
+                            :aria-selected="settingsTab === 'data'"
+                            :tabindex="settingsTab === 'data' ? 0 : -1"
+                            :class="['config-subtab', { active: settingsTab === 'data' }]"
+                            @click="onSettingsTabClick('data')">
+                            {{ t('settings.tab.data') }}
                         </button>
                     </div>
 
                     <div
-                        v-show="settingsTab === 'backup'"
-                        id="settings-panel-backup"
+                        v-show="settingsTab === 'general'"
+                        id="settings-panel-general"
                         role="tabpanel"
-                        aria-labelledby="settings-tab-backup">
+                        aria-labelledby="settings-tab-general">
                         <div class="settings-layout">
                             <div class="settings-grid">
                                 <section class="settings-card settings-card--wide" :aria-label="t('settings.sharePrefix.title')">
@@ -69,6 +58,35 @@
                                     </div>
                                 </section>
 
+                                <section class="settings-card settings-card--wide" :aria-label="t('settings.templateConfirm.title')">
+                                    <div class="settings-card-header">
+                                        <div class="settings-card-title">{{ t('settings.templateConfirm.title') }}</div>
+                                        <div class="settings-card-meta">{{ t('settings.templateConfirm.meta') }}</div>
+                                    </div>
+                                    <div class="settings-card-body">
+                                        <label class="health-remote-toggle settings-toggle">
+                                            <input
+                                                type="checkbox"
+                                                :checked="configTemplateDiffConfirmEnabled"
+                                                @change="setConfigTemplateDiffConfirmEnabled($event.target.checked)">
+                                            <span>{{ t('settings.templateConfirm.toggle') }}</span>
+                                        </label>
+                                        <div class="settings-card-hint">
+                                            {{ t('settings.templateConfirm.hint') }}
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        v-show="settingsTab === 'data'"
+                        id="settings-panel-data"
+                        role="tabpanel"
+                        aria-labelledby="settings-tab-data">
+                        <div class="settings-layout">
+                            <div class="settings-grid">
                                 <section class="settings-card" :aria-label="t('settings.claude.title')">
                                     <div class="settings-card-header">
                                         <div class="settings-card-title">{{ t('settings.claude.title') }}</div>
@@ -114,17 +132,7 @@
                                             @change="handleCodexImportChange">
                                     </div>
                                 </section>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div
-                        v-show="settingsTab === 'trash'"
-                        id="settings-panel-trash"
-                        role="tabpanel"
-                        aria-labelledby="settings-tab-trash">
-                        <div class="settings-layout">
-                            <div class="settings-grid">
                                 <section class="settings-card settings-card--wide" :aria-label="t('settings.deleteBehavior.title')">
                                     <div class="settings-card-header">
                                         <div class="settings-card-title">{{ t('settings.deleteBehavior.title') }}</div>
@@ -221,35 +229,6 @@
                                                     {{ t('settings.trash.loadMore', { count: sessionTrashHiddenCount }) }}
                                                 </button>
                                             </div>
-                                        </div>
-                                    </div>
-                                </section>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        v-show="settingsTab === 'device'"
-                        id="settings-panel-device"
-                        role="tabpanel"
-                        aria-labelledby="settings-tab-device">
-                        <div class="settings-layout">
-                            <div class="settings-grid">
-                                <section class="settings-card settings-card--wide" :aria-label="t('settings.templateConfirm.title')">
-                                    <div class="settings-card-header">
-                                        <div class="settings-card-title">{{ t('settings.templateConfirm.title') }}</div>
-                                        <div class="settings-card-meta">{{ t('settings.templateConfirm.meta') }}</div>
-                                    </div>
-                                    <div class="settings-card-body">
-                                        <label class="health-remote-toggle settings-toggle">
-                                            <input
-                                                type="checkbox"
-                                                :checked="configTemplateDiffConfirmEnabled"
-                                                @change="setConfigTemplateDiffConfirmEnabled($event.target.checked)">
-                                            <span>{{ t('settings.templateConfirm.toggle') }}</span>
-                                        </label>
-                                        <div class="settings-card-hint">
-                                            {{ t('settings.templateConfirm.hint') }}
                                         </div>
                                     </div>
                                 </section>

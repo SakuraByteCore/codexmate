@@ -189,7 +189,7 @@ test('switchMainTab primes trash badge count and invalidates the cached trash li
     const calls = [];
     const vm = {
         mainTab: 'sessions',
-        settingsTab: 'backup',
+        settingsTab: 'general',
         sessionTrashLoadedOnce: true,
         configMode: 'codex',
         teardownSessionTabRender() {},

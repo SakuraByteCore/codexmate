@@ -160,7 +160,7 @@ export function switchMainTab(tab) {
         this.prepareSessionTabRender();
     }
     const shouldLoadTrashListOnSettingsEnter = nextTab === 'settings'
-        && this.settingsTab === 'trash'
+        && this.settingsTab === 'data'
         && typeof this.loadSessionTrash === 'function';
     if (shouldLoadTrashListOnSettingsEnter) {
         this.loadSessionTrash({
@@ -168,7 +168,7 @@ export function switchMainTab(tab) {
         });
     }
     const shouldPrimeTrashCountOnSettingsEnter = nextTab === 'settings'
-        && this.settingsTab !== 'trash'
+        && this.settingsTab !== 'data'
         && typeof this.loadSessionTrashCount === 'function';
     if (shouldPrimeTrashCountOnSettingsEnter) {
         this.sessionTrashLoadedOnce = false;

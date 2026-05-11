@@ -56,12 +56,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
         /<button[^>]*@click="resetCodexContextBudgetDefaults"[^>]*>[\s\S]*?t\('config\.reset'\)[\s\S]*?<\/button>/
     );
     assert.match(html, /class="codex-config-grid"/);
-    assert.match(html, /onSettingsTabClick\('backup'\)/);
-    assert.match(html, /onSettingsTabClick\('trash'\)/);
-    assert.match(html, /onSettingsTabClick\('device'\)/);
-    assert.match(html, /settingsTab === 'backup'/);
-    assert.match(html, /settingsTab === 'trash'/);
-    assert.match(html, /settingsTab === 'device'/);
+    assert.match(html, /onSettingsTabClick\('general'\)/);
+    assert.match(html, /onSettingsTabClick\('data'\)/);
+    assert.match(html, /settingsTab === 'general'/);
+    assert.match(html, /settingsTab === 'data'/);
     assert.match(html, /setConfigTemplateDiffConfirmEnabled/);
     assert.match(html, /configTemplateDiffConfirmEnabled/);
     assert.match(html, /sessionTrashCount/);
@@ -205,31 +203,25 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(html, /resetOnlineSkillsMarketSearch/);
     assert.doesNotMatch(html, /class="market-online-list"/);
     assert.doesNotMatch(html, /class="market-ecosystem-grid"/);
-    assert.match(html, /id="settings-tab-backup"/);
-    assert.match(html, /id="settings-tab-trash"/);
-    assert.match(html, /id="settings-tab-device"/);
+    assert.match(html, /id="settings-tab-general"/);
+    assert.match(html, /id="settings-tab-data"/);
     assert.match(html, /role="tab"/);
-    assert.match(html, /aria-controls="settings-panel-backup"/);
-    assert.match(html, /aria-controls="settings-panel-trash"/);
-    assert.match(html, /aria-controls="settings-panel-device"/);
-    assert.match(html, /:aria-selected="settingsTab === 'backup'"/);
-    assert.match(html, /:aria-selected="settingsTab === 'trash'"/);
-    assert.match(html, /:aria-selected="settingsTab === 'device'"/);
-    assert.match(html, /id="settings-tab-backup"[\s\S]*:tabindex="settingsTab === 'backup' \? 0 : -1"/);
-    assert.match(html, /id="settings-tab-trash"[\s\S]*:tabindex="settingsTab === 'trash' \? 0 : -1"/);
-    assert.match(html, /id="settings-tab-device"[\s\S]*:tabindex="settingsTab === 'device' \? 0 : -1"/);
-    assert.match(html, /id="settings-panel-backup"/);
-    assert.match(html, /id="settings-panel-trash"/);
-    assert.match(html, /id="settings-panel-device"/);
-    assert.match(html, /<div[\s\S]*v-show="settingsTab === 'backup'"[\s\S]*id="settings-panel-backup"[\s\S]*aria-labelledby="settings-tab-backup">/);
-    assert.match(html, /<div[\s\S]*v-show="settingsTab === 'trash'"[\s\S]*id="settings-panel-trash"[\s\S]*aria-labelledby="settings-tab-trash">/);
-    assert.match(html, /<div[\s\S]*v-show="settingsTab === 'device'"[\s\S]*id="settings-panel-device"[\s\S]*aria-labelledby="settings-tab-device">/);
-    assert.match(html, /id="settings-panel-backup"[\s\S]*?<div class="settings-card-title">\{\{\s*t\('settings\.sharePrefix\.title'\)\s*\}\}<\/div>/);
+    assert.match(html, /aria-controls="settings-panel-general"/);
+    assert.match(html, /aria-controls="settings-panel-data"/);
+    assert.match(html, /:aria-selected="settingsTab === 'general'"/);
+    assert.match(html, /:aria-selected="settingsTab === 'data'"/);
+    assert.match(html, /id="settings-tab-general"[\s\S]*:tabindex="settingsTab === 'general' \? 0 : -1"/);
+    assert.match(html, /id="settings-tab-data"[\s\S]*:tabindex="settingsTab === 'data' \? 0 : -1"/);
+    assert.match(html, /id="settings-panel-general"/);
+    assert.match(html, /id="settings-panel-data"/);
+    assert.match(html, /<div[\s\S]*v-show="settingsTab === 'general'"[\s\S]*id="settings-panel-general"[\s\S]*aria-labelledby="settings-tab-general">/);
+    assert.match(html, /<div[\s\S]*v-show="settingsTab === 'data'"[\s\S]*id="settings-panel-data"[\s\S]*aria-labelledby="settings-tab-data">/);
+    assert.match(html, /id="settings-panel-general"[\s\S]*?<div class="settings-card-title">\{\{\s*t\('settings\.sharePrefix\.title'\)\s*\}\}<\/div>/);
     assert.match(html, /id="settings-share-prefix"[\s\S]*class="model-select"[\s\S]*:value="shareCommandPrefix"[\s\S]*@change="setShareCommandPrefix\(\$event\.target\.value\)"/);
     assert.match(html, /<option value="npm start">npm start<\/option>/);
     assert.match(html, /<option value="codexmate">codexmate<\/option>/);
-    assert.match(html, /id="settings-panel-device"[\s\S]*?<div class="settings-card-title">\{\{\s*t\('settings\.reset\.title'\)\s*\}\}<\/div>/);
-    assert.match(html, /id="settings-panel-device"[\s\S]*?@click="resetConfig"/);
+    assert.match(html, /id="settings-panel-data"[\s\S]*?<div class="settings-card-title">\{\{\s*t\('settings\.reset\.title'\)\s*\}\}<\/div>/);
+    assert.match(html, /id="settings-panel-data"[\s\S]*?@click="resetConfig"/);
     assert.doesNotMatch(
         html.match(/id="panel-config-provider"[\s\S]*?<\/template>/)?.[0] || '',
         /<span class="selector-title">配置重置<\/span>/
@@ -242,7 +234,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<button class="btn-tool btn-tool-compact" @click="clearSessionTrash"/);
     assert.doesNotMatch(html, /<span class="selector-title">会话回收站<\/span>/);
     assert.match(html, /role="tabpanel"/);
-    assert.doesNotMatch(html, /v-if="settingsTab === 'backup'"/);
+    assert.doesNotMatch(html, /v-if="settingsTab === 'general'"/);
     assert.match(html, /class="trash-item session-item session-card"/);
     assert.match(html, /class="trash-item-mainline"/);
     assert.match(html, /class="trash-item-side"/);
@@ -472,7 +464,7 @@ test('web ui script defines provider mode metadata for codex only', () => {
     assert.match(appScript, /normalizePositiveIntegerInput\(/);
     assert.match(constantsSource, /export const SESSION_TRASH_LIST_LIMIT = 500;/);
     assert.match(constantsSource, /export const SESSION_TRASH_PAGE_SIZE = 200;/);
-    assert.match(appScript, /settingsTab:\s*'backup'/);
+    assert.match(appScript, /settingsTab:\s*'general'/);
     assert.match(appScript, /skillsTargetApp:\s*'codex'/);
     assert.match(appScript, /skillsMarketLoading:\s*false/);
     assert.match(appScript, /skillsMarketLocalLoadedOnce:\s*false/);
@@ -492,7 +484,7 @@ test('web ui script defines provider mode metadata for codex only', () => {
     assert.match(appScript, /sessionTrashHasMoreItems\(\)/);
     assert.match(appScript, /sessionTrashHiddenCount\(\)/);
     assert.match(appScript, /normalizeSettingsTab\(tab\)/);
-    assert.match(appScript, /tab === 'trash' \|\| tab === 'device'/);
+    assert.match(appScript, /tab === 'general' \|\| tab === 'data'/);
     assert.match(appScript, /switchSettingsTab\(tab,\s*options = \{\}\)/);
     assert.match(appScript, /loadSessionTrash\(options = \{\}\)/);
     assert.match(appScript, /loadMoreSessionTrashItems\(\)/);
@@ -526,10 +518,10 @@ test('session helper deferred claude refresh validates live tab and mode before 
     assert.match(helperScript, /const expectedConfigMode = this\.configMode;/);
     assert.match(helperScript, /if \(this\.mainTab !== expectedTab \|\| this\.configMode !== expectedConfigMode\) return;/);
     assert.match(helperScript, /const shouldLoadTrashListOnSettingsEnter = nextTab === 'settings'/);
-    assert.match(helperScript, /this\.settingsTab === 'trash'/);
+    assert.match(helperScript, /this\.settingsTab === 'data'/);
     assert.match(helperScript, /forceRefresh: !!this\.sessionTrashLoadedOnce/);
     assert.match(helperScript, /const shouldPrimeTrashCountOnSettingsEnter = nextTab === 'settings'/);
-    assert.match(helperScript, /this\.settingsTab !== 'trash'/);
+    assert.match(helperScript, /this\.settingsTab !== 'data'/);
     assert.match(helperScript, /this\.sessionTrashLoadedOnce = false;/);
     assert.match(helperScript, /this\.loadSessionTrashCount\(\{ silent: true \}\);/);
     assert.match(helperScript, /const shouldLoadSkillsMarketOnEnter = nextTab === 'market'/);

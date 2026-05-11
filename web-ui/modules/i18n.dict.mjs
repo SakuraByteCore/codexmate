@@ -350,10 +350,6 @@ const DICT = Object.freeze({
         'plugins.builtin.ruleAck.name': '规则确认回复',
         'plugins.builtin.ruleAck.desc': '请根据【{{rule}}】，收到请回复',
         'plugins.builtin.ruleAck.line1': '请根据【{{rule}}】，收到请回复',
-        'plugins.builtin.issueInject.name': 'Issue 注入',
-        'plugins.builtin.issueInject.desc': '将 {{issue}} 注入到 issue {{num}}',
-        'plugins.builtin.issueInject.line1': '## 需求',
-        'plugins.builtin.issueInject.line2': '## 验证',
 
         // Toasts
         'toast.copy.empty': '没有可复制内容',
@@ -538,7 +534,6 @@ const DICT = Object.freeze({
         'sessions.pin': '置顶',
         'sessions.unpin': '取消置顶',
         'sessions.copyResume': '复制恢复命令',
-        'sessions.resumeYolo': '复制恢复命令附带 --yolo',
         'sessions.preview.refresh': '刷新内容',
         'sessions.preview.loading': '加载中...',
         'sessions.preview.deleteHard': '直接删除',
@@ -703,6 +698,7 @@ const DICT = Object.freeze({
 
         // Config panel (Codex)
         'config.addProvider': '新增提供商',
+        'config.providerTemplate.title': '预设供应商',
         'config.models': '模型',
         'config.modelLoading': '加载中...',
         'config.models.unlimited': '当前无模型列表，可手填。',
@@ -738,6 +734,7 @@ const DICT = Object.freeze({
         'modal.agents.title.openclawWorkspaceFile': 'OpenClaw 工作区文件: {fileName}',
         'modal.agents.hint.openclawWorkspaceFile': '保存后会写入 OpenClaw Workspace 下的 {fileName}。',
         'config.url.unset': '未设 URL',
+        'config.model.unset': '未设置模型',
         'config.badge.system': '系统',
         'config.availabilityTest': '可用性测试',
         'config.availabilityTestAria': '测试 {name} 可用性',
@@ -755,6 +752,8 @@ const DICT = Object.freeze({
         'config.shareCommand.aria': '分享导入命令',
         'config.provider.edit.aria': '编辑提供商：{name}',
         'config.provider.delete.aria': '删除提供商：{name}',
+        'config.provider.clone': '克隆',
+        'config.provider.clone.aria': '克隆提供商：{name}',
         'app.loadingConfig': '加载配置中...'
         ,
         'common.current': '当前 {value}',
@@ -902,10 +901,9 @@ const DICT = Object.freeze({
         ,
 
         // Settings panel
-        'settings.tab.backup': '备份与导入',
-        'settings.tab.trash': '回收站',
-        'settings.tab.device': '设备',
-        'settings.tabs.aria': '设置标签页',
+        'settings.tab.general': '通用',
+        'settings.tab.data': '数据',
+        'settings.tabs.aria': '设置分类',
         'settings.sharePrefix.title': '分享命令前缀',
         'settings.sharePrefix.meta': '影响 Web UI 里“复制分享命令”的前缀',
         'settings.sharePrefix.label': '前缀',
@@ -1035,6 +1033,8 @@ const DICT = Object.freeze({
         ,
         'claude.action.editAria': '编辑 Claude 配置：{name}',
         'claude.action.deleteAria': '删除 Claude 配置：{name}',
+        'claude.action.clone': '克隆',
+        'claude.action.cloneAria': '克隆 Claude 配置：{name}',
 
         // OpenClaw config panel
         'openclaw.applyHint': '写入 ~/.openclaw/openclaw.json，支持 JSON5。',
@@ -1406,10 +1406,6 @@ const DICT = Object.freeze({
         'plugins.builtin.ruleAck.name': 'Rule acknowledgement',
         'plugins.builtin.ruleAck.desc': 'Please follow 【{{rule}}】, reply when received',
         'plugins.builtin.ruleAck.line1': 'Please follow 【{{rule}}】, reply when received',
-        'plugins.builtin.issueInject.name': 'Issue inject',
-        'plugins.builtin.issueInject.desc': 'Inject {{issue}} into issue {{num}}',
-        'plugins.builtin.issueInject.line1': '## Requirements',
-        'plugins.builtin.issueInject.line2': '## Verification',
 
         // Toasts
         'toast.copy.empty': 'Nothing to copy',
@@ -1594,7 +1590,6 @@ const DICT = Object.freeze({
         'sessions.pin': 'Pin',
         'sessions.unpin': 'Unpin',
         'sessions.copyResume': 'Copy resume command',
-        'sessions.resumeYolo': 'Append --yolo to resume command',
         'sessions.preview.refresh': 'Refresh content',
         'sessions.preview.loading': 'Loading...',
         'sessions.preview.deleteHard': 'Delete permanently',
@@ -1759,6 +1754,7 @@ const DICT = Object.freeze({
 
         // Config panel (Codex)
         'config.addProvider': 'Add provider',
+        'config.providerTemplate.title': 'Provider presets',
         'config.models': 'Model',
         'config.modelLoading': 'Loading...',
         'config.models.unlimited': 'No model list available. Enter manually.',
@@ -1794,6 +1790,7 @@ const DICT = Object.freeze({
         'modal.agents.title.openclawWorkspaceFile': 'OpenClaw workspace file: {fileName}',
         'modal.agents.hint.openclawWorkspaceFile': 'Saved content will be written to OpenClaw workspace {fileName}.',
         'config.url.unset': 'URL not set',
+        'config.model.unset': 'Model not set',
         'config.badge.system': 'System',
         'config.availabilityTest': 'Availability test',
         'config.availabilityTestAria': 'Test availability for {name}',
@@ -1811,6 +1808,8 @@ const DICT = Object.freeze({
         'config.shareCommand.aria': 'Share import command',
         'config.provider.edit.aria': 'Edit provider: {name}',
         'config.provider.delete.aria': 'Delete provider: {name}',
+        'config.provider.clone': 'Clone',
+        'config.provider.clone.aria': 'Clone provider: {name}',
         'app.loadingConfig': 'Loading configuration...'
         ,
         'common.current': 'Current {value}',
@@ -1958,10 +1957,9 @@ const DICT = Object.freeze({
         ,
 
         // Settings panel
-        'settings.tab.backup': 'Backup & Import',
-        'settings.tab.trash': 'Trash',
-        'settings.tab.device': 'Device',
-        'settings.tabs.aria': 'Settings tabs',
+        'settings.tab.general': 'General',
+        'settings.tab.data': 'Data',
+        'settings.tabs.aria': 'Settings categories',
         'settings.sharePrefix.title': 'Share command prefix',
         'settings.sharePrefix.meta': 'Used as the prefix for “Copy share command” in the Web UI',
         'settings.sharePrefix.label': 'Prefix',
@@ -2091,6 +2089,8 @@ const DICT = Object.freeze({
         ,
         'claude.action.editAria': 'Edit Claude config: {name}',
         'claude.action.deleteAria': 'Delete Claude config: {name}',
+        'claude.action.clone': 'Clone',
+        'claude.action.cloneAria': 'Clone Claude config: {name}',
 
         // OpenClaw config panel
         'openclaw.applyHint': 'Writes to ~/.openclaw/openclaw.json (JSON5 supported).',

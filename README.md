@@ -4,7 +4,7 @@
 
 # Codex Mate
 
-**Local-first CLI + Web UI that edits your AI tool configs and sessions directly on disk, with built-in usage analytics and safe rollback.**
+**One dashboard for all your local AI coding tools — switch providers, manage sessions, edit configs, and orchestrate tasks across Codex, Claude Code, and OpenClaw. Built-in OpenAI-compatible bridge, usage analytics, and prompt templates. Zero cloud, zero setup.**
 
 [![Build](https://img.shields.io/github/actions/workflow/status/SakuraByteCore/codexmate/release.yml?label=build&style=flat)](https://github.com/SakuraByteCore/codexmate/actions/workflows/release.yml)
 [![Version](https://img.shields.io/npm/v/codexmate?label=version&style=flat)](https://www.npmjs.com/package/codexmate)

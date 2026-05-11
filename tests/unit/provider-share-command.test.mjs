@@ -622,6 +622,7 @@ test('status api case does not synthesize budget defaults after config load erro
             }),
             hasConfigLoadError,
             readPositiveIntegerConfigValue,
+            readCurrentModels: () => ({}),
             consumeInitNotice: () => ''
         }
     );
@@ -632,6 +633,7 @@ test('status api case does not synthesize budget defaults after config load erro
     assert.strictEqual(result.modelAutoCompactTokenLimit, '');
     assert.strictEqual(result.configErrorType, 'parse');
     assert.strictEqual(result.configNotice, 'config.toml 解析失败');
+    assert.deepStrictEqual(result.currentModels, {});
 });
 
 test('status api case keeps lexical declarations scoped to the switch branch', () => {

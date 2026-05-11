@@ -60,7 +60,14 @@ export function createStartupClaudeMethods(options = {}) {
                         return false;
                     }
                     this.currentProvider = statusRes.provider;
-                    this.currentModel = statusRes.model;
+                    this.currentModels = statusRes.currentModels && typeof statusRes.currentModels === 'object'
+                        ? { ...statusRes.currentModels }
+                        : {};
+                    const dictModelForCurrent = this.currentProvider
+                        && typeof this.currentModels[this.currentProvider] === 'string'
+                        ? this.currentModels[this.currentProvider].trim()
+                        : '';
+                    this.currentModel = dictModelForCurrent || statusRes.model;
                     try {
                         const installRes = await withTimeout(api('install-status'), Math.max(0, Math.min(1200, timeLeftMs())));
                         if (installRes && !installRes.error) {

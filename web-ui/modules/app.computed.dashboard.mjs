@@ -1,3 +1,5 @@
+import { getProviderDisplayUrl, checkIsTransformProvider } from './provider-url-display.mjs';
+import { getCodexModelCatalogForProvider, CODEX_PROVIDER_TEMPLATES } from '../logic.codex.mjs';
 export function createDashboardComputed() {
     return {
         agentsDiffHasChanges() {
@@ -29,6 +31,50 @@ export function createDashboardComputed() {
             }
             return list;
         },
+        activeProviderModel() {
+            return (name) => {
+                const target = String(name || '').trim();
+                if (!target) return '';
+                const dict = this.currentModels && typeof this.currentModels === 'object' ? this.currentModels : {};
+                const fromDict = typeof dict[target] === 'string' ? dict[target].trim() : '';
+                if (fromDict) return fromDict;
+                const activeName = String(this.currentProvider || '').trim();
+                if (target === activeName) {
+                    const top = typeof this.currentModel === 'string' ? this.currentModel.trim() : '';
+                    if (top && top !== '未设置') return top;
+                }
+                return '';
+            };
+        },
+        codexModelOptions() {
+            const seen = new Set();
+            const out = [];
+            const push = (val) => {
+                const s = typeof val === 'string' ? val.trim() : '';
+                if (!s || seen.has(s)) return;
+                seen.add(s);
+                out.push(s);
+            };
+            const activeName = String(this.displayCurrentProvider || '').trim();
+            const current = typeof this.currentModel === 'string' ? this.currentModel.trim() : '';
+            if (current && current !== '未设置') push(current);
+            const dict = this.currentModels && typeof this.currentModels === 'object' ? this.currentModels : {};
+            if (activeName && typeof dict[activeName] === 'string') push(dict[activeName]);
+            const remote = Array.isArray(this.models) ? this.models : [];
+            for (const m of remote) push(m);
+            const list = Array.isArray(this.providersList) ? this.providersList : [];
+            const activeProvider = list.find((p) => p && p.name === activeName);
+            if (activeProvider) {
+                for (const m of getCodexModelCatalogForProvider(activeProvider)) push(m);
+            }
+            return out;
+        },
+        codexModelHasList() {
+            return this.codexModelOptions.length > 0;
+        },
+        codexProviderTemplates() {
+            return CODEX_PROVIDER_TEMPLATES;
+        },
         displayCurrentProvider() {
             const switching = String(this.providerSwitchDisplayTarget || '').trim();
             if (switching) return switching;
@@ -38,6 +84,14 @@ export function createDashboardComputed() {
         displayProvidersList() {
             const list = Array.isArray(this.providersList) ? this.providersList : [];
             return list;
+        },
+
+        displayProviderUrl() {
+            return (provider) => getProviderDisplayUrl(provider);
+        },
+
+        isTransformProvider() {
+            return (provider) => checkIsTransformProvider(provider);
         },
         installTargetCards() {
             const targets = Array.isArray(this.installStatusTargets) && this.installStatusTargets.length

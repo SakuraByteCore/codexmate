@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 configMode: 'codex',
                 currentProvider: '',
                 currentModel: '',
+                currentModels: {},
                 serviceTier: 'fast',
                 modelReasoningEffort: 'medium',
                 modelContextWindowInput: String(DEFAULT_MODEL_CONTEXT_WINDOW),
@@ -171,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionRoleFilter: 'all',
                 sessionTimePreset: 'all',
                 sessionSortMode: 'time',
-                sessionResumeWithYolo: true,
                 sessionPathOptions: [],
                 sessionPathOptionsLoading: false,
                 sessionPathOptionsMap: {
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 installRegistryPreset: 'default',
                 installRegistryCustom: '',
                 installStatusTargets: null,
-                newProvider: { name: '', url: '', key: '', useTransform: false },
+                newProvider: { name: '', url: '', key: '', useTransform: false, _suggestedModel: '' },
                 resetConfigLoading: false,
                 editingProvider: { name: '', url: '', key: '', readOnly: false, nonEditable: false },
                 newModelName: '',
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 codexDownloadLoading: false,
                 codexDownloadProgress: 0,
                 codexDownloadTimer: null,
-                settingsTab: 'backup',
+                settingsTab: 'general',
                 sessionTrashEnabled: true,
                 sessionTrashItems: [],
                 sessionTrashVisibleCount: SESSION_TRASH_PAGE_SIZE,
@@ -465,12 +465,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.updateCompactLayoutMode();
             if (!this.taskOrchestrationTabEnabled && this.mainTab === 'orchestration') {
                 this.mainTab = 'config';
-            }
-            const savedSessionYolo = localStorage.getItem('codexmateSessionResumeYolo');
-            if (savedSessionYolo === '0' || savedSessionYolo === 'false') {
-                this.sessionResumeWithYolo = false;
-            } else if (savedSessionYolo === '1' || savedSessionYolo === 'true') {
-                this.sessionResumeWithYolo = true;
             }
             this.restoreSessionFilterCache();
             this.restoreSessionPinnedMap();

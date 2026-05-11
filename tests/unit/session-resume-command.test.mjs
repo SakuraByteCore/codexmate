@@ -20,45 +20,37 @@ test('isResumeCommandAvailable supports codex and codebuddy with sessionId', () 
     assert.strictEqual(methods.isResumeCommandAvailable({ source: 'claude', sessionId: '', filePath: '/home/user/.claude/projects/demo/sess-3.jsonl' }), true);
 });
 
-test('buildResumeCommand generates codex resume with optional --yolo, codebuddy -r, gemini -r, and claude -r', () => {
+test('buildResumeCommand generates codex --yolo resume, codebuddy -r, gemini -r, and claude --dangerously-skip-permissions -r', () => {
     const methods = createSessionActionMethods();
-    const contextBase = {
-        ...methods,
-        sessionResumeWithYolo: false
-    };
+    const ctx = { ...methods, quoteShellArg: methods.quoteShellArg };
 
     assert.strictEqual(
-        methods.buildResumeCommand.call(contextBase, { source: 'codex', sessionId: 'sess-1' }),
-        'codex resume sess-1'
-    );
-
-    assert.strictEqual(
-        methods.buildResumeCommand.call({ ...contextBase, sessionResumeWithYolo: true }, { source: 'codex', sessionId: 'sess-1' }),
+        methods.buildResumeCommand.call(ctx, { source: 'codex', sessionId: 'sess-1' }),
         'codex --yolo resume sess-1'
     );
 
     assert.strictEqual(
-        methods.buildResumeCommand.call({ ...contextBase, sessionResumeWithYolo: true }, { source: 'codebuddy', sessionId: 'abc123' }),
+        methods.buildResumeCommand.call(ctx, { source: 'codebuddy', sessionId: 'abc123' }),
         'codebuddy -r abc123'
     );
 
     assert.strictEqual(
-        methods.buildResumeCommand.call({ ...contextBase, sessionResumeWithYolo: true }, { source: 'gemini', sessionId: 'gm-123' }),
+        methods.buildResumeCommand.call(ctx, { source: 'gemini', sessionId: 'gm-123' }),
         'gemini -r gm-123'
     );
 
     assert.strictEqual(
-        methods.buildResumeCommand.call({ ...contextBase, sessionResumeWithYolo: true }, { source: 'claude', sessionId: 'sess-2' }),
-        'claude -r sess-2'
+        methods.buildResumeCommand.call(ctx, { source: 'claude', sessionId: 'sess-2' }),
+        'claude --dangerously-skip-permissions -r sess-2'
     );
 
     assert.strictEqual(
-        methods.buildResumeCommand.call({ ...contextBase, sessionResumeWithYolo: true }, { source: 'claude', sessionId: '', filePath: '/home/user/.claude/projects/demo/sess-3.jsonl' }),
-        'claude -r sess-3'
+        methods.buildResumeCommand.call(ctx, { source: 'claude', sessionId: '', filePath: '/home/user/.claude/projects/demo/sess-3.jsonl' }),
+        'claude --dangerously-skip-permissions -r sess-3'
     );
 
     assert.strictEqual(
-        methods.buildResumeCommand.call({ ...contextBase, sessionResumeWithYolo: true }, { source: 'gemini', sessionId: '', filePath: '/home/user/.gemini/tmp/abc/chats/gm-456.json' }),
+        methods.buildResumeCommand.call(ctx, { source: 'gemini', sessionId: '', filePath: '/home/user/.gemini/tmp/abc/chats/gm-456.json' }),
         'gemini -r gm-456'
     );
 });

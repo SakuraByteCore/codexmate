@@ -249,11 +249,6 @@ export function createSessionBrowserMethods(options = {}) {
             }
         },
 
-        onSessionResumeYoloChange() {
-            const value = this.sessionResumeWithYolo ? '1' : '0';
-            localStorage.setItem('codexmateSessionResumeYolo', value);
-        },
-
         normalizeSessionSortMode(value) {
             const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
             return normalized === 'hot' ? 'hot' : 'time';
