@@ -794,7 +794,14 @@ function writeChatCompletionChunkAsResponsesSse(state, chunk) {
         const delta = choice && choice.delta && typeof choice.delta === 'object' ? choice.delta : null;
         if (!delta) continue;
 
+        const segments = [];
+        if (typeof delta.reasoning_content === 'string' && delta.reasoning_content) {
+            segments.push(delta.reasoning_content);
+        }
         if (typeof delta.content === 'string' && delta.content) {
+            segments.push(delta.content);
+        }
+        for (const seg of segments) {
             if (!state.messageItem) {
                 state.messageItem = {
                     id: `msg_${crypto.randomBytes(8).toString('hex')}`,
@@ -809,14 +816,14 @@ function writeChatCompletionChunkAsResponsesSse(state, chunk) {
                     item: state.messageItem
                 });
             }
-            state.messageText += delta.content;
+            state.messageText += seg;
             state.messageItem.content[0].text = state.messageText;
             writeSse(state.res, 'response.output_text.delta', {
                 type: 'response.output_text.delta',
                 item_id: state.messageItem.id,
                 output_index: state.output.length - 1,
                 content_index: 0,
-                delta: delta.content,
+                delta: seg,
                 sequence_number: state.nextSeq()
             });
         }
