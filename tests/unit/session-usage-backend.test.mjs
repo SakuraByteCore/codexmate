@@ -666,6 +666,98 @@ test('parseClaudeSessionSummary reads model from session index and tail records'
     }
 });
 
+test('parseClaudeSessionSummary exposes Anthropic cache_read and cache_creation token fields', () => {
+    const parseClaudeSessionSummary = instantiateFunctionBundle(
+        [
+            getFileHeadTextSrc,
+            getFileTailTextSrc,
+            parseJsonlContentSrc,
+            parseJsonlHeadRecordsSrc,
+            parseJsonlTailRecordsSrc,
+            isSessionSummaryMessageCountExactSrc,
+            removeLeadingSystemMessageSrc,
+            readNonNegativeIntegerSrc,
+            readTotalTokensFromUsageSrc,
+            readUsageTotalsFromUsageSrc,
+            readContextWindowValueSrc,
+            applyUsageTotalsToStateSrc,
+            readSessionModelsFromRecordSrc,
+            readSessionModelFromRecordSrc,
+            readExplicitSessionProviderFromRecordSrc,
+            readSessionProviderFromRecordSrc,
+            applySessionUsageSummaryFromRecordSrc,
+            parseClaudeSessionSummarySrc
+        ],
+        'parseClaudeSessionSummary',
+        {
+            fs,
+            path,
+            Buffer,
+            SESSION_SUMMARY_READ_BYTES: 512,
+            SESSION_TITLE_READ_BYTES: 512,
+            toIsoTime(value, fallback = '') {
+                const date = new Date(value);
+                if (!Number.isFinite(date.getTime())) return fallback;
+                return date.toISOString();
+            },
+            updateLatestIso(current, next) {
+                const currentMs = Date.parse(current || '');
+                const nextMs = Date.parse(next || '');
+                if (!Number.isFinite(nextMs)) return current || '';
+                if (!Number.isFinite(currentMs) || nextMs > currentMs) return new Date(nextMs).toISOString();
+                return current || '';
+            },
+            normalizeRole(role) {
+                return typeof role === 'string' ? role.trim().toLowerCase() : '';
+            },
+            extractMessageText(content) {
+                if (typeof content === 'string') return content;
+                if (Array.isArray(content)) {
+                    return content.map((item) => item && item.text ? item.text : '').join(' ').trim();
+                }
+                return '';
+            },
+            truncateText(text) {
+                return typeof text === 'string' ? text : '';
+            },
+            isBootstrapLikeText() {
+                return false;
+            }
+        }
+    );
+
+    const tempDir = fs.mkdtempSync(path.join(__dirname, 'tmp-session-usage-claude-cache-'));
+    const filePath = path.join(tempDir, 'claude-cache.jsonl');
+    fs.writeFileSync(filePath, [
+        JSON.stringify({ type: 'user', message: { content: 'hello' }, timestamp: '2026-04-12T09:07:26.690Z' }),
+        JSON.stringify({
+            type: 'assistant',
+            message: {
+                model: 'claude-sonnet-4-6',
+                usage: {
+                    input_tokens: 1000,
+                    cache_read_input_tokens: 5000,
+                    cache_creation_input_tokens: 2000,
+                    output_tokens: 500
+                }
+            },
+            timestamp: '2026-04-12T09:11:35.588Z'
+        })
+    ].join('\n'));
+
+    try {
+        const result = parseClaudeSessionSummary(filePath, { summaryReadBytes: 512, titleReadBytes: 512 });
+        assert(result, 'expected claude session summary');
+        assert.strictEqual(result.cachedInputTokens, 5000, 'cache_read_input_tokens should map to cachedInputTokens');
+        assert.strictEqual(result.cacheCreationInputTokens, 2000, 'cache_creation_input_tokens should be exposed');
+        assert.strictEqual(result.inputTokens, 1000);
+        assert.strictEqual(result.outputTokens, 500);
+        assert.strictEqual(result.totalTokens, 8500, 'totalTokens fallback should include cache read and creation');
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+});
+
 test('listSessionInventoryBySource reuses cached summaries and registers session lookups', () => {
     const codexCalls = [];
     const g_sessionInventoryCache = new Map();

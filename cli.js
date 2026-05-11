@@ -3647,12 +3647,19 @@ function readTotalTokensFromUsage(usage) {
         return explicitTotal;
     }
     const inputTokens = readNonNegativeInteger(usage.input_tokens ?? usage.inputTokens);
+    const cachedInputTokens = readNonNegativeInteger(
+        usage.cached_input_tokens ?? usage.cachedInputTokens
+            ?? usage.cache_read_input_tokens ?? usage.cacheReadInputTokens
+    );
+    const cacheCreationInputTokens = readNonNegativeInteger(
+        usage.cache_creation_input_tokens ?? usage.cacheCreationInputTokens
+    );
     const outputTokens = readNonNegativeInteger(usage.output_tokens ?? usage.outputTokens);
     const reasoningOutputTokens = readNonNegativeInteger(usage.reasoning_output_tokens ?? usage.reasoningOutputTokens);
-    if (inputTokens === null && outputTokens === null && reasoningOutputTokens === null) {
+    if (inputTokens === null && cachedInputTokens === null && cacheCreationInputTokens === null && outputTokens === null && reasoningOutputTokens === null) {
         return null;
     }
-    return (inputTokens || 0) + (outputTokens || 0) + (reasoningOutputTokens || 0);
+    return (inputTokens || 0) + (cachedInputTokens || 0) + (cacheCreationInputTokens || 0) + (outputTokens || 0) + (reasoningOutputTokens || 0);
 }
 
 function readUsageTotalsFromUsage(usage) {
@@ -3660,19 +3667,26 @@ function readUsageTotalsFromUsage(usage) {
         return null;
     }
     const inputTokens = readNonNegativeInteger(usage.input_tokens ?? usage.inputTokens);
-    const cachedInputTokens = readNonNegativeInteger(usage.cached_input_tokens ?? usage.cachedInputTokens);
+    const cachedInputTokens = readNonNegativeInteger(
+        usage.cached_input_tokens ?? usage.cachedInputTokens
+            ?? usage.cache_read_input_tokens ?? usage.cacheReadInputTokens
+    );
+    const cacheCreationInputTokens = readNonNegativeInteger(
+        usage.cache_creation_input_tokens ?? usage.cacheCreationInputTokens
+    );
     const outputTokens = readNonNegativeInteger(usage.output_tokens ?? usage.outputTokens);
     const reasoningOutputTokens = readNonNegativeInteger(usage.reasoning_output_tokens ?? usage.reasoningOutputTokens);
     const totalTokens = readNonNegativeInteger(usage.total_tokens ?? usage.totalTokens)
-        ?? ((inputTokens === null && cachedInputTokens === null && outputTokens === null && reasoningOutputTokens === null)
+        ?? ((inputTokens === null && cachedInputTokens === null && cacheCreationInputTokens === null && outputTokens === null && reasoningOutputTokens === null)
             ? null
-            : ((inputTokens || 0) + (outputTokens || 0) + (reasoningOutputTokens || 0)));
-    if (inputTokens === null && cachedInputTokens === null && outputTokens === null && reasoningOutputTokens === null && totalTokens === null) {
+            : ((inputTokens || 0) + (cachedInputTokens || 0) + (cacheCreationInputTokens || 0) + (outputTokens || 0) + (reasoningOutputTokens || 0)));
+    if (inputTokens === null && cachedInputTokens === null && cacheCreationInputTokens === null && outputTokens === null && reasoningOutputTokens === null && totalTokens === null) {
         return null;
     }
     return {
         inputTokens,
         cachedInputTokens,
+        cacheCreationInputTokens,
         outputTokens,
         reasoningOutputTokens,
         totalTokens
@@ -3698,6 +3712,7 @@ function applyUsageTotalsToState(state, usageTotals) {
     const pairs = [
         ['inputTokens', usageTotals.inputTokens],
         ['cachedInputTokens', usageTotals.cachedInputTokens],
+        ['cacheCreationInputTokens', usageTotals.cacheCreationInputTokens],
         ['outputTokens', usageTotals.outputTokens],
         ['reasoningOutputTokens', usageTotals.reasoningOutputTokens],
         ['totalTokens', usageTotals.totalTokens]
@@ -3948,12 +3963,13 @@ function parseCodexSessionSummary(filePath, options = {}) {
     let contextWindow = 0;
     let inputTokens = 0;
     let cachedInputTokens = 0;
+    let cacheCreationInputTokens = 0;
     let outputTokens = 0;
     let reasoningOutputTokens = 0;
     let provider = 'codex';
     let model = '';
     const models = [];
-    const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, outputTokens, reasoningOutputTokens };
+    const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, cacheCreationInputTokens, outputTokens, reasoningOutputTokens };
     const previewMessages = [];
 
     for (const record of records) {
@@ -3966,6 +3982,7 @@ function parseCodexSessionSummary(filePath, options = {}) {
         contextWindow = usageState.contextWindow || 0;
         inputTokens = usageState.inputTokens || 0;
         cachedInputTokens = usageState.cachedInputTokens || 0;
+        cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
         outputTokens = usageState.outputTokens || 0;
         reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
 
@@ -4000,6 +4017,7 @@ function parseCodexSessionSummary(filePath, options = {}) {
         contextWindow = usageState.contextWindow || 0;
         inputTokens = usageState.inputTokens || 0;
         cachedInputTokens = usageState.cachedInputTokens || 0;
+        cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
         outputTokens = usageState.outputTokens || 0;
         reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
         provider = readExplicitSessionProviderFromRecord(record) || provider;
@@ -4059,6 +4077,7 @@ function parseCodexSessionSummary(filePath, options = {}) {
         contextWindow,
         inputTokens,
         cachedInputTokens,
+        cacheCreationInputTokens,
         outputTokens,
         reasoningOutputTokens,
         __messageCountExact: isSessionSummaryMessageCountExact(stat, summaryReadBytes),
@@ -4095,12 +4114,13 @@ function parseClaudeSessionSummary(filePath, options = {}) {
     let contextWindow = 0;
     let inputTokens = 0;
     let cachedInputTokens = 0;
+    let cacheCreationInputTokens = 0;
     let outputTokens = 0;
     let reasoningOutputTokens = 0;
     let provider = 'claude';
     let model = '';
     const models = [];
-    const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, outputTokens, reasoningOutputTokens };
+    const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, cacheCreationInputTokens, outputTokens, reasoningOutputTokens };
     const previewMessages = [];
     let createdAt = '';
     let updatedAt = stat.mtime.toISOString();
@@ -4118,6 +4138,7 @@ function parseClaudeSessionSummary(filePath, options = {}) {
         contextWindow = usageState.contextWindow || 0;
         inputTokens = usageState.inputTokens || 0;
         cachedInputTokens = usageState.cachedInputTokens || 0;
+        cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
         outputTokens = usageState.outputTokens || 0;
         reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
 
@@ -4151,6 +4172,7 @@ function parseClaudeSessionSummary(filePath, options = {}) {
         contextWindow = usageState.contextWindow || 0;
         inputTokens = usageState.inputTokens || 0;
         cachedInputTokens = usageState.cachedInputTokens || 0;
+        cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
         outputTokens = usageState.outputTokens || 0;
         reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
         provider = readExplicitSessionProviderFromRecord(record) || provider;
@@ -4209,6 +4231,7 @@ function parseClaudeSessionSummary(filePath, options = {}) {
         contextWindow,
         inputTokens,
         cachedInputTokens,
+        cacheCreationInputTokens,
         outputTokens,
         reasoningOutputTokens,
         __messageCountExact: isSessionSummaryMessageCountExact(stat, summaryReadBytes),
@@ -4245,12 +4268,13 @@ function parseCodeBuddySessionSummary(filePath, options = {}) {
     let contextWindow = 0;
     let inputTokens = 0;
     let cachedInputTokens = 0;
+    let cacheCreationInputTokens = 0;
     let outputTokens = 0;
     let reasoningOutputTokens = 0;
     let provider = 'codebuddy';
     let model = '';
     const models = [];
-    const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, outputTokens, reasoningOutputTokens };
+    const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, cacheCreationInputTokens, outputTokens, reasoningOutputTokens };
     const previewMessages = [];
     let createdAt = '';
     let updatedAt = stat.mtime.toISOString();
@@ -4268,6 +4292,7 @@ function parseCodeBuddySessionSummary(filePath, options = {}) {
         contextWindow = usageState.contextWindow || 0;
         inputTokens = usageState.inputTokens || 0;
         cachedInputTokens = usageState.cachedInputTokens || 0;
+        cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
         outputTokens = usageState.outputTokens || 0;
         reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
 
@@ -4306,6 +4331,7 @@ function parseCodeBuddySessionSummary(filePath, options = {}) {
         contextWindow = usageState.contextWindow || 0;
         inputTokens = usageState.inputTokens || 0;
         cachedInputTokens = usageState.cachedInputTokens || 0;
+        cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
         outputTokens = usageState.outputTokens || 0;
         reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
         provider = readExplicitSessionProviderFromRecord(record) || provider;
@@ -4366,6 +4392,7 @@ function parseCodeBuddySessionSummary(filePath, options = {}) {
         contextWindow,
         inputTokens,
         cachedInputTokens,
+        cacheCreationInputTokens,
         outputTokens,
         reasoningOutputTokens,
         __messageCountExact: isSessionSummaryMessageCountExact(stat, summaryReadBytes),
@@ -4655,17 +4682,19 @@ function listClaudeSessions(limit, options = {}) {
             let contextWindow = 0;
             let inputTokens = 0;
             let cachedInputTokens = 0;
+            let cacheCreationInputTokens = 0;
             let outputTokens = 0;
             let reasoningOutputTokens = 0;
             let model = typeof entry.model === 'string' ? entry.model.trim() : '';
             const models = model ? [model] : [];
 
-            const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, outputTokens, reasoningOutputTokens };
+            const usageState = { totalTokens, contextWindow, inputTokens, cachedInputTokens, cacheCreationInputTokens, outputTokens, reasoningOutputTokens };
             applySessionUsageSummaryFromIndexEntry(usageState, entry);
             totalTokens = usageState.totalTokens || 0;
             contextWindow = usageState.contextWindow || 0;
             inputTokens = usageState.inputTokens || 0;
             cachedInputTokens = usageState.cachedInputTokens || 0;
+            cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
             outputTokens = usageState.outputTokens || 0;
             reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
 
@@ -4696,6 +4725,7 @@ function listClaudeSessions(limit, options = {}) {
                 contextWindow = usageState.contextWindow || 0;
                 inputTokens = usageState.inputTokens || 0;
                 cachedInputTokens = usageState.cachedInputTokens || 0;
+                cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
                 outputTokens = usageState.outputTokens || 0;
                 reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
                 const filteredQuickMessages = removeLeadingSystemMessage(quickMessages);
@@ -4720,6 +4750,7 @@ function listClaudeSessions(limit, options = {}) {
             contextWindow = usageState.contextWindow || 0;
             inputTokens = usageState.inputTokens || 0;
             cachedInputTokens = usageState.cachedInputTokens || 0;
+            cacheCreationInputTokens = usageState.cacheCreationInputTokens || 0;
             outputTokens = usageState.outputTokens || 0;
             reasoningOutputTokens = usageState.reasoningOutputTokens || 0;
 
@@ -4743,6 +4774,7 @@ function listClaudeSessions(limit, options = {}) {
                 contextWindow,
                 inputTokens,
                 cachedInputTokens,
+                cacheCreationInputTokens,
                 outputTokens,
                 reasoningOutputTokens,
                 model,

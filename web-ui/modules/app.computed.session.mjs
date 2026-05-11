@@ -154,13 +154,13 @@ const KNOWN_USAGE_MODEL_PRICING = Object.freeze({
     'gpt-5.4-mini': Object.freeze({ input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0 }),
     'gpt-5.3-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 }),
     'gpt-5.2-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 }),
-    'claude-opus-4-6': Object.freeze({ input: 15, output: 75, cacheRead: 1.875, cacheWrite: 0, reasoningOutput: 75 }),
-    'claude-opus-4-7': Object.freeze({ input: 15, output: 75, cacheRead: 1.875, cacheWrite: 0, reasoningOutput: 75 }),
-    'claude-sonnet-4-6': Object.freeze({ input: 3, output: 15, cacheRead: 0.375, cacheWrite: 0, reasoningOutput: 15 }),
-    'claude-haiku-4-5': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.1, cacheWrite: 0, reasoningOutput: 4 }),
-    'claude-3-5-sonnet': Object.freeze({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 0, reasoningOutput: 15 }),
-    'claude-3-5-haiku': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 0, reasoningOutput: 4 }),
-    'claude-3-opus': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 0, reasoningOutput: 75 })
+    'claude-opus-4-6': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75, reasoningOutput: 75 }),
+    'claude-opus-4-7': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75, reasoningOutput: 75 }),
+    'claude-sonnet-4-6': Object.freeze({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75, reasoningOutput: 15 }),
+    'claude-haiku-4-5': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1, reasoningOutput: 4 }),
+    'claude-3-5-sonnet': Object.freeze({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75, reasoningOutput: 15 }),
+    'claude-3-5-haiku': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1, reasoningOutput: 4 }),
+    'claude-3-opus': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75, reasoningOutput: 75 })
 });
 
 function createUsagePricingEntry(pricing, source) {
@@ -315,10 +315,11 @@ function estimateUsageCostSummary(sessions, providersList, currentProvider) {
 function estimateUsageCostForSession(session, pricingIndex, currentProvider) {
     const inputTokens = Number.isFinite(Number(session.inputTokens)) ? Math.max(0, Math.floor(Number(session.inputTokens))) : null;
     const cachedInputTokens = Number.isFinite(Number(session.cachedInputTokens)) ? Math.max(0, Math.floor(Number(session.cachedInputTokens))) : 0;
+    const cacheCreationInputTokens = Number.isFinite(Number(session.cacheCreationInputTokens)) ? Math.max(0, Math.floor(Number(session.cacheCreationInputTokens))) : 0;
     const outputTokens = Number.isFinite(Number(session.outputTokens)) ? Math.max(0, Math.floor(Number(session.outputTokens))) : null;
     const reasoningOutputTokens = Number.isFinite(Number(session.reasoningOutputTokens)) ? Math.max(0, Math.floor(Number(session.reasoningOutputTokens))) : 0;
-    const billableInputTokens = Math.max(0, (inputTokens || 0) - cachedInputTokens);
-    const fallbackSessionTokens = billableInputTokens + cachedInputTokens + (outputTokens || 0) + reasoningOutputTokens;
+    const billableInputTokens = Math.max(0, (inputTokens || 0) - cachedInputTokens - cacheCreationInputTokens);
+    const fallbackSessionTokens = billableInputTokens + cachedInputTokens + cacheCreationInputTokens + (outputTokens || 0) + reasoningOutputTokens;
     const totalSessionTokens = Number.isFinite(Number(session.totalTokens))
         ? Math.max(0, Math.floor(Number(session.totalTokens)))
         : fallbackSessionTokens;
@@ -327,12 +328,14 @@ function estimateUsageCostForSession(session, pricingIndex, currentProvider) {
     const reasoningRate = pricing
         ? ((pricing.reasoningOutput != null ? pricing.reasoningOutput : pricing.output) || 0)
         : 0;
+    const visibleOutputTokens = Math.max(0, (outputTokens || 0) - reasoningOutputTokens);
     const estimatedUsd = pricing && hasTokenBreakdown
         ? (
             ((pricing.input || 0) * billableInputTokens)
             + ((pricing.cacheRead || 0) * cachedInputTokens)
+            + ((pricing.cacheWrite || 0) * cacheCreationInputTokens)
             + (reasoningRate * reasoningOutputTokens)
-            + ((pricing.output || 0) * (outputTokens || 0))
+            + ((pricing.output || 0) * visibleOutputTokens)
         ) / 1000000
         : 0;
     return {
