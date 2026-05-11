@@ -48,6 +48,12 @@ function normalizeProviderDraftState(target) {
     }
 }
 
+function maskKeyLocal(key) {
+    if (!key) return '';
+    if (key.length <= 8) return '****';
+    return key.substring(0, 4) + '...' + key.substring(key.length - 4);
+}
+
 function getProviderValidationForContext(vm, mode = 'add') {
     const draft = mode === 'edit' ? vm.editingProvider : vm.newProvider;
     const editingName = mode === 'edit' ? normalizeText(draft && draft.name) : '';
@@ -158,10 +164,25 @@ export function createProvidersMethods(options = {}) {
                     return;
                 }
 
+                // 本地更新：构造新 provider 对象并追加到列表
+                const newProvider = {
+                    name: validation.name,
+                    url: validation.url,
+                    upstreamUrl: '',
+                    codexmate_bridge: payload.useTransform ? 'openai' : '',
+                    key: maskKeyLocal(payload.key),
+                    hasKey: !!payload.key,
+                    models: [],
+                    current: false,
+                    readOnly: false,
+                    nonDeletable: false,
+                    nonEditable: false
+                };
+                this.providersList = [...this.providersList, newProvider];
+
                 this.showMessage('操作成功', 'success');
                 this.closeAddModal();
-                await this.loadAll();
-                // loadAll 会重拉 status 覆盖字典，所以暗示模型在 loadAll 之后再写。
+
                 if (suggestedModel) {
                     if (!this.currentModels || typeof this.currentModels !== 'object') this.currentModels = {};
                     this.currentModels[validation.name] = suggestedModel;
@@ -237,12 +258,27 @@ export function createProvidersMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
+
+                // 本地更新：从列表中移除
+                this.providersList = this.providersList.filter(p => p.name !== name);
+
+                // 清理 currentModels
+                if (this.currentModels && this.currentModels[name]) {
+                    delete this.currentModels[name];
+                }
+
                 if (res.switched && res.provider) {
+                    this.currentProvider = res.provider;
+                    if (res.model) this.currentModel = res.model;
+                    // 更新 current 标记
+                    this.providersList = this.providersList.map(p => ({
+                        ...p,
+                        current: p.name === res.provider
+                    }));
                     this.showMessage(`已删除提供商，自动切换到 ${res.provider}${res.model ? ` / ${res.model}` : ''}`, 'success');
                 } else {
                     this.showMessage('操作成功', 'success');
                 }
-                await this.loadAll();
             } catch (_) {
                 this.showMessage('删除失败', 'error');
             }
@@ -329,9 +365,22 @@ export function createProvidersMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
+
+                // 本地更新：更新列表中对应 provider 的 url 和 key
+                this.providersList = this.providersList.map(p => {
+                    if (p.name === validation.name) {
+                        return {
+                            ...p,
+                            url: validation.url,
+                            key: params.key ? maskKeyLocal(params.key) : p.key,
+                            hasKey: params.key ? true : p.hasKey
+                        };
+                    }
+                    return p;
+                });
+
                 this.closeEditModal();
                 this.showMessage('操作成功', 'success');
-                await this.loadAll();
             } catch (e) {
                 this.showMessage('更新失败', 'error');
             }
@@ -366,13 +415,26 @@ export function createProvidersMethods(options = {}) {
                 return this.showMessage('请输入模型', 'error');
             }
             try {
-                const res = await api('add-model', { model: this.newModelName.trim() });
+                const modelName = this.newModelName.trim();
+                const res = await api('add-model', { model: modelName });
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                 } else {
+                    // 本地更新：在当前 provider 的 models 中追加
+                    this.providersList = this.providersList.map(p => {
+                        if (p.name === this.currentProvider) {
+                            const exists = p.models.some(m => m.id === modelName);
+                            if (!exists) {
+                                return {
+                                    ...p,
+                                    models: [...p.models, { id: modelName, name: modelName, cost: null, contextWindow: undefined, maxTokens: undefined }]
+                                };
+                            }
+                        }
+                        return p;
+                    });
                     this.showMessage('操作成功', 'success');
                     this.closeModelModal();
-                    await this.loadAll();
                 }
             } catch (_) {
                 this.showMessage('新增模型失败', 'error');
@@ -385,8 +447,17 @@ export function createProvidersMethods(options = {}) {
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                 } else {
+                    // 本地更新：从当前 provider 的 models 中移除
+                    this.providersList = this.providersList.map(p => {
+                        if (p.name === this.currentProvider) {
+                            return {
+                                ...p,
+                                models: p.models.filter(m => m.id !== model)
+                            };
+                        }
+                        return p;
+                    });
                     this.showMessage('操作成功', 'success');
-                    await this.loadAll();
                 }
             } catch (_) {
                 this.showMessage('删除模型失败', 'error');
