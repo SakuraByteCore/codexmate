@@ -337,7 +337,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'taskOrchestration',
         '_taskOrchestrationPollTimer',
         'displayProviderUrl',
-        'isTransformProvider'
+        'isTransformProvider',
+        'openCloneClaudeConfigModal',
+        'openCloneProviderModal'
     ] : [
         '__mainTabSwitchState',
         'openclawAuthProfilesByProvider',
@@ -356,7 +358,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionsViewMode',
         'taskOrchestrationTabEnabled',
         'taskOrchestration',
-        '_taskOrchestrationPollTimer'
+        '_taskOrchestrationPollTimer',
+        'openCloneClaudeConfigModal',
+        'openCloneProviderModal'
     ];
     const allowedMissingCurrentKeys = [
         'localProxyRunning',
@@ -551,7 +555,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'copySessionsFilterShareUrl',
         'getInstallStatusTarget',
         'isInstallTargetInstalled',
-        'shouldShowCliInstallPlaceholder'
+        'shouldShowCliInstallPlaceholder',
+        'openCloneClaudeConfigModal',
+        'openCloneProviderModal'
     );
     const allowedMissingCurrentMethodKeys = [
         'closeInstallModal',
