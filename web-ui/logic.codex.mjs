@@ -52,5 +52,18 @@ export const CODEX_PROVIDER_TEMPLATES = Object.freeze([
         url: 'https://ai.muapi.cn/v1',
         model: 'mimo-v2-pro',
         useTransform: true
+    },
+    {
+        label: 'Telepub',
+        name: 'telepub',
+        url: 'https://voyage.prod.telepub.cn/voyage/api',
+        model: 'DeepSeek-V4-pro',
+        useTransform: true
+    },
+    {
+        label: 'AnyRouter',
+        name: 'anyrouter',
+        url: 'https://anyrouter.top/v1',
+        model: 'gpt-5.5'
     }
 ]);
