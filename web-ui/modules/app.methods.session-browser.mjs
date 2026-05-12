@@ -693,7 +693,7 @@ export function createSessionBrowserMethods(options = {}) {
             for (const session of visible) {
                 if (!session || typeof session !== 'object') continue;
                 const messageCountRaw = Number(session.messageCount);
-                const shouldHydrate = !Number.isFinite(messageCountRaw) || messageCountRaw === 0;
+                const shouldHydrate = !Number.isFinite(messageCountRaw) || (messageCountRaw === 0 && !session.__messageCountExact);
                 if (!shouldHydrate) continue;
                 const key = this.getSessionExportKey(session);
                 if (!key) continue;
