@@ -872,6 +872,10 @@ function writeChatCompletionChunkAsResponsesSse(state, chunk) {
                 appendChatStreamToolCall(state.toolCalls, toolCall);
             }
         }
+
+        if (typeof choice.finish_reason === 'string' && choice.finish_reason) {
+            state.sawFinishReason = true;
+        }
     }
 }
 
@@ -1088,6 +1092,7 @@ function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
                 toolCalls: [],
                 finished: false,
                 sawDone: false,
+                sawFinishReason: false,
                 nextSeq: () => {
                     sequence += 1;
                     return sequence;
@@ -1142,7 +1147,7 @@ function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
             });
             upstreamRes.on('end', () => {
                 if (buffer.trim()) handleEventBlock(buffer);
-                if (!state.finished && !state.sawDone) {
+                if (!state.finished && !state.sawDone && !state.sawFinishReason) {
                     failChatStreamResponsesSse(state, 'upstream stream ended before [DONE]');
                     finish({ ok: true });
                     return;
