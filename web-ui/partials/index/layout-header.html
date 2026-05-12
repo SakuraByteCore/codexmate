@@ -107,6 +107,12 @@
                     :aria-pressed="(lang || 'zh') === 'en'"
                     :class="{ active: (lang || 'zh') === 'en' }"
                     @click="setLang('en')">EN</button>
+                <button
+                    type="button"
+                    class="lang-choice-btn"
+                    :aria-pressed="(lang || 'zh') === 'ja'"
+                    :class="{ active: (lang || 'zh') === 'ja' }"
+                    @click="setLang('ja')">日本語</button>
             </div>
         </div>
 
@@ -314,6 +320,12 @@
                             :aria-pressed="(lang || 'zh') === 'en'"
                             :class="{ active: (lang || 'zh') === 'en' }"
                             @click="setLang('en')">EN</button>
+                        <button
+                            type="button"
+                            class="lang-choice-btn"
+                            :aria-pressed="(lang || 'zh') === 'ja'"
+                            :class="{ active: (lang || 'zh') === 'ja' }"
+                            @click="setLang('ja')">日本語</button>
                     </div>
                 </div>
             </aside>

@@ -4,7 +4,9 @@ const I18N_STORAGE_KEY = 'codexmateLang';
 
 function normalizeLang(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'en' ? 'en' : 'zh';
+    if (normalized === 'en') return 'en';
+    if (normalized === 'ja') return 'ja';
+    return 'zh';
 }
 
 function interpolate(template, params) {
@@ -26,7 +28,9 @@ export function createI18nMethods() {
             this.lang = next;
             try {
                 if (typeof document !== 'undefined' && document.documentElement) {
-                    document.documentElement.lang = next === 'en' ? 'en' : 'zh-CN';
+                    if (next === 'en') document.documentElement.lang = 'en';
+                    else if (next === 'ja') document.documentElement.lang = 'ja';
+                    else document.documentElement.lang = 'zh-CN';
                 }
             } catch (_) {}
         },
@@ -40,7 +44,9 @@ export function createI18nMethods() {
             } catch (_) {}
             try {
                 if (typeof document !== 'undefined' && document.documentElement) {
-                    document.documentElement.lang = next === 'en' ? 'en' : 'zh-CN';
+                    if (next === 'en') document.documentElement.lang = 'en';
+                    else if (next === 'ja') document.documentElement.lang = 'ja';
+                    else document.documentElement.lang = 'zh-CN';
                 }
             } catch (_) {}
         },
