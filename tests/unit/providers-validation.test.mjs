@@ -79,7 +79,12 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
     }]);
     assert.strictEqual(context.showAddModal, false);
     assert.deepStrictEqual(context.newProvider, { name: '', url: '', key: '', useTransform: false, _suggestedModel: '' });
-    assert.deepStrictEqual(loadAllCalls, ['loadAll']);
+    // c3c9ee5：增删改不再触发 loadAll，改为本地 providersList 增量更新。
+    assert.deepStrictEqual(loadAllCalls, []);
+    assert.ok(
+        context.providersList.some((p) => p && p.name === 'beta.provider' && p.url === 'https://api.example.com/v1'),
+        'new provider should be appended to providersList locally'
+    );
     assert.strictEqual(messages.length, 1);
     assert.deepStrictEqual(messages[0], {
         text: '操作成功',
