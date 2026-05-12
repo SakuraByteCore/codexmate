@@ -65,6 +65,13 @@ function createProviderUpdateContext() {
             readOnly: false,
             nonEditable: false
         },
+        // c3c9ee5：updateProvider 改为本地 providersList 增量更新，fixture 须提供初始列表。
+        providersList: [{
+            name: 'alpha',
+            url: 'https://api.example.com/v1-old',
+            key: 'sk-***old',
+            hasKey: true
+        }],
         showEditModal: true,
         messages,
         loadAllCalls: 0,
@@ -251,7 +258,9 @@ test('updateProvider keeps existing key when edit key input is blank', async () 
     }]);
     assert.strictEqual(context.showEditModal, false);
     assert.deepStrictEqual(context.editingProvider, { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false });
-    assert.strictEqual(context.loadAllCalls, 1);
+    // c3c9ee5：不再 loadAll，断言本地 providersList url 已更新。
+    assert.strictEqual(context.loadAllCalls, 0);
+    assert.strictEqual(context.providersList[0].url, 'https://api.example.com/v1');
     assert.deepStrictEqual(context.messages, [{
         text: '操作成功',
         type: 'success'
@@ -280,7 +289,9 @@ test('updateProvider sends explicit key when user enters a new key', async () =>
         }
     }]);
     assert.strictEqual(context.showEditModal, false);
-    assert.strictEqual(context.loadAllCalls, 1);
+    // c3c9ee5：不再 loadAll，断言本地 providersList 已挂上新 key。
+    assert.strictEqual(context.loadAllCalls, 0);
+    assert.strictEqual(context.providersList[0].hasKey, true);
     assert.deepStrictEqual(context.messages, [{
         text: '操作成功',
         type: 'success'
