@@ -833,9 +833,10 @@ function writeChatCompletionChunkAsResponsesSse(state, chunk) {
         if (!delta) continue;
 
         const segments = [];
-        if (typeof delta.reasoning_content === 'string' && delta.reasoning_content) {
-            segments.push(delta.reasoning_content);
-        }
+        // DeepSeek-style OpenAI-compatible streams may emit private reasoning in
+        // `reasoning_content` before the final answer. Responses `output_text`
+        // must stay user-visible answer text only; forwarding reasoning here
+        // pollutes Codex output and breaks exact-answer prompts.
         if (typeof delta.content === 'string' && delta.content) {
             segments.push(delta.content);
         }

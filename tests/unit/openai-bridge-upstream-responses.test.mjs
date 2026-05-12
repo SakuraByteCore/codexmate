@@ -169,7 +169,7 @@ test('openai-bridge streams chat/completions directly when Responses client requ
     await rm(tmpDir, { recursive: true, force: true });
 });
 
-test('openai-bridge forwards upstream reasoning_content as output_text delta', async () => {
+test('openai-bridge omits upstream reasoning_content from output_text deltas', async () => {
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/chat/completions' && req.method === 'POST') {
             let body = '';
@@ -217,10 +217,10 @@ test('openai-bridge forwards upstream reasoning_content as output_text delta', a
         body: { model: 'deepseek-v4', input: 'ping', stream: true }
     });
     assert.equal(sse.status, 200);
-    assert.match(sse.text, /"delta":"thinking-"/);
-    assert.match(sse.text, /"delta":"step"/);
+    assert.doesNotMatch(sse.text, /"delta":"thinking-"/);
+    assert.doesNotMatch(sse.text, /"delta":"step"/);
     assert.match(sse.text, /"delta":"answer"/);
-    assert.match(sse.text, /"text":"thinking-stepanswer"/);
+    assert.match(sse.text, /"text":"answer"/);
     assert.match(sse.text, /data: \[DONE\]/);
 
     await bridge.close();
