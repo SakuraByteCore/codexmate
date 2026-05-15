@@ -178,6 +178,21 @@ codexmate run
 
 > 安全提示：默认监听会在当前局域网暴露未鉴权的管理界面。若包含 API Key、provider 配置或 skills 管理，请仅在可信网络中使用；如需仅本机访问，可设置 `CODEXMATE_HOST=127.0.0.1` 或启动时传入 `--host 127.0.0.1`。
 
+### curl 一键安装（独立包，无需 npm）
+
+下载包含 `node_modules` 的自包含安装包，不依赖 npm：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scripts/install.sh | bash
+```
+
+安装到 `~/.codexmate`，自动软链接到 `~/.local/bin/codexmate`，并添加 PATH。
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `CODEXMATE_INSTALL_DIR` | `~/.codexmate` | 安装目录 |
+| `CODEXMATE_BIN_DIR` | `~/.local/bin` | 软链接目录 |
+
 ### 安装 Codex CLI / Claude Code / Gemini CLI / CodeBuddy Code（可选）
 
 Codex Mate 支持透传调用官方 CLI（例如 `codexmate codex ...`），建议先安装：
