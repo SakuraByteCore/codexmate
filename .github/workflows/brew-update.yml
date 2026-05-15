@@ -1,0 +1,72 @@
+name: brew-update
+run-name: "Update Homebrew formula for ${{ github.event.release.tag_name }}"
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: ver
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#v}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Download standalone tarball
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --pattern "codexmate-${{ steps.ver.outputs.version }}-standalone.tar.gz" \
+            --dir ./assets
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          sha=$(sha256sum "./assets/codexmate-${{ steps.ver.outputs.version }}-standalone.tar.gz" | awk '{print $1}')
+          echo "sha256=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tap repo
+        uses: actions/checkout@v4
+        with:
+          repository: SakuraByteCore/homebrew-codexmate
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          ref: main
+
+      - name: Update formula
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          SHA256: ${{ steps.sha.outputs.sha256 }}
+        run: |
+          formula="Formula/codexmate.rb"
+
+          url="https://github.com/SakuraByteCore/codexmate/releases/download/v${VERSION}/codexmate-${VERSION}-standalone.tar.gz"
+
+          sed -i "s|^  url \".*\"|  url \"${url}\"|" "$formula"
+          sed -i "s|^  sha256 \".*\"|  sha256 \"${SHA256}\"|" "$formula"
+
+          echo "### Formula updated" >> "$GITHUB_STEP_SUMMARY"
+          echo "- version: \`${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- sha256: \`${SHA256}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- url: \`${url}\`" >> "$GITHUB_STEP_SUMMARY"
+
+          cat "$formula" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/codexmate.rb
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "bump codexmate to v${VERSION}"
+          git push origin main

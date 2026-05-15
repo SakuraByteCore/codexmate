@@ -9,7 +9,7 @@
 [![Version](https://img.shields.io/npm/v/codexmate?label=version&style=flat)](https://www.npmjs.com/package/codexmate)
 [![Build](https://img.shields.io/github/actions/workflow/status/SakuraByteCore/codexmate/release.yml?label=build&style=flat)](https://github.com/SakuraByteCore/codexmate/actions/workflows/release.yml)
 [![Downloads](https://img.shields.io/npm/dt/codexmate?label=downloads&style=flat)](https://www.npmjs.com/package/codexmate)
-[![Install](https://img.shields.io/badge/install-curl%20%7C%20npm-0A0?style=flat)](#install-via-curl-standalone)
+[![Install](https://img.shields.io/badge/install-brew%20%7C%20curl%20%7C%20npm-0A0?style=flat)](#install-via-homebrew-macos--linux)
 [![Platform](https://img.shields.io/badge/platform-Termux%20%7C%20Linux%20%7C%20macOS%20%7C%20Windows-555?style=flat)](#quick-start)
 [![Node](https://img.shields.io/node/v/codexmate?label=Node.js&style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/npm/l/codexmate?label=license&style=flat)](LICENSE)
@@ -191,6 +191,15 @@ Installs to `~/.codexmate`, symlinks to `~/.local/bin/codexmate`, and auto-adds 
 | --- | --- | --- |
 | `CODEXMATE_INSTALL_DIR` | `~/.codexmate` | Installation directory |
 | `CODEXMATE_BIN_DIR` | `~/.local/bin` | Symlink directory |
+
+### Install via Homebrew (macOS / Linux)
+
+```bash
+brew tap SakuraByteCore/codexmate
+brew install codexmate
+```
+
+Requires [Node.js](https://nodejs.org/) (`brew install node` if not present).
 
 ### Install Codex CLI / Claude Code CLI (optional)
 
