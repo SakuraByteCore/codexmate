@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPO="SakuraByteCore/codexmate"
-GITHUB_API="https://api.github.com/repos/${REPO}/releases/latest"
+GITHUB_API="${CODEXMATE_API_URL:-https://api.github.com/repos/${REPO}/releases/latest}"
 INSTALL_DIR="${CODEXMATE_INSTALL_DIR:-$HOME/.codexmate}"
 BIN_DIR="${CODEXMATE_BIN_DIR:-$HOME/.local/bin}"
 BINARY_NAME="codexmate"
@@ -12,8 +12,15 @@ BINARY_NAME="codexmate"
 info()  { printf '\033[1;34m[info]\033[0m  %s\n' "$*"; }
 warn()  { printf '\033[1;33m[warn]\033[0m  %s\n' "$*"; }
 error() { printf '\033[1;31m[error]\033[0m %s\n' "$*" >&2; exit 1; }
+die()   { printf '\033[1;31m[error]\033[0m %s\n' "$*" >&2; exit 1; }
 
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+fetch() {
+  if has_cmd curl; then curl -fsSL "$1"
+  else wget -qO- "$1"
+  fi
+}
 
 # --- preflight ---
 has_cmd node || error "node is required (>=14). Install: https://nodejs.org"
@@ -24,21 +31,15 @@ has_cmd curl || has_cmd wget || error "curl or wget is required"
 
 # --- resolve latest version ---
 info "Fetching latest release from ${REPO}"
-release_url=""
-if has_cmd curl; then
-  release_url=$(curl -fsSL "$GITHUB_API" | grep -o '"browser_download_url": *"[^"]*standalone[^"]*"' | head -1 | sed 's/.*"//;s/"$//') || true
-else
-  release_url=$(wget -qO- "$GITHUB_API" | grep -o '"browser_download_url": *"[^"]*standalone[^"]*"' | head -1 | sed 's/.*"//;s/"$//') || true
-fi
+api_body=$(fetch "$GITHUB_API") || die "Failed to fetch release info from $GITHUB_API"
 
-# fallback: build from source tag tarball
+release_url=$(printf '%s' "$api_body" \
+  | grep -o '"browser_download_url":"[^"]*standalone[^"]*"' \
+  | head -1 | sed 's/.*":"//;s/"$//') || true
+
 if [ -z "$release_url" ]; then
-  if has_cmd curl; then
-    tag=$(curl -fsSL "$GITHUB_API" | grep '"tag_name"' | head -1 | sed 's/.*"//;s/".*//')
-  else
-    tag=$(wget -qO- "$GITHUB_API" | grep '"tag_name"' | head -1 | sed 's/.*"//;s/".*//')
-  fi
-  [ -z "$tag" ] && error "Cannot determine latest release tag"
+  tag=$(printf '%s' "$api_body" | grep -o '"tag_name":"[^"]*"' | head -1 | sed 's/.*":"//;s/"$//')
+  [ -z "$tag" ] && die "Cannot determine latest release tag"
   release_url="https://github.com/${REPO}/archive/refs/tags/${tag}.tar.gz"
   warn "No standalone tarball found, falling back to source archive (${tag})"
   warn "You will need to run 'npm install --prod' in ${INSTALL_DIR} after install"
