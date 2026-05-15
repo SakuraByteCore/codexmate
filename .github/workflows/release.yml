@@ -182,6 +182,15 @@ jobs:
           npm pack
           test -f "$name"
           echo "PACKAGE_TGZ=$name" >> "$GITHUB_ENV"
+      - name: Pack standalone tarball
+        run: |
+          version=$(node -e "process.stdout.write(require('./package.json').version)")
+          name="codexmate-${version}-standalone.tar.gz"
+          npm install --omit=dev --no-fund --no-audit
+          tar czf "$name" \
+            cli.js cli/ lib/ plugins/ web-ui.html web-ui/ \
+            node_modules/ package.json LICENSE README.md README.zh.md
+          echo "STANDALONE_TGZ=$name" >> "$GITHUB_ENV"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -190,5 +199,7 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           prerelease: false
           draft: false
-          files: ${{ env.PACKAGE_TGZ }}
+          files: |
+            ${{ env.PACKAGE_TGZ }}
+            ${{ env.STANDALONE_TGZ }}
           generate_release_notes: true
