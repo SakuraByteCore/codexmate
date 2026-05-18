@@ -56,6 +56,7 @@
 | 特性 | 状态 | 描述 |
 | --- | --- | --- |
 | **Provider 管理** | ✅ | 切换 Codex、Claude 和 OpenClaw 的 provider/model |
+| **状态实时同步** | ✅ | 实时感知 Codex/Claude 的配置与运行状态变更 |
 | **会话浏览器** | ✅ | 列表、筛选及导出会话 (Codex/Claude/Gemini) |
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
 | **本地 Skills 市场** | ✅ | 跨应用的智能体 Skills 导入与导出 |

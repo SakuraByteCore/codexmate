@@ -56,6 +56,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 | Feature | Status | Description |
 | --- | --- | --- |
 | **Provider Management** | ✅ | Switch providers/models for Codex, Claude, and OpenClaw |
+| **Live Agent Sync** | ✅ | Real-time monitoring of Codex/Claude config & status |
 | **Session Browser** | ✅ | List, filter, and export sessions (Codex/Claude/Gemini) |
 | **Usage Analytics** | ✅ | Visualize message trends and top projects |
 | **Local Skills Market** | ✅ | Cross-app import/export of agent skills |
