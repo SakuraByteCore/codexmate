@@ -575,6 +575,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'setConfigTemplateDiffConfirmEnabled',
         'extractClaudeResumeKeyFromFilePath',
         'openClaudeConfigTemplateEditor',
+        'applyClaudeLocalBridge',
         'loadPluginsOverview',
         'selectPlugin',
         'createPromptTemplate',
