@@ -124,6 +124,10 @@
                         <div class="card-leading">
                             <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}<span v-if="isTransformProvider(provider)" class="card-icon-dot" title="通过内建转换适配"></span></div>
                             <div class="card-content">
+                                <div v-if="provider.name === 'local'" class="bridge-pool-summary">
+                                    <svg class="bridge-pool-summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
+                                    <span class="bridge-pool-summary-text">已启用 {{ localBridgeCandidateProviders().filter(cp => !isLocalBridgeExcluded(cp.name)).length }} / {{ localBridgeCandidateProviders().length }}</span>
+                                </div>
                                 <div class="card-title">
                                     <span>{{ provider.name }}</span>
                                     <span v-if="provider.readOnly" class="provider-readonly-badge">{{ t('config.badge.system') }}</span>
@@ -136,6 +140,9 @@
                             <span v-if="speedResults[provider.name]" :class="['latency', speedResults[provider.name].ok ? 'ok' : 'error']">{{ formatLatency(speedResults[provider.name]) }}</span>
                             <span :class="['pill', providerPillConfigured(provider) ? 'configured' : 'empty']">{{ providerPillText(provider) }}</span>
                             <div class="card-actions" @click.stop>
+                                <button v-if="provider.name === 'local'" class="card-action-btn bridge-pool-trigger" @click="showCodexBridgePoolModal = true" :aria-label="'轮询池设置'" :title="'轮询池设置'">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
+                                </button>
                                 <button class="card-action-btn" :class="{ loading: speedLoading[provider.name] }" :disabled="!!speedLoading[provider.name]" @click="runSpeedTest(provider.name, { silent: true })" :aria-label="t('config.availabilityTestAria', { name: provider.name })" :title="t('config.availabilityTest')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                                 </button>
@@ -164,27 +171,6 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div v-if="displayCurrentProvider === 'local'" class="bridge-pool-panel">
-                    <div class="bridge-pool-header">
-                        <span class="bridge-pool-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
-                        </span>
-                        <span class="bridge-pool-title">轮询池</span>
-                        <span class="bridge-pool-hint">勾选参与负载均衡的提供商</span>
-                    </div>
-                    <div v-if="localBridgeCandidateProviders().length === 0" class="bridge-pool-empty">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-                        <span>暂无可用上游 provider，请先添加直连 provider</span>
-                    </div>
-                    <div v-else class="bridge-pool-list">
-                        <label v-for="cp in localBridgeCandidateProviders()" :key="cp.name" class="bridge-pool-item">
-                            <span class="bridge-pool-item-name">{{ cp.name }}</span>
-                            <span class="bridge-pool-item-status" :class="{ active: !isLocalBridgeExcluded(cp.name) }">{{ isLocalBridgeExcluded(cp.name) ? '未启用' : '已启用' }}</span>
-                            <input type="checkbox" :checked="!isLocalBridgeExcluded(cp.name)" @change="toggleLocalBridgeExcluded(cp.name)" />
-                        </label>
                     </div>
                 </div>
                 </template>

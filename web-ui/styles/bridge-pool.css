@@ -3,6 +3,43 @@
    ============================================ */
 
 
+/* ---- 摘要状态（在卡片标题上方） ---- */
+.bridge-pool-summary {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+.bridge-pool-summary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    flex-shrink: 0;
+}
+
+.bridge-pool-summary-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: -0.01em;
+}
+
+/* ---- 轮询池触发按钮 ---- */
+.bridge-pool-trigger {
+    color: var(--color-brand);
+    background: rgba(200, 121, 99, 0.08);
+}
+
+.bridge-pool-trigger:hover {
+    background: rgba(200, 121, 99, 0.16);
+}
+
 .bridge-pool-panel {
     margin-top: 18px;
     padding: 18px 20px 16px;
@@ -194,4 +231,36 @@
     .bridge-pool-item {
         padding: 10px 12px 10px 14px;
     }
+}
+
+/* ---- 模态框中的轮询池 ---- */
+.modal-bridge-pool {
+    max-width: 380px;
+}
+
+.modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.bridge-pool-modal-hint {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.modal-bridge-pool .bridge-pool-list {
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 16px;
 }
