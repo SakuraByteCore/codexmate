@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmDialogResolver: null,
                 configTemplateContent: '',
                 configTemplateApplying: false,
+                configTemplateContext: 'codex',
                 configTemplateDiffVisible: false,
                 configTemplateDiffLoading: false,
                 configTemplateDiffError: '',

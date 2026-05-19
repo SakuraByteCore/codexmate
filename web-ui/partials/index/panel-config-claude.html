@@ -82,6 +82,7 @@
                         :placeholder="t('claude.model.placeholder')"
                     >
                     <div class="config-template-hint">{{ t('claude.model.hint') }}</div>
+                    <button class="btn-tool btn-template-editor" @click="openClaudeConfigTemplateEditor" :disabled="loading || !!initError">{{ t('config.template.openEditor') }}</button>
                 </div>
 
                 <div class="selector-section">

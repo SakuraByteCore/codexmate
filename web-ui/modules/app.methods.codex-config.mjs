@@ -558,6 +558,7 @@ export function createCodexConfigMethods(options = {}) {
                     template = `${template.trimEnd()}\n\n${appendBlock}\n`;
                 }
                 this.configTemplateContent = template;
+                this.configTemplateContext = 'codex';
                 this.showConfigTemplateModal = true;
             } catch (e) {
                 this.showMessage('加载模板失败', 'error');
@@ -807,9 +808,16 @@ export function createCodexConfigMethods(options = {}) {
             const performApply = async () => {
                 this.configTemplateApplying = true;
                 try {
-                    const res = await api('apply-config-template', {
-                        template: this.configTemplateContent
-                    });
+                    let res;
+                    if (this.configTemplateContext === 'claude') {
+                        res = await api('apply-claude-settings-raw', {
+                            content: this.configTemplateContent
+                        });
+                    } else {
+                        res = await api('apply-config-template', {
+                            template: this.configTemplateContent
+                        });
+                    }
                     if (res.error) {
                         this.showMessage(res.error, 'error');
                         return;

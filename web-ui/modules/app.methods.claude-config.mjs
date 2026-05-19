@@ -264,6 +264,21 @@ export function createClaudeConfigMethods(options = {}) {
 
         claudeLocalBridgeConfigured() {
             return this.claudeLocalBridgeCandidateProviders().some(p => p.hasKey);
+        },
+
+        async openClaudeConfigTemplateEditor() {
+            try {
+                const res = await api('get-claude-settings-raw');
+                if (res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                this.configTemplateContent = res.content || '{}';
+                this.configTemplateContext = 'claude';
+                this.showConfigTemplateModal = true;
+            } catch (e) {
+                this.showMessage('加载 Claude settings 失败', 'error');
+            }
         }
     };
 }
