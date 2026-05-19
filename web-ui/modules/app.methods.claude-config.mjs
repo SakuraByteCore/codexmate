@@ -266,6 +266,28 @@ export function createClaudeConfigMethods(options = {}) {
             return this.claudeLocalBridgeCandidateProviders().some(p => p.hasKey);
         },
 
+        async applyClaudeLocalBridge() {
+            this.currentClaudeConfig = 'claude-local';
+            try { localStorage.setItem('currentClaudeConfig', 'claude-local'); } catch (_) {}
+            this.refreshClaudeModelContext();
+
+            const candidates = this.claudeLocalBridgeCandidateProviders();
+            if (candidates.length === 0) {
+                return this.showMessage('请先添加并配置至少一个 Claude 提供商', 'error');
+            }
+
+            try {
+                const res = await api('claude-local-bridge-toggle', { enable: true });
+                if (res.error) {
+                    this.showMessage(res.error || '启用本地负载均衡失败', 'error');
+                    return;
+                }
+                this.showMessage('Claude 本地负载均衡已启用', 'success');
+            } catch (e) {
+                this.showMessage('启用本地负载均衡失败', 'error');
+            }
+        },
+
         async openClaudeConfigTemplateEditor() {
             try {
                 const res = await api('get-claude-settings-raw');
