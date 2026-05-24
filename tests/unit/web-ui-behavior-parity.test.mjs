@@ -447,7 +447,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
         'sessionsUsageSelectedDayKey',
-        'currentModels'
+        'currentModels',
+        'isLocalProviderDisabled'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -701,6 +702,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionUsageHourlyHeatmap',
         'sessionUsageDailyTableRows',
         'sessionsUsageSelectedDaySummary',
+        'sessionsUsageSelectedDay',
+        'sessionUsageWave',
+        'usageHeroDelta',
+        'usageHeroDeltaClass',
         'usageCurrentSessionStats',
         'taskOrchestrationSelectedRun',
         'taskOrchestrationSelectedRunNodes',
