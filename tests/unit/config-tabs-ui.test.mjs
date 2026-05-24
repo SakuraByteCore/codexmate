@@ -63,7 +63,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /setConfigTemplateDiffConfirmEnabled/);
     assert.match(html, /configTemplateDiffConfirmEnabled/);
     assert.match(html, /sessionTrashCount/);
-    assert.match(html, /v-if="taskOrchestrationTabEnabled" class="top-tab"[\s\S]*id="tab-orchestration"/);
+    assert.match(html, /v-if="taskOrchestrationTabEnabled"[^>]*class="top-tab"[\s\S]*id="tab-orchestration"/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled" class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled"[\s\S]*id="panel-orchestration"/);
     assert.match(html, /taskOrchestrationTabEnabled && mainTab === 'orchestration'/);

@@ -19,6 +19,26 @@ function createLocalStorage() {
     };
 }
 
+function createWindowMock(initialUrl) {
+    const location = new URL(initialUrl);
+    const syncLocation = (nextUrl) => {
+        const url = new URL(nextUrl);
+        location.href = url.href;
+        location.pathname = url.pathname;
+        location.search = url.search;
+        location.hash = url.hash;
+    };
+    syncLocation(initialUrl);
+    return {
+        location,
+        history: {
+            replaceState(_state, _title, nextUrl) {
+                syncLocation(nextUrl);
+            }
+        }
+    };
+}
+
 function getBundledAppOptions() {
     if (!bundledAppOptionsPromise) {
         const helperPath = path.resolve(__dirname, '..', 'unit', 'helpers', 'web-ui-app-options.mjs');
@@ -88,7 +108,9 @@ module.exports = async function testWebUiSessionTab() {
     const appOptions = await getBundledAppOptions();
     const vm = createBundledNavigationContext(appOptions);
     const prevLocalStorage = globalThis.localStorage;
+    const prevWindow = globalThis.window;
     globalThis.localStorage = createLocalStorage();
+    globalThis.window = createWindowMock('http://127.0.0.1:3737/web-ui/index.html?tab=sessions#stale');
     try {
         vm.mainTab = 'sessions';
         vm.sessionListRenderEnabled = true;
@@ -116,6 +138,10 @@ module.exports = async function testWebUiSessionTab() {
         assert(vm.sessionPreviewScrollEl === null, 'leaving sessions should clear preview scroll refs');
         assert(vm.sessionPreviewContainerEl === null, 'leaving sessions should clear preview container refs');
         assert(vm.sessionPreviewHeaderEl === null, 'leaving sessions should clear preview header refs');
+        assert(
+            globalThis.window.location.href === 'http://127.0.0.1:3737/',
+            'leaving sessions should canonicalize stale /web-ui/index.html URLs back to the root route'
+        );
 
         vm.prepareSessionTabRender = function prepareSessionTabRender() {
             this._prepareCalls = (this._prepareCalls || 0) + 1;
@@ -147,5 +173,6 @@ module.exports = async function testWebUiSessionTab() {
         assert(vm2.mainTab === 'usage', 'nav state restore should select the cached sidebar tab');
     } finally {
         globalThis.localStorage = prevLocalStorage;
+        globalThis.window = prevWindow;
     }
 };
