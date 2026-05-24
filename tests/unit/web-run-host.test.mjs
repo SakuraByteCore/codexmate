@@ -717,7 +717,7 @@ function createWebServerHarness({
 function assertInternalServerErrorResponse(response) {
     assert.strictEqual(response.statusCode, 500);
     assert.deepStrictEqual(response.headers, {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
         'Content-Type': 'text/plain; charset=utf-8',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY'
@@ -729,7 +729,7 @@ function assertInternalServerErrorResponse(response) {
 function assertNotFoundResponse(response) {
     assert.strictEqual(response.statusCode, 404);
     assert.deepStrictEqual(response.headers, {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
         'Content-Type': 'text/plain; charset=utf-8',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY'
@@ -771,22 +771,22 @@ test('createWebServer preserves the legacy 404 contract for /web-ui/', () => {
     assert.deepStrictEqual(errors, []);
 });
 
-test('createWebServer returns 404 for removed /web-ui/index.html route', () => {
-    const { requestHandler, errors } = createWebServerHarness({
-        dynamicAssets: new Map([
-            ['index.html', {
-                mime: 'text/html; charset=utf-8',
-                reader() {
-                    throw new Error('bundled index failed');
-                }
-            }]
-        ])
-    });
+test('createWebServer redirects bundled index URL to the canonical root URL', () => {
+    const { requestHandler, errors } = createWebServerHarness();
     const response = createMockResponse();
 
-    requestHandler({ url: '/web-ui/index.html' }, response);
+    requestHandler({ url: '/web-ui/index.html?tab=sessions' }, response);
 
-    assertNotFoundResponse(response);
+    assert.strictEqual(response.statusCode, 302);
+    assert.deepStrictEqual(response.headers, {
+        'Cache-Control': 'no-store, max-age=0',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Location': '/?tab=sessions',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY'
+    });
+    assert.strictEqual(response.body, 'Found');
     assert.deepStrictEqual(errors, []);
 });
 

@@ -7,8 +7,10 @@ import {
 import { createAppComputed } from './modules/app.computed.index.mjs';
 import { createAppMethods } from './modules/app.methods.index.mjs';
 import { loadConfigTemplateDiffConfirmEnabledFromStorage } from './modules/config-template-confirm-pref.mjs';
+import { installWebUiUrlCanonicalization } from './modules/sessions-filters-url.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
+    installWebUiUrlCanonicalization();
     if (typeof Vue === 'undefined') {
         console.error('Vue 库未能在 DOMContentLoaded 触发前加载完成。');
         const fallbackTarget = document.querySelector('#app') || document.querySelector('[v-cloak]');
@@ -26,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { createApp } = Vue;
 
-    const app = createApp({
+    const appOptions = {
         data() {
             return {
                 lang: 'zh',
@@ -669,7 +671,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         computed: createAppComputed(),
         methods: createAppMethods()
-    });
+    };
+
+    if (typeof window.__CODEXMATE_WEB_UI_RENDER__ === 'function') {
+        appOptions.render = window.__CODEXMATE_WEB_UI_RENDER__;
+    }
+
+    const app = createApp(appOptions);
 
     app.mount('#app');
 });

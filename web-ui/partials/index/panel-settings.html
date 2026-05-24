@@ -19,7 +19,8 @@
                                 :aria-selected="settingsTab === 'general'"
                                 :tabindex="settingsTab === 'general' ? 0 : -1"
                                 :class="['segmented-option', { active: settingsTab === 'general' }]"
-                                @click="onSettingsTabClick('general')">{{ t('settings.tab.general') }}</button>
+                                @click="onSettingsTabClick('general')"
+                                @keydown="onSettingsTabKeydown($event, 'general')">{{ t('settings.tab.general') }}</button>
                             <button
                                 id="settings-tab-data"
                                 type="button"
@@ -28,7 +29,8 @@
                                 :aria-selected="settingsTab === 'data'"
                                 :tabindex="settingsTab === 'data' ? 0 : -1"
                                 :class="['segmented-option', { active: settingsTab === 'data' }]"
-                                @click="onSettingsTabClick('data')">{{ t('settings.tab.data') }}</button>
+                                @click="onSettingsTabClick('data')"
+                                @keydown="onSettingsTabKeydown($event, 'data')">{{ t('settings.tab.data') }}</button>
                         </div>
                     </div>
 

@@ -39,6 +39,13 @@ test('styles include force-compact fallback rules for readability on touch devic
     assert.match(compactSubtitleBlock[0], /overflow:\s*hidden;/);
     assert.doesNotMatch(compactSubtitleBlock[0], /word-break:\s*break-word;/);
     assert.match(styles, /body\.force-compact\s+\.provider-fast-switch\s*\{/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.container\s*\{[\s\S]*height:\s*100vh;[\s\S]*overflow:\s*hidden;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.app-shell\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*hidden;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.main-panel\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow-y:\s*auto;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.main-panel-topbar\s*\{[\s\S]*position:\s*sticky;[\s\S]*top:\s*0;/);
+    assert.match(styles, /\.main-panel-topbar\s+\.status-strip\s*\{[\s\S]*min-height:\s*36px;[\s\S]*align-items:\s*center;/);
+    assert.match(styles, /\.main-panel-topbar\s+\.status-strip\s*\{[\s\S]*flex-wrap:\s*nowrap;[\s\S]*overflow-x:\s*auto;/);
+    assert.match(styles, /\.main-panel-topbar\s+\.status-chip\s*\{[\s\S]*flex:\s*0\s+0\s+auto;[\s\S]*min-width:\s*max-content;/);
     assert.match(styles, /body\.force-compact\s+\.card\s*\{[\s\S]*flex-direction:\s*column;/);
     assert.match(styles, /body\.force-compact\s+\.card-trailing\s*\{[\s\S]*justify-items:\s*end;/);
     assert.match(styles, /body\.force-compact\s+\.card-trailing\s+\.card-actions\s*\{[\s\S]*justify-content:\s*flex-end;/);
@@ -68,6 +75,7 @@ test('styles keep desktop layout wide and session history readable on large scre
 
     const html = readBundledWebUiHtml();
     assert.match(html, /class="brand-logo"\s+src="\/res\/logo-pack\.webp"/);
+    assert.match(html, /class="status-strip status-strip-placeholder"/);
 
     const titleBlock = styles.match(/\.session-item-title\s*\{[^}]*\}/);
     assert.ok(titleBlock, 'missing session item title style block');

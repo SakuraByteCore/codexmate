@@ -10058,9 +10058,10 @@ function watchPathsForRestart(targets, onChange) {
 }
 // #endregion watchPathsForRestart
 
-function writeJsonResponse(res, statusCode, payload) {
+function writeJsonResponse(res, statusCode, payload, headers = {}) {
     const body = JSON.stringify(payload, null, 2);
     res.writeHead(statusCode, {
+        ...headers,
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Length': Buffer.byteLength(body, 'utf-8')
     });
@@ -10620,7 +10621,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         const securityHeaders = {
             'X-Content-Type-Options': 'nosniff',
             'X-Frame-Options': 'DENY',
-            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:"
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:"
         };
         const origWriteHead = res.writeHead.bind(res);
         res.writeHead = function (statusCode, headers) {
@@ -10649,34 +10650,15 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             || requestPath.startsWith('/download/')
         ) {
             const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
-            const isLoopback = !remoteAddr
-                || remoteAddr === '127.0.0.1'
-                || remoteAddr === '::1'
-                || remoteAddr === '::ffff:127.0.0.1';
+            const isLoopback = !remoteAddr || isLoopbackRemoteAddress(remoteAddr);
             if (!isLoopback) {
                 const rateLimitKey = (remoteAddr || 'unknown') + ':' + requestPath;
                 if (!checkRateLimit(rateLimitKey)) {
-                    res.writeHead(429, { 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': '60' });
-                    res.end(JSON.stringify({ error: 'Rate limit exceeded' }));
+                    writeJsonResponse(res, 429, { error: 'Rate limit exceeded' }, { 'Retry-After': '60' });
                     return;
                 }
-                const expected = typeof process.env.CODEXMATE_HTTP_TOKEN === 'string'
-                    ? process.env.CODEXMATE_HTTP_TOKEN.trim()
-                    : '';
-                if (!expected) {
-                    sendJson(403, {
-                        error: 'Remote access is disabled (set CODEXMATE_HTTP_TOKEN or use --host 127.0.0.1)'
-                    });
-                    return;
-                }
-                const headers = req && req.headers && typeof req.headers === 'object' ? req.headers : {};
-                const rawAuth = typeof headers.authorization === 'string' ? headers.authorization.trim() : '';
-                const match = rawAuth ? rawAuth.match(/^bearer\s+(.+)$/i) : null;
-                const actual = match && match[1]
-                    ? match[1].trim()
-                    : (rawAuth ? rawAuth : (typeof headers['x-codexmate-token'] === 'string' ? String(headers['x-codexmate-token']).trim() : ''));
-                if (!actual || !safeTimingEqual(actual, expected)) {
-                    sendJson(401, { error: 'Unauthorized' });
+                const auth = assertRequestAuthorized(req, res);
+                if (!auth.ok) {
                     return;
                 }
             }
@@ -11408,6 +11390,16 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                     res.end(errorBody, 'utf-8');
                 }
             });
+        } else if (requestPath === '/web-ui/index.html') {
+            const rawUrl = typeof req.url === 'string' ? req.url : '';
+            const queryIndex = rawUrl.indexOf('?');
+            const query = queryIndex >= 0 ? rawUrl.slice(queryIndex) : '';
+            res.writeHead(302, {
+                'Location': `/${query}`,
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-store, max-age=0'
+            });
+            res.end('Found');
         } else if (requestPath.startsWith('/web-ui/')) {
             // Skip the /web-ui/ directory itself, which is handled above
             const normalized = path.normalize(requestPath).replace(/^([\\.\\/])+/, '');
@@ -11430,7 +11422,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             if (dynamicAsset) {
                 try {
                     const assetBody = dynamicAsset.reader(filePath);
-                    res.writeHead(200, { 'Content-Type': dynamicAsset.mime });
+                    res.writeHead(200, {
+                        'Content-Type': dynamicAsset.mime,
+                        'Cache-Control': 'no-store, max-age=0'
+                    });
                     res.end(assetBody, 'utf-8');
                 } catch (error) {
                     writeWebUiAssetError(res, requestPath, error);
@@ -11457,7 +11452,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         : ext === '.json'
                             ? 'application/json; charset=utf-8'
                             : 'application/octet-stream';
-            res.writeHead(200, { 'Content-Type': mime });
+            res.writeHead(200, {
+                'Content-Type': mime,
+                'Cache-Control': 'no-store, max-age=0'
+            });
             fs.createReadStream(filePath).pipe(res);
         } else if (requestPath.startsWith('/download/')) {
             const fileName = requestPath.slice('/download/'.length);
@@ -11518,14 +11516,20 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                     : ext === '.json'
                         ? 'application/json; charset=utf-8'
                         : 'application/octet-stream';
-            res.writeHead(200, { 'Content-Type': mime });
+            res.writeHead(200, {
+                'Content-Type': mime,
+                'Cache-Control': 'no-store, max-age=0'
+            });
             fs.createReadStream(filePath).pipe(res);
         } else {
-            // Only serve HTML for root path; /web-ui returns 404
+            // Only serve HTML for root path; /web-ui returns 404.
             if (requestPath === '/') {
                 try {
                     const html = readBundledWebUiHtml(htmlPath);
-                    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                    res.writeHead(200, {
+                        'Content-Type': 'text/html; charset=utf-8',
+                        'Cache-Control': 'no-store, max-age=0'
+                    });
                     res.end(html);
                 } catch (error) {
                     writeWebUiAssetError(res, requestPath, error);

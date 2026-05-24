@@ -55,11 +55,70 @@ export function applySessionsFilterUrlState(vm, state) {
     }
 }
 
+export function canonicalizeWebUiUrl(url) {
+    if (!url || typeof url !== 'object') return url;
+    if (url.pathname === '/web-ui/index.html') {
+        url.pathname = '/';
+    }
+    return url;
+}
+
+function canonicalizeWebUiHistoryUrl(value) {
+    if (typeof window === 'undefined' || !window.location) return value;
+    if (typeof value === 'undefined' || value === null) return value;
+    try {
+        const url = canonicalizeWebUiUrl(new URL(String(value), window.location.href));
+        return url && url.pathname === '/' ? url.href : value;
+    } catch (_) {
+        return value;
+    }
+}
+
+export function normalizeCurrentWebUiUrl() {
+    try {
+        const url = canonicalizeWebUiUrl(new URL(window.location.href));
+        if (url && url.href !== window.location.href) {
+            window.history.replaceState(null, '', url.href);
+        }
+        return url;
+    } catch (_) {
+        return null;
+    }
+}
+
+export function installWebUiUrlCanonicalization() {
+    if (typeof window === 'undefined' || !window.history) return false;
+    if (window.__codexmateWebUiUrlCanonicalizationInstalled) {
+        normalizeCurrentWebUiUrl();
+        return true;
+    }
+    try {
+        const originalReplaceState = window.history.replaceState;
+        const originalPushState = window.history.pushState;
+        if (typeof originalReplaceState === 'function') {
+            window.history.replaceState = function replaceState(state, title, url) {
+                return originalReplaceState.call(this, state, title, canonicalizeWebUiHistoryUrl(url));
+            };
+        }
+        if (typeof originalPushState === 'function') {
+            window.history.pushState = function pushState(state, title, url) {
+                return originalPushState.call(this, state, title, canonicalizeWebUiHistoryUrl(url));
+            };
+        }
+        window.__codexmateWebUiUrlCanonicalizationInstalled = true;
+        normalizeCurrentWebUiUrl();
+        return true;
+    } catch (_) {
+        normalizeCurrentWebUiUrl();
+        return false;
+    }
+}
+
 export function buildSessionsFilterShareUrl(vm) {
     try {
-        // 使用干净的根路径作为基础 URL
+        // 使用干净的根路径作为基础 URL，避免把 /web-ui/index.html 或 /session 带进分享链接。
         const baseUrl = window.location.origin + '/';
-        const url = new URL(baseUrl);
+        const url = canonicalizeWebUiUrl(new URL(baseUrl));
         url.searchParams.set('tab', 'sessions');
         url.searchParams.set('s_source', String(vm.sessionFilterSource || 'all'));
         if (vm.sessionPathFilter) url.searchParams.set('s_path', String(vm.sessionPathFilter || ''));

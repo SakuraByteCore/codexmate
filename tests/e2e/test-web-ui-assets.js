@@ -46,7 +46,13 @@ module.exports = async function testWebUiAssets(ctx) {
 
     // /web-ui/index.html now returns 404 (only root path serves HTML)
     const bundledIndex = await getText(port, '/web-ui/index.html');
-    assert(bundledIndex.statusCode === 404, '/web-ui/index.html should return 404');
+    assert(bundledIndex.statusCode === 302, '/web-ui/index.html should redirect to the canonical root URL');
+    assert(bundledIndex.headers.location === '/', '/web-ui/index.html should not remain in the address bar');
+    assert(bundledIndex.headers['cache-control'] === 'no-store, max-age=0', '/web-ui/index.html redirect should not be cached');
+
+    const bundledIndexWithQuery = await getText(port, '/web-ui/index.html?tab=sessions');
+    assert(bundledIndexWithQuery.statusCode === 302, '/web-ui/index.html with query should redirect');
+    assert(bundledIndexWithQuery.headers.location === '/?tab=sessions', '/web-ui/index.html redirect should preserve query params');
 
     // /web-ui/ now returns 404 (only root path serves HTML)
     const bundledIndexWithSlash = await getText(port, '/web-ui/');
@@ -59,6 +65,8 @@ module.exports = async function testWebUiAssets(ctx) {
         'app entry should return javascript content type'
     );
     assert(appEntry.body.includes('document.addEventListener(\'DOMContentLoaded\''), 'app entry should contain the executable bootstrap');
+    assert(appEntry.body.includes('window.__CODEXMATE_WEB_UI_RENDER__'), 'app entry should include the precompiled Web UI render function');
+    assert(!/\bwith\s*\(/.test(appEntry.body), 'app entry render function should be safe for module strict mode');
     assert(
         !/(?:^|\n)\s*import\s+(?:[\s\S]*?\s+from\s+)?['"]\.[^'"]+['"]\s*;?/.test(appEntry.body),
         'app entry should not leak split relative module imports'

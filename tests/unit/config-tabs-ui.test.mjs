@@ -34,8 +34,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /isProviderConfigMode/);
     assert.match(html, /provider-fast-switch-select/);
     assert.match(html, /forceCompactLayout/);
-    assert.match(html, /<script src="\/res\/vue\.global\.prod\.js"><\/script>/);
-    assert.doesNotMatch(html, /<script src="\/res\/vue\.global\.js"><\/script>/);
+    assert.match(html, /<script src="\/res\/vue\.runtime\.global\.prod\.js"><\/script>/);
+    assert.doesNotMatch(html, /<script src="\/res\/vue\.global\.prod\.js"><\/script>/);
     assert.match(html, /quickSwitchProvider\(\$event\.target\.value\)/);
     assert.match(html, /onMainTabPointerDown\('sessions', \$event\)/);
     assert.match(html, /onConfigTabPointerDown\('codex', \$event\)/);
@@ -58,6 +58,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /class="codex-config-grid"/);
     assert.match(html, /onSettingsTabClick\('general'\)/);
     assert.match(html, /onSettingsTabClick\('data'\)/);
+    assert.match(html, /onSettingsTabKeydown\(\$event, 'general'\)/);
+    assert.match(html, /onSettingsTabKeydown\(\$event, 'data'\)/);
     assert.match(html, /settingsTab === 'general'/);
     assert.match(html, /settingsTab === 'data'/);
     assert.match(html, /setConfigTemplateDiffConfirmEnabled/);

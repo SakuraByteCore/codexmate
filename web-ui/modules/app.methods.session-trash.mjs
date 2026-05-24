@@ -218,6 +218,36 @@ export function createSessionTrashMethods(options = {}) {
             await this.switchSettingsTab(tab);
         },
 
+        async onSettingsTabKeydown(event, tab) {
+            if (!event) {
+                return;
+            }
+            const tabs = ['general', 'data'];
+            const currentTab = this.normalizeSettingsTab(tab || this.settingsTab);
+            const currentIndex = Math.max(0, tabs.indexOf(currentTab));
+            let nextIndex = currentIndex;
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                nextIndex = (currentIndex + 1) % tabs.length;
+            } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+            } else if (event.key === 'Home') {
+                nextIndex = 0;
+            } else if (event.key === 'End') {
+                nextIndex = tabs.length - 1;
+            } else {
+                return;
+            }
+            event.preventDefault();
+            const nextTab = tabs[nextIndex];
+            await this.switchSettingsTab(nextTab);
+            const target = typeof document !== 'undefined'
+                ? document.getElementById(`settings-tab-${nextTab}`)
+                : null;
+            if (target && typeof target.focus === 'function') {
+                target.focus();
+            }
+        },
+
         async switchSettingsTab(tab, options = {}) {
             const nextTab = this.normalizeSettingsTab(tab);
             this.settingsTab = nextTab;

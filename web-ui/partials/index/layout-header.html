@@ -479,6 +479,12 @@
                             <span class="value">{{ installRegistryPreview || t('common.defaultOfficial') }}</span>
                         </div>
                     </div>
+                    <div class="status-strip status-strip-placeholder" v-else-if="!sessionStandalone" aria-hidden="true">
+                        <div class="status-chip">
+                            <span class="label">&nbsp;</span>
+                            <span class="value">&nbsp;</span>
+                        </div>
+                    </div>
                     <div
                         v-if="!sessionStandalone && mainTab === 'config' && isProviderConfigMode && forceCompactLayout && !loading && !initError && displayProvidersList.length > 1"
                         class="provider-fast-switch">
