@@ -11,6 +11,7 @@ const VOID_HTML_TAGS = new Set([
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
     'link', 'meta', 'param', 'source', 'track', 'wbr'
 ]);
+const PRECOMPILED_RENDER_PATH = path.join(__dirname, 'res', 'web-ui-render.precompiled.js');
 
 function stripBom(content) {
     return content.replace(/^\uFEFF/, '');
@@ -108,6 +109,21 @@ function compileWebUiTemplateToRenderScript(htmlPath = path.join(__dirname, 'ind
         '})();',
         ''
     ].join('\n');
+}
+
+function readPrecompiledWebUiRenderScript(entryPath = PRECOMPILED_RENDER_PATH) {
+    const resolvedPath = path.isAbsolute(entryPath)
+        ? entryPath
+        : path.resolve(__dirname, entryPath);
+    try {
+        const source = readUtf8Text(resolvedPath).trimEnd();
+        return source ? `${source}\n` : '';
+    } catch (error) {
+        if (error && error.code === 'ENOENT') {
+            return '';
+        }
+        throw error;
+    }
 }
 
 function resolveJavaScriptDependencies(filePath) {
@@ -264,7 +280,8 @@ function readBundledWebUiScript(entryPath = path.join(__dirname, 'app.js')) {
 }
 
 function readExecutableBundledWebUiScript(entryPath = path.join(__dirname, 'app.js')) {
-    return `${compileWebUiTemplateToRenderScript()}\n${bundleExecutableJavaScriptFile(entryPath, { preserveExports: false })}`;
+    const renderScript = readPrecompiledWebUiRenderScript() || compileWebUiTemplateToRenderScript();
+    return `${renderScript}\n${bundleExecutableJavaScriptFile(entryPath, { preserveExports: false })}`;
 }
 
 function readExecutableBundledJavaScriptModule(entryPath) {
@@ -278,6 +295,7 @@ module.exports = {
     collectJavaScriptFiles,
     compileWebUiTemplateToRenderScript,
     extractElementInnerHtmlById,
+    readPrecompiledWebUiRenderScript,
     readUtf8Text,
     readBundledWebUiHtml,
     readBundledWebUiCss,

@@ -79,6 +79,27 @@ test('executable web ui app bundle strips relative module imports and remains lo
     assert.strictEqual(typeof appOptions.computed.activeSessionVisibleMessages, 'function');
 });
 
+test('executable web ui app bundle uses checked-in precompiled render without runtime compiler dependency', () => {
+    const precompiled = sourceBundle.readPrecompiledWebUiRenderScript();
+    const compiled = sourceBundle.compileWebUiTemplateToRenderScript();
+    const originalLoad = require('module')._load;
+
+    assert.strictEqual(precompiled, compiled, 'precompiled Web UI render must match the current template');
+
+    try {
+        require('module')._load = function patchedLoad(request, parent, isMain) {
+            if (request === '@vue/compiler-dom') {
+                throw new Error('compiler intentionally unavailable');
+            }
+            return originalLoad.call(this, request, parent, isMain);
+        };
+        const script = sourceBundle.readExecutableBundledWebUiScript(path.join(projectRoot, 'web-ui', 'app.js'));
+        assert.match(script, /window\.__CODEXMATE_WEB_UI_RENDER__ = \(\(\) => \{/);
+    } finally {
+        require('module')._load = originalLoad;
+    }
+});
+
 test('executable logic bundle preserves named exports without leaking split re-exports', async () => {
     const script = readExecutableBundledWebUiModule('web-ui/logic.mjs');
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codexmate-web-ui-logic-'));
