@@ -131,11 +131,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /:aria-selected="mainTab === 'usage'"/);
     assert.match(html, /id="panel-usage"/);
     assert.match(html, /v-show="mainTab === 'usage'"/);
-    assert.match(usagePanel, /sessionsUsageLoading && !sessionsUsageList\.length" class="session-empty">\{\{\s*t\('usage\.loading'\)\s*\}\}</);
-    assert.match(usagePanel, /sessionsUsageError && !sessionsUsageList\.length" class="usage-empty">/);
-    assert.match(usagePanel, /v-else-if="!sessionsUsageList\.length" class="usage-empty">\{\{\s*t\('usage\.empty'\)\s*\}\}/);
+    assert.match(usagePanel, /sessionsUsageLoading && !sessionsUsageList\.length" class="usage-empty-state">/);
+    assert.match(usagePanel, /class="usage-empty-text">\{\{\s*t\('usage\.loading'\)\s*\}\}<\/p>/);
+    assert.match(usagePanel, /sessionsUsageError && !sessionsUsageList\.length" class="usage-empty-state">/);
+    assert.match(usagePanel, /v-else-if="!sessionsUsageList\.length" class="usage-empty-state">/);
+    assert.match(usagePanel, /class="usage-empty-text">\{\{\s*t\('usage\.empty'\)\s*\}\}<\/p>/);
     assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
-    assert.match(usagePanel, /sessionUsageDaily/);
+    assert.match(usagePanel, /sessionUsageHourlyHeatmap/);
     assert.match(html, /data-main-tab="market"/);
     assert.match(html, /onMainTabPointerDown\('market', \$event\)/);
     assert.match(html, /onMainTabClick\('market', \$event\)/);
@@ -155,31 +157,21 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /installTroubleshootingTips/);
     assert.doesNotMatch(html, /<span class="selector-title">Skills<\/span>/);
     assert.doesNotMatch(html, /openSkillsManager\(\{ targetApp: 'codex' \}\)/);
-    assert.match(html, /loadSkillsMarketOverview\(\{ forceRefresh: true, silent: false \}\)/);
-    assert.match(html, /class="market-grid"/);
-    assert.match(html, /class="market-action-grid"/);
+    assert.match(html, /class="skills-flow-panel"/);
     assert.match(html, /skillsTargetApp === 'codex'/);
     assert.match(html, /skillsTargetApp === 'claude'/);
     assert.match(html, /setSkillsTargetApp\('codex', \{ silent: false \}\)/);
     assert.match(html, /setSkillsTargetApp\('claude', \{ silent: false \}\)/);
     const targetSwitchButtons = [...html.matchAll(
-        /<button[\s\S]*?:class="\['market-target-chip', \{ active: skillsTargetApp === '(codex|claude)' \}\]"[\s\S]*?@click="setSkillsTargetApp\('\1', \{ silent: false \}\)"[\s\S]*?>/g
+        /<button[\s\S]*?:class="\['skills-target-chip', \{ active: skillsTargetApp === '(codex|claude)' \}\]"[\s\S]*?@click="setSkillsTargetApp\('\1', \{ silent: false \}\)"[\s\S]*?>/g
     )];
-    assert.strictEqual(targetSwitchButtons.length, 4);
+    assert.strictEqual(targetSwitchButtons.length, 2);
     for (const [buttonMarkup] of targetSwitchButtons) {
         assert.match(buttonMarkup, /:disabled="loading \|\| !!initError \|\| skillsMarketBusy"/);
     }
-    assert.match(html, /<button type="button" class="btn-tool btn-tool-compact" @click="loadSkillsMarketOverview\(\{ forceRefresh: true, silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy"/);
-    assert.match(html, /<button type="button" class="btn-tool btn-tool-compact" @click="openSkillsManager" :disabled="loading \|\| !!initError \|\| skillsMarketBusy"/);
-    assert.match(html, /<button type="button" class="btn-mini" @click="refreshSkillsList\(\{ silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="btn-mini" @click="scanImportableSkills\(\{ silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="market-action-card" @click="openSkillsManager" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="market-action-card" @click="scanImportableSkills\(\{ silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="market-action-card" @click="triggerSkillsZipImport" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /class="market-target-switch" role="group" :aria-label="t\('market\.target\.aria'\)"/);
-    assert.match(html, /class="market-target-switch market-target-switch-compact" role="group" :aria-label="t\('modal\.skills\.target\.aria'\)"/);
-    assert.doesNotMatch(html, /class="market-target-switch" role="tablist" :aria-label="t\('market\.target\.aria'\)"/);
-    assert.doesNotMatch(html, /class="market-target-switch market-target-switch-compact" role="tablist" :aria-label="t\('modal\.skills\.target\.aria'\)"/);
+    assert.match(html, /<button type="button" class="btn-icon" @click="openSkillsMenu"/);
+    assert.match(html, /<button type="button" class="btn-mini" @click="refreshSkillsList\(\{ silent: false \}\)"/);
+    assert.match(html, /class="skills-target-switch" role="group" :aria-label="t\('market\.target\.aria'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.config'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.sessions'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
@@ -195,7 +187,6 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(sideRail, /id="side-tab-docs"[\s\S]*:aria-current="mainTab === 'docs' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-settings"[\s\S]*:aria-current="mainTab === 'settings' \? 'page' : null"/);
     assert.match(html, /skillsDefaultRootPath/);
-    assert.match(html, /\{\{\s*skill\.hasSkillFile\s*\?\s*t\('market\.pill\.importableDirect'\)\s*:\s*t\('market\.pill\.importMissing'\)\s*\}\}/);
     assert.doesNotMatch(html, /在线生态目录/);
     assert.doesNotMatch(html, /查看在线目录/);
     assert.doesNotMatch(html, /skillsMarketRemoteCount/);
@@ -256,7 +247,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     );
     assert.match(
         html,
-        /:class="\['card', \{ active: displayCurrentProvider === provider\.name \}\]"[\s\S]*@click="switchProvider\(provider\.name\)"[\s\S]*@keydown\.enter\.self\.prevent="switchProvider\(provider\.name\)"[\s\S]*@keydown\.space\.self\.prevent="switchProvider\(provider\.name\)"[\s\S]*tabindex="0"[\s\S]*role="button"[\s\S]*:aria-current="displayCurrentProvider === provider\.name \? 'true' : null"/
+        /:class="\['card', \{ active: displayCurrentProvider === provider\.name, disabled: provider\.name === 'local' && isLocalProviderDisabled \}\]"[\s\S]*@click="\(provider\.name === 'local' && isLocalProviderDisabled\) \? null : switchProvider\(provider\.name\)"[\s\S]*@keydown\.enter\.self\.prevent="\([^)]+\) \? null : switchProvider\(provider\.name\)"[\s\S]*:tabindex="provider\.name === 'local' && isLocalProviderDisabled \? -1 : 0"[\s\S]*role="button"[\s\S]*:aria-current="displayCurrentProvider === provider\.name \? 'true' : null"/
     );
     assert.match(
         html,
@@ -283,15 +274,15 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(usagePanel, />\{\{\s*t\('usage\.range\.all'\)\s*\}\}<\/button>/);
     assert.match(usagePanel, /sessionsUsageList\.length/);
     assert.match(usagePanel, /loadSessionsUsage\(\{ forceRefresh: true, range: sessionsUsageTimeRange \}\)/);
-    assert.match(usagePanel, /sessionUsageSummaryCards/);
-    assert.match(usagePanel, /usage-summary-card-value/);
-    assert.match(usagePanel, /usage-summary-card-label/);
+    assert.match(usagePanel, /sessionUsageWave\.points/);
+    assert.match(usagePanel, /usage-hero/);
+    assert.match(usagePanel, /usage-hero-main/);
     assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
     assert.match(usagePanel, /sessionUsageCharts\.topSessionsByMessages/);
     assert.match(usagePanel, /usage\.sessions\.topDensity/);
-    assert.match(usagePanel, /usage-card-head/);
-    assert.match(usagePanel, /usage-daily-chart/);
-    assert.match(usagePanel, /sessionUsageDaily\.rows/);
+    assert.match(usagePanel, /usage-card-title/);
+    assert.match(usagePanel, /usage-wave-chart/);
+    assert.match(usagePanel, /sessionUsageHourlyHeatmap\.rows/);
     assert.doesNotMatch(usagePanel, /sessionUsageCharts\.topPaths\[0\]\?\.count/);
     assert.doesNotMatch(html, /sessionUsageSummaryCards\[0\]\?\.value/);
     assert.doesNotMatch(html, /sessionUsageSummaryCards\[1\]\?\.value/);

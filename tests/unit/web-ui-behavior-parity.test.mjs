@@ -611,7 +611,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'setSessionSource',
         'highlightQueryText',
         'pasteConfigTemplateContent',
-        'pasteAgentsContent'
+        'pasteAgentsContent',
+        'importSingleSkill',
+        'openSkillsMenu',
+        'isClaudeLocalBridgeDisabled'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

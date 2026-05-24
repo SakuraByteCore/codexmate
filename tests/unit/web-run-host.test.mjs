@@ -743,7 +743,7 @@ test('resolveSkillTarget still falls back to default target when target is omitt
     assert.deepStrictEqual(resolveSkillTarget({ items: [] }), SKILL_TARGETS[0]);
 });
 
-test('createWebServer returns 500 when bundled /web-ui html generation throws', () => {
+test('createWebServer returns 404 for removed /web-ui route', () => {
     const { requestHandler, errors } = createWebServerHarness({
         htmlReader() {
             throw new Error('bundled html failed');
@@ -753,10 +753,8 @@ test('createWebServer returns 500 when bundled /web-ui html generation throws', 
 
     requestHandler({ url: '/web-ui' }, response);
 
-    assertInternalServerErrorResponse(response);
-    assert.deepStrictEqual(errors, [
-        ['! Web UI 资源读取失败 [/web-ui]:', 'bundled html failed']
-    ]);
+    assertNotFoundResponse(response);
+    assert.deepStrictEqual(errors, []);
 });
 
 test('createWebServer preserves the legacy 404 contract for /web-ui/', () => {
@@ -773,7 +771,7 @@ test('createWebServer preserves the legacy 404 contract for /web-ui/', () => {
     assert.deepStrictEqual(errors, []);
 });
 
-test('createWebServer returns 500 when bundled dynamic asset generation throws', () => {
+test('createWebServer returns 404 for removed /web-ui/index.html route', () => {
     const { requestHandler, errors } = createWebServerHarness({
         dynamicAssets: new Map([
             ['index.html', {
@@ -788,10 +786,8 @@ test('createWebServer returns 500 when bundled dynamic asset generation throws',
 
     requestHandler({ url: '/web-ui/index.html' }, response);
 
-    assertInternalServerErrorResponse(response);
-    assert.deepStrictEqual(errors, [
-        ['! Web UI 资源读取失败 [/web-ui/index.html]:', 'bundled index failed']
-    ]);
+    assertNotFoundResponse(response);
+    assert.deepStrictEqual(errors, []);
 });
 
 test('createWebServer returns 500 when fallback bundled html generation throws', () => {
