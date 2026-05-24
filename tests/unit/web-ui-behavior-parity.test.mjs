@@ -444,6 +444,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptComposerVarValuesRaw',
         'sessionConverting',
         'sessionImportingNative',
+        'preserveSessionRenderOnTabLeave',
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
         'sessionsUsageSelectedDayKey',

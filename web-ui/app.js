@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionPreviewHeaderEl: null,
                 sessionPreviewHeaderResizeObserver: null,
                 sessionListRenderEnabled: false,
+                preserveSessionRenderOnTabLeave: true,
                 sessionListVisibleCount: 0,
                 sessionListInitialBatchSize: 40,
                 sessionListLoadStep: 80,

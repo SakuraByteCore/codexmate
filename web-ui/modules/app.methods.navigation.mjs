@@ -489,9 +489,10 @@
                 return;
             }
             const isLeavingSessions = previousTab === 'sessions' && targetTab !== 'sessions';
-            const shouldDeferApply = isLeavingSessions;
+            const shouldPreserveSessionRender = isLeavingSessions && this.preserveSessionRenderOnTabLeave === true;
+            const shouldDeferApply = isLeavingSessions && !shouldPreserveSessionRender;
             if (isLeavingSessions && !this.isSessionPanelFastHidden()) {
-                this.setSessionPanelFastHidden(true);
+                this.setSessionPanelFastHidden(!shouldPreserveSessionRender);
             }
             if (shouldDeferApply && typeof this.suspendSessionTabRender === 'function') {
                 this.suspendSessionTabRender();

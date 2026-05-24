@@ -90,7 +90,7 @@ export function switchMainTab(tab) {
     emitSessionLoadDebug(this, 'switchMainTab:start', `from=${previousTab}\nto=${nextTab}`);
     this.mainTab = nextTab;
 
-    if (leavingSessions) {
+    if (leavingSessions && this.preserveSessionRenderOnTabLeave !== true) {
         const teardown = () => {
             if (this.mainTab === 'sessions') return;
             if (typeof this.finalizeSessionTabTeardown === 'function') {
@@ -156,7 +156,13 @@ export function switchMainTab(tab) {
     if (nextTab !== 'orchestration' && typeof this.stopTaskOrchestrationPolling === 'function') {
         this.stopTaskOrchestrationPolling();
     }
-    if (nextTab === 'sessions') {
+    if (
+        nextTab === 'sessions'
+        && (
+            !this.sessionListRenderEnabled
+            || !this.sessionPreviewRenderEnabled
+        )
+    ) {
         this.prepareSessionTabRender();
     }
     const shouldLoadTrashListOnSettingsEnter = nextTab === 'settings'

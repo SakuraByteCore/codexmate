@@ -408,7 +408,8 @@ test('web ui script defines provider mode metadata for codex only', () => {
     assert.match(appScript, /const enteringUsageTab = nextTab === 'usage';/);
     assert.match(appScript, /this\.loadSessionsUsage\(\);/);
     assert.match(appScript, /if \(targetTab === previousTab\) {/);
-    assert.match(appScript, /const shouldDeferApply = isLeavingSessions;/);
+    assert.match(appScript, /const shouldPreserveSessionRender = isLeavingSessions && this\.preserveSessionRenderOnTabLeave === true;/);
+    assert.match(appScript, /const shouldDeferApply = isLeavingSessions && !shouldPreserveSessionRender;/);
     assert.match(appScript, /if \(isLeavingSessions && !this\.isSessionPanelFastHidden\(\)\) {/);
     assert.match(appScript, /switchState\.pendingTarget = targetTab;/);
     assert.match(appScript, /if \(ticket !== liveState\.ticket\) return;/);
