@@ -706,6 +706,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionUsageWave',
         'usageHeroDelta',
         'usageHeroDeltaClass',
+        'usageHeroMainValue',
+        'usageHeroSubLabel',
         'usageCurrentSessionStats',
         'taskOrchestrationSelectedRun',
         'taskOrchestrationSelectedRunNodes',
