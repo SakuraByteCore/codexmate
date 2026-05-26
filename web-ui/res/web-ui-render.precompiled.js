@@ -2357,7 +2357,7 @@ return function render(_ctx, _cache) {
                               }, [
                                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionsList, (session, __, ___, _cached) => {
                                   const _memo = ([_ctx.activeSessionExportKey === _ctx.getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, _ctx.isSessionPinned(session), _ctx.sessionsLoading, session.match && session.match.count])
-                                  if (_cached && _cached.el && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
+                                  if (_cached && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
                                   const _item = (_openBlock(), _createElementBlock("div", {
                                     key: session.source + '-' + session.sessionId + '-' + session.filePath,
                                     class: _normalizeClass([
@@ -2598,7 +2598,7 @@ return function render(_ctx, _cache) {
                                                       : _createCommentVNode("v-if", true),
                                                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionMessages, (msg, idx, ___, _cached) => {
                                                       const _memo = ([msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole])
-                                                      if (_cached && _cached.el && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
+                                                      if (_cached && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
                                                       const _item = (_openBlock(), _createElementBlock("div", {
                                                         key: _ctx.getRecordRenderKey(msg, idx),
                                                         "data-message-key": _ctx.getRecordRenderKey(msg, idx),
@@ -2632,7 +2632,7 @@ return function render(_ctx, _cache) {
                                         _createElementVNode("div", { class: "session-timeline-track" }),
                                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
                                           const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
-                                          if (_cached && _cached.el && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                          if (_cached && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
                                           const _item = (_openBlock(), _createElementBlock("button", {
                                             key: 'timeline-' + node.key,
                                             type: "button",
