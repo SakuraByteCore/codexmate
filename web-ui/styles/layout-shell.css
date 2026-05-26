@@ -431,6 +431,16 @@ body::after {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+.brand-block:focus-visible {
+    outline: 2px solid rgba(0, 122, 255, 0.5);
+    outline-offset: -2px;
+    border-radius: 4px;
+}
+
+.brand-block:focus:not(:focus-visible) {
+    outline: none;
+}
+
 .brand-head {
     display: flex;
     align-items: center;
@@ -480,10 +490,15 @@ body::after {
     color: #1d1d1f;
     letter-spacing: -0.01em;
     font-weight: 500;
-    background: linear-gradient(180deg, #1d1d1f 0%, #2d2d2f 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+    .brand-kicker {
+        background: linear-gradient(180deg, #1d1d1f 0%, #2d2d2f 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 }
 
 .brand-version {

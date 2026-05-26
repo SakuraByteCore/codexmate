@@ -167,8 +167,11 @@ return function render(_ctx, _cache) {
           }, [
             _createElementVNode("div", {
               class: "brand-block",
+              tabindex: "0",
               onMouseenter: $event => (_ctx.brandHovered = true),
-              onMouseleave: $event => (_ctx.brandHovered = false)
+              onMouseleave: $event => (_ctx.brandHovered = false),
+              onFocus: $event => (_ctx.brandHovered = true),
+              onBlur: $event => (_ctx.brandHovered = false)
             }, [
               _createElementVNode("div", { class: "brand-head" }, [
                 _createElementVNode("img", {
@@ -193,7 +196,7 @@ return function render(_ctx, _cache) {
                   ])
                 ])
               ])
-            ], 40 /* PROPS, NEED_HYDRATION */, ["onMouseenter", "onMouseleave"]),
+            ], 40 /* PROPS, NEED_HYDRATION */, ["onMouseenter", "onMouseleave", "onFocus", "onBlur"]),
             _createElementVNode("div", { class: "side-rail-nav" }, [
               _createElementVNode("div", {
                 class: "side-section",
