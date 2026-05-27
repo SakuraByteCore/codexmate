@@ -14,7 +14,7 @@ function readProjectFile(relativePath) {
 test('README Architecture diagram includes the documented config files', () => {
     const readme = readProjectFile('README.md');
     const readmeZh = readProjectFile('README.zh.md');
-
+    
     // 验证 README.md 中的架构图节点
     assert.match(readme, /ClawDir\[~\/\.openclaw\]/);
     assert.match(readme, /ClaudeDir\[~\/\.claude\]/);
