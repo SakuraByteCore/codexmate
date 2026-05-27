@@ -1,4 +1,4 @@
-﻿import { buildSessionListParams } from './logic.mjs';
+﻿import { buildSessionListParams, formatSessionTimelineTimestamp } from './logic.mjs';
 
 function clearSessionTimelineRefs(vm) {
     if (typeof vm.clearSessionTimelineRefs === 'function') {
@@ -90,7 +90,7 @@ export function switchMainTab(tab) {
     emitSessionLoadDebug(this, 'switchMainTab:start', `from=${previousTab}\nto=${nextTab}`);
     this.mainTab = nextTab;
 
-    if (leavingSessions) {
+    if (leavingSessions && this.preserveSessionRenderOnTabLeave !== true) {
         const teardown = () => {
             if (this.mainTab === 'sessions') return;
             if (typeof this.finalizeSessionTabTeardown === 'function') {
@@ -156,7 +156,13 @@ export function switchMainTab(tab) {
     if (nextTab !== 'orchestration' && typeof this.stopTaskOrchestrationPolling === 'function') {
         this.stopTaskOrchestrationPolling();
     }
-    if (nextTab === 'sessions') {
+    if (
+        nextTab === 'sessions'
+        && (
+            !this.sessionListRenderEnabled
+            || !this.sessionPreviewRenderEnabled
+        )
+    ) {
         this.prepareSessionTabRender();
     }
     const shouldLoadTrashListOnSettingsEnter = nextTab === 'settings'
@@ -259,7 +265,12 @@ export async function loadSessions(api, options = {}) {
             clearSessionTimelineRefs(this);
         } else {
             loadSucceeded = true;
-            this.sessionsList = Array.isArray(res.sessions) ? res.sessions : [];
+            const rawSessions = Array.isArray(res.sessions) ? res.sessions : [];
+            this.sessionsList = rawSessions.filter(s => s && typeof s === 'object');
+            for (const session of this.sessionsList) {
+                const rawUpdatedAt = typeof session.updatedAt === 'string' ? session.updatedAt : '';
+                session.updatedAtLabel = formatSessionTimelineTimestamp(rawUpdatedAt);
+            }
             emitSessionLoadDebug(this, 'loadSessions:response', `sessions=${this.sessionsList.length}`);
             if (typeof this.primeSessionListRender === 'function') {
                 this.primeSessionListRender();
@@ -419,9 +430,6 @@ export async function loadActiveSessionDetail(api, options = {}) {
             : messageLimit;
         if (res.sourceLabel) {
             this.activeSession.sourceLabel = res.sourceLabel;
-        }
-        if (typeof res.derived === 'boolean') {
-            this.activeSession.derived = res.derived;
         }
         if (res.sessionId) {
             this.activeSession.sessionId = res.sessionId;

@@ -4,172 +4,99 @@
                     id="panel-market"
                     role="tabpanel"
                     aria-labelledby="tab-market">
-                    <div class="selector-section market-overview-section">
-                        <div class="selector-header market-overview-header">
-                            <div>
-                                <span class="selector-title">{{ t('market.title') }}</span>
-                                <div class="skills-panel-note">{{ t('market.subtitle') }}</div>
-                            </div>
-                            <div class="settings-tab-actions market-header-actions">
-                                <button type="button" class="btn-tool btn-tool-compact" @click="loadSkillsMarketOverview({ forceRefresh: true, silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
-                                    {{ skillsMarketLoading ? t('market.refreshing') : t('market.refresh') }}
+                    <!-- Minimalist header with target switch -->
+                    <div class="skills-minimal-header">
+                        <div class="skills-header-left">
+                            <span class="skills-header-title">{{ t('market.title') }}</span>
+                            <div class="skills-target-switch" role="group" :aria-label="t('market.target.aria')">
+                                <button
+                                    type="button"
+                                    :class="['skills-target-chip', { active: skillsTargetApp === 'codex' }]"
+                                    :aria-pressed="skillsTargetApp === 'codex'"
+                                    :disabled="loading || !!initError || skillsMarketBusy"
+                                    @click="setSkillsTargetApp('codex', { silent: false })">
+                                    Codex
                                 </button>
-                                <button type="button" class="btn-tool btn-tool-compact" @click="openSkillsManager" :disabled="loading || !!initError || skillsMarketBusy">
-                                    {{ t('market.openManager') }}
-                                </button>
-                                <button type="button" class="btn-tool btn-tool-compact" @click="switchMainTab('dashboard')" :disabled="loading || !!initError || skillsMarketBusy">
-                                    {{ t('dashboard.doctor.title') }}
+                                <button
+                                    type="button"
+                                    :class="['skills-target-chip', { active: skillsTargetApp === 'claude' }]"
+                                    :aria-pressed="skillsTargetApp === 'claude'"
+                                    :disabled="loading || !!initError || skillsMarketBusy"
+                                    @click="setSkillsTargetApp('claude', { silent: false })">
+                                    Claude Code
                                 </button>
                             </div>
                         </div>
-
-                        <div class="market-target-switch" role="group" :aria-label="t('market.target.aria')">
-                            <button
-                                type="button"
-                                :class="['market-target-chip', { active: skillsTargetApp === 'codex' }]"
-                                :aria-pressed="skillsTargetApp === 'codex'"
-                                :disabled="loading || !!initError || skillsMarketBusy"
-                                @click="setSkillsTargetApp('codex', { silent: false })">
-                                Codex
-                            </button>
-                            <button
-                                type="button"
-                                :class="['market-target-chip', { active: skillsTargetApp === 'claude' }]"
-                                :aria-pressed="skillsTargetApp === 'claude'"
-                                :disabled="loading || !!initError || skillsMarketBusy"
-                                @click="setSkillsTargetApp('claude', { silent: false })">
-                                Claude Code
+                        <div class="skills-header-actions">
+                            <button type="button" class="btn-icon" @click="openSkillsMenu" :aria-label="t('common.menu')" :title="t('common.menu')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                             </button>
                         </div>
+                    </div>
 
-                        <div class="skills-root-box market-root-box">{{ skillsRootPath || skillsDefaultRootPath }}</div>
-
-                        <div class="skills-summary-strip market-summary-strip">
-                            <div class="skills-summary-item">
-                                <span class="skills-summary-label">{{ t('market.summary.target') }}</span>
-                                <strong class="skills-summary-value">{{ skillsTargetLabel }}</strong>
+                    <!-- Installed skills panel -->
+                    <div class="skills-flow-panel">
+                        <div class="skills-flow-header">
+                            <div class="skills-flow-title-wrap">
+                                <span class="skills-flow-title">{{ t('market.installed.title') }}</span>
+                                <span class="skills-flow-count">{{ skillsList.length }}</span>
                             </div>
-                            <div class="skills-summary-item">
-                                <span class="skills-summary-label">{{ t('market.summary.total') }}</span>
-                                <strong class="skills-summary-value">{{ skillsList.length }}</strong>
-                            </div>
-                            <div class="skills-summary-item">
-                                <span class="skills-summary-label">{{ t('market.summary.configured') }}</span>
-                                <strong class="skills-summary-value">{{ skillsConfiguredCount }}</strong>
-                            </div>
-                            <div class="skills-summary-item">
-                                <span class="skills-summary-label">{{ t('market.summary.missing') }}</span>
-                                <strong class="skills-summary-value">{{ skillsMissingSkillFileCount }}</strong>
-                            </div>
-                            <div class="skills-summary-item">
-                                <span class="skills-summary-label">{{ t('market.summary.importable') }}</span>
-                                <strong class="skills-summary-value">{{ skillsImportList.length }}</strong>
-                            </div>
-                            <div class="skills-summary-item">
-                                <span class="skills-summary-label">{{ t('market.summary.importableDirect') }}</span>
-                                <strong class="skills-summary-value">{{ skillsImportConfiguredCount }}</strong>
+                            <button type="button" class="btn-mini" @click="refreshSkillsList({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
+                                <svg v-if="!skillsLoading" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M3 19l-4-4 4-4"/><path d="M17 9v2a4 4 0 01-4 4H3"/></svg>
+                                <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" class="spin"><path d="M10 2v4m0 8v4M2 10h4m8 0h4m-3.5-6.5l2.5 2.5M4 4l2.5 2.5M16 16l-2.5-2.5M4 16l2.5-2.5"/></svg>
+                            </button>
+                        </div>
+                        <div v-if="skillsLoading && !skillsMarketLocalLoadedOnce" class="skills-flow-loading">{{ t('market.local.loading') }}</div>
+                        <div v-else-if="skillsList.length === 0" class="skills-flow-empty">{{ t('market.local.empty') }}</div>
+                        <div v-else class="skills-flow-list">
+                            <div v-for="skill in skillsList" :key="'skill-' + skill.name" class="skills-flow-item" :class="{ 'has-issue': !skill.hasSkillFile }">
+                                <div class="skills-flow-main">
+                                    <span class="skills-flow-name">{{ skill.displayName || skill.name }}</span>
+                                    <span class="skills-flow-path">{{ skill.path }}</span>
+                                </div>
+                                <span :class="['skills-flow-status', skill.hasSkillFile ? 'success' : 'warning']">
+                                    {{ skill.hasSkillFile ? t('market.pill.verified') : t('market.pill.missingSkill') }}
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="market-grid">
-                        <div class="skills-panel market-panel">
-                            <div class="skills-panel-header">
-                                <div class="skills-panel-title-wrap">
-                                    <div class="skills-panel-title">{{ t('market.installed.title') }}</div>
-                                    <div class="skills-panel-note">{{ t('market.installed.note') }}</div>
-                                </div>
-                                <button type="button" class="btn-mini" @click="refreshSkillsList({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
-                                    {{ skillsLoading ? t('market.local.refreshing') : t('market.local.refresh') }}
-                                </button>
+                    <!-- Importable skills panel -->
+                    <div class="skills-flow-panel">
+                        <div class="skills-flow-header">
+                            <div class="skills-flow-title-wrap">
+                                <span class="skills-flow-title">{{ t('market.import.title') }}</span>
+                                <span class="skills-flow-count">{{ skillsImportList.length }}</span>
                             </div>
-                            <div v-if="skillsLoading && !skillsMarketLocalLoadedOnce" class="skills-empty-state">{{ t('market.local.loading') }}</div>
-                            <div v-else-if="skillsList.length === 0" class="skills-empty-state">{{ t('market.local.empty') }}</div>
-                            <div v-else class="market-preview-list">
-                                <div v-for="skill in skillsMarketInstalledPreview" :key="'market-local-' + skill.name" class="market-preview-item">
-                                    <div class="market-preview-main">
-                                        <div class="market-preview-title">{{ skill.displayName || skill.name }}</div>
-                                        <div class="market-preview-meta">{{ skill.description || skill.path }}</div>
-                                    </div>
-                                    <span :class="['pill', skill.hasSkillFile ? 'configured' : 'empty']">
-                                        {{ skill.hasSkillFile ? t('market.pill.verified') : t('market.pill.missingSkill') }}
-                                    </span>
-                                </div>
-                            </div>
+                            <button type="button" class="btn-mini" @click="scanImportableSkills({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
+                                <svg v-if="!skillsScanningImports" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M3 19l-4-4 4-4"/><path d="M17 9v2a4 4 0 01-4 4H3"/></svg>
+                                <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" class="spin"><path d="M10 2v4m0 8v4M2 10h4m8 0h4m-3.5-6.5l2.5 2.5M4 4l2.5 2.5M16 16l-2.5-2.5M4 16l2.5-2.5"/></svg>
+                            </button>
                         </div>
-
-                        <div class="skills-panel market-panel">
-                            <div class="skills-panel-header">
-                                <div class="skills-panel-title-wrap">
-                                    <div class="skills-panel-title">{{ t('market.import.title') }}</div>
-                                    <div class="skills-panel-note">{{ t('market.import.note', { target: skillsTargetLabel }) }}</div>
-                                </div>
-                                <button type="button" class="btn-mini" @click="scanImportableSkills({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
-                                    {{ skillsScanningImports ? t('market.import.scanning') : t('market.import.scan') }}
+                        <div v-if="skillsScanningImports && !skillsMarketImportLoadedOnce" class="skills-flow-loading">{{ t('market.import.loading') }}</div>
+                        <div v-else-if="skillsImportList.length === 0" class="skills-flow-empty">{{ t('market.import.empty') }}</div>
+                        <div v-else>
+                            <!-- Quick actions -->
+                            <div class="skills-flow-actions">
+                                <button type="button" class="skills-action-btn" @click="openSkillsManager" :disabled="loading || !!initError || skillsMarketBusy">
+                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M7 7h6M7 10h4"/></svg>
+                                    {{ t('market.action.manage.title') }}
+                                </button>
+                                <button type="button" class="skills-action-btn" @click="triggerSkillsZipImport" :disabled="loading || !!initError || skillsMarketBusy">
+                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M4 14l3-3 3 3"/><path d="M7 4v7"/><rect x="12" y="4" width="5" height="12" rx="1"/></svg>
+                                    {{ t('market.action.zipImport.title') }}
                                 </button>
                             </div>
-                            <div v-if="skillsScanningImports && !skillsMarketImportLoadedOnce" class="skills-empty-state">{{ t('market.import.loading') }}</div>
-                            <div v-else-if="skillsImportList.length === 0" class="skills-empty-state">{{ t('market.import.empty') }}</div>
-                            <div v-else class="market-preview-list">
-                                <div v-for="skill in skillsMarketImportPreview" :key="'market-import-' + buildSkillImportKey(skill)" class="market-preview-item">
-                                    <div class="market-preview-main">
-                                        <div class="market-preview-title">{{ skill.displayName || skill.name }}</div>
-                                        <div class="market-preview-meta">{{ skill.sourceLabel }} · {{ skill.sourcePath }}</div>
+                            <!-- Import list -->
+                            <div class="skills-flow-list">
+                                <div v-for="skill in skillsImportList" :key="'import-' + buildSkillImportKey(skill)" class="skills-flow-item">
+                                    <div class="skills-flow-main">
+                                        <span class="skills-flow-name">{{ skill.displayName || skill.name }}</span>
+                                        <span class="skills-flow-meta">{{ skill.sourceLabel }}</span>
                                     </div>
-                                    <span :class="['pill', skill.hasSkillFile ? 'configured' : 'empty']">
-                                        {{ skill.hasSkillFile ? t('market.pill.importableDirect') : t('market.pill.importMissing') }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skills-panel market-panel market-actions-panel">
-                            <div class="skills-panel-header">
-                                <div class="skills-panel-title-wrap">
-                                    <div class="skills-panel-title">{{ t('market.actions.title') }}</div>
-                                    <div class="skills-panel-note">{{ t('market.actions.note') }}</div>
-                                </div>
-                            </div>
-                            <div class="market-action-grid">
-                                <button type="button" class="market-action-card" @click="openSkillsManager" :disabled="loading || !!initError || skillsMarketBusy">
-                                    <span class="market-action-title"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M7 7h6M7 10h4"/></svg>{{ t('market.action.manage.title') }}</span>
-                                    <span class="market-action-copy">{{ t('market.action.manage.copy', { target: skillsTargetLabel }) }}</span>
-                                </button>
-                                <button type="button" class="market-action-card" @click="scanImportableSkills({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
-                                    <span class="market-action-title"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l3-3 3 3"/><path d="M7 3v6"/><path d="M13 7l3 3 3-3"/><path d="M16 16V7"/></svg>{{ t('market.action.crossImport.title') }}</span>
-                                    <span class="market-action-copy">{{ t('market.action.crossImport.copy', { target: skillsTargetLabel }) }}</span>
-                                </button>
-                                <button type="button" class="market-action-card" @click="triggerSkillsZipImport" :disabled="loading || !!initError || skillsMarketBusy">
-                                    <span class="market-action-title"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l3-3 3 3"/><path d="M7 4v7"/><rect x="12" y="4" width="5" height="12" rx="1"/></svg>{{ t('market.action.zipImport.title') }}</span>
-                                    <span class="market-action-copy">{{ t('market.action.zipImport.copy') }}</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="skills-panel market-panel market-panel-wide">
-                            <div class="skills-panel-header">
-                                <div class="skills-panel-title-wrap">
-                                    <div class="skills-panel-title">{{ t('market.help.title') }}</div>
-                                </div>
-                            </div>
-                            <div class="market-preview-list">
-                                <div class="market-preview-item">
-                                    <div class="market-preview-main">
-                                        <div class="market-preview-title">{{ t('market.help.target.title') }}</div>
-                                        <div class="market-preview-meta">{{ t('market.help.target.copy', { target: skillsTargetLabel }) }}</div>
-                                    </div>
-                                </div>
-                                <div class="market-preview-item">
-                                    <div class="market-preview-main">
-                                        <div class="market-preview-title">{{ t('market.help.crossImport.title') }}</div>
-                                        <div class="market-preview-meta">{{ t('market.help.crossImport.copy') }}</div>
-                                    </div>
-                                </div>
-                                <div class="market-preview-item">
-                                    <div class="market-preview-main">
-                                        <div class="market-preview-title">{{ t('market.help.zipImport.title') }}</div>
-                                        <div class="market-preview-meta">{{ t('market.help.zipImport.copy') }}</div>
-                                    </div>
+                                    <button type="button" class="skills-flow-add" @click="importSingleSkill(skill)" :disabled="loading || !!initError || skillsMarketBusy">
+                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M10 4v6m3-3l-3 3-3-3"/></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>

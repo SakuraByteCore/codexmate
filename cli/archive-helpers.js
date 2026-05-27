@@ -4,6 +4,7 @@ function createArchiveHelperController(deps = {}) {
         path,
         os,
         execSync,
+        execFileSync,
         zipLib,
         yauzl,
         ensureDir,
@@ -341,8 +342,11 @@ function createArchiveHelperController(deps = {}) {
 
             const zipTool = resolveZipTool();
             if (zipTool.type === 'zip') {
-                const cmd = `"${zipTool.cmd}" -0 -q -r "${zipFilePath}" "${dirPath}"`;
-                execSync(cmd, { stdio: 'ignore' });
+                if (typeof execFileSync === 'function') {
+                    execFileSync(zipTool.cmd, ['-0', '-q', '-r', zipFilePath, dirPath], { stdio: 'ignore' });
+                } else {
+                    execSync(`"${zipTool.cmd}" -0 -q -r "${zipFilePath}" "${dirPath}"`, { stdio: 'ignore' });
+                }
             } else {
                 await zipWithLibrary(dirPath, zipFilePath);
             }
@@ -371,8 +375,11 @@ function createArchiveHelperController(deps = {}) {
 
         try {
             if (zipTool.type === 'zip') {
-                const cmd = `"${zipTool.cmd}" -0 -q -r "${zipFilePath}" "${dirPath}"`;
-                execSync(cmd, { stdio: 'ignore' });
+                if (typeof execFileSync === 'function') {
+                    execFileSync(zipTool.cmd, ['-0', '-q', '-r', zipFilePath, dirPath], { stdio: 'ignore' });
+                } else {
+                    execSync(`"${zipTool.cmd}" -0 -q -r "${zipFilePath}" "${dirPath}"`, { stdio: 'ignore' });
+                }
             } else {
                 await zipWithLibrary(dirPath, zipFilePath);
             }

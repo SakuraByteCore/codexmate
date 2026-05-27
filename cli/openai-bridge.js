@@ -5,7 +5,7 @@ const { StringDecoder } = require('string_decoder');
 const { readJsonFile, writeJsonAtomic } = require('../lib/cli-file-utils');
 const { isValidHttpUrl, normalizeBaseUrl, joinApiUrl } = require('../lib/cli-utils');
 
-const DEFAULT_BRIDGE_TOKEN = 'codexmate';
+const DEFAULT_BRIDGE_TOKEN = crypto.randomBytes(16).toString('hex');
 const SETTINGS_VERSION = 1;
 // 推理模型 reasoning 阶段可能长时间无字节输出，需匹配 codex 的 stream_idle_timeout_ms=300000。
 const STREAM_IDLE_TIMEOUT_MS = 5 * 60 * 1000;

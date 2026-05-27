@@ -1,10 +1,5 @@
 import { runLatestOnlyQueue } from '../logic.mjs';
 import { normalizeConfigTemplateDiffConfirmEnabled } from './config-template-confirm-pref.mjs';
-import {
-    getConvertTargetSource,
-    normalizeSessionConvertSource
-} from '../logic.session-convert.mjs';
-import { syncSessionsFilterUrl } from './sessions-filters-url.mjs';
 
 function hasResponseError(response) {
     if (!response || typeof response !== 'object') {
@@ -77,77 +72,6 @@ export function createCodexConfigMethods(options = {}) {
                 this.showMessage('导出失败', 'error');
             } finally {
                 this.sessionExporting[key] = false;
-            }
-        },
-
-        async convertSession(session) {
-            const source = normalizeSessionConvertSource(session && session.source ? session.source : '');
-            const target = getConvertTargetSource(source);
-            if (!source || !target) {
-                this.showMessage('不支持此操作', 'error');
-                return;
-            }
-            const key = this.getSessionExportKey(session);
-            if (this.sessionConverting[key]) return;
-            this.sessionConverting[key] = true;
-            try {
-                const res = await api('convert-session', {
-                    source,
-                    target,
-                    sessionId: session.sessionId,
-                    filePath: session.filePath,
-                    maxMessages: 'all'
-                });
-                if (res && res.error) {
-                    this.showMessage(res.error, 'error');
-                    return;
-                }
-                const converted = res && res.session ? res.session : null;
-                if (!converted) {
-                    this.showMessage('转换失败', 'error');
-                    return;
-                }
-                if (res && res.truncated) {
-                    const maxLabel = res.maxMessages === 'all' ? 'all' : res.maxMessages;
-                    const targetLabel = converted && converted.sourceLabel ? String(converted.sourceLabel).trim() : '';
-                    if (targetLabel && typeof this.sessionFilterSource === 'string' && this.sessionFilterSource !== converted.source) {
-                        this.showMessage(`已生成派生会话（来源：${targetLabel}，已截断：最多 ${maxLabel} 条消息）`, 'info');
-                    } else {
-                        this.showMessage(`已生成派生会话（已截断：最多 ${maxLabel} 条消息）`, 'info');
-                    }
-                } else {
-                    const targetLabel = converted && converted.sourceLabel ? String(converted.sourceLabel).trim() : '';
-                    if (targetLabel && typeof this.sessionFilterSource === 'string' && this.sessionFilterSource !== converted.source) {
-                        this.showMessage(`已生成派生会话（来源：${targetLabel}）`, 'success');
-                    } else {
-                        this.showMessage('已生成派生会话', 'success');
-                    }
-                }
-
-                if (converted && converted.source && typeof this.sessionFilterSource === 'string') {
-                    if (this.sessionFilterSource !== converted.source) {
-                        this.sessionFilterSource = converted.source;
-                        if (typeof this.refreshSessionPathOptions === 'function') {
-                            this.refreshSessionPathOptions(this.sessionFilterSource);
-                        }
-                        if (typeof this.persistSessionFilterCache === 'function') {
-                            this.persistSessionFilterCache();
-                        }
-                        syncSessionsFilterUrl(this);
-                        this.sessionsList = [converted];
-                    } else {
-                        const list = Array.isArray(this.sessionsList) ? this.sessionsList : [];
-                        const next = [converted, ...list.filter(item => !(item && item.filePath === converted.filePath && item.source === converted.source))];
-                        this.sessionsList = next;
-                    }
-                }
-                if (typeof this.selectSession === 'function') {
-                    await this.selectSession(converted);
-                }
-            } catch (e) {
-                this.showMessage('转换失败', 'error');
-            } finally {
-                this.sessionConverting[key] = false;
             }
         },
 
@@ -634,6 +558,7 @@ export function createCodexConfigMethods(options = {}) {
                     template = `${template.trimEnd()}\n\n${appendBlock}\n`;
                 }
                 this.configTemplateContent = template;
+                this.configTemplateContext = 'codex';
                 this.showConfigTemplateModal = true;
             } catch (e) {
                 this.showMessage('加载模板失败', 'error');
@@ -772,6 +697,26 @@ export function createCodexConfigMethods(options = {}) {
             }
         },
 
+        async pasteConfigTemplateContent() {
+            if (this.configTemplateApplying || this.configTemplateDiffLoading || this.configTemplateDiffVisible) {
+                return;
+            }
+            let text = '';
+            try {
+                text = await navigator.clipboard.readText();
+            } catch (_) {
+                this.showMessage('无法读取剪贴板', 'error');
+                return;
+            }
+            if (typeof text !== 'string' || !text) {
+                this.showMessage('剪贴板为空', 'info');
+                return;
+            }
+            this.configTemplateContent = text;
+            this.onConfigTemplateContentInput();
+            this.showMessage('已粘贴', 'success');
+        },
+
         buildConfigTemplateDiffFingerprint() {
             const content = typeof this.configTemplateContent === 'string' ? this.configTemplateContent : '';
             return `${content.length}::${content}`;
@@ -863,9 +808,16 @@ export function createCodexConfigMethods(options = {}) {
             const performApply = async () => {
                 this.configTemplateApplying = true;
                 try {
-                    const res = await api('apply-config-template', {
-                        template: this.configTemplateContent
-                    });
+                    let res;
+                    if (this.configTemplateContext === 'claude') {
+                        res = await api('apply-claude-settings-raw', {
+                            content: this.configTemplateContent
+                        });
+                    } else {
+                        res = await api('apply-config-template', {
+                            template: this.configTemplateContent
+                        });
+                    }
                     if (res.error) {
                         this.showMessage(res.error, 'error');
                         return;

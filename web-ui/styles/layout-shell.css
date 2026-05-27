@@ -55,7 +55,6 @@ body::after {
     border-radius: 0;
     box-shadow: 8px 0 28px rgba(92, 68, 52, 0.05), 1px 0 0 rgba(255, 255, 255, 0.5);
     min-height: 100vh;
-    overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
     backdrop-filter: blur(18px) saturate(130%);
@@ -63,11 +62,6 @@ body::after {
 
 .side-rail::-webkit-scrollbar {
     display: none;
-}
-
-.side-rail .brand-title {
-    font-size: 22px;
-    margin-bottom: 0;
 }
 
 .side-section {
@@ -84,8 +78,15 @@ body::after {
 .side-rail-nav {
     display: flex;
     flex-direction: column;
-    gap: 0;
     flex: 1 1 auto;
+    gap: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.side-rail-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .lang-fab {
@@ -168,7 +169,6 @@ body::after {
     transform: none;
     z-index: 60;
     pointer-events: none;
-    display: flex;
     justify-content: center;
 }
 
@@ -206,16 +206,19 @@ body::after {
 }
 
 .side-rail-lang {
-    position: sticky;
+    position: absolute;
     bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 2;
-    margin-top: auto;
     padding: 10px 4px 6px;
     background: linear-gradient(180deg, rgba(255, 248, 241, 0), rgba(255, 248, 241, 0.94) 28%);
     border-top: 1px solid rgba(137, 111, 94, 0.08);
     backdrop-filter: blur(12px);
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
 .side-rail-lang .lang-choice {
@@ -422,59 +425,97 @@ body::after {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
     margin-bottom: 0;
-    padding: 14px 10px 16px;
-    border-bottom: 1px solid rgba(137, 111, 94, 0.10);
+    padding: 16px 12px 20px;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.brand-block:focus-visible {
+    outline: 2px solid rgba(0, 122, 255, 0.5);
+    outline-offset: -2px;
+    border-radius: 4px;
+}
+
+.brand-block:focus:not(:focus-visible) {
+    outline: none;
 }
 
 .brand-head {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .brand-logo {
-    width: 38px;
-    height: 38px;
-    border-radius: 13px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     object-fit: cover;
     flex-shrink: 0;
-    box-shadow:
-        0 8px 20px rgba(92, 68, 52, 0.10),
-        0 0 0 1px rgba(200, 121, 99, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: width 0.24s var(--ease-smooth), height 0.24s var(--ease-smooth), box-shadow 0.24s var(--ease-smooth);
+    position: relative;
+}
+
+.brand-logo::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    background: radial-gradient(circle, rgba(0, 122, 255, 0.12), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s var(--ease-smooth);
+    pointer-events: none;
+}
+
+.brand-block:hover .brand-logo {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.brand-block:hover .brand-logo::after {
+    opacity: 1;
 }
 
 .brand-copy {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0;
     min-width: 0;
 }
 
 .brand-kicker {
-    font-size: 11px;
-    line-height: 1;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.2;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
+    font-weight: 500;
 }
 
-.brand-subtitle {
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+    .brand-kicker {
+        background: linear-gradient(180deg, #1d1d1f 0%, #2d2d2f 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}
+
+.brand-version {
     font-size: 12px;
-    line-height: 1.45;
-    color: var(--color-text-secondary);
-    max-width: 22ch;
+    font-weight: 400;
+    color: #8e8e93;
+    vertical-align: baseline;
 }
 
-.brand-title {
-    font-size: 18px;
-    line-height: 1.15;
-    font-family: var(--font-family-display);
-    color: var(--color-text-primary);
-    letter-spacing: -0.02em;
-    font-weight: 700;
+.brand-version-fade-enter-active,
+.brand-version-fade-leave-active {
+    transition: opacity 0.2s var(--ease-smooth);
+}
+
+.brand-version-fade-enter-from,
+.brand-version-fade-leave-to {
+    opacity: 0;
 }
 
 .github-badge {

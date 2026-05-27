@@ -1,6 +1,6 @@
     <div id="app" class="container" v-cloak>
         <div v-if="!sessionStandalone" class="top-tabs" role="tablist" :aria-label="t('nav.topTabs.aria')">
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-dashboard"
                 role="tab"
                 data-main-tab="dashboard"
@@ -10,7 +10,7 @@
                 :class="{ active: isMainTabNavActive('dashboard') }"
                 @pointerdown="onMainTabPointerDown('dashboard', $event)"
                 @click="onMainTabClick('dashboard', $event)">{{ t('tab.dashboard') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-docs"
                 role="tab"
                 data-main-tab="docs"
@@ -20,7 +20,7 @@
                 :class="{ active: isMainTabNavActive('docs') }"
                 @pointerdown="onMainTabPointerDown('docs', $event)"
                 @click="onMainTabClick('docs', $event)">{{ t('tab.docs') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-config"
                 role="tab"
                 data-main-tab="config"
@@ -31,7 +31,7 @@
                 :class="{ active: isMainTabNavActive('config') }"
                 @pointerdown="onMainTabPointerDown('config', $event)"
                 @click="onMainTabClick('config', $event)">{{ t('tab.config') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-sessions"
                 role="tab"
                 data-main-tab="sessions"
@@ -41,7 +41,7 @@
                 :class="{ active: isMainTabNavActive('sessions') }"
                 @pointerdown="onMainTabPointerDown('sessions', $event)"
                 @click="onMainTabClick('sessions', $event)">{{ t('tab.sessions') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-usage"
                 role="tab"
                 data-main-tab="usage"
@@ -51,7 +51,7 @@
                 :class="{ active: isMainTabNavActive('usage') }"
                 @pointerdown="onMainTabPointerDown('usage', $event)"
                 @click="onMainTabClick('usage', $event)">{{ t('tab.usage') }}</button>
-            <button v-if="taskOrchestrationTabEnabled" class="top-tab"
+            <button v-if="taskOrchestrationTabEnabled" type="button" class="top-tab"
                 id="tab-orchestration"
                 role="tab"
                 data-main-tab="orchestration"
@@ -61,7 +61,7 @@
                 :class="{ active: isMainTabNavActive('orchestration') }"
                 @pointerdown="onMainTabPointerDown('orchestration', $event)"
                 @click="onMainTabClick('orchestration', $event)">{{ t('tab.orchestration') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-market"
                 role="tab"
                 data-main-tab="market"
@@ -71,7 +71,7 @@
                 :class="{ active: isMainTabNavActive('market') }"
                 @pointerdown="onMainTabPointerDown('market', $event)"
                 @click="onMainTabClick('market', $event)">{{ t('tab.market') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-plugins"
                 role="tab"
                 data-main-tab="plugins"
@@ -81,7 +81,7 @@
                 :class="{ active: isMainTabNavActive('plugins') }"
                 @pointerdown="onMainTabPointerDown('plugins', $event)"
                 @click="onMainTabClick('plugins', $event)">{{ t('tab.plugins') }}</button>
-            <button class="top-tab"
+            <button type="button" class="top-tab"
                 id="tab-settings"
                 role="tab"
                 data-main-tab="settings"
@@ -118,15 +118,13 @@
 
         <div :class="['app-shell', { standalone: sessionStandalone }]">
             <aside class="side-rail" v-if="!sessionStandalone">
-                <div class="brand-block">
+                <div class="brand-block" tabindex="0" @mouseenter="brandHovered = true" @mouseleave="brandHovered = false" @focus="brandHovered = true" @blur="brandHovered = false">
                     <div class="brand-head">
                         <img class="brand-logo" src="/res/logo-pack.webp" alt="Codex Mate logo">
                         <div class="brand-copy">
-                            <div class="brand-kicker">{{ t('brand.kicker.workspace') }}</div>
-                            <div class="brand-title">Codex Mate</div>
+                            <div class="brand-kicker">Codex Mate<transition name="brand-version-fade"><span v-if="appVersion && brandHovered" class="brand-version"> v{{ appVersion }}</span></transition></div>
                         </div>
                     </div>
-                    <div class="brand-subtitle">{{ t('brand.subtitle.localConfigSessionsWorkspace') }}</div>
                 </div>
 
                 <div class="side-rail-nav">
@@ -478,6 +476,12 @@
                         <div class="status-chip">
                             <span class="label">{{ t('status.registry') }}</span>
                             <span class="value">{{ installRegistryPreview || t('common.defaultOfficial') }}</span>
+                        </div>
+                    </div>
+                    <div class="status-strip status-strip-placeholder" v-else-if="!sessionStandalone" aria-hidden="true">
+                        <div class="status-chip">
+                            <span class="label">&nbsp;</span>
+                            <span class="value">&nbsp;</span>
                         </div>
                     </div>
                     <div

@@ -119,39 +119,6 @@
                                 <strong>{{ inspectorModelLoadStatus }}</strong>
                             </div>
                         </div>
-                        <div v-if="providersHealthLoading || providersHealthResult" class="doctor-providers-health">
-                            <div class="doctor-providers-health-title">
-                                {{ t('dashboard.providersHealth.title') }}
-                                <span v-if="providersHealthResult" class="doctor-providers-health-summary">
-                                    {{ providersHealthResult.summary.green }}/{{ providersHealthResult.summary.total }}
-                                </span>
-                                <span v-else class="doctor-providers-health-summary">{{ t('dashboard.providersHealth.checking') }}</span>
-                            </div>
-                            <div v-if="providersHealthResult" class="doctor-providers-grid">
-                                <div v-for="entry in providersHealthResult.providers"
-                                    :key="entry.provider"
-                                    class="doctor-provider-chip"
-                                    :class="[entry.status]"
-                                    :title="entry.provider + (entry.remote ? (entry.remote.ok ? ' OK' : ' ' + entry.remote.message) : '')">
-                                    <span class="doctor-provider-name">
-                                        {{ entry.provider }}
-                                        <span v-if="entry.isCurrent" class="doctor-provider-current">{{ t('dashboard.providersHealth.current') }}</span>
-                                    </span>
-                                    <span class="doctor-provider-status-dot"></span>
-                                </div>
-                            </div>
-                            <div v-if="providersHealthResult && providersHealthResult.providers.some(e => e.issues && e.issues.length)" class="doctor-provider-issues">
-                                <div v-for="entry in providersHealthResult.providers.filter(e => e.issues && e.issues.length)"
-                                    :key="entry.provider + '-issues'"
-                                    class="doctor-provider-issue-card">
-                                    <div class="doctor-provider-issue-name">{{ entry.provider }}</div>
-                                    <div v-for="issue in entry.issues" :key="issue.code" class="doctor-provider-issue-row">
-                                        <span class="doctor-provider-issue-text">{{ issue.message }}</span>
-                                        <span v-if="issue.suggestion" class="doctor-provider-issue-fix">{{ issue.suggestion }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div v-if="healthCheckResult" class="doctor-health-result" :class="healthCheckResult.ok ? 'ok' : 'error'">
                             <div class="doctor-health-title">
                                 {{ healthCheckResult.ok ? t('dashboard.health.ok') : t('dashboard.health.fail') }}

@@ -27,53 +27,16 @@ function formatCompactUsageSummaryNumber(value) {
     }).format(Math.floor(numeric));
 }
 
-function readUsageCostNumber(value) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric < 0) {
-        return null;
-    }
-    return numeric;
-}
-
-function formatUsageEstimatedCost(value, options = {}) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric <= 0) {
-        return '$0.00';
-    }
-    const precise = options && options.precise === true;
-    if (numeric < 0.0001) {
-        return '<$0.0001';
-    }
-    let fractionDigits = 2;
-    if (numeric < 1) {
-        fractionDigits = precise ? 6 : 4;
-    } else if (numeric >= 100) {
-        fractionDigits = 0;
-    }
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits
-    }).format(numeric);
-}
-
 function formatSignedUsageSummaryNumber(value) {
     const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric === 0) {
+    if (!Number.isFinite(numeric)) {
         return '0';
     }
-    const sign = numeric > 0 ? '+' : '-';
-    return `${sign}${formatUsageSummaryNumber(Math.abs(numeric))}`;
-}
-
-function formatSignedUsageEstimatedCost(value, options = {}) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric === 0) {
-        return '$0.00';
-    }
-    const sign = numeric > 0 ? '+' : '-';
-    return `${sign}${formatUsageEstimatedCost(Math.abs(numeric), options)}`;
+    const abs = Math.floor(Math.abs(numeric));
+    const formatted = abs.toLocaleString('en-US');
+    if (numeric > 0) return `+${formatted}`;
+    if (numeric < 0) return `-${formatted}`;
+    return '0';
 }
 
 function formatUsageRangeLabel(range, t) {
@@ -149,207 +112,19 @@ function formatUsageDuration(value, options = {}) {
     return parts.length ? parts.join(compact ? '' : ' ') : (isEn ? '0m' : '0分');
 }
 
-const KNOWN_USAGE_MODEL_PRICING = Object.freeze({
-    'gpt-5.4': Object.freeze({ input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 0 }),
-    'gpt-5.4-mini': Object.freeze({ input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0 }),
-    'gpt-5.3-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 }),
-    'gpt-5.2-codex': Object.freeze({ input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 }),
-    'claude-opus-4-6': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75, reasoningOutput: 75 }),
-    'claude-opus-4-7': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75, reasoningOutput: 75 }),
-    'claude-sonnet-4-6': Object.freeze({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75, reasoningOutput: 15 }),
-    'claude-haiku-4-5': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1, reasoningOutput: 4 }),
-    'claude-3-5-sonnet': Object.freeze({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75, reasoningOutput: 15 }),
-    'claude-3-5-haiku': Object.freeze({ input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1, reasoningOutput: 4 }),
-    'claude-3-opus': Object.freeze({ input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75, reasoningOutput: 75 })
-});
-
-function createUsagePricingEntry(pricing, source) {
-    const resolvedSource = typeof source === 'string' && source.trim() ? source.trim() : 'provider-config';
-    return {
-        input: readUsageCostNumber(pricing && pricing.input),
-        output: readUsageCostNumber(pricing && pricing.output),
-        reasoningOutput: readUsageCostNumber(
-            pricing && (pricing.reasoningOutput != null ? pricing.reasoningOutput : pricing.reasoning)
-        ),
-        cacheRead: readUsageCostNumber(pricing && pricing.cacheRead),
-        cacheWrite: readUsageCostNumber(pricing && pricing.cacheWrite),
-        source: resolvedSource
-    };
-}
-
-function buildUsagePricingIndex(providersList = []) {
-    const byProvider = new Map();
-    const byModel = new Map();
-    const knownByModel = new Map();
-    const list = Array.isArray(providersList) ? providersList : [];
-    for (const provider of list) {
-        if (!provider || typeof provider !== 'object') continue;
-        const providerName = typeof provider.name === 'string' ? provider.name.trim() : '';
-        const models = Array.isArray(provider.models) ? provider.models : [];
-        const providerMap = new Map();
-        for (const model of models) {
-            if (!model || typeof model !== 'object') continue;
-            const modelId = typeof model.id === 'string' ? model.id.trim() : '';
-            if (!modelId) continue;
-            const pricing = createUsagePricingEntry(
-                model.cost && typeof model.cost === 'object' && !Array.isArray(model.cost)
-                    ? model.cost
-                    : null,
-                'provider-config'
-            );
-            const hasKnownRate = [pricing.input, pricing.output, pricing.reasoningOutput, pricing.cacheRead, pricing.cacheWrite]
-                .some((value) => value !== null);
-            if (!hasKnownRate) continue;
-            providerMap.set(modelId, pricing);
-            const modelMatches = byModel.get(modelId) || [];
-            modelMatches.push({ provider: providerName, pricing });
-            byModel.set(modelId, modelMatches);
-        }
-        if (providerName && providerMap.size) {
-            byProvider.set(providerName, providerMap);
-        }
-    }
-    for (const [modelId, pricing] of Object.entries(KNOWN_USAGE_MODEL_PRICING)) {
-        const normalizedModelId = typeof modelId === 'string' ? modelId.trim() : '';
-        if (!normalizedModelId || byModel.has(normalizedModelId)) {
-            continue;
-        }
-        knownByModel.set(normalizedModelId, createUsagePricingEntry(pricing, 'public-catalog'));
-    }
-    return { byProvider, byModel, knownByModel };
-}
-
-function resolveUsagePricingForSession(session, pricingIndex, fallbackProvider = '') {
-    if (!session || typeof session !== 'object' || !pricingIndex || typeof pricingIndex !== 'object') {
-        return null;
-    }
-    const model = typeof session.model === 'string' ? session.model.trim() : '';
-    if (!model) return null;
-    const provider = typeof session.provider === 'string' ? session.provider.trim() : '';
-    const effectiveProvider = provider || fallbackProvider;
-    if (effectiveProvider) {
-        const providerMap = pricingIndex.byProvider instanceof Map ? pricingIndex.byProvider.get(effectiveProvider) : null;
-        if (providerMap instanceof Map && providerMap.has(model)) {
-            return providerMap.get(model);
-        }
-    }
-    const modelMatches = pricingIndex.byModel instanceof Map ? pricingIndex.byModel.get(model) : null;
-    if (Array.isArray(modelMatches) && modelMatches.length === 1) {
-        return modelMatches[0].pricing;
-    }
-    const knownPricing = pricingIndex.knownByModel instanceof Map ? pricingIndex.knownByModel.get(model) : null;
-    if (knownPricing) {
-        return knownPricing;
-    }
-    const strippedModel = model.replace(/-\d{8}(?=[-_]|$)/, '');
-    if (strippedModel !== model) {
-        const strippedKnown = pricingIndex.knownByModel instanceof Map ? pricingIndex.knownByModel.get(strippedModel) : null;
-        if (strippedKnown) {
-            return strippedKnown;
-        }
-    }
-    return null;
-}
-
-function shouldEstimateUsageCostForSession() {
-    return true;
-}
-
-function estimateUsageCostSummary(sessions, providersList, currentProvider) {
-    const list = Array.isArray(sessions) ? sessions : [];
-    const pricingIndex = buildUsagePricingIndex(providersList);
-    let totalCostUsd = 0;
-    let estimatedSessions = 0;
-    let totalTokens = 0;
-    let estimatedTokens = 0;
-    let configuredSessions = 0;
-    let catalogSessions = 0;
-    let missingPricingSessions = 0;
-    let missingTokenSessions = 0;
-    let supportedSessions = 0;
-    let skippedUnsupportedSessions = 0;
-
-    for (const session of list) {
-        if (!session || typeof session !== 'object') continue;
-        if (!shouldEstimateUsageCostForSession(session)) {
-            skippedUnsupportedSessions += 1;
-            continue;
-        }
-        supportedSessions += 1;
-        const cost = estimateUsageCostForSession(session, pricingIndex, currentProvider);
-        totalTokens += cost.totalSessionTokens;
-        if (!cost.pricing) {
-            missingPricingSessions += 1;
-            continue;
-        }
-        if (!cost.hasTokenBreakdown) {
-            missingTokenSessions += 1;
-            continue;
-        }
-        totalCostUsd += cost.estimatedUsd;
-        estimatedSessions += 1;
-        estimatedTokens += cost.totalSessionTokens;
-        if (cost.pricing.source === 'public-catalog') catalogSessions += 1;
-        else configuredSessions += 1;
-    }
-
-    const coveragePercent = totalTokens > 0
-        ? Math.round((estimatedTokens / totalTokens) * 100)
-        : (estimatedSessions > 0 ? 100 : 0);
-    return {
-        totalCostUsd,
-        estimatedSessions,
-        totalSessions: supportedSessions,
-        estimatedTokens,
-        totalTokens,
-        coveragePercent,
-        hasEstimate: estimatedSessions > 0,
-        configuredSessions,
-        catalogSessions,
-        missingPricingSessions,
-        missingTokenSessions,
-        skippedUnsupportedSessions
-    };
-}
-
-function estimateUsageCostForSession(session, pricingIndex, currentProvider) {
-    const inputTokens = Number.isFinite(Number(session.inputTokens)) ? Math.max(0, Math.floor(Number(session.inputTokens))) : null;
-    const cachedInputTokens = Number.isFinite(Number(session.cachedInputTokens)) ? Math.max(0, Math.floor(Number(session.cachedInputTokens))) : 0;
-    const cacheCreationInputTokens = Number.isFinite(Number(session.cacheCreationInputTokens)) ? Math.max(0, Math.floor(Number(session.cacheCreationInputTokens))) : 0;
-    const outputTokens = Number.isFinite(Number(session.outputTokens)) ? Math.max(0, Math.floor(Number(session.outputTokens))) : null;
-    const reasoningOutputTokens = Number.isFinite(Number(session.reasoningOutputTokens)) ? Math.max(0, Math.floor(Number(session.reasoningOutputTokens))) : 0;
-    const billableInputTokens = Math.max(0, (inputTokens || 0) - cachedInputTokens - cacheCreationInputTokens);
-    const fallbackSessionTokens = billableInputTokens + cachedInputTokens + cacheCreationInputTokens + (outputTokens || 0) + reasoningOutputTokens;
-    const totalSessionTokens = Number.isFinite(Number(session.totalTokens))
-        ? Math.max(0, Math.floor(Number(session.totalTokens)))
-        : fallbackSessionTokens;
-    const pricing = resolveUsagePricingForSession(session, pricingIndex, currentProvider);
-    const hasTokenBreakdown = !(inputTokens === null && outputTokens === null && reasoningOutputTokens === 0);
-    const reasoningRate = pricing
-        ? ((pricing.reasoningOutput != null ? pricing.reasoningOutput : pricing.output) || 0)
-        : 0;
-    const visibleOutputTokens = Math.max(0, (outputTokens || 0) - reasoningOutputTokens);
-    const estimatedUsd = pricing && hasTokenBreakdown
-        ? (
-            ((pricing.input || 0) * billableInputTokens)
-            + ((pricing.cacheRead || 0) * cachedInputTokens)
-            + ((pricing.cacheWrite || 0) * cacheCreationInputTokens)
-            + (reasoningRate * reasoningOutputTokens)
-            + ((pricing.output || 0) * visibleOutputTokens)
-        ) / 1000000
-        : 0;
-    return {
-        pricing,
-        hasTokenBreakdown,
-        totalSessionTokens,
-        estimatedUsd
-    };
-}
-
 export function createSessionComputed() {
     return {
         isSessionQueryEnabled() {
             return isSessionQueryEnabled(this.sessionFilterSource);
+        },
+        sessionSourceOptions() {
+            return [
+                { value: "all", label: this.t("common.all") },
+                { value: "codex", label: this.t("sessions.source.codex") },
+                { value: "claude", label: this.t("sessions.source.claudeCode") },
+                { value: "gemini", label: this.t("sessions.source.gemini") },
+                { value: "codebuddy", label: this.t("sessions.source.codebuddy") }
+            ];
         },
         activeSessionExportKey() {
             return this.activeSession ? this.getSessionExportKey(this.activeSession) : '';
@@ -642,30 +417,8 @@ export function createSessionComputed() {
                 : this.sessionsUsageList;
             const t = typeof this.t === 'function' ? this.t : null;
             const usageRangeLabel = formatUsageRangeLabel(this.sessionsUsageTimeRange, t);
-            const estimatedCost = estimateUsageCostSummary(
-                filteredUsageSessions,
-                this.providersList,
-                this.currentProvider
-            );
             const noneLabel = t ? t('common.none') : '暂无';
-            const estimatedCostPrefix = estimatedCost.skippedUnsupportedSessions > 0
-                ? (t ? t('usage.estimatedCost.note.excludesClaudePrefix') : '暂不含 Claude，')
-                : '';
-            const estimatedCostMethod = estimatedCost.catalogSessions > 0
-                ? (estimatedCost.configuredSessions > 0
-                    ? (t ? t('usage.estimatedCost.method.configuredAndCatalog') : '按已配置单价 + 公开模型目录估算')
-                    : (t ? t('usage.estimatedCost.method.catalog') : '按公开模型目录估算'))
-                : (t ? t('usage.estimatedCost.method.configured') : '按已配置单价估算');
-            const estimatedCostTitle = estimatedCost.hasEstimate
-                ? (t ? t('usage.estimatedCost.detail.estimate', {
-                    prefix: estimatedCostPrefix,
-                    method: estimatedCostMethod,
-                    estimate: formatUsageEstimatedCost(estimatedCost.totalCostUsd, { precise: true }),
-                    covered: estimatedCost.estimatedSessions,
-                    total: estimatedCost.totalSessions,
-                    percent: estimatedCost.coveragePercent
-                }) : `${estimatedCostPrefix}${estimatedCostMethod}，估算 ${formatUsageEstimatedCost(estimatedCost.totalCostUsd, { precise: true })}，覆盖 ${estimatedCost.estimatedSessions}/${estimatedCost.totalSessions} 个会话，约 ${estimatedCost.coveragePercent}% token`)
-                : (t ? t('usage.estimatedCost.detail.missing', { prefix: estimatedCostPrefix }) : `${estimatedCostPrefix}缺少可匹配的模型单价或 token 拆分。请先补 models.cost，或确认会话已记录 input/output token。`);
+
             return [
                 { key: 'sessions', label: t ? t('usage.summary.sessions') : '总会话数', value: formatUsageSummaryNumber(summary.totalSessions || 0) },
                 { key: 'messages', label: t ? t('usage.summary.messages') : '总消息数', value: formatUsageSummaryNumber(summary.totalMessages || 0) },
@@ -680,12 +433,6 @@ export function createSessionComputed() {
                     label: t ? t('usage.summary.contextWindow') : '总上下文数',
                     value: formatCompactUsageSummaryNumber(summary.totalContextWindow || 0),
                     title: formatUsageSummaryNumber(summary.totalContextWindow || 0)
-                },
-                {
-                    key: 'estimated-cost',
-                    label: t ? t('usage.summary.estimatedCost', { range: usageRangeLabel }) : `预估费用 · ${usageRangeLabel}`,
-                    value: estimatedCost.hasEstimate ? formatUsageEstimatedCost(estimatedCost.totalCostUsd) : '0',
-                    title: estimatedCostTitle
                 },
                 {
                     key: 'active-duration',
@@ -747,7 +494,6 @@ export function createSessionComputed() {
             const baseBuckets = this.sessionUsageCharts && Array.isArray(this.sessionUsageCharts.buckets)
                 ? this.sessionUsageCharts.buckets
                 : [];
-            const pricingIndex = buildUsagePricingIndex(this.providersList);
             const compareEnabled = this.sessionsUsageCompareEnabled === true && this.sessionsUsageTimeRange !== 'all';
             const sessions = compareEnabled
                 ? this.sessionsUsageList
@@ -766,9 +512,7 @@ export function createSessionComputed() {
                     sessionCount: 0,
                     messageCount: 0,
                     tokenTotal: 0,
-                    estimatedCostUsd: 0,
-                    estimatedSessions: 0,
-                    hasCostEstimate: false
+
                 });
                 if (compareEnabled) {
                     const baseMs = Date.parse(`${bucket.key}T00:00:00.000Z`);
@@ -781,9 +525,7 @@ export function createSessionComputed() {
                                 sessionCount: 0,
                                 messageCount: 0,
                                 tokenTotal: 0,
-                                estimatedCostUsd: 0,
-                                estimatedSessions: 0,
-                                hasCostEstimate: false
+
                             });
                         }
                     }
@@ -808,15 +550,7 @@ export function createSessionComputed() {
                 row.messageCount += messageCount;
                 row.tokenTotal += tokenTotal;
 
-                if (shouldEstimateUsageCostForSession(session)) {
-                    const cost = estimateUsageCostForSession(session, pricingIndex, this.currentProvider);
-                    if (cost.pricing && cost.hasTokenBreakdown) {
-                        row.estimatedCostUsd += cost.estimatedUsd;
-                        row.estimatedSessions += 1;
-                        row.hasCostEstimate = true;
-                    }
-                }
-            }
+                            }
 
             const currentKeys = baseBuckets.map((bucket) => bucket && bucket.key).filter(Boolean);
             const rows = currentKeys
@@ -825,7 +559,7 @@ export function createSessionComputed() {
                 .sort((a, b) => b.key.localeCompare(a.key, 'en-US'));
             const rowsWithCompare = rows.map((row) => {
                 if (!compareEnabled) {
-                    return { ...row, compareEnabled: false, prevKey: '', prevTokenTotal: 0, prevCostUsd: 0 };
+                    return { ...row, compareEnabled: false, prevKey: '', prevTokenTotal: 0 };
                 }
                 const baseMs = Date.parse(`${row.key}T00:00:00.000Z`);
                 const prevKey = Number.isFinite(baseMs)
@@ -837,11 +571,9 @@ export function createSessionComputed() {
                     compareEnabled: true,
                     prevKey,
                     prevTokenTotal: prevRow ? prevRow.tokenTotal : 0,
-                    prevCostUsd: prevRow ? prevRow.estimatedCostUsd : 0
                 };
             });
             const maxTokens = rowsWithCompare.reduce((max, item) => Math.max(max, item.tokenTotal, item.prevTokenTotal || 0), 0);
-            const maxCost = rowsWithCompare.reduce((max, item) => Math.max(max, item.estimatedCostUsd, item.prevCostUsd || 0), 0);
 
             return {
                 rows: rowsWithCompare.map((row) => ({
@@ -851,14 +583,9 @@ export function createSessionComputed() {
                     tokenPercent: maxTokens > 0 ? Math.round((row.tokenTotal / maxTokens) * 1000) / 10 : 0,
                     prevTokenPercent: row.compareEnabled && maxTokens > 0 ? Math.round(((row.prevTokenTotal || 0) / maxTokens) * 1000) / 10 : 0,
                     prevTokenTitle: row.compareEnabled ? formatUsageSummaryNumber(row.prevTokenTotal || 0) : '',
-                    costLabel: row.hasCostEstimate ? formatUsageEstimatedCost(row.estimatedCostUsd) : '0',
-                    costTitle: row.hasCostEstimate ? formatUsageEstimatedCost(row.estimatedCostUsd, { precise: true }) : '0',
-                    costPercent: maxCost > 0 ? Math.round((row.estimatedCostUsd / maxCost) * 1000) / 10 : 0,
-                    prevCostPercent: row.compareEnabled && maxCost > 0 ? Math.round(((row.prevCostUsd || 0) / maxCost) * 1000) / 10 : 0,
-                    prevCostTitle: row.compareEnabled ? formatUsageEstimatedCost(row.prevCostUsd || 0, { precise: true }) : ''
+                    prevCostTitle: row.compareEnabled ? formatUsageSummaryNumber(row.prevTokenTotal || 0) : '',
                 })),
                 maxTokens,
-                maxCost
             };
         },
 
@@ -875,22 +602,16 @@ export function createSessionComputed() {
             const sessions = this.sessionUsageCharts && Array.isArray(this.sessionUsageCharts.filteredSessions)
                 ? this.sessionUsageCharts.filteredSessions
                 : this.sessionsUsageList;
-            const pricingIndex = buildUsagePricingIndex(this.providersList);
-            const compareEnabled = this.sessionsUsageCompareEnabled === true && this.sessionsUsageTimeRange !== 'all';
             const rangeDays = this.sessionsUsageTimeRange === '30d' ? 30 : 7;
             const dayMs = 24 * 60 * 60 * 1000;
             const baseMs = Date.parse(`${dayKey}T00:00:00.000Z`);
-            const prevKey = compareEnabled && Number.isFinite(baseMs)
+            const prevKey = Number.isFinite(baseMs)
                 ? new Date(baseMs - (rangeDays * dayMs)).toISOString().slice(0, 10)
                 : '';
             let sessionCount = 0;
             let messageCount = 0;
             let tokenTotal = 0;
-            let estimatedCostUsd = 0;
-            let hasCostEstimate = false;
             let prevTokenTotal = 0;
-            let prevEstimatedCostUsd = 0;
-            let prevHasCostEstimate = false;
             const modelMap = new Map();
             const sessionRows = [];
             for (const session of (Array.isArray(sessions) ? sessions : [])) {
@@ -913,18 +634,6 @@ export function createSessionComputed() {
                     tokenTotal += sessionTokens;
                 } else if (isPrev) {
                     prevTokenTotal += sessionTokens;
-                }
-                if (shouldEstimateUsageCostForSession(session)) {
-                    const cost = estimateUsageCostForSession(session, pricingIndex, this.currentProvider);
-                    if (cost.pricing && cost.hasTokenBreakdown) {
-                        if (isCurrent) {
-                            estimatedCostUsd += cost.estimatedUsd;
-                            hasCostEstimate = true;
-                        } else if (isPrev) {
-                            prevEstimatedCostUsd += cost.estimatedUsd;
-                            prevHasCostEstimate = true;
-                        }
-                    }
                 }
                 const model = typeof session.model === 'string' ? session.model.trim() : '';
                 if (isCurrent && model) {
@@ -957,20 +666,159 @@ export function createSessionComputed() {
                 }));
             return {
                 dayKey,
-                compareEnabled,
                 prevKey,
                 sessionCount,
                 messageCount,
                 tokenTotal,
                 tokenLabel: formatUsageSummaryNumber(tokenTotal),
-                costLabel: hasCostEstimate ? formatUsageEstimatedCost(estimatedCostUsd) : '0',
                 prevTokenTotal,
-                prevTokenLabel: compareEnabled ? formatUsageSummaryNumber(prevTokenTotal) : '0',
-                deltaTokenLabel: compareEnabled ? formatSignedUsageSummaryNumber(tokenTotal - prevTokenTotal) : '0',
-                prevCostLabel: compareEnabled ? (prevHasCostEstimate ? formatUsageEstimatedCost(prevEstimatedCostUsd) : '0') : '0',
-                deltaCostLabel: compareEnabled ? formatSignedUsageEstimatedCost(estimatedCostUsd - prevEstimatedCostUsd, { precise: true }) : '0',
+                prevTokenLabel: prevKey ? formatUsageSummaryNumber(prevTokenTotal) : null,
+                deltaTokenLabel: prevKey ? formatSignedUsageSummaryNumber(tokenTotal - prevTokenTotal) : null,
                 topSessions,
                 topModels
+            };
+        },
+
+        usageHeroMainValue() {
+            const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
+                ? this.sessionUsageCharts.summary
+                : null;
+            if (!summary) return '0';
+            return formatCompactUsageSummaryNumber(summary.totalTokens || 0);
+        },
+
+        usageHeroSubLabel() {
+            const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
+                ? this.sessionUsageCharts.summary
+                : null;
+            if (!summary) return '';
+            const t = typeof this.t === 'function' ? this.t : null;
+            const sessionCount = summary.totalSessions || 0;
+            const rangeLabel = this.sessionsUsageTimeRange === '30d' ? '30天' : (this.sessionsUsageTimeRange === 'all' ? '全部' : '7天');
+            const rangeText = t ? t('usage.range.' + this.sessionsUsageTimeRange) : rangeLabel;
+            return `${formatUsageSummaryNumber(sessionCount)} sessions · ${rangeText}`;
+        },
+
+        usageHeroDelta() {
+            const range = this.sessionsUsageTimeRange;
+            if (range === 'all') return null;
+            const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
+                ? this.sessionUsageCharts.summary
+                : null;
+            if (!summary || !summary.totalTokens) return null;
+
+            const rangeDays = range === '30d' ? 30 : 7;
+            const dayMs = 24 * 60 * 60 * 1000;
+            const nowMs = Date.now();
+            const prevStartMs = nowMs - (rangeDays * 2 * dayMs);
+            const prevEndMs = nowMs - (rangeDays * dayMs);
+
+            let prevTokens = 0;
+            for (const session of (Array.isArray(this.sessionsUsageList) ? this.sessionsUsageList : [])) {
+                if (!session || typeof session !== 'object') continue;
+                const updatedAtMs = Date.parse(session.updatedAt || '');
+                if (!Number.isFinite(updatedAtMs)) continue;
+                if (updatedAtMs >= prevStartMs && updatedAtMs < prevEndMs) {
+                    const sessionTokens = Number.isFinite(Number(session.totalTokens))
+                        ? Math.max(0, Math.floor(Number(session.totalTokens)))
+                        : 0;
+                    prevTokens += sessionTokens;
+                }
+            }
+
+            if (prevTokens === 0) return null;
+            const currentTokens = summary.totalTokens;
+            const delta = currentTokens - prevTokens;
+            const deltaPercent = prevTokens > 0 ? Math.round((delta / prevTokens) * 100) : 0;
+            const arrow = delta > 0 ? '↑' : (delta < 0 ? '↓' : '–');
+            const sign = delta >= 0 ? '+' : '';
+            return `${arrow} ${sign}${deltaPercent}%`;
+        },
+
+        usageHeroDeltaClass() {
+            const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
+                ? this.sessionUsageCharts.summary
+                : null;
+            if (!summary || !summary.totalTokens) return '';
+
+            const range = this.sessionsUsageTimeRange;
+            if (range === 'all') return '';
+
+            const rangeDays = range === '30d' ? 30 : 7;
+            const dayMs = 24 * 60 * 60 * 1000;
+            const nowMs = Date.now();
+            const prevStartMs = nowMs - (rangeDays * 2 * dayMs);
+            const prevEndMs = nowMs - (rangeDays * dayMs);
+
+            let prevTokens = 0;
+            for (const session of (Array.isArray(this.sessionsUsageList) ? this.sessionsUsageList : [])) {
+                if (!session || typeof session !== 'object') continue;
+                const updatedAtMs = Date.parse(session.updatedAt || '');
+                if (!Number.isFinite(updatedAtMs)) continue;
+                if (updatedAtMs >= prevStartMs && updatedAtMs < prevEndMs) {
+                    const sessionTokens = Number.isFinite(Number(session.totalTokens))
+                        ? Math.max(0, Math.floor(Number(session.totalTokens)))
+                        : 0;
+                    prevTokens += sessionTokens;
+                }
+            }
+
+            if (prevTokens === 0) return '';
+            const currentTokens = summary.totalTokens;
+            return currentTokens >= prevTokens ? 'delta-up' : 'delta-down';
+        },
+
+        sessionsUsageSelectedDay() {
+            return this.sessionsUsageSelectedDayKey || '';
+        },
+
+        sessionUsageWave() {
+            const daily = this.sessionUsageDaily && typeof this.sessionUsageDaily === 'object'
+                ? this.sessionUsageDaily
+                : null;
+            if (!daily || !Array.isArray(daily.rows) || daily.rows.length === 0) {
+                return { points: [], labels: [], linePath: '', areaPath: '', width: 800, maxTokens: 0 };
+            }
+
+            const rows = daily.rows;
+            const maxTokens = daily.maxTokens || 1;
+            const width = 800;
+            const height = 140;
+            const padding = { top: 10, bottom: 30, left: 0, right: 0 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+
+            const points = rows.map((row, index) => {
+                const x = padding.left + (index / (rows.length - 1 || 1)) * chartWidth;
+                const normalizedValue = maxTokens > 0 ? (row.tokenTotal / maxTokens) : 0;
+                const y = padding.top + chartHeight - (normalizedValue * chartHeight);
+                return { x, y, key: row.key, value: row.tokenTotal, label: row.label };
+            });
+
+            const linePath = points.length > 1
+                ? `M ${points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ')}`
+                : '';
+
+            const areaPath = points.length > 1
+                ? `${linePath} L ${points[points.length - 1].x.toFixed(1)},${(padding.top + chartHeight).toFixed(1)} L ${points[0].x.toFixed(1)},${(padding.top + chartHeight).toFixed(1)} Z`
+                : '';
+
+            const selectedKey = this.sessionsUsageSelectedDayKey;
+            const selectedPoint = points.find(p => p.key === selectedKey) || points[points.length - 1] || null;
+
+            return {
+                points,
+                labels: rows.map((row, index) => ({
+                    key: row.key,
+                    text: row.label
+                })),
+                linePath,
+                areaPath,
+                width,
+                height,
+                maxTokens,
+                hoverX: selectedPoint ? selectedPoint.x : 0,
+                hoverY: selectedPoint ? selectedPoint.y : 0
             };
         },
 
@@ -994,6 +842,35 @@ export function createSessionComputed() {
                 return Math.max(0, Math.floor(totalCount));
             }
             return Array.isArray(this.sessionTrashItems) ? this.sessionTrashItems.length : 0;
+        },
+
+        sessionContextUtilization() {
+            const list = Array.isArray(this.sessionsList) ? this.sessionsList : [];
+            const utilizationMap = {};
+            for (const session of list) {
+                if (!session || typeof session !== 'object') continue;
+                const key = this.getSessionExportKey(session);
+                if (!key) continue;
+                const totalTokens = Number.isFinite(Number(session.totalTokens))
+                    ? Math.max(0, Math.floor(Number(session.totalTokens)))
+                    : 0;
+                const contextWindow = Number.isFinite(Number(session.contextWindow))
+                    ? Math.max(0, Math.floor(Number(session.contextWindow)))
+                    : 0;
+                if (contextWindow <= 0) {
+                    utilizationMap[key] = { percent: 0, level: 'normal' };
+                    continue;
+                }
+                const percent = Math.min(100, Math.round((totalTokens / contextWindow) * 100));
+                let level = 'normal';
+                if (percent >= 95) {
+                    level = 'critical';
+                } else if (percent >= 80) {
+                    level = 'warning';
+                }
+                utilizationMap[key] = { percent, level };
+            }
+            return utilizationMap;
         }
     };
 }

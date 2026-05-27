@@ -154,6 +154,20 @@
     background: var(--color-brand);
 }
 
+.card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.card.disabled:hover {
+    transform: none;
+}
+
+.card.disabled::after {
+    opacity: 0;
+}
+
 .card:hover::after {
     opacity: 0.6;
 }

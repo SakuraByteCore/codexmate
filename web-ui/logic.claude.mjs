@@ -111,6 +111,10 @@ export function matchClaudeConfigFromSettings(claudeConfigs = {}, env = {}) {
     if (!normalizedSettings.baseUrl || !normalizedSettings.model || !hasClaudeCredential(normalizedSettings)) {
         return '';
     }
+    // 检测本地桥接 URL
+    if (typeof normalizedSettings.baseUrl === 'string' && normalizedSettings.baseUrl.includes('/bridge/claude-local/')) {
+        return 'claude-local';
+    }
     const comparableSettingsUrl = normalizeClaudeComparableUrl(normalizedSettings.baseUrl);
     const entries = Object.entries(claudeConfigs || {});
     for (const [name, config] of entries) {

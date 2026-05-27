@@ -7,8 +7,10 @@ import {
 import { createAppComputed } from './modules/app.computed.index.mjs';
 import { createAppMethods } from './modules/app.methods.index.mjs';
 import { loadConfigTemplateDiffConfirmEnabledFromStorage } from './modules/config-template-confirm-pref.mjs';
+import { installWebUiUrlCanonicalization } from './modules/sessions-filters-url.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
+    installWebUiUrlCanonicalization();
     if (typeof Vue === 'undefined') {
         console.error('Vue 库未能在 DOMContentLoaded 触发前加载完成。');
         const fallbackTarget = document.querySelector('#app') || document.querySelector('[v-cloak]');
@@ -26,10 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { createApp } = Vue;
 
-    const app = createApp({
+    const appOptions = {
         data() {
             return {
+                brandHovered: false,
                 lang: 'zh',
+                appVersion: '',
                 mainTab: 'dashboard',
                 configMode: 'codex',
                 currentProvider: '',
@@ -42,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 editingCodexBudgetField: '',
                 providersList: [],
                 localBridgeExcluded: [],
+                claudeLocalBridgeExcluded: [],
                 models: [],
                 codexModelsLoading: false,
                 modelsSource: 'remote',
@@ -58,15 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageType: '',
                 showAddModal: false,
                 showEditModal: false,
+                showEditProviderKey: false,
                 showModelModal: false,
                 showModelListModal: false,
                 showClaudeConfigModal: false,
                 showEditConfigModal: false,
+                showEditClaudeConfigKey: false,
                 showOpenclawConfigModal: false,
                 showConfigTemplateModal: false,
                 showAgentsModal: false,
                 showSkillsModal: false,
                 showHealthCheckModal: false,
+                showCodexBridgePoolModal: false,
+                showClaudeBridgePoolModal: false,
+                showWebhookModal: false,
                 // Plugins
                 pluginsActiveId: 'prompt-templates',
                 pluginsLoading: false,
@@ -94,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmDialogResolver: null,
                 configTemplateContent: '',
                 configTemplateApplying: false,
+                configTemplateContext: 'codex',
                 configTemplateDiffVisible: false,
                 configTemplateDiffLoading: false,
                 configTemplateDiffError: '',
@@ -195,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 sessionExporting: {},
                 sessionConverting: {},
+                sessionImportingNative: {},
                 sessionCloning: {},
                 sessionDeleting: {},
                 activeSession: null,
@@ -221,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionPreviewHeaderEl: null,
                 sessionPreviewHeaderResizeObserver: null,
                 sessionListRenderEnabled: false,
+                preserveSessionRenderOnTabLeave: true,
                 sessionListVisibleCount: 0,
                 sessionListInitialBatchSize: 40,
                 sessionListLoadStep: 80,
@@ -411,6 +424,27 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         mounted() {
+            // URL 规范化：将 /web-ui/* 重定向到根路径 /
+            try {
+                const pathname = window.location.pathname;
+                if (pathname === '/web-ui' || pathname === '/web-ui/' || pathname === '/web-ui/index.html') {
+                    const url = new URL(window.location.href);
+                    url.pathname = '/';
+                    // 移除查询参数和 hash，保持 URL 纯净
+                    url.search = '';
+                    url.hash = '';
+                    window.location.replace(url.toString());
+                    return;
+                }
+                // 清理任何查询参数和 hash，保持 URL 为 /
+                if (window.location.search || window.location.hash) {
+                    const url = new URL(window.location.href);
+                    url.search = '';
+                    url.hash = '';
+                    window.history.replaceState(null, '', url.toString());
+                }
+            } catch (_) {}
+
             if (typeof this.initI18n === 'function') {
                 this.initI18n();
             }
@@ -639,7 +673,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         computed: createAppComputed(),
         methods: createAppMethods()
-    });
+    };
+
+    if (typeof window.__CODEXMATE_WEB_UI_RENDER__ === 'function') {
+        appOptions.render = window.__CODEXMATE_WEB_UI_RENDER__;
+    }
+
+    const app = createApp(appOptions);
 
     app.mount('#app');
 });

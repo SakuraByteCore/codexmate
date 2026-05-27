@@ -420,3 +420,14 @@
     min-height: 22px;
     white-space: nowrap;
 }
+
+.config-row {
+    display: flex;
+    gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .config-row {
+        flex-direction: column;
+    }
+}

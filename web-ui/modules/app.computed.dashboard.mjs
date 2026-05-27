@@ -92,6 +92,10 @@ export function createDashboardComputed() {
             return list;
         },
 
+        isLocalProviderDisabled() {
+            return this.configMode === 'codex';
+        },
+
         displayProviderUrl() {
             return (provider) => {
                 if (provider && provider.name === 'local') return '';

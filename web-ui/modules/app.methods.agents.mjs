@@ -420,6 +420,25 @@ export function createAgentsMethods(options = {}) {
                 this.resetAgentsDiffState();
             }
         },
+        async pasteAgentsContent() {
+            if (this.agentsLoading || this.agentsSaving || this.agentsDiffVisible) {
+                return;
+            }
+            let text = '';
+            try {
+                text = await navigator.clipboard.readText();
+            } catch (_) {
+                this.showMessage('无法读取剪贴板', 'error');
+                return;
+            }
+            if (typeof text !== 'string' || !text) {
+                this.showMessage('剪贴板为空', 'info');
+                return;
+            }
+            this.agentsContent = text;
+            this.onAgentsContentInput();
+            this.showMessage('已粘贴', 'success');
+        },
         buildAgentsDiffFingerprint() {
             const context = this.agentsContext || 'codex';
             const fileName = context === 'openclaw-workspace'

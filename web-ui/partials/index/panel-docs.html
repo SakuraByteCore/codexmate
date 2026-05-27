@@ -4,12 +4,10 @@
                     id="panel-docs"
                     role="tabpanel"
                     aria-labelledby="tab-docs">
-                    <div class="selector-section docs-overview-section">
-                        <div class="selector-header docs-overview-header">
-                            <div>
-                                <span class="selector-title">{{ t('docs.title') }}</span>
-                                <div class="skills-panel-note docs-section-note">{{ t('docs.subtitle') }}</div>
-                            </div>
+                    <div class="selector-section">
+                        <div class="selector-header">
+                            <span class="selector-title">{{ t('docs.title') }}</span>
+                            <div class="skills-panel-note docs-section-note">{{ t('docs.subtitle') }}</div>
                         </div>
 
                         <div class="docs-toolbar-grid">
@@ -21,7 +19,6 @@
                                     <option value="bun">bun</option>
                                 </select>
                             </div>
-
                             <div class="docs-toolbar-card docs-toolbar-card-wide">
                                 <label class="form-label">{{ t('common.mirror') }}</label>
                                 <div class="install-action-tabs">
@@ -30,19 +27,10 @@
                                     <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'tencent' }" @click="setInstallRegistryPreset('tencent')">{{ t('docs.registry.tencent') }}</button>
                                     <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'custom' }" @click="setInstallRegistryPreset('custom')">{{ t('common.custom') }}</button>
                                 </div>
-                                <input
-                                    v-if="installRegistryPreset === 'custom'"
-                                    v-model="installRegistryCustom"
-                                    class="form-input install-registry-input"
-                                    placeholder="https://registry.example.com">
-                                <div class="form-hint install-registry-hint" v-if="installRegistryPreview">
-                                    {{ t('docs.registryHintPrefix') }} --registry={{ installRegistryPreview }}
-                                </div>
-                                <div class="form-hint install-registry-hint" v-else-if="installRegistryPreset === 'custom'">
-                                    {{ t('docs.registryHintCustom') }}
-                                </div>
+                                <input v-if="installRegistryPreset === 'custom'" v-model="installRegistryCustom" class="form-input install-registry-input" placeholder="https://registry.example.com">
+                                <div class="form-hint install-registry-hint" v-if="installRegistryPreview">{{ t('docs.registryHintPrefix') }} --registry={{ installRegistryPreview }}</div>
+                                <div class="form-hint install-registry-hint" v-else-if="installRegistryPreset === 'custom'">{{ t('docs.registryHintCustom') }}</div>
                             </div>
-
                             <div class="docs-toolbar-card docs-toolbar-card-wide">
                                 <label class="form-label">{{ t('common.action') }}</label>
                                 <div class="install-action-tabs">
@@ -62,30 +50,21 @@
                                 <span class="docs-summary-label">{{ t('common.currentPm') }}</span>
                                 <strong class="docs-summary-value">{{ String(installPackageManager || 'npm').toUpperCase() }}</strong>
                             </div>
-                            <div class="docs-summary-item">
-                                <span class="docs-summary-label">{{ t('common.currentAction') }}</span>
-                                <strong class="docs-summary-value">{{ installCommandAction === 'update' ? t('common.update') : (installCommandAction === 'uninstall' ? t('common.uninstall') : t('common.install')) }}</strong>
-                            </div>
                             <div class="docs-summary-item docs-summary-item-wide">
-                                <span class="docs-summary-label">{{ t('common.mirrorActive') }}</span>
+                                <span class="docs-summary-label">{{ t('common.registry') }}</span>
                                 <strong class="docs-summary-value">{{ installRegistryPreview || t('common.defaultOfficial') }}</strong>
                             </div>
                         </div>
                     </div>
 
-                    <div class="selector-section docs-command-section">
-                        <div class="selector-header docs-section-header">
-                            <div>
-                                <span class="selector-title">{{ t('docs.section.commands') }}</span>
-                                <div class="skills-panel-note docs-section-note">{{ t('docs.section.commandsNote') }}</div>
-                            </div>
+                    <div class="selector-section">
+                        <div class="selector-header">
+                            <span class="selector-title">{{ t('docs.section.commands') }}</span>
+                            <div class="skills-panel-note docs-section-note">{{ t('docs.section.commandsNote') }}</div>
                         </div>
 
                         <div class="install-list docs-install-list">
-                            <div
-                                class="install-row docs-install-row"
-                                v-for="target in installTargetCards"
-                                :key="'docs-install-command-' + target.id + '-' + installCommandAction">
+                            <div class="install-row docs-install-row" v-for="target in installTargetCards" :key="'docs-install-command-' + target.id + '-' + installCommandAction">
                                 <div class="install-row-main">
                                     <div class="docs-command-head">
                                         <div class="install-row-title">{{ target.name }}</div>
@@ -97,22 +76,13 @@
                                     <div class="docs-command-row">
                                         <div class="docs-command-box" role="group" :aria-label="t('docs.command.aria', { name: target.name })">
                                             <code class="install-command">{{ target.command }}</code>
-                                            <button
-                                                type="button"
-                                                class="btn-mini docs-copy-btn"
-                                                :disabled="!target.command"
-                                                @click="copyInstallCommand(target.command)">{{ t('common.copy') }}</button>
+                                            <button type="button" class="btn-mini docs-copy-btn" :disabled="!target.command" @click="copyInstallCommand(target.command)">{{ t('common.copy') }}</button>
                                         </div>
                                     </div>
-                                    <div
-                                        v-if="target.id === 'codex' && target.termuxCommand && target.termuxCommand !== target.command"
-                                        class="docs-command-row docs-command-row-secondary">
+                                    <div v-if="target.id === 'codex' && target.termuxCommand && target.termuxCommand !== target.command" class="docs-command-row docs-command-row-secondary">
                                         <div class="docs-command-box" role="group" :aria-label="t('docs.termuxAria')">
                                             <code class="install-command"><span class="docs-command-prefix">{{ t('docs.termuxLabel') }}</span>{{ target.termuxCommand }}</code>
-                                            <button
-                                                type="button"
-                                                class="btn-mini docs-copy-btn"
-                                                @click="copyInstallCommand(target.termuxCommand)">{{ t('common.copy') }}</button>
+                                            <button type="button" class="btn-mini docs-copy-btn" @click="copyInstallCommand(target.termuxCommand)">{{ t('common.copy') }}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -120,12 +90,10 @@
                         </div>
                     </div>
 
-                    <div class="selector-section docs-help-section">
-                        <div class="selector-header docs-section-header">
-                            <div>
-                                <span class="selector-title">{{ t('docs.section.faq') }}</span>
-                                <div class="skills-panel-note docs-section-note">{{ t('docs.section.faqNote') }}</div>
-                            </div>
+                    <div class="selector-section">
+                        <div class="selector-header">
+                            <span class="selector-title">{{ t('docs.section.faq') }}</span>
+                            <div class="skills-panel-note docs-section-note">{{ t('docs.section.faqNote') }}</div>
                         </div>
 
                         <div class="docs-help-grid">

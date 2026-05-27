@@ -39,6 +39,13 @@ test('styles include force-compact fallback rules for readability on touch devic
     assert.match(compactSubtitleBlock[0], /overflow:\s*hidden;/);
     assert.doesNotMatch(compactSubtitleBlock[0], /word-break:\s*break-word;/);
     assert.match(styles, /body\.force-compact\s+\.provider-fast-switch\s*\{/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.container\s*\{[\s\S]*height:\s*100vh;[\s\S]*overflow:\s*hidden;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.app-shell\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*hidden;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.main-panel\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow-y:\s*auto;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.main-panel-topbar\s*\{[\s\S]*position:\s*sticky;[\s\S]*top:\s*0;/);
+    assert.match(styles, /\.main-panel-topbar\s+\.status-strip\s*\{[\s\S]*min-height:\s*36px;[\s\S]*align-items:\s*center;/);
+    assert.match(styles, /\.main-panel-topbar\s+\.status-strip\s*\{[\s\S]*flex-wrap:\s*nowrap;[\s\S]*overflow-x:\s*auto;/);
+    assert.match(styles, /\.main-panel-topbar\s+\.status-chip\s*\{[\s\S]*flex:\s*0\s+0\s+auto;[\s\S]*min-width:\s*max-content;/);
     assert.match(styles, /body\.force-compact\s+\.card\s*\{[\s\S]*flex-direction:\s*column;/);
     assert.match(styles, /body\.force-compact\s+\.card-trailing\s*\{[\s\S]*justify-items:\s*end;/);
     assert.match(styles, /body\.force-compact\s+\.card-trailing\s+\.card-actions\s*\{[\s\S]*justify-content:\s*flex-end;/);
@@ -62,12 +69,13 @@ test('styles keep desktop layout wide and session history readable on large scre
     assert.match(styles, /\.session-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(260px,\s*360px\)\s*minmax\(0,\s*1fr\);/);
     assert.match(styles, /\.session-preview-scroll\s*\{[\s\S]*padding-right:\s*52px;/);
     assert.match(styles, /\.session-timeline\s*\{[\s\S]*right:\s*4px;[\s\S]*width:\s*44px;/);
-    assert.match(styles, /\.session-item\s*\{[\s\S]*min-height:\s*108px;[\s\S]*contain-intrinsic-size:\s*108px;/);
-    assert.match(styles, /\.session-item-cwd\s*\{[\s\S]*flex:\s*1 0 100%;[\s\S]*white-space:\s*normal;[\s\S]*overflow:\s*visible;[\s\S]*overflow-wrap:\s*anywhere;/);
-    assert.doesNotMatch(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.session-item\s*\{[\s\S]*height:\s*75px;/);
+    assert.match(styles, /\.session-item\s*\{[\s\S]*min-height:\s*84px;/);
+    assert.match(styles, /\.session-item\s*\{[\s\S]*contain-intrinsic-size:\s*84px;/);
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.session-item\s*\{[\s\S]*min-height:\s*79px;[\s\S]*height:\s*79px;[\s\S]*contain-intrinsic-size:\s*79px;/);
 
     const html = readBundledWebUiHtml();
     assert.match(html, /class="brand-logo"\s+src="\/res\/logo-pack\.webp"/);
+    assert.match(html, /class="status-strip status-strip-placeholder"/);
 
     const titleBlock = styles.match(/\.session-item-title\s*\{[^}]*\}/);
     assert.ok(titleBlock, 'missing session item title style block');

@@ -7,6 +7,11 @@ const JS_IMPORT_RE = /(?:^|\n)\s*import\s+(?:[\s\S]*?\s+from\s+)?['"](\.[^'"]+)[
 const JS_EXPORT_FROM_RE = /(?:^|\n)\s*export\s+\*\s+from\s+['"](\.[^'"]+)['"]\s*;?/g;
 const JS_RELATIVE_IMPORT_STATEMENT_RE = /(^|\n)([ \t]*)import\s+([\s\S]*?)\s+from\s+['"](\.[^'"]+)['"]\s*;?[ \t]*/g;
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
+const VOID_HTML_TAGS = new Set([
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+    'link', 'meta', 'param', 'source', 'track', 'wbr'
+]);
+const PRECOMPILED_RENDER_PATH = path.join(__dirname, 'res', 'web-ui-render.precompiled.js');
 
 function stripBom(content) {
     return content.replace(/^\uFEFF/, '');
@@ -56,6 +61,69 @@ function bundleCssFile(filePath, stack = []) {
         const targetPath = path.resolve(path.dirname(filePath), target);
         return bundleCssFile(targetPath, [...stack, filePath]);
     });
+}
+
+function extractElementInnerHtmlById(html, id) {
+    const escapedId = String(id || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const startRe = new RegExp(`<([A-Za-z][\\w:-]*)(?=[^>]*\\bid=["']${escapedId}["'])[^>]*>`, 'i');
+    const startMatch = startRe.exec(html);
+    if (!startMatch) {
+        throw new Error(`Unable to find #${id} in bundled Web UI HTML`);
+    }
+    const tagName = startMatch[1].toLowerCase();
+    const openEnd = startMatch.index + startMatch[0].length;
+    const tagRe = new RegExp(`</?${tagName}\\b[^>]*>`, 'ig');
+    tagRe.lastIndex = openEnd;
+    let depth = 1;
+    let match = tagRe.exec(html);
+    while (match) {
+        const rawTag = match[0];
+        const isClosing = rawTag.startsWith('</');
+        const isSelfClosing = rawTag.endsWith('/>') || VOID_HTML_TAGS.has(tagName);
+        if (isClosing) {
+            depth -= 1;
+        } else if (!isSelfClosing) {
+            depth += 1;
+        }
+        if (depth === 0) {
+            return html.slice(openEnd, match.index);
+        }
+        match = tagRe.exec(html);
+    }
+    throw new Error(`Unable to find closing </${tagName}> for #${id} in bundled Web UI HTML`);
+}
+
+function compileWebUiTemplateToRenderScript(htmlPath = path.join(__dirname, 'index.html')) {
+    let compile;
+    try {
+        ({ compile } = require('@vue/compiler-dom'));
+    } catch (e) {
+        throw new Error(`Unable to compile Web UI template: @vue/compiler-dom is required (${e.message})`);
+    }
+    const html = bundleHtmlFile(htmlPath);
+    const appTemplate = extractElementInnerHtmlById(html, 'app');
+    const result = compile(appTemplate, { mode: 'function', prefixIdentifiers: true });
+    return [
+        'window.__CODEXMATE_WEB_UI_RENDER__ = (() => {',
+        result.code.trimEnd(),
+        '})();',
+        ''
+    ].join('\n');
+}
+
+function readPrecompiledWebUiRenderScript(entryPath = PRECOMPILED_RENDER_PATH) {
+    const resolvedPath = path.isAbsolute(entryPath)
+        ? entryPath
+        : path.resolve(__dirname, entryPath);
+    try {
+        const source = readUtf8Text(resolvedPath).trimEnd();
+        return source ? `${source}\n` : '';
+    } catch (error) {
+        if (error && error.code === 'ENOENT') {
+            return '';
+        }
+        throw error;
+    }
 }
 
 function resolveJavaScriptDependencies(filePath) {
@@ -212,7 +280,8 @@ function readBundledWebUiScript(entryPath = path.join(__dirname, 'app.js')) {
 }
 
 function readExecutableBundledWebUiScript(entryPath = path.join(__dirname, 'app.js')) {
-    return bundleExecutableJavaScriptFile(entryPath, { preserveExports: false });
+    const renderScript = readPrecompiledWebUiRenderScript() || compileWebUiTemplateToRenderScript();
+    return `${renderScript}\n${bundleExecutableJavaScriptFile(entryPath, { preserveExports: false })}`;
 }
 
 function readExecutableBundledJavaScriptModule(entryPath) {
@@ -224,6 +293,9 @@ function readExecutableBundledJavaScriptModule(entryPath) {
 
 module.exports = {
     collectJavaScriptFiles,
+    compileWebUiTemplateToRenderScript,
+    extractElementInnerHtmlById,
+    readPrecompiledWebUiRenderScript,
     readUtf8Text,
     readBundledWebUiHtml,
     readBundledWebUiCss,

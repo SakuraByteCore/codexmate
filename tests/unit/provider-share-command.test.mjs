@@ -194,7 +194,7 @@ test('buildProviderShareCommand appends model switch command when model exists',
 
     assert.strictEqual(
         command,
-        "npm start -- add alpha 'https://api.example.com/v1' sk-alpha && npm start -- switch alpha && npm start -- use alpha-share-model"
+        "npm start -- add alpha https://api.example.com/v1 sk-alpha && npm start -- switch alpha && npm start -- use alpha-share-model"
     );
 });
 
@@ -208,7 +208,7 @@ test('buildProviderShareCommand keeps legacy command when payload model is empty
         bridge: ''
     });
 
-    assert.strictEqual(command, "npm start -- add alpha 'https://api.example.com/v1' sk-alpha && npm start -- switch alpha");
+    assert.strictEqual(command, "npm start -- add alpha https://api.example.com/v1 sk-alpha && npm start -- switch alpha");
 });
 
 test('buildProviderShareCommand supports codexmate prefix', () => {
@@ -223,7 +223,7 @@ test('buildProviderShareCommand supports codexmate prefix', () => {
 
     assert.strictEqual(
         command,
-        "codexmate add alpha 'https://api.example.com/v1' sk-alpha && codexmate switch alpha && codexmate use alpha-share-model"
+        "codexmate add alpha https://api.example.com/v1 sk-alpha && codexmate switch alpha && codexmate use alpha-share-model"
     );
 });
 
@@ -239,7 +239,7 @@ test('buildProviderShareCommand adds bridge flag when present', () => {
 
     assert.strictEqual(
         command,
-        "codexmate add alpha 'https://api.example.com/v1' sk-alpha --bridge openai && codexmate switch alpha"
+        "codexmate add alpha https://api.example.com/v1 sk-alpha --bridge openai && codexmate switch alpha"
     );
 });
 
@@ -253,7 +253,7 @@ test('buildClaudeShareCommand respects the configured share prefix', () => {
 
     assert.strictEqual(
         command,
-        "npm start -- claude 'https://claude.example.com' sk-claude claude-3-7-sonnet"
+        "npm start -- claude https://claude.example.com sk-claude claude-3-7-sonnet"
     );
 });
 

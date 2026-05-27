@@ -477,6 +477,37 @@ export function createSkillsMethods({ api }) {
                 this.skillsDeleting = false;
                 await this.scanImportableSkills({ silent: true });
             }
+        },
+
+        openSkillsMenu() {
+            // Open skills manager modal as menu
+            this.openSkillsManager();
+        },
+
+        async importSingleSkill(skill) {
+            if (this.skillsImporting || this.skillsZipImporting) return;
+            const key = this.buildSkillImportKey(skill);
+            this.skillsImporting = true;
+            try {
+                const res = await api('import-skills', {
+                    targetApp: this.skillsTargetApp,
+                    imports: [skill]
+                });
+                if (res && res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                const imported = Array.isArray(res && res.imported) ? res.imported : [];
+                if (imported.length > 0) {
+                    this.showMessage(`已导入 ${skill.displayName || skill.name}`, 'success');
+                    await this.refreshSkillsList({ silent: true });
+                    await this.scanImportableSkills({ silent: true });
+                }
+            } catch (e) {
+                this.showMessage('导入失败', 'error');
+            } finally {
+                this.skillsImporting = false;
+            }
         }
     };
 }

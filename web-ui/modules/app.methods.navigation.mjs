@@ -56,6 +56,32 @@
             return null;
         }
     };
+
+    const canonicalizeWebUiRuntimeUrl = () => {
+        if (typeof window === 'undefined' || !window.location) return;
+        try {
+            const url = new URL(window.location.href);
+            if (url.pathname === '/session') return;
+            let pathname = url.pathname;
+            let previousPathname = '';
+            do {
+                previousPathname = pathname;
+                pathname = pathname.replace(/\/+web-ui\/+web-ui\/+/, '/web-ui/');
+            } while (pathname !== previousPathname);
+            if (pathname === '/web-ui' || pathname === '/web-ui/' || pathname === '/web-ui/index.html') {
+                pathname = '/';
+            }
+            url.pathname = pathname;
+            url.search = '';
+            url.hash = '';
+            const nextUrl = url.toString();
+            if (nextUrl === window.location.href) return;
+            if (window.history && typeof window.history.replaceState === 'function') {
+                window.history.replaceState(null, '', nextUrl);
+            }
+        } catch (_) {}
+    };
+
     const persistNavState = (vm, overrides = null) => {
         if (!vm || vm.__navStateRestoring) return;
         if (typeof localStorage === 'undefined') return;
@@ -138,6 +164,7 @@
             const normalizedMode = typeof mode === 'string'
                 ? mode.trim().toLowerCase()
                 : '';
+            canonicalizeWebUiRuntimeUrl();
             this.cancelTouchNavIntentReset();
             if (typeof this.ensureMainTabSwitchState === 'function') {
                 this.ensureMainTabSwitchState().pendingConfigMode = '';
@@ -412,6 +439,7 @@
                 : '';
             const targetTab = normalizedTab || tab;
             if (!targetTab) return;
+            canonicalizeWebUiRuntimeUrl();
             if (targetTab === 'orchestration' && this.taskOrchestrationTabEnabled !== true) {
                 return this.switchMainTab('config');
             }
@@ -419,6 +447,7 @@
                 mainTab: targetTab,
                 configMode: targetTab === 'config' ? this.configMode : this.configMode
             });
+            // URL 保持静态，不写入任何状态
             this.cancelTouchNavIntentReset();
             if (targetTab === 'sessions') {
                 this.cancelScheduledSessionTabDeferredTeardown();
@@ -460,9 +489,10 @@
                 return;
             }
             const isLeavingSessions = previousTab === 'sessions' && targetTab !== 'sessions';
-            const shouldDeferApply = isLeavingSessions;
+            const shouldPreserveSessionRender = isLeavingSessions && this.preserveSessionRenderOnTabLeave === true;
+            const shouldDeferApply = isLeavingSessions && !shouldPreserveSessionRender;
             if (isLeavingSessions && !this.isSessionPanelFastHidden()) {
-                this.setSessionPanelFastHidden(true);
+                this.setSessionPanelFastHidden(!shouldPreserveSessionRender);
             }
             if (shouldDeferApply && typeof this.suspendSessionTabRender === 'function') {
                 this.suspendSessionTabRender();

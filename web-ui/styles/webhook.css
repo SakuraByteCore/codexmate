@@ -1,4 +1,39 @@
-/* webhook 行 — 对齐暖色设计系统 */
+/* ============================================
+   Webhook 模态框 — 极简设计
+   ============================================ */
+
+/* Webhook 事件复选框列表 */
+.webhook-events-checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0;
+}
+
+.webhook-event-checkbox-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.15s ease;
+}
+
+.webhook-event-checkbox-item:hover {
+    background: rgba(137, 111, 94, 0.06);
+}
+
+.webhook-event-checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-brand);
+    cursor: pointer;
+}
+
+/* 保留兼容旧组件的样式 */
 .webhook-row {
     display: flex;
     align-items: center;
@@ -30,7 +65,6 @@
     color: var(--color-text-muted);
 }
 
-/* 只读展示行 */
 .webhook-readonly-row {
     display: flex;
     align-items: flex-start;
@@ -71,11 +105,11 @@
 
 .webhook-event-tag {
     display: inline-block;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 999px;
     border: 1px solid var(--color-border);
     background: var(--color-brand-light);
     color: var(--color-brand-dark);
-    font-size: var(--font-size-caption);
+    font-size: 12px;
     font-weight: var(--font-weight-secondary);
 }

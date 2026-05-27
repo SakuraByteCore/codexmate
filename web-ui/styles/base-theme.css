@@ -26,6 +26,16 @@
     --color-success: #4B8B6A;
     --color-error: #C44536;
 
+    /* Delta 指示色 */
+    --color-delta-up: #4caf50;
+    --color-delta-down: #f44336;
+
+    /* 热力图色阶 */
+    --color-heatmap-1: rgba(200, 121, 99, 0.2);
+    --color-heatmap-2: rgba(200, 121, 99, 0.4);
+    --color-heatmap-3: rgba(200, 121, 99, 0.6);
+    --color-heatmap-4: rgba(200, 121, 99, 0.85);
+
     --bg-warm-gradient:
         radial-gradient(circle at 14% 8%, rgba(255, 219, 196, 0.5) 0%, rgba(255, 219, 196, 0) 32%),
         radial-gradient(circle at 88% 0%, rgba(252, 239, 207, 0.58) 0%, rgba(252, 239, 207, 0) 30%),

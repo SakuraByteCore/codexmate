@@ -34,8 +34,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /isProviderConfigMode/);
     assert.match(html, /provider-fast-switch-select/);
     assert.match(html, /forceCompactLayout/);
-    assert.match(html, /<script src="\/res\/vue\.global\.prod\.js"><\/script>/);
-    assert.doesNotMatch(html, /<script src="\/res\/vue\.global\.js"><\/script>/);
+    assert.match(html, /<script src="\/res\/vue\.runtime\.global\.prod\.js"><\/script>/);
+    assert.doesNotMatch(html, /<script src="\/res\/vue\.global\.prod\.js"><\/script>/);
     assert.match(html, /quickSwitchProvider\(\$event\.target\.value\)/);
     assert.match(html, /onMainTabPointerDown\('sessions', \$event\)/);
     assert.match(html, /onConfigTabPointerDown\('codex', \$event\)/);
@@ -58,12 +58,14 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /class="codex-config-grid"/);
     assert.match(html, /onSettingsTabClick\('general'\)/);
     assert.match(html, /onSettingsTabClick\('data'\)/);
+    assert.match(html, /onSettingsTabKeydown\(\$event, 'general'\)/);
+    assert.match(html, /onSettingsTabKeydown\(\$event, 'data'\)/);
     assert.match(html, /settingsTab === 'general'/);
     assert.match(html, /settingsTab === 'data'/);
     assert.match(html, /setConfigTemplateDiffConfirmEnabled/);
     assert.match(html, /configTemplateDiffConfirmEnabled/);
     assert.match(html, /sessionTrashCount/);
-    assert.match(html, /v-if="taskOrchestrationTabEnabled" class="top-tab"[\s\S]*id="tab-orchestration"/);
+    assert.match(html, /v-if="taskOrchestrationTabEnabled"[^>]*class="top-tab"[\s\S]*id="tab-orchestration"/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled" class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled"[\s\S]*id="panel-orchestration"/);
     assert.match(html, /taskOrchestrationTabEnabled && mainTab === 'orchestration'/);
@@ -131,11 +133,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /:aria-selected="mainTab === 'usage'"/);
     assert.match(html, /id="panel-usage"/);
     assert.match(html, /v-show="mainTab === 'usage'"/);
-    assert.match(usagePanel, /sessionsUsageLoading && !sessionsUsageList\.length" class="session-empty">\{\{\s*t\('usage\.loading'\)\s*\}\}</);
-    assert.match(usagePanel, /sessionsUsageError && !sessionsUsageList\.length" class="usage-empty">/);
-    assert.match(usagePanel, /v-else-if="!sessionsUsageList\.length" class="usage-empty">\{\{\s*t\('usage\.empty'\)\s*\}\}/);
-    assert.match(usagePanel, /sessionUsageCharts\.modelCoverage\.missingModelSessionsPreview\.length/);
-    assert.match(usagePanel, /\{\{\s*t\('usage\.models\.missingListTitle'\)\s*\}\}/);
+    assert.match(usagePanel, /sessionsUsageLoading && !sessionsUsageList\.length" class="usage-empty-state">/);
+    assert.match(usagePanel, /class="usage-empty-text">\{\{\s*t\('usage\.loading'\)\s*\}\}<\/p>/);
+    assert.match(usagePanel, /sessionsUsageError && !sessionsUsageList\.length" class="usage-empty-state">/);
+    assert.match(usagePanel, /v-else-if="!sessionsUsageList\.length" class="usage-empty-state">/);
+    assert.match(usagePanel, /class="usage-empty-text">\{\{\s*t\('usage\.empty'\)\s*\}\}<\/p>/);
+    assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
+    assert.match(usagePanel, /sessionUsageHourlyHeatmap/);
     assert.match(html, /data-main-tab="market"/);
     assert.match(html, /onMainTabPointerDown\('market', \$event\)/);
     assert.match(html, /onMainTabClick\('market', \$event\)/);
@@ -155,31 +159,21 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /installTroubleshootingTips/);
     assert.doesNotMatch(html, /<span class="selector-title">Skills<\/span>/);
     assert.doesNotMatch(html, /openSkillsManager\(\{ targetApp: 'codex' \}\)/);
-    assert.match(html, /loadSkillsMarketOverview\(\{ forceRefresh: true, silent: false \}\)/);
-    assert.match(html, /class="market-grid"/);
-    assert.match(html, /class="market-action-grid"/);
+    assert.match(html, /class="skills-flow-panel"/);
     assert.match(html, /skillsTargetApp === 'codex'/);
     assert.match(html, /skillsTargetApp === 'claude'/);
     assert.match(html, /setSkillsTargetApp\('codex', \{ silent: false \}\)/);
     assert.match(html, /setSkillsTargetApp\('claude', \{ silent: false \}\)/);
     const targetSwitchButtons = [...html.matchAll(
-        /<button[\s\S]*?:class="\['market-target-chip', \{ active: skillsTargetApp === '(codex|claude)' \}\]"[\s\S]*?@click="setSkillsTargetApp\('\1', \{ silent: false \}\)"[\s\S]*?>/g
+        /<button[\s\S]*?:class="\['skills-target-chip', \{ active: skillsTargetApp === '(codex|claude)' \}\]"[\s\S]*?@click="setSkillsTargetApp\('\1', \{ silent: false \}\)"[\s\S]*?>/g
     )];
-    assert.strictEqual(targetSwitchButtons.length, 4);
+    assert.strictEqual(targetSwitchButtons.length, 2);
     for (const [buttonMarkup] of targetSwitchButtons) {
         assert.match(buttonMarkup, /:disabled="loading \|\| !!initError \|\| skillsMarketBusy"/);
     }
-    assert.match(html, /<button type="button" class="btn-tool btn-tool-compact" @click="loadSkillsMarketOverview\(\{ forceRefresh: true, silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy"/);
-    assert.match(html, /<button type="button" class="btn-tool btn-tool-compact" @click="openSkillsManager" :disabled="loading \|\| !!initError \|\| skillsMarketBusy"/);
-    assert.match(html, /<button type="button" class="btn-mini" @click="refreshSkillsList\(\{ silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="btn-mini" @click="scanImportableSkills\(\{ silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="market-action-card" @click="openSkillsManager" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="market-action-card" @click="scanImportableSkills\(\{ silent: false \}\)" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /<button type="button" class="market-action-card" @click="triggerSkillsZipImport" :disabled="loading \|\| !!initError \|\| skillsMarketBusy">/);
-    assert.match(html, /class="market-target-switch" role="group" :aria-label="t\('market\.target\.aria'\)"/);
-    assert.match(html, /class="market-target-switch market-target-switch-compact" role="group" :aria-label="t\('modal\.skills\.target\.aria'\)"/);
-    assert.doesNotMatch(html, /class="market-target-switch" role="tablist" :aria-label="t\('market\.target\.aria'\)"/);
-    assert.doesNotMatch(html, /class="market-target-switch market-target-switch-compact" role="tablist" :aria-label="t\('modal\.skills\.target\.aria'\)"/);
+    assert.match(html, /<button type="button" class="btn-icon" @click="openSkillsMenu"/);
+    assert.match(html, /<button type="button" class="btn-mini" @click="refreshSkillsList\(\{ silent: false \}\)"/);
+    assert.match(html, /class="skills-target-switch" role="group" :aria-label="t\('market\.target\.aria'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.config'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.sessions'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
@@ -195,7 +189,6 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(sideRail, /id="side-tab-docs"[\s\S]*:aria-current="mainTab === 'docs' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-settings"[\s\S]*:aria-current="mainTab === 'settings' \? 'page' : null"/);
     assert.match(html, /skillsDefaultRootPath/);
-    assert.match(html, /\{\{\s*skill\.hasSkillFile\s*\?\s*t\('market\.pill\.importableDirect'\)\s*:\s*t\('market\.pill\.importMissing'\)\s*\}\}/);
     assert.doesNotMatch(html, /在线生态目录/);
     assert.doesNotMatch(html, /查看在线目录/);
     assert.doesNotMatch(html, /skillsMarketRemoteCount/);
@@ -232,7 +225,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(html, /<span class="selector-title">会话回收站<\/span>/);
     assert.match(html, /role="tabpanel"/);
     assert.doesNotMatch(html, /v-if="settingsTab === 'general'"/);
-    assert.match(html, /class="trash-item-path session-item-sub session-item-wrap"/);
+    assert.match(html, /class="trash-item-cwd"/);
     assert.match(html, /v-for="item in visibleSessionTrashItems"/);
     assert.match(html, /class="session-source"/);
     assert.match(html, /@click="loadMoreSessionTrashItems"/);
@@ -256,7 +249,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     );
     assert.match(
         html,
-        /:class="\['card', \{ active: displayCurrentProvider === provider\.name \}\]"[\s\S]*@click="switchProvider\(provider\.name\)"[\s\S]*@keydown\.enter\.self\.prevent="switchProvider\(provider\.name\)"[\s\S]*@keydown\.space\.self\.prevent="switchProvider\(provider\.name\)"[\s\S]*tabindex="0"[\s\S]*role="button"[\s\S]*:aria-current="displayCurrentProvider === provider\.name \? 'true' : null"/
+        /:class="\['card', \{ active: displayCurrentProvider === provider\.name, disabled: provider\.name === 'local' && isLocalProviderDisabled \}\]"[\s\S]*@click="\(provider\.name === 'local' && isLocalProviderDisabled\) \? null : switchProvider\(provider\.name\)"[\s\S]*@keydown\.enter\.self\.prevent="\([^)]+\) \? null : switchProvider\(provider\.name\)"[\s\S]*:tabindex="provider\.name === 'local' && isLocalProviderDisabled \? -1 : 0"[\s\S]*role="button"[\s\S]*:aria-current="displayCurrentProvider === provider\.name \? 'true' : null"/
     );
     assert.match(
         html,
@@ -283,15 +276,15 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(usagePanel, />\{\{\s*t\('usage\.range\.all'\)\s*\}\}<\/button>/);
     assert.match(usagePanel, /sessionsUsageList\.length/);
     assert.match(usagePanel, /loadSessionsUsage\(\{ forceRefresh: true, range: sessionsUsageTimeRange \}\)/);
-    assert.match(usagePanel, /sessionUsageSummaryCards/);
-    assert.match(usagePanel, /class="usage-summary-value" :title="card\.title \|\| null"/);
-    assert.match(usagePanel, /v-if="card\.note" class="usage-summary-note"/);
-    assert.match(usagePanel, /sessionUsageCharts\.usedModels/);
-    assert.match(usagePanel, /sessionUsageCharts\.modelCoverage/);
-    assert.match(usagePanel, /\{\{\s*t\('usage\.models\.noneTitle'\)\s*\}\}/);
-    assert.match(usagePanel, /class="usage-card-head"/);
-    assert.match(usagePanel, /class="usage-model-list"/);
-    assert.match(usagePanel, /sessionUsageCharts\.buckets/);
+    assert.match(usagePanel, /sessionUsageWave\.points/);
+    assert.match(usagePanel, /usage-hero/);
+    assert.match(usagePanel, /usage-hero-main/);
+    assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
+    assert.match(usagePanel, /sessionUsageCharts\.topSessionsByMessages/);
+    assert.match(usagePanel, /usage\.sessions\.topDensity/);
+    assert.match(usagePanel, /usage-card-title/);
+    assert.match(usagePanel, /usage-wave-chart/);
+    assert.match(usagePanel, /sessionUsageHourlyHeatmap\.rows/);
     assert.doesNotMatch(usagePanel, /sessionUsageCharts\.topPaths\[0\]\?\.count/);
     assert.doesNotMatch(html, /sessionUsageSummaryCards\[0\]\?\.value/);
     assert.doesNotMatch(html, /sessionUsageSummaryCards\[1\]\?\.value/);
@@ -328,7 +321,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<button[\s\S]*?@click="deleteProvider\(provider\.name\)"[\s\S]*?:aria-label="t\('config\.provider\.delete\.aria', \{ name: provider\.name \}\)"[\s\S]*?:title="shouldShowProviderDelete\(provider\) \? t\('common\.delete'\) : t\('common\.notDeletable'\)">/);
     assert.match(html, /<button class="card-action-btn"[^>]*@click="openEditConfigModal\(name\)"[^>]*:aria-label="t\('claude\.action\.editAria', \{ name \}\)"[^>]*:title="t\('claude\.action\.edit'\)">/);
     assert.match(html, /<button class="card-action-btn delete"[^>]*@click="deleteClaudeConfig\(name\)"[^>]*:aria-label="t\('claude\.action\.deleteAria', \{ name \}\)"[^>]*:title="t\('claude\.action\.delete'\)">/);
-    assert.match(html, /<button class="card-action-btn"[^>]*@click="copyClaudeShareCommand\(name\)"[^>]*disabled[^>]*>/);
+    assert.match(html, /<button class="card-action-btn"[^>]*@click="copyClaudeShareCommand\(name\)"[^>]*>/);
     assert.match(html, /<button class="card-action-btn"[^>]*@click="openOpenclawEditModal\(name\)"[^>]*:aria-label="t\('openclaw\.action\.editAria', \{ name \}\)"[^>]*:title="t\('openclaw\.action\.edit'\)">/);
     assert.match(
         html,
@@ -352,10 +345,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(modalsBasic, /install-cli-modal-title/);
     assert.doesNotMatch(modalsBasic, /showInstallModal/);
     assert.match(modalsBasic, /<input v-model="newProvider\.key" class="form-input" type="password" placeholder="sk-\.\.\.">/);
-    assert.match(modalsBasic, /<input v-model="editingProvider\.key" class="form-input" type="password" :placeholder="t\('placeholder\.keepUnchanged'\)">/);
+    assert.match(modalsBasic, /<input v-model="editingProvider\.key" class="form-input" :type="showEditProviderKey \? 'text' : 'password'" placeholder="sk-\.\.\." autocomplete="off" spellcheck="false">/);
     assert.match(modalsBasic, /<input v-model="newClaudeConfig\.apiKey" class="form-input" type="password" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
-    assert.match(modalsBasic, /<input v-model="editingConfig\.apiKey" class="form-input" type="password" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
-    assert.strictEqual([...modalsBasic.matchAll(/type="password"/g)].length, 4);
+    assert.match(modalsBasic, /<input v-model="editingConfig\.apiKey" class="form-input" :type="showEditClaudeConfigKey \? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
+    assert.strictEqual([...modalsBasic.matchAll(/type="password"/g)].length, 2);
     assert.match(templateAgentModals, /<div v-if="showConfigTemplateModal" class="modal-overlay" @click\.self="!configTemplateApplying && closeConfigTemplateModal\(\)">/);
     assert.match(templateAgentModals, /<div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="config-template-modal-title">/);
     assert.match(templateAgentModals, /<div class="modal-title" id="config-template-modal-title">\{\{\s*t\('modal\.configTemplate\.title'\)\s*\}\}<\/div>/);
@@ -415,7 +408,8 @@ test('web ui script defines provider mode metadata for codex only', () => {
     assert.match(appScript, /const enteringUsageTab = nextTab === 'usage';/);
     assert.match(appScript, /this\.loadSessionsUsage\(\);/);
     assert.match(appScript, /if \(targetTab === previousTab\) {/);
-    assert.match(appScript, /const shouldDeferApply = isLeavingSessions;/);
+    assert.match(appScript, /const shouldPreserveSessionRender = isLeavingSessions && this\.preserveSessionRenderOnTabLeave === true;/);
+    assert.match(appScript, /const shouldDeferApply = isLeavingSessions && !shouldPreserveSessionRender;/);
     assert.match(appScript, /if \(isLeavingSessions && !this\.isSessionPanelFastHidden\(\)\) {/);
     assert.match(appScript, /switchState\.pendingTarget = targetTab;/);
     assert.match(appScript, /if \(ticket !== liveState\.ticket\) return;/);
@@ -524,32 +518,15 @@ test('session helper deferred claude refresh validates live tab and mode before 
     assert.match(helperScript, /void Promise\.resolve\(marketOverviewLoad\)\.catch\(\(\) => \{\}\);/);
 });
 
-test('trash item styles stay aligned with session card layout and keep mobile usability', () => {
+test('trash item styles stay aligned', () => {
     const styles = readBundledWebUiCss();
-    const mobile520Start = styles.indexOf('@media (max-width: 520px)');
-    const mobile540Start = styles.indexOf('@media (max-width: 540px)');
-
-    assert.notStrictEqual(mobile520Start, -1, '520px media block should exist');
-    assert(mobile540Start > mobile520Start, '540px media block should appear after 520px block');
-
-    const mobile520Block = styles.slice(mobile520Start, mobile540Start);
-
     assert.match(styles, /\.session-source\s*\{/);
-    assert.match(styles, /\.trash-item\.session-item\s*\{[\s\S]*height:\s*auto;/);
-    assert.match(styles, /\.session-item:focus-visible\s*\{[\s\S]*outline:\s*3px solid rgba\(201,\s*94,\s*75,\s*0\.25\);[\s\S]*outline-offset:\s*2px;/);
-    assert.match(styles, /\.trash-item-title\s*\{[\s\S]*-webkit-line-clamp:\s*2;/);
-    assert.match(styles, /\.trash-item-actions\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(116px,\s*116px\)\);/);
-    assert.match(styles, /\.trash-item-actions \.btn-mini\s*\{[\s\S]*height:\s*38px;[\s\S]*min-height:\s*38px;[\s\S]*white-space:\s*nowrap;/);
-    assert.match(styles, /\.trash-item-path\s*\{[\s\S]*grid-template-columns:\s*48px\s+minmax\(0,\s*1fr\);/);
-    assert.match(styles, /\.session-toolbar-grow\s*\{[\s\S]*grid-column:\s*1\s*\/\s*-1;/);
-    assert.match(mobile520Block, /\.trash-item-header\s*\{[\s\S]*flex-direction:\s*column;/);
-    assert.match(mobile520Block, /\.trash-item-actions\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
-    assert.match(mobile520Block, /\.trash-item-actions \.btn-mini\s*\{[\s\S]*min-height:\s*44px;/);
-    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-item\.session-item\s*\{[\s\S]*height:\s*auto;/);
-    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-item-header\s*\{[\s\S]*flex-direction:\s*column;/);
-    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-item-actions \.btn-mini\s*\{[\s\S]*min-height:\s*44px;/);
-    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-item \.session-count-badge\s*\{[\s\S]*align-self:\s*flex-start;/);
-    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-item-title\s*\{[\s\S]*-webkit-line-clamp:\s*3;/);
+    assert.match(styles, /\.trash-item\s*\{/);
+    assert.match(styles, /\.trash-item-title\s*\{/);
+    assert.match(styles, /\.trash-item-actions\s*\{/);
+    assert.match(styles, /\.trash-action-btn\s*\{/);
+    assert.match(styles, /\.trash-item-cwd\s*\{/);
+    assert.match(styles, /\.trash-empty-state\s*\{/);
     assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-header-actions\s*\{[\s\S]*display:\s*grid;/);
     assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-header-actions\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
     assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*\.trash-header-actions\s*\{[\s\S]*width:\s*100%;/);

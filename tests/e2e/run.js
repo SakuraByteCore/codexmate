@@ -70,7 +70,8 @@ async function main() {
         CLAUDE_CONFIG_DIR: '',
         XDG_CONFIG_HOME: '',
         CODEXMATE_FORCE_RESET_EXISTING_CONFIG: '1',
-        CODEXMATE_NO_BROWSER: '1'
+        CODEXMATE_NO_BROWSER: '1',
+        CODEXMATE_ALLOW_PRIVATE_WEBHOOK: '1'
     };
     const cliPath = path.resolve(__dirname, '../../cli.js');
     const node = process.execPath;

@@ -2,6 +2,14 @@ import { api } from './api.mjs';
 
 export function createWebhookMethods() {
     return {
+        openWebhookModal() {
+            this.showWebhookModal = true;
+        },
+
+        closeWebhookModal() {
+            this.showWebhookModal = false;
+        },
+
         async loadWebhookSettings() {
             try {
                 const data = await api('get-webhook-config');

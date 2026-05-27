@@ -10,8 +10,7 @@ export function createClaudeConfigMethods(options = {}) {
 
         onClaudeModelChange() {
             const name = this.currentClaudeConfig;
-            if (!name) {
-                this.showMessage('请先选择配置', 'error');
+            if (!name || name === 'claude-local') {
                 return;
             }
             const model = (this.currentClaudeModel || '').trim();
@@ -41,6 +40,11 @@ export function createClaudeConfigMethods(options = {}) {
             if (this.currentClaudeConfig) {
                 try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
             }
+            this.syncClaudeBridgeProviders();
+        },
+
+        async syncClaudeBridgeProviders() {
+            try { await api('claude-local-bridge-sync-providers', { providers: this.claudeConfigs || {} }); } catch (_) {}
         },
 
         openCloneClaudeConfigModal(name, config) {
@@ -61,6 +65,7 @@ export function createClaudeConfigMethods(options = {}) {
                 baseUrl: config.baseUrl || '',
                 model: config.model || ''
             };
+            this.showEditClaudeConfigKey = false;
             this.showEditConfigModal = true;
         },
 
@@ -77,7 +82,12 @@ export function createClaudeConfigMethods(options = {}) {
 
         closeEditConfigModal() {
             this.showEditConfigModal = false;
+            this.showEditClaudeConfigKey = false;
             this.editingConfig = { name: '', apiKey: '', baseUrl: '', model: '' };
+        },
+
+        toggleEditClaudeConfigKey() {
+            this.showEditClaudeConfigKey = !this.showEditClaudeConfigKey;
         },
 
         async saveAndApplyConfig() {
@@ -195,6 +205,106 @@ export function createClaudeConfigMethods(options = {}) {
                 baseUrl: '',
                 model: ''
             };
+        },
+
+        async loadClaudeLocalBridgeStatus() {
+            try {
+                const res = await api('claude-local-bridge-status');
+                if (res && !res.error) {
+                    if (Array.isArray(res.excludedProviders)) {
+                        this.claudeLocalBridgeExcluded = res.excludedProviders;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        },
+
+        async toggleClaudeLocalBridge(enable) {
+            try {
+                const res = await api('claude-local-bridge-toggle', { enable });
+                if (res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                if (enable) {
+                    this.showMessage('Claude 本地负载均衡已启用', 'success');
+                } else {
+                    this.showMessage('Claude 本地负载均衡已关闭', 'success');
+                }
+            } catch (e) {
+                this.showMessage('操作失败', 'error');
+            }
+        },
+
+        async toggleClaudeLocalBridgeExcluded(providerName) {
+            const name = String(providerName || '').trim();
+            if (!name) return;
+            const idx = this.claudeLocalBridgeExcluded.indexOf(name);
+            const next = [...this.claudeLocalBridgeExcluded];
+            if (idx >= 0) {
+                next.splice(idx, 1);
+            } else {
+                next.push(name);
+            }
+            try {
+                const res = await api('claude-local-bridge-set-excluded', { names: next });
+                if (res && !res.error) {
+                    this.claudeLocalBridgeExcluded = next;
+                }
+            } catch (e) { /* ignore */ }
+        },
+
+        isClaudeLocalBridgeExcluded(providerName) {
+            return this.claudeLocalBridgeExcluded.indexOf(String(providerName || '').trim()) >= 0;
+        },
+
+        claudeLocalBridgeCandidateProviders() {
+            return Object.keys(this.claudeConfigs || {}).filter(name => name && !this.isClaudeLocalBridgeExcluded(name))
+                .map(name => ({ name, ...this.claudeConfigs[name] }));
+        },
+
+        claudeLocalBridgeConfigured() {
+            return this.claudeLocalBridgeCandidateProviders().some(p => p.hasKey);
+        },
+
+        isClaudeLocalBridgeDisabled() {
+            return this.configMode === 'claude';
+        },
+
+        async applyClaudeLocalBridge() {
+            this.currentClaudeConfig = 'claude-local';
+            try { localStorage.setItem('currentClaudeConfig', 'claude-local'); } catch (_) {}
+            this.refreshClaudeModelContext();
+
+            const candidates = this.claudeLocalBridgeCandidateProviders();
+            if (candidates.length === 0) {
+                return this.showMessage('请先添加并配置至少一个 Claude 提供商', 'error');
+            }
+
+            try {
+                const res = await api('claude-local-bridge-toggle', { enable: true });
+                if (res.error) {
+                    this.showMessage(res.error || '启用本地负载均衡失败', 'error');
+                    return;
+                }
+                this.showMessage('Claude 本地负载均衡已启用', 'success');
+            } catch (e) {
+                this.showMessage('启用本地负载均衡失败', 'error');
+            }
+        },
+
+        async openClaudeConfigTemplateEditor() {
+            try {
+                const res = await api('get-claude-settings-raw');
+                if (res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                this.configTemplateContent = res.content || '{}';
+                this.configTemplateContext = 'claude';
+                this.showConfigTemplateModal = true;
+            } catch (e) {
+                this.showMessage('加载 Claude settings 失败', 'error');
+            }
         }
     };
 }

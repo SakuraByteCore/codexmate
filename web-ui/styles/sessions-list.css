@@ -19,19 +19,249 @@
     opacity: 0.18;
 }
 
-.trash-list {
-    display: grid;
+
+/* ============================================
+   回收站 — 极简·本质
+   ============================================ */
+
+/* ---- 空态 ---- */
+.trash-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 12px;
-    margin-top: 12px;
+    padding: 64px 24px;
+    text-align: center;
 }
 
-.trash-item.session-item {
-    min-height: auto;
-    height: auto;
-    cursor: default;
-    content-visibility: visible;
-    contain-intrinsic-size: auto;
+.trash-empty-svg {
+    width: 56px;
+    height: 56px;
+    color: var(--color-text-muted);
+    opacity: 0.6;
 }
+
+.trash-spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2.5px solid var(--color-border-soft);
+    border-top-color: var(--color-brand);
+    animation: trash-spin 0.7s linear infinite;
+}
+
+@keyframes trash-spin {
+    to { transform: rotate(360deg); }
+}
+
+.trash-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.trash-empty-hint {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+/* ---- 工具栏 ---- */
+.trash-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.trash-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.trash-toolbar-count {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.trash-toolbar-retention {
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.trash-toolbar-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* ---- 列表 ---- */
+.trash-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.trash-item {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-soft);
+    transition: all 120ms var(--ease-spring);
+}
+
+.trash-item:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-alt);
+}
+
+.trash-item-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.trash-item-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.trash-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.trash-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    flex-wrap: wrap;
+}
+
+.trash-item-time {
+    white-space: nowrap;
+}
+
+.trash-item-cwd {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+    color: var(--color-text-muted);
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+}
+
+/* ---- 操作按钮（悬浮显示） ---- */
+.trash-item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 120ms var(--ease-spring);
+}
+
+.trash-item:hover .trash-item-actions {
+    opacity: 1;
+}
+
+.trash-action-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-soft);
+    background: var(--color-surface);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all 120ms var(--ease-spring);
+    padding: 0;
+}
+
+.trash-action-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.trash-action-btn:hover:not(:disabled) {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
+}
+
+.trash-action-btn.restore:hover:not(:disabled) {
+    border-color: var(--color-success);
+    color: var(--color-success);
+    background: rgba(75, 139, 106, 0.06);
+}
+
+.trash-action-btn.delete:hover:not(:disabled) {
+    border-color: var(--color-error);
+    color: var(--color-error);
+    background: rgba(196, 69, 54, 0.06);
+}
+
+.trash-action-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.trash-action-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+/* ---- 加载更多 ---- */
+.trash-list-footer {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 4px;
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 640px) {
+    .trash-item-body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .trash-item-actions {
+        opacity: 1;
+        justify-content: flex-end;
+    }
+
+    .trash-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .trash-toolbar-right {
+        justify-content: flex-end;
+    }
+
+    .trash-empty-state {
+        padding: 40px 16px;
+    }
+}
+
 
 .trash-item.session-item:hover,
 .trash-item.session-item:active {
@@ -204,9 +434,9 @@
     min-width: 0;
     position: relative;
     overflow: hidden;
-    min-height: 108px;
+    min-height: 84px;
     content-visibility: auto;
-    contain-intrinsic-size: 108px;
+    contain-intrinsic-size: 84px;
 }
 
 .session-item-header {
@@ -414,4 +644,40 @@
     overflow: hidden;
     position: relative;
     transition: box-shadow var(--transition-normal) var(--ease-spring-soft);
+}
+
+.session-context-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.session-context-normal {
+    background: rgba(75, 139, 106, 0.12);
+    color: #4b8b6a;
+}
+
+.session-context-warning {
+    background: rgba(217, 119, 6, 0.15);
+    color: #b45309;
+    animation: context-warning-pulse 2s ease-in-out infinite;
+}
+
+.session-context-critical {
+    background: rgba(196, 69, 54, 0.18);
+    color: #c2410c;
+    animation: context-critical-pulse 1s ease-in-out infinite;
+}
+
+@keyframes context-warning-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes context-critical-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }

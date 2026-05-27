@@ -1,4 +1,4 @@
-                    <!-- Provider 配置模式（Codex） -->
+                    <!-- Codex 配置 -->
                     <div
                         v-show="mainTab === 'config' && isProviderConfigMode"
                         class="mode-content mode-cards"
@@ -18,11 +18,7 @@
                             <div class="docs-command-row">
                                 <div class="docs-command-box" role="group" :aria-label="t('cli.missing.commandAria', { name: 'Codex' })">
                                     <code class="install-command">{{ getInstallCommand('codex', 'install') }}</code>
-                                    <button
-                                        type="button"
-                                        class="btn-mini docs-copy-btn"
-                                        :disabled="!getInstallCommand('codex', 'install')"
-                                        @click="copyInstallCommand(getInstallCommand('codex', 'install'))">{{ t('common.copy') }}</button>
+                                    <button type="button" class="btn-mini docs-copy-btn" :disabled="!getInstallCommand('codex', 'install')" @click="copyInstallCommand(getInstallCommand('codex', 'install'))">{{ t('common.copy') }}</button>
                                 </div>
                             </div>
                             <button type="button" class="btn-tool btn-tool-compact" @click="mainTab = 'docs'; setInstallCommandAction('install')">{{ t('cli.missing.openDocs') }}</button>
@@ -30,36 +26,25 @@
                     </div>
                 </template>
                 <template v-else>
-                <!-- 添加提供商按钮 -->
                 <button class="btn-add" @click="showAddModal = true" v-if="!loading && !initError">
-                    <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M10 4v12M4 10h12"/>
-                    </svg>
+                    <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('config.addProvider') }}
                 </button>
 
-                <!-- 服务预设 -->
                 <div class="selector-section" v-if="isCodexConfigMode && codexProviderTemplates.length">
                     <div class="selector-header">
                         <span class="selector-title">{{ t('config.providerTemplate.title') }}</span>
                     </div>
                     <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
-                        <button
-                            v-for="tpl in codexProviderTemplates"
-                            :key="tpl.name"
-                            type="button"
-                            class="btn-mini"
-                            @click="newProvider.name = tpl.name;
-                                    newProvider.url = tpl.url;
-                                    newProvider._suggestedModel = tpl.model || '';
-                                    newProvider.useTransform = !!tpl.useTransform;
-                                    showAddModal = true">
-                            {{ tpl.label }}
-                        </button>
+                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider._suggestedModel = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddModal = true">{{ tpl.label }}</button>
                     </div>
                 </div>
 
-                <!-- 模型选择器 -->
+                <div class="selector-section">
+                    <div class="selector-header"><span class="selector-title">AGENTS.md</span></div>
+                    <button class="btn-tool" @click="openAgentsEditor" :disabled="loading || !!initError || agentsLoading">{{ agentsLoading ? t('config.modelLoading') : t('config.agents.open') }}</button>
+                </div>
+
                 <div class="selector-section">
                     <div class="selector-header">
                         <span class="selector-title">{{ t('config.models') }}</span>
@@ -68,74 +53,41 @@
                             <button class="btn-icon" @click="showModelListModal = true" :aria-label="t('modal.modelManage.title')" :title="t('modal.modelManage.title')" v-if="modelsSource === 'legacy'">≡</button>
                         </div>
                     </div>
-                    <select
-                        v-if="codexModelsLoading || modelsSource === 'remote'"
-                        class="model-select"
-                        v-model="currentModel"
-                        @change="onModelChange"
-                        :disabled="codexModelsLoading"
-                    >
+                    <select v-if="codexModelsLoading || modelsSource === 'remote'" class="model-select" v-model="currentModel" @change="onModelChange" :disabled="codexModelsLoading">
                         <option v-if="codexModelsLoading" value="">{{ t('config.modelLoading') }}</option>
                         <option v-else v-for="model in codexModelOptions" :key="model" :value="model">{{ model }}</option>
                     </select>
-                    <input
-                        v-if="!codexModelsLoading && (modelsSource !== 'remote' || !modelsHasCurrent)"
-                        class="model-input"
-                        v-model="currentModel"
-                        @blur="onModelChange"
-                        @keyup.enter="onModelChange"
-                        :placeholder="activeProviderModelPlaceholder"
-                        :list="codexModelHasList ? 'codex-model-options' : null"
-                    >
+                    <input v-if="!codexModelsLoading && (modelsSource !== 'remote' || !modelsHasCurrent)" class="model-input" v-model="currentModel" @blur="onModelChange" @keyup.enter="onModelChange" :placeholder="activeProviderModelPlaceholder" :list="codexModelHasList ? 'codex-model-options' : null">
                     <datalist v-if="codexModelHasList" id="codex-model-options">
                         <option v-for="model in codexModelOptions" :key="model" :value="model"></option>
                     </datalist>
-                    <div class="config-template-hint" v-if="modelsSource === 'unlimited'">
-                        {{ t('config.models.unlimited') }}
-                    </div>
-                    <div class="config-template-hint" v-if="modelsSource === 'error'">
-                        {{ t('config.models.error') }}
-                    </div>
-                    <div class="config-template-hint" v-if="modelsSource === 'remote' && !modelsHasCurrent">
-                        {{ isCodexConfigMode ? t('config.models.notInList.codex') : t('config.models.notInList.other') }}
-                    </div>
-                    <div class="config-template-hint" v-if="isCodexConfigMode">
-                        {{ t('config.template.editFirst') }}
-                    </div>
-                    <div class="config-template-hint" v-else-if="activeProviderBridgeHint">
-                        {{ t('config.template.bridgeCodexOnly', { hint: activeProviderBridgeHint }) }}
-                    </div>
-                    <button class="btn-tool btn-template-editor" v-if="isCodexConfigMode" @click="openConfigTemplateEditor" :disabled="loading || !!initError">
-                        {{ t('config.template.openEditor') }}
-                    </button>
+                    <div class="config-template-hint" v-if="modelsSource === 'unlimited'">{{ t('config.models.unlimited') }}</div>
+                    <div class="config-template-hint" v-if="modelsSource === 'error'">{{ t('config.models.error') }}</div>
+                    <div class="config-template-hint" v-if="modelsSource === 'remote' && !modelsHasCurrent">{{ isCodexConfigMode ? t('config.models.notInList.codex') : t('config.models.notInList.other') }}</div>
+                    <div class="config-template-hint" v-if="isCodexConfigMode">{{ t('config.template.editFirst') }}</div>
+                    <div class="config-template-hint" v-else-if="activeProviderBridgeHint">{{ t('config.template.bridgeCodexOnly', { hint: activeProviderBridgeHint }) }}</div>
+                    <button class="btn-tool btn-template-editor" v-if="isCodexConfigMode" @click="openConfigTemplateEditor" :disabled="loading || !!initError">{{ t('config.template.openEditor') }}</button>
                 </div>
 
                 <template v-if="isCodexConfigMode">
-                <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">{{ t('config.serviceTier') }}</span>
+                <div class="config-row">
+                    <div class="selector-section" style="flex:1">
+                        <div class="selector-header"><span class="selector-title">{{ t('config.serviceTier') }}</span></div>
+                        <select class="model-select" v-model="serviceTier" @change="onServiceTierChange">
+                            <option value="fast">{{ t('config.serviceTier.fast') }}</option>
+                            <option value="standard">{{ t('config.serviceTier.standard') }}</option>
+                        </select>
+                        <div class="config-template-hint">{{ t('config.serviceTier.hint', { field: 'service_tier' }) }}</div>
                     </div>
-                    <select class="model-select" v-model="serviceTier" @change="onServiceTierChange">
-                        <option value="fast">{{ t('config.serviceTier.fast') }}</option>
-                        <option value="standard">{{ t('config.serviceTier.standard') }}</option>
-                    </select>
-                    <div class="config-template-hint">
-                        {{ t('config.serviceTier.hint', { field: 'service_tier' }) }}
-                    </div>
-                </div>
-
-                <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">{{ t('config.reasoningEffort') }}</span>
-                    </div>
-                    <select class="model-select" v-model="modelReasoningEffort" @change="onReasoningEffortChange">
-                        <option value="high">high</option>
-                        <option value="medium">{{ t('config.reasoningEffort.medium') }}</option>
-                        <option value="low">low</option>
-                        <option value="xhigh">xhigh</option>
-                    </select>
-                    <div class="config-template-hint">
-                        {{ t('config.reasoningEffort.hint') }}
+                    <div class="selector-section" style="flex:1">
+                        <div class="selector-header"><span class="selector-title">{{ t('config.reasoningEffort') }}</span></div>
+                        <select class="model-select" v-model="modelReasoningEffort" @change="onReasoningEffortChange">
+                            <option value="high">high</option>
+                            <option value="medium">{{ t('config.reasoningEffort.medium') }}</option>
+                            <option value="low">low</option>
+                            <option value="xhigh">xhigh</option>
+                        </select>
+                        <div class="config-template-hint">{{ t('config.reasoningEffort.hint') }}</div>
                     </div>
                 </div>
 
@@ -143,126 +95,62 @@
                     <div class="selector-header">
                         <span class="selector-title">{{ t('config.contextBudget') }}</span>
                         <div class="selector-actions">
-                            <button
-                                class="btn-tool btn-tool-compact"
-                                @click="resetCodexContextBudgetDefaults"
-                                :disabled="loading || !!initError || codexApplying">
-                                {{ t('config.reset') }}
-                            </button>
+                            <button class="btn-tool btn-tool-compact" @click="resetCodexContextBudgetDefaults" :disabled="loading || !!initError || codexApplying">{{ t('config.reset') }}</button>
                         </div>
                     </div>
                     <div class="codex-config-grid">
                         <div class="form-group codex-config-field">
                             <label class="form-label" for="codex-model-context-window">model_context_window</label>
-                            <input
-                                id="codex-model-context-window"
-                                v-model="modelContextWindowInput"
-                                class="form-input"
-                                inputmode="numeric"
-                                autocomplete="off"
-                                :placeholder="t('config.example', { value: 190000 })"
-                                @focus="editingCodexBudgetField = 'modelContextWindowInput'"
-                                @input="sanitizePositiveIntegerDraft('modelContextWindowInput')"
-                                @blur="onModelContextWindowBlur"
-                                @keydown.enter.prevent="onModelContextWindowBlur">
+                            <input id="codex-model-context-window" v-model="modelContextWindowInput" class="form-input" inputmode="numeric" autocomplete="off" :placeholder="t('config.example', { value: 190000 })" @focus="editingCodexBudgetField = 'modelContextWindowInput'" @input="sanitizePositiveIntegerDraft('modelContextWindowInput')" @blur="onModelContextWindowBlur" @keydown.enter.prevent="onModelContextWindowBlur">
                             <div class="form-hint">{{ t('config.contextWindow.hint') }}</div>
                         </div>
                         <div class="form-group codex-config-field">
                             <label class="form-label" for="codex-model-auto-compact-token-limit">model_auto_compact_token_limit</label>
-                            <input
-                                id="codex-model-auto-compact-token-limit"
-                                v-model="modelAutoCompactTokenLimitInput"
-                                class="form-input"
-                                inputmode="numeric"
-                                autocomplete="off"
-                                :placeholder="t('config.example', { value: 185000 })"
-                                @focus="editingCodexBudgetField = 'modelAutoCompactTokenLimitInput'"
-                                @input="sanitizePositiveIntegerDraft('modelAutoCompactTokenLimitInput')"
-                                @blur="onModelAutoCompactTokenLimitBlur"
-                                @keydown.enter.prevent="onModelAutoCompactTokenLimitBlur">
+                            <input id="codex-model-auto-compact-token-limit" v-model="modelAutoCompactTokenLimitInput" class="form-input" inputmode="numeric" autocomplete="off" :placeholder="t('config.example', { value: 185000 })" @focus="editingCodexBudgetField = 'modelAutoCompactTokenLimitInput'" @input="sanitizePositiveIntegerDraft('modelAutoCompactTokenLimitInput')" @blur="onModelAutoCompactTokenLimitBlur" @keydown.enter.prevent="onModelAutoCompactTokenLimitBlur">
                             <div class="form-hint">{{ t('config.autoCompact.hint') }}</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">AGENTS.md</span>
-                    </div>
-                    <button class="btn-tool" @click="openAgentsEditor" :disabled="loading || !!initError || agentsLoading">
-                        {{ agentsLoading ? t('config.modelLoading') : t('config.agents.open') }}
-                    </button>
-                </div>
-
-                <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">{{ t('config.health.title') }}</span>
-                    </div>
-                    <button class="btn-tool" @click="runHealthCheck" :disabled="healthCheckLoading || loading || !!initError">
-                        {{ healthCheckLoading ? t('config.health.running') : t('config.health.run') }}
-                    </button>
+                    <div class="selector-header"><span class="selector-title">{{ t('config.health.title') }}</span></div>
+                    <button class="btn-tool" @click="runHealthCheck" :disabled="healthCheckLoading || loading || !!initError">{{ healthCheckLoading ? t('config.health.running') : t('config.health.run') }}</button>
                     <div class="config-template-hint">{{ t('config.health.hint') }}</div>
-                    <div v-if="healthCheckLoading && healthCheckBatchTotal" class="config-template-hint">
-                        {{ t('config.health.progress', { done: healthCheckBatchDone, total: healthCheckBatchTotal, failed: healthCheckBatchFailed }) }}
-                    </div>
-                    <div v-if="healthCheckResult && !healthCheckLoading" class="config-template-hint">
-                        {{ healthCheckResult.ok ? t('config.health.ok') : t('config.health.fail') }} · {{ t('config.health.issues', { count: (healthCheckResult.issues || []).length }) }}
-                    </div>
-                    <button v-if="healthCheckResult && !healthCheckLoading" type="button" class="btn-mini" @click="showHealthCheckModal = true">
-                        {{ t('common.detail') }}
-                    </button>
-                    <div v-if="healthCheckResult && !healthCheckLoading && (healthCheckResult.issues || []).length">
-                        <div v-for="(issue, index) in healthCheckResult.issues" :key="issue.code || ('issue-' + index)" class="config-template-hint">
-                            {{ issue.message || issue.code || '' }}<span v-if="issue.suggestion"> · {{ issue.suggestion }}</span>
-                        </div>
-                    </div>
                 </div>
-
                 </template>
 
                 <div v-if="!loading && !initError" class="card-list">
-                    <div v-for="provider in displayProvidersList" :key="provider.name"
-                         :class="['card', { active: displayCurrentProvider === provider.name }]"
-                         @click="switchProvider(provider.name)"
-                         @keydown.enter.self.prevent="switchProvider(provider.name)"
-                         @keydown.space.self.prevent="switchProvider(provider.name)"
-                         tabindex="0"
-                         role="button"
-                         :aria-current="displayCurrentProvider === provider.name ? 'true' : null">
+                    <div v-for="provider in displayProvidersList" :key="provider.name" :class="['card', { active: displayCurrentProvider === provider.name, disabled: provider.name === 'local' && isLocalProviderDisabled }]" @click="(provider.name === 'local' && isLocalProviderDisabled) ? null : switchProvider(provider.name)" @keydown.enter.self.prevent="(provider.name === 'local' && isLocalProviderDisabled) ? null : switchProvider(provider.name)" @keydown.space.self.prevent="(provider.name === 'local' && isLocalProviderDisabled) ? null : switchProvider(provider.name)" :tabindex="provider.name === 'local' && isLocalProviderDisabled ? -1 : 0" role="button" :aria-current="displayCurrentProvider === provider.name ? 'true' : null">
                         <div class="card-leading">
                             <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}<span v-if="isTransformProvider(provider)" class="card-icon-dot" title="通过内建转换适配"></span></div>
                             <div class="card-content">
+                                <div v-if="provider.name === 'local'" class="bridge-pool-summary">
+                                    <svg class="bridge-pool-summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
+                                    <span class="bridge-pool-summary-text">已启用 {{ localBridgeCandidateProviders().filter(cp => !isLocalBridgeExcluded(cp.name)).length }} / {{ localBridgeCandidateProviders().length }}</span>
+                                </div>
                                 <div class="card-title">
                                     <span>{{ provider.name }}</span>
                                     <span v-if="provider.readOnly" class="provider-readonly-badge">{{ t('config.badge.system') }}</span>
                                 </div>
-                                <div v-if="provider.name !== 'local'" class="card-subtitle card-subtitle-model">
-                                    {{ activeProviderModel(provider.name) || t('config.model.unset') }}
-                                </div>
-                                <div v-if="provider.name !== 'local'" class="card-subtitle card-subtitle-url">
-                                    {{ displayProviderUrl(provider) || t('config.url.unset') }}
-                                </div>
+                                <div v-if="provider.name !== 'local'" class="card-subtitle card-subtitle-model">{{ activeProviderModel(provider.name) || t('config.model.unset') }}</div>
+                                <div v-if="provider.name !== 'local'" class="card-subtitle card-subtitle-url">{{ displayProviderUrl(provider) || t('config.url.unset') }}</div>
                             </div>
                         </div>
                         <div class="card-trailing">
-                            <span v-if="speedResults[provider.name]" :class="['latency', speedResults[provider.name].ok ? 'ok' : 'error']">
-                                {{ formatLatency(speedResults[provider.name]) }}
-                            </span>
-                            <span :class="['pill', providerPillConfigured(provider) ? 'configured' : 'empty']">
-                                {{ providerPillText(provider) }}
-                            </span>
+                            <span v-if="speedResults[provider.name]" :class="['latency', speedResults[provider.name].ok ? 'ok' : 'error']">{{ formatLatency(speedResults[provider.name]) }}</span>
+                            <span :class="['pill', providerPillConfigured(provider) ? 'configured' : 'empty']">{{ providerPillText(provider) }}</span>
                             <div class="card-actions" @click.stop>
-                                <button
-                                    class="card-action-btn"
-                                    :class="{ loading: speedLoading[provider.name] }"
-                                    :disabled="!!speedLoading[provider.name]"
-                                    @click="runSpeedTest(provider.name, { silent: true })"
-                                    :aria-label="t('config.availabilityTestAria', { name: provider.name })"
-                                    :title="t('config.availabilityTest')"
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M13 2L3 14h7l-1 8 12-14h-7l1-6z"/>
-                                    </svg>
+                                <button v-if="provider.name === 'local'" class="card-action-btn bridge-pool-trigger" @click="showCodexBridgePoolModal = true" :aria-label="'轮询池设置'" :title="'轮询池设置'">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
+                                </button>
+                                <button class="card-action-btn" :class="{ loading: speedLoading[provider.name] }" :disabled="!!speedLoading[provider.name]" @click="runSpeedTest(provider.name, { silent: true })" :aria-label="t('config.availabilityTestAria', { name: provider.name })" :title="t('config.availabilityTest')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                </button>
+                                <button class="card-action-btn" :disabled="!shouldShowProviderEdit(provider)" @click="openEditModal(provider)" :aria-label="t('config.provider.edit.aria', { name: provider.name })" :title="shouldShowProviderEdit(provider) ? t('common.edit') : t('common.notEditable')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button v-if="!provider.readOnly" class="card-action-btn" @click="openCloneProviderModal(provider)" :aria-label="t('config.provider.clone.aria', { name: provider.name })" :title="t('config.provider.clone')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                                 </button>
                                 <button
                                     v-if="!provider.readOnly"
@@ -278,60 +166,12 @@
                                         <path d="M12 2v14"/>
                                     </svg>
                                 </button>
-                                <button
-                                    v-if="!provider.readOnly"
-                                    class="card-action-btn"
-                                    :class="{ disabled: !shouldShowProviderEdit(provider) }"
-                                    :disabled="!shouldShowProviderEdit(provider)"
-                                    @click="openEditModal(provider)"
-                                    :aria-label="t('config.provider.edit.aria', { name: provider.name })"
-                                    :title="shouldShowProviderEdit(provider) ? t('common.edit') : t('common.notEditable')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button
-                                    v-if="!provider.readOnly"
-                                    class="card-action-btn"
-                                    @click="openCloneProviderModal(provider)"
-                                    :aria-label="t('config.provider.clone.aria', { name: provider.name })"
-                                    :title="t('config.provider.clone')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="9" y="9" width="13" height="13" rx="2"/>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                    </svg>
-                                </button>
-                                <button
-                                    v-if="!provider.readOnly"
-                                    class="card-action-btn delete"
-                                    :class="{ disabled: !shouldShowProviderDelete(provider) }"
-                                    :disabled="!shouldShowProviderDelete(provider)"
-                                    @click="deleteProvider(provider.name)"
-                                    :aria-label="t('config.provider.delete.aria', { name: provider.name })"
-                                    :title="shouldShowProviderDelete(provider) ? t('common.delete') : t('common.notDeletable')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M3 6h18"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
+                                <button v-if="!provider.readOnly" class="card-action-btn delete" :class="{ disabled: !shouldShowProviderDelete(provider) }" :disabled="!shouldShowProviderDelete(provider)" @click="deleteProvider(provider.name)" :aria-label="t('config.provider.delete.aria', { name: provider.name })" :title="shouldShowProviderDelete(provider) ? t('common.delete') : t('common.notDeletable')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div v-if="displayCurrentProvider === 'local'" class="local-bridge-panel" style="margin-top:12px;padding:12px;background:var(--card-bg);border-radius:8px;border:1px solid var(--border-color)">
-                    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-secondary)">轮询池 — 勾选参与负载均衡的提供商</div>
-                    <div v-if="localBridgeCandidateProviders().length === 0" style="font-size:12px;color:var(--text-muted)">暂无可用上游 provider，请先添加直连 provider</div>
-                    <label v-for="cp in localBridgeCandidateProviders()" :key="cp.name"
-                        style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px">
-                        <input type="checkbox"
-                            :checked="!isLocalBridgeExcluded(cp.name)"
-                            @change="toggleLocalBridgeExcluded(cp.name)"
-                            style="accent-color:var(--accent-color)" />
-                        <span>{{ cp.name }}</span>
-                    </label>
-                </div>
-
                 </template>
             </div>

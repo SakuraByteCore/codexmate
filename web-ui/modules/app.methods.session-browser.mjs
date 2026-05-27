@@ -264,6 +264,13 @@ export function createSessionBrowserMethods(options = {}) {
                 });
             if (urlState) {
                 applySessionsFilterUrlState(this, urlState);
+                // 清理 URL，保持静态
+                try {
+                    const url = new URL(window.location.href);
+                    url.search = '';
+                    url.hash = '';
+                    window.history.replaceState(null, '', url.toString());
+                } catch (_) {}
                 try {
                     const sortCache = localStorage.getItem('codexmateSessionSortMode');
                     this.sessionSortMode = normalizeSortMode(sortCache);
@@ -464,6 +471,28 @@ export function createSessionBrowserMethods(options = {}) {
             delete next[key];
             this.sessionPinnedMap = next;
             this.persistSessionPinnedMap();
+        },
+
+        setSessionSource(value) {
+            if (this.sessionsLoading) return;
+            this.sessionFilterSource = value;
+            this.refreshSessionPathOptions(value);
+            this.persistSessionFilterCache();
+            syncSessionsFilterUrl(this);
+            this.loadSessions();
+        },
+
+        highlightQueryText(text) {
+            if (typeof text !== 'string' || !text) return text;
+            var tokens = this.queryTokens;
+            if (!tokens || tokens.length === 0) return text;
+            var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            for (var i = 0; i < tokens.length; i++) {
+                var token = tokens[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                var re = new RegExp('(' + token + ')', 'gi');
+                escaped = escaped.replace(re, '<mark>$1</mark>');
+            }
+            return escaped;
         },
 
         async onSessionSourceChange(event) {
@@ -817,7 +846,11 @@ export function createSessionBrowserMethods(options = {}) {
                 ? Math.max(1, Math.min(rawLimit, 2000))
                 : compareBoost;
             const loadedLimit = Number(this.sessionsUsageLoadedLimit || 0);
-            if (this.sessionsUsageLoadedOnce && !options.forceRefresh && loadedLimit >= limit) {
+            const lastRange = typeof this.sessionsUsageLastLoadedRange === 'string'
+                ? this.sessionsUsageLastLoadedRange
+                : '';
+            const rangeChanged = lastRange && lastRange !== range;
+            if (this.sessionsUsageLoadedOnce && !options.forceRefresh && !rangeChanged && loadedLimit >= limit) {
                 return;
             }
             this.sessionsUsageLoading = true;
@@ -844,6 +877,7 @@ export function createSessionBrowserMethods(options = {}) {
                 if (loadSucceeded) {
                     this.sessionsUsageLoadedOnce = true;
                     this.sessionsUsageLoadedLimit = limit;
+                    this.sessionsUsageLastLoadedRange = range;
                     if (!this.sessionsUsageSelectedDayKey && Array.isArray(this.sessionUsageDailyTableRows) && this.sessionUsageDailyTableRows.length > 0) {
                         this.sessionsUsageSelectedDayKey = this.sessionUsageDailyTableRows[0].key;
                     }

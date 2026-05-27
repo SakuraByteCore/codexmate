@@ -136,8 +136,8 @@ const resolveWebHost = instantiateFunction(resolveWebHostSource, 'resolveWebHost
 });
 
 test('resolveWebHost defaults to LAN host', () => {
-    assert.strictEqual(resolveWebHost({}), '0.0.0.0');
-    assert.strictEqual(resolveWebHost(), '0.0.0.0');
+    assert.strictEqual(resolveWebHost({}), '127.0.0.1');
+    assert.strictEqual(resolveWebHost(), '127.0.0.1');
 });
 
 test('resolveWebHost still prefers CLI host over environment and default host', () => {
@@ -698,7 +698,8 @@ function createWebServerHarness({
             error(...args) {
                 errors.push(args);
             }
-        }
+        },
+        startWinTray() {}
     });
 
     createWebServer({
@@ -716,7 +717,10 @@ function createWebServerHarness({
 function assertInternalServerErrorResponse(response) {
     assert.strictEqual(response.statusCode, 500);
     assert.deepStrictEqual(response.headers, {
-        'Content-Type': 'text/plain; charset=utf-8'
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY'
     });
     assert.strictEqual(response.body, 'Internal Server Error');
     assert.strictEqual(response.destroyedWith, null);
@@ -725,7 +729,10 @@ function assertInternalServerErrorResponse(response) {
 function assertNotFoundResponse(response) {
     assert.strictEqual(response.statusCode, 404);
     assert.deepStrictEqual(response.headers, {
-        'Content-Type': 'text/plain; charset=utf-8'
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY'
     });
     assert.strictEqual(response.body, 'Not Found');
     assert.strictEqual(response.destroyedWith, null);
@@ -736,7 +743,7 @@ test('resolveSkillTarget still falls back to default target when target is omitt
     assert.deepStrictEqual(resolveSkillTarget({ items: [] }), SKILL_TARGETS[0]);
 });
 
-test('createWebServer returns 500 when bundled /web-ui html generation throws', () => {
+test('createWebServer returns 404 for removed /web-ui route', () => {
     const { requestHandler, errors } = createWebServerHarness({
         htmlReader() {
             throw new Error('bundled html failed');
@@ -746,10 +753,8 @@ test('createWebServer returns 500 when bundled /web-ui html generation throws', 
 
     requestHandler({ url: '/web-ui' }, response);
 
-    assertInternalServerErrorResponse(response);
-    assert.deepStrictEqual(errors, [
-        ['! Web UI 资源读取失败 [/web-ui]:', 'bundled html failed']
-    ]);
+    assertNotFoundResponse(response);
+    assert.deepStrictEqual(errors, []);
 });
 
 test('createWebServer preserves the legacy 404 contract for /web-ui/', () => {
@@ -766,25 +771,23 @@ test('createWebServer preserves the legacy 404 contract for /web-ui/', () => {
     assert.deepStrictEqual(errors, []);
 });
 
-test('createWebServer returns 500 when bundled dynamic asset generation throws', () => {
-    const { requestHandler, errors } = createWebServerHarness({
-        dynamicAssets: new Map([
-            ['index.html', {
-                mime: 'text/html; charset=utf-8',
-                reader() {
-                    throw new Error('bundled index failed');
-                }
-            }]
-        ])
-    });
+test('createWebServer redirects bundled index URL to the canonical root URL', () => {
+    const { requestHandler, errors } = createWebServerHarness();
     const response = createMockResponse();
 
-    requestHandler({ url: '/web-ui/index.html' }, response);
+    requestHandler({ url: '/web-ui/index.html?tab=sessions' }, response);
 
-    assertInternalServerErrorResponse(response);
-    assert.deepStrictEqual(errors, [
-        ['! Web UI 资源读取失败 [/web-ui/index.html]:', 'bundled index failed']
-    ]);
+    assert.strictEqual(response.statusCode, 302);
+    assert.deepStrictEqual(response.headers, {
+        'Cache-Control': 'no-store, max-age=0',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:",
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Location': '/?tab=sessions',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY'
+    });
+    assert.strictEqual(response.body, 'Found');
+    assert.deepStrictEqual(errors, []);
 });
 
 test('createWebServer returns 500 when fallback bundled html generation throws', () => {
@@ -896,7 +899,8 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
         setTimeout() {
             throw new Error('unexpected retry');
         },
-        Buffer
+        Buffer,
+        startWinTray() {}
     });
 
     createWebServer({
@@ -1044,7 +1048,8 @@ test('createWebServer health-check does not consume init notice before the first
         consumeInitNotice() {
             consumed += 1;
             return 'startup notice';
-        }
+        },
+        startWinTray() {}
     });
 
     createWebServer({
@@ -1198,7 +1203,8 @@ test('createWebServer retries readiness probe failures before auto-opening the b
             timers.push({ callback, ms });
             return timers.length;
         },
-        Buffer
+        Buffer,
+        startWinTray() {}
     });
 
     // first api probe fails, second api probe succeeds, asset probe succeeds

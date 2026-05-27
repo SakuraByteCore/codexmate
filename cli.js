@@ -7,7 +7,7 @@ const toml = require('@iarna/toml');
 const JSON5 = require('json5');
 const zipLib = require('zip-lib');
 const yauzl = require('yauzl');
-const { exec, execSync, spawn, spawnSync } = require('child_process');
+const { exec, execSync, execFileSync, spawn, spawnSync } = require('child_process');
 const http = require('http');
 const https = require('https');
 const net = require('net');
@@ -148,6 +148,7 @@ const {
     deleteCodexSkills
 } = require('./cli/skills');
 const { cmdImportSkills: cmdImportSkillsFromUrl } = require('./cli/import-skills-url');
+const { cmdToolUpdate } = require('./cli/update');
 const {
     getFileStatSafe,
     isBootstrapLikeText,
@@ -174,7 +175,7 @@ const {
 } = require('./lib/download-artifacts');
 
 const DEFAULT_WEB_PORT = 3737;
-const DEFAULT_WEB_HOST = '0.0.0.0';
+const DEFAULT_WEB_HOST = '127.0.0.1';
 const DEFAULT_WEB_OPEN_HOST = '127.0.0.1';
 
 // ============================================================================
@@ -192,6 +193,8 @@ const BUILTIN_PROXY_SETTINGS_FILE = path.join(CONFIG_DIR, 'codexmate-proxy.json'
 const BUILTIN_CLAUDE_PROXY_SETTINGS_FILE = path.join(CONFIG_DIR, 'codexmate-claude-proxy.json');
 const OPENAI_BRIDGE_SETTINGS_FILE = path.join(CONFIG_DIR, 'codexmate-openai-bridge.json');
 const LOCAL_BRIDGE_SETTINGS_FILE = path.join(CONFIG_DIR, 'codexmate-local-bridge.json');
+const CLAUDE_LOCAL_BRIDGE_SETTINGS_FILE = path.join(CONFIG_DIR, 'codexmate-claude-local-bridge.json');
+const CLAUDE_LOCAL_PROVIDERS_FILE = path.join(CONFIG_DIR, 'codexmate-claude-bridge.json');
 const CODEX_SESSIONS_DIR = path.join(CONFIG_DIR, 'sessions');
 const SESSION_TRASH_DIR = path.join(CONFIG_DIR, 'codexmate-session-trash');
 const SESSION_TRASH_FILES_DIR = path.join(SESSION_TRASH_DIR, 'files');
@@ -338,6 +341,7 @@ const openaiBridgeHandler = createOpenaiBridgeHttpHandler({
 const localBridgeHandler = createLocalBridgeHttpHandler({
     readConfigFn: readConfig,
     openaiBridgeFile: OPENAI_BRIDGE_SETTINGS_FILE,
+    claudeProvidersFile: CLAUDE_LOCAL_PROVIDERS_FILE,
     localBridgeSettingsFile: LOCAL_BRIDGE_SETTINGS_FILE,
     expectedToken: typeof process.env.CODEXMATE_HTTP_TOKEN === 'string' ? process.env.CODEXMATE_HTTP_TOKEN.trim() : '',
     maxBodySize: MAX_API_BODY_SIZE,
@@ -568,7 +572,7 @@ function releaseRunPortIfNeeded(port, host, deps = {}) {
             try {
                 killProcess(pid, 'SIGKILL');
                 released = true;
-            } catch (_) {}
+            } catch (_) { }
         }
     }
 
@@ -723,7 +727,7 @@ function readModels() {
     if (fs.existsSync(MODELS_FILE)) {
         try {
             return JSON.parse(fs.readFileSync(MODELS_FILE, 'utf-8'));
-        } catch (e) {}
+        } catch (e) { }
     }
     return [...DEFAULT_MODELS];
 }
@@ -736,7 +740,7 @@ function readCurrentModels() {
     if (fs.existsSync(CURRENT_MODELS_FILE)) {
         try {
             return JSON.parse(fs.readFileSync(CURRENT_MODELS_FILE, 'utf-8'));
-        } catch (e) {}
+        } catch (e) { }
     }
     return {};
 }
@@ -751,10 +755,10 @@ function updateAuthJson(apiKey) {
         try {
             const content = fs.readFileSync(AUTH_FILE, 'utf-8');
             if (content.trim()) authData = JSON.parse(content);
-        } catch (e) {}
+        } catch (e) { }
     }
     authData['OPENAI_API_KEY'] = apiKey;
-    fs.writeFileSync(AUTH_FILE, JSON.stringify(authData, null, 2), 'utf-8');
+    fs.writeFileSync(AUTH_FILE, JSON.stringify(authData, null, 2), { encoding: 'utf-8', mode: 0o600 });
 }
 
 function isPlainObject(value) {
@@ -856,7 +860,7 @@ function appendLegacySegmentsVariant(provider, segments) {
             configurable: true,
             writable: true
         });
-    } catch (e) {}
+    } catch (e) { }
 }
 
 function setLegacySegmentsMetadata(provider, segments) {
@@ -1388,7 +1392,10 @@ function formatCompactTimestamp(value = Date.now()) {
     return `${year}${month}${day}-${hour}${minute}${second}`;
 }
 
-function buildDerivedSessionId(baseId) {
+function buildDerivedSessionId(baseId, useUuid) {
+    if (useUuid) {
+        return crypto.randomUUID();
+    }
     const safeBase = typeof baseId === 'string' && baseId.trim() ? baseId.trim() : 'session';
     const normalized = safeBase.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'session';
     const suffix = crypto.randomBytes(3).toString('hex');
@@ -1704,6 +1711,7 @@ const {
     path,
     os,
     execSync,
+    execFileSync,
     zipLib,
     yauzl,
     ensureDir,
@@ -1867,7 +1875,7 @@ function getConfigTemplate(params = {}) {
             if (raw && raw.trim()) {
                 content = raw;
             }
-        } catch (e) {}
+        } catch (e) { }
     }
     if (
         params.modelAutoCompactTokenLimit !== undefined
@@ -2199,6 +2207,30 @@ function updateProviderInConfig(params = {}) {
     }
 }
 
+function getProviderKey(params = {}) {
+    const name = typeof params.name === 'string' ? params.name.trim() : '';
+    if (!name) return { error: '名称不能为空' };
+    try {
+        const config = readConfig();
+        const provider = config.model_providers && config.model_providers[name];
+        if (!provider) return { error: '提供商不存在' };
+
+        const bridge = typeof provider.codexmate_bridge === 'string' ? provider.codexmate_bridge.trim() : '';
+        const isTransform = bridge === 'openai' || String(provider.base_url || '').includes('/bridge/openai/');
+        if (isTransform) {
+            const settings = readOpenaiBridgeSettings(OPENAI_BRIDGE_SETTINGS_FILE);
+            const entry = settings.providers ? settings.providers[name] : null;
+            const key = entry && typeof entry.apiKey === 'string' ? entry.apiKey : '';
+            return { key };
+        }
+
+        const key = typeof provider.preferred_auth_method === 'string' ? provider.preferred_auth_method : '';
+        return { key };
+    } catch (e) {
+        return { error: e.message || '读取失败' };
+    }
+}
+
 function deleteProviderFromConfig(params = {}) {
     const name = typeof params.name === 'string' ? params.name.trim() : '';
     if (!name) return { error: '名称不能为空' };
@@ -2465,7 +2497,7 @@ function readJsonlRecords(filePath) {
         if (!trimmed) continue;
         try {
             records.push(JSON.parse(trimmed));
-        } catch (e) {}
+        } catch (e) { }
     }
     return records;
 }
@@ -2487,7 +2519,7 @@ function getFileHeadText(filePath, maxBytes = SESSION_SUMMARY_READ_BYTES) {
         return '';
     } finally {
         if (fd !== undefined) {
-            try { fs.closeSync(fd); } catch (e) {}
+            try { fs.closeSync(fd); } catch (e) { }
         }
     }
 }
@@ -2515,7 +2547,7 @@ function getFileTailText(filePath, maxBytes = SESSION_USAGE_TAIL_READ_BYTES) {
         return '';
     } finally {
         if (fd !== undefined) {
-            try { fs.closeSync(fd); } catch (e) {}
+            try { fs.closeSync(fd); } catch (e) { }
         }
     }
 }
@@ -2532,7 +2564,7 @@ function parseJsonlContent(content) {
         if (!trimmed) continue;
         try {
             records.push(JSON.parse(trimmed));
-        } catch (e) {}
+        } catch (e) { }
     }
     return records;
 }
@@ -2780,10 +2812,10 @@ async function countConversationMessagesInFile(filePath, source) {
         return safeCount;
     } finally {
         if (rl) {
-            try { rl.close(); } catch (e) {}
+            try { rl.close(); } catch (e) { }
         }
         if (stream && !stream.destroyed && stream.destroy) {
-            try { stream.destroy(); } catch (e) {}
+            try { stream.destroy(); } catch (e) { }
         }
     }
 }
@@ -2863,10 +2895,10 @@ async function extractSessionDetailPreviewFromFile(filePath, source, messageLimi
         return extractSessionDetailPreviewFromRecords(readJsonlRecords(filePath), source, safeMessageLimit);
     } finally {
         if (rl) {
-            try { rl.close(); } catch (e) {}
+            try { rl.close(); } catch (e) { }
         }
         if (stream && !stream.destroyed && stream.destroy) {
-            try { stream.destroy(); } catch (e) {}
+            try { stream.destroy(); } catch (e) { }
         }
     }
 }
@@ -3026,7 +3058,7 @@ function mergeAndLimitSessions(items, limit) {
     const seen = new Set();
     for (const item of items) {
         if (!item || !item.filePath) continue;
-        const key = `${item.source}:${item.filePath}`;
+        const key = `${item.source}:${item.sessionId || item.filePath}`;
         if (seen.has(key)) continue;
         seen.add(key);
         deduped.push(item);
@@ -3299,10 +3331,10 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
         return scanSessionContentForQueryInRecords(readJsonlRecords(filePath), session.source, state);
     } finally {
         if (rl) {
-            try { rl.close(); } catch (e) {}
+            try { rl.close(); } catch (e) { }
         }
         if (stream && !stream.destroyed && stream.destroy) {
-            try { stream.destroy(); } catch (e) {}
+            try { stream.destroy(); } catch (e) { }
         }
     }
 }
@@ -3410,7 +3442,7 @@ function collectRecentJsonlFiles(rootDir, options = {}) {
             try {
                 const stat = fs.statSync(fullPath);
                 filesMeta.push({ filePath: fullPath, mtimeMs: stat.mtimeMs || 0 });
-            } catch (e) {}
+            } catch (e) { }
 
             if (scanned >= maxFilesScanned) {
                 break;
@@ -3462,7 +3494,7 @@ function collectRecentJsonlFilesFromRoots(rootDirs, options = {}) {
             try {
                 const stat = fs.statSync(fullPath);
                 filesMeta.push({ filePath: fullPath, mtimeMs: stat.mtimeMs || 0 });
-            } catch (_) {}
+            } catch (_) { }
             if (scanned >= maxFilesScanned) {
                 break;
             }
@@ -3685,7 +3717,7 @@ function readTotalTokensFromUsage(usage) {
     const inputTokens = readNonNegativeInteger(usage.input_tokens ?? usage.inputTokens);
     const cachedInputTokens = readNonNegativeInteger(
         usage.cached_input_tokens ?? usage.cachedInputTokens
-            ?? usage.cache_read_input_tokens ?? usage.cacheReadInputTokens
+        ?? usage.cache_read_input_tokens ?? usage.cacheReadInputTokens
     );
     const cacheCreationInputTokens = readNonNegativeInteger(
         usage.cache_creation_input_tokens ?? usage.cacheCreationInputTokens
@@ -3705,7 +3737,7 @@ function readUsageTotalsFromUsage(usage) {
     const inputTokens = readNonNegativeInteger(usage.input_tokens ?? usage.inputTokens);
     const cachedInputTokens = readNonNegativeInteger(
         usage.cached_input_tokens ?? usage.cachedInputTokens
-            ?? usage.cache_read_input_tokens ?? usage.cacheReadInputTokens
+        ?? usage.cache_read_input_tokens ?? usage.cacheReadInputTokens
     );
     const cacheCreationInputTokens = readNonNegativeInteger(
         usage.cache_creation_input_tokens ?? usage.cacheCreationInputTokens
@@ -4203,6 +4235,9 @@ function parseClaudeSessionSummary(filePath, options = {}) {
 
     const tailRecords = parseJsonlTailRecords(filePath, summaryReadBytes);
     for (const record of tailRecords) {
+        if (record && record.timestamp) {
+            updatedAt = updateLatestIso(updatedAt, record.timestamp);
+        }
         applySessionUsageSummaryFromRecord(usageState, record, 'claude');
         totalTokens = usageState.totalTokens || 0;
         contextWindow = usageState.contextWindow || 0;
@@ -4627,10 +4662,10 @@ function listCodexSessions(limit, options = {}) {
             titleReadBytes
         });
         if (summary) {
-            sessions.push({
+            sessions.push(attachSessionNativeStatus({
                 ...summary,
                 derived: isDerivedSessionFile(filePath)
-            });
+            }));
         }
 
         if (sessions.length >= targetCount) {
@@ -4710,8 +4745,8 @@ function listClaudeSessions(limit, options = {}) {
                 continue;
             }
 
-            const updatedAt = toIsoTime(entry.modified || entry.fileMtime, '');
-            const createdAt = toIsoTime(entry.created, '');
+            let updatedAt = toIsoTime(entry.modified || entry.fileMtime, fileStat.mtime.toISOString());
+            let createdAt = toIsoTime(entry.created, '');
             let title = truncateText(entry.summary || entry.firstPrompt || sessionId, 120);
             let messageCount = Number.isFinite(entry.messageCount) ? Math.max(0, entry.messageCount - 1) : 0;
             let totalTokens = 0;
@@ -4743,6 +4778,12 @@ function listClaudeSessions(limit, options = {}) {
 
                 const quickMessages = [];
                 for (const record of quickRecords) {
+                    if (record && record.timestamp) {
+                        if (!createdAt) {
+                            createdAt = toIsoTime(record.timestamp, createdAt);
+                        }
+                        updatedAt = updateLatestIso(updatedAt, record.timestamp);
+                    }
                     applySessionUsageSummaryFromRecord(usageState, record, 'claude');
                     const recordModels = readSessionModelsFromRecord(record);
                     for (const recordModel of recordModels) {
@@ -4773,6 +4814,12 @@ function listClaudeSessions(limit, options = {}) {
 
             const tailRecords = parseJsonlTailRecords(filePath, summaryReadBytes);
             for (const record of tailRecords) {
+                if (record && record.timestamp) {
+                    if (!createdAt) {
+                        createdAt = toIsoTime(record.timestamp, createdAt);
+                    }
+                    updatedAt = updateLatestIso(updatedAt, record.timestamp);
+                }
                 applySessionUsageSummaryFromRecord(usageState, record, 'claude');
                 const recordModels = readSessionModelsFromRecord(record);
                 for (const recordModel of recordModels) {
@@ -4796,7 +4843,7 @@ function listClaudeSessions(limit, options = {}) {
             const keywords = normalizeKeywords(entry.keywords);
             const capabilities = normalizeCapabilities(entry.capabilities);
 
-            sessions.push({
+            sessions.push(attachSessionNativeStatus({
                 source: 'claude',
                 sourceLabel: 'Claude Code',
                 provider,
@@ -4820,7 +4867,7 @@ function listClaudeSessions(limit, options = {}) {
                 derived: isDerivedSessionFile(filePath),
                 keywords,
                 capabilities
-            });
+            }));
 
             if (sessions.length >= targetCount) {
                 break;
@@ -4832,27 +4879,29 @@ function listClaudeSessions(limit, options = {}) {
         }
     }
 
-    if (sessions.length === 0) {
-        const fallbackFiles = collectRecentJsonlFiles(claudeProjectsDir, {
-            returnCount: scanCount,
-            maxFilesScanned,
-            ignoreSubPath: `${path.sep}subagents${path.sep}`
+    // 补充扫描未索引的 .jsonl 文件（包括 sessions-index.json 中遗漏的会话）
+    const seenFilePaths = new Set(sessions.map((item) => item.filePath).filter(Boolean));
+    const fallbackFiles = collectRecentJsonlFiles(claudeProjectsDir, {
+        returnCount: scanCount,
+        maxFilesScanned,
+        ignoreSubPath: `${path.sep}subagents${path.sep}`
+    });
+    for (const filePath of fallbackFiles) {
+        if (seenFilePaths.has(filePath)) continue;
+        const summary = parseClaudeSessionSummary(filePath, {
+            summaryReadBytes,
+            titleReadBytes
         });
-        for (const filePath of fallbackFiles) {
-            const summary = parseClaudeSessionSummary(filePath, {
-                summaryReadBytes,
-                titleReadBytes
-            });
-            if (summary) {
-                sessions.push({
-                    ...summary,
-                    derived: isDerivedSessionFile(filePath)
-                });
-            }
+        if (summary) {
+            sessions.push(attachSessionNativeStatus({
+                ...summary,
+                derived: isDerivedSessionFile(filePath)
+            }));
+            seenFilePaths.add(filePath);
+        }
 
-            if (sessions.length >= targetCount) {
-                break;
-            }
+        if (sessions.length >= targetCount) {
+            break;
         }
     }
 
@@ -4869,10 +4918,10 @@ function listClaudeSessions(limit, options = {}) {
                 titleReadBytes
             });
             if (summary) {
-                sessions.push({
+                sessions.push(attachSessionNativeStatus({
                     ...summary,
                     derived: isDerivedSessionFile(filePath)
-                });
+                }));
             }
             seen.add(filePath);
         }
@@ -4940,7 +4989,7 @@ function listGeminiSessions(limit, options = {}) {
             try {
                 const stat = fs.statSync(fullPath);
                 filesMeta.push({ filePath: fullPath, mtimeMs: stat.mtimeMs || 0 });
-            } catch (_) {}
+            } catch (_) { }
             scanned += 1;
             if (scanned >= maxFilesScanned) {
                 break;
@@ -5546,6 +5595,156 @@ function getLocalBridgeExcludedProviders() {
     return { excludedProviders: settings.excludedProviders };
 }
 
+// ============================================================================
+// Claude Local Bridge
+// ============================================================================
+
+function readClaudeLocalBridgeSettings() {
+    const defaults = { enabled: false, lastActiveBaseUrl: '', lastModel: '', excludedProviders: [] };
+    try {
+        if (!fs.existsSync(CLAUDE_LOCAL_BRIDGE_SETTINGS_FILE)) return defaults;
+        const raw = JSON.parse(fs.readFileSync(CLAUDE_LOCAL_BRIDGE_SETTINGS_FILE, 'utf-8'));
+        return {
+            enabled: !!raw.enabled,
+            lastActiveBaseUrl: typeof raw.lastActiveBaseUrl === 'string' ? raw.lastActiveBaseUrl.trim() : '',
+            lastModel: typeof raw.lastModel === 'string' ? raw.lastModel.trim() : '',
+            excludedProviders: Array.isArray(raw.excludedProviders) ? raw.excludedProviders.filter(p => typeof p === 'string') : []
+        };
+    } catch (e) {
+        return defaults;
+    }
+}
+
+function writeClaudeLocalBridgeSettings(settings) {
+    fs.writeFileSync(CLAUDE_LOCAL_BRIDGE_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
+}
+
+function readClaudeLocalProvidersFile() {
+    try {
+        if (!fs.existsSync(CLAUDE_LOCAL_PROVIDERS_FILE)) return { providers: {} };
+        const raw = JSON.parse(fs.readFileSync(CLAUDE_LOCAL_PROVIDERS_FILE, 'utf-8'));
+        return { providers: (raw && typeof raw.providers === 'object') ? raw.providers : {} };
+    } catch (e) {
+        return { providers: {} };
+    }
+}
+
+function writeClaudeLocalProvidersFile(data) {
+    ensureDir(CONFIG_DIR);
+    fs.writeFileSync(CLAUDE_LOCAL_PROVIDERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function syncClaudeProvidersToBridgeFile() {
+    // Sync Claude configs from localStorage-equivalent (browser) to bridge file
+    // Called when providers are added/updated/deleted via web UI
+    const existing = readClaudeLocalProvidersFile();
+    const providers = existing.providers || {};
+    // Preserve existing entries, update from params
+    return { providers };
+}
+
+function toggleClaudeLocalBridge(params = {}) {
+    const enable = !!params.enable;
+    const settings = readClaudeLocalBridgeSettings();
+
+    try {
+        const readResult = readJsonObjectFromFile(CLAUDE_SETTINGS_FILE, {});
+        if (!readResult.ok) {
+            return { success: false, error: readResult.error || '读取 Claude settings.json 失败' };
+        }
+        const currentSettings = readResult.data || {};
+        const currentEnv = (currentSettings.env && typeof currentSettings.env === 'object' && !Array.isArray(currentSettings.env))
+            ? currentSettings.env : {};
+        const currentBaseUrl = typeof currentEnv.ANTHROPIC_BASE_URL === 'string' ? currentEnv.ANTHROPIC_BASE_URL.trim() : '';
+
+        if (enable) {
+            if (currentBaseUrl.includes('/bridge/claude-local/')) {
+                return { success: true, enabled: true, notice: '已启用 Claude 本地负载均衡' };
+            }
+            settings.lastActiveBaseUrl = currentBaseUrl;
+            settings.lastModel = typeof currentEnv.ANTHROPIC_MODEL === 'string' ? currentEnv.ANTHROPIC_MODEL.trim() : '';
+            settings.enabled = true;
+            writeClaudeLocalBridgeSettings(settings);
+
+            const localPort = resolveWebPort();
+            const localBaseUrl = `http://127.0.0.1:${localPort}/bridge/claude-local/v1`;
+            const nextEnv = { ...currentEnv, ANTHROPIC_BASE_URL: localBaseUrl };
+            const nextSettings = { ...currentSettings, env: nextEnv };
+            ensureDir(CLAUDE_DIR);
+            backupFileIfNeededOnce(CLAUDE_SETTINGS_FILE);
+            writeJsonAtomic(CLAUDE_SETTINGS_FILE, nextSettings);
+            return { success: true, enabled: true, previousBaseUrl: currentBaseUrl };
+        } else {
+            if (!currentBaseUrl.includes('/bridge/claude-local/')) {
+                settings.enabled = false;
+                writeClaudeLocalBridgeSettings(settings);
+                return { success: true, enabled: false, notice: 'Claude 本地负载均衡未启用' };
+            }
+            const restoreBaseUrl = settings.lastActiveBaseUrl || '';
+            if (!restoreBaseUrl) {
+                settings.enabled = false;
+                writeClaudeLocalBridgeSettings(settings);
+                return { success: true, enabled: false, notice: '已关闭 Claude 本地负载均衡（无历史配置可恢复）' };
+            }
+            const nextEnv = { ...currentEnv, ANTHROPIC_BASE_URL: restoreBaseUrl };
+            if (settings.lastModel) {
+                nextEnv.ANTHROPIC_MODEL = settings.lastModel;
+            }
+            const nextSettings = { ...currentSettings, env: nextEnv };
+            ensureDir(CLAUDE_DIR);
+            backupFileIfNeededOnce(CLAUDE_SETTINGS_FILE);
+            writeJsonAtomic(CLAUDE_SETTINGS_FILE, nextSettings);
+            settings.enabled = false;
+            writeClaudeLocalBridgeSettings(settings);
+            return { success: true, enabled: false, restoredBaseUrl: restoreBaseUrl, restoredModel: settings.lastModel };
+        }
+    } catch (e) {
+        return { error: e && e.message ? e.message : '操作失败' };
+    }
+}
+
+function getClaudeLocalBridgeStatus() {
+    const settings = readClaudeLocalBridgeSettings();
+    let currentBaseUrl = '';
+    try {
+        const readResult = readJsonObjectFromFile(CLAUDE_SETTINGS_FILE, {});
+        if (readResult.ok && readResult.data && readResult.data.env) {
+            currentBaseUrl = typeof readResult.data.env.ANTHROPIC_BASE_URL === 'string' ? readResult.data.env.ANTHROPIC_BASE_URL.trim() : '';
+        }
+    } catch (e) { /* ignore */ }
+    const providersData = readClaudeLocalProvidersFile();
+    const providerNames = Object.keys(providersData.providers || {});
+    return {
+        enabled: settings.enabled,
+        active: currentBaseUrl.includes('/bridge/claude-local/'),
+        excludedProviders: settings.excludedProviders,
+        lastActiveBaseUrl: settings.lastActiveBaseUrl,
+        lastModel: settings.lastModel,
+        providers: providerNames
+    };
+}
+
+function setClaudeLocalBridgeExcludedProviders(params = {}) {
+    const names = Array.isArray(params.names) ? params.names.filter(n => typeof n === 'string' && n.trim()) : [];
+    const settings = readClaudeLocalBridgeSettings();
+    settings.excludedProviders = names;
+    writeClaudeLocalBridgeSettings(settings);
+    return { success: true, excludedProviders: names };
+}
+
+function getClaudeLocalBridgeExcludedProviders() {
+    const settings = readClaudeLocalBridgeSettings();
+    return { excludedProviders: settings.excludedProviders };
+}
+
+function syncClaudeBridgeProviders(params = {}) {
+    const providers = (params.providers && typeof params.providers === 'object') ? params.providers : {};
+    const existing = readClaudeLocalProvidersFile();
+    const excluded = existing.excludedProviders || [];
+    writeClaudeLocalProvidersFile({ providers, excludedProviders: excluded });
+    return { success: true, count: Object.keys(providers).length };
+}
+
 function removeClaudeSessionIndexEntry(indexPath, sessionFilePath, sessionId) {
     if (!indexPath || !fs.existsSync(indexPath)) {
         return { removed: false, entry: null };
@@ -5614,7 +5813,7 @@ function moveFileSync(sourcePath, targetPath) {
     } catch (error) {
         try {
             fs.unlinkSync(targetPath);
-        } catch (_) {}
+        } catch (_) { }
         throw error;
     }
 }
@@ -5788,7 +5987,7 @@ function purgeExpiredSessionTrashEntries(retentionDays) {
         if (deletedAtMs > 0 && deletedAtMs < cutoffMs) {
             const trashFilePath = resolveSessionTrashFilePath(entry);
             if (trashFilePath) {
-                try { fs.unlinkSync(trashFilePath); } catch (_) {}
+                try { fs.unlinkSync(trashFilePath); } catch (_) { }
             }
             purgedCount += 1;
         } else {
@@ -6109,12 +6308,12 @@ async function restoreSessionTrashItem(params = {}) {
             try {
                 moveFileSync(targetFilePath, trashFilePath);
                 rollbackSucceeded = true;
-            } catch (_) {}
+            } catch (_) { }
         }
         if (rollbackSucceeded && entry.source === 'claude' && claudeIndexPath && fs.existsSync(claudeIndexPath)) {
             try {
                 removeClaudeSessionIndexEntry(claudeIndexPath, targetFilePath, entry.sessionId);
-            } catch (_) {}
+            } catch (_) { }
         }
         return { error: `恢复会话失败: ${e.message}` };
     }
@@ -6261,7 +6460,7 @@ async function trashSessionData(params = {}) {
             try {
                 moveFileSync(trashFilePath, filePath);
                 rollbackSucceeded = true;
-            } catch (_) {}
+            } catch (_) { }
         }
         if (rollbackSucceeded && source === 'claude' && claudeIndexPath && removedClaudeIndexEntry) {
             try {
@@ -6279,10 +6478,10 @@ async function trashSessionData(params = {}) {
                     trashId,
                     trashFileName
                 });
-            } catch (_) {}
+            } catch (_) { }
         }
         if (!rollbackSucceeded && fs.existsSync(trashFilePath)) {
-            try { fs.unlinkSync(trashFilePath); } catch (_) {}
+            try { fs.unlinkSync(trashFilePath); } catch (_) { }
         }
         return { error: `移入回收站失败: ${e.message}` };
     }
@@ -6452,7 +6651,7 @@ async function cloneCodexSession(params = {}) {
                     maxTimestampMs = ts;
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     const sessionsDir = getCodexSessionsDir();
@@ -6511,7 +6710,7 @@ async function cloneCodexSession(params = {}) {
     }
     try {
         fs.utimesSync(newFilePath, cloneTime, cloneTime);
-    } catch (e) {}
+    } catch (e) { }
 
     invalidateSessionListCache();
 
@@ -6580,7 +6779,7 @@ function buildSessionPlainText(messages) {
 function getDerivedSessionMetaPath(filePath) {
     if (!filePath) return '';
     const base = filePath.toLowerCase().endsWith('.jsonl')
-        ? filePath.slice(0, -5)
+        ? filePath.slice(0, -6)
         : filePath;
     return `${base}.meta.json`;
 }
@@ -6596,7 +6795,88 @@ function isDerivedSessionFile(filePath) {
         return false;
     }
     const base = path.basename(filePath || '', path.extname(filePath || ''));
-    return /-\d{8}-\d{6}-[0-9a-f]{6}$/i.test(base);
+    if (/-\d{8}-\d{6}-[0-9a-f]{6}$/i.test(base)) return true;
+    const norm = (filePath || '').replace(/\\/g, '/');
+    if (norm.includes('/.codexmate/sessions/derived/')) return true;
+    return false;
+}
+
+function readDerivedSessionMeta(filePath) {
+    const metaPath = getDerivedSessionMetaPath(filePath);
+    if (!metaPath) return null;
+    return readJsonFile(metaPath, null);
+}
+
+function resolveNativeSessionFilePath(source, sessionId, cwd = '') {
+    const normalizedSource = normalizeSessionDerivedTarget(source);
+    const id = typeof sessionId === 'string' ? sessionId.trim() : '';
+    if (!normalizedSource || !id) return '';
+    if (normalizedSource === 'codex') {
+        return path.join(getCodexSessionsDir(), `${id}.jsonl`);
+    }
+    const projectDir = resolveClaudeProjectDirForCwd(cwd || '') || path.join(getClaudeProjectsDir(), 'codexmate-derived');
+    return path.join(projectDir, `${id}.jsonl`);
+}
+
+function buildSessionNativeStatus(source, sessionId, cwd, filePath, derived) {
+    const normalizedSource = normalizeSessionDerivedTarget(source);
+    const id = typeof sessionId === 'string' ? sessionId.trim() : '';
+    const currentPath = typeof filePath === 'string' && filePath.trim()
+        ? path.resolve(expandHomePath(filePath.trim()))
+        : '';
+    const nativePath = resolveNativeSessionFilePath(normalizedSource, id, cwd || '');
+    const resolvedNativePath = nativePath ? path.resolve(expandHomePath(nativePath)) : '';
+    const inNativePath = !!(currentPath && resolvedNativePath && currentPath === resolvedNativePath);
+    const nativeExists = !!(resolvedNativePath && fs.existsSync(resolvedNativePath));
+    const currentExists = !!(currentPath && fs.existsSync(currentPath));
+    const isDerived = derived === true || isDerivedSessionFile(currentPath);
+    const nativeAvailable = inNativePath || nativeExists || (!isDerived && currentExists);
+    const effectiveNativePath = !isDerived && currentPath
+        ? currentPath
+        : (resolvedNativePath || '');
+    return {
+        derived: isDerived,
+        nativeAvailable,
+        nativePath: effectiveNativePath,
+        derivedPath: isDerived && currentPath && !inNativePath ? currentPath : '',
+        nativeImportAvailable: isDerived && !!resolvedNativePath && !inNativePath
+    };
+}
+
+function attachSessionNativeStatus(session) {
+    if (!session || typeof session !== 'object') return session;
+    const meta = session.meta && typeof session.meta === 'object' && !Array.isArray(session.meta)
+        ? session.meta
+        : (session.derived === true ? readDerivedSessionMeta(session.filePath) : null);
+    const metaConvertedFromLabel = buildConvertedFromLabel(meta);
+    const convertedFromLabel = typeof session.convertedFromLabel === 'string' && session.convertedFromLabel.trim()
+        ? session.convertedFromLabel.trim()
+        : metaConvertedFromLabel;
+    const convertedFrom = typeof session.convertedFrom === 'string' && session.convertedFrom.trim()
+        ? session.convertedFrom.trim()
+        : (convertedFromLabel ? convertedFromLabel.toLowerCase().replace(' code', '') : '');
+    return {
+        ...session,
+        ...(convertedFrom ? { convertedFrom } : {}),
+        ...(convertedFromLabel ? { convertedFromLabel } : {}),
+        ...buildSessionNativeStatus(
+            session.source,
+            session.sessionId,
+            session.cwd,
+            session.filePath,
+            session.derived === true
+        )
+    };
+}
+
+function buildConvertedFromLabel(meta) {
+    const rawSourceType = meta && meta.source && typeof meta.source.type === 'string'
+        ? meta.source.type
+        : (meta && typeof meta.convertedFrom === 'string' ? meta.convertedFrom : '');
+    const sourceType = rawSourceType.trim().toLowerCase();
+    if (sourceType === 'codex') return 'Codex';
+    if (sourceType === 'claude') return 'Claude Code';
+    return '';
 }
 
 function resolveStateMaxMessages(state) {
@@ -6842,10 +7122,10 @@ async function extractMessagesFromFile(filePath, source, options = {}) {
         return extractMessagesFromRecords(fallbackRecords, source, { maxMessages });
     } finally {
         if (rl) {
-            try { rl.close(); } catch (e) {}
+            try { rl.close(); } catch (e) { }
         }
         if (stream && !stream.destroyed && stream.destroy) {
-            try { stream.destroy(); } catch (e) {}
+            try { stream.destroy(); } catch (e) { }
         }
     }
 
@@ -6947,7 +7227,7 @@ async function readSessionDetail(params = {}) {
         derived: (() => {
             try {
                 const metaPath = filePath.toLowerCase().endsWith('.jsonl')
-                    ? `${filePath.slice(0, -5)}.meta.json`
+                    ? `${filePath.slice(0, -6)}.meta.json`
                     : `${filePath}.meta.json`;
                 if (fs.existsSync(metaPath)) {
                     return true;
@@ -6956,7 +7236,9 @@ async function readSessionDetail(params = {}) {
                 return false;
             }
             const base = path.basename(filePath || '', path.extname(filePath || ''));
-            return /-\d{8}-\d{6}-[0-9a-f]{6}$/i.test(base);
+            if (/-\d{8}-\d{6}-[0-9a-f]{6}$/i.test(base)) return true;
+            const norm = (filePath || '').replace(/\\/g, '/');
+            return norm.includes('/.codexmate/sessions/derived/');
         })(),
         totalMessages: hasExactTotalMessages ? extracted.totalMessages : null,
         clipped: typeof extracted.clipped === 'boolean'
@@ -6964,7 +7246,18 @@ async function readSessionDetail(params = {}) {
             : (hasExactTotalMessages ? extracted.totalMessages > indexedMessages.length : false),
         messageLimit,
         messages: indexedMessages,
-        filePath
+        filePath,
+        ...(typeof buildSessionNativeStatus === 'function'
+            ? buildSessionNativeStatus(source, sessionId, extracted.cwd || '', filePath, (typeof isDerivedSessionFile === 'function' ? isDerivedSessionFile(filePath) : false))
+            : { derived: (typeof isDerivedSessionFile === 'function' ? isDerivedSessionFile(filePath) : false) }),
+        convertedFrom: (() => {
+            if (typeof buildConvertedFromLabel !== 'function' || typeof readDerivedSessionMeta !== 'function') return '';
+            const label = buildConvertedFromLabel(readDerivedSessionMeta(filePath));
+            return label ? label.toLowerCase().replace(' code', '') : '';
+        })(),
+        convertedFromLabel: (typeof buildConvertedFromLabel === 'function' && typeof readDerivedSessionMeta === 'function')
+            ? buildConvertedFromLabel(readDerivedSessionMeta(filePath))
+            : ''
     };
 }
 
@@ -7195,18 +7488,45 @@ async function convertSessionToDerived(params = {}) {
     }
 
     const baseSessionId = extracted.sessionId || params.sessionId || path.basename(filePath, '.jsonl');
-    const derivedSessionId = buildDerivedSessionId(baseSessionId);
     const sourceKey = buildSessionDerivedSourceKey(source, baseSessionId, filePath);
-    const outputDir = target === 'codex'
-        ? getCodexSessionsDir()
-        : (target === 'claude'
-            ? (resolveClaudeProjectDirForCwd(extracted.cwd || '') || path.join(getClaudeProjectsDir(), 'codexmate-derived'))
-            : buildDerivedSessionOutputDir(target, source, sourceKey));
-    ensureDir(outputDir);
-    const outputPath = path.join(outputDir, `${derivedSessionId}.jsonl`);
-    const metaPath = path.join(outputDir, `${derivedSessionId}.meta.json`);
-
+    const outputDirModeRaw = typeof params.outputDir === 'string'
+        ? params.outputDir
+        : (typeof params.output_dir === 'string' ? params.output_dir : 'native');
+    const outputDirMode = outputDirModeRaw.trim().toLowerCase() === 'derived' ? 'derived' : 'native';
     const cwd = typeof extracted.cwd === 'string' ? extracted.cwd : '';
+    const outputDir = outputDirMode === 'derived'
+        ? buildDerivedSessionOutputDir(target, source, sourceKey)
+        : (target === 'codex'
+            ? getCodexSessionsDir()
+            : (resolveClaudeProjectDirForCwd(cwd || '') || path.join(getClaudeProjectsDir(), 'codexmate-derived')));
+    ensureDir(outputDir);
+
+    let derivedSessionId = '';
+    let outputPath = '';
+    let metaPath = '';
+    if (outputDirMode === 'native') {
+        derivedSessionId = baseSessionId;
+        outputPath = path.join(outputDir, `${derivedSessionId}.jsonl`);
+        metaPath = path.join(outputDir, `${derivedSessionId}.meta.json`);
+        if (fs.existsSync(outputPath) || fs.existsSync(metaPath)) {
+            return { error: 'Converted sessionId conflicts with an existing native session; please retry or choose derived output.' };
+        }
+    } else {
+        const useUuid = target === 'codex' || target === 'claude';
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+            derivedSessionId = buildDerivedSessionId(baseSessionId, useUuid);
+            outputPath = path.join(outputDir, `${derivedSessionId}.jsonl`);
+            metaPath = path.join(outputDir, `${derivedSessionId}.meta.json`);
+            if (!fs.existsSync(outputPath) && !fs.existsSync(metaPath)) {
+                break;
+            }
+            derivedSessionId = '';
+        }
+        if (!derivedSessionId) {
+            return { error: 'Converted sessionId conflicts with an existing native session; please retry or choose derived output.' };
+        }
+    }
+
     const resolvedCwd = cwd ? path.resolve(expandHomePath(cwd)) : '';
     const messages = removeLeadingSystemMessage(Array.isArray(extracted.messages) ? extracted.messages : []);
     const now = Date.now();
@@ -7265,7 +7585,8 @@ async function convertSessionToDerived(params = {}) {
             filePath: outputPath
         },
         options: {
-            maxMessages: maxMessages === Infinity ? 'all' : maxMessages
+            maxMessages: maxMessages === Infinity ? 'all' : maxMessages,
+            outputDir: outputDirMode
         }
     });
 
@@ -7301,7 +7622,12 @@ async function convertSessionToDerived(params = {}) {
         target,
         truncated: !!extracted.truncated,
         maxMessages: maxMessagesLabel,
-        session: summary ? { ...summary, derived: true } : {
+        session: attachSessionNativeStatus(summary ? {
+            ...summary,
+            derived: true,
+            convertedFrom: source,
+            convertedFromLabel: source === 'codex' ? 'Codex' : 'Claude Code'
+        } : {
             source: target,
             sourceLabel: target === 'codex' ? 'Codex' : 'Claude Code',
             sessionId: derivedSessionId,
@@ -7319,9 +7645,158 @@ async function convertSessionToDerived(params = {}) {
             __messageCountExact: true,
             filePath: outputPath,
             derived: true,
+            convertedFrom: source,
+            convertedFromLabel: source === 'codex' ? 'Codex' : 'Claude Code',
             keywords: [],
             capabilities: {}
+        })
+    };
+}
+
+
+async function importDerivedSessionToNative(params = {}) {
+    const source = normalizeSessionDerivedTarget(params.source);
+    if (!source) {
+        return { error: 'Invalid source', errorCode: 'INVALID_SOURCE' };
+    }
+    const filePath = resolveSessionFilePath(source, getSessionFileArg(params), params.sessionId);
+    if (!filePath) {
+        return { error: 'Session file not found', errorCode: 'SESSION_FILE_NOT_FOUND' };
+    }
+
+    const summary = (source === 'claude' ? parseClaudeSessionSummary(filePath) : parseCodexSessionSummary(filePath))
+        || buildSessionSummaryFallback(source, filePath, params.sessionId);
+    const sessionId = summary.sessionId || params.sessionId || path.basename(filePath, '.jsonl');
+    const nativePath = resolveNativeSessionFilePath(source, sessionId, summary.cwd || '');
+    if (!nativePath) {
+        return { error: 'Native session path unavailable', errorCode: 'NATIVE_SESSION_PATH_UNAVAILABLE' };
+    }
+
+    const resolvedSourcePath = path.resolve(expandHomePath(filePath));
+    const resolvedNativePath = path.resolve(expandHomePath(nativePath));
+    const overwrite = params.overwrite === true || params.confirmOverwrite === true || params.force === true;
+    const hadNativeBefore = fs.existsSync(resolvedNativePath);
+    if (resolvedSourcePath === resolvedNativePath) {
+        return {
+            success: true,
+            imported: false,
+            alreadyNative: true,
+            source,
+            sessionId,
+            filePath: resolvedNativePath,
+            nativePath: resolvedNativePath,
+            nativeAvailable: true,
+            session: attachSessionNativeStatus({ ...summary, filePath: resolvedNativePath, derived: true })
+        };
+    }
+    if (fs.existsSync(resolvedNativePath) && !overwrite) {
+        return {
+            error: 'Native session already exists',
+            errorCode: 'NATIVE_SESSION_EXISTS',
+            conflict: true,
+            source,
+            sessionId,
+            filePath: resolvedSourcePath,
+            nativePath: resolvedNativePath,
+            nativeAvailable: true,
+            session: attachSessionNativeStatus({ ...summary, filePath: resolvedSourcePath, derived: true })
+        };
+    }
+
+    const targetMetaPath = getDerivedSessionMetaPath(resolvedNativePath);
+    const indexPath = source === 'claude' ? path.join(path.dirname(resolvedNativePath), 'sessions-index.json') : '';
+    const tmpNativePath = `${resolvedNativePath}.tmp-${process.pid}-${Date.now()}`;
+    let previousNative = null;
+    let previousMeta = null;
+    let previousIndex = null;
+    try {
+        previousNative = hadNativeBefore ? fs.readFileSync(resolvedNativePath) : null;
+        previousMeta = targetMetaPath && fs.existsSync(targetMetaPath)
+            ? fs.readFileSync(targetMetaPath)
+            : null;
+        previousIndex = indexPath && fs.existsSync(indexPath)
+            ? fs.readFileSync(indexPath)
+            : null;
+        ensureDir(path.dirname(resolvedNativePath));
+        fs.copyFileSync(resolvedSourcePath, tmpNativePath);
+        const sourceMetaPath = getDerivedSessionMetaPath(resolvedSourcePath);
+        let meta = readDerivedSessionMeta(resolvedSourcePath) || {};
+        if (!meta || typeof meta !== 'object' || Array.isArray(meta)) meta = {};
+        meta.version = meta.version || 1;
+        meta.importedAt = new Date().toISOString();
+        meta.target = {
+            ...(meta.target && typeof meta.target === 'object' ? meta.target : {}),
+            type: source,
+            sessionId,
+            filePath: resolvedNativePath
+        };
+        if (sourceMetaPath && fs.existsSync(sourceMetaPath)) {
+            writeJsonAtomic(targetMetaPath, meta);
+        } else {
+            writeJsonAtomic(targetMetaPath, meta);
         }
+        if (source === 'claude') {
+            ensureClaudeSessionsIndex(indexPath, summary.cwd || '');
+            upsertClaudeSessionIndexEntry(indexPath, resolvedNativePath, {
+                ...summary,
+                source: 'claude',
+                trashId: sessionId,
+                trashFileName: `${sessionId}.jsonl`,
+                sessionId,
+                claudeIndexEntry: { projectPath: summary.cwd || '' }
+            });
+        }
+        if (hadNativeBefore) {
+            fs.unlinkSync(resolvedNativePath);
+        }
+        fs.renameSync(tmpNativePath, resolvedNativePath);
+    } catch (e) {
+        try {
+            if (fs.existsSync(tmpNativePath)) fs.unlinkSync(tmpNativePath);
+        } catch (_) { }
+        try {
+            if (previousNative) {
+                ensureDir(path.dirname(resolvedNativePath));
+                fs.writeFileSync(resolvedNativePath, previousNative);
+            } else if (!hadNativeBefore && fs.existsSync(resolvedNativePath)) {
+                fs.unlinkSync(resolvedNativePath);
+            }
+        } catch (_) { }
+        try {
+            if (previousMeta) {
+                ensureDir(path.dirname(targetMetaPath));
+                fs.writeFileSync(targetMetaPath, previousMeta);
+            } else if (targetMetaPath && fs.existsSync(targetMetaPath)) {
+                fs.unlinkSync(targetMetaPath);
+            }
+        } catch (_) { }
+        try {
+            if (indexPath) {
+                if (previousIndex) {
+                    ensureDir(path.dirname(indexPath));
+                    fs.writeFileSync(indexPath, previousIndex);
+                } else if (fs.existsSync(indexPath)) {
+                    fs.unlinkSync(indexPath);
+                }
+            }
+        } catch (_) { }
+        return { error: `Import to native failed: ${e.message}`, errorCode: 'IMPORT_DERIVED_SESSION_FAILED', reason: e.message };
+    }
+
+    invalidateSessionListCache();
+    const importedSummary = (source === 'claude' ? parseClaudeSessionSummary(resolvedNativePath) : parseCodexSessionSummary(resolvedNativePath))
+        || { ...summary, filePath: resolvedNativePath };
+    return {
+        success: true,
+        imported: true,
+        source,
+        sessionId,
+        filePath: resolvedNativePath,
+        nativePath: resolvedNativePath,
+        nativeAvailable: true,
+        previousFilePath: resolvedSourcePath,
+        overwritten: hadNativeBefore && overwrite,
+        session: attachSessionNativeStatus({ ...importedSummary, filePath: resolvedNativePath, derived: true })
     };
 }
 
@@ -7435,7 +7910,7 @@ function normalizeImportPayload(payload) {
             const name = item.name || item.provider || '';
             const baseUrl = item.baseUrl || item.base_url || item.url || '';
             const apiKey = item.apiKey ?? item.key ?? item.preferred_auth_method ?? null;
-            if (name && baseUrl) {
+            if (name && baseUrl && /^[a-zA-Z0-9_\-.\s]+$/.test(name)) {
                 providers[name] = { baseUrl, apiKey };
             }
         }
@@ -7444,7 +7919,7 @@ function normalizeImportPayload(payload) {
             if (!item || typeof item !== 'object') continue;
             const baseUrl = item.baseUrl || item.base_url || item.url || '';
             const apiKey = item.apiKey ?? item.key ?? item.preferred_auth_method ?? null;
-            if (name && baseUrl) {
+            if (name && baseUrl && /^[a-zA-Z0-9_\-.\s]+$/.test(name)) {
                 providers[name] = { baseUrl, apiKey };
             }
         }
@@ -8763,6 +9238,45 @@ function readClaudeSettingsInfo() {
     };
 }
 
+function readClaudeSettingsRaw() {
+    if (!fs.existsSync(CLAUDE_SETTINGS_FILE)) {
+        return { content: '{}', exists: false, targetPath: CLAUDE_SETTINGS_FILE };
+    }
+    try {
+        const raw = fs.readFileSync(CLAUDE_SETTINGS_FILE, 'utf-8');
+        return { content: raw || '{}', exists: true, targetPath: CLAUDE_SETTINGS_FILE };
+    } catch (e) {
+        return { error: e.message || '读取 settings.json 失败' };
+    }
+}
+
+function applyClaudeSettingsRaw(params = {}) {
+    const content = typeof params.content === 'string' ? params.content : '';
+    if (!content.trim()) {
+        return { error: '内容不能为空' };
+    }
+    if (content.length > 1024 * 1024) {
+        return { error: '内容过大（最大 1MB）' };
+    }
+    let parsed;
+    try {
+        parsed = JSON.parse(content);
+    } catch (e) {
+        return { error: `JSON 解析失败: ${e.message}` };
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return { error: 'JSON 内容必须是一个对象' };
+    }
+    try {
+        ensureDir(CLAUDE_DIR);
+        backupFileIfNeededOnce(CLAUDE_SETTINGS_FILE);
+        writeJsonAtomic(CLAUDE_SETTINGS_FILE, parsed);
+        return { success: true, targetPath: CLAUDE_SETTINGS_FILE };
+    } catch (e) {
+        return { error: e.message || '写入 settings.json 失败' };
+    }
+}
+
 // API: 打包 Claude 配置目录（系统 zip 可用则使用，否则回退 zip-lib）
 async function prepareClaudeDirDownload() {
     return await prepareDirectoryDownload(CLAUDE_DIR, {
@@ -8800,12 +9314,21 @@ async function restoreCodexDir(payload) {
 }
 
 // CLI: 一行写入 Claude Code 配置
-function cmdClaude(baseUrl, apiKey, model, silent = false) {
+async function cmdClaude(args = []) {
+    const argv = Array.isArray(args) ? args : [];
+    // 无参数 → 代理启动
+    if (argv.length === 0 || (argv.length === 1 && argv[0] === undefined)) {
+        return runProxyCommand('Claude', 'claude', [], '', { autoFlag: '--dangerously-skip-permissions' });
+    }
+    // 有参数 → 配置写入
+    const [baseUrl, apiKey, model] = argv;
     const normalizedBaseUrl = typeof baseUrl === 'string' ? baseUrl.trim() : '';
     const normalizedKey = typeof apiKey === 'string' ? apiKey.trim() : '';
     const normalizedModel = typeof model === 'string' && model.trim()
         ? model.trim()
         : DEFAULT_CLAUDE_MODEL;
+
+    const silent = false;
 
     if (!normalizedBaseUrl || !normalizedKey) {
         if (!silent) {
@@ -8841,7 +9364,7 @@ function cmdClaude(baseUrl, apiKey, model, silent = false) {
         console.log();
     }
 
-    return result;
+    return 0;
 }
 
 function commandExists(command, args = '') {
@@ -9122,7 +9645,7 @@ function resolveExportOutputPath(outputPath, defaultFileName) {
             if (stat.isDirectory()) {
                 return path.join(resolved, defaultFileName);
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     return resolved;
@@ -9343,7 +9866,7 @@ function watchPathsForRestart(targets, onChange) {
         watcherEntries.delete(watchKey);
         try {
             entry.watcher.close();
-        } catch (_) {}
+        } catch (_) { }
     };
 
     const listDirectoryTree = (rootDir) => {
@@ -9537,9 +10060,10 @@ function watchPathsForRestart(targets, onChange) {
 }
 // #endregion watchPathsForRestart
 
-function writeJsonResponse(res, statusCode, payload) {
+function writeJsonResponse(res, statusCode, payload, headers = {}) {
     const body = JSON.stringify(payload, null, 2);
     res.writeHead(statusCode, {
+        ...headers,
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Length': Buffer.byteLength(body, 'utf-8')
     });
@@ -9617,7 +10141,7 @@ function assertRequestAuthorized(req, res) {
         return { ok: false, mode: 'missing-token' };
     }
     const actual = extractRequestToken(req);
-    if (!actual || actual !== expected) {
+    if (!actual || !safeTimingEqual(actual, expected)) {
         writeJsonResponse(res, 401, { error: 'Unauthorized' });
         return { ok: false, mode: 'unauthorized' };
     }
@@ -9807,12 +10331,12 @@ function streamZipDownloadResponse(res, filePath, options = {}) {
         if (deleteAfterDownload && fs.existsSync(filePath)) {
             try {
                 fs.unlinkSync(filePath);
-            } catch (_) {}
+            } catch (_) { }
         }
         if (onAfterComplete) {
             try {
                 onAfterComplete();
-            } catch (_) {}
+            } catch (_) { }
         }
     };
     stream.on('error', () => {
@@ -9822,7 +10346,7 @@ function streamZipDownloadResponse(res, filePath, options = {}) {
         } else {
             try {
                 res.destroy();
-            } catch (_) {}
+            } catch (_) { }
         }
         finalize();
     });
@@ -9964,7 +10488,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         });
         req.on('error', () => finish(false));
         req.setTimeout(1000, () => {
-            try { req.destroy(); } catch (_) {}
+            try { req.destroy(); } catch (_) { }
             finish(false);
         });
         req.end(payload, 'utf-8');
@@ -9992,7 +10516,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         });
         req.on('error', () => finish(false));
         req.setTimeout(1000, () => {
-            try { req.destroy(); } catch (_) {}
+            try { req.destroy(); } catch (_) { }
             finish(false);
         });
         req.end();
@@ -10067,14 +10591,45 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         if (res.headersSent) {
             try {
                 res.destroy(error);
-            } catch (_) {}
+            } catch (_) { }
             return;
         }
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end('Internal Server Error');
     };
 
+    const rateLimitMap = new Map();
+    const RATE_LIMIT_WINDOW_MS = 60000;
+    const RATE_LIMIT_MAX = 120;
+    function checkRateLimit(key) {
+        const now = Date.now();
+        const entry = rateLimitMap.get(key);
+        if (!entry || now - entry.start > RATE_LIMIT_WINDOW_MS) {
+            rateLimitMap.set(key, { start: now, count: 1 });
+            return true;
+        }
+        entry.count++;
+        if (entry.count > RATE_LIMIT_MAX) return false;
+        return true;
+    }
+    setInterval(function () {
+        const now = Date.now();
+        for (const [key, entry] of rateLimitMap.entries()) {
+            if (now - entry.start > RATE_LIMIT_WINDOW_MS * 2) rateLimitMap.delete(key);
+        }
+    }, RATE_LIMIT_WINDOW_MS).unref();
+
     const server = http.createServer((req, res) => {
+        const securityHeaders = {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:"
+        };
+        const origWriteHead = res.writeHead.bind(res);
+        res.writeHead = function (statusCode, headers) {
+            const merged = Object.assign({}, securityHeaders, headers || {});
+            return origWriteHead(statusCode, merged);
+        };
         const requestPath = (req.url || '/').split('?')[0];
         const sendJson = (statusCode, payload) => {
             const body = JSON.stringify(payload || {}, null, 2);
@@ -10097,28 +10652,15 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             || requestPath.startsWith('/download/')
         ) {
             const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
-            const isLoopback = !remoteAddr
-                || remoteAddr === '127.0.0.1'
-                || remoteAddr === '::1'
-                || remoteAddr === '::ffff:127.0.0.1';
+            const isLoopback = !remoteAddr || isLoopbackRemoteAddress(remoteAddr);
             if (!isLoopback) {
-                const expected = typeof process.env.CODEXMATE_HTTP_TOKEN === 'string'
-                    ? process.env.CODEXMATE_HTTP_TOKEN.trim()
-                    : '';
-                if (!expected) {
-                    sendJson(403, {
-                        error: 'Remote access is disabled (set CODEXMATE_HTTP_TOKEN or use --host 127.0.0.1)'
-                    });
+                const rateLimitKey = (remoteAddr || 'unknown') + ':' + requestPath;
+                if (!checkRateLimit(rateLimitKey)) {
+                    writeJsonResponse(res, 429, { error: 'Rate limit exceeded' }, { 'Retry-After': '60' });
                     return;
                 }
-                const headers = req && req.headers && typeof req.headers === 'object' ? req.headers : {};
-                const rawAuth = typeof headers.authorization === 'string' ? headers.authorization.trim() : '';
-                const match = rawAuth ? rawAuth.match(/^bearer\s+(.+)$/i) : null;
-                const actual = match && match[1]
-                    ? match[1].trim()
-                    : (rawAuth ? rawAuth : (typeof headers['x-codexmate-token'] === 'string' ? String(headers['x-codexmate-token']).trim() : ''));
-                if (!actual || actual !== expected) {
-                    sendJson(401, { error: 'Unauthorized' });
+                const auth = assertRequestAuthorized(req, res);
+                if (!auth.ok) {
                     return;
                 }
             }
@@ -10187,7 +10729,16 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 'model_auto_compact_token_limit',
                                 budgetReadOptions
                             );
+                            const pkgVersion = (() => {
+                                try {
+                                    const pkg = require('./package.json');
+                                    return pkg && pkg.version ? pkg.version : '';
+                                } catch (_) {
+                                    return '';
+                                }
+                            })();
                             result = {
+                                version: pkgVersion,
                                 provider: config.model_provider || '未设置',
                                 model: config.model || '未设置',
                                 currentModels: readCurrentModels(),
@@ -10244,7 +10795,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                                 result = { error: 'Refusing to access private network baseUrl from non-loopback request' };
                                                 break;
                                             }
-                                        } catch (_) {}
+                                        } catch (_) { }
                                     }
                                     const res = await fetchModelsFromBaseUrl(baseUrl, apiKey);
                                     if (res.error) {
@@ -10271,6 +10822,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'update-provider':
                             result = updateProviderInConfig(params || {});
+                            break;
+                        case 'get-provider-key':
+                            result = getProviderKey(params || {});
                             break;
                         case 'delete-provider':
                             result = deleteProviderFromConfig(params || {});
@@ -10312,7 +10866,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             result = applyClaudeMdFile(params || {});
                             if (result && !result.error) {
                                 const mdTarget = (params && params.targetPath) ? String(params.targetPath) : 'CLAUDE.md';
-                                notifyWebhook('claude-md-edit', 'CLAUDE.md modified: ' + mdTarget, { targetPath: mdTarget }).catch(function () {});
+                                notifyWebhook('claude-md-edit', 'CLAUDE.md modified: ' + mdTarget, { targetPath: mdTarget }).catch(function () { });
                             }
                             break;
                         case 'preview-agents-diff':
@@ -10387,6 +10941,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'get-claude-settings':
                             result = readClaudeSettingsInfo();
                             break;
+                        case 'get-claude-settings-raw':
+                            result = readClaudeSettingsRaw();
+                            break;
+                        case 'apply-claude-settings-raw':
+                            result = applyClaudeSettingsRaw(params || {});
+                            break;
                         case 'apply-claude-config':
                             result = applyToClaudeSettings(params.config);
                             if (result && !result.error) {
@@ -10395,7 +10955,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 const summary = cfgFrom
                                     ? ('Provider switched: ' + cfgFrom + ' -> ' + cfgName)
                                     : ('Provider applied: ' + cfgName);
-                                notifyWebhook('provider-switch', summary, { name: cfgName, previousName: cfgFrom }).catch(function () {});
+                                notifyWebhook('provider-switch', summary, { name: cfgName, previousName: cfgFrom }).catch(function () { });
                             }
                             break;
                         case 'get-webhook-config':
@@ -10547,6 +11107,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'convert-session':
                             result = await convertSessionToDerived(params || {});
                             break;
+                        case 'import-derived-session':
+                            result = await importDerivedSessionToNative(params || {});
+                            break;
                         case 'delete-session':
                             result = await deleteSessionData(params || {});
                             break;
@@ -10638,6 +11201,21 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'local-bridge-get-excluded':
                             result = getLocalBridgeExcludedProviders();
                             break;
+                        case 'claude-local-bridge-toggle':
+                            result = toggleClaudeLocalBridge(params || {});
+                            break;
+                        case 'claude-local-bridge-status':
+                            result = getClaudeLocalBridgeStatus();
+                            break;
+                        case 'claude-local-bridge-set-excluded':
+                            result = setClaudeLocalBridgeExcludedProviders(params || {});
+                            break;
+                        case 'claude-local-bridge-get-excluded':
+                            result = getClaudeLocalBridgeExcludedProviders();
+                            break;
+                        case 'claude-local-bridge-sync-providers':
+                            result = syncClaudeBridgeProviders(params || {});
+                            break;
                         case 'workflow-list':
                             result = listWorkflowDefinitions();
                             break;
@@ -10725,7 +11303,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                     }
                                     const taskId = typeof params.taskId === 'string' && params.taskId.trim() ? params.taskId.trim() : createTaskId();
                                     const runId = createTaskRunId();
-                                    runTaskPlanInternal(plan, { taskId, runId }).catch(() => {});
+                                    runTaskPlanInternal(plan, { taskId, runId }).catch(() => { });
                                     result = {
                                         ok: true,
                                         started: true,
@@ -10814,15 +11392,18 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                     res.end(errorBody, 'utf-8');
                 }
             });
-        } else if (requestPath === '/web-ui') {
-            try {
-                const html = readBundledWebUiHtml(htmlPath);
-                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end(html);
-            } catch (error) {
-                writeWebUiAssetError(res, requestPath, error);
-            }
+        } else if (requestPath === '/web-ui/index.html') {
+            const rawUrl = typeof req.url === 'string' ? req.url : '';
+            const queryIndex = rawUrl.indexOf('?');
+            const query = queryIndex >= 0 ? rawUrl.slice(queryIndex) : '';
+            res.writeHead(302, {
+                'Location': `/${query}`,
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-store, max-age=0'
+            });
+            res.end('Found');
         } else if (requestPath.startsWith('/web-ui/')) {
+            // Skip the /web-ui/ directory itself, which is handled above
             const normalized = path.normalize(requestPath).replace(/^([\\.\\/])+/, '');
             const filePath = path.join(__dirname, normalized);
             if (!isPathInside(filePath, webDir)) {
@@ -10831,11 +11412,22 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                 return;
             }
             const relativePath = path.relative(webDir, filePath).replace(/\\/g, '/');
+
+            // Empty relativePath means direct /web-ui/ access - return 404
+            if (relativePath === '' || relativePath === 'index.html') {
+                res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end('Not Found');
+                return;
+            }
+
             const dynamicAsset = PUBLIC_WEB_UI_DYNAMIC_ASSETS.get(relativePath);
             if (dynamicAsset) {
                 try {
                     const assetBody = dynamicAsset.reader(filePath);
-                    res.writeHead(200, { 'Content-Type': dynamicAsset.mime });
+                    res.writeHead(200, {
+                        'Content-Type': dynamicAsset.mime,
+                        'Cache-Control': 'no-store, max-age=0'
+                    });
                     res.end(assetBody, 'utf-8');
                 } catch (error) {
                     writeWebUiAssetError(res, requestPath, error);
@@ -10857,12 +11449,15 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                 ? 'application/javascript; charset=utf-8'
                 : ext === '.html'
                     ? 'text/html; charset=utf-8'
-                : ext === '.css'
-                    ? 'text/css; charset=utf-8'
-                    : ext === '.json'
-                        ? 'application/json; charset=utf-8'
-                        : 'application/octet-stream';
-            res.writeHead(200, { 'Content-Type': mime });
+                    : ext === '.css'
+                        ? 'text/css; charset=utf-8'
+                        : ext === '.json'
+                            ? 'application/json; charset=utf-8'
+                            : 'application/octet-stream';
+            res.writeHead(200, {
+                'Content-Type': mime,
+                'Cache-Control': 'no-store, max-age=0'
+            });
             fs.createReadStream(filePath).pipe(res);
         } else if (requestPath.startsWith('/download/')) {
             const fileName = requestPath.slice('/download/'.length);
@@ -10920,18 +11515,30 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                 ? 'application/javascript; charset=utf-8'
                 : ext === '.html'
                     ? 'text/html; charset=utf-8'
-                : ext === '.json'
-                    ? 'application/json; charset=utf-8'
-                    : 'application/octet-stream';
-            res.writeHead(200, { 'Content-Type': mime });
+                    : ext === '.json'
+                        ? 'application/json; charset=utf-8'
+                        : 'application/octet-stream';
+            res.writeHead(200, {
+                'Content-Type': mime,
+                'Cache-Control': 'no-store, max-age=0'
+            });
             fs.createReadStream(filePath).pipe(res);
         } else {
-            try {
-                const html = readBundledWebUiHtml(htmlPath);
-                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end(html);
-            } catch (error) {
-                writeWebUiAssetError(res, requestPath, error);
+            // Only serve HTML for root path; /web-ui returns 404.
+            if (requestPath === '/') {
+                try {
+                    const html = readBundledWebUiHtml(htmlPath);
+                    res.writeHead(200, {
+                        'Content-Type': 'text/html; charset=utf-8',
+                        'Cache-Control': 'no-store, max-age=0'
+                    });
+                    res.end(html);
+                } catch (error) {
+                    writeWebUiAssetError(res, requestPath, error);
+                }
+            } else {
+                res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end('Not Found');
             }
         }
     });
@@ -10983,7 +11590,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             if (done) return;
             done = true;
             for (const socket of connections) {
-                try { socket.destroy(); } catch (_) {}
+                try { socket.destroy(); } catch (_) { }
             }
             connections.clear();
             resolve();
@@ -11099,7 +11706,7 @@ function cmdStart(options = {}) {
 
     // 禁止前端变更侦测与自动重启：避免终端输出噪音与访问时短暂 Connection Refused。
     // 如需热重启，请由开发者自行使用外部 watcher / nodemon 等工具。
-    const stopWatch = () => {};
+    const stopWatch = () => { };
 
     const handleExit = () => {
         stopWatch();
@@ -12401,8 +13008,9 @@ async function runProxyCommandWithQueuedFollowUps(selectedBin, finalArgs = [], q
 
 async function runProxyCommand(displayName, binNames, args = [], installTip = '', runtimeOptions = {}) {
     const extraArgs = Array.isArray(args) ? args.filter(arg => arg !== undefined) : [];
-    const hasYolo = extraArgs.includes('--yolo');
-    const finalArgs = hasYolo ? extraArgs : ['--yolo', ...extraArgs];
+    const autoFlag = typeof runtimeOptions.autoFlag === 'string' && runtimeOptions.autoFlag ? runtimeOptions.autoFlag : '--yolo';
+    const hasAutoFlag = extraArgs.includes(autoFlag);
+    const finalArgs = hasAutoFlag ? extraArgs : [autoFlag, ...extraArgs];
 
     const names = Array.isArray(binNames) ? binNames : [binNames];
     let selectedBin = names[0];
@@ -13082,7 +13690,7 @@ function listWorkflowRunRecords(limit = 20) {
             if (parsed.length >= max) {
                 break;
             }
-        } catch (_) {}
+        } catch (_) { }
     }
     return parsed;
 }
@@ -13181,7 +13789,7 @@ async function runWorkflowById(workflowId, input = {}, options = {}) {
     };
     try {
         appendWorkflowRunRecord(record);
-    } catch (_) {}
+    } catch (_) { }
 
     return {
         success: execution.success === true,
@@ -13379,10 +13987,10 @@ function withTaskQueueLock(fn) {
                 if (ageMs > 5000) {
                     try {
                         fs.unlinkSync(lockPath);
-                    } catch (_) {}
+                    } catch (_) { }
                     lockFd = fs.openSync(lockPath, 'wx', 0o600);
                 }
-            } catch (_) {}
+            } catch (_) { }
         }
     }
     if (!lockFd) {
@@ -13393,10 +14001,10 @@ function withTaskQueueLock(fn) {
     } finally {
         try {
             fs.closeSync(lockFd);
-        } catch (_) {}
+        } catch (_) { }
         try {
             fs.unlinkSync(lockPath);
-        } catch (_) {}
+        } catch (_) { }
     }
 }
 
@@ -13565,7 +14173,7 @@ function writeTaskRunArtifacts(detail = {}) {
     const combined = `${runLogText}${nodeLogText ? `\n\n${nodeLogText}` : ''}`.trim();
     try {
         fs.writeFileSync(path.join(dir, 'logs.txt'), combined, { encoding: 'utf-8', mode: 0o600 });
-    } catch (_) {}
+    } catch (_) { }
 }
 
 async function notifyAutomationOnTaskRun(detail = {}) {
@@ -13590,34 +14198,34 @@ function startAutomationScheduler() {
         }
         tickInFlight = true;
         try {
-        const cfg = readAutomationConfig(AUTOMATION_CONFIG_FILE, { env: process.env });
-        if (!cfg.ok || !cfg.config) {
-            return;
-        }
-        const schedules = Array.isArray(cfg.config.schedules) ? cfg.config.schedules : [];
-        if (schedules.length === 0) {
-            return;
-        }
-        const now = new Date();
-        const tickKey = now.toISOString().slice(0, 16);
-        for (const schedule of schedules) {
-            if (!schedule || schedule.enabled === false) continue;
-            if (!schedule.id || !schedule.cron) continue;
-            if (!isCronMatch(schedule.cron, now)) continue;
-            if (lastTicks.get(schedule.id) === tickKey) continue;
-            lastTicks.set(schedule.id, tickKey);
-            const action = schedule.action && typeof schedule.action === 'object' ? schedule.action : {};
-            const actionType = typeof action.type === 'string' ? action.type.trim().toLowerCase() : '';
-            if (actionType !== 'task.queue.add') continue;
-            const taskPayload = action.task && typeof action.task === 'object' ? action.task : {};
-            try {
-                const enqueue = addTaskToQueue(taskPayload);
-                if (enqueue && enqueue.error) continue;
-                if (action.startQueue === true) {
-                    await startTaskQueueProcessing({ taskId: '', detach: true });
-                }
-            } catch (_) {}
-        }
+            const cfg = readAutomationConfig(AUTOMATION_CONFIG_FILE, { env: process.env });
+            if (!cfg.ok || !cfg.config) {
+                return;
+            }
+            const schedules = Array.isArray(cfg.config.schedules) ? cfg.config.schedules : [];
+            if (schedules.length === 0) {
+                return;
+            }
+            const now = new Date();
+            const tickKey = now.toISOString().slice(0, 16);
+            for (const schedule of schedules) {
+                if (!schedule || schedule.enabled === false) continue;
+                if (!schedule.id || !schedule.cron) continue;
+                if (!isCronMatch(schedule.cron, now)) continue;
+                if (lastTicks.get(schedule.id) === tickKey) continue;
+                lastTicks.set(schedule.id, tickKey);
+                const action = schedule.action && typeof schedule.action === 'object' ? schedule.action : {};
+                const actionType = typeof action.type === 'string' ? action.type.trim().toLowerCase() : '';
+                if (actionType !== 'task.queue.add') continue;
+                const taskPayload = action.task && typeof action.task === 'object' ? action.task : {};
+                try {
+                    const enqueue = addTaskToQueue(taskPayload);
+                    if (enqueue && enqueue.error) continue;
+                    if (action.startQueue === true) {
+                        await startTaskQueueProcessing({ taskId: '', detach: true });
+                    }
+                } catch (_) { }
+            }
         } finally {
             tickInFlight = false;
         }
@@ -13779,7 +14387,7 @@ async function runCodexExecTaskNode(node, context = {}) {
             if (!sessionId) {
                 sessionId = findCodexSessionId(payload);
             }
-        } catch (_) {}
+        } catch (_) { }
     };
     const captureLines = (bucket, text, stream) => {
         const currentPartial = stream === 'stderr' ? stderrPartial : stdoutPartial;
@@ -13814,7 +14422,7 @@ async function runCodexExecTaskNode(node, context = {}) {
             context.registerAbort(() => {
                 try {
                     child.kill('SIGTERM');
-                } catch (_) {}
+                } catch (_) { }
             });
         }
         child.stdout.on('data', (chunk) => {
@@ -13839,7 +14447,7 @@ async function runCodexExecTaskNode(node, context = {}) {
         } else {
             fs.rmdirSync(tempDir, { recursive: true });
         }
-    } catch (_) {}
+    } catch (_) { }
     const success = exit.code === 0;
     const errorMessage = success
         ? ''
@@ -13947,7 +14555,7 @@ async function runTaskPlanInternal(plan, options = {}) {
         abort() {
             try {
                 controller.abort();
-            } catch (_) {}
+            } catch (_) { }
         }
     });
     if (options.queueItem) {
@@ -13961,7 +14569,7 @@ async function runTaskPlanInternal(plan, options = {}) {
             updatedAt: toIsoTime(Date.now()),
             plan
         });
-        if (queued && queued.error) {}
+        if (queued && queued.error) { }
     }
     try {
         const run = await executeTaskPlan(plan, {
@@ -13997,7 +14605,7 @@ async function runTaskPlanInternal(plan, options = {}) {
                         updatedAt: toIsoTime(Date.now()),
                         plan
                     });
-                    if (queued && queued.error) {}
+                    if (queued && queued.error) { }
                 }
             }
         });
@@ -14012,7 +14620,7 @@ async function runTaskPlanInternal(plan, options = {}) {
         writeTaskRunArtifacts(detail);
         try {
             await notifyAutomationOnTaskRun(detail);
-        } catch (_) {}
+        } catch (_) { }
         if (options.queueItem) {
             const queued = upsertTaskQueueItem({
                 ...options.queueItem,
@@ -14026,7 +14634,7 @@ async function runTaskPlanInternal(plan, options = {}) {
                 updatedAt: toIsoTime(Date.now()),
                 plan
             });
-            if (queued && queued.error) {}
+            if (queued && queued.error) { }
         }
         return detail;
     } finally {
@@ -14338,7 +14946,7 @@ function readDetachedTaskWorkerPayload(payloadPath = '') {
     const parsed = readJsonObjectFromFile(filePath, {});
     try {
         fs.unlinkSync(filePath);
-    } catch (_) {}
+    } catch (_) { }
     if (!parsed.ok || !parsed.exists) {
         return { error: parsed.error || 'task worker payload not found' };
     }
@@ -14352,7 +14960,7 @@ function spawnDetachedTaskWorker(payload = {}) {
         detached: true,
         windowsHide: true
     });
-    child.on('error', () => {});
+    child.on('error', () => { });
     if (typeof child.unref === 'function') {
         child.unref();
     }
@@ -14409,7 +15017,7 @@ function readTaskQueueWorkerState() {
     if (!isTaskWorkerProcessId(state.pid)) {
         try {
             fs.unlinkSync(TASK_QUEUE_WORKER_FILE);
-        } catch (_) {}
+        } catch (_) { }
         return null;
     }
     return state;
@@ -14427,7 +15035,7 @@ function writeTaskQueueWorkerState(state = {}) {
 function clearTaskQueueWorkerState() {
     try {
         fs.unlinkSync(TASK_QUEUE_WORKER_FILE);
-    } catch (_) {}
+    } catch (_) { }
 }
 
 function findRunningTaskRunDetailByTaskId(taskId = '') {
@@ -15103,7 +15711,7 @@ function createMcpResources() {
                     pathFilter = parsed.searchParams.get('pathFilter') || '';
                     roleFilter = parsed.searchParams.get('roleFilter') || '';
                     timeRangePreset = parsed.searchParams.get('timeRangePreset') || '';
-                } catch (_) {}
+                } catch (_) { }
                 const normalizedSource = normalizeMcpSource(source);
                 if (normalizedSource === null) {
                     return {
@@ -15163,7 +15771,7 @@ function createMcpResources() {
                             limit = parsedLimit;
                         }
                     }
-                } catch (_) {}
+                } catch (_) { }
                 const payload = {
                     runs: listWorkflowRunRecords(limit),
                     limit: Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 20
@@ -15345,6 +15953,7 @@ function printMainHelp() {
     console.log('  codexmate use <模型>       切换模型');
     console.log('  codexmate add <名称> <URL> [密钥] [--bridge <openai>]');
     console.log('  codexmate delete <名称>    删除提供商');
+    console.log('  codexmate claude            等同于 claude --dangerously-skip-permissions');
     console.log('  codexmate claude <BaseURL> <API密钥> [模型]  写入 Claude Code 配置');
     console.log('  codexmate auth <list|import|switch|delete|status>  认证管理');
     console.log('  codexmate add-model <模型> 添加模型');
@@ -15352,6 +15961,7 @@ function printMainHelp() {
     console.log('  codexmate workflow <list|get|validate|run|runs>  MCP 工作流中心');
     console.log('  codexmate task <plan|run|runs|queue|retry|cancel|logs>  本地任务编排');
     console.log('  codexmate run [--host <HOST>] [--no-browser]    启动 Web 界面');
+    console.log('  codexmate update [--check] 检查并快速更新工具');
     console.log('  codexmate codex [参数...] [--follow-up <文本>|--queued-follow-up <文本> 可重复]  等同于 codex --yolo');
     console.log('    注: follow-up 自动排队仅支持 linux/android/netbsd/openbsd/darwin/freebsd 且 stdin 必须是 TTY，其他平台会报错');
     console.log('  codexmate qwen [参数...]   等同于 qwen --yolo');
@@ -15432,7 +16042,10 @@ async function main() {
             break;
         }
         case 'delete': cmdDelete(args[1]); break;
-        case 'claude': cmdClaude(args[1], args[2], args[3]); break;
+        case 'claude': {
+            const exitCode = await cmdClaude(args.slice(1));
+            process.exit(exitCode);
+        }
         case 'add-model': cmdAddModel(args[1]); break;
         case 'delete-model': cmdDeleteModel(args[1]); break;
         case 'auth': cmdAuth(args.slice(1)); break;
@@ -15440,19 +16053,17 @@ async function main() {
         case 'workflow': await cmdWorkflow(args.slice(1)); break;
         case 'task': await cmdTask(args.slice(1)); break;
         case 'run': cmdStart(parseStartOptions(args.slice(1))); break;
+        case 'update': await cmdToolUpdate(args.slice(1)); break;
         case 'start':
             console.error('错误: 命令已更名为 "run"，请使用: codexmate run');
             process.exit(1);
-            break;
         case 'codex': {
             const exitCode = await cmdCodex(args.slice(1));
             process.exit(exitCode);
-            break;
         }
         case 'qwen': {
             const exitCode = await cmdQwen(args.slice(1));
             process.exit(exitCode);
-            break;
         }
         case 'mcp': await cmdMcp(args.slice(1)); break;
         case 'export-session': await cmdExportSession(args.slice(1)); break;

@@ -20,6 +20,14 @@ test('isResumeCommandAvailable supports codex and codebuddy with sessionId', () 
     assert.strictEqual(methods.isResumeCommandAvailable({ source: 'claude', sessionId: '', filePath: '/home/user/.claude/projects/demo/sess-3.jsonl' }), true);
 });
 
+test('getResumeCommandTitle returns copy resume label', () => {
+    const methods = createSessionActionMethods();
+    assert.strictEqual(
+        methods.getResumeCommandTitle.call(methods, { source: 'claude', sessionId: 'sess-2' }),
+        'Copy resume command'
+    );
+});
+
 test('buildResumeCommand generates codex --yolo resume, codebuddy -r, gemini -r, and claude --dangerously-skip-permissions -r', () => {
     const methods = createSessionActionMethods();
     const ctx = { ...methods, quoteShellArg: methods.quoteShellArg };

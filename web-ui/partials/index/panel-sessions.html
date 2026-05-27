@@ -22,26 +22,27 @@
                 </div>
                 <div v-else>
                 <div class="selector-section">
-                    <div class="selector-header">
+                    <div class="selector-header" style="display:none">
                         <span class="selector-title">{{ t('sessions.sourceTitle') }}</span>
-                        <div class="selector-actions sessions-header-actions">
-                            <button class="btn-tool btn-tool-compact" @click="loadSessions({ forceRefresh: true })" :disabled="sessionsLoading">
-                                {{ sessionsLoading ? t('sessions.refreshing') : t('sessions.refresh') }}
-                            </button>
-                            <button class="btn-tool btn-tool-compact" type="button" @click="switchMainTab('dashboard')">
-                                {{ t('dashboard.doctor.title') }}
-                            </button>
-                        </div>
+                        <div class="selector-actions sessions-header-actions"></div>
                     </div>
                     <div class="session-toolbar">
                         <div class="session-toolbar-group session-toolbar-primary">
-                            <select class="session-source-select" v-model="sessionFilterSource" @change="onSessionSourceChange($event)" :disabled="sessionsLoading">
-                                <option value="all">{{ t('common.all') }}</option>
-                                <option value="codex">{{ t('sessions.source.codex') }}</option>
-                                <option value="claude">{{ t('sessions.source.claudeCode') }}</option>
-                                <option value="gemini">{{ t('sessions.source.gemini') }}</option>
-                                <option value="codebuddy">{{ t('sessions.source.codebuddy') }}</option>
-                            </select>
+                            <div class="session-source-pills" role="radiogroup" aria-label="Session source">
+                                <button
+                                    v-for="src in sessionSourceOptions"
+                                    :key="src.value"
+                                    :class="['session-source-pill', { active: sessionFilterSource === src.value }]"
+                                    :data-source="src.value"
+                                    @click="setSessionSource(src.value)"
+                                    :disabled="sessionsLoading"
+                                    :aria-pressed="sessionFilterSource === src.value"
+                                    role="radio"
+                                    type="button">
+                                    <span class="session-source-pill-dot"></span>
+                                    <span class="session-source-pill-label">{{ src.label }}</span>
+                                </button>
+                            </div>
                             <select
                                 class="session-path-select"
                                 v-model="sessionPathFilter"
@@ -89,6 +90,12 @@
                                 <option value="time">{{ t('sessions.sort.time') }}</option>
                                 <option value="hot">{{ t('sessions.sort.hot') }}</option>
                             </select>
+                            <button class="btn-tool btn-tool-compact" @click="loadSessions({ forceRefresh: true })" :disabled="sessionsLoading" :title="t('sessions.refresh')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                            </button>
+                            <button class="btn-tool btn-tool-compact" type="button" @click="switchMainTab('dashboard')" :title="t('dashboard.doctor.title')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            </button>
                             <button class="btn-tool btn-tool-compact" type="button" @click="copySessionsFilterShareUrl" :disabled="sessionsLoading">
                                 {{ t('sessions.filters.copyLink') }}
                             </button>
@@ -129,7 +136,7 @@
                         <div
                             v-for="session in visibleSessionsList"
                             :key="session.source + '-' + session.sessionId + '-' + session.filePath"
-                            v-memo="[activeSessionExportKey === getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, isSessionPinned(session), sessionsLoading]"
+                            v-memo="[activeSessionExportKey === getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, isSessionPinned(session), sessionsLoading, session.match && session.match.count]"
                             :class="[
                                 'session-item',
                                 {
@@ -147,6 +154,13 @@
                                 <div class="session-item-main">
                                     <div class="session-item-title">{{ session.title || session.sessionId }}</div>
                                     <span class="session-count-badge">{{ session.messageCount == null ? '...' : session.messageCount }}</span>
+                                    <span v-if="session.match && session.match.hit" class="session-match-badge">{{ session.match.count }}</span>
+                                    <span
+                                        v-if="sessionContextUtilization[getSessionExportKey(session)] && sessionContextUtilization[getSessionExportKey(session)].percent > 0"
+                                        :class="['session-context-badge', 'session-context-' + sessionContextUtilization[getSessionExportKey(session)].level]"
+                                        :title="'Context: ' + sessionContextUtilization[getSessionExportKey(session)].percent + '%'">
+                                        {{ sessionContextUtilization[getSessionExportKey(session)].percent }}%
+                                    </span>
                                 </div>
                                 <div class="session-item-actions">
                                     <button
@@ -168,8 +182,8 @@
                                         class="session-item-copy"
                                         @click.stop="copyResumeCommand(session)"
                                         :disabled="sessionsLoading"
-                                        :aria-label="t('sessions.copyResume')"
-                                        :title="t('sessions.copyResume')">
+                                        :aria-label="getResumeCommandTitle(session)"
+                                        :title="getResumeCommandTitle(session)">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <rect x="8" y="8" width="12" height="12" rx="2"></rect>
                                             <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
@@ -178,10 +192,13 @@
                                 </div>
                             </div>
                             <div class="session-item-meta">
-                                <span class="session-source">{{ session.sourceLabel }}</span>
-                                <span class="session-item-time">{{ session.updatedAt || t('sessions.unknownTime') }}</span>
+                                <span class="session-source" :data-source="session.source">{{ session.sourceLabel }}</span>
+                                <span class="session-item-time">{{ session.updatedAtLabel || session.updatedAt || t('sessions.unknownTime') }}</span>
                                 <span v-if="getSessionHotLabel(session)" class="session-item-hot">{{ getSessionHotLabel(session) }}</span>
                                 <span v-if="session.cwd" class="session-item-cwd session-item-sub">{{ session.cwd }}</span>
+                                <div v-if="session.match && session.match.snippets && session.match.snippets.length" class="session-match-snippets">
+                                    <div v-for="(snip, si) in session.match.snippets.slice(0, 2)" :key="si" class="session-match-snippet">{{ snip }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -194,8 +211,8 @@
                                     <div>
                                         <div class="session-preview-title">{{ activeSession.title || activeSession.sessionId }}</div>
                                         <div class="session-preview-meta">
-                                            <span class="session-preview-meta-item">{{ activeSession.sourceLabel }}</span>
-                                            <span class="session-preview-meta-item">{{ activeSession.updatedAt || t('sessions.unknownTime') }}</span>
+                                            <span class="session-preview-meta-item session-source" :data-source="activeSession.source">{{ activeSession.sourceLabel }}</span>
+                                            <span class="session-preview-meta-item">{{ activeSession.updatedAtLabel || activeSession.updatedAt || t('sessions.unknownTime') }}</span>
                                         </div>
                                         <div class="session-preview-meta" v-if="activeSession.cwd">
                                             <span class="session-preview-meta-item">{{ activeSession.cwd }}</span>
@@ -219,16 +236,10 @@
                                             {{ (activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export') }}
                                         </button>
                                         <button
-                                            class="btn-session-export"
-                                            @click="convertSession(activeSession)"
-                                            :disabled="true">
-                                            {{ (activeSession && sessionConverting[getSessionExportKey(activeSession)]) ? t('sessions.preview.converting') : t('sessions.preview.convert') }}
-                                        </button>
-                                        <button
                                             class="btn-session-open"
-                                            @click="openSessionStandalone(activeSession)"
+                                            @click="copySessionLink(activeSession)"
                                             :disabled="!activeSession">
-                                            {{ t('sessions.preview.openStandalone') }}
+                                            {{ t('sessions.preview.copyLink') }}
                                         </button>
                                     </div>
                                 </div>
@@ -274,7 +285,7 @@
                                                     <span class="session-msg-time">{{ msg.timestamp || '' }}</span>
                                                 </div>
                                             </div>
-                                            <div class="session-msg-content">{{ msg.text || '' }}</div>
+                                            <div class="session-msg-content" v-html="highlightQueryText(msg.text) || ''"></div>
                                         </div>
                                     </div>
                                 </div>

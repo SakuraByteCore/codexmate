@@ -34,31 +34,26 @@ test('buildSessionStandaloneUrl returns empty when neither origin nor apiBase is
     assert.strictEqual(url, '');
 });
 
-test('openSessionStandalone shows an error instead of opening an undefined standalone url', () => {
+test('copySessionLink shows an error when url cannot be built', async () => {
     const methods = createSessionActionMethods({ apiBase: '' });
     const context = {
         ...methods,
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
-        }
-    };
-    let openedUrl = '';
-    const fakeWindow = {
-        location: {
-            origin: 'null'
         },
-        open(url) {
-            openedUrl = url;
-        }
+        fallbackCopyText() { return true; }
     };
 
-    withWindow(fakeWindow, () => methods.openSessionStandalone.call(context, {
+    await withWindow({
+        location: {
+            origin: 'null'
+        }
+    }, () => methods.copySessionLink.call(context, {
         source: 'codex',
         sessionId: 'session-1'
     }));
 
-    assert.strictEqual(openedUrl, '');
     assert.deepStrictEqual(context.shownMessages, [{
         message: '无法生成链接',
         type: 'error'

@@ -85,11 +85,21 @@ textarea:focus-visible {
     :root {
         --side-rail-width: min(188px, 46vw);
     }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
     .app-shell {
         grid-template-columns: 1fr;
-        min-height: auto;
+        flex: 1 1 auto;
+        min-height: 0;
         height: auto;
-        overflow: visible;
+        overflow: hidden;
     }
 
     .side-rail {
@@ -102,26 +112,34 @@ textarea:focus-visible {
 
     .top-tabs {
         display: flex !important;
+        flex: 0 0 auto;
         flex-wrap: nowrap;
         overflow-x: auto;
         overflow-y: hidden;
         padding-bottom: 2px;
         margin-left: -2px;
         margin-right: -2px;
+        background: rgba(255, 248, 241, 0.96);
+        position: relative;
+        z-index: 30;
     }
 
     .main-panel {
         padding: 0 12px 16px;
-        height: auto;
-        overflow-y: visible;
+        height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .main-panel-topbar {
-        position: static;
+        position: sticky;
+        top: 0;
+        z-index: 20;
         margin: 0 0 10px;
-        padding: 0;
-        background: transparent;
-        backdrop-filter: none;
+        padding: 0 0 8px;
+        background: rgba(255, 248, 241, 0.96);
+        backdrop-filter: blur(14px) saturate(130%);
     }
 
     .panel-header-refined {
@@ -155,8 +173,27 @@ textarea:focus-visible {
     }
 
     .status-strip {
-        grid-template-columns: 1fr;
         gap: 12px;
+    }
+
+    .main-panel-topbar .status-strip {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .main-panel-topbar .status-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .main-panel-topbar .status-chip {
+        flex: 0 0 auto;
+        min-width: max-content;
     }
 
     .market-grid {
@@ -212,6 +249,10 @@ textarea:focus-visible {
         min-width: 100%;
     }
 
+    .main-panel-topbar .status-chip {
+        min-width: max-content;
+    }
+
     .btn-add,
     .btn-tool,
     .card-action-btn,
@@ -233,9 +274,9 @@ textarea:focus-visible {
     }
 
     .session-item {
-        min-height: 108px;
-        height: auto;
-        contain-intrinsic-size: 108px;
+        min-height: 79px;
+        height: 79px;
+        contain-intrinsic-size: 79px;
         padding: 12px 14px;
     }
 
@@ -284,81 +325,19 @@ textarea:focus-visible {
         align-items: center;
     }
 
-    .trash-item.session-item {
-        min-height: auto;
-        height: auto;
-        contain-intrinsic-size: auto;
-    }
-
-    .trash-item-header {
+    .trash-item-body {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
-    }
-
-    .trash-item-mainline {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-
-    .trash-item-side {
-        width: 100%;
-        min-width: 0;
-        align-items: stretch;
-        gap: 10px;
-        padding-top: 8px;
-        border-top: 1px dashed rgba(216, 201, 184, 0.55);
     }
 
     .trash-item-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        justify-content: flex-start;
-        width: 100%;
+        opacity: 1;
+        justify-content: flex-end;
     }
 
-    .trash-item-actions .btn-mini {
-        width: 100%;
-        height: 44px;
-        min-height: 44px;
-        padding: 0 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        white-space: nowrap;
-    }
-
-    .trash-item .session-count-badge {
-        align-self: flex-start;
-        margin-top: 0;
-    }
-
-    .trash-item-title {
-        -webkit-line-clamp: 3;
-        max-height: none;
-        white-space: normal;
-        text-overflow: clip;
-        overflow: hidden;
-    }
-
-    .trash-item-meta {
-        margin-top: 6px;
-        margin-bottom: 0;
-        gap: 6px;
-        align-items: center;
-    }
-
-    .trash-item-time {
-        padding-top: 2px;
-        line-height: 1.35;
-        text-align: right;
-    }
-
-    .trash-item-path {
-        grid-template-columns: 1fr;
-        gap: 4px;
+    .trash-item-cwd {
+        max-width: 140px;
     }
 
     .card {

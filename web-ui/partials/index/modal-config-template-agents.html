@@ -1,6 +1,11 @@
         <div v-if="showConfigTemplateModal" class="modal-overlay" @click.self="!configTemplateApplying && closeConfigTemplateModal()">
             <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="config-template-modal-title">
-                <div class="modal-title" id="config-template-modal-title">{{ t('modal.configTemplate.title') }}</div>
+                <div class="modal-header modal-editor-header">
+                    <div class="modal-title" id="config-template-modal-title">{{ t('modal.configTemplate.title') }}</div>
+                    <div class="modal-header-actions">
+                        <button class="btn-mini btn-modal-copy" @click="pasteConfigTemplateContent" :disabled="configTemplateApplying || configTemplateDiffLoading || configTemplateDiffVisible">{{ t('common.paste') }}</button>
+                    </div>
+                </div>
 
                 <div class="form-group">
                     <label class="form-label">{{ t('modal.configTemplate.label') }}</label>
@@ -90,6 +95,12 @@
                             @click="copyAgentsContent"
                             :disabled="agentsLoading">
                             {{ t('modal.agents.copy') }}
+                        </button>
+                        <button
+                            class="btn-mini btn-modal-copy"
+                            @click="pasteAgentsContent"
+                            :disabled="agentsLoading || agentsSaving || agentsDiffVisible">
+                            {{ t('common.paste') }}
                         </button>
                     </div>
                 </div>

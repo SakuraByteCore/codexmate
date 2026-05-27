@@ -55,6 +55,12 @@ function maskKeyLocal(key) {
     return key.substring(0, 4) + '...' + key.substring(key.length - 4);
 }
 
+function maskKeyForEdit(key) {
+    if (!key) return '';
+    if (key.length <= 12) return key.substring(0, 4) + '...' + key.substring(key.length - 4);
+    return key.substring(0, 8) + '...' + key.substring(key.length - 4);
+}
+
 function getProviderValidationForContext(vm, mode = 'add') {
     const draft = mode === 'edit' ? vm.editingProvider : vm.newProvider;
     const editingName = mode === 'edit' ? normalizeText(draft && draft.name) : '';
@@ -286,11 +292,15 @@ export function createProvidersMethods(options = {}) {
         },
 
         openCloneProviderModal(provider) {
+            const isTransform = !!(provider.codexmate_bridge || '').trim() || /\/bridge\/openai\//.test(provider.url || '');
+            const cloneUrl = isTransform && provider.upstreamUrl
+                ? normalizeProviderUrl(provider.upstreamUrl)
+                : normalizeProviderUrl(provider.url || '');
             this.newProvider = {
                 name: '',
-                url: normalizeProviderUrl(provider.url || ''),
+                url: cloneUrl,
                 key: '',
-                useTransform: !!(provider.codexmate_bridge || '').trim() || /\/bridge\/openai\//.test(provider.url || '')
+                useTransform: isTransform
             };
             this.showAddModal = true;
         },
@@ -312,14 +322,38 @@ export function createProvidersMethods(options = {}) {
             this.editingProvider = {
                 name: provider.name,
                 url: normalizeProviderUrl(provider.url || ''),
-                key: '',
+                key: maskKeyForEdit(provider.key || ''),
                 readOnly: !!provider.readOnly,
                 nonEditable: typeof provider.nonEditable === 'boolean'
                     ? provider.nonEditable
                     : this.isNonDeletableProvider(provider),
                 useTransform: isTransformProvider
             };
+            this._editProviderOriginalKey = '';
+            this._editProviderRealKeyLoaded = false;
+            this.showEditProviderKey = false;
             this.showEditModal = true;
+
+            // 后台加载真实密钥
+            try {
+                const res = await api('get-provider-key', { name: provider.name });
+                if (
+                    this._openEditModalRequestId === requestId
+                    && this.showEditModal
+                    && this.editingProvider
+                    && this.editingProvider.name === provider.name
+                    && res && !res.error
+                ) {
+                    this._editProviderOriginalKey = typeof res.key === 'string' ? res.key : '';
+                    this._editProviderRealKeyLoaded = true;
+                    // 如果用户未修改输入框，替换为真实密钥
+                    if (this.editingProvider.key === maskKeyForEdit(provider.key || '')) {
+                        this.editingProvider.key = this._editProviderOriginalKey;
+                    }
+                }
+            } catch (_) {
+                // ignore
+            }
 
             if (isTransformProvider) {
                 try {
@@ -357,8 +391,12 @@ export function createProvidersMethods(options = {}) {
             if (this.editingProvider && this.editingProvider.useTransform) {
                 params.useTransform = true;
             }
-            if (typeof this.editingProvider.key === 'string' && this.editingProvider.key.trim()) {
-                params.key = this.editingProvider.key;
+            if (this._editProviderRealKeyLoaded) {
+                const currentKey = typeof this.editingProvider.key === 'string' ? this.editingProvider.key : '';
+                const originalKey = typeof this._editProviderOriginalKey === 'string' ? this._editProviderOriginalKey : '';
+                if (currentKey !== originalKey) {
+                    params.key = currentKey;
+                }
             }
             try {
                 const res = await api('update-provider', params);
@@ -370,11 +408,12 @@ export function createProvidersMethods(options = {}) {
                 // 本地更新：更新列表中对应 provider 的 url 和 key
                 this.providersList = this.providersList.map(p => {
                     if (p.name === validation.name) {
+                        const keyUpdated = typeof params.key === 'string';
                         return {
                             ...p,
                             url: validation.url,
-                            key: params.key ? maskKeyLocal(params.key) : p.key,
-                            hasKey: params.key ? true : p.hasKey
+                            key: keyUpdated ? maskKeyLocal(params.key) : p.key,
+                            hasKey: keyUpdated ? !!params.key : p.hasKey
                         };
                     }
                     return p;
@@ -389,7 +428,14 @@ export function createProvidersMethods(options = {}) {
 
         closeEditModal() {
             this.showEditModal = false;
+            this.showEditProviderKey = false;
+            this._editProviderOriginalKey = '';
+            this._editProviderRealKeyLoaded = false;
             this.editingProvider = { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false };
+        },
+
+        toggleEditProviderKey() {
+            this.showEditProviderKey = !this.showEditProviderKey;
         },
 
         async resetConfig() {

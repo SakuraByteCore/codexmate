@@ -621,7 +621,7 @@ test('loadSessionTrashCount trusts a lower authoritative backend totalCount duri
 
 test('session trash template keeps source badges neutral and shares the busy guard between actions', () => {
     const trashMeta = indexHtmlSource.match(
-        /<div class="trash-item-meta session-item-meta">[\s\S]*?<span class="session-source">{{ item\.sourceLabel }}<\/span>[\s\S]*?<\/div>/
+        /<div class="trash-item-meta">[\s\S]*?<span class="session-source" :data-source="item.source">{{ item.sourceLabel }}<\/span>[\s\S]*?<\/div>/
     );
     assert(trashMeta, 'trash item source badge should exist');
     assert.doesNotMatch(trashMeta[0], /item\.source === 'claude' \? 'configured' : 'empty'/);
@@ -633,9 +633,9 @@ test('session trash template keeps source badges neutral and shares the busy gua
 test('session trash desktop actions keep the action block right-aligned', () => {
     const actionsRule = stylesSource.match(/\.trash-item-actions\s*\{[\s\S]*?\}/);
     assert(actionsRule, 'trash item actions rule should exist');
-    assert.match(actionsRule[0], /align-self:\s*flex-end;/);
-    assert.match(actionsRule[0], /justify-content:\s*flex-end;/);
-    assert.doesNotMatch(actionsRule[0], /align-self:\s*flex-start;/);
+    // New design uses opacity transition, not align-self
+    assert.match(actionsRule[0], /flex-shrink:\s*0/);
+    assert.match(actionsRule[0], /opacity:\s*0/);
 });
 
 test('loadSessionTrash and loadSessionTrashCount keep independent stale-response tokens', async () => {

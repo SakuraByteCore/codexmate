@@ -741,22 +741,16 @@ test('sessionUsageSummaryCards uses compact units for long token and context tot
 
     const tokensCard = cards.find((card) => card.key === 'tokens');
     const contextCard = cards.find((card) => card.key === 'context-window');
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
     const activeDurationCard = cards.find((card) => card.key === 'active-duration');
     const totalDurationCard = cards.find((card) => card.key === 'total-duration');
     assert(tokensCard, 'missing tokens summary card');
     assert(contextCard, 'missing context summary card');
-    assert(costCard, 'missing estimated cost summary card');
     assert(activeDurationCard, 'missing active duration summary card');
     assert(totalDurationCard, 'missing total duration summary card');
     assert.strictEqual(tokensCard.value, '1.2M');
     assert.strictEqual(tokensCard.title, '1,234,567');
     assert.strictEqual(contextCard.value, '256K');
     assert.strictEqual(contextCard.title, '256,000');
-    assert.strictEqual(costCard.value, '0');
-    assert.strictEqual(costCard.label, '预估费用 · 近 7 天');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /缺少可匹配的模型单价或 token 拆分/);
     assert.strictEqual(activeDurationCard.value, '2天3时');
     assert.strictEqual(totalDurationCard.value, '7天5时');
     assert.strictEqual(activeDurationCard.title, '累计会话跨度 2天 3小时');
@@ -939,450 +933,14 @@ test('buildUsageChartGroups falls back to token breakdown when totalTokens is mi
     assert.strictEqual(result.usedModels[0].tokenTotal, 400000);
 });
 
-test('sessionUsageSummaryCards explains why usage cost is unavailable for the selected range', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 2,
-                totalMessages: 5,
-                totalTokens: 320000,
-                totalContextWindow: 128000,
-                activeDurationMs: 20 * 60 * 1000,
-                totalDurationMs: 20 * 60 * 1000,
-                activeDays: 1,
-                avgMessagesPerSession: 2.5,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                provider: 'maxx',
-                model: 'gpt-5.1-codex-max',
-                totalTokens: 200000,
-                inputTokens: 120000,
-                cachedInputTokens: 0,
-                outputTokens: 80000,
-                reasoningOutputTokens: 0
-            },
-            {
-                provider: 'maxx',
-                model: 'gpt-5.3-codex',
-                totalTokens: 120000,
-                inputTokens: undefined,
-                cachedInputTokens: 0,
-                outputTokens: undefined,
-                reasoningOutputTokens: 0
-            }
-        ],
-        sessionsUsageTimeRange: '7d',
-        providersList: [],
-        currentProvider: 'maxx'
-    });
 
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '0');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /缺少可匹配的模型单价或 token 拆分/);
-});
 
-test('sessionUsageSummaryCards estimates usage cost from configured provider pricing', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 2,
-                totalMessages: 10,
-                totalTokens: 600000,
-                totalContextWindow: 256000,
-                activeDurationMs: 90 * 60 * 1000,
-                totalDurationMs: 3 * 24 * 60 * 60 * 1000,
-                activeDays: 2,
-                avgMessagesPerSession: 5,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                provider: 'maxx',
-                model: 'gpt-5.3-codex',
-                totalTokens: 400000,
-                inputTokens: 300000,
-                cachedInputTokens: 100000,
-                outputTokens: 50000,
-                reasoningOutputTokens: 50000
-            },
-            {
-                provider: 'maxx',
-                model: 'unknown-model',
-                totalTokens: 200000,
-                inputTokens: 100000,
-                cachedInputTokens: 0,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            }
-        ],
-        providersList: [
-            {
-                name: 'maxx',
-                models: [
-                    {
-                        id: 'gpt-5.3-codex',
-                        cost: {
-                            input: 2,
-                            output: 8,
-                            cacheRead: 0.5,
-                            cacheWrite: 0
-                        }
-                    }
-                ]
-            }
-        ],
-        currentProvider: 'maxx'
-    });
 
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    const activeDurationCard = cards.find((card) => card.key === 'active-duration');
-    const totalDurationCard = cards.find((card) => card.key === 'total-duration');
-    assert(costCard, 'missing estimated cost summary card');
-    assert(activeDurationCard, 'missing active duration summary card');
-    assert(totalDurationCard, 'missing total duration summary card');
-    assert.strictEqual(costCard.value, '$0.8500');
-    assert.strictEqual(costCard.label, '预估费用 · 近 7 天');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /覆盖 1\/2 个会话/);
-    assert.match(costCard.title, /约 67% token/);
-    assert.strictEqual(activeDurationCard.value, '1时30分');
-    assert.strictEqual(totalDurationCard.value, '3天');
-});
 
-test('sessionUsageSummaryCards falls back to public catalog pricing when provider config omits models.cost', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 1,
-                totalMessages: 4,
-                totalTokens: 400000,
-                totalContextWindow: 258400,
-                activeDurationMs: 30 * 60 * 1000,
-                totalDurationMs: 30 * 60 * 1000,
-                activeDays: 1,
-                avgMessagesPerSession: 4,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                provider: 'maxx',
-                model: 'gpt-5.3-codex',
-                totalTokens: 400000,
-                inputTokens: 300000,
-                cachedInputTokens: 100000,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            }
-        ],
-        providersList: [],
-        currentProvider: 'maxx'
-    });
 
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$1.77');
-    assert.strictEqual(costCard.label, '预估费用 · 近 7 天');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /按公开模型目录估算/);
-    assert.match(costCard.title, /覆盖 1\/1 个会话/);
-});
 
-test('sessionUsageSummaryCards estimates Anthropic cache_creation cost via cacheWrite rate', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 1,
-                totalMessages: 4,
-                totalTokens: 400000,
-                totalContextWindow: 200000,
-                activeDurationMs: 30 * 60 * 1000,
-                totalDurationMs: 30 * 60 * 1000,
-                activeDays: 1,
-                avgMessagesPerSession: 4,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                source: 'claude',
-                provider: 'claude',
-                model: 'claude-sonnet-4-6',
-                totalTokens: 400000,
-                inputTokens: 200000,
-                cachedInputTokens: 50000,
-                cacheCreationInputTokens: 30000,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            }
-        ],
-        providersList: [],
-        currentProvider: 'claude'
-    });
 
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$1.99');
-    assert.match(costCard.title, /覆盖 1\/1 个会话/);
-});
 
-test('sessionUsageSummaryCards includes Claude sessions in cost estimation', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 2,
-                totalMessages: 8,
-                totalTokens: 650000,
-                totalContextWindow: 258400,
-                activeDurationMs: 50 * 60 * 1000,
-                totalDurationMs: 50 * 60 * 1000,
-                activeDays: 1,
-                avgMessagesPerSession: 4,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                source: 'codex',
-                provider: 'maxx',
-                model: 'gpt-5.3-codex',
-                totalTokens: 400000,
-                inputTokens: 300000,
-                cachedInputTokens: 100000,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            },
-            {
-                source: 'claude',
-                provider: 'claude',
-                model: 'claude-sonnet-4-6',
-                totalTokens: 250000,
-                inputTokens: 150000,
-                cachedInputTokens: 0,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            }
-        ],
-        providersList: [],
-        currentProvider: 'maxx'
-    });
-
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.ok(!costCard.title.includes('暂不含 Claude'), 'Claude exclusion prefix should not appear');
-    assert.match(costCard.title, /覆盖 2\/2 个会话/);
-});
-
-test('sessionUsageSummaryCards respects configured zero-cost pricing instead of falling back to catalog rates', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 1,
-                totalMessages: 4,
-                totalTokens: 400000,
-                totalContextWindow: 258400,
-                activeDurationMs: 30 * 60 * 1000,
-                totalDurationMs: 30 * 60 * 1000,
-                activeDays: 1,
-                avgMessagesPerSession: 4,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                provider: 'maxx',
-                model: 'gpt-5.3-codex',
-                totalTokens: 400000,
-                inputTokens: 300000,
-                cachedInputTokens: 100000,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            }
-        ],
-        providersList: [
-            {
-                name: 'maxx',
-                models: [
-                    {
-                        id: 'gpt-5.3-codex',
-                        cost: {
-                            input: 0,
-                            output: 0,
-                            cacheRead: 0,
-                            cacheWrite: 0
-                        }
-                    }
-                ]
-            }
-        ],
-        currentProvider: 'maxx'
-    });
-
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$0.00');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /按已配置单价估算/);
-});
-
-test('sessionUsageSummaryCards uses fallback token totals when totalTokens is missing', () => {
-    const computed = createSessionComputed();
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: {
-            summary: {
-                totalSessions: 1,
-                totalMessages: 4,
-                totalTokens: 0,
-                totalContextWindow: 258400,
-                activeDurationMs: 30 * 60 * 1000,
-                totalDurationMs: 30 * 60 * 1000,
-                activeDays: 1,
-                avgMessagesPerSession: 4,
-                busiestDay: null,
-                busiestHour: null
-            }
-        },
-        sessionsUsageList: [
-            {
-                provider: 'maxx',
-                model: 'gpt-5.3-codex',
-                inputTokens: 300000,
-                cachedInputTokens: 100000,
-                outputTokens: 100000,
-                reasoningOutputTokens: 0
-            }
-        ],
-        providersList: [],
-        currentProvider: 'maxx'
-    });
-
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$1.77');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /约 100% token/);
-});
-
-test('sessionUsageSummaryCards recalculates estimated cost from the selected usage range', () => {
-    const computed = createSessionComputed();
-    const sessions = [
-        {
-            source: 'codex',
-            provider: 'maxx',
-            model: 'gpt-5.3-codex',
-            createdAt: '2026-04-06T07:30:00.000Z',
-            updatedAt: '2026-04-06T08:00:00.000Z',
-            messageCount: 4,
-            totalTokens: 400000,
-            inputTokens: 300000,
-            cachedInputTokens: 100000,
-            outputTokens: 100000,
-            reasoningOutputTokens: 0,
-            contextWindow: 258400
-        },
-        {
-            source: 'codex',
-            provider: 'maxx',
-            model: 'gpt-5.3-codex',
-            createdAt: '2026-02-01T07:30:00.000Z',
-            updatedAt: '2026-02-01T08:00:00.000Z',
-            messageCount: 4,
-            totalTokens: 800000,
-            inputTokens: 400000,
-            cachedInputTokens: 0,
-            outputTokens: 400000,
-            reasoningOutputTokens: 0,
-            contextWindow: 258400
-        }
-    ];
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: buildUsageChartGroups(sessions, {
-            range: '30d',
-            now: Date.UTC(2026, 3, 6, 12, 0, 0)
-        }),
-        sessionsUsageList: sessions,
-        sessionsUsageTimeRange: '30d',
-        providersList: [],
-        currentProvider: 'maxx'
-    });
-
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$1.77');
-    assert.strictEqual(costCard.label, '预估费用 · 近 30 天');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /覆盖 1\/1 个会话/);
-});
-
-test('sessionUsageSummaryCards shows a distinct all-range estimated cost when older sessions exist', () => {
-    const computed = createSessionComputed();
-    const sessions = [
-        {
-            source: 'codex',
-            provider: 'maxx',
-            model: 'gpt-5.3-codex',
-            createdAt: '2026-04-10T07:30:00.000Z',
-            updatedAt: '2026-04-10T08:00:00.000Z',
-            messageCount: 4,
-            totalTokens: 400000,
-            inputTokens: 300000,
-            cachedInputTokens: 100000,
-            outputTokens: 100000,
-            reasoningOutputTokens: 0,
-            contextWindow: 258400
-        },
-        {
-            source: 'codex',
-            provider: 'maxx',
-            model: 'gpt-5.3-codex',
-            createdAt: '2026-02-01T07:30:00.000Z',
-            updatedAt: '2026-02-01T08:00:00.000Z',
-            messageCount: 4,
-            totalTokens: 800000,
-            inputTokens: 400000,
-            cachedInputTokens: 0,
-            outputTokens: 400000,
-            reasoningOutputTokens: 0,
-            contextWindow: 258400
-        }
-    ];
-    const cards = computed.sessionUsageSummaryCards.call({
-        sessionUsageCharts: buildUsageChartGroups(sessions, {
-            range: 'all',
-            now: Date.UTC(2026, 3, 12, 12, 0, 0)
-        }),
-        sessionsUsageList: sessions,
-        sessionsUsageTimeRange: 'all',
-        providersList: [],
-        currentProvider: 'maxx'
-    });
-
-    const costCard = cards.find((card) => card.key === 'estimated-cost');
-    assert(costCard, 'missing estimated cost summary card');
-    assert.strictEqual(costCard.value, '$8.07');
-    assert.strictEqual(costCard.label, '预估费用 · 全部');
-    assert.ok(!costCard.note);
-    assert.match(costCard.title, /估算 \$8\.07/);
-    assert.match(costCard.title, /覆盖 2\/2 个会话/);
-});
 
 test('activeSessionVisibleMessages falls back to the initial preview batch before priming completes', () => {
     const computed = createSessionComputed();
@@ -1399,8 +957,8 @@ test('activeSessionVisibleMessages falls back to the initial preview batch befor
 });
 
 test('formatSessionTimelineTimestamp normalizes ISO-like strings for timeline labels', () => {
-    assert.strictEqual(formatSessionTimelineTimestamp('2026-03-23T09:10:11.000Z'), '03-23 09:10:11');
-    assert.strictEqual(formatSessionTimelineTimestamp('2026-03-23 19:20:00'), '03-23 19:20:00');
+    assert.strictEqual(formatSessionTimelineTimestamp('2026-03-23T09:10:11.000Z'), '2026-03-23 09:10');
+    assert.strictEqual(formatSessionTimelineTimestamp('2026-03-23 19:20:00'), '2026-03-23 19:20');
     assert.strictEqual(formatSessionTimelineTimestamp('not-a-time'), 'not-a-time');
     assert.strictEqual(formatSessionTimelineTimestamp(''), '');
 });
@@ -1420,8 +978,8 @@ test('buildSessionTimelineNodes builds per-message node metadata', () => {
     assert.strictEqual(nodes[0].key, 'user-0');
     assert.strictEqual(nodes[0].role, 'user');
     assert.strictEqual(nodes[0].roleShort, 'U');
-    assert.strictEqual(nodes[0].displayTime, '03-23 09:00:00');
-    assert.strictEqual(nodes[0].title, '#1 · User · 03-23 09:00:00');
+    assert.strictEqual(nodes[0].displayTime, '2026-03-23 09:00');
+    assert.strictEqual(nodes[0].title, '#1 · User · 2026-03-23 09:00');
     assert.strictEqual(nodes[0].percent, 0);
     assert.strictEqual(nodes[0].safePercent, 6);
 

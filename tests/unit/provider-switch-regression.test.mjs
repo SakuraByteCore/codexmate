@@ -269,6 +269,8 @@ test('updateProvider keeps existing key when edit key input is blank', async () 
 
 test('updateProvider sends explicit key when user enters a new key', async () => {
     const context = createProviderUpdateContext();
+    context._editProviderRealKeyLoaded = true;
+    context._editProviderOriginalKey = '';
     context.editingProvider.key = 'sk-new';
     const payloads = [];
     const fetch = async (_url, init = {}) => {

@@ -1,4 +1,4 @@
-                <!-- Claude Code 配置模式 -->
+                <!-- Claude Code 配置 -->
                 <div
                     v-show="mainTab === 'config' && configMode === 'claude'"
                     class="mode-content mode-cards"
@@ -18,11 +18,7 @@
                             <div class="docs-command-row">
                                 <div class="docs-command-box" role="group" :aria-label="t('cli.missing.commandAria', { name: 'Claude' })">
                                     <code class="install-command">{{ getInstallCommand('claude', 'install') }}</code>
-                                    <button
-                                        type="button"
-                                        class="btn-mini docs-copy-btn"
-                                        :disabled="!getInstallCommand('claude', 'install')"
-                                        @click="copyInstallCommand(getInstallCommand('claude', 'install'))">{{ t('common.copy') }}</button>
+                                    <button type="button" class="btn-mini docs-copy-btn" :disabled="!getInstallCommand('claude', 'install')" @click="copyInstallCommand(getInstallCommand('claude', 'install'))">{{ t('common.copy') }}</button>
                                 </div>
                             </div>
                             <button type="button" class="btn-tool btn-tool-compact" @click="mainTab = 'docs'; setInstallCommandAction('install')">{{ t('cli.missing.openDocs') }}</button>
@@ -30,21 +26,14 @@
                     </div>
                 </template>
                 <template v-else>
-                <!-- 添加提供商按钮 -->
                 <button class="btn-add" @click="openClaudeConfigModal" v-if="!loading && !initError">
-                    <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M10 4v12M4 10h12"/>
-                    </svg>
+                    <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('claude.addProvider') }}
                 </button>
-                <div class="config-template-hint">
-                    {{ t('claude.applyDefault') }}
-                </div>
+                <div class="config-template-hint">{{ t('claude.applyDefault') }}</div>
 
                 <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">{{ t('claude.presetProviders') }}</span>
-                    </div>
+                    <div class="selector-header"><span class="selector-title">{{ t('claude.presetProviders') }}</span></div>
                     <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
                         <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Claude Official'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.anthropic.com'; newClaudeConfig.model = 'claude-sonnet-4'; showClaudeConfigModal = true">Claude Official</button>
                         <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DeepSeek'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.deepseek.com/anthropic'; newClaudeConfig.model = 'DeepSeek-V3.2'; showClaudeConfigModal = true">DeepSeek</button>
@@ -70,9 +59,7 @@
                 </div>
 
                 <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">{{ t('claude.model') }}</span>
-                    </div>
+                    <div class="selector-header"><span class="selector-title">{{ t('claude.model') }}</span></div>
                     <input
                         v-if="claudeModelHasList"
                         class="model-input"
@@ -81,6 +68,7 @@
                         @blur="onClaudeModelChange"
                         @keyup.enter="onClaudeModelChange"
                         :placeholder="t('claude.model.placeholder')"
+                        :readonly="currentClaudeConfig === 'claude-local'"
                         list="claude-model-options"
                     >
                     <datalist v-if="claudeModelHasList" id="claude-model-options">
@@ -93,58 +81,49 @@
                         @blur="onClaudeModelChange"
                         @keyup.enter="onClaudeModelChange"
                         :placeholder="t('claude.model.placeholder')"
+                        :readonly="currentClaudeConfig === 'claude-local'"
                     >
-                    <div class="config-template-hint">
-                        {{ t('claude.model.hint') }}
-                    </div>
+                    <div class="config-template-hint">{{ t('claude.model.hint') }}</div>
+                    <button class="btn-tool btn-template-editor" @click="openClaudeConfigTemplateEditor" :disabled="loading || !!initError">{{ t('config.template.openEditor') }}</button>
                 </div>
 
                 <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">CLAUDE.md</span>
-                    </div>
-                    <button class="btn-tool" @click="openClaudeMdEditor" :disabled="loading || !!initError || agentsLoading">
-                        {{ agentsLoading ? t('config.modelLoading') : t('claude.md.open') }}
-                    </button>
-                    <div class="config-template-hint">
-                        {{ t('claude.md.hint') }}
-                    </div>
+                    <div class="selector-header"><span class="selector-title">CLAUDE.md</span></div>
+                    <button class="btn-tool" @click="openClaudeMdEditor" :disabled="loading || !!initError || agentsLoading">{{ agentsLoading ? t('config.modelLoading') : t('claude.md.open') }}</button>
+                    <div class="config-template-hint">{{ t('claude.md.hint') }}</div>
                 </div>
 
                 <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">{{ t('claude.health.title') }}</span>
-                    </div>
-                    <button class="btn-tool" @click="runHealthCheck" :disabled="healthCheckLoading || loading || !!initError">
-                        {{ healthCheckLoading ? t('claude.health.running') : t('claude.health.run') }}
-                    </button>
-                    <div class="config-template-hint">{{ t('claude.health.hint') }}</div>
-                    <div v-if="healthCheckLoading && healthCheckBatchTotal" class="config-template-hint">
-                        {{ t('claude.health.progress', { done: healthCheckBatchDone, total: healthCheckBatchTotal, failed: healthCheckBatchFailed }) }}
-                    </div>
-                    <div v-if="healthCheckResult && !healthCheckLoading" class="config-template-hint">
-                        {{ healthCheckResult.ok ? t('config.health.ok') : t('config.health.fail') }} · {{ t('config.health.issues', { count: (healthCheckResult.issues || []).length }) }}
-                    </div>
-                    <button v-if="healthCheckResult && !healthCheckLoading" type="button" class="btn-mini" @click="showHealthCheckModal = true">
-                        {{ t('common.detail') }}
-                    </button>
-                    <div v-if="healthCheckResult && !healthCheckLoading && (healthCheckResult.issues || []).length">
-                        <div v-for="(issue, index) in healthCheckResult.issues" :key="issue.code || ('issue-' + index)" class="config-template-hint">
-                            {{ issue.message || issue.code || '' }}<span v-if="issue.suggestion"> · {{ issue.suggestion }}</span>
-                        </div>
-                    </div>
+                    <div class="selector-header"><span class="selector-title">{{ t('config.health.title') }}</span></div>
+                    <button class="btn-tool" @click="runHealthCheck" :disabled="healthCheckLoading || loading || !!initError">{{ healthCheckLoading ? t('config.health.running') : t('config.health.run') }}</button>
+                    <div class="config-template-hint">{{ t('config.health.hint') }}</div>
                 </div>
-
 
                 <div class="card-list">
-                    <div v-for="(config, name) in claudeConfigs" :key="name"
-                         :class="['card', { active: currentClaudeConfig === name }]"
-                         @click="applyClaudeConfig(name)"
-                         @keydown.enter.self.prevent="applyClaudeConfig(name)"
-                         @keydown.space.self.prevent="applyClaudeConfig(name)"
-                         tabindex="0"
-                         role="button"
-                         :aria-current="currentClaudeConfig === name ? 'true' : null">
+                    <div :class="['card', { active: currentClaudeConfig === 'claude-local', disabled: isClaudeLocalBridgeDisabled() }]" @click="isClaudeLocalBridgeDisabled() ? null : applyClaudeLocalBridge()" @keydown.enter.self.prevent="isClaudeLocalBridgeDisabled() ? null : applyClaudeLocalBridge()" @keydown.space.self.prevent="isClaudeLocalBridgeDisabled() ? null : applyClaudeLocalBridge()" :tabindex="isClaudeLocalBridgeDisabled() ? -1 : 0" role="button" :aria-current="currentClaudeConfig === 'claude-local' ? 'true' : null">
+                        <div class="card-leading">
+                            <div class="card-icon">L</div>
+                            <div class="card-content">
+                                <div class="bridge-pool-summary">
+                                    <svg class="bridge-pool-summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
+                                    <span class="bridge-pool-summary-text">{{ t('claude.localBridge.enabled') }} {{ claudeLocalBridgeCandidateProviders().filter(cp => !isClaudeLocalBridgeExcluded(cp.name)).length }} / {{ claudeLocalBridgeCandidateProviders().length }}</span>
+                                </div>
+                                <div class="card-title">
+                                    <span>local</span>
+                                    <span class="provider-readonly-badge">{{ t('config.badge.system') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-trailing">
+                            <span :class="['pill', claudeLocalBridgeConfigured() ? 'configured' : 'empty']">{{ claudeLocalBridgeConfigured() ? t('claude.configured') : t('claude.notConfigured') }}</span>
+                            <div class="card-actions" @click.stop>
+                                <button class="card-action-btn bridge-pool-trigger" @click="showClaudeBridgePoolModal = true" :aria-label="t('claude.localBridge.poolTitle')" :title="t('claude.localBridge.poolTitle')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-for="(config, name) in claudeConfigs" :key="name" :class="['card', { active: currentClaudeConfig === name }]" @click="applyClaudeConfig(name)" @keydown.enter.self.prevent="applyClaudeConfig(name)" @keydown.space.self.prevent="applyClaudeConfig(name)" tabindex="0" role="button" :aria-current="currentClaudeConfig === name ? 'true' : null">
                         <div class="card-leading">
                             <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
                             <div class="card-content">
@@ -154,41 +133,25 @@
                             </div>
                         </div>
                         <div class="card-trailing">
-                            <span v-if="claudeSpeedResults[name]" :class="['latency', claudeSpeedResults[name].ok ? 'ok' : 'error']">
-                                {{ formatLatency(claudeSpeedResults[name]) }}
-                            </span>
-                            <span :class="['pill', config.hasKey ? 'configured' : 'empty']">
-                                {{ config.hasKey ? t('claude.configured') : t('claude.notConfigured') }}
-                            </span>
+                            <span v-if="claudeSpeedResults[name]" :class="['latency', claudeSpeedResults[name].ok ? 'ok' : 'error']">{{ formatLatency(claudeSpeedResults[name]) }}</span>
+                            <span :class="['pill', config.hasKey ? 'configured' : 'empty']">{{ config.hasKey ? t('claude.configured') : t('claude.notConfigured') }}</span>
                             <div class="card-actions" @click.stop>
                                 <button class="card-action-btn" @click="openEditConfigModal(name)" :aria-label="t('claude.action.editAria', { name })" :title="t('claude.action.edit')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </button>
                                 <button class="card-action-btn" @click="openCloneClaudeConfigModal(name, config)" :aria-label="t('claude.action.cloneAria', { name })" :title="t('claude.action.clone')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="9" y="9" width="13" height="13" rx="2"/>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                                 </button>
-                                <button class="card-action-btn" :class="{ loading: claudeShareLoading[name] }" @click="copyClaudeShareCommand(name)" disabled :title="t('claude.action.shareDisabled')" :aria-label="t('config.shareCommand.aria')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>
-                                        <path d="M16 6l-4-4-4 4"/>
-                                        <path d="M12 2v14"/>
-                                    </svg>
+                                <button class="card-action-btn" :class="{ loading: claudeShareLoading[name] }" @click="copyClaudeShareCommand(name)" :title="t('config.shareCommand')" :aria-label="t('config.shareCommand.aria')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
                                 </button>
                                 <button class="card-action-btn delete" @click="deleteClaudeConfig(name)" :aria-label="t('claude.action.deleteAria', { name })" :title="t('claude.action.delete')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M3 6h18"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 </template>
             </div>

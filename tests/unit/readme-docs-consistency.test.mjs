@@ -11,15 +11,17 @@ function readProjectFile(relativePath) {
     return fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
 }
 
-test('README OpenClaw state diagram includes the documented runtime config file', () => {
+test('README Architecture diagram includes the documented config files', () => {
     const readme = readProjectFile('README.md');
     const readmeZh = readProjectFile('README.zh.md');
-    assert.match(
-        readme,
-        /OPENCLAW\["~\/\.openclaw\/\*\.json5 \+ ~\/\.openclaw\/openclaw\.json \+ workspace\/AGENTS\.md"\]/
-    );
-    assert.match(
-        readmeZh,
-        /OPENCLAW\["~\/\.openclaw\/\*\.json5 \+ ~\/\.openclaw\/openclaw\.json \+ workspace\/AGENTS\.md"\]/
-    );
+
+    // 验证 README.md 中的架构图节点
+    assert.match(readme, /ClawDir\[~\/\.openclaw\]/);
+    assert.match(readme, /ClaudeDir\[~\/\.claude\]/);
+    assert.match(readme, /CodexDir\[~\/\.codex\]/);
+
+    // 验证 README.zh.md 中的架构图节点
+    assert.match(readmeZh, /ClawDir\[~\/\.openclaw\]/);
+    assert.match(readmeZh, /ClaudeDir\[~\/\.claude\]/);
+    assert.match(readmeZh, /CodexDir\[~\/\.codex\]/);
 });

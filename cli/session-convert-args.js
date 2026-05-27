@@ -25,7 +25,7 @@ function resolveOutputPath(outputPath, defaultFileName) {
 }
 
 function parseArgs(args = []) {
-    const options = { from: '', to: '', sessionId: '', filePath: '', output: '', maxMessages: undefined };
+    const options = { from: '', to: '', sessionId: '', filePath: '', output: '', outputDir: 'native', maxMessages: undefined };
     const errors = [];
     for (let i = 0; i < args.length; i += 1) {
         const arg = String(args[i] || '');
@@ -41,6 +41,8 @@ function parseArgs(args = []) {
         if (arg.startsWith('--file=')) { options.filePath = arg.slice(7); continue; }
         if (arg === '--output') { options.output = next; i += 1; continue; }
         if (arg.startsWith('--output=')) { options.output = arg.slice(9); continue; }
+        if (arg === '--output-dir') { options.outputDir = next; i += 1; continue; }
+        if (arg.startsWith('--output-dir=')) { options.outputDir = arg.slice(13); continue; }
         if (arg === '--max-messages') { options.maxMessages = next; i += 1; continue; }
         if (arg.startsWith('--max-messages=')) { options.maxMessages = arg.slice(15); continue; }
         errors.push(`未知参数: ${arg}`);
@@ -50,6 +52,8 @@ function parseArgs(args = []) {
     if (options.from !== 'codex' && options.from !== 'claude') errors.push('参数 --from 仅支持 codex 或 claude');
     if (options.to !== 'codex' && options.to !== 'claude') errors.push('参数 --to 仅支持 codex 或 claude');
     if (options.from && options.to && options.from === options.to) errors.push('--from 与 --to 不能相同');
+    options.outputDir = String(options.outputDir || 'native').trim().toLowerCase();
+    if (options.outputDir !== 'native' && options.outputDir !== 'derived') errors.push('参数 --output-dir 仅支持 native 或 derived');
     if (!options.from) errors.push('缺少 --from');
     if (!options.to) errors.push('缺少 --to');
     if (!options.sessionId && !options.filePath) errors.push('必须指定 --session-id 或 --file');

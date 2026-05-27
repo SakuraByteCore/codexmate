@@ -60,6 +60,9 @@ export function createStartupClaudeMethods(options = {}) {
                         return false;
                     }
                     this.currentProvider = statusRes.provider;
+                    if (statusRes.version) {
+                        this.appVersion = statusRes.version;
+                    }
                     this.currentModels = statusRes.currentModels && typeof statusRes.currentModels === 'object'
                         ? { ...statusRes.currentModels }
                         : {};
@@ -119,6 +122,7 @@ export function createStartupClaudeMethods(options = {}) {
                     }
                     this.providersList = listRes.providers;
                     if (typeof this.loadLocalBridgeExcluded === 'function') { this.loadLocalBridgeExcluded(); }
+                    if (typeof this.loadClaudeLocalBridgeStatus === 'function') { this.loadClaudeLocalBridgeStatus(); }
                     if (statusRes.configReady === false) {
                         this.showMessage('配置已加载', 'info');
                     }
@@ -379,6 +383,15 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         syncClaudeModelFromConfig() {
+            if (this.currentClaudeConfig === 'claude-local') {
+                const candidates = this.claudeLocalBridgeCandidateProviders
+                    ? this.claudeLocalBridgeCandidateProviders()
+                    : [];
+                const active = candidates.find(cp => !this.isClaudeLocalBridgeExcluded(cp.name));
+                this.currentClaudeModel = active && active.model ? active.model : '';
+                this.claudeCustomModelDraft = this.currentClaudeModel;
+                return;
+            }
             const config = this.getCurrentClaudeConfig();
             this.currentClaudeModel = config && config.model ? config.model : '';
             this.claudeCustomModelDraft = this.currentClaudeModel;

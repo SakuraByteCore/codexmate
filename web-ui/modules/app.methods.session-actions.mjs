@@ -10,22 +10,8 @@ export function createSessionActionMethods(options = {}) {
     } = options;
 
     return {
-        isDerivedSessionId(value) {
-            const sessionId = typeof value === 'string' ? value.trim() : String(value || '');
-            if (!sessionId) return false;
-            return /-\d{8}-\d{6}-[0-9a-f]{6}$/i.test(sessionId);
-        },
-
-        isDerivedSession(session) {
-            if (!session || typeof session !== 'object') return false;
-            if (session.derived === true) return true;
-            if (this.isDerivedSessionId(session.sessionId)) return true;
-            const rawFilePath = typeof session.filePath === 'string' ? session.filePath.trim() : '';
-            if (!rawFilePath) return false;
-            const normalized = rawFilePath.replace(/\\/g, '/');
-            if (normalized.includes('/.codexmate/sessions/derived/')) return true;
-            if (normalized.includes('/codexmate-derived/')) return true;
-            return false;
+        getResumeCommandTitle(session) {
+            return (typeof this.t === 'function' ? this.t('sessions.copyResume') : 'Copy resume command');
         },
 
         getSessionStandaloneContext() {
@@ -122,13 +108,25 @@ export function createSessionActionMethods(options = {}) {
             return `${origin}/session?${params.toString()}`;
         },
 
-        openSessionStandalone(session) {
+        async copySessionLink(session) {
             const url = this.buildSessionStandaloneUrl(session);
             if (!url) {
                 this.showMessage('无法生成链接', 'error');
                 return;
             }
-            window.open(url, '_blank', 'noopener');
+            const ok = this.fallbackCopyText(url);
+            if (ok) {
+                this.showMessage('已复制链接', 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(url);
+                    this.showMessage('已复制链接', 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage('复制失败', 'error');
         },
 
         getSessionExportKey(session) {
@@ -205,7 +203,7 @@ export function createSessionActionMethods(options = {}) {
         quoteShellArg(value) {
             const text = typeof value === 'string' ? value : String(value || '');
             if (!text) return "''";
-            if (/^[a-zA-Z0-9._-]+$/.test(text)) return text;
+            if (/^[a-zA-Z0-9._/:@~+=-]+$/.test(text)) return text;
             const escaped = text.replace(/'/g, "'\\''");
             return `'${escaped}'`;
         },

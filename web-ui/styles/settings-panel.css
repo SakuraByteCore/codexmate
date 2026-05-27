@@ -1,349 +1,415 @@
 /* ============================================
-   Settings Panel — refined visual layer
+   Settings Panel — 乔布斯式极简设计
+   原则：删除一切非必要元素，每个像素服务于功能
    ============================================ */
 
+/* ---- 容器与布局 —— 呼吸感优先 ---- */
 .settings-layout {
-    padding: 4px 0 0;
+    padding: 0;
 }
 
 .settings-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 18px;
-}
-
-/* ---- Card shell ---- */
-.settings-card {
-    grid-column: span 6;
-    border-radius: var(--radius-xl);
-    border: 1px solid rgba(216, 201, 184, 0.42);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 253, 252, 0.9) 100%);
-    box-shadow: var(--shadow-card);
-    padding: 16px 16px 14px;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    gap: 8px;
+}
+
+/* ---- 分段控制器：苹果风格 ---- */
+.settings-tab-header {
+    margin: 0 0 24px;
+    padding: 0;
+}
+
+.settings-tab-header .segmented-control {
+    display: inline-flex;
+    background: rgba(137, 111, 94, 0.08);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 2px;
+}
+
+.settings-tab-header .segmented-option {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    white-space: nowrap;
+}
+
+.settings-tab-header .segmented-option:hover {
+    color: var(--color-text-primary);
+}
+
+.settings-tab-header .segmented-option.active {
+    background: white;
+    color: var(--color-text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- 卡片系统：本质呈现 ---- */
+.settings-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 24px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(137, 111, 94, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
     position: relative;
-    overflow: hidden;
-    transition: box-shadow var(--transition-normal) var(--ease-smooth),
-                transform var(--transition-normal) var(--ease-smooth);
 }
 
 .settings-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: rgba(137, 111, 94, 0.15);
 }
 
-
-.settings-card > * {
-    position: relative;
-    z-index: 1;
-}
-
-.settings-card--wide {
-    grid-column: 1 / -1;
-}
-
-.settings-card--danger {
-    border-color: rgba(196, 69, 54, 0.22);
-}
-
-/* ---- Card header ---- */
-.settings-card-header {
+.settings-card-main {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding-bottom: 0;
-}
-
-.settings-card-header-row {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
-}
-
-.settings-card-title {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: var(--color-text-primary);
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.settings-card-title-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    background: var(--color-brand-light);
-    color: var(--color-brand-dark);
-    font-size: 12px;
-    flex-shrink: 0;
-}
-
-.settings-card-meta {
-    font-size: 11px;
-    color: var(--color-text-tertiary);
-    line-height: 1.35;
-}
-
-/* ---- Card body ---- */
-.settings-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex: 1;
     min-width: 0;
 }
 
-.settings-card-hint {
-    font-size: 12px;
-    color: var(--color-text-tertiary);
-    line-height: 1.45;
+.settings-card-content {
+    flex: 1;
+    min-width: 0;
 }
 
-.settings-card-hint code {
-    font-family: var(--font-family-mono);
-    font-size: 11px;
-    padding: 1px 6px;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: rgba(248, 243, 238, 0.7);
-    color: var(--color-text-secondary);
-}
-
-/* ---- Field row ---- */
-.settings-field-row {
-    display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
-    align-items: center;
-    gap: 10px;
-}
-
-.settings-field-label {
-    font-size: 11px;
-    color: var(--color-text-muted);
+.settings-card-title {
+    font-size: 15px;
     font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+}
+
+.settings-card-desc {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+
+.selector-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin: 12px 0 6px;
     letter-spacing: 0.02em;
 }
 
-/* ---- Actions ---- */
-.settings-actions {
+/* ---- 选择器：极简精确 ---- */
+.model-select {
+    width: 100%;
+    max-width: 200px;
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background: rgba(247, 240, 233, 0.5);
+    border: 1px solid rgba(137, 111, 94, 0.15);
+    border-radius: 10px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%2382746A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.model-select:hover {
+    border-color: rgba(137, 111, 94, 0.25);
+    background-color: rgba(247, 240, 233, 0.7);
+}
+
+.model-select:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(200, 121, 99, 0.12);
+}
+
+/* ---- 开关：iOS 风格 ---- */
+.settings-toggle-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
     align-items: center;
-    justify-content: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    margin: 12px 0;
+}
+
+.settings-toggle-row input[type="checkbox"] {
+    display: none;
+}
+
+.settings-toggle-row .toggle-track {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    background: rgba(137, 111, 94, 0.2);
+    border-radius: 13px;
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    flex-shrink: 0;
+}
+
+.settings-toggle-row .toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.settings-toggle-row input:checked + .toggle-track {
+    background: var(--color-brand);
+}
+
+.settings-toggle-row input:checked + .toggle-track::after {
+    transform: translateX(18px);
+}
+
+.settings-toggle-row span:not(.toggle-track) {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+/* ---- 保留天数输入 ---- */
+.settings-retention {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(247, 240, 233, 0.5);
+    border-radius: 10px;
+    border: 1px solid rgba(137, 111, 94, 0.1);
+    margin: 12px 0;
+}
+
+.settings-retention label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.settings-retention-input {
+    width: 48px;
+    padding: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    background: transparent;
+    border: none;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.settings-retention-input::-webkit-outer-spin-button,
+.settings-retention-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.settings-retention-input:focus {
+    outline: none;
+}
+
+.settings-retention span {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+}
+
+/* ---- 提示文本 ---- */
+.settings-card-hint {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin: 8px 0 0;
+    line-height: 1.4;
+}
+
+/* ---- 操作按钮 ---- */
+.settings-card-action,
+.settings-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.settings-card-action {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: white;
+    border: 1px solid rgba(137, 111, 94, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+    white-space: nowrap;
+}
+
+.settings-card-action:hover:not(:disabled) {
+    color: var(--color-brand);
+    border-color: var(--color-brand);
+    background: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(200, 121, 99, 0.15);
+}
+
+.settings-card-action:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.settings-card-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.settings-card-action--active {
+    background: var(--color-brand);
+    color: white;
+    border-color: var(--color-brand);
+}
+
+.settings-card-action--active:hover {
+    background: var(--color-brand-dark);
+    border-color: var(--color-brand-dark);
+    color: white;
 }
 
 .settings-card-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 2px;
 }
 
-/* ---- Toggle switch (replaces checkbox) ---- */
-.settings-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    padding: 0;
-    border: none;
-    background: none;
-    border-radius: 0;
-    user-select: none;
+.settings-card-actions .settings-card-action {
+    padding: 10px 16px;
 }
 
-.settings-toggle input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 40px;
-    height: 22px;
-    border-radius: 11px;
-    background: rgba(137, 111, 94, 0.22);
-    border: 1px solid rgba(137, 111, 94, 0.16);
-    cursor: pointer;
-    position: relative;
-    transition: background var(--transition-fast) var(--ease-smooth),
-                border-color var(--transition-fast) var(--ease-smooth);
-    flex-shrink: 0;
-    margin: 0;
+/* ---- 危险操作 ---- */
+.settings-card--destructive {
+    background: linear-gradient(135deg, rgba(250, 112, 154, 0.04) 0%, rgba(254, 225, 64, 0.04) 100%);
+    border-color: rgba(250, 112, 154, 0.12);
 }
 
-.settings-toggle input[type="checkbox"]::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-    transition: transform var(--transition-fast) var(--ease-spring);
+.settings-card--destructive:hover {
+    background: linear-gradient(135deg, rgba(250, 112, 154, 0.08) 0%, rgba(254, 225, 64, 0.08) 100%);
+    border-color: rgba(250, 112, 154, 0.2);
 }
 
-.settings-toggle input[type="checkbox"]:checked {
-    background: var(--color-brand);
-    border-color: var(--color-brand);
+.settings-card-action--danger {
+    color: #e85d75;
+    border-color: rgba(232, 93, 117, 0.25);
+    background: white;
 }
 
-.settings-toggle input[type="checkbox"]:checked::after {
-    transform: translateX(18px);
+.settings-card-action--danger:hover:not(:disabled) {
+    color: #d63353;
+    border-color: #d63353;
+    background: white;
+    box-shadow: 0 4px 12px rgba(214, 51, 83, 0.15);
 }
 
-.settings-toggle input[type="checkbox"]:focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
-}
-
-.settings-toggle span {
-    font-size: var(--font-size-secondary);
-    color: var(--color-text-secondary);
-    font-weight: var(--font-weight-body);
-}
-
-/* ---- Retention row ---- */
-.settings-retention-row {
+/* ---- Webhook 状态 ---- */
+.webhook-status {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(216, 201, 184, 0.4);
-    background: rgba(248, 243, 238, 0.6);
-}
-
-.settings-retention-input {
-    width: 64px;
-    padding: 4px 8px;
-    border: 1px solid rgba(216, 201, 184, 0.6);
-    border-radius: 8px;
-    font-size: 14px;
-    text-align: center;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    background: var(--color-surface);
-    transition: border-color var(--transition-fast) var(--ease-smooth);
-}
-
-.settings-retention-input:focus {
-    border-color: var(--color-brand);
-    outline: none;
-    box-shadow: 0 0 0 3px var(--color-brand-light);
-}
-
-/* ---- Backup grid ---- */
-.settings-backup-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.settings-backup-slot {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
-    padding: 12px 14px;
-    border-radius: var(--radius-md);
-    background: rgba(247, 240, 233, 0.45);
-    border: 1px solid var(--color-border-soft);
-    transition: border-color var(--transition-fast) var(--ease-smooth);
+    margin-top: 8px;
 }
 
-.settings-backup-slot:hover {
-    border-color: var(--color-border);
+.webhook-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(137, 111, 94, 0.25);
+    transition: all 0.2s ease;
 }
 
-.settings-backup-slot-label {
-    font-size: var(--font-size-caption);
-    font-weight: var(--font-weight-secondary);
+.webhook-status-dot.active {
+    background: var(--color-success);
+    box-shadow: 0 0 0 3px rgba(75, 139, 106, 0.2);
+}
+
+.webhook-status-label {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+}
+
+.webhook-url {
+    font-family: var(--font-family-mono);
+    font-size: 11px;
     color: var(--color-text-muted);
-    letter-spacing: 0.03em;
+    background: rgba(137, 111, 94, 0.08);
+    padding: 3px 8px;
+    border-radius: 6px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* ---- Trash config grid ---- */
-.settings-trash-config-grid {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-}
+/* ---- 移动端适配 ---- */
+@media (max-width: 640px) {
+    .settings-tab-header {
+        margin: 0 0 20px;
+    }
 
-/* ---- Subtab bar ---- */
-.settings-subtabs-bar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 22px;
-    padding: 4px;
-    background: rgba(247, 240, 233, 0.4);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border-soft);
-}
+    .settings-tab-header .segmented-control {
+        width: 100%;
+        justify-content: stretch;
+    }
 
-.settings-subtab {
-    position: relative;
-    padding: 8px 18px;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: var(--font-weight-secondary);
-    transition: all var(--transition-fast) var(--ease-smooth);
-    letter-spacing: 0.01em;
-}
+    .settings-tab-header .segmented-option {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 16px;
+    }
 
-.settings-subtab:hover {
-    color: var(--color-text-primary);
-    background: rgba(255, 255, 255, 0.6);
-}
-
-.settings-subtab.active {
-    color: var(--color-brand-dark);
-    font-weight: 700;
-    background: var(--color-surface);
-    box-shadow: var(--shadow-subtle);
-}
-
-/* ---- Buttons inside cards ---- */
-.settings-card .btn-tool {
-    width: auto;
-    max-width: 100%;
-}
-
-/* ---- Mobile ---- */
-@media (max-width: 860px) {
     .settings-card {
-        grid-column: 1 / -1;
-    }
-    .settings-field-row {
-        grid-template-columns: 1fr;
-        align-items: stretch;
-    }
-    .settings-backup-grid {
-        grid-template-columns: 1fr;
-    }
-    .settings-trash-config-grid {
         flex-direction: column;
         align-items: stretch;
+        gap: 16px;
+        padding: 18px 20px;
     }
-    .settings-subtabs-bar {
-        gap: 2px;
+
+    .settings-card-main {
+        width: 100%;
     }
-    .settings-subtab {
-        padding: 8px 14px;
-        font-size: 12px;
+
+    .settings-card-action,
+    .settings-card-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .settings-card-action {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .settings-card-actions {
+        flex-direction: column;
+    }
+
+    .model-select {
+        max-width: none;
     }
 }

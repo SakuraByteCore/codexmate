@@ -60,7 +60,12 @@ async function convertAndAssertListed(api, tmpHome, source, target, params = {},
     const outPath = res.session.filePath;
     assert(fs.existsSync(outPath), `derived ${target} session file missing`);
     assert(fs.existsSync(derivedMetaPath(outPath)), `derived ${target} meta missing`);
-    if (target === 'codex') {
+    if (params.outputDir === 'derived') {
+        assert(
+            outPath.startsWith(path.join(tmpHome, '.codexmate', 'sessions', 'derived', target) + path.sep),
+            `derived ${target} session path should stay inside ~/.codexmate when outputDir=derived`
+        );
+    } else if (target === 'codex') {
         assert(isCodexSessionPath(tmpHome, outPath), 'derived codex session path should stay inside ~/.codex or ~/.config/codex');
     } else if (target === 'claude') {
         assert(isClaudeProjectPath(tmpHome, outPath), 'derived claude session path should stay inside ~/.claude/projects or ~/.config/claude/projects');
@@ -97,31 +102,52 @@ module.exports = async function testSessionConvertDerived(ctx) {
     });
 
     const detailClaude = await api('session-detail', { source: 'claude', filePath: derivedClaudePath, maxMessages: 50 });
+    assert(detailClaude.derived === true, 'native-written converted claude session should stay marked derived');
+    assert(detailClaude.nativeAvailable === true, 'native-written converted claude session should report nativeAvailable');
+    assert(detailClaude.nativePath === derivedClaudePath, 'native-written converted claude nativePath should equal filePath');
+    assert(detailClaude.nativeImportAvailable === false, 'native-written converted claude should not show import action');
     assert(Array.isArray(detailClaude.messages), 'session-detail(derived claude) missing messages');
     assert(detailClaude.messages.length === 2, 'session-detail(derived claude) should keep exact short length');
     assert(detailClaude.messages[0].text === 'hello', 'session-detail(derived claude) user text mismatch');
     assert(detailClaude.messages[1].text === 'world', 'session-detail(derived claude) assistant text mismatch');
 
-    const { outPath: derivedCodexPath } = await convertAndAssertListed(api, tmpHome, 'claude', 'codex', {
-        filePath: derivedClaudePath,
-        maxMessages: 'all'
-    });
-
-    const detailCodex = await api('session-detail', { source: 'codex', filePath: derivedCodexPath, maxMessages: 50 });
-    assert(Array.isArray(detailCodex.messages), 'session-detail(derived codex) missing messages');
-    assert(detailCodex.messages.length === 2, 'session-detail(derived codex) should keep exact short length');
-    assert(detailCodex.messages[0].text === 'hello', 'session-detail(derived codex) user text mismatch');
-    assert(detailCodex.messages[1].text === 'world', 'session-detail(derived codex) assistant text mismatch');
-
-    const { outPath: derivedClaudePath2 } = await convertAndAssertListed(api, tmpHome, 'codex', 'claude', {
+    const duplicateNative = await api('convert-session', {
+        source: 'codex',
+        target: 'claude',
         sessionId,
         maxMessages: 'all'
     });
-    assert(derivedClaudePath2 && derivedClaudePath2 !== derivedClaudePath, 'second derived session should create a distinct file');
-    assert(fs.existsSync(derivedClaudePath2), 'second derived claude session file missing');
+    assert(duplicateNative.error, 'second native conversion should abort on target sessionId conflict');
 
     const afterHash = sha256File(sessionPath);
     assert(afterHash === beforeHash, 'source codex session should remain unchanged after conversions');
+
+    {
+        const { res: legacyRes, outPath: legacyDerivedCodexPath } = await convertAndAssertListed(api, tmpHome, 'claude', 'codex', {
+            filePath: derivedClaudePath,
+            maxMessages: 'all',
+            outputDir: 'derived'
+        }, { assertListed: false });
+        assert(legacyRes.session.nativeAvailable === false, 'legacy derived codex conversion should report native unavailable');
+        assert(legacyRes.session.nativeImportAvailable === true, 'legacy derived codex conversion should allow native import');
+        const detailCodex = await api('session-detail', { source: 'codex', filePath: legacyDerivedCodexPath, maxMessages: 50 });
+        assert(detailCodex.derived === true, 'legacy derived codex session should stay marked derived');
+        assert(detailCodex.nativeAvailable === false, 'legacy derived codex detail should report native unavailable');
+        assert(detailCodex.nativeImportAvailable === true, 'legacy derived codex detail should allow import');
+        assert(Array.isArray(detailCodex.messages), 'session-detail(derived codex) missing messages');
+        assert(detailCodex.messages.length === 2, 'session-detail(derived codex) should keep exact short length');
+        assert(detailCodex.messages[0].text === 'hello', 'session-detail(derived codex) user text mismatch');
+        assert(detailCodex.messages[1].text === 'world', 'session-detail(derived codex) assistant text mismatch');
+        const imported = await api('import-derived-session', { source: 'codex', filePath: legacyDerivedCodexPath });
+        assert(!imported.error, `import-derived-session failed: ${imported.error || ''}`);
+        assert(imported.nativeAvailable === true, 'import-derived-session should report native available');
+        assert(imported.filePath && imported.filePath !== legacyDerivedCodexPath, 'import-derived-session should copy to native path');
+        assert(fs.existsSync(imported.filePath), 'imported native codex session file missing');
+        const importedDetail = await api('session-detail', { source: 'codex', filePath: imported.filePath, maxMessages: 50 });
+        assert(importedDetail.nativeAvailable === true, 'imported native codex detail should report native available');
+        const conflict = await api('import-derived-session', { source: 'codex', filePath: legacyDerivedCodexPath });
+        assert(conflict.conflict === true, 'second import without overwrite should report conflict');
+    }
 
     if (daudeSessionPath) {
         const beforeDaudeHash = sha256File(daudeSessionPath);

@@ -92,6 +92,9 @@ function createAgentsFileController(deps = {}) {
     function applyClaudeMdFile(params = {}) {
         const filePath = resolveClaudeMdFilePath();
         const content = typeof params.content === 'string' ? params.content : '';
+        if (content.length > 2 * 1024 * 1024) {
+            return { error: '内容过大（最大 2MB）' };
+        }
         const lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
         const normalized = normalizeLineEnding(content, lineEnding);
         const finalContent = ensureUtf8Bom(normalized);
@@ -150,6 +153,9 @@ function createAgentsFileController(deps = {}) {
         }
 
         const content = typeof params.content === 'string' ? params.content : '';
+        if (content.length > 2 * 1024 * 1024) {
+            return { error: '内容过大（最大 2MB）' };
+        }
         const lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
         const normalized = normalizeLineEnding(content, lineEnding);
         const finalContent = ensureUtf8Bom(normalized);

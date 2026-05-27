@@ -266,6 +266,39 @@
     opacity: 0.7;
 }
 
+.input-with-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-toggle .form-input {
+    width: 100%;
+    padding-right: 36px;
+}
+
+.input-toggle-btn {
+    position: absolute;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.input-toggle-btn:hover {
+    color: var(--color-text-primary);
+    background: var(--color-surface-alt);
+}
+
 .form-select {
     width: 100%;
     min-height: 44px;

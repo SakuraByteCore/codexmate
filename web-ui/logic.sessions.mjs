@@ -180,12 +180,9 @@ export function formatSessionTimelineTimestamp(timestamp) {
     if (!value) return '';
 
     const matched = value.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/);
-    if (matched) {
-        const second = matched[6] || '00';
-        return `${matched[2]}-${matched[3]} ${matched[4]}:${matched[5]}:${second}`;
-    }
+    if (!matched) return value;
 
-    return value;
+    return `${matched[1]}-${matched[2]}-${matched[3]} ${matched[4]}:${matched[5]}`;
 }
 
 function normalizeUsageRange(range) {
@@ -424,6 +421,22 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
     }
     const { range, buckets } = buildUsageBuckets(normalizedSessions, options);
     const bucketMap = new Map(buckets.map((bucket) => [bucket.key, bucket]));
+
+    // Range window: filter normalizedSessions to the selected range
+    var rangeStartMs = 0;
+    var rangeEndMs = Number.POSITIVE_INFINITY;
+    if (range !== "all" && buckets.length > 0) {
+        var firstKey = buckets[0].key;
+        var lastKey = buckets[buckets.length - 1].key;
+        rangeStartMs = Date.parse(firstKey + "T00:00:00.000Z");
+        rangeEndMs = Date.parse(lastKey + "T23:59:59.999Z");
+    }
+    var rangeFiltered = range === "all"
+        ? normalizedSessions
+        : normalizedSessions.filter(function(ns) {
+            return ns.updatedAtMs >= rangeStartMs && ns.updatedAtMs <= rangeEndMs;
+        });
+
     let codexTotal = 0;
     let claudeTotal = 0;
     let messageTotal = 0;
@@ -455,7 +468,7 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
     const topSessionsByMessages = [];
     const filteredSessions = [];
 
-    for (const normalized of normalizedSessions) {
+    for (const normalized of rangeFiltered) {
         const { session, sessionIndex, source, updatedAtMs, sessionStartedAtMs, sessionEndedAtMs, bucketKey } = normalized;
         const stamp = new Date(updatedAtMs);
         const bucket = bucketMap.get(bucketKey);
@@ -533,11 +546,15 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
                 String(messageCount),
                 String(sessionIndex)
             ].join(':'),
+            sessionId: session.sessionId || '',
+            filePath: session.filePath || '',
             title: normalizedTitle,
             source,
             sourceLabel,
             cwd,
             messageCount,
+            totalTokens: sessionTotalTokens,
+            contextWindow: sessionContextWindow,
             updatedAt: session.updatedAt || '',
             updatedAtMs,
             updatedAtLabel: formatSessionTimelineTimestamp(session.updatedAt || ''),

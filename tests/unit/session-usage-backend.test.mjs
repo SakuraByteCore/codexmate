@@ -25,6 +25,8 @@ function extractFunction(content, funcName) {
 
 const listSessionUsageSrc = extractFunction(cliContent, 'listSessionUsage');
 const listSessionBrowseSrc = extractFunction(cliContent, 'listSessionBrowse');
+const sortSessionsByUpdatedAtSrc = extractFunction(cliContent, 'sortSessionsByUpdatedAt');
+const mergeAndLimitSessionsSrc = extractFunction(cliContent, 'mergeAndLimitSessions');
 const buildSessionInventoryCacheKeySrc = extractFunction(cliContent, 'buildSessionInventoryCacheKey');
 const cloneSessionInventoryCacheValueSrc = extractFunction(cliContent, 'cloneSessionInventoryCacheValue');
 const getSessionInventoryCacheSrc = extractFunction(cliContent, 'getSessionInventoryCache');
@@ -39,19 +41,24 @@ const parseJsonlContentSrc = extractFunction(cliContent, 'parseJsonlContent');
 const parseJsonlHeadRecordsSrc = extractFunction(cliContent, 'parseJsonlHeadRecords');
 const parseJsonlTailRecordsSrc = extractFunction(cliContent, 'parseJsonlTailRecords');
 const isSessionSummaryMessageCountExactSrc = extractFunction(cliContent, 'isSessionSummaryMessageCountExact');
+const countConversationMessagesInRecordsSrc = extractFunction(cliContent, 'countConversationMessagesInRecords');
 const removeLeadingSystemMessageSrc = extractFunction(sessionsContent, 'removeLeadingSystemMessage');
 const readNonNegativeIntegerSrc = extractFunction(cliContent, 'readNonNegativeInteger');
 const readTotalTokensFromUsageSrc = extractFunction(cliContent, 'readTotalTokensFromUsage');
 const readUsageTotalsFromUsageSrc = extractFunction(cliContent, 'readUsageTotalsFromUsage');
 const readContextWindowValueSrc = extractFunction(cliContent, 'readContextWindowValue');
 const applyUsageTotalsToStateSrc = extractFunction(cliContent, 'applyUsageTotalsToState');
+const applySessionUsageSummaryFromIndexEntrySrc = extractFunction(cliContent, 'applySessionUsageSummaryFromIndexEntry');
 const readSessionModelsFromRecordSrc = extractFunction(cliContent, 'readSessionModelsFromRecord');
 const readSessionModelFromRecordSrc = extractFunction(cliContent, 'readSessionModelFromRecord');
 const readExplicitSessionProviderFromRecordSrc = extractFunction(cliContent, 'readExplicitSessionProviderFromRecord');
 const readSessionProviderFromRecordSrc = extractFunction(cliContent, 'readSessionProviderFromRecord');
 const applySessionUsageSummaryFromRecordSrc = extractFunction(cliContent, 'applySessionUsageSummaryFromRecord');
+const normalizeKeywordsSrc = extractFunction(cliContent, 'normalizeKeywords');
+const normalizeCapabilitiesSrc = extractFunction(cliContent, 'normalizeCapabilities');
 const parseCodexSessionSummarySrc = extractFunction(cliContent, 'parseCodexSessionSummary');
 const parseClaudeSessionSummarySrc = extractFunction(cliContent, 'parseClaudeSessionSummary');
+const listClaudeSessionsSrc = extractFunction(cliContent, 'listClaudeSessions');
 
 function instantiateListSessionUsage(bindings = {}) {
     const effectiveBindings = {
@@ -654,6 +661,8 @@ test('parseClaudeSessionSummary reads model from session index and tail records'
         JSON.stringify({ type: 'assistant', message: { content: 'hi there', model: 'claude-3-5-sonnet' }, timestamp: '2026-04-12T09:07:27.690Z' }),
         JSON.stringify({ type: 'assistant', message: { model: 'claude-3-7-sonnet', usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 } }, timestamp: '2026-04-12T09:11:35.588Z' })
     ].join('\n'));
+    const staleMtime = new Date('2026-04-12T09:00:00.000Z');
+    fs.utimesSync(filePath, staleMtime, staleMtime);
 
     try {
         const result = parseClaudeSessionSummary(filePath, { summaryReadBytes: 512, titleReadBytes: 512 });
@@ -661,8 +670,144 @@ test('parseClaudeSessionSummary reads model from session index and tail records'
         assert.strictEqual(result.model, 'claude-3-7-sonnet');
         assert.deepStrictEqual(result.models, ['claude-3-5-sonnet', 'claude-3-7-sonnet']);
         assert.strictEqual(result.totalTokens, 15);
+        assert.strictEqual(result.updatedAt, '2026-04-12T09:11:35.588Z');
     } finally {
         fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+});
+
+test('listClaudeSessions uses jsonl timestamps when session index time is stale or missing', () => {
+    const listClaudeSessions = instantiateFunctionBundle(
+        [
+            sortSessionsByUpdatedAtSrc,
+            mergeAndLimitSessionsSrc,
+            getFileHeadTextSrc,
+            getFileTailTextSrc,
+            parseJsonlContentSrc,
+            parseJsonlHeadRecordsSrc,
+            parseJsonlTailRecordsSrc,
+            countConversationMessagesInRecordsSrc,
+            removeLeadingSystemMessageSrc,
+            readNonNegativeIntegerSrc,
+            readTotalTokensFromUsageSrc,
+            readUsageTotalsFromUsageSrc,
+            readContextWindowValueSrc,
+            applyUsageTotalsToStateSrc,
+            readSessionModelsFromRecordSrc,
+            readExplicitSessionProviderFromRecordSrc,
+            applySessionUsageSummaryFromIndexEntrySrc,
+            applySessionUsageSummaryFromRecordSrc,
+            normalizeKeywordsSrc,
+            normalizeCapabilitiesSrc,
+            parseClaudeSessionSummarySrc,
+            listClaudeSessionsSrc
+        ],
+        'listClaudeSessions',
+        {
+            fs,
+            path,
+            Buffer,
+            SESSION_SCAN_FACTOR: 4,
+            SESSION_SCAN_MIN_FILES: 800,
+            SESSION_SUMMARY_READ_BYTES: 512,
+            SESSION_TITLE_READ_BYTES: 512,
+            MAX_SESSION_LIST_SIZE: 200,
+            getClaudeProjectsDir() {
+                return tempRoot;
+            },
+            getCodexmateDerivedSessionsRoot() {
+                return path.join(tempRoot, 'missing-derived');
+            },
+            readJsonFile(filePath, fallback) {
+                try {
+                    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+                } catch (_) {
+                    return fallback;
+                }
+            },
+            expandHomePath(value) {
+                return value;
+            },
+            getFileStatSafe(filePath) {
+                try {
+                    return fs.statSync(filePath);
+                } catch (_) {
+                    return null;
+                }
+            },
+            toIsoTime(value, fallback = '') {
+                if (value === undefined || value === null || value === '') return fallback;
+                const date = new Date(value);
+                if (!Number.isFinite(date.getTime())) return fallback;
+                return date.toISOString();
+            },
+            updateLatestIso(current, next) {
+                const currentMs = Date.parse(current || '');
+                const nextMs = Date.parse(next || '');
+                if (!Number.isFinite(nextMs)) return current || '';
+                if (!Number.isFinite(currentMs) || nextMs > currentMs) return new Date(nextMs).toISOString();
+                return current || '';
+            },
+            truncateText(text) {
+                return typeof text === 'string' ? text : '';
+            },
+            normalizeRole(role) {
+                return typeof role === 'string' ? role.trim().toLowerCase() : '';
+            },
+            extractMessageText(content) {
+                if (typeof content === 'string') return content;
+                if (Array.isArray(content)) {
+                    return content.map((item) => item && item.text ? item.text : '').join(' ').trim();
+                }
+                return '';
+            },
+            isBootstrapLikeText() {
+                return false;
+            },
+            isSessionSummaryMessageCountExact() {
+                return true;
+            },
+            attachSessionNativeStatus(session) {
+                return session;
+            },
+            isDerivedSessionFile() {
+                return false;
+            },
+            collectRecentJsonlFiles() {
+                return [];
+            }
+        }
+    );
+
+    const tempRoot = fs.mkdtempSync(path.join(__dirname, 'tmp-session-usage-claude-index-'));
+    const projectDir = path.join(tempRoot, 'project-a');
+    fs.mkdirSync(projectDir, { recursive: true });
+    const sessionPath = path.join(projectDir, 'today-session.jsonl');
+    fs.writeFileSync(sessionPath, [
+        JSON.stringify({ type: 'user', message: { content: 'today claude code' }, timestamp: '2026-04-12T01:00:00.000Z' }),
+        JSON.stringify({ type: 'assistant', message: { content: 'done', model: 'claude-sonnet-4' }, timestamp: '2026-04-12T09:30:00.000Z' })
+    ].join('\n'));
+    const staleMtime = new Date('2026-04-11T23:00:00.000Z');
+    fs.utimesSync(sessionPath, staleMtime, staleMtime);
+    fs.writeFileSync(path.join(projectDir, 'sessions-index.json'), JSON.stringify({
+        originalPath: '/repo/project-a',
+        entries: [{
+            sessionId: 'today-session',
+            fullPath: sessionPath,
+            updatedAt: '2026-04-11T22:00:00.000Z',
+            created: '2026-04-12T00:59:00.000Z',
+            firstPrompt: 'today claude code',
+            messageCount: 2
+        }]
+    }));
+
+    try {
+        const result = listClaudeSessions(10, { summaryReadBytes: 512, titleReadBytes: 512 });
+        assert.strictEqual(result.length, 1);
+        assert.strictEqual(result[0].updatedAt, '2026-04-12T09:30:00.000Z');
+        assert.strictEqual(result[0].source, 'claude');
+    } finally {
+        fs.rmSync(tempRoot, { recursive: true, force: true });
     }
 });
 

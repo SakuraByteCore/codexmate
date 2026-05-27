@@ -120,7 +120,137 @@
     border-color: var(--color-brand);
 }
 
-.session-source-select,
+/* ===== Session source pill bar ===== */
+.session-source-pills {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-soft);
+}
+
+.session-source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-secondary);
+    font-family: var(--font-family);
+    font-weight: var(--font-weight-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast) var(--ease-spring);
+    outline: none;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.session-source-pill:hover:not(:disabled) {
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+}
+
+.session-source-pill:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.session-source-pill.active {
+    color: #fff;
+    background: var(--color-brand);
+    box-shadow: 0 1px 3px rgba(200, 121, 99, 0.35);
+    font-weight: var(--font-weight-primary);
+}
+
+.session-source-pill.active .session-source-pill-dot {
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.3);
+}
+
+.session-source-pill:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-brand-light);
+}
+
+.session-source-pill:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.session-source-pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: all var(--transition-fast) var(--ease-spring);
+}
+
+.session-source-pill[data-source="codex"] .session-source-pill-dot {
+    background: #D26B5A;
+}
+.session-source-pill[data-source="claude"] .session-source-pill-dot {
+    background: #D97757;
+}
+.session-source-pill[data-source="gemini"] .session-source-pill-dot {
+    background: #5B8C5A;
+}
+.session-source-pill[data-source="codebuddy"] .session-source-pill-dot {
+    background: #6B8EB5;
+}
+
+.session-source-pill-label {
+    font-size: var(--font-size-secondary);
+    line-height: 1;
+}
+
+/* ===== Session card source badge ===== */
+.session-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-caption);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    background: var(--color-surface-alt);
+    color: var(--color-text-tertiary);
+    border: 1px solid var(--color-border-soft);
+    transition: all var(--transition-fast) var(--ease-spring);
+}
+
+.session-source[data-source="codex"],
+.session-source.codex {
+    background: rgba(210, 107, 90, 0.08);
+    color: #B54A3A;
+    border-color: rgba(210, 107, 90, 0.2);
+}
+
+.session-source[data-source="claude"],
+.session-source.claude {
+    background: rgba(217, 119, 87, 0.08);
+    color: #B55A3A;
+    border-color: rgba(217, 119, 87, 0.2);
+}
+
+.session-source[data-source="gemini"],
+.session-source.gemini {
+    background: rgba(91, 140, 90, 0.08);
+    color: #3A6B38;
+    border-color: rgba(91, 140, 90, 0.2);
+}
+
+.session-source[data-source="codebuddy"],
+.session-source.codebuddy {
+    background: rgba(107, 142, 181, 0.08);
+    color: #3A5A7A;
+    border-color: rgba(107, 142, 181, 0.2);
+}
+
 .session-path-select,
 .session-query-input,
 .session-role-select,
@@ -144,18 +274,17 @@
 }
 
 @media (min-width: 980px) {
-    /* Wider screens: align left/right control groups, keep query spanning full width. */
     .session-toolbar {
         grid-template-columns: repeat(12, minmax(0, 1fr));
         gap: 10px;
     }
 
     .session-toolbar-primary {
-        grid-column: span 6;
+        grid-column: span 7;
     }
 
     .session-toolbar-secondary {
-        grid-column: span 6;
+        grid-column: span 5;
         justify-content: flex-end;
     }
 
@@ -164,7 +293,6 @@
     }
 }
 
-.session-source-select:hover,
 .session-path-select:hover,
 .session-query-input:hover,
 .session-role-select:hover,
@@ -172,7 +300,6 @@
     border-color: var(--color-border-strong);
 }
 
-.session-source-select:focus,
 .session-path-select:focus,
 .session-query-input:focus,
 .session-role-select:focus,
@@ -218,13 +345,19 @@
     flex-shrink: 0;
 }
 
-.session-source {
-    font-size: var(--font-size-caption);
-    color: var(--color-text-tertiary);
-    border: 1px solid var(--color-border-soft);
+/* .session-source now defined above with per-source colors */
+
+.session-derived-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(208, 88, 58, 0.28);
     border-radius: 999px;
     padding: 2px 8px;
-    background: var(--color-surface-alt);
+    background: rgba(208, 88, 58, 0.08);
+    color: var(--color-brand);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-secondary);
+    line-height: 1.2;
     white-space: nowrap;
 }
 
@@ -331,4 +464,55 @@
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+}
+
+.btn-icon-sm {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* ===== Session match badges ===== */
+.session-match-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.session-match-snippets {
+    margin-top: 4px;
+    grid-column: 1 / -1;
+}
+
+.session-match-snippet {
+    font-size: var(--font-size-caption);
+    color: var(--color-text-tertiary);
+    line-height: 1.35;
+    padding: 3px 8px;
+    margin-bottom: 2px;
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-sm);
+    border-left: 2px solid var(--color-brand-light);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* ===== Session preview match highlight ===== */
+.session-msg-content mark {
+    background: rgba(200, 121, 99, 0.18);
+    color: var(--color-brand-dark);
+    border-radius: 2px;
+    padding: 0 1px;
 }

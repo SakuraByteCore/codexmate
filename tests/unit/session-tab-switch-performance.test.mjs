@@ -425,6 +425,45 @@ test('deferred teardown is skipped when user quickly switches back to sessions',
     assert.strictEqual(teardownCount, 0);
 });
 
+test('switchMainTab can preserve rendered sessions when leaving and returning to the browser tab', () => {
+    const calls = {
+        teardown: 0,
+        prepare: 0,
+        loadSessions: 0
+    };
+    const vm = {
+        mainTab: 'sessions',
+        configMode: 'codex',
+        sessionsLoadedOnce: true,
+        preserveSessionRenderOnTabLeave: true,
+        sessionListRenderEnabled: true,
+        sessionPreviewRenderEnabled: true,
+        scheduleSessionTabDeferredTeardown() {
+            calls.teardown += 1;
+        },
+        teardownSessionTabRender() {
+            calls.teardown += 1;
+        },
+        prepareSessionTabRender() {
+            calls.prepare += 1;
+        },
+        loadSessions() {
+            calls.loadSessions += 1;
+        },
+        refreshClaudeModelContext() {}
+    };
+
+    switchMainTab.call(vm, 'usage');
+    assert.strictEqual(vm.mainTab, 'usage');
+    assert.strictEqual(vm.sessionListRenderEnabled, true);
+    assert.strictEqual(vm.sessionPreviewRenderEnabled, true);
+    assert.deepStrictEqual(calls, { teardown: 0, prepare: 0, loadSessions: 0 });
+
+    switchMainTab.call(vm, 'sessions');
+    assert.strictEqual(vm.mainTab, 'sessions');
+    assert.deepStrictEqual(calls, { teardown: 0, prepare: 0, loadSessions: 0 });
+});
+
 test('loadSessions replays the latest pending request after an in-flight list refresh completes', async () => {
     const apiCalls = [];
     let resolveFirstRequest = null;

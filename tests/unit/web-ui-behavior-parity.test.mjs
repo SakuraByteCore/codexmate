@@ -324,6 +324,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const extraCurrentKeys = currentDataKeys.filter((key) => !headDataKeys.includes(key)).sort();
     const missingCurrentKeys = headDataKeys.filter((key) => !currentDataKeys.includes(key)).sort();
     const allowedExtraCurrentKeys = parityAgainstHead ? [
+        'appVersion',
+        'brandHovered',
         'sessionListInitialBatchSize',
         'sessionListLoadStep',
         'sessionListVisibleCount',
@@ -346,9 +348,14 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'openCloneClaudeConfigModal',
         'openCloneProviderModal',
         'localBridgeExcluded',
+        'claudeLocalBridgeExcluded',
         'providersHealthLoading',
-        'providersHealthResult'
+        'providersHealthResult',
+        'showEditClaudeConfigKey',
+        'showEditProviderKey'
     ] : [
+        'appVersion',
+        'brandHovered',
         '__mainTabSwitchState',
         'openclawAuthProfilesByProvider',
         'openclawPendingAuthProfileUpdates',
@@ -375,8 +382,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'openCloneClaudeConfigModal',
         'openCloneProviderModal',
         'localBridgeExcluded',
+        'claudeLocalBridgeExcluded',
         'providersHealthLoading',
-        'providersHealthResult'
+        'providersHealthResult',
+        'showEditClaudeConfigKey',
+        'showEditProviderKey'
     ];
     const allowedMissingCurrentKeys = [
         'localProxyRunning',
@@ -395,12 +405,15 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'healthCheckDialogPrompt',
         'healthCheckDialogSelectedProvider',
         'healthCheckDialogSending',
+        'claudeLocalBridgeEnabled',
+        'claudeLocalBridgeActive',
         'promptTemplateVarDraftError',
         'promptTemplateVarDraftName',
         'showPromptTemplateVarModal',
     ];
     allowedExtraCurrentKeys.push(
         'lang',
+        'configTemplateContext',
         'configTemplateDiffVisible',
         'configTemplateDiffLoading',
         'configTemplateDiffError',
@@ -414,6 +427,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'healthCheckBatchDone',
         'healthCheckBatchFailed',
         'showHealthCheckModal',
+        'showCodexBridgePoolModal',
+        'showClaudeBridgePoolModal',
         'pluginsActiveId',
         'pluginsLoading',
         'pluginsError',
@@ -430,6 +445,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptComposerSelectedTemplateId',
         'promptComposerVarValuesRaw',
         'sessionConverting',
+        'sessionImportingNative',
+        'preserveSessionRenderOnTabLeave',
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
         'sessionsUsageSelectedDayKey',
@@ -474,7 +491,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'findProviderByName',
         'getProviderValidation',
         'getShareCommandPrefixInvocation',
-        'convertSession',
         'invalidateSessionsUsageData',
         'isReservedProviderCreationName',
         'isSessionLoadNativeDialogEnabled',
@@ -502,6 +518,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectSessionsUsageDay',
         'clearSessionsUsageDay',
         'setSessionTrashEnabled',
+        'onSettingsTabKeydown',
         'setShareCommandPrefix',
         'setSessionListRef',
         'hasRenderableSessionTimeline',
@@ -534,14 +551,23 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isLocalBridgeExcluded',
         'loadLocalBridgeExcluded',
         'toggleLocalBridgeExcluded',
-        'localBridgeCandidateProviders'
+        'localBridgeCandidateProviders',
+        'loadClaudeLocalBridgeStatus',
+        'toggleClaudeLocalBridge',
+        'toggleClaudeLocalBridgeExcluded',
+        'isClaudeLocalBridgeExcluded',
+        'claudeLocalBridgeCandidateProviders',
+        'claudeLocalBridgeConfigured',
+        'syncClaudeBridgeProviders',
+        'toggleEditClaudeConfigKey',
+        'toggleEditProviderKey'
     ];
     allowedExtraCurrentMethodKeys.push(
         'hasActiveSessionFilters',
         'getSessionFilterChips',
         'clearSessionFilterChip',
-        'isDerivedSession',
-        'isDerivedSessionId',
+        'getResumeCommandTitle',
+        'copySessionLink',
         'normalizeSessionTrashRetentionDays',
         'setSessionTrashRetentionDays',
         'resetConfigTemplateDiffState',
@@ -552,6 +578,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'normalizeConfigTemplateDiffConfirmEnabled',
         'setConfigTemplateDiffConfirmEnabled',
         'extractClaudeResumeKeyFromFilePath',
+        'openClaudeConfigTemplateEditor',
+        'applyClaudeLocalBridge',
         'loadPluginsOverview',
         'selectPlugin',
         'createPromptTemplate',
@@ -583,9 +611,24 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'shouldShowCliInstallPlaceholder',
         'openCloneClaudeConfigModal',
         'openCloneProviderModal',
-        'runProvidersHealthCheck'
+        'runProvidersHealthCheck',
+        'setSessionSource',
+        'highlightQueryText',
+        'pasteConfigTemplateContent',
+        'pasteAgentsContent',
+        'importSingleSkill',
+        'openSkillsMenu',
+        'isClaudeLocalBridgeDisabled'
     );
     const allowedMissingCurrentMethodKeys = [
+        'convertSession',
+        'importDerivedSessionToNative',
+        'isDerivedSession',
+        'isDerivedSessionId',
+        'isImportToNativeAvailable',
+        'isSessionConvertAvailable',
+        'isSessionNativeAvailable',
+        'openSessionStandalone',
         'closeInstallModal',
         'getFirstNonLocalProviderName',
         'isLocalLikeProvider',
@@ -635,6 +678,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const extraCurrentComputedKeys = currentComputedKeys.filter((key) => !headComputedKeys.includes(key)).sort();
     const missingCurrentComputedKeys = headComputedKeys.filter((key) => !currentComputedKeys.includes(key)).sort();
     const allowedExtraCurrentComputedKeys = [
+        'sessionSourceOptions',
+        'queryTokens',
         'visibleSessionsList',
         'mainTabKicker',
         'mainTabTitle',
@@ -660,6 +705,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionUsageHourlyHeatmap',
         'sessionUsageDailyTableRows',
         'sessionsUsageSelectedDaySummary',
+        'sessionsUsageSelectedDay',
+        'sessionUsageWave',
+        'usageHeroDelta',
+        'usageHeroDeltaClass',
+        'usageHeroMainValue',
+        'usageHeroSubLabel',
         'usageCurrentSessionStats',
         'taskOrchestrationSelectedRun',
         'taskOrchestrationSelectedRunNodes',
@@ -674,7 +725,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'codexModelHasList',
         'codexProviderTemplates',
         'providersHealthSummary',
-        'providersHealthTone'
+        'providersHealthTone',
+        'sessionContextUtilization',
+        'isLocalProviderDisabled'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',
@@ -1235,7 +1288,7 @@ test('share, copy, and standalone helpers remain aligned with HEAD', async () =>
 
     assert.deepStrictEqual(currentProvider, headProvider);
     assert.deepStrictEqual(currentProviderEnv.clipboardWrites, [
-        "npm start -- add demo-provider 'https://provider.example.com' provider-secret && npm start -- switch demo-provider && npm start -- use gpt-4.1"
+        "npm start -- add demo-provider https://provider.example.com provider-secret && npm start -- switch demo-provider && npm start -- use gpt-4.1"
     ]);
     assert.deepStrictEqual(currentProviderContext.providerShareLoading, headProviderContext.providerShareLoading);
     assert.deepStrictEqual(currentProviderContext.messages, headProviderContext.messages);
@@ -1277,7 +1330,7 @@ test('share, copy, and standalone helpers remain aligned with HEAD', async () =>
     }, () => headMethods.copyClaudeShareCommand.call(headClaudeContext, 'shared'));
 
     assert.deepStrictEqual(currentClaudeEnv.clipboardWrites, [
-        "npm start -- claude 'https://claude.example.com' claude-secret claude-3-7"
+        "npm start -- claude https://claude.example.com claude-secret claude-3-7"
     ]);
     assert.deepStrictEqual(currentClaudeContext.claudeShareLoading, headClaudeContext.claudeShareLoading);
     assert.deepStrictEqual(currentClaudeContext.messages, headClaudeContext.messages);

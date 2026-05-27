@@ -34,8 +34,12 @@ test('convert-session converts codex jsonl to claude jsonl', async () => {
     );
 
     const files = listFiles(outDir);
-    assert.deepStrictEqual(files, ['claude-session-sess-1.jsonl']);
-    const content = fs.readFileSync(path.join(outDir, files[0]), 'utf-8').trim();
+    assert.deepStrictEqual(files, ['claude-session-sess-1.jsonl', 'claude-session-sess-1.meta.json']);
+    const meta = JSON.parse(fs.readFileSync(path.join(outDir, 'claude-session-sess-1.meta.json'), 'utf-8'));
+    assert.strictEqual(meta.source.type, 'codex');
+    assert.strictEqual(meta.target.type, 'claude');
+    assert.strictEqual(meta.target.sessionId, 'sess-1');
+    const content = fs.readFileSync(path.join(outDir, 'claude-session-sess-1.jsonl'), 'utf-8').trim();
     const records = content.split('\n').map((line) => JSON.parse(line));
     assert.strictEqual(records.length, 2);
     assert.strictEqual(records[0].type, 'user');
@@ -63,8 +67,12 @@ test('convert-session converts claude jsonl to codex jsonl', async () => {
     );
 
     const files = listFiles(outDir);
-    assert.deepStrictEqual(files, ['codex-session-sess-2.jsonl']);
-    const content = fs.readFileSync(path.join(outDir, files[0]), 'utf-8').trim();
+    assert.deepStrictEqual(files, ['codex-session-sess-2.jsonl', 'codex-session-sess-2.meta.json']);
+    const meta = JSON.parse(fs.readFileSync(path.join(outDir, 'codex-session-sess-2.meta.json'), 'utf-8'));
+    assert.strictEqual(meta.source.type, 'claude');
+    assert.strictEqual(meta.target.type, 'codex');
+    assert.strictEqual(meta.target.sessionId, 'sess-2');
+    const content = fs.readFileSync(path.join(outDir, 'codex-session-sess-2.jsonl'), 'utf-8').trim();
     const records = content.split('\n').map((line) => JSON.parse(line));
     assert.strictEqual(records[0].type, 'session_meta');
     assert.strictEqual(records[0].payload.id, 'sess-2');
