@@ -491,7 +491,7 @@ export function createSkillsMethods({ api }) {
             try {
                 const res = await api('import-skills', {
                     targetApp: this.skillsTargetApp,
-                    imports: [skill]
+                    items: [skill]
                 });
                 if (res && res.error) {
                     this.showMessage(res.error, 'error');
