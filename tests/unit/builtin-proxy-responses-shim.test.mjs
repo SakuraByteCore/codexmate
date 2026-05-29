@@ -555,6 +555,116 @@ test('builtin-proxy /v1/responses maps Responses tool items through chat fallbac
     }
 });
 
+test('builtin-proxy /v1/responses uses metapi-style Responses to chat fallback conversion', async () => {
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    id: 'chatcmpl_metapi_conversion',
+                    model: 'gpt-metapi',
+                    choices: [{ message: { role: 'assistant', content: 'converted' } }],
+                    usage: { prompt_tokens: 3, completion_tokens: 2, total_tokens: 5 }
+                }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-metapi',
+                input: [
+                    { type: 'function_call_output', call_id: 'call_orphan', output: 'drop-me' },
+                    { role: 'developer', content: [{ type: 'input_text', text: 'dev rules' }] },
+                    { type: 'reasoning', summary: [{ type: 'summary_text', text: 'hidden chain summary' }], encrypted_content: 'enc_sig' },
+                    {
+                        type: 'message',
+                        role: 'user',
+                        content: [
+                            { type: 'input_text', text: 'use both tools' },
+                            { type: 'input_image', url: 'https://example.com/cat.png' },
+                            { type: 'input_file', file_id: 'file_123', filename: 'notes.txt' }
+                        ]
+                    },
+                    { type: 'function_call', call_id: 'call_a', name: 'lookup', arguments: { q: 'codexmate' } },
+                    { type: 'custom_tool_call', call_id: 'call_b', name: 'shell', input: 'pwd' },
+                    { type: 'function_call_output', call_id: 'call_a', output: { ok: true } },
+                    { type: 'custom_tool_call_output', call_id: 'call_b', output: 'done' }
+                ],
+                tools: [{ type: 'function', name: 'lookup', description: 'Lookup data', parameters: { type: 'object' } }],
+                tool_choice: { type: 'tool', name: 'lookup' },
+                text: { format: { type: 'json_object' }, verbosity: 'low' },
+                parallel_tool_calls: false,
+                stream: false
+            }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.ok(capturedChatRequest, 'chat fallback should be captured');
+        assert.deepStrictEqual(capturedChatRequest.messages, [
+            { role: 'system', content: [{ type: 'text', text: 'dev rules' }] },
+            {
+                role: 'assistant',
+                content: [{ type: 'text', text: 'hidden chain summary' }],
+                reasoning_signature: 'enc_sig'
+            },
+            {
+                role: 'user',
+                content: [
+                    { type: 'text', text: 'use both tools' },
+                    { type: 'image_url', image_url: { url: 'https://example.com/cat.png' } },
+                    { type: 'file', file: { file_id: 'file_123', filename: 'notes.txt' } }
+                ]
+            },
+            {
+                role: 'assistant',
+                content: null,
+                tool_calls: [
+                    { id: 'call_a', type: 'function', function: { name: 'lookup', arguments: '{"q":"codexmate"}' } },
+                    { id: 'call_b', type: 'function', function: { name: 'shell', arguments: 'pwd' } }
+                ]
+            },
+            { role: 'tool', tool_call_id: 'call_a', content: '{"ok":true}' },
+            { role: 'tool', tool_call_id: 'call_b', content: 'done' }
+        ]);
+        assert.deepStrictEqual(capturedChatRequest.tools, [{
+            type: 'function',
+            function: { name: 'lookup', description: 'Lookup data', parameters: { type: 'object' } }
+        }]);
+        assert.deepStrictEqual(capturedChatRequest.tool_choice, { type: 'function', function: { name: 'lookup' } });
+        assert.equal(capturedChatRequest.parallel_tool_calls, false);
+        assert.deepStrictEqual(capturedChatRequest.response_format, { type: 'json_object' });
+        assert.equal(capturedChatRequest.verbosity, 'low');
+
+        const parsed = JSON.parse(resp.text);
+        assert.equal(parsed.output[0].content[0].text, 'converted');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
 test('builtin-proxy /v1/responses stream=true retries chat fallback up to three times before output', async () => {
     const sockets = new Set();
     let chatAttempts = 0;
