@@ -5300,7 +5300,12 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                        _createElementVNode("circle", {
+                          cx: "10",
+                          cy: "10",
+                          r: "3"
+                        })
                       ]))
                     : (_openBlock(), _createElementBlock("svg", {
                         key: 1,
@@ -5311,12 +5316,7 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
-                        _createElementVNode("circle", {
-                          cx: "10",
-                          cy: "10",
-                          r: "3"
-                        })
+                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
               ])
@@ -5423,7 +5423,12 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                        _createElementVNode("circle", {
+                          cx: "10",
+                          cy: "10",
+                          r: "3"
+                        })
                       ]))
                     : (_openBlock(), _createElementBlock("svg", {
                         key: 1,
@@ -5434,12 +5439,7 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
-                        _createElementVNode("circle", {
-                          cx: "10",
-                          cy: "10",
-                          r: "3"
-                        })
+                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
               ])
@@ -5596,7 +5596,12 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                        _createElementVNode("circle", {
+                          cx: "10",
+                          cy: "10",
+                          r: "3"
+                        })
                       ]))
                     : (_openBlock(), _createElementBlock("svg", {
                         key: 1,
@@ -5607,12 +5612,7 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
-                        _createElementVNode("circle", {
-                          cx: "10",
-                          cy: "10",
-                          r: "3"
-                        })
+                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
               ])
@@ -5698,7 +5698,12 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                        _createElementVNode("circle", {
+                          cx: "10",
+                          cy: "10",
+                          r: "3"
+                        })
                       ]))
                     : (_openBlock(), _createElementBlock("svg", {
                         key: 1,
@@ -5709,12 +5714,7 @@ return function render(_ctx, _cache) {
                         width: "16",
                         height: "16"
                       }, [
-                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
-                        _createElementVNode("circle", {
-                          cx: "10",
-                          cy: "10",
-                          r: "3"
-                        })
+                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
               ])

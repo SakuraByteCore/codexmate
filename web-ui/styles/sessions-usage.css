@@ -672,8 +672,12 @@
 /* ---- 图表网格 (加大间距) ---- */
 .usage-chart-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
+}
+
+.usage-chart-grid > * {
+    min-width: 0;
 }
 
 /* 为非 paths 卡片添加容器 */
@@ -720,10 +724,13 @@
 }
 
 /* ---- 响应式 ---- */
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
     .usage-chart-grid {
         grid-template-columns: 1fr;
     }
+}
+
+@media (max-width: 960px) {
 
     .usage-hero-main {
         font-size: 44px;
