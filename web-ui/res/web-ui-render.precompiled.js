@@ -652,6 +652,93 @@ return function render(_ctx, _cache) {
                   }, _toDisplayString(_ctx.healthCheckLoading ? _ctx.t('dashboard.doctor.checking') : _ctx.t('dashboard.doctor.runChecks')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                 ])
               ]),
+              _createElementVNode("div", { class: "doctor-status-row" }, [
+                _createElementVNode("div", {
+                  class: _normalizeClass(["doctor-status-chip", _ctx.inspectorHealthTone])
+                }, [
+                  _createElementVNode("span", null, _toDisplayString(_ctx.t('dashboard.status.health')), 1 /* TEXT */),
+                  _createElementVNode("strong", null, _toDisplayString(_ctx.inspectorHealthStatus), 1 /* TEXT */)
+                ], 2 /* CLASS */),
+                _createElementVNode("div", { class: "doctor-status-chip" }, [
+                  _createElementVNode("span", null, _toDisplayString(_ctx.t('dashboard.status.busy')), 1 /* TEXT */),
+                  _createElementVNode("strong", null, _toDisplayString(_ctx.inspectorBusyStatus), 1 /* TEXT */)
+                ]),
+                _createElementVNode("div", { class: "doctor-status-chip" }, [
+                  _createElementVNode("span", null, _toDisplayString(_ctx.t('dashboard.status.models')), 1 /* TEXT */),
+                  _createElementVNode("strong", null, _toDisplayString(_ctx.inspectorModelLoadStatus), 1 /* TEXT */)
+                ])
+              ]),
+              (_ctx.healthCheckResult)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: _normalizeClass(["doctor-health-result", _ctx.healthCheckResult.ok ? 'ok' : 'error'])
+                  }, [
+                    _createElementVNode("div", { class: "doctor-health-title" }, [
+                      _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('dashboard.health.ok') : _ctx.t('dashboard.health.fail')) + " ", 1 /* TEXT */),
+                      (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
+                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('dashboard.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ])
+                  ], 2 /* CLASS */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.healthCheckResult && _ctx.healthCheckResult.report && _ctx.healthCheckResult.report.issues && _ctx.healthCheckResult.report.issues.length)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 1,
+                    class: "doctor-action-list"
+                  }, [
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.report.issues, (issue) => {
+                      return (_openBlock(), _createElementBlock("div", {
+                        key: issue.id,
+                        class: "doctor-action-card"
+                      }, [
+                        _createElementVNode("div", { class: "doctor-action-head" }, [
+                          _createElementVNode("div", { class: "doctor-action-title" }, _toDisplayString(issue.problem || (issue.problemKey ? _ctx.t(issue.problemKey, issue.problemParams) : '')), 1 /* TEXT */),
+                          _createElementVNode("div", {
+                            class: _normalizeClass(['doctor-action-severity', issue.severity])
+                          }, _toDisplayString(issue.severityLabel || issue.severity), 3 /* TEXT, CLASS */)
+                        ]),
+                        _createElementVNode("div", { class: "doctor-action-impact" }, _toDisplayString(issue.impact || (issue.impactKey ? _ctx.t(issue.impactKey, issue.impactParams) : '')), 1 /* TEXT */),
+                        (issue.actions && issue.actions.some(action => action && action.type === 'navigate'))
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 0,
+                              class: "doctor-action-buttons"
+                            }, [
+                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(issue.actions, (action, index) => {
+                                return (_openBlock(), _createElementBlock(_Fragment, {
+                                  key: issue.id + '-action-' + index
+                                }, [
+                                  (action.type === 'navigate')
+                                    ? (_openBlock(), _createElementBlock("button", {
+                                        key: 0,
+                                        type: "button",
+                                        class: "btn-tool btn-tool-compact",
+                                        onClick: $event => (_ctx.switchMainTab(action.target))
+                                      }, _toDisplayString(action.label || (action.labelKey ? _ctx.t(action.labelKey, action.labelParams) : _ctx.t('dashboard.doctor.open'))), 9 /* TEXT, PROPS */, ["onClick"]))
+                                    : _createCommentVNode("v-if", true)
+                                ], 64 /* STABLE_FRAGMENT */))
+                              }), 128 /* KEYED_FRAGMENT */))
+                            ]))
+                          : _createCommentVNode("v-if", true)
+                      ]))
+                    }), 128 /* KEYED_FRAGMENT */)),
+                    _createElementVNode("div", { class: "doctor-action-footer" }, [
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: $event => {_ctx.healthCheckResult && _ctx.healthCheckResult.report
+                                        ? _ctx.downloadTextFile('codexmate-doctor.json', JSON.stringify(_ctx.healthCheckResult.report, null, 2), 'application/json;charset=utf-8')
+                                        : null}
+                      }, _toDisplayString(_ctx.t('dashboard.doctor.export.json')), 9 /* TEXT, PROPS */, ["onClick"]),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: $event => {_ctx.healthCheckResult && _ctx.healthCheckResult.report
+                                        ? _ctx.downloadTextFile('codexmate-doctor.md', String(_ctx.healthCheckResult.markdown || ''), 'text/markdown;charset=utf-8')
+                                        : null}
+                      }, _toDisplayString(_ctx.t('dashboard.doctor.export.md')), 9 /* TEXT, PROPS */, ["onClick"])
+                    ])
+                  ]))
+                : _createCommentVNode("v-if", true),
               _createElementVNode("div", { class: "doctor-grid" }, [
                 _createElementVNode("button", {
                   type: "button",
@@ -793,113 +880,7 @@ return function render(_ctx, _cache) {
                       ]))
                     : _createCommentVNode("v-if", true)
                 ], 8 /* PROPS */, ["onClick", "disabled"])
-              ]),
-              _createElementVNode("div", { class: "doctor-status-row" }, [
-                _createElementVNode("div", {
-                  class: _normalizeClass(["doctor-status-chip", _ctx.inspectorHealthTone])
-                }, [
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('dashboard.status.health')), 1 /* TEXT */),
-                  _createElementVNode("strong", null, _toDisplayString(_ctx.inspectorHealthStatus), 1 /* TEXT */)
-                ], 2 /* CLASS */),
-                _createElementVNode("div", { class: "doctor-status-chip" }, [
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('dashboard.status.busy')), 1 /* TEXT */),
-                  _createElementVNode("strong", null, _toDisplayString(_ctx.inspectorBusyStatus), 1 /* TEXT */)
-                ]),
-                _createElementVNode("div", { class: "doctor-status-chip" }, [
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('dashboard.status.models')), 1 /* TEXT */),
-                  _createElementVNode("strong", null, _toDisplayString(_ctx.inspectorModelLoadStatus), 1 /* TEXT */)
-                ])
-              ]),
-              (_ctx.healthCheckResult)
-                ? (_openBlock(), _createElementBlock("div", {
-                    key: 0,
-                    class: _normalizeClass(["doctor-health-result", _ctx.healthCheckResult.ok ? 'ok' : 'error'])
-                  }, [
-                    _createElementVNode("div", { class: "doctor-health-title" }, [
-                      _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('dashboard.health.ok') : _ctx.t('dashboard.health.fail')) + " ", 1 /* TEXT */),
-                      (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
-                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('dashboard.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
-                        : _createCommentVNode("v-if", true)
-                    ])
-                  ], 2 /* CLASS */))
-                : _createCommentVNode("v-if", true),
-              (_ctx.healthCheckResult && _ctx.healthCheckResult.report && _ctx.healthCheckResult.report.issues && _ctx.healthCheckResult.report.issues.length)
-                ? (_openBlock(), _createElementBlock("div", {
-                    key: 1,
-                    class: "doctor-action-list"
-                  }, [
-                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.report.issues, (issue) => {
-                      return (_openBlock(), _createElementBlock("div", {
-                        key: issue.id,
-                        class: "doctor-action-card"
-                      }, [
-                        _createElementVNode("div", { class: "doctor-action-head" }, [
-                          _createElementVNode("div", { class: "doctor-action-title" }, _toDisplayString(issue.problem || (issue.problemKey ? _ctx.t(issue.problemKey, issue.problemParams) : '')), 1 /* TEXT */),
-                          _createElementVNode("div", {
-                            class: _normalizeClass(['doctor-action-severity', issue.severity])
-                          }, _toDisplayString(issue.severityLabel || issue.severity), 3 /* TEXT, CLASS */)
-                        ]),
-                        _createElementVNode("div", { class: "doctor-action-impact" }, _toDisplayString(issue.impact || (issue.impactKey ? _ctx.t(issue.impactKey, issue.impactParams) : '')), 1 /* TEXT */),
-                        (issue.actions && issue.actions.length)
-                          ? (_openBlock(), _createElementBlock("div", {
-                              key: 0,
-                              class: "doctor-action-buttons"
-                            }, [
-                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(issue.actions, (action, index) => {
-                                return (_openBlock(), _createElementBlock(_Fragment, {
-                                  key: issue.id + '-action-' + index
-                                }, [
-                                  (action.type === 'navigate')
-                                    ? (_openBlock(), _createElementBlock("button", {
-                                        key: 0,
-                                        type: "button",
-                                        class: "btn-tool btn-tool-compact",
-                                        onClick: $event => (_ctx.switchMainTab(action.target))
-                                      }, _toDisplayString(action.label || (action.labelKey ? _ctx.t(action.labelKey, action.labelParams) : _ctx.t('dashboard.doctor.open'))), 9 /* TEXT, PROPS */, ["onClick"]))
-                                    : (action.type === 'run-check')
-                                      ? (_openBlock(), _createElementBlock("button", {
-                                          key: 1,
-                                          type: "button",
-                                          class: "btn-tool btn-tool-compact",
-                                          onClick: $event => (_ctx.runHealthCheck({ doctor: true, forceRefresh: true })),
-                                          disabled: _ctx.healthCheckLoading
-                                        }, _toDisplayString(_ctx.t('dashboard.doctor.runChecks')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                                      : (action.type === 'export')
-                                        ? (_openBlock(), _createElementBlock("button", {
-                                            key: 2,
-                                            type: "button",
-                                            class: "btn-tool btn-tool-compact",
-                                            onClick: $event => {_ctx.healthCheckResult && _ctx.healthCheckResult.report
-                                                ? (action.format === 'md'
-                                                    ? _ctx.downloadTextFile('codexmate-doctor.md', String(_ctx.healthCheckResult.markdown || ''), 'text/markdown;charset=utf-8')
-                                                    : _ctx.downloadTextFile('codexmate-doctor.json', JSON.stringify(_ctx.healthCheckResult.report, null, 2), 'application/json;charset=utf-8'))
-                                                : null}
-                                          }, _toDisplayString(action.format === 'md' ? _ctx.t('dashboard.doctor.export.md') : _ctx.t('dashboard.doctor.export.json')), 9 /* TEXT, PROPS */, ["onClick"]))
-                                        : _createCommentVNode("v-if", true)
-                                ], 64 /* STABLE_FRAGMENT */))
-                              }), 128 /* KEYED_FRAGMENT */))
-                            ]))
-                          : _createCommentVNode("v-if", true)
-                      ]))
-                    }), 128 /* KEYED_FRAGMENT */)),
-                    _createElementVNode("div", { class: "doctor-action-footer" }, [
-                      _createElementVNode("button", {
-                        type: "button",
-                        class: "btn-tool btn-tool-compact",
-                        onClick: $event => {_ctx.healthCheckResult && _ctx.healthCheckResult.report
-                                        ? _ctx.downloadTextFile('codexmate-doctor.json', JSON.stringify(_ctx.healthCheckResult.report, null, 2), 'application/json;charset=utf-8')
-                                        : null}
-                      }, _toDisplayString(_ctx.t('dashboard.doctor.export.json')), 9 /* TEXT, PROPS */, ["onClick"]),
-                      _createElementVNode("button", {
-                        type: "button",
-                        class: "btn-tool btn-tool-compact",
-                        onClick: $event => {_ctx.healthCheckResult && _ctx.healthCheckResult.report
-                                        ? _ctx.downloadTextFile('codexmate-doctor.md', String(_ctx.healthCheckResult.markdown || ''), 'text/markdown;charset=utf-8')
-                                        : null}
-                      }, _toDisplayString(_ctx.t('dashboard.doctor.export.md')), 9 /* TEXT, PROPS */, ["onClick"])
-                    ])
-                  ]))
-                : _createCommentVNode("v-if", true)
+              ])
             ])
           ], 512 /* NEED_PATCH */), [
             [_vShow, _ctx.mainTab === 'dashboard']
