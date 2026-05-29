@@ -1986,41 +1986,72 @@ return function render(_ctx, _cache) {
                   }, _toDisplayString(_ctx.t('tab.config.openclaw')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                 ]))
               : _createCommentVNode("v-if", true),
-            _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('openclaw.applyHint')), 1 /* TEXT */),
-            _createElementVNode("div", { class: "selector-section" }, [
-              _createElementVNode("div", { class: "selector-header" }, [
-                _createElementVNode("span", { class: "selector-title" }, "AGENTS.md")
+            _createElementVNode("div", { class: "openclaw-panel" }, [
+              _createElementVNode("section", { class: "openclaw-hero" }, [
+                _createElementVNode("div", { class: "openclaw-hero-copy" }, [
+                  _createElementVNode("div", { class: "openclaw-kicker" }, "OpenClaw Workspace"),
+                  _createElementVNode("h2", { class: "openclaw-title" }, "OpenClaw"),
+                  _createElementVNode("p", { class: "openclaw-summary" }, _toDisplayString(_ctx.t('openclaw.applyHint')), 1 /* TEXT */)
+                ]),
+                _createElementVNode("div", { class: "openclaw-stats" }, [
+                  _createElementVNode("div", { class: "openclaw-stat" }, [
+                    _createElementVNode("span", { class: "openclaw-stat-label" }, "Current"),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.currentOpenclawConfig || '-'), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("div", { class: "openclaw-stat" }, [
+                    _createElementVNode("span", { class: "openclaw-stat-label" }, "Profiles"),
+                    _createElementVNode("strong", null, _toDisplayString(Object.keys(_ctx.openclawConfigs || {}).length), 1 /* TEXT */)
+                  ])
+                ])
               ]),
-              _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('openclaw.agents.hint')), 1 /* TEXT */),
-              _createElementVNode("button", {
-                class: "btn-tool",
-                onClick: _ctx.openOpenclawAgentsEditor,
-                disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-              }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+              _createElementVNode("div", { class: "openclaw-action-grid" }, [
+                _createElementVNode("section", { class: "openclaw-action-card" }, [
+                  _createElementVNode("div", { class: "openclaw-action-icon" }, "A"),
+                  _createElementVNode("div", { class: "openclaw-action-main" }, [
+                    _createElementVNode("div", { class: "openclaw-action-title" }, "AGENTS.md"),
+                    _createElementVNode("div", { class: "openclaw-action-hint" }, _toDisplayString(_ctx.t('openclaw.agents.hint')), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("button", {
+                    class: "btn-tool",
+                    onClick: _ctx.openOpenclawAgentsEditor,
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                  }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                ]),
+                _createElementVNode("section", { class: "openclaw-action-card openclaw-workspace-card" }, [
+                  _createElementVNode("div", { class: "openclaw-action-icon" }, "W"),
+                  _createElementVNode("div", { class: "openclaw-action-main" }, [
+                    _createElementVNode("label", {
+                      class: "openclaw-action-title",
+                      for: "openclaw-workspace-file"
+                    }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
+                    _withDirectives(_createElementVNode("input", {
+                      id: "openclaw-workspace-file",
+                      class: "form-input",
+                      "onUpdate:modelValue": $event => ((_ctx.openclawWorkspaceFileName) = $event),
+                      placeholder: _ctx.t('openclaw.workspace.placeholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                      [_vModelText, _ctx.openclawWorkspaceFileName]
+                    ]),
+                    _createElementVNode("div", { class: "openclaw-action-hint" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("button", {
+                    class: "btn-tool",
+                    onClick: _ctx.openOpenclawWorkspaceEditor,
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                  }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.workspace.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                ])
+              ]),
+              _createElementVNode("div", { class: "openclaw-section-head" }, [
+                _createElementVNode("div", null, [
+                  _createElementVNode("div", { class: "openclaw-section-kicker" }, "Config Library"),
+                  _createElementVNode("div", { class: "openclaw-section-title" }, "OpenClaw 配置")
+                ]),
+                _createElementVNode("span", {
+                  class: _normalizeClass(['pill', _ctx.openclawHasContent(_ctx.openclawConfigs && _ctx.openclawConfigs[_ctx.currentOpenclawConfig]) ? 'configured' : 'empty'])
+                }, _toDisplayString(_ctx.openclawHasContent(_ctx.openclawConfigs && _ctx.openclawConfigs[_ctx.currentOpenclawConfig]) ? _ctx.t('openclaw.configured') : _ctx.t('openclaw.notConfigured')), 3 /* TEXT, CLASS */)
+              ])
             ]),
-            _createElementVNode("div", { class: "selector-section" }, [
-              _createElementVNode("div", { class: "selector-header" }, [
-                _createElementVNode("label", {
-                  class: "selector-title",
-                  for: "openclaw-workspace-file"
-                }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */)
-              ]),
-              _withDirectives(_createElementVNode("input", {
-                id: "openclaw-workspace-file",
-                class: "form-input",
-                "onUpdate:modelValue": $event => ((_ctx.openclawWorkspaceFileName) = $event),
-                placeholder: _ctx.t('openclaw.workspace.placeholder')
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                [_vModelText, _ctx.openclawWorkspaceFileName]
-              ]),
-              _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */),
-              _createElementVNode("button", {
-                class: "btn-tool",
-                onClick: _ctx.openOpenclawWorkspaceEditor,
-                disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-              }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.workspace.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-            ]),
-            _createElementVNode("div", { class: "card-list" }, [
+            _createElementVNode("div", { class: "card-list openclaw-config-list" }, [
               (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
                 return (_openBlock(), _createElementBlock("div", {
                   key: name,

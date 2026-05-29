@@ -1,3 +1,226 @@
+.openclaw-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.openclaw-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--spacing-md);
+    align-items: stretch;
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(200, 121, 99, 0.16);
+    background:
+        radial-gradient(circle at top right, rgba(200, 121, 99, 0.14), transparent 36%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 248, 241, 0.72));
+    box-shadow: 0 14px 34px rgba(92, 68, 52, 0.1);
+}
+
+.openclaw-hero::before {
+    content: '';
+    position: absolute;
+    inset: auto 18px 16px auto;
+    width: 92px;
+    height: 92px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, rgba(200, 121, 99, 0.12), rgba(90, 139, 106, 0.1));
+    transform: rotate(14deg);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.openclaw-hero-copy {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.openclaw-kicker,
+.openclaw-section-kicker,
+.openclaw-stat-label {
+    font-size: 10px;
+    font-weight: var(--font-weight-caption);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.openclaw-title {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: var(--color-text-primary);
+}
+
+.openclaw-summary {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    line-height: 1.55;
+}
+
+.openclaw-stats {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(96px, 1fr));
+    gap: var(--spacing-xs);
+    min-width: 220px;
+}
+
+.openclaw-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(137, 111, 94, 0.08);
+    background: rgba(255, 255, 255, 0.68);
+    box-shadow: var(--shadow-subtle);
+    min-width: 0;
+}
+
+.openclaw-stat strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-brand-dark);
+    font-size: 16px;
+}
+
+.openclaw-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.openclaw-action-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-soft);
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(255, 248, 241, 0.54));
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition-fast) var(--ease-smooth), border-color var(--transition-fast) var(--ease-smooth), box-shadow var(--transition-fast) var(--ease-smooth);
+}
+
+.openclaw-action-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.openclaw-action-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(200, 121, 99, 0.12);
+    color: var(--color-brand-dark);
+    font-weight: var(--font-weight-title);
+    box-shadow: inset 0 0 0 1px rgba(200, 121, 99, 0.1);
+}
+
+.openclaw-workspace-card .openclaw-action-icon {
+    background: rgba(90, 139, 106, 0.14);
+    color: var(--color-success);
+    box-shadow: inset 0 0 0 1px rgba(90, 139, 106, 0.12);
+}
+
+.openclaw-action-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.openclaw-action-title,
+.openclaw-section-title {
+    font-size: var(--font-size-secondary);
+    font-weight: var(--font-weight-secondary);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.openclaw-action-hint {
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-caption);
+    line-height: 1.45;
+}
+
+.openclaw-action-card > .btn-tool {
+    grid-column: 2;
+    justify-self: flex-start;
+    margin-top: 2px;
+}
+
+.openclaw-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(137, 111, 94, 0.08);
+    background: rgba(255, 255, 255, 0.42);
+}
+
+.openclaw-config-list .card {
+    border-radius: var(--radius-lg);
+}
+
+@media (max-width: 960px) {
+    .openclaw-hero,
+    .openclaw-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .openclaw-stats {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 540px) {
+    .openclaw-hero {
+        padding: 16px;
+    }
+
+    .openclaw-title {
+        font-size: 24px;
+    }
+
+    .openclaw-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .openclaw-action-card {
+        grid-template-columns: 1fr;
+    }
+
+    .openclaw-action-card > .btn-tool {
+        grid-column: 1;
+        width: 100%;
+    }
+}
+
 .quick-section {
     margin-top: var(--spacing-md);
     padding: var(--spacing-sm);
@@ -263,4 +486,3 @@
     line-height: 1.4;
     word-break: break-all;
 }
-
