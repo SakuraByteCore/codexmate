@@ -1204,6 +1204,7 @@ const DICT = Object.freeze({
         'modal.openclaw.quick.step2': '点击写入编辑器',
         'modal.openclaw.structured.writeHint': '写入编辑器会重排 JSON，注释可能丢失。',
         'openclaw.action.editAria': '编辑 OpenClaw 配置：{name}',
+        'openclaw.action.applyAria': '应用 OpenClaw 配置：{name}',
         'openclaw.action.deleteAria': '删除 OpenClaw 配置：{name}'
     },
     ja: {
@@ -2400,6 +2401,7 @@ const DICT = Object.freeze({
         'modal.openclaw.quick.step2': 'エディタに書き込みをクリック',
         'modal.openclaw.structured.writeHint': 'エディタに書き込むと JSON が再配置され、コメントが失われる可能性があります。',
         'openclaw.action.editAria': 'OpenClaw 設定を編集：{name}',
+        'openclaw.action.applyAria': 'OpenClaw 設定を適用：{name}',
         'openclaw.action.deleteAria': 'OpenClaw 設定を削除：{name}',
     
     },
@@ -3606,6 +3608,7 @@ const DICT = Object.freeze({
         'modal.openclaw.quick.step2': 'Write to editor',
         'modal.openclaw.structured.writeHint': 'Writing to editor may reformat JSON and drop comments.',
         'openclaw.action.editAria': 'Edit OpenClaw config: {name}',
+        'openclaw.action.applyAria': 'Apply OpenClaw config: {name}',
         'openclaw.action.deleteAria': 'Delete OpenClaw config: {name}'
     }
 });

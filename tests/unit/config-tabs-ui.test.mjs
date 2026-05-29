@@ -358,13 +358,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<button class="card-action-btn"[^>]*@click="openEditConfigModal\(name\)"[^>]*:aria-label="t\('claude\.action\.editAria', \{ name \}\)"[^>]*:title="t\('claude\.action\.edit'\)">/);
     assert.match(html, /<button class="card-action-btn delete"[^>]*@click="deleteClaudeConfig\(name\)"[^>]*:aria-label="t\('claude\.action\.deleteAria', \{ name \}\)"[^>]*:title="t\('claude\.action\.delete'\)">/);
     assert.match(html, /<button class="card-action-btn"[^>]*@click="copyClaudeShareCommand\(name\)"[^>]*>/);
-    assert.match(html, /<button class="btn-mini" type="button" @click="openOpenclawEditModal\(name\)">\{\{\s*t\('openclaw\.action\.edit'\)\s*\}\}<\/button>/);
-    assert.match(html, /<button\s+class="btn-mini"[\s\S]*@click="applyOpenclawConfig\(name\)"[\s\S]*\{\{\s*t\('openclaw\.action\.apply'\)\s*\}\}/);
+    assert.match(html, /<button class="btn-mini" type="button" @click="openOpenclawEditModal\(name\)" :aria-label="t\('openclaw\.action\.editAria', \{ name \}\)">\{\{\s*t\('openclaw\.action\.edit'\)\s*\}\}<\/button>/);
+    assert.match(html, /<button\s+class="btn-mini"[\s\S]*@click="applyOpenclawConfig\(name\)"[\s\S]*:aria-label="t\('openclaw\.action\.applyAria', \{ name \}\)"[\s\S]*\{\{\s*t\('openclaw\.action\.apply'\)\s*\}\}/);
     assert.match(
         html,
         /<div class="docs-command-row">[\s\S]*<div class="docs-command-box"[\s\S]*<code class="install-command">\{\{ target\.command \}\}<\/code>[\s\S]*<button[\s\S]*class="btn-mini docs-copy-btn"/
     );
-    assert.match(html, /<button v-if="name !== '默认配置'" class="btn-mini delete" type="button" @click="deleteOpenclawConfig\(name\)">\{\{\s*t\('openclaw\.action\.delete'\)\s*\}\}<\/button>/);
+    assert.match(html, /<button v-if="name !== '默认配置'" class="btn-mini delete" type="button" @click="deleteOpenclawConfig\(name\)" :aria-label="t\('openclaw\.action\.deleteAria', \{ name \}\)">\{\{\s*t\('openclaw\.action\.delete'\)\s*\}\}<\/button>/);
     assert.match(modalsBasic, /<div v-if="showAddModal" class="modal-overlay" @click\.self="closeAddModal">/);
     assert.match(modalsBasic, /<div v-if="showModelModal" class="modal-overlay" @click\.self="closeModelModal">/);
     assert.match(modalsBasic, /<div v-if="showClaudeConfigModal" class="modal-overlay" @click\.self="closeClaudeConfigModal">/);

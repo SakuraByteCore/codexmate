@@ -2050,21 +2050,24 @@ return function render(_ctx, _cache) {
                         _createElementVNode("button", {
                           class: "btn-mini",
                           type: "button",
-                          onClick: $event => (_ctx.openOpenclawEditModal(name))
-                        }, _toDisplayString(_ctx.t('openclaw.action.edit')), 9 /* TEXT, PROPS */, ["onClick"]),
+                          onClick: $event => (_ctx.openOpenclawEditModal(name)),
+                          "aria-label": _ctx.t('openclaw.action.editAria', { name })
+                        }, _toDisplayString(_ctx.t('openclaw.action.edit')), 9 /* TEXT, PROPS */, ["onClick", "aria-label"]),
                         _createElementVNode("button", {
                           class: "btn-mini",
                           type: "button",
                           onClick: $event => (_ctx.applyOpenclawConfig(name)),
+                          "aria-label": _ctx.t('openclaw.action.applyAria', { name }),
                           disabled: _ctx.openclawApplying || !_ctx.openclawHasContent(config)
-                        }, _toDisplayString(_ctx.t('openclaw.action.apply')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                        }, _toDisplayString(_ctx.t('openclaw.action.apply')), 9 /* TEXT, PROPS */, ["onClick", "aria-label", "disabled"]),
                         (name !== '默认配置')
                           ? (_openBlock(), _createElementBlock("button", {
                               key: 0,
                               class: "btn-mini delete",
                               type: "button",
-                              onClick: $event => (_ctx.deleteOpenclawConfig(name))
-                            }, _toDisplayString(_ctx.t('openclaw.action.delete')), 9 /* TEXT, PROPS */, ["onClick"]))
+                              onClick: $event => (_ctx.deleteOpenclawConfig(name)),
+                              "aria-label": _ctx.t('openclaw.action.deleteAria', { name })
+                            }, _toDisplayString(_ctx.t('openclaw.action.delete')), 9 /* TEXT, PROPS */, ["onClick", "aria-label"]))
                           : _createCommentVNode("v-if", true)
                       ])
                     ])
