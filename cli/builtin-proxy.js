@@ -134,13 +134,11 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         if (/ECONNRESET|ECONNREFUSED|EPIPE|EPROTO|ETIMEDOUT/i.test(text)) return true;
         if (/EAI_AGAIN/i.test(text)) return true;
         if (/UND_ERR_SOCKET/i.test(text)) return true;
-        if (/aborted|stream aborted|disconnected before|secure tls|tls handshake/i.test(text)) return true;
+        if (/disconnected before|secure tls|tls handshake/i.test(text)) return true;
         return false;
     }
 
-    const TRANSIENT_RETRY_DELAYS_MS = [200, 600];
-    const STREAM_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
-    const MAX_STREAM_IDLE_EXTENSIONS = 3;
+    const TRANSIENT_RETRY_DELAYS_MS = [200, 600, 1200];
 
     async function retryTransientRequest(executor) {
         let lastResult = null;
@@ -160,7 +158,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             if (result.ok) return result;
             if (result.retry) return result;
             if (result.status && result.status > 0) return result;
-            if (!isTransientNetworkError(result.error)) return result;
+            if (!result.retryTransient && !isTransientNetworkError(result.error)) return result;
         }
         return lastResult;
     }
@@ -714,6 +712,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         content: [{ type: 'output_text', text: '' }]
                     };
                     state.output.push(state.messageItem);
+                    state.outputStarted = true;
                     beginChatStreamResponsesSse(state);
                     writeSse(state.res, 'response.output_item.added', {
                         type: 'response.output_item.added',
@@ -799,6 +798,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             };
             const outputIndex = state.output.length;
             state.output.push(item);
+            state.outputStarted = true;
             writeSse(state.res, 'response.output_item.added', {
                 type: 'response.output_item.added',
                 output_index: outputIndex,
@@ -873,6 +873,29 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         failResponsesSseRaw(state.res, message);
     }
 
+    function createChatStreamResponsesSseState(res, model) {
+        let sequence = 0;
+        return {
+            res,
+            upstreamReq: null,
+            responseId: `resp_${crypto.randomBytes(10).toString('hex')}`,
+            model: typeof model === 'string' ? model : '',
+            createdAt: Math.floor(Date.now() / 1000),
+            output: [],
+            messageItem: null,
+            messageText: '',
+            toolCalls: [],
+            finished: false,
+            started: false,
+            outputStarted: false,
+            closeListenerAttached: false,
+            nextSeq: () => {
+                sequence += 1;
+                return sequence;
+            }
+        };
+    }
+
     function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
         const parsed = new URL(targetUrl);
         const transport = parsed.protocol === 'https:' ? https : http;
@@ -888,49 +911,16 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         const timeoutMs = Number.isFinite(options.timeoutMs)
             ? Math.max(1000, Number(options.timeoutMs))
             : 30000;
-        const streamIdleTimeoutMs = Number.isFinite(options.streamIdleTimeoutMs)
-            ? Math.max(1000, Number(options.streamIdleTimeoutMs))
-            : STREAM_IDLE_TIMEOUT_MS;
-        const maxStreamIdleExtensions = Number.isFinite(options.maxStreamIdleExtensions)
-            ? Math.max(0, Math.floor(Number(options.maxStreamIdleExtensions)))
-            : MAX_STREAM_IDLE_EXTENSIONS;
         const res = options.res;
         const model = typeof options.model === 'string' ? options.model : '';
+        const sharedState = options.streamState || createChatStreamResponsesSseState(res, model);
 
         return new Promise((resolve) => {
             let settled = false;
             let streamAccepted = false;
-            let streamIdleExtensions = 0;
-            let streamIdleTimer = null;
-            const clearStreamIdleTimer = () => {
-                if (!streamIdleTimer) return;
-                clearTimeout(streamIdleTimer);
-                streamIdleTimer = null;
-            };
-            const armStreamIdleTimer = () => {
-                if (!streamAccepted || settled) return;
-                clearStreamIdleTimer();
-                streamIdleTimer = setTimeout(() => {
-                    if (settled) return;
-                    if (streamIdleExtensions < maxStreamIdleExtensions) {
-                        streamIdleExtensions += 1;
-                        armStreamIdleTimer();
-                        return;
-                    }
-                    try { req.destroy(new Error('stream idle timeout')); } catch (_) {}
-                    finish({ ok: false, error: 'stream idle timeout' });
-                }, streamIdleTimeoutMs);
-                if (typeof streamIdleTimer.unref === 'function') streamIdleTimer.unref();
-            };
-            const recordStreamActivity = () => {
-                if (!streamAccepted) return;
-                streamIdleExtensions = 0;
-                armStreamIdleTimer();
-            };
             const finish = (value) => {
                 if (settled) return;
                 settled = true;
-                clearStreamIdleTimer();
                 resolve(value);
             };
             const req = transport.request({
@@ -948,19 +938,18 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 streamAccepted = status >= 200 && status < 300 && /text\/event-stream/i.test(contentType);
                 if (streamAccepted) {
                     req.setTimeout(0);
-                    armStreamIdleTimer();
                 }
                 let streamState = null;
 
                 const handleAbort = (reason) => {
                     if (settled) return;
                     if (streamState) {
-                        if (streamState.started) {
+                        if (streamState.outputStarted) {
                             failChatStreamResponsesSse(streamState, reason);
                             finish({ ok: true });
                             return;
                         }
-                        finish({ ok: false, error: reason || 'upstream stream failed' });
+                        finish({ ok: false, retryTransient: true, error: reason || 'upstream stream failed' });
                         return;
                     }
                     if (res.headersSent) {
@@ -969,10 +958,11 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         return;
                     }
                     const bodyText = chunks.length ? Buffer.concat(chunks).toString('utf-8') : '';
-                    const transient = isTransientNetworkError(reason);
+                    const transient = isTransientNetworkError(reason) || /aborted|stream aborted/i.test(String(reason || ''));
                     finish({
                         ok: false,
                         ...(transient ? {} : { status }),
+                        ...(transient ? { retryTransient: true } : {}),
                         error: reason,
                         bodyText
                     });
@@ -1017,26 +1007,11 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     return;
                 }
 
-                let sequence = 0;
-                const state = {
-                    res,
-                    upstreamReq: req,
-                    responseId: `resp_${crypto.randomBytes(10).toString('hex')}`,
-                    model,
-                    createdAt: Math.floor(Date.now() / 1000),
-                    output: [],
-                    messageItem: null,
-                    messageText: '',
-                    toolCalls: [],
-                    finished: false,
-                    started: false,
-                    closeListenerAttached: false,
-                    nextSeq: () => {
-                        sequence += 1;
-                        return sequence;
-                    }
-                };
+                const state = sharedState;
+                state.upstreamReq = req;
+                if (!state.model && model) state.model = model;
                 streamState = state;
+                beginChatStreamResponsesSse(state);
 
                 let buffer = '';
                 const handleEventBlock = (block) => {
@@ -1060,7 +1035,6 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 };
 
                 upstreamRes.on('data', (chunk) => {
-                    recordStreamActivity();
                     buffer += chunk.toString('utf-8');
                     let boundary = buffer.search(/\r?\n\r?\n/);
                     while (boundary >= 0) {
@@ -1094,8 +1068,9 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             return { ok: false, error: 'failed to build upstream URL' };
         }
         let lastResult = null;
+        const streamState = options.streamState || createChatStreamResponsesSseState(options.res, options.model);
         for (const url of urls) {
-            const result = await retryTransientRequest(() => streamChatCompletionsAsResponsesSse(url, options));
+            const result = await retryTransientRequest(() => streamChatCompletionsAsResponsesSse(url, { ...options, streamState }));
             lastResult = result;
             if (result && result.retry) continue;
             return result;
@@ -1379,13 +1354,6 @@ function createBuiltinProxyRuntimeController(deps = {}) {
     function createBuiltinProxyServer(settings, upstream) {
         const connections = new Set();
         const timeoutMs = settings.timeoutMs;
-        const streamIdleTimeoutMs = Number.isFinite(Number(settings.streamIdleTimeoutMs))
-            ? Math.max(1000, Number(settings.streamIdleTimeoutMs))
-            : undefined;
-        const maxStreamIdleExtensions = Number.isFinite(Number(settings.maxStreamIdleExtensions))
-            ? Math.max(0, Math.floor(Number(settings.maxStreamIdleExtensions)))
-            : undefined;
-
         const server = http.createServer((req, res) => {
             let parsedIncoming;
             try {
@@ -1543,8 +1511,6 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                             method: 'POST',
                             headers: commonHeaders,
                             timeoutMs,
-                            streamIdleTimeoutMs,
-                            maxStreamIdleExtensions,
                             body: streamingChatBody,
                             res,
                             model
