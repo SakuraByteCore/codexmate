@@ -53,3 +53,16 @@ codex-switcher.exe
 # Package manager lockfiles (keep package-lock.json)
 # pnpm-lock.yaml
 # yarn.lock
+log.txt
+tmp/
+.gitnexus/
+
+# Internal project configs (local-only)
+.project-identity
+*.code-workspace
+help.html
+AGENTS.md
+CLAUDE.md
+CODEBASE.md
+.claude/
+pnpm-lock.yaml
