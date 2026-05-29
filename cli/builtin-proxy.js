@@ -140,6 +140,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
 
     const TRANSIENT_RETRY_DELAYS_MS = [200, 600];
     const STREAM_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+    const MAX_STREAM_IDLE_EXTENSIONS = 3;
 
     async function retryTransientRequest(executor) {
         let lastResult = null;
@@ -847,7 +848,12 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         startChatStreamHeartbeat(state);
         if (typeof res.on === 'function' && !state.closeListenerAttached) {
             state.closeListenerAttached = true;
-            res.on('close', () => stopChatStreamHeartbeat(state));
+            res.on('close', () => {
+                stopChatStreamHeartbeat(state);
+                if (!state.finished && state.upstreamReq) {
+                    try { state.upstreamReq.destroy(new Error('client aborted')); } catch (_) {}
+                }
+            });
         }
         writeSse(res, 'response.created', {
             type: 'response.created',
@@ -882,15 +888,49 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         const timeoutMs = Number.isFinite(options.timeoutMs)
             ? Math.max(1000, Number(options.timeoutMs))
             : 30000;
+        const streamIdleTimeoutMs = Number.isFinite(options.streamIdleTimeoutMs)
+            ? Math.max(1000, Number(options.streamIdleTimeoutMs))
+            : STREAM_IDLE_TIMEOUT_MS;
+        const maxStreamIdleExtensions = Number.isFinite(options.maxStreamIdleExtensions)
+            ? Math.max(0, Math.floor(Number(options.maxStreamIdleExtensions)))
+            : MAX_STREAM_IDLE_EXTENSIONS;
         const res = options.res;
         const model = typeof options.model === 'string' ? options.model : '';
 
         return new Promise((resolve) => {
             let settled = false;
             let streamAccepted = false;
+            let streamIdleExtensions = 0;
+            let streamIdleTimer = null;
+            const clearStreamIdleTimer = () => {
+                if (!streamIdleTimer) return;
+                clearTimeout(streamIdleTimer);
+                streamIdleTimer = null;
+            };
+            const armStreamIdleTimer = () => {
+                if (!streamAccepted || settled) return;
+                clearStreamIdleTimer();
+                streamIdleTimer = setTimeout(() => {
+                    if (settled) return;
+                    if (streamIdleExtensions < maxStreamIdleExtensions) {
+                        streamIdleExtensions += 1;
+                        armStreamIdleTimer();
+                        return;
+                    }
+                    try { req.destroy(new Error('stream idle timeout')); } catch (_) {}
+                    finish({ ok: false, error: 'stream idle timeout' });
+                }, streamIdleTimeoutMs);
+                if (typeof streamIdleTimer.unref === 'function') streamIdleTimer.unref();
+            };
+            const recordStreamActivity = () => {
+                if (!streamAccepted) return;
+                streamIdleExtensions = 0;
+                armStreamIdleTimer();
+            };
             const finish = (value) => {
                 if (settled) return;
                 settled = true;
+                clearStreamIdleTimer();
                 resolve(value);
             };
             const req = transport.request({
@@ -906,6 +946,10 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 const chunks = [];
                 const contentType = String(upstreamRes.headers && upstreamRes.headers['content-type'] || '');
                 streamAccepted = status >= 200 && status < 300 && /text\/event-stream/i.test(contentType);
+                if (streamAccepted) {
+                    req.setTimeout(0);
+                    armStreamIdleTimer();
+                }
                 let streamState = null;
 
                 const handleAbort = (reason) => {
@@ -924,11 +968,13 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         finish({ ok: true });
                         return;
                     }
+                    const bodyText = chunks.length ? Buffer.concat(chunks).toString('utf-8') : '';
+                    const transient = isTransientNetworkError(reason);
                     finish({
                         ok: false,
-                        status,
+                        ...(transient ? {} : { status }),
                         error: reason,
-                        bodyText: chunks.length ? Buffer.concat(chunks).toString('utf-8') : ''
+                        bodyText
                     });
                 };
                 upstreamRes.on('error', (err) => handleAbort(err && err.message ? err.message : 'upstream stream failed'));
@@ -947,16 +993,16 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 }
 
                 if (!/text\/event-stream/i.test(contentType)) {
-                    res.writeHead(200, {
-                        'Content-Type': 'text/event-stream; charset=utf-8',
-                        'Cache-Control': 'no-cache',
-                        'Connection': 'keep-alive',
-                        'X-Accel-Buffering': 'no'
-                    });
                     upstreamRes.on('data', (chunk) => chunk && chunks.push(chunk));
                     upstreamRes.on('end', () => {
                         const text = chunks.length ? Buffer.concat(chunks).toString('utf-8') : '';
                         const parsedJson = parseJsonOrError(text);
+                        res.writeHead(200, {
+                            'Content-Type': 'text/event-stream; charset=utf-8',
+                            'Cache-Control': 'no-cache',
+                            'Connection': 'keep-alive',
+                            'X-Accel-Buffering': 'no'
+                        });
                         if (parsedJson.error) {
                             writeSse(res, 'response.failed', { type: 'response.failed', error: `invalid upstream response: ${parsedJson.error}` });
                             writeSse(res, 'done', '[DONE]');
@@ -974,6 +1020,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 let sequence = 0;
                 const state = {
                     res,
+                    upstreamReq: req,
                     responseId: `resp_${crypto.randomBytes(10).toString('hex')}`,
                     model,
                     createdAt: Math.floor(Date.now() / 1000),
@@ -1013,6 +1060,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 };
 
                 upstreamRes.on('data', (chunk) => {
+                    recordStreamActivity();
                     buffer += chunk.toString('utf-8');
                     let boundary = buffer.search(/\r?\n\r?\n/);
                     while (boundary >= 0) {
@@ -1030,10 +1078,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 });
             });
             req.setTimeout(timeoutMs, () => {
-                if (streamAccepted) {
-                    req.setTimeout(STREAM_IDLE_TIMEOUT_MS);
-                    return;
-                }
+                if (streamAccepted) return;
                 try { req.destroy(new Error('timeout')); } catch (_) {}
                 finish({ ok: false, error: 'timeout' });
             });
@@ -1334,6 +1379,12 @@ function createBuiltinProxyRuntimeController(deps = {}) {
     function createBuiltinProxyServer(settings, upstream) {
         const connections = new Set();
         const timeoutMs = settings.timeoutMs;
+        const streamIdleTimeoutMs = Number.isFinite(Number(settings.streamIdleTimeoutMs))
+            ? Math.max(1000, Number(settings.streamIdleTimeoutMs))
+            : undefined;
+        const maxStreamIdleExtensions = Number.isFinite(Number(settings.maxStreamIdleExtensions))
+            ? Math.max(0, Math.floor(Number(settings.maxStreamIdleExtensions)))
+            : undefined;
 
         const server = http.createServer((req, res) => {
             let parsedIncoming;
@@ -1492,6 +1543,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                             method: 'POST',
                             headers: commonHeaders,
                             timeoutMs,
+                            streamIdleTimeoutMs,
+                            maxStreamIdleExtensions,
                             body: streamingChatBody,
                             res,
                             model

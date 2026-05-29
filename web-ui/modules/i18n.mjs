@@ -13,14 +13,21 @@ function getAvailableLanguages() {
     return LANGUAGE_META.filter((item) => item && item.code && DICT[item.code]);
 }
 
+function getDefaultLanguageMeta() {
+    const available = getAvailableLanguages();
+    return available[0] || LANGUAGE_META[0];
+}
+
 function getLanguageMeta(code) {
     const normalized = typeof code === 'string' ? code.trim().toLowerCase() : '';
-    return getAvailableLanguages().find((item) => item.code === normalized) || LANGUAGE_META[0];
+    return getAvailableLanguages().find((item) => item.code === normalized) || getDefaultLanguageMeta();
 }
 
 function normalizeLang(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return getAvailableLanguages().some((item) => item.code === normalized) ? normalized : 'zh';
+    const available = getAvailableLanguages();
+    const fallback = available[0] && available[0].code ? available[0].code : 'zh';
+    return available.some((item) => item.code === normalized) ? normalized : fallback;
 }
 
 function applyDocumentLanguage(next) {

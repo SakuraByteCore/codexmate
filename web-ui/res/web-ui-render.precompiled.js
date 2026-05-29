@@ -4278,6 +4278,7 @@ return function render(_ctx, _cache) {
                                   class: "btn-mini",
                                   onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true })),
                                   disabled: _ctx.sessionTrashLoading,
+                                  "aria-label": _ctx.t('sessions.refresh'),
                                   title: _ctx.t('sessions.refresh')
                                 }, [
                                   (_openBlock(), _createElementBlock("svg", {
@@ -4289,7 +4290,7 @@ return function render(_ctx, _cache) {
                                   }, [
                                     _createElementVNode("path", { d: "M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16" })
                                   ]))
-                                ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                                ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
                                 _createElementVNode("button", {
                                   class: "btn-mini delete",
                                   onClick: _ctx.clearSessionTrash,
@@ -4325,6 +4326,7 @@ return function render(_ctx, _cache) {
                                         class: "trash-action-btn restore",
                                         onClick: $event => (_ctx.restoreSessionTrash(item)),
                                         disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
+                                        "aria-label": _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore'),
                                         title: _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore')
                                       }, [
                                         (_openBlock(), _createElementBlock("svg", {
@@ -4336,11 +4338,12 @@ return function render(_ctx, _cache) {
                                           _createElementVNode("path", { d: "M3 12a9 9 0 119 9" }),
                                           _createElementVNode("path", { d: "M3 4v6h6" })
                                         ]))
-                                      ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                                      ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
                                       _createElementVNode("button", {
                                         class: "trash-action-btn delete",
                                         onClick: $event => (_ctx.purgeSessionTrash(item)),
                                         disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
+                                        "aria-label": _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge'),
                                         title: _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge')
                                       }, [
                                         (_openBlock(), _createElementBlock("svg", {
@@ -4351,7 +4354,7 @@ return function render(_ctx, _cache) {
                                         }, [
                                           _createElementVNode("path", { d: "M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" })
                                         ]))
-                                      ], 8 /* PROPS */, ["onClick", "disabled", "title"])
+                                      ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
                                     ])
                                   ])
                                 ]))

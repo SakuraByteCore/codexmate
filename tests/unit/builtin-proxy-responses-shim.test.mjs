@@ -110,7 +110,13 @@ function createTestController() {
 async function startTestProxy(upstreamPort, options = {}) {
     const controller = createTestController();
     const runtime = await controller.createBuiltinProxyServer(
-        { host: '127.0.0.1', port: 0, timeoutMs: options.timeoutMs || 2000 },
+        {
+            host: '127.0.0.1',
+            port: 0,
+            timeoutMs: options.timeoutMs || 2000,
+            streamIdleTimeoutMs: options.streamIdleTimeoutMs,
+            maxStreamIdleExtensions: options.maxStreamIdleExtensions
+        },
         {
             providerName: options.providerName || 'test',
             baseUrl: options.baseUrl || `http://127.0.0.1:${upstreamPort}/v1`,
@@ -614,6 +620,68 @@ test('builtin-proxy /v1/responses stream=true retries chat fallback when upstrea
     }
 });
 
+test('builtin-proxy /v1/responses stream=true retries JSON fallback when body aborts before SSE output', async () => {
+    const sockets = new Set();
+    let chatAttempts = 0;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            req.on('data', () => {});
+            req.on('end', () => {
+                chatAttempts += 1;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                if (chatAttempts === 1) {
+                    res.write('{"id":"chatcmpl_json_retry","model":"gpt-test","choices":[');
+                    setTimeout(() => {
+                        try { req.socket.destroy(); } catch (_) {}
+                    }, 30);
+                    return;
+                }
+                res.end(JSON.stringify({
+                    id: 'chatcmpl_json_retry',
+                    model: 'gpt-test',
+                    choices: [{ message: { role: 'assistant', content: 'json-recovered' } }]
+                }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    upstream.on('connection', (socket) => {
+        sockets.add(socket);
+        socket.on('close', () => sockets.delete(socket));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const sse = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-test', input: 'ping', stream: true }
+        });
+        assert.equal(sse.status, 200);
+        assert.ok(chatAttempts >= 2, 'pre-output JSON fallback abort should be retried');
+        assert.match(sse.headers['content-type'], /text\/event-stream/i);
+        assert.match(sse.text, /"delta":"json-recovered"/);
+        assert.match(sse.text, /event: response\.completed/);
+        assert.doesNotMatch(sse.text, /event: response\.failed/);
+        assert.equal((sse.text.match(/event: response\.created/g) || []).length, 1);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream, sockets);
+    }
+});
+
 test('builtin-proxy /v1/responses stream=true keeps long idle upstream streams open', async () => {
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
@@ -658,6 +726,120 @@ test('builtin-proxy /v1/responses stream=true keeps long idle upstream streams o
             await closeServer(proxyRuntime.server, proxyRuntime.connections);
         }
         await closeServer(upstream);
+    }
+});
+
+test('builtin-proxy /v1/responses stream=true aborts upstream when client disconnects', async () => {
+    let upstreamClosed = false;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            req.on('close', () => { upstreamClosed = true; });
+            req.on('data', () => {});
+            req.on('end', () => {
+                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+                res.write('data: {"id":"chatcmpl_client_abort","model":"gpt-test","choices":[{"delta":{"role":"assistant"}}]}\n\n');
+                // Keep stream open until the proxy destroys it after client disconnect.
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        await new Promise((resolve, reject) => {
+            const req = http.request({
+                hostname: '127.0.0.1',
+                port: proxyPort,
+                path: '/v1/responses',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }, (res) => {
+                let text = '';
+                res.on('data', (chunk) => {
+                    text += chunk.toString('utf-8');
+                    if (text.includes('event: response.created')) {
+                        req.destroy();
+                        setTimeout(resolve, 100);
+                    }
+                });
+                res.on('error', () => {});
+            });
+            req.on('error', (err) => {
+                if (err && err.code === 'ECONNRESET') return;
+                reject(err);
+            });
+            req.write(JSON.stringify({ model: 'gpt-test', input: 'ping', stream: true }));
+            req.end();
+        });
+        assert.equal(upstreamClosed, true, 'client disconnect should close upstream request');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
+test('builtin-proxy /v1/responses stream=true caps accepted stream idle extensions', async () => {
+    const sockets = new Set();
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            req.on('data', () => {});
+            req.on('end', () => {
+                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+                res.write('data: {"id":"chatcmpl_idle_cap","model":"gpt-test","choices":[{"delta":{"role":"assistant"}}]}\n\n');
+                // Keep the upstream stream open and idle long enough to hit the capped idle timeout.
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    upstream.on('connection', (socket) => {
+        sockets.add(socket);
+        socket.on('close', () => sockets.delete(socket));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort, {
+            timeoutMs: 1000,
+            streamIdleTimeoutMs: 1000,
+            maxStreamIdleExtensions: 1
+        });
+        const proxyPort = proxyRuntime.server.address().port;
+        const sse = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-test', input: 'ping', stream: true }
+        });
+        assert.equal(sse.status, 200);
+        assert.match(sse.headers['content-type'], /text\/event-stream/i);
+        assert.match(sse.text, /event: response\.created/);
+        assert.match(sse.text, /event: response\.failed/);
+        assert.match(sse.text, /stream idle timeout/);
+        assert.match(sse.text, /data: \[DONE\]/);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream, sockets);
     }
 });
 
