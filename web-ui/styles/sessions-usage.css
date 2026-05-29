@@ -135,10 +135,10 @@
 .usage-hero::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 400px;
-    height: 400px;
+    top: -72px;
+    right: 0;
+    width: min(320px, 62%);
+    height: min(320px, 62%);
     background: radial-gradient(circle, rgba(200, 121, 99, 0.06) 0%, transparent 70%);
     pointer-events: none;
 }
@@ -175,10 +175,14 @@
 .usage-hero-active-label {
     font-weight: 600;
     color: var(--color-text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .usage-hero-active-stat {
     color: var(--color-text-tertiary);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .usage-hero-active-stat::before {
@@ -221,6 +225,15 @@
     justify-content: center;
     gap: 14px;
     flex-wrap: wrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.usage-hero-sub > span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .usage-hero-delta {
@@ -726,12 +739,26 @@
     }
 
     .usage-hero {
-        padding: 24px 20px;
+        padding: 22px 16px;
         min-height: 140px;
+        gap: 16px;
+    }
+
+    .usage-hero::before {
+        top: -56px;
+        right: 0;
+        width: 220px;
+        height: 220px;
+    }
+
+    .usage-hero-active {
+        padding: 10px 12px;
+        gap: 8px 10px;
     }
 
     .usage-hero-main {
-        font-size: 38px;
+        font-size: clamp(32px, 10vw, 38px);
+        line-height: 1.08;
     }
 
     .usage-wave-chart {
