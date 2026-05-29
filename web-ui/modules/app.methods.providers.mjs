@@ -302,6 +302,7 @@ export function createProvidersMethods(options = {}) {
                 key: '',
                 useTransform: isTransform
             };
+            this.showAddProviderKey = false;
             this.showAddModal = true;
         },
 
@@ -513,7 +514,12 @@ export function createProvidersMethods(options = {}) {
 
         closeAddModal() {
             this.showAddModal = false;
+            this.showAddProviderKey = false;
             this.newProvider = { name: '', url: '', key: '', useTransform: false, _suggestedModel: '' };
+        },
+
+        toggleAddProviderKey() {
+            this.showAddProviderKey = !this.showAddProviderKey;
         },
 
         closeModelModal() {

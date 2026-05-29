@@ -350,6 +350,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeExcluded',
         'providersHealthLoading',
         'providersHealthResult',
+        'showAddClaudeConfigKey',
+        'showAddProviderKey',
         'showEditClaudeConfigKey',
         'showEditProviderKey'
     ] : [
@@ -383,6 +385,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeExcluded',
         'providersHealthLoading',
         'providersHealthResult',
+        'showAddClaudeConfigKey',
+        'showAddProviderKey',
         'showEditClaudeConfigKey',
         'showEditProviderKey'
     ];
@@ -558,6 +562,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeCandidateProviders',
         'claudeLocalBridgeConfigured',
         'syncClaudeBridgeProviders',
+        'toggleAddClaudeConfigKey',
+        'toggleAddProviderKey',
         'toggleEditClaudeConfigKey',
         'toggleEditProviderKey'
     ];

@@ -26,7 +26,7 @@
                     </div>
                 </template>
                 <template v-else>
-                <button class="btn-add" @click="showAddModal = true" v-if="!loading && !initError">
+                <button class="btn-add" @click="showAddProviderKey = false; showAddModal = true" v-if="!loading && !initError">
                     <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('config.addProvider') }}
                 </button>
@@ -36,7 +36,7 @@
                         <span class="selector-title">{{ t('config.providerTemplate.title') }}</span>
                     </div>
                     <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
-                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider._suggestedModel = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddModal = true">{{ tpl.label }}</button>
+                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider._suggestedModel = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddProviderKey = false; showAddModal = true">{{ tpl.label }}</button>
                     </div>
                 </div>
 

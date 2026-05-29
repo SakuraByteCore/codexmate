@@ -35,6 +35,16 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /isProviderConfigMode/);
     assert.match(html, /provider-fast-switch-select/);
     assert.match(html, /forceCompactLayout/);
+    assert.match(modalsBasic, /v-model="newProvider\.key"[\s\S]*:type="showAddProviderKey \? 'text' : 'password'"/);
+    assert.match(modalsBasic, /@click="toggleAddProviderKey"/);
+    assert.match(modalsBasic, /class="input-toggle-btn"[\s\S]*showAddProviderKey/);
+    assert.match(modalsBasic, /v-model="newClaudeConfig\.apiKey"[\s\S]*:type="showAddClaudeConfigKey \? 'text' : 'password'"/);
+    assert.match(modalsBasic, /@click="toggleAddClaudeConfigKey"/);
+    assert.match(modalsBasic, /class="input-toggle-btn"[\s\S]*showAddClaudeConfigKey/);
+    assert.match(bundledScript, /showAddProviderKey:\s*false/);
+    assert.match(bundledScript, /showAddClaudeConfigKey:\s*false/);
+    assert.match(bundledScript, /toggleAddProviderKey\(\)\s*\{/);
+    assert.match(bundledScript, /toggleAddClaudeConfigKey\(\)\s*\{/);
     assert.match(html, /<script src="\/res\/vue\.runtime\.global\.prod\.js"><\/script>/);
     assert.doesNotMatch(html, /<script src="\/res\/vue\.global\.prod\.js"><\/script>/);
     assert.match(html, /quickSwitchProvider\(\$event\.target\.value\)/);
@@ -362,11 +372,11 @@ test('config template keeps expected config tabs in top and side navigation', ()
     }
     assert.doesNotMatch(modalsBasic, /install-cli-modal-title/);
     assert.doesNotMatch(modalsBasic, /showInstallModal/);
-    assert.match(modalsBasic, /<input v-model="newProvider\.key" class="form-input" type="password" placeholder="sk-\.\.\.">/);
+    assert.match(modalsBasic, /<input v-model="newProvider\.key" class="form-input" :type="showAddProviderKey \? 'text' : 'password'" placeholder="sk-\.\.\." autocomplete="off" spellcheck="false">/);
     assert.match(modalsBasic, /<input v-model="editingProvider\.key" class="form-input" :type="showEditProviderKey \? 'text' : 'password'" placeholder="sk-\.\.\." autocomplete="off" spellcheck="false">/);
-    assert.match(modalsBasic, /<input v-model="newClaudeConfig\.apiKey" class="form-input" type="password" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
+    assert.match(modalsBasic, /<input v-model="newClaudeConfig\.apiKey" class="form-input" :type="showAddClaudeConfigKey \? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
     assert.match(modalsBasic, /<input v-model="editingConfig\.apiKey" class="form-input" :type="showEditClaudeConfigKey \? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
-    assert.strictEqual([...modalsBasic.matchAll(/type="password"/g)].length, 2);
+    assert.strictEqual([...modalsBasic.matchAll(/\? 'text' : 'password'/g)].length, 4);
     assert.match(templateAgentModals, /<div v-if="showConfigTemplateModal" class="modal-overlay" @click\.self="!configTemplateApplying && closeConfigTemplateModal\(\)">/);
     assert.match(templateAgentModals, /<div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="config-template-modal-title">/);
     assert.match(templateAgentModals, /<div class="modal-title" id="config-template-modal-title">\{\{\s*t\('modal\.configTemplate\.title'\)\s*\}\}<\/div>/);

@@ -1,5 +1,5 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, normalizeClass: _normalizeClass, createElementVNode: _createElementVNode, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle, vModelCheckbox: _vModelCheckbox, vModelDynamic: _vModelDynamic } = Vue
+const { toDisplayString: _toDisplayString, normalizeClass: _normalizeClass, createElementVNode: _createElementVNode, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox } = Vue
 
 return function render(_ctx, _cache) {
   return (_openBlock(), _createElementBlock(_Fragment, null, [
@@ -968,7 +968,7 @@ return function render(_ctx, _cache) {
                     ? (_openBlock(), _createElementBlock("button", {
                         key: 0,
                         class: "btn-add",
-                        onClick: $event => (_ctx.showAddModal = true)
+                        onClick: $event => {_ctx.showAddProviderKey = false; _ctx.showAddModal = true}
                       }, [
                         (_openBlock(), _createElementBlock("svg", {
                           class: "icon",
@@ -999,7 +999,7 @@ return function render(_ctx, _cache) {
                               key: tpl.name,
                               type: "button",
                               class: "btn-mini",
-                              onClick: $event => {_ctx.newProvider.name = tpl.name; _ctx.newProvider.url = tpl.url; _ctx.newProvider._suggestedModel = tpl.model || ''; _ctx.newProvider.useTransform = !!tpl.useTransform; _ctx.showAddModal = true}
+                              onClick: $event => {_ctx.newProvider.name = tpl.name; _ctx.newProvider.url = tpl.url; _ctx.newProvider._suggestedModel = tpl.model || ''; _ctx.newProvider.useTransform = !!tpl.useTransform; _ctx.showAddProviderKey = false; _ctx.showAddModal = true}
                             }, _toDisplayString(tpl.label), 9 /* TEXT, PROPS */, ["onClick"]))
                           }), 128 /* KEYED_FRAGMENT */))
                         ])
@@ -1574,102 +1574,102 @@ return function render(_ctx, _cache) {
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Claude Official'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.anthropic.com'; _ctx.newClaudeConfig.model = 'claude-sonnet-4'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Claude Official'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.anthropic.com'; _ctx.newClaudeConfig.model = 'claude-sonnet-4'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Claude Official", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'DeepSeek'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.deepseek.com/anthropic'; _ctx.newClaudeConfig.model = 'DeepSeek-V3.2'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'DeepSeek'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.deepseek.com/anthropic'; _ctx.newClaudeConfig.model = 'DeepSeek-V3.2'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "DeepSeek", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Zhipu GLM'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://open.bigmodel.cn/api/anthropic'; _ctx.newClaudeConfig.model = 'glm-5'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Zhipu GLM'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://open.bigmodel.cn/api/anthropic'; _ctx.newClaudeConfig.model = 'glm-5'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Zhipu GLM", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Z.ai GLM'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.z.ai/api/anthropic'; _ctx.newClaudeConfig.model = 'glm-5'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Z.ai GLM'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.z.ai/api/anthropic'; _ctx.newClaudeConfig.model = 'glm-5'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Z.ai GLM", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Qwen Coder'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://coding.dashscope.aliyuncs.com/apps/anthropic'; _ctx.newClaudeConfig.model = 'qwen3-coder'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Qwen Coder'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://coding.dashscope.aliyuncs.com/apps/anthropic'; _ctx.newClaudeConfig.model = 'qwen3-coder'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Qwen Coder", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Kimi k2'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.moonshot.cn/anthropic'; _ctx.newClaudeConfig.model = 'kimi-k2.5'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Kimi k2'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.moonshot.cn/anthropic'; _ctx.newClaudeConfig.model = 'kimi-k2.5'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Kimi k2", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Kimi For Coding'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.kimi.com/coding/'; _ctx.newClaudeConfig.model = 'kimi-k2.5'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Kimi For Coding'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.kimi.com/coding/'; _ctx.newClaudeConfig.model = 'kimi-k2.5'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Kimi For Coding", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'KAT-Coder'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints/${ENDPOINT_ID}/claude-code-proxy'; _ctx.newClaudeConfig.model = 'KAT-Coder-Pro V1'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'KAT-Coder'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints/${ENDPOINT_ID}/claude-code-proxy'; _ctx.newClaudeConfig.model = 'KAT-Coder-Pro V1'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "KAT-Coder", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Longcat'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.longcat.chat/anthropic'; _ctx.newClaudeConfig.model = 'LongCat-Flash-Chat'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Longcat'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.longcat.chat/anthropic'; _ctx.newClaudeConfig.model = 'LongCat-Flash-Chat'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Longcat", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'MiniMax'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.minimaxi.com/anthropic'; _ctx.newClaudeConfig.model = 'MiniMax-M2.7'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'MiniMax'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.minimaxi.com/anthropic'; _ctx.newClaudeConfig.model = 'MiniMax-M2.7'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "MiniMax", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'MiniMax en'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.minimax.io/anthropic'; _ctx.newClaudeConfig.model = 'MiniMax-M2.7'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'MiniMax en'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.minimax.io/anthropic'; _ctx.newClaudeConfig.model = 'MiniMax-M2.7'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "MiniMax en", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'DouBaoSeed'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://ark.cn-beijing.volces.com/api/coding'; _ctx.newClaudeConfig.model = 'doubao-seed-2-0-code-preview-latest'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'DouBaoSeed'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://ark.cn-beijing.volces.com/api/coding'; _ctx.newClaudeConfig.model = 'doubao-seed-2-0-code-preview-latest'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "DouBaoSeed", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'BaiLing'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.tbox.cn/api/anthropic'; _ctx.newClaudeConfig.model = 'Ling-2.5-1T'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'BaiLing'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.tbox.cn/api/anthropic'; _ctx.newClaudeConfig.model = 'Ling-2.5-1T'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "BaiLing", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'ModelScope'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api-inference.modelscope.cn'; _ctx.newClaudeConfig.model = 'ZhipuAI/GLM-5'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'ModelScope'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api-inference.modelscope.cn'; _ctx.newClaudeConfig.model = 'ZhipuAI/GLM-5'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "ModelScope", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'AiHubMix'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://aihubmix.com'; _ctx.newClaudeConfig.model = 'glm-4.7'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'AiHubMix'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://aihubmix.com'; _ctx.newClaudeConfig.model = 'glm-4.7'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "AiHubMix", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'DMXAPI'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://www.dmxapi.cn'; _ctx.newClaudeConfig.model = 'glm-4.7'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'DMXAPI'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://www.dmxapi.cn'; _ctx.newClaudeConfig.model = 'glm-4.7'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "DMXAPI", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'PackyCode'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://www.packyapi.com'; _ctx.newClaudeConfig.model = 'glm-4.7'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'PackyCode'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://www.packyapi.com'; _ctx.newClaudeConfig.model = 'glm-4.7'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "PackyCode", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'AnyRouter'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://anyrouter.top'; _ctx.newClaudeConfig.model = 'claude-opus-4-7[1m]'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'AnyRouter'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://anyrouter.top'; _ctx.newClaudeConfig.model = 'claude-opus-4-7[1m]'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "AnyRouter", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Xiaomi MiMo'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.xiaomimimo.com/anthropic'; _ctx.newClaudeConfig.model = 'mimo-v2.5-pro'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Xiaomi MiMo'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://api.xiaomimimo.com/anthropic'; _ctx.newClaudeConfig.model = 'mimo-v2.5-pro'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Xiaomi MiMo", 8 /* PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-mini",
-                        onClick: $event => {_ctx.newClaudeConfig.name = 'Xiaomi Token Plan'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://token-plan-cn.xiaomimimo.com/anthropic'; _ctx.newClaudeConfig.model = 'mimo-v2.5-pro'; _ctx.showClaudeConfigModal = true}
+                        onClick: $event => {_ctx.newClaudeConfig.name = 'Xiaomi Token Plan'; _ctx.newClaudeConfig.apiKey = ''; _ctx.newClaudeConfig.baseUrl = 'https://token-plan-cn.xiaomimimo.com/anthropic'; _ctx.newClaudeConfig.model = 'mimo-v2.5-pro'; _ctx.showAddClaudeConfigKey = false; _ctx.showClaudeConfigModal = true}
                       }, "Xiaomi Token Plan", 8 /* PROPS */, ["onClick"])
                     ])
                   ]),
@@ -5272,13 +5272,52 @@ return function render(_ctx, _cache) {
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.apiKey')), 1 /* TEXT */),
-              _withDirectives(_createElementVNode("input", {
-                "onUpdate:modelValue": $event => ((_ctx.newProvider.key) = $event),
-                class: "form-input",
-                type: "password",
-                placeholder: "sk-..."
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                [_vModelText, _ctx.newProvider.key]
+              _createElementVNode("div", { class: "input-with-toggle" }, [
+                _withDirectives(_createElementVNode("input", {
+                  "onUpdate:modelValue": $event => ((_ctx.newProvider.key) = $event),
+                  class: "form-input",
+                  type: _ctx.showAddProviderKey ? 'text' : 'password',
+                  placeholder: "sk-...",
+                  autocomplete: "off",
+                  spellcheck: "false"
+                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type"]), [
+                  [_vModelDynamic, _ctx.newProvider.key]
+                ]),
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "input-toggle-btn",
+                  onClick: _ctx.toggleAddProviderKey,
+                  title: _ctx.showAddProviderKey ? _ctx.t('common.hide') : _ctx.t('common.show')
+                }, [
+                  (!_ctx.showAddProviderKey)
+                    ? (_openBlock(), _createElementBlock("svg", {
+                        key: 0,
+                        viewBox: "0 0 20 20",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        width: "16",
+                        height: "16"
+                      }, [
+                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                        _createElementVNode("circle", {
+                          cx: "10",
+                          cy: "10",
+                          r: "3"
+                        })
+                      ]))
+                    : (_openBlock(), _createElementBlock("svg", {
+                        key: 1,
+                        viewBox: "0 0 20 20",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        width: "16",
+                        height: "16"
+                      }, [
+                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                      ]))
+                ], 8 /* PROPS */, ["onClick", "title"])
               ])
             ]),
             _createElementVNode("div", { class: "form-group" }, [
@@ -5527,15 +5566,52 @@ return function render(_ctx, _cache) {
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, "API Key"),
-              _withDirectives(_createElementVNode("input", {
-                "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.apiKey) = $event),
-                class: "form-input",
-                type: "password",
-                autocomplete: "off",
-                spellcheck: "false",
-                placeholder: _ctx.t('placeholder.apiKeyExampleClaude')
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                [_vModelText, _ctx.newClaudeConfig.apiKey]
+              _createElementVNode("div", { class: "input-with-toggle" }, [
+                _withDirectives(_createElementVNode("input", {
+                  "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.apiKey) = $event),
+                  class: "form-input",
+                  type: _ctx.showAddClaudeConfigKey ? 'text' : 'password',
+                  autocomplete: "off",
+                  spellcheck: "false",
+                  placeholder: _ctx.t('placeholder.apiKeyExampleClaude')
+                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
+                  [_vModelDynamic, _ctx.newClaudeConfig.apiKey]
+                ]),
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "input-toggle-btn",
+                  onClick: _ctx.toggleAddClaudeConfigKey,
+                  title: _ctx.showAddClaudeConfigKey ? _ctx.t('common.hide') : _ctx.t('common.show')
+                }, [
+                  (!_ctx.showAddClaudeConfigKey)
+                    ? (_openBlock(), _createElementBlock("svg", {
+                        key: 0,
+                        viewBox: "0 0 20 20",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        width: "16",
+                        height: "16"
+                      }, [
+                        _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                        _createElementVNode("circle", {
+                          cx: "10",
+                          cy: "10",
+                          r: "3"
+                        })
+                      ]))
+                    : (_openBlock(), _createElementBlock("svg", {
+                        key: 1,
+                        viewBox: "0 0 20 20",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        width: "16",
+                        height: "16"
+                      }, [
+                        _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                      ]))
+                ], 8 /* PROPS */, ["onClick", "title"])
               ])
             ]),
             _createElementVNode("div", { class: "form-group" }, [

@@ -529,6 +529,7 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         openClaudeConfigModal() {
+            this.showAddClaudeConfigKey = false;
             this.showClaudeConfigModal = true;
         },
 
