@@ -385,6 +385,7 @@
     border: none;
     background: transparent;
     padding: 0;
+    min-width: 0;
 }
 
 .hourly-heatmap-wrapper {
@@ -393,6 +394,8 @@
     gap: 3px;
     margin-top: 14px;
     min-width: 500px;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 16px;
     border-radius: 18px;
     background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(252,248,241,0.6));
@@ -770,11 +773,70 @@
     }
 
     .hourly-heatmap-wrapper {
+        width: 100%;
         min-width: 100%;
-        overflow-x: auto;
+        max-width: 100%;
+        overflow-x: visible;
+        padding: 12px;
+        gap: 2px;
+    }
+
+    .usage-card-hourly-heatmap {
+        overflow-x: visible;
+    }
+
+    .hourly-heatmap-header,
+    .hourly-heatmap-row {
+        gap: 2px;
+    }
+
+    .hourly-heatmap-corner,
+    .hourly-heatmap-weekday-label {
+        width: 28px;
+    }
+
+    .hourly-heatmap-weekday-label {
+        font-size: 10px;
+        padding-right: 4px;
+    }
+
+    .hourly-heatmap-hour-label {
+        font-size: 8px;
+        line-height: 12px;
+    }
+
+    .hourly-heatmap-cell {
+        height: 8px;
+        border-radius: 3px;
     }
 
     .usage-chart-grid {
         gap: 16px;
+    }
+}
+
+@media (max-width: 420px) {
+    .hourly-heatmap-wrapper {
+        padding: 10px;
+        gap: 1px;
+    }
+
+    .hourly-heatmap-header,
+    .hourly-heatmap-row {
+        gap: 1px;
+    }
+
+    .hourly-heatmap-corner,
+    .hourly-heatmap-weekday-label {
+        width: 24px;
+    }
+
+    .hourly-heatmap-weekday-label {
+        font-size: 9px;
+        padding-right: 3px;
+    }
+
+    .hourly-heatmap-hour-label {
+        font-size: 7px;
     }
 }
