@@ -132,7 +132,7 @@ return function render(_ctx, _cache) {
           _createElementVNode("button", {
             type: "button",
             class: "language-settings-link",
-            "aria-label": _ctx.t('settings.language.open'),
+            "aria-label": _ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() }),
             onClick: _ctx.openLanguageSettings
           }, _toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })), 9 /* TEXT, PROPS */, ["aria-label", "onClick"])
         ]))
@@ -422,7 +422,7 @@ return function render(_ctx, _cache) {
               _createElementVNode("button", {
                 type: "button",
                 class: "language-settings-link",
-                "aria-label": _ctx.t('settings.language.open'),
+                "aria-label": _ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() }),
                 onClick: _ctx.openLanguageSettings
               }, _toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })), 9 /* TEXT, PROPS */, ["aria-label", "onClick"])
             ])

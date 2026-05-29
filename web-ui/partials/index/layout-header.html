@@ -97,7 +97,7 @@
             <button
                 type="button"
                 class="language-settings-link"
-                :aria-label="t('settings.language.open')"
+                :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
                 @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
         </div>
 
@@ -310,7 +310,7 @@
                     <button
                         type="button"
                         class="language-settings-link"
-                        :aria-label="t('settings.language.open')"
+                        :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
                         @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
                 </div>
             </aside>
