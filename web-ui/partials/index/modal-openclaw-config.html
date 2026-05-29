@@ -267,7 +267,7 @@
                     </div>
                 </div>
 
-                <div class="btn-group">
+                <div class="btn-group openclaw-modal-footer">
                     <button class="btn btn-cancel" @click="closeOpenclawConfigModal" :disabled="openclawSaving || openclawApplying">取消</button>
                     <button class="btn btn-confirm" @click="saveOpenclawConfig" :disabled="openclawSaving || openclawApplying || (openclawEditing.lockName && openclawEditing.name === '默认配置')">
                         {{ openclawSaving ? '保存中...' : '保存' }}
