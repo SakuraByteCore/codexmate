@@ -492,6 +492,20 @@
     width: 100%;
 }
 
+.openclaw-card-list .card-content {
+    flex: 1;
+}
+
+.openclaw-card-list .card-title {
+    white-space: normal;
+    overflow: visible;
+}
+
+.openclaw-card-list .card-subtitle {
+    white-space: normal;
+    overflow: visible;
+}
+
 .openclaw-card-list .card-trailing {
     width: 100%;
     justify-content: space-between;
