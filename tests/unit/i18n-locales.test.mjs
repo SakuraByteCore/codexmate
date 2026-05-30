@@ -16,6 +16,14 @@ function placeholders(value) {
         .sort();
 }
 
+function readLocaleSource(code) {
+    return fs.readFileSync(path.join(localeDir, `${code}.mjs`), 'utf8');
+}
+
+function localeSourceKeys(code) {
+    return [...readLocaleSource(code).matchAll(/^\s*'([^']+)'\s*:/gm)].map(match => match[1]);
+}
+
 test('i18n dictionaries are split into locale modules', () => {
     const localeFiles = fs.readdirSync(localeDir)
         .filter(name => name.endsWith('.mjs'))
@@ -31,6 +39,20 @@ test('i18n dictionaries are split into locale modules', () => {
     }
 });
 
+test('locale source files do not declare duplicate keys', () => {
+    for (const code of expectedLocales) {
+        const seen = new Set();
+        const duplicates = new Set();
+        for (const key of localeSourceKeys(code)) {
+            if (seen.has(key)) {
+                duplicates.add(key);
+            }
+            seen.add(key);
+        }
+        assert.deepStrictEqual([...duplicates].sort(), [], `${code} locale should not contain duplicate keys`);
+    }
+});
+
 test('partial locale overrides only known keys and preserves placeholders', () => {
     const fallback = DICT.zh;
     for (const [key, value] of Object.entries(DICT.vi)) {
@@ -40,5 +62,24 @@ test('partial locale overrides only known keys and preserves placeholders', () =
             placeholders(fallback[key]),
             `vi placeholder mismatch for key: ${key}`
         );
+    }
+});
+
+test('Japanese orchestration template copy stays localized', () => {
+    const staleChineseCopy = [
+        '输出统一结论',
+        '避免重复描述',
+        '继续处理新增 review 评论',
+        '最后更新 PR 摘要',
+        '用 Workflow 跑一组固定检查并整理结果'
+    ];
+    const templateCopy = [
+        DICT.ja['orchestration.templates.reviewFix.notes'],
+        DICT.ja['orchestration.templates.reviewFix.followUps'],
+        DICT.ja['orchestration.templates.planOnly.notes'],
+        DICT.ja['orchestration.templates.workflowBatch.notes']
+    ].join('\n');
+    for (const phrase of staleChineseCopy) {
+        assert(!templateCopy.includes(phrase), `Japanese template copy should not include stale Chinese phrase: ${phrase}`);
     }
 });

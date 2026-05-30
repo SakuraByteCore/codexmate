@@ -44,7 +44,9 @@ function readTaskOrchestrationDraftMetrics(taskOrchestration) {
 }
 
 function translateTaskText(t, key, fallback, params = null) {
-    return typeof t === 'function' ? t(key, params) : fallback;
+    if (typeof t !== 'function') return fallback;
+    const translated = t(key, params);
+    return translated === key ? fallback : translated;
 }
 
 function createTaskDraftChecklist(metrics, t = null) {
