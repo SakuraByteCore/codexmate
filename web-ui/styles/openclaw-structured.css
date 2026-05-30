@@ -358,13 +358,15 @@
 .openclaw-layout {
     display: grid;
     gap: 12px;
-    padding: 4px 0 0;
+    padding: 0;
+    width: 100%;
 }
 
 .openclaw-workspace-card.settings-card,
 .openclaw-configs-card {
     margin: 0;
     padding: 12px 14px;
+    width: 100%;
 }
 
 /* Nested workspace card - distinguish from outer section */
