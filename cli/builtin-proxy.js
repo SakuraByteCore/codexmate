@@ -720,11 +720,13 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         };
     }
 
-    function normalizeSingleResponsesToolToChatTools(tool) {
-        if (!isRecord(tool)) return [];
+    const MAX_RESPONSES_TOOL_NAMESPACE_DEPTH = 5;
+
+    function normalizeSingleResponsesToolToChatTools(tool, depth = 0) {
+        if (!isRecord(tool) || depth > MAX_RESPONSES_TOOL_NAMESPACE_DEPTH) return [];
         const type = asTrimmedString(tool.type).toLowerCase();
         if (type === 'namespace' && Array.isArray(tool.tools)) {
-            return tool.tools.flatMap((inner) => normalizeSingleResponsesToolToChatTools(inner));
+            return tool.tools.flatMap((inner) => normalizeSingleResponsesToolToChatTools(inner, depth + 1));
         }
         if (type === 'function') {
             const converted = normalizeFunctionToolForChat(tool);

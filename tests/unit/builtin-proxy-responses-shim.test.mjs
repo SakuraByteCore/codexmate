@@ -120,6 +120,14 @@ async function startTestProxy(upstreamPort, options = {}) {
     return runtime;
 }
 
+function createNestedNamespace(depth, leafTool) {
+    let current = leafTool;
+    for (let i = 0; i < depth; i += 1) {
+        current = { type: 'namespace', tools: [current] };
+    }
+    return current;
+}
+
 test('builtin-proxy /v1/responses falls back to chat-only upstream and returns Responses JSON', async () => {
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
@@ -697,7 +705,8 @@ test('builtin-proxy /v1/responses uses metapi-style Responses to chat fallback c
                     {
                         type: 'namespace',
                         tools: [{ type: 'function', name: 'nested_lookup', parameters: { type: 'object' } }]
-                    }
+                    },
+                    createNestedNamespace(6, { type: 'function', name: 'too_deep', parameters: { type: 'object' } })
                 ],
                 tool_choice: { type: 'tool', name: 'lookup' },
                 text: { format: { type: 'json_object' }, verbosity: 'low' },
@@ -775,6 +784,7 @@ test('builtin-proxy /v1/responses uses metapi-style Responses to chat fallback c
             }
         ]);
         assert.deepStrictEqual(capturedChatRequest.tool_choice, { type: 'function', function: { name: 'lookup' } });
+        assert.equal(capturedChatRequest.tools.some((tool) => tool.function?.name === 'too_deep'), false);
         assert.equal(capturedChatRequest.parallel_tool_calls, false);
         assert.deepStrictEqual(capturedChatRequest.response_format, { type: 'json_object' });
         assert.equal(capturedChatRequest.verbosity, 'low');
