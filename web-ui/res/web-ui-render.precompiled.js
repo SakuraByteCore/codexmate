@@ -1970,16 +1970,7 @@ return function render(_ctx, _cache) {
                 ]))
               : _createCommentVNode("v-if", true),
             _createElementVNode("div", { class: "openclaw-layout" }, [
-              _createElementVNode("section", {
-                class: "settings-card settings-card--wide openclaw-workspace-card",
-                "aria-labelledby": "openclaw-workspace-title"
-              }, [
-                _createElementVNode("div", { class: "settings-card-header" }, [
-                  _createElementVNode("h2", {
-                    id: "openclaw-workspace-title",
-                    class: "settings-card-title"
-                  }, _toDisplayString(_ctx.t('openclaw.workspace.title')), 1 /* TEXT */)
-                ]),
+              _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "openclaw-tools-grid" }, [
                     _createElementVNode("button", {

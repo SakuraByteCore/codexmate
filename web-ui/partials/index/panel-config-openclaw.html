@@ -11,10 +11,7 @@
                     <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
                 <div class="openclaw-layout">
-                    <section class="settings-card settings-card--wide openclaw-workspace-card" aria-labelledby="openclaw-workspace-title">
-                        <div class="settings-card-header">
-                            <h2 id="openclaw-workspace-title" class="settings-card-title">{{ t('openclaw.workspace.title') }}</h2>
-                        </div>
+                    <section class="settings-card settings-card--wide openclaw-workspace-card">
                         <div class="settings-card-body">
                             <div class="openclaw-tools-grid">
                                 <button class="openclaw-tool-btn" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
