@@ -479,6 +479,21 @@
 }
 
 .openclaw-card-list .card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.openclaw-card-list .card-leading {
+    width: 100%;
+}
+
+.openclaw-card-list .card-trailing {
+    width: 100%;
+    justify-content: space-between;
+}
+
+.openclaw-card-list .card {
     background: rgba(255, 255, 255, 0.76);
 }
 

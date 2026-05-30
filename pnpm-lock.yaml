@@ -11,6 +11,9 @@ importers:
       '@iarna/toml':
         specifier: ^2.2.5
         version: 2.2.5
+      '@vue/compiler-dom':
+        specifier: ^3.5.30
+        version: 3.5.34
       json5:
         specifier: ^2.2.3
         version: 2.2.3
