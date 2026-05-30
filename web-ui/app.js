@@ -346,6 +346,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     overrideModels: true,
                     showKey: false
                 },
+                openclawAccordionStep: 1,
+                openclawValidation: {
+                    providerName: { valid: true, message: '' },
+                    modelId: { valid: true, message: '' }
+                },
                 openclawAgentsList: [],
                 openclawProviders: [],
                 openclawMissingProviders: [],

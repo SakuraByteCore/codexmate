@@ -11,53 +11,46 @@
                     <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
                 <div class="openclaw-layout">
-                    <section class="settings-card settings-card--wide openclaw-overview-card" aria-labelledby="openclaw-workspace-title">
-                        <div class="settings-card-header settings-card-header-row">
-                            <div>
-                                <div id="openclaw-workspace-title" class="settings-card-title">{{ t('openclaw.workspace.title') }}</div>
-                                <div class="settings-card-meta">{{ t('openclaw.applyHint') }}</div>
-                            </div>
+                    <section class="settings-card settings-card--wide openclaw-workspace-card" aria-labelledby="openclaw-workspace-title">
+                        <div class="settings-card-header">
+                            <h2 id="openclaw-workspace-title" class="settings-card-title">{{ t('openclaw.workspace.title') }}</h2>
+                            <p class="settings-card-meta">{{ t('openclaw.applyHint') }}</p>
                         </div>
                         <div class="settings-card-body">
                             <div class="openclaw-tools-grid">
-                                <div class="openclaw-tool-card">
-                                    <div class="openclaw-tool-copy">
-                                        <div class="openclaw-tool-title">AGENTS.md</div>
-                                        <div class="openclaw-tool-meta">{{ t('openclaw.agents.hint') }}</div>
+                                <button class="openclaw-tool-btn" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
+                                    <div class="tool-icon">📄</div>
+                                    <div class="tool-content">
+                                        <div class="tool-title">AGENTS.md</div>
+                                        <div class="tool-meta">{{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.hint') }}</div>
                                     </div>
-                                    <div class="openclaw-tool-actions">
-                                        <button class="btn-tool btn-tool-compact" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
-                                            {{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.open') }}
-                                        </button>
-                                    </div>
-                                </div>
+                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
+                                    </svg>
+                                </button>
 
-                                <div class="openclaw-tool-card openclaw-tool-card--workspace">
-                                    <div class="openclaw-tool-copy">
-                                        <label class="openclaw-tool-title" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
-                                        <div class="openclaw-tool-meta">{{ t('openclaw.workspace.hint') }}</div>
-                                    </div>
-                                    <div class="openclaw-workspace-row">
+                                <div class="openclaw-workspace-card">
+                                    <label class="workspace-label" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
+                                    <div class="workspace-input-group">
                                         <input
                                             id="openclaw-workspace-file"
                                             class="form-input"
                                             v-model="openclawWorkspaceFileName"
                                             :placeholder="t('openclaw.workspace.placeholder')">
-                                        <button class="btn-tool btn-tool-compact" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
+                                        <button class="btn-tool" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
                                             {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
                                         </button>
                                     </div>
+                                    <div class="workspace-meta">{{ t('openclaw.workspace.hint') }}</div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
                     <section class="settings-card settings-card--wide openclaw-configs-card" aria-labelledby="openclaw-configs-title">
-                        <div class="settings-card-header settings-card-header-row">
-                            <div>
-                                <div id="openclaw-configs-title" class="settings-card-title">{{ t('status.openclawConfig') }}</div>
-                                <div class="settings-card-meta">{{ t('openclaw.configs.hint') }}</div>
-                            </div>
+                        <div class="settings-card-header">
+                            <h2 id="openclaw-configs-title" class="settings-card-title">{{ t('status.openclawConfig') }}</h2>
+                            <p class="settings-card-meta">{{ t('openclaw.configs.hint') }}</p>
                         </div>
                         <div class="settings-card-body">
                             <div class="card-list openclaw-card-list">

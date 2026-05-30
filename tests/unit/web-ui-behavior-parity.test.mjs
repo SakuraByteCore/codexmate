@@ -453,7 +453,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
         'sessionsUsageSelectedDayKey',
-        'currentModels'
+        'currentModels',
+        'openclawAccordionStep',
+        'openclawValidation'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -630,7 +632,13 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isDefaultOpenclawConfig',
         'getClaudeConfigValidation',
         'claudeConfigFieldError',
-        'canSubmitClaudeConfig'
+        'canSubmitClaudeConfig',
+        'toggleAccordionStep',
+        'nextAccordionStep',
+        'prevAccordionStep',
+        'finishAccordionStep',
+        'validateProviderName',
+        'validateModelId'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

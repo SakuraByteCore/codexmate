@@ -1971,42 +1971,44 @@ return function render(_ctx, _cache) {
               : _createCommentVNode("v-if", true),
             _createElementVNode("div", { class: "openclaw-layout" }, [
               _createElementVNode("section", {
-                class: "settings-card settings-card--wide openclaw-overview-card",
+                class: "settings-card settings-card--wide openclaw-workspace-card",
                 "aria-labelledby": "openclaw-workspace-title"
               }, [
-                _createElementVNode("div", { class: "settings-card-header settings-card-header-row" }, [
-                  _createElementVNode("div", null, [
-                    _createElementVNode("div", {
-                      id: "openclaw-workspace-title",
-                      class: "settings-card-title"
-                    }, _toDisplayString(_ctx.t('openclaw.workspace.title')), 1 /* TEXT */),
-                    _createElementVNode("div", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.applyHint')), 1 /* TEXT */)
-                  ])
+                _createElementVNode("div", { class: "settings-card-header" }, [
+                  _createElementVNode("h2", {
+                    id: "openclaw-workspace-title",
+                    class: "settings-card-title"
+                  }, _toDisplayString(_ctx.t('openclaw.workspace.title')), 1 /* TEXT */),
+                  _createElementVNode("p", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.applyHint')), 1 /* TEXT */)
                 ]),
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "openclaw-tools-grid" }, [
-                    _createElementVNode("div", { class: "openclaw-tool-card" }, [
-                      _createElementVNode("div", { class: "openclaw-tool-copy" }, [
-                        _createElementVNode("div", { class: "openclaw-tool-title" }, "AGENTS.md"),
-                        _createElementVNode("div", { class: "openclaw-tool-meta" }, _toDisplayString(_ctx.t('openclaw.agents.hint')), 1 /* TEXT */)
+                    _createElementVNode("button", {
+                      class: "openclaw-tool-btn",
+                      onClick: _ctx.openOpenclawAgentsEditor,
+                      disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                    }, [
+                      _createElementVNode("div", { class: "tool-icon" }, "📄"),
+                      _createElementVNode("div", { class: "tool-content" }, [
+                        _createElementVNode("div", { class: "tool-title" }, "AGENTS.md"),
+                        _createElementVNode("div", { class: "tool-meta" }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.hint')), 1 /* TEXT */)
                       ]),
-                      _createElementVNode("div", { class: "openclaw-tool-actions" }, [
-                        _createElementVNode("button", {
-                          class: "btn-tool btn-tool-compact",
-                          onClick: _ctx.openOpenclawAgentsEditor,
-                          disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                        }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ])
-                    ]),
-                    _createElementVNode("div", { class: "openclaw-tool-card openclaw-tool-card--workspace" }, [
-                      _createElementVNode("div", { class: "openclaw-tool-copy" }, [
-                        _createElementVNode("label", {
-                          class: "openclaw-tool-title",
-                          for: "openclaw-workspace-file"
-                        }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "openclaw-tool-meta" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("div", { class: "openclaw-workspace-row" }, [
+                      (_openBlock(), _createElementBlock("svg", {
+                        class: "tool-chevron",
+                        viewBox: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "2"
+                      }, [
+                        _createElementVNode("path", { d: "M9 18l6-6-6-6" })
+                      ]))
+                    ], 8 /* PROPS */, ["onClick", "disabled"]),
+                    _createElementVNode("div", { class: "openclaw-workspace-card" }, [
+                      _createElementVNode("label", {
+                        class: "workspace-label",
+                        for: "openclaw-workspace-file"
+                      }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "workspace-input-group" }, [
                         _withDirectives(_createElementVNode("input", {
                           id: "openclaw-workspace-file",
                           class: "form-input",
@@ -2016,11 +2018,12 @@ return function render(_ctx, _cache) {
                           [_vModelText, _ctx.openclawWorkspaceFileName]
                         ]),
                         _createElementVNode("button", {
-                          class: "btn-tool btn-tool-compact",
+                          class: "btn-tool",
                           onClick: _ctx.openOpenclawWorkspaceEditor,
                           disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
                         }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.workspace.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ])
+                      ]),
+                      _createElementVNode("div", { class: "workspace-meta" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */)
                     ])
                   ])
                 ])
@@ -2029,14 +2032,12 @@ return function render(_ctx, _cache) {
                 class: "settings-card settings-card--wide openclaw-configs-card",
                 "aria-labelledby": "openclaw-configs-title"
               }, [
-                _createElementVNode("div", { class: "settings-card-header settings-card-header-row" }, [
-                  _createElementVNode("div", null, [
-                    _createElementVNode("div", {
-                      id: "openclaw-configs-title",
-                      class: "settings-card-title"
-                    }, _toDisplayString(_ctx.t('status.openclawConfig')), 1 /* TEXT */),
-                    _createElementVNode("div", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.configs.hint')), 1 /* TEXT */)
-                  ])
+                _createElementVNode("div", { class: "settings-card-header" }, [
+                  _createElementVNode("h2", {
+                    id: "openclaw-configs-title",
+                    class: "settings-card-title"
+                  }, _toDisplayString(_ctx.t('status.openclawConfig')), 1 /* TEXT */),
+                  _createElementVNode("p", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.configs.hint')), 1 /* TEXT */)
                 ]),
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
@@ -6188,183 +6189,312 @@ return function render(_ctx, _cache) {
                   }, _toDisplayString(_ctx.t('common.clear')), 9 /* TEXT, PROPS */, ["onClick"])
                 ])
               ]),
-              _createElementVNode("div", { class: "quick-steps" }, [
-                _createElementVNode("div", { class: "quick-step" }, [
-                  _createElementVNode("span", { class: "step-badge" }, "1"),
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('modal.openclaw.quick.step1')), 1 /* TEXT */)
-                ]),
-                _createElementVNode("div", { class: "quick-step" }, [
-                  _createElementVNode("span", { class: "step-badge" }, "2"),
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('modal.openclaw.quick.step2')), 1 /* TEXT */)
-                ]),
-                _createElementVNode("div", { class: "quick-step" }, [
-                  _createElementVNode("span", { class: "step-badge" }, "3"),
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('modal.openclaw.quick.step3')), 1 /* TEXT */)
-                ])
-              ]),
-              _createElementVNode("div", { class: "quick-grid" }, [
-                _createElementVNode("div", { class: "quick-card" }, [
-                  _createElementVNode("div", { class: "structured-card-title" }, "Provider"),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.providerName')), 1 /* TEXT */),
-                    _withDirectives(_createElementVNode("input", {
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.providerName) = $event),
-                      class: "form-input",
-                      placeholder: "例如: custom-myapi"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                      [_vModelText, _ctx.openclawQuick.providerName]
+              _createCommentVNode(" Accordion Stepper "),
+              _createElementVNode("div", { class: "quick-accordion" }, [
+                _createCommentVNode(" Step 1: Provider "),
+                _createElementVNode("div", {
+                  class: _normalizeClass(['accordion-panel', { active: _ctx.openclawAccordionStep === 1, completed: _ctx.openclawAccordionStep > 1 }])
+                }, [
+                  _createElementVNode("button", {
+                    class: "accordion-trigger",
+                    onClick: $event => (_ctx.toggleAccordionStep(1)),
+                    type: "button"
+                  }, [
+                    _createElementVNode("span", { class: "accordion-step-badge" }, [
+                      (_ctx.openclawAccordionStep > 1)
+                        ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                            _createTextVNode("✓")
+                          ], 64 /* STABLE_FRAGMENT */))
+                        : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                            _createTextVNode("1")
+                          ], 64 /* STABLE_FRAGMENT */))
                     ]),
-                    _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.quick.providerHint')), 1 /* TEXT */)
-                  ]),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.baseUrl')), 1 /* TEXT */),
-                    _withDirectives(_createElementVNode("input", {
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.baseUrl) = $event),
-                      class: "form-input",
-                      placeholder: "https://api.example.com/v1",
-                      readonly: _ctx.openclawQuick.baseUrlReadOnly
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly"]), [
-                      [_vModelText, _ctx.openclawQuick.baseUrl]
-                    ]),
-                    (_ctx.openclawQuick.baseUrlDisplayKind === 'builtin-default')
-                      ? (_openBlock(), _createElementBlock("div", {
+                    _createElementVNode("span", { class: "accordion-title" }, "Provider"),
+                    (_ctx.openclawQuick.providerName)
+                      ? (_openBlock(), _createElementBlock("span", {
                           key: 0,
-                          class: "form-hint"
-                        }, _toDisplayString(_ctx.t('modal.openclaw.quick.baseUrlHintDefault')), 1 /* TEXT */))
-                      : (_ctx.openclawQuick.baseUrlReadOnly)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 1,
-                            class: "form-hint"
-                          }, _toDisplayString(_ctx.t('modal.openclaw.quick.baseUrlHintReadonly')), 1 /* TEXT */))
-                        : _createCommentVNode("v-if", true)
-                  ]),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, "API Key"),
-                    _createElementVNode("div", { class: "list-row" }, [
+                          class: "accordion-status"
+                        }, _toDisplayString(_ctx.openclawQuick.providerName), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    (_openBlock(), _createElementBlock("svg", {
+                      class: "accordion-chevron",
+                      viewBox: "0 0 24 24",
+                      fill: "none",
+                      stroke: "currentColor",
+                      "stroke-width": "2"
+                    }, [
+                      _createElementVNode("path", { d: "M6 9l6 6 6-6" })
+                    ]))
+                  ], 8 /* PROPS */, ["onClick"]),
+                  _withDirectives(_createElementVNode("div", { class: "accordion-content" }, [
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.providerName')), 1 /* TEXT */),
                       _withDirectives(_createElementVNode("input", {
-                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.apiKey) = $event),
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.providerName) = $event),
                         class: "form-input",
-                        readonly: _ctx.openclawQuick.apiKeyReadOnly,
-                        type: (_ctx.openclawQuick.apiKeyReadOnly || _ctx.openclawQuick.showKey) ? 'text' : 'password',
-                        placeholder: "sk-..."
-                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly", "type"]), [
-                        [_vModelDynamic, _ctx.openclawQuick.apiKey]
+                        placeholder: "例如: custom-myapi",
+                        onInput: _ctx.validateProviderName
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onInput"]), [
+                        [_vModelText, _ctx.openclawQuick.providerName]
                       ]),
-                      (!_ctx.openclawQuick.apiKeyReadOnly)
-                        ? (_openBlock(), _createElementBlock("button", {
+                      _createElementVNode("div", {
+                        class: _normalizeClass(["form-hint", { 'hint-error': !_ctx.openclawValidation.providerName.valid }])
+                      }, _toDisplayString(_ctx.openclawValidation.providerName.message || _ctx.t('modal.openclaw.quick.providerHint')), 3 /* TEXT, CLASS */)
+                    ]),
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.baseUrl')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.baseUrl) = $event),
+                        class: "form-input",
+                        placeholder: "https://api.example.com/v1",
+                        readonly: _ctx.openclawQuick.baseUrlReadOnly
+                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly"]), [
+                        [_vModelText, _ctx.openclawQuick.baseUrl]
+                      ]),
+                      (_ctx.openclawQuick.baseUrlDisplayKind === 'builtin-default')
+                        ? (_openBlock(), _createElementBlock("div", {
                             key: 0,
-                            class: "btn-mini",
-                            onClick: _ctx.toggleOpenclawQuickKey
-                          }, _toDisplayString(_ctx.openclawQuick.showKey ? _ctx.t('common.hide') : _ctx.t('common.show')), 9 /* TEXT, PROPS */, ["onClick"]))
-                        : _createCommentVNode("v-if", true)
-                    ]),
-                    (_ctx.openclawQuick.apiKeyDisplayKind === 'auth-profile-value')
-                      ? (_openBlock(), _createElementBlock("div", {
-                          key: 0,
-                          class: "form-hint"
-                        }, _toDisplayString(_ctx.t('modal.openclaw.quick.apiKeyHintFromAuth')), 1 /* TEXT */))
-                      : (_ctx.openclawQuick.apiKeyReadOnly)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 1,
                             class: "form-hint"
-                          }, _toDisplayString(_ctx.t('modal.openclaw.quick.apiKeyHintReadonly')), 1 /* TEXT */))
-                        : (_openBlock(), _createElementBlock("div", {
-                            key: 2,
-                            class: "form-hint"
-                          }, _toDisplayString(_ctx.t('modal.openclaw.quick.apiKeyHintKeep')), 1 /* TEXT */))
-                  ]),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.apiType')), 1 /* TEXT */),
-                    _withDirectives(_createElementVNode("input", {
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.apiType) = $event),
-                      class: "form-input",
-                      list: "openclawApiTypeList",
-                      placeholder: _ctx.t('placeholder.apiTypeExample')
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                      [_vModelText, _ctx.openclawQuick.apiType]
+                          }, _toDisplayString(_ctx.t('modal.openclaw.quick.baseUrlHintDefault')), 1 /* TEXT */))
+                        : (_ctx.openclawQuick.baseUrlReadOnly)
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 1,
+                              class: "form-hint"
+                            }, _toDisplayString(_ctx.t('modal.openclaw.quick.baseUrlHintReadonly')), 1 /* TEXT */))
+                          : _createCommentVNode("v-if", true)
                     ]),
-                    _createElementVNode("datalist", { id: "openclawApiTypeList" }, [
-                      _createElementVNode("option", { value: "openai-responses" }),
-                      _createElementVNode("option", { value: "openai-chat" }),
-                      _createElementVNode("option", { value: "anthropic" }),
-                      _createElementVNode("option", { value: "custom" })
-                    ])
-                  ])
-                ]),
-                _createElementVNode("div", { class: "quick-card" }, [
-                  _createElementVNode("div", { class: "structured-card-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.modelTitle')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.modelId')), 1 /* TEXT */),
-                    _withDirectives(_createElementVNode("input", {
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.modelId) = $event),
-                      class: "form-input",
-                      placeholder: _ctx.t('placeholder.modelIdExample')
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                      [_vModelText, _ctx.openclawQuick.modelId]
-                    ])
-                  ]),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.displayName')), 1 /* TEXT */),
-                    _withDirectives(_createElementVNode("input", {
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.modelName) = $event),
-                      class: "form-input",
-                      placeholder: _ctx.t('placeholder.modelNameOptional')
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                      [_vModelText, _ctx.openclawQuick.modelName]
-                    ])
-                  ]),
-                  _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.contextAndMaxOutput')), 1 /* TEXT */),
-                    _createElementVNode("div", { class: "list-row" }, [
-                      _withDirectives(_createElementVNode("input", {
-                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.contextWindow) = $event),
-                        class: "form-input",
-                        placeholder: _ctx.t('field.contextWindow')
-                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                        [_vModelText, _ctx.openclawQuick.contextWindow]
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, "API Key"),
+                      _createElementVNode("div", { class: "list-row" }, [
+                        _withDirectives(_createElementVNode("input", {
+                          "onUpdate:modelValue": $event => ((_ctx.openclawQuick.apiKey) = $event),
+                          class: "form-input",
+                          readonly: _ctx.openclawQuick.apiKeyReadOnly,
+                          type: (_ctx.openclawQuick.apiKeyReadOnly || _ctx.openclawQuick.showKey) ? 'text' : 'password',
+                          placeholder: "sk-..."
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly", "type"]), [
+                          [_vModelDynamic, _ctx.openclawQuick.apiKey]
+                        ]),
+                        (!_ctx.openclawQuick.apiKeyReadOnly)
+                          ? (_openBlock(), _createElementBlock("button", {
+                              key: 0,
+                              class: "btn-mini",
+                              onClick: _ctx.toggleOpenclawQuickKey
+                            }, _toDisplayString(_ctx.openclawQuick.showKey ? _ctx.t('common.hide') : _ctx.t('common.show')), 9 /* TEXT, PROPS */, ["onClick"]))
+                          : _createCommentVNode("v-if", true)
                       ]),
+                      (_ctx.openclawQuick.apiKeyDisplayKind === 'auth-profile-value')
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 0,
+                            class: "form-hint"
+                          }, _toDisplayString(_ctx.t('modal.openclaw.quick.apiKeyHintFromAuth')), 1 /* TEXT */))
+                        : (_ctx.openclawQuick.apiKeyReadOnly)
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 1,
+                              class: "form-hint"
+                            }, _toDisplayString(_ctx.t('modal.openclaw.quick.apiKeyHintReadonly')), 1 /* TEXT */))
+                          : (_openBlock(), _createElementBlock("div", {
+                              key: 2,
+                              class: "form-hint"
+                            }, _toDisplayString(_ctx.t('modal.openclaw.quick.apiKeyHintKeep')), 1 /* TEXT */))
+                    ]),
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.apiType')), 1 /* TEXT */),
                       _withDirectives(_createElementVNode("input", {
-                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.maxTokens) = $event),
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.apiType) = $event),
                         class: "form-input",
-                        placeholder: _ctx.t('field.maxOutput')
+                        list: "openclawApiTypeList",
+                        placeholder: _ctx.t('placeholder.apiTypeExample')
                       }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                        [_vModelText, _ctx.openclawQuick.maxTokens]
+                        [_vModelText, _ctx.openclawQuick.apiType]
+                      ]),
+                      _createElementVNode("datalist", { id: "openclawApiTypeList" }, [
+                        _createElementVNode("option", { value: "openai-responses" }),
+                        _createElementVNode("option", { value: "openai-chat" }),
+                        _createElementVNode("option", { value: "anthropic" }),
+                        _createElementVNode("option", { value: "custom" })
                       ])
                     ]),
-                    _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('hint.emptyNoChange')), 1 /* TEXT */)
+                    _createElementVNode("div", { class: "accordion-actions" }, [
+                      _createElementVNode("button", {
+                        class: "btn btn-confirm btn-sm",
+                        onClick: _ctx.nextAccordionStep,
+                        disabled: !_ctx.openclawQuick.providerName
+                      }, " 下一步 → ", 8 /* PROPS */, ["onClick", "disabled"])
+                    ])
+                  ], 512 /* NEED_PATCH */), [
+                    [_vShow, _ctx.openclawAccordionStep === 1]
                   ])
-                ]),
-                _createElementVNode("div", { class: "quick-card" }, [
-                  _createElementVNode("div", { class: "structured-card-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.optionsTitle')), 1 /* TEXT */),
-                  _createElementVNode("label", { class: "quick-option" }, [
-                    _withDirectives(_createElementVNode("input", {
-                      type: "checkbox",
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.setPrimary) = $event)
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                      [_vModelCheckbox, _ctx.openclawQuick.setPrimary]
+                ], 2 /* CLASS */),
+                _createCommentVNode(" Step 2: Model "),
+                _createElementVNode("div", {
+                  class: _normalizeClass(['accordion-panel', { active: _ctx.openclawAccordionStep === 2, completed: _ctx.openclawAccordionStep > 2 }])
+                }, [
+                  _createElementVNode("button", {
+                    class: "accordion-trigger",
+                    onClick: $event => (_ctx.toggleAccordionStep(2)),
+                    type: "button"
+                  }, [
+                    _createElementVNode("span", { class: "accordion-step-badge" }, [
+                      (_ctx.openclawAccordionStep > 2)
+                        ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                            _createTextVNode("✓")
+                          ], 64 /* STABLE_FRAGMENT */))
+                        : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                            _createTextVNode("2")
+                          ], 64 /* STABLE_FRAGMENT */))
                     ]),
-                    _createTextVNode(" " + _toDisplayString(_ctx.t('modal.openclaw.quick.setPrimary')), 1 /* TEXT */)
-                  ]),
-                  _createElementVNode("label", { class: "quick-option" }, [
-                    _withDirectives(_createElementVNode("input", {
-                      type: "checkbox",
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.overrideProvider) = $event)
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                      [_vModelCheckbox, _ctx.openclawQuick.overrideProvider]
+                    _createElementVNode("span", { class: "accordion-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.modelTitle')), 1 /* TEXT */),
+                    (_ctx.openclawQuick.modelId)
+                      ? (_openBlock(), _createElementBlock("span", {
+                          key: 0,
+                          class: "accordion-status"
+                        }, _toDisplayString(_ctx.openclawQuick.modelName || _ctx.openclawQuick.modelId), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    (_openBlock(), _createElementBlock("svg", {
+                      class: "accordion-chevron",
+                      viewBox: "0 0 24 24",
+                      fill: "none",
+                      stroke: "currentColor",
+                      "stroke-width": "2"
+                    }, [
+                      _createElementVNode("path", { d: "M6 9l6 6 6-6" })
+                    ]))
+                  ], 8 /* PROPS */, ["onClick"]),
+                  _withDirectives(_createElementVNode("div", { class: "accordion-content" }, [
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.modelId')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.modelId) = $event),
+                        class: "form-input",
+                        placeholder: _ctx.t('placeholder.modelIdExample'),
+                        onInput: _ctx.validateModelId
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onInput"]), [
+                        [_vModelText, _ctx.openclawQuick.modelId]
+                      ]),
+                      _createElementVNode("div", {
+                        class: _normalizeClass(["form-hint", { 'hint-error': !_ctx.openclawValidation.modelId.valid }])
+                      }, _toDisplayString(_ctx.openclawValidation.modelId.message || '必填，例如: gpt-4'), 3 /* TEXT, CLASS */)
                     ]),
-                    _createTextVNode(" " + _toDisplayString(_ctx.t('modal.openclaw.quick.overrideProvider')), 1 /* TEXT */)
-                  ]),
-                  _createElementVNode("label", { class: "quick-option" }, [
-                    _withDirectives(_createElementVNode("input", {
-                      type: "checkbox",
-                      "onUpdate:modelValue": $event => ((_ctx.openclawQuick.overrideModels) = $event)
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                      [_vModelCheckbox, _ctx.openclawQuick.overrideModels]
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.displayName')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.modelName) = $event),
+                        class: "form-input",
+                        placeholder: _ctx.t('placeholder.modelNameOptional')
+                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                        [_vModelText, _ctx.openclawQuick.modelName]
+                      ]),
+                      _createElementVNode("div", { class: "form-hint" }, "可选，用于显示")
                     ]),
-                    _createTextVNode(" " + _toDisplayString(_ctx.t('modal.openclaw.quick.overrideModels')), 1 /* TEXT */)
-                  ]),
-                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.quick.optionsHint')), 1 /* TEXT */)
-                ])
+                    _createElementVNode("div", { class: "form-group" }, [
+                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.contextAndMaxOutput')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "list-row" }, [
+                        _withDirectives(_createElementVNode("input", {
+                          "onUpdate:modelValue": $event => ((_ctx.openclawQuick.contextWindow) = $event),
+                          class: "form-input",
+                          placeholder: _ctx.t('field.contextWindow')
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                          [_vModelText, _ctx.openclawQuick.contextWindow]
+                        ]),
+                        _withDirectives(_createElementVNode("input", {
+                          "onUpdate:modelValue": $event => ((_ctx.openclawQuick.maxTokens) = $event),
+                          class: "form-input",
+                          placeholder: _ctx.t('field.maxOutput')
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                          [_vModelText, _ctx.openclawQuick.maxTokens]
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('hint.emptyNoChange')), 1 /* TEXT */)
+                    ]),
+                    _createElementVNode("div", { class: "accordion-actions" }, [
+                      _createElementVNode("button", {
+                        class: "btn btn-cancel btn-sm",
+                        onClick: _ctx.prevAccordionStep
+                      }, " ← 上一步 ", 8 /* PROPS */, ["onClick"]),
+                      _createElementVNode("button", {
+                        class: "btn btn-confirm btn-sm",
+                        onClick: _ctx.nextAccordionStep,
+                        disabled: !_ctx.openclawQuick.modelId
+                      }, " 下一步 → ", 8 /* PROPS */, ["onClick", "disabled"])
+                    ])
+                  ], 512 /* NEED_PATCH */), [
+                    [_vShow, _ctx.openclawAccordionStep === 2]
+                  ])
+                ], 2 /* CLASS */),
+                _createCommentVNode(" Step 3: Options "),
+                _createElementVNode("div", {
+                  class: _normalizeClass(['accordion-panel', { active: _ctx.openclawAccordionStep === 3, completed: _ctx.openclawAccordionStep > 3 }])
+                }, [
+                  _createElementVNode("button", {
+                    class: "accordion-trigger",
+                    onClick: $event => (_ctx.toggleAccordionStep(3)),
+                    type: "button"
+                  }, [
+                    _createElementVNode("span", { class: "accordion-step-badge" }, [
+                      (_ctx.openclawAccordionStep > 3)
+                        ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                            _createTextVNode("✓")
+                          ], 64 /* STABLE_FRAGMENT */))
+                        : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                            _createTextVNode("3")
+                          ], 64 /* STABLE_FRAGMENT */))
+                    ]),
+                    _createElementVNode("span", { class: "accordion-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.optionsTitle')), 1 /* TEXT */),
+                    _createElementVNode("span", { class: "accordion-status" }, "高级选项"),
+                    (_openBlock(), _createElementBlock("svg", {
+                      class: "accordion-chevron",
+                      viewBox: "0 0 24 24",
+                      fill: "none",
+                      stroke: "currentColor",
+                      "stroke-width": "2"
+                    }, [
+                      _createElementVNode("path", { d: "M6 9l6 6 6-6" })
+                    ]))
+                  ], 8 /* PROPS */, ["onClick"]),
+                  _withDirectives(_createElementVNode("div", { class: "accordion-content" }, [
+                    _createElementVNode("label", { class: "quick-option" }, [
+                      _withDirectives(_createElementVNode("input", {
+                        type: "checkbox",
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.setPrimary) = $event)
+                      }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                        [_vModelCheckbox, _ctx.openclawQuick.setPrimary]
+                      ]),
+                      _createTextVNode(" " + _toDisplayString(_ctx.t('modal.openclaw.quick.setPrimary')), 1 /* TEXT */)
+                    ]),
+                    _createElementVNode("label", { class: "quick-option" }, [
+                      _withDirectives(_createElementVNode("input", {
+                        type: "checkbox",
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.overrideProvider) = $event)
+                      }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                        [_vModelCheckbox, _ctx.openclawQuick.overrideProvider]
+                      ]),
+                      _createTextVNode(" " + _toDisplayString(_ctx.t('modal.openclaw.quick.overrideProvider')), 1 /* TEXT */)
+                    ]),
+                    _createElementVNode("label", { class: "quick-option" }, [
+                      _withDirectives(_createElementVNode("input", {
+                        type: "checkbox",
+                        "onUpdate:modelValue": $event => ((_ctx.openclawQuick.overrideModels) = $event)
+                      }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                        [_vModelCheckbox, _ctx.openclawQuick.overrideModels]
+                      ]),
+                      _createTextVNode(" " + _toDisplayString(_ctx.t('modal.openclaw.quick.overrideModels')), 1 /* TEXT */)
+                    ]),
+                    _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.quick.optionsHint')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "accordion-actions" }, [
+                      _createElementVNode("button", {
+                        class: "btn btn-cancel btn-sm",
+                        onClick: _ctx.prevAccordionStep
+                      }, " ← 上一步 ", 8 /* PROPS */, ["onClick"]),
+                      _createElementVNode("button", {
+                        class: "btn btn-confirm btn-sm",
+                        onClick: _ctx.finishAccordionStep
+                      }, " 完成 ✓ ", 8 /* PROPS */, ["onClick"])
+                    ])
+                  ], 512 /* NEED_PATCH */), [
+                    [_vShow, _ctx.openclawAccordionStep === 3]
+                  ])
+                ], 2 /* CLASS */)
               ]),
               _createElementVNode("div", { class: "btn-group" }, [
                 _createElementVNode("button", {
@@ -7460,3 +7590,4 @@ return function render(_ctx, _cache) {
   ], 64 /* STABLE_FRAGMENT */))
 }
 })();
+

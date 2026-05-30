@@ -406,6 +406,12 @@
     font-size: 12px;
 }
 
+.btn-sm {
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
 .selector-header .btn-tool-compact {
     display: inline-flex;
     align-items: center;

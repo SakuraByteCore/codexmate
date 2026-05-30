@@ -367,6 +367,54 @@ export function createOpenclawEditingMethods() {
                 this.showMessage('保存本地 OpenClaw 配置失败', 'error');
                 return false;
             }
+        },
+
+        // Accordion stepper methods
+        toggleAccordionStep(step) {
+            if (this.openclawAccordionStep === step) {
+                // Don't allow collapsing the current step
+                return;
+            }
+            this.openclawAccordionStep = step;
+        },
+
+        nextAccordionStep() {
+            if (this.openclawAccordionStep < 3) {
+                this.openclawAccordionStep++;
+            }
+        },
+
+        prevAccordionStep() {
+            if (this.openclawAccordionStep > 1) {
+                this.openclawAccordionStep--;
+            }
+        },
+
+        finishAccordionStep() {
+            this.openclawAccordionStep = 4; // Mark as complete
+            this.applyOpenclawQuickToText();
+        },
+
+        validateProviderName() {
+            const name = (this.openclawQuick.providerName || '').trim();
+            if (!name) {
+                this.openclawValidation.providerName = { valid: false, message: '必填' };
+                return;
+            }
+            if (name.includes('/')) {
+                this.openclawValidation.providerName = { valid: false, message: '不能包含 "/"' };
+                return;
+            }
+            this.openclawValidation.providerName = { valid: true, message: '' };
+        },
+
+        validateModelId() {
+            const id = (this.openclawQuick.modelId || '').trim();
+            if (!id) {
+                this.openclawValidation.modelId = { valid: false, message: '必填' };
+                return;
+            }
+            this.openclawValidation.modelId = { valid: true, message: '' };
         }
     };
 }
