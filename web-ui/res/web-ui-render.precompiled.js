@@ -2031,12 +2031,6 @@ return function render(_ctx, _cache) {
                 class: "settings-card settings-card--wide openclaw-configs-card",
                 "aria-labelledby": "openclaw-configs-title"
               }, [
-                _createElementVNode("div", { class: "settings-card-header" }, [
-                  _createElementVNode("h2", {
-                    id: "openclaw-configs-title",
-                    class: "settings-card-title"
-                  }, _toDisplayString(_ctx.t('status.openclawConfig')), 1 /* TEXT */)
-                ]),
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
