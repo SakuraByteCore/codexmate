@@ -382,6 +382,10 @@ textarea:focus-visible {
         display: none;
     }
 
+    .openclaw-card-list .card-trailing .pill {
+        display: block;
+    }
+
     .auth-profile-item {
         padding: 10px;
     }
