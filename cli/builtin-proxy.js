@@ -739,7 +739,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             target[name] = 'local_shell_call';
             return;
         }
-        if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+        if (type === 'custom' || type === 'custom_tool' || (!type && name === 'apply_patch')) {
             target[name] = 'custom_tool_call';
             return;
         }
@@ -816,7 +816,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             return [buildLocalShellToolForChat(tool)];
         }
         const name = asTrimmedString(tool.name);
-        if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+        if (type === 'custom' || type === 'custom_tool' || (!type && name === 'apply_patch')) {
             return [buildFreeformToolForChat(tool, name || 'custom_tool')];
         }
         // Hosted Responses tools such as web_search/image_generation/computer_use

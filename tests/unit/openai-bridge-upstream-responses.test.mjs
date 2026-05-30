@@ -1244,6 +1244,44 @@ test('openai-bridge restores Codex built-in tool call types from chat fallback r
     ]);
 });
 
+test('openai-bridge preserves explicit function tools named apply_patch', () => {
+    const converted = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: 'call function apply_patch',
+        tools: [
+            {
+                type: 'function',
+                name: 'apply_patch',
+                description: 'Apply a structured patch.',
+                parameters: {
+                    type: 'object',
+                    properties: { diff: { type: 'string' } },
+                    required: ['diff'],
+                    additionalProperties: false
+                }
+            }
+        ]
+    });
+
+    assert.equal(converted.error, undefined);
+    assert.deepStrictEqual(converted.toolTypesByName, { apply_patch: 'function_call' });
+
+    const payload = buildResponsesPayloadFromChatResult('gpt-test', '', [
+        { id: 'call_patch_fn', type: 'function', function: { name: 'apply_patch', arguments: '{"diff":"*** Begin Patch\\n*** End Patch"}' } }
+    ], {}, {
+        toolTypesByName: converted.toolTypesByName
+    });
+
+    assert.deepStrictEqual(payload.output, [
+        {
+            type: 'function_call',
+            call_id: 'call_patch_fn',
+            name: 'apply_patch',
+            arguments: '{"diff":"*** Begin Patch\\n*** End Patch"}'
+        }
+    ]);
+});
+
 test('openai-bridge tells chat fallback to poll running Codex exec sessions', () => {
     const converted = convertResponsesRequestToChatCompletions({
         model: 'gpt-test',

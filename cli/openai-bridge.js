@@ -605,7 +605,7 @@ function rememberResponsesToolType(tool, target, depth = 0) {
         target[name] = 'local_shell_call';
         return;
     }
-    if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+    if (type === 'custom' || type === 'custom_tool' || (!type && name === 'apply_patch')) {
         target[name] = 'custom_tool_call';
         return;
     }
@@ -683,7 +683,7 @@ function normalizeSingleResponsesToolToChatTools(tool, depth = 0) {
         return [buildLocalShellToolForChat(tool)];
     }
     const name = asTrimmedString(tool.name);
-    if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+    if (type === 'custom' || type === 'custom_tool' || (!type && name === 'apply_patch')) {
         return [buildFreeformToolForChat(tool, name || 'custom_tool')];
     }
     return [];
