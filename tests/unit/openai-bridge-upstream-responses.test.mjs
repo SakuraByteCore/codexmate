@@ -8,7 +8,11 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { createOpenaiBridgeHttpHandler, convertResponsesRequestToChatCompletions } = require('../../cli/openai-bridge.js');
+const {
+    createOpenaiBridgeHttpHandler,
+    convertResponsesRequestToChatCompletions,
+    buildResponsesPayloadFromChatResult
+} = require('../../cli/openai-bridge.js');
 
 function listen(server) {
     server.listen(0, '127.0.0.1');
@@ -1196,6 +1200,48 @@ test('openai-bridge prunes invalid tool_choice after dropping hosted-only Respon
     assert.equal(converted.error, undefined);
     assert.equal(Object.prototype.hasOwnProperty.call(converted.chat, 'tools'), false);
     assert.equal(Object.prototype.hasOwnProperty.call(converted.chat, 'tool_choice'), false);
+});
+
+test('openai-bridge restores Codex built-in tool call types from chat fallback results', () => {
+    const converted = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: 'use tools',
+        tools: [
+            { type: 'custom_tool', name: 'apply_patch' },
+            { type: 'local_shell', name: 'local_shell' },
+            { type: 'function', name: 'lookup', parameters: { type: 'object' } }
+        ]
+    });
+
+    assert.equal(converted.error, undefined);
+    const payload = buildResponsesPayloadFromChatResult('gpt-test', '', [
+        { id: 'call_patch', type: 'function', function: { name: 'apply_patch', arguments: '{"input":"*** Begin Patch\\n*** End Patch"}' } },
+        { id: 'call_shell', type: 'function', function: { name: 'local_shell', arguments: '{"cmd":"pwd","yield_time_ms":1000}' } },
+        { id: 'call_lookup', type: 'function', function: { name: 'lookup', arguments: '{"q":"codexmate"}' } }
+    ], { usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 } }, {
+        toolTypesByName: converted.toolTypesByName
+    });
+
+    assert.deepStrictEqual(payload.output, [
+        {
+            type: 'custom_tool_call',
+            call_id: 'call_patch',
+            name: 'apply_patch',
+            input: '*** Begin Patch\n*** End Patch'
+        },
+        {
+            type: 'local_shell_call',
+            call_id: 'call_shell',
+            name: 'local_shell',
+            action: { cmd: 'pwd', yield_time_ms: 1000 }
+        },
+        {
+            type: 'function_call',
+            call_id: 'call_lookup',
+            name: 'lookup',
+            arguments: '{"q":"codexmate"}'
+        }
+    ]);
 });
 
 test('openai-bridge tells chat fallback to poll running Codex exec sessions', () => {

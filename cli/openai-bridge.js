@@ -232,6 +232,17 @@ function stringifyJsonValue(value, fallback = '') {
     }
 }
 
+function parseJsonValueOrNull(value) {
+    if (typeof value !== 'string') return null;
+    const text = value.trim();
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch (_) {
+        return null;
+    }
+}
+
 function isRecord(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
@@ -580,6 +591,84 @@ function buildFreeformToolForChat(tool, fallbackName = 'custom_tool') {
 
 const MAX_RESPONSES_TOOL_NAMESPACE_DEPTH = 5;
 
+function rememberResponsesToolType(tool, target, depth = 0) {
+    if (!isRecord(tool) || !target || depth > MAX_RESPONSES_TOOL_NAMESPACE_DEPTH) return;
+    const type = asTrimmedString(tool.type).toLowerCase();
+    if (type === 'namespace' && Array.isArray(tool.tools)) {
+        for (const inner of tool.tools) rememberResponsesToolType(inner, target, depth + 1);
+        return;
+    }
+    const sourceFn = isRecord(tool.function) ? tool.function : tool;
+    const name = asTrimmedString(sourceFn.name) || asTrimmedString(tool.name);
+    if (!name) return;
+    if (type === 'local_shell') {
+        target[name] = 'local_shell_call';
+        return;
+    }
+    if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+        target[name] = 'custom_tool_call';
+        return;
+    }
+    if (type === 'function') {
+        target[name] = 'function_call';
+    }
+}
+
+function collectResponsesToolTypesByName(tools) {
+    const result = {};
+    if (!Array.isArray(tools)) return result;
+    for (const tool of tools) rememberResponsesToolType(tool, result);
+    return result;
+}
+
+function extractFreeformInputFromChatArguments(argumentsText) {
+    if (typeof argumentsText !== 'string') return '';
+    const parsed = parseJsonValueOrNull(argumentsText);
+    if (isRecord(parsed) && Object.prototype.hasOwnProperty.call(parsed, 'input')) {
+        return typeof parsed.input === 'string' ? parsed.input : normalizeResponsesToolOutput(parsed.input);
+    }
+    return argumentsText;
+}
+
+function extractLocalShellActionFromChatArguments(argumentsText) {
+    const parsed = parseJsonValueOrNull(argumentsText);
+    if (isRecord(parsed)) return cloneJsonValue(parsed);
+    return { cmd: typeof argumentsText === 'string' ? argumentsText : '' };
+}
+
+function buildResponsesToolCallItemFromChatToolCall(toolCall, toolTypesByName = {}) {
+    if (!isRecord(toolCall)) return null;
+    const fn = isRecord(toolCall.function) ? toolCall.function : {};
+    const name = asTrimmedString(fn.name);
+    if (!name) return null;
+    const callId = asTrimmedString(toolCall.id) || `call_${crypto.randomBytes(8).toString('hex')}`;
+    const argumentsText = typeof fn.arguments === 'string' ? fn.arguments : '';
+    const responseType = toolTypesByName && toolTypesByName[name] ? toolTypesByName[name] : 'function_call';
+
+    if (responseType === 'custom_tool_call') {
+        return {
+            type: 'custom_tool_call',
+            call_id: callId,
+            name,
+            input: extractFreeformInputFromChatArguments(argumentsText)
+        };
+    }
+    if (responseType === 'local_shell_call') {
+        return {
+            type: 'local_shell_call',
+            call_id: callId,
+            name,
+            action: extractLocalShellActionFromChatArguments(argumentsText)
+        };
+    }
+    return {
+        type: 'function_call',
+        call_id: callId,
+        name,
+        arguments: argumentsText
+    };
+}
+
 function normalizeSingleResponsesToolToChatTools(tool, depth = 0) {
     if (!isRecord(tool) || depth > MAX_RESPONSES_TOOL_NAMESPACE_DEPTH) return [];
     const type = asTrimmedString(tool.type).toLowerCase();
@@ -781,10 +870,10 @@ function convertResponsesRequestToChatCompletions(payload) {
     // Remove undefined keys
     Object.keys(chat).forEach((key) => chat[key] === undefined && delete chat[key]);
 
-    return { chat, streamRequested: stream };
+    return { chat, streamRequested: stream, toolTypesByName: collectResponsesToolTypesByName(body.tools) };
 }
 
-function buildResponsesPayloadFromChatResult(model, text, toolCalls, upstreamPayload) {
+function buildResponsesPayloadFromChatResult(model, text, toolCalls, upstreamPayload, options = {}) {
     const responseId = `resp_${crypto.randomBytes(10).toString('hex')}`;
     const usage = upstreamPayload && upstreamPayload.usage && typeof upstreamPayload.usage === 'object'
         ? upstreamPayload.usage
@@ -801,22 +890,13 @@ function buildResponsesPayloadFromChatResult(model, text, toolCalls, upstreamPay
         });
     }
 
-    // Convert chat.completions tool_calls into Responses-style function_call output items.
-    // This is important for Codex, which appends function_call + function_call_output back into `input`.
+    // Convert chat.completions tool_calls back into the original Responses item type.
+    // Treating every call as `function_call` makes Codex built-ins (custom/local_shell)
+    // degrade into ordinary chat text instead of executable agent steps.
     if (Array.isArray(toolCalls)) {
         for (const call of toolCalls) {
-            if (!call || typeof call !== 'object') continue;
-            const callId = typeof call.id === 'string' && call.id.trim() ? call.id.trim() : `call_${crypto.randomBytes(8).toString('hex')}`;
-            const fn = call.function && typeof call.function === 'object' ? call.function : {};
-            const name = typeof fn.name === 'string' ? fn.name : '';
-            const args = typeof fn.arguments === 'string' ? fn.arguments : '';
-            if (!name) continue;
-            output.push({
-                type: 'function_call',
-                call_id: callId,
-                name,
-                arguments: args
-            });
+            const item = buildResponsesToolCallItemFromChatToolCall(call, options.toolTypesByName || {});
+            if (item) output.push(item);
         }
     }
 
@@ -1183,14 +1263,8 @@ function finishChatStreamResponsesSse(state) {
 
     for (const toolCall of state.toolCalls) {
         if (!toolCall) continue;
-        const name = toolCall.function && typeof toolCall.function.name === 'string' ? toolCall.function.name : '';
-        if (!name) continue;
-        const item = {
-            type: 'function_call',
-            call_id: toolCall.id || `call_${crypto.randomBytes(8).toString('hex')}`,
-            name,
-            arguments: toolCall.function && typeof toolCall.function.arguments === 'string' ? toolCall.function.arguments : ''
-        };
+        const item = buildResponsesToolCallItemFromChatToolCall(toolCall, state.toolTypesByName || {});
+        if (!item) continue;
         const outputIndex = state.output.length;
         state.output.push(item);
         writeSse(state.res, 'response.output_item.added', {
@@ -1353,7 +1427,9 @@ function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
                         return;
                     }
                     const extracted = extractChatCompletionResult(parsedJson.value);
-                    sendResponsesSse(res, buildResponsesPayloadFromChatResult(fallbackModel, extracted.text, extracted.toolCalls, parsedJson.value));
+                    sendResponsesSse(res, buildResponsesPayloadFromChatResult(fallbackModel, extracted.text, extracted.toolCalls, parsedJson.value, {
+                        toolTypesByName: options.toolTypesByName || {}
+                    }));
                     if (!res.writableEnded && !res.destroyed) res.end();
                     finish({ ok: true });
                 });
@@ -1370,6 +1446,7 @@ function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
                 messageItem: null,
                 messageText: '',
                 toolCalls: [],
+                toolTypesByName: options.toolTypesByName || {},
                 finished: false,
                 sawDone: false,
                 sawFinishReason: false,
@@ -1726,7 +1803,8 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     httpAgent,
                     httpsAgent,
                     res,
-                    model: typeof chatBody.model === 'string' ? chatBody.model : ''
+                    model: typeof chatBody.model === 'string' ? chatBody.model : '',
+                    toolTypesByName: converted.toolTypesByName || {}
                 }));
                 if (!streamed.ok) {
                     if (res.writableEnded || res.destroyed) {
@@ -1849,7 +1927,9 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             const extracted = extractChatCompletionResult(upstreamJson.value);
             const text = extracted && typeof extracted.text === 'string' ? extracted.text : '';
             const toolCalls = extracted && Array.isArray(extracted.toolCalls) ? extracted.toolCalls : [];
-            const responsesPayload = buildResponsesPayloadFromChatResult(model, text, toolCalls, upstreamJson.value);
+            const responsesPayload = buildResponsesPayloadFromChatResult(model, text, toolCalls, upstreamJson.value, {
+                toolTypesByName: converted.toolTypesByName || {}
+            });
 
             if (converted.streamRequested && wantsSse) {
                 res.writeHead(200, {

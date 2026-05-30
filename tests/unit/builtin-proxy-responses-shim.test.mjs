@@ -175,6 +175,86 @@ test('builtin-proxy /v1/responses falls back to chat-only upstream and returns R
     }
 });
 
+test('builtin-proxy /v1/responses restores Codex built-in tool calls from chat fallback', async () => {
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                id: 'chatcmpl_tool_restore',
+                model: 'gpt-tools',
+                choices: [{
+                    message: {
+                        role: 'assistant',
+                        content: null,
+                        tool_calls: [
+                            { id: 'call_patch', type: 'function', function: { name: 'apply_patch', arguments: '{"input":"*** Begin Patch\\n*** End Patch"}' } },
+                            { id: 'call_shell', type: 'function', function: { name: 'local_shell', arguments: '{"cmd":"pwd"}' } },
+                            { id: 'call_lookup', type: 'function', function: { name: 'lookup', arguments: '{"q":"codexmate"}' } }
+                        ]
+                    },
+                    finish_reason: 'tool_calls'
+                }]
+            }));
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-tools',
+                input: 'use tools',
+                tools: [
+                    { type: 'custom_tool', name: 'apply_patch' },
+                    { type: 'local_shell', name: 'local_shell' },
+                    { type: 'function', name: 'lookup', parameters: { type: 'object' } }
+                ],
+                stream: false
+            }
+        });
+        assert.equal(resp.status, 200);
+        const parsed = JSON.parse(resp.text);
+        assert.deepStrictEqual(parsed.output, [
+            {
+                type: 'custom_tool_call',
+                call_id: 'call_patch',
+                name: 'apply_patch',
+                input: '*** Begin Patch\n*** End Patch'
+            },
+            {
+                type: 'local_shell_call',
+                call_id: 'call_shell',
+                name: 'local_shell',
+                action: { cmd: 'pwd' }
+            },
+            {
+                type: 'function_call',
+                call_id: 'call_lookup',
+                name: 'lookup',
+                arguments: '{"q":"codexmate"}'
+            }
+        ]);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
 test('builtin-proxy /v1/responses falls back to chat when upstream responses times out', async () => {
     const sockets = new Set();
     let capturedChatRequest = null;

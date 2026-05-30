@@ -264,6 +264,17 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         }
     }
 
+    function parseJsonValueOrNull(value) {
+        if (typeof value !== 'string') return null;
+        const text = value.trim();
+        if (!text) return null;
+        try {
+            return JSON.parse(text);
+        } catch (_) {
+            return null;
+        }
+    }
+
     function normalizeChatUsageToResponsesUsage(usage) {
         if (!usage || typeof usage !== 'object' || Array.isArray(usage)) return undefined;
         const pickNumber = (...keys) => {
@@ -338,7 +349,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         return blocks;
     }
 
-    function buildResponsesPayloadFromChatCompletion(payload, fallbackModel = '') {
+    function buildResponsesPayloadFromChatCompletion(payload, fallbackModel = '', options = {}) {
         const base = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : {};
         const choice = Array.isArray(base.choices) ? base.choices[0] : null;
         const message = choice && typeof choice === 'object' && choice.message && typeof choice.message === 'object'
@@ -355,16 +366,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         }
         if (Array.isArray(message.tool_calls)) {
             for (const toolCall of message.tool_calls) {
-                if (!toolCall || typeof toolCall !== 'object') continue;
-                const fn = toolCall.function && typeof toolCall.function === 'object' ? toolCall.function : {};
-                const name = typeof fn.name === 'string' ? fn.name : '';
-                if (!name) continue;
-                output.push({
-                    type: 'function_call',
-                    call_id: typeof toolCall.id === 'string' && toolCall.id ? toolCall.id : `call_${crypto.randomBytes(8).toString('hex')}`,
-                    name,
-                    arguments: stringifyJsonValue(fn.arguments, '{}')
-                });
+                const item = buildResponsesToolCallItemFromChatToolCall(toolCall, options.toolTypesByName || {});
+                if (item) output.push(item);
             }
         }
         const finish = mapChatFinishReasonToResponses(choice);
@@ -722,6 +725,83 @@ function createBuiltinProxyRuntimeController(deps = {}) {
 
     const MAX_RESPONSES_TOOL_NAMESPACE_DEPTH = 5;
 
+    function rememberResponsesToolType(tool, target, depth = 0) {
+        if (!isRecord(tool) || !target || depth > MAX_RESPONSES_TOOL_NAMESPACE_DEPTH) return;
+        const type = asTrimmedString(tool.type).toLowerCase();
+        if (type === 'namespace' && Array.isArray(tool.tools)) {
+            for (const inner of tool.tools) rememberResponsesToolType(inner, target, depth + 1);
+            return;
+        }
+        const sourceFn = isRecord(tool.function) ? tool.function : tool;
+        const name = asTrimmedString(sourceFn.name) || asTrimmedString(tool.name);
+        if (!name) return;
+        if (type === 'local_shell') {
+            target[name] = 'local_shell_call';
+            return;
+        }
+        if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+            target[name] = 'custom_tool_call';
+            return;
+        }
+        if (type === 'function') {
+            target[name] = 'function_call';
+        }
+    }
+
+    function collectResponsesToolTypesByName(tools) {
+        const result = {};
+        if (!Array.isArray(tools)) return result;
+        for (const tool of tools) rememberResponsesToolType(tool, result);
+        return result;
+    }
+
+    function extractFreeformInputFromChatArguments(argumentsText) {
+        if (typeof argumentsText !== 'string') return '';
+        const parsed = parseJsonValueOrNull(argumentsText);
+        if (isRecord(parsed) && Object.prototype.hasOwnProperty.call(parsed, 'input')) {
+            return typeof parsed.input === 'string' ? parsed.input : normalizeResponsesToolOutput(parsed.input);
+        }
+        return argumentsText;
+    }
+
+    function extractLocalShellActionFromChatArguments(argumentsText) {
+        const parsed = parseJsonValueOrNull(argumentsText);
+        if (isRecord(parsed)) return cloneJsonValue(parsed);
+        return { cmd: typeof argumentsText === 'string' ? argumentsText : '' };
+    }
+
+    function buildResponsesToolCallItemFromChatToolCall(toolCall, toolTypesByName = {}) {
+        if (!isRecord(toolCall)) return null;
+        const fn = isRecord(toolCall.function) ? toolCall.function : {};
+        const name = asTrimmedString(fn.name);
+        if (!name) return null;
+        const callId = asTrimmedString(toolCall.id) || `call_${crypto.randomBytes(8).toString('hex')}`;
+        const argumentsText = typeof fn.arguments === 'string' ? fn.arguments : '';
+        const responseType = toolTypesByName && toolTypesByName[name] ? toolTypesByName[name] : 'function_call';
+        if (responseType === 'custom_tool_call') {
+            return {
+                type: 'custom_tool_call',
+                call_id: callId,
+                name,
+                input: extractFreeformInputFromChatArguments(argumentsText)
+            };
+        }
+        if (responseType === 'local_shell_call') {
+            return {
+                type: 'local_shell_call',
+                call_id: callId,
+                name,
+                action: extractLocalShellActionFromChatArguments(argumentsText)
+            };
+        }
+        return {
+            type: 'function_call',
+            call_id: callId,
+            name,
+            arguments: argumentsText
+        };
+    }
+
     function normalizeSingleResponsesToolToChatTools(tool, depth = 0) {
         if (!isRecord(tool) || depth > MAX_RESPONSES_TOOL_NAMESPACE_DEPTH) return [];
         const type = asTrimmedString(tool.type).toLowerCase();
@@ -1074,12 +1154,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
 
         for (const toolCall of state.toolCalls) {
             if (!toolCall) continue;
-            const item = {
-                type: 'function_call',
-                call_id: toolCall.id || `call_${crypto.randomBytes(8).toString('hex')}`,
-                name: toolCall.function && typeof toolCall.function.name === 'string' ? toolCall.function.name : '',
-                arguments: toolCall.function && typeof toolCall.function.arguments === 'string' ? toolCall.function.arguments : ''
-            };
+            const item = buildResponsesToolCallItemFromChatToolCall(toolCall, state.toolTypesByName || {});
+            if (!item) continue;
             const outputIndex = state.output.length;
             state.output.push(item);
             state.outputStarted = true;
@@ -1157,7 +1233,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         failResponsesSseRaw(state.res, message);
     }
 
-    function createChatStreamResponsesSseState(res, model) {
+    function createChatStreamResponsesSseState(res, model, options = {}) {
         let sequence = 0;
         return {
             res,
@@ -1169,6 +1245,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             messageItem: null,
             messageText: '',
             toolCalls: [],
+            toolTypesByName: options.toolTypesByName || {},
             finished: false,
             started: false,
             outputStarted: false,
@@ -1197,7 +1274,9 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             : 30000;
         const res = options.res;
         const model = typeof options.model === 'string' ? options.model : '';
-        const sharedState = options.streamState || createChatStreamResponsesSseState(res, model);
+        const sharedState = options.streamState || createChatStreamResponsesSseState(res, model, {
+            toolTypesByName: options.toolTypesByName || {}
+        });
 
         return new Promise((resolve) => {
             let settled = false;
@@ -1284,7 +1363,9 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                             finish({ ok: true });
                             return;
                         }
-                        sendResponsesSse(res, buildResponsesPayloadFromChatCompletion(parsedJson.value, model));
+                        sendResponsesSse(res, buildResponsesPayloadFromChatCompletion(parsedJson.value, model, {
+                            toolTypesByName: options.toolTypesByName || {}
+                        }));
                         res.end();
                         finish({ ok: true });
                     });
@@ -1352,7 +1433,9 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             return { ok: false, error: 'failed to build upstream URL' };
         }
         let lastResult = null;
-        const streamState = options.streamState || createChatStreamResponsesSseState(options.res, options.model);
+        const streamState = options.streamState || createChatStreamResponsesSseState(options.res, options.model, {
+            toolTypesByName: options.toolTypesByName || {}
+        });
         for (const url of urls) {
             const result = await retryTransientRequest(() => streamChatCompletionsAsResponsesSse(url, { ...options, streamState }));
             lastResult = result;
@@ -1737,6 +1820,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
 
                     const model = typeof payload.model === 'string' ? payload.model : '';
                     const chatBody = buildChatCompletionsBodyFromResponsesPayload(payload);
+                    const toolTypesByName = collectResponsesToolTypesByName(payload.tools);
 
                     if (wantsStream) {
                         const streamingChatBody = { ...chatBody, stream: true };
@@ -1746,7 +1830,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                             timeoutMs,
                             body: streamingChatBody,
                             res,
-                            model
+                            model,
+                            toolTypesByName
                         });
                         if (!streamed.ok) {
                             if (!res.headersSent) {
@@ -1837,7 +1922,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         return;
                     }
 
-                    const responsesPayload = buildResponsesPayloadFromChatCompletion(chatJson.value, model);
+                    const responsesPayload = buildResponsesPayloadFromChatCompletion(chatJson.value, model, { toolTypesByName });
 
                     if (wantsStream) {
                         res.writeHead(200, {
