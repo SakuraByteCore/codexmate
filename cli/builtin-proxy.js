@@ -494,8 +494,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         return blocks;
     }
 
-    const RESPONSES_TOOL_CALL_INPUT_TYPES = new Set(['function_call', 'custom_tool_call']);
-    const RESPONSES_TOOL_CALL_OUTPUT_TYPES = new Set(['function_call_output', 'custom_tool_call_output']);
+    const RESPONSES_TOOL_CALL_INPUT_TYPES = new Set(['function_call', 'custom_tool_call', 'mcp_tool_call', 'local_shell_call']);
+    const RESPONSES_TOOL_CALL_OUTPUT_TYPES = new Set(['function_call_output', 'custom_tool_call_output', 'mcp_tool_call_output', 'tool_search_output', 'local_shell_call_output']);
 
     function stripOrphanedResponsesToolOutputs(input) {
         if (!Array.isArray(input)) return input;
@@ -524,17 +524,31 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         return sanitized;
     }
 
+    function normalizeFreeformToolArguments(value) {
+        if (typeof value === 'string') return stringifyJsonValue({ input: value }, '{"input":""}');
+        if (value == null) return '{"input":""}';
+        if (isRecord(value) && Object.prototype.hasOwnProperty.call(value, 'input')) {
+            return stringifyJsonValue(value, '{"input":""}');
+        }
+        return stringifyJsonValue({ input: normalizeResponsesToolOutput(value) }, '{"input":""}');
+    }
+
     function toOpenAiToolCall(item, fallbackIndex) {
         if (!isRecord(item)) return null;
         const callId = asTrimmedString(item.call_id || item.id) || `call_${crypto.randomBytes(8).toString('hex')}_${fallbackIndex}`;
-        const name = asTrimmedString(item.name);
+        const name = asTrimmedString(item.name) || asTrimmedString(item.server_label);
         if (!name) return null;
+        const type = asTrimmedString(item.type).toLowerCase();
+        const rawArguments = item.arguments != null ? item.arguments : item.input;
+        const args = type === 'custom_tool_call' && item.arguments == null
+            ? normalizeFreeformToolArguments(rawArguments)
+            : normalizeOpenAiToolArguments(rawArguments);
         return {
             id: callId,
             type: 'function',
             function: {
                 name,
-                arguments: normalizeOpenAiToolArguments(item.arguments != null ? item.arguments : item.input)
+                arguments: args
             }
         };
     }
@@ -647,35 +661,92 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         return messages;
     }
 
+    function normalizeFunctionToolForChat(tool) {
+        if (!isRecord(tool)) return null;
+        const sourceFn = isRecord(tool.function) ? tool.function : tool;
+        const name = asTrimmedString(sourceFn.name) || asTrimmedString(tool.name);
+        if (!name) return null;
+        const fn = { name };
+        const description = asTrimmedString(sourceFn.description) || asTrimmedString(tool.description);
+        if (description) fn.description = description;
+        if (sourceFn.parameters !== undefined) {
+            fn.parameters = cloneJsonValue(sourceFn.parameters);
+        } else if (tool.parameters !== undefined) {
+            fn.parameters = cloneJsonValue(tool.parameters);
+        }
+        if (typeof sourceFn.strict === 'boolean') {
+            fn.strict = sourceFn.strict;
+        } else if (typeof tool.strict === 'boolean') {
+            fn.strict = tool.strict;
+        }
+        return { type: 'function', function: fn };
+    }
+
+    function buildLocalShellToolForChat(tool) {
+        return {
+            type: 'function',
+            function: {
+                name: asTrimmedString(tool && tool.name) || 'local_shell',
+                description: asTrimmedString(tool && tool.description) || 'Run a local shell command and return its output.',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        cmd: { type: 'string', description: 'Shell command to execute.' },
+                        yield_time_ms: { type: 'number', description: 'Milliseconds to wait before yielding partial output.' },
+                        max_output_tokens: { type: 'number', description: 'Maximum output tokens to return.' }
+                    },
+                    required: ['cmd'],
+                    additionalProperties: true
+                }
+            }
+        };
+    }
+
+    function buildFreeformToolForChat(tool, fallbackName = 'custom_tool') {
+        return {
+            type: 'function',
+            function: {
+                name: asTrimmedString(tool && tool.name) || fallbackName,
+                description: asTrimmedString(tool && tool.description) || 'Pass raw freeform input to the local tool.',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        input: { type: 'string', description: 'Raw tool input.' }
+                    },
+                    required: ['input'],
+                    additionalProperties: false
+                }
+            }
+        };
+    }
+
+    function normalizeSingleResponsesToolToChatTools(tool) {
+        if (!isRecord(tool)) return [];
+        const type = asTrimmedString(tool.type).toLowerCase();
+        if (type === 'namespace' && Array.isArray(tool.tools)) {
+            return tool.tools.flatMap((inner) => normalizeSingleResponsesToolToChatTools(inner));
+        }
+        if (type === 'function') {
+            const converted = normalizeFunctionToolForChat(tool);
+            return converted ? [converted] : [];
+        }
+        if (type === 'local_shell') {
+            return [buildLocalShellToolForChat(tool)];
+        }
+        const name = asTrimmedString(tool.name);
+        if (type === 'custom' || type === 'custom_tool' || name === 'apply_patch') {
+            return [buildFreeformToolForChat(tool, name || 'custom_tool')];
+        }
+        // Hosted Responses tools such as web_search/image_generation/computer_use
+        // do not have a safe Chat Completions representation. Passing them through
+        // as-is makes OpenAI-compatible chat gateways reject the request, so drop
+        // them instead of pretending the shapes are compatible.
+        return [];
+    }
+
     function normalizeResponsesToolsToChatTools(tools) {
         if (!Array.isArray(tools)) return tools;
-        return tools
-            .map((tool) => {
-                if (!isRecord(tool)) return null;
-                const type = asTrimmedString(tool.type).toLowerCase();
-                if (type === 'custom' || type === 'image_generation') return cloneJsonValue(tool);
-                if (type !== 'function') return cloneJsonValue(tool);
-                if (isRecord(tool.function) && asTrimmedString(tool.function.name)) return cloneJsonValue(tool);
-
-                const sourceFn = isRecord(tool.function) ? tool.function : {};
-                const name = asTrimmedString(tool.name) || asTrimmedString(sourceFn.name);
-                if (!name) return null;
-                const fn = { name };
-                const description = asTrimmedString(tool.description) || asTrimmedString(sourceFn.description);
-                if (description) fn.description = description;
-                if (tool.parameters !== undefined) {
-                    fn.parameters = cloneJsonValue(tool.parameters);
-                } else if (sourceFn.parameters !== undefined) {
-                    fn.parameters = cloneJsonValue(sourceFn.parameters);
-                }
-                if (tool.strict !== undefined) {
-                    fn.strict = tool.strict;
-                } else if (sourceFn.strict !== undefined) {
-                    fn.strict = sourceFn.strict;
-                }
-                return { type: 'function', function: fn };
-            })
-            .filter(Boolean);
+        return tools.flatMap((tool) => normalizeSingleResponsesToolToChatTools(tool));
     }
 
     function normalizeResponsesToolChoiceToChatToolChoice(toolChoice) {
@@ -684,14 +755,37 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         if (!isRecord(toolChoice)) return toolChoice;
 
         const type = asTrimmedString(toolChoice.type).toLowerCase();
-        if (type === 'tool' || type === 'function') {
+        if (type === 'tool' || type === 'function' || type === 'custom' || type === 'custom_tool' || type === 'local_shell') {
             if (isRecord(toolChoice.function) && asTrimmedString(toolChoice.function.name)) return cloneJsonValue(toolChoice);
-            const name = asTrimmedString(toolChoice.name);
+            const name = asTrimmedString(toolChoice.name) || asTrimmedString(toolChoice.server_label);
             if (!name) return 'required';
             return { type: 'function', function: { name } };
         }
         if (type === 'auto' || type === 'none' || type === 'required') return type;
-        return cloneJsonValue(toolChoice);
+        return 'auto';
+    }
+
+    function getChatToolChoiceName(toolChoice) {
+        if (!isRecord(toolChoice)) return '';
+        if (isRecord(toolChoice.function)) return asTrimmedString(toolChoice.function.name);
+        return '';
+    }
+
+    function pruneInvalidChatToolChoice(chatBody) {
+        if (!isRecord(chatBody) || !Array.isArray(chatBody.tools)) return;
+        if (chatBody.tools.length === 0) {
+            delete chatBody.tools;
+            delete chatBody.tool_choice;
+            return;
+        }
+        const chosenName = getChatToolChoiceName(chatBody.tool_choice);
+        if (!chosenName) return;
+        const toolNames = new Set(chatBody.tools
+            .map((tool) => isRecord(tool) && isRecord(tool.function) ? asTrimmedString(tool.function.name) : '')
+            .filter(Boolean));
+        if (!toolNames.has(chosenName)) {
+            delete chatBody.tool_choice;
+        }
     }
 
     function buildChatCompletionsBodyFromResponsesPayload(payload) {
@@ -751,9 +845,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             chatBody.verbosity = asTrimmedString(source.text.verbosity);
         }
 
-        if (Array.isArray(chatBody.tools) && chatBody.tools.length === 0) {
-            delete chatBody.tool_choice;
-        }
+        pruneInvalidChatToolChoice(chatBody);
 
         if (Object.prototype.hasOwnProperty.call(source, 'max_tokens')) {
             chatBody.max_tokens = source.max_tokens;

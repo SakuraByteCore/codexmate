@@ -689,7 +689,16 @@ test('builtin-proxy /v1/responses uses metapi-style Responses to chat fallback c
                     { type: 'function_call_output', call_id: 'call_a', output: { ok: true } },
                     { type: 'custom_tool_call_output', call_id: 'call_b', output: 'done' }
                 ],
-                tools: [{ type: 'function', name: 'lookup', description: 'Lookup data', parameters: { type: 'object' } }],
+                tools: [
+                    { type: 'function', name: 'lookup', description: 'Lookup data', parameters: { type: 'object' } },
+                    { type: 'custom', name: 'shell', description: 'Run raw shell input' },
+                    { type: 'local_shell', name: 'local_shell' },
+                    { type: 'image_generation', name: 'image_generation' },
+                    {
+                        type: 'namespace',
+                        tools: [{ type: 'function', name: 'nested_lookup', parameters: { type: 'object' } }]
+                    }
+                ],
                 tool_choice: { type: 'tool', name: 'lookup' },
                 text: { format: { type: 'json_object' }, verbosity: 'low' },
                 parallel_tool_calls: false,
@@ -719,16 +728,52 @@ test('builtin-proxy /v1/responses uses metapi-style Responses to chat fallback c
                 content: null,
                 tool_calls: [
                     { id: 'call_a', type: 'function', function: { name: 'lookup', arguments: '{"q":"codexmate"}' } },
-                    { id: 'call_b', type: 'function', function: { name: 'shell', arguments: 'pwd' } }
+                    { id: 'call_b', type: 'function', function: { name: 'shell', arguments: '{"input":"pwd"}' } }
                 ]
             },
             { role: 'tool', tool_call_id: 'call_a', content: '{"ok":true}' },
             { role: 'tool', tool_call_id: 'call_b', content: 'done' }
         ]);
-        assert.deepStrictEqual(capturedChatRequest.tools, [{
-            type: 'function',
-            function: { name: 'lookup', description: 'Lookup data', parameters: { type: 'object' } }
-        }]);
+        assert.deepStrictEqual(capturedChatRequest.tools, [
+            {
+                type: 'function',
+                function: { name: 'lookup', description: 'Lookup data', parameters: { type: 'object' } }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'shell',
+                    description: 'Run raw shell input',
+                    parameters: {
+                        type: 'object',
+                        properties: { input: { type: 'string', description: 'Raw tool input.' } },
+                        required: ['input'],
+                        additionalProperties: false
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'local_shell',
+                    description: 'Run a local shell command and return its output.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            cmd: { type: 'string', description: 'Shell command to execute.' },
+                            yield_time_ms: { type: 'number', description: 'Milliseconds to wait before yielding partial output.' },
+                            max_output_tokens: { type: 'number', description: 'Maximum output tokens to return.' }
+                        },
+                        required: ['cmd'],
+                        additionalProperties: true
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: { name: 'nested_lookup', parameters: { type: 'object' } }
+            }
+        ]);
         assert.deepStrictEqual(capturedChatRequest.tool_choice, { type: 'function', function: { name: 'lookup' } });
         assert.equal(capturedChatRequest.parallel_tool_calls, false);
         assert.deepStrictEqual(capturedChatRequest.response_format, { type: 'json_object' });
@@ -736,6 +781,66 @@ test('builtin-proxy /v1/responses uses metapi-style Responses to chat fallback c
 
         const parsed = JSON.parse(resp.text);
         assert.equal(parsed.output[0].content[0].text, 'converted');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
+test('builtin-proxy /v1/responses drops hosted-only Responses tools for chat fallback', async () => {
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    id: 'chatcmpl_hosted_tools',
+                    model: 'gpt-hosted-tools',
+                    choices: [{ message: { role: 'assistant', content: 'hosted-dropped' } }]
+                }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-hosted-tools',
+                input: 'draw later',
+                tools: [
+                    { type: 'image_generation', name: 'image_generation' },
+                    { type: 'web_search_preview', name: 'web_search_preview' }
+                ],
+                tool_choice: { type: 'tool', name: 'image_generation' },
+                stream: false
+            }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.ok(capturedChatRequest, 'chat fallback should be captured');
+        assert.equal(Object.prototype.hasOwnProperty.call(capturedChatRequest, 'tools'), false);
+        assert.equal(Object.prototype.hasOwnProperty.call(capturedChatRequest, 'tool_choice'), false);
+        const parsed = JSON.parse(resp.text);
+        assert.equal(parsed.output[0].content[0].text, 'hosted-dropped');
     } finally {
         if (proxyRuntime) {
             await closeServer(proxyRuntime.server, proxyRuntime.connections);
