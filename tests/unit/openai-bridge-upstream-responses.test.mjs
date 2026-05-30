@@ -8,7 +8,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { createOpenaiBridgeHttpHandler } = require('../../cli/openai-bridge.js');
+const { createOpenaiBridgeHttpHandler, convertResponsesRequestToChatCompletions } = require('../../cli/openai-bridge.js');
 
 function listen(server) {
     server.listen(0, '127.0.0.1');
@@ -1139,4 +1139,87 @@ test('openai-bridge preserves multibyte UTF-8 deltas split across chunk boundari
     await bridge.close();
     await upstream.close();
     await rm(tmpDir, { recursive: true, force: true });
+});
+
+
+test('openai-bridge converts Codex Responses tool history for chat fallback', () => {
+    const converted = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: [
+            { role: 'developer', content: [{ type: 'input_text', text: 'agent rules' }] },
+            { role: 'user', content: [{ type: 'input_text', text: 'run a slow task' }] },
+            { type: 'custom_tool_call', call_id: 'call_patch', name: 'apply_patch', input: '*** Begin Patch\n*** End Patch' },
+            { type: 'custom_tool_call_output', call_id: 'call_patch', output: { ok: true } },
+            { type: 'mcp_tool_call', call_id: 'call_lookup', server_label: 'lookup', arguments: { query: 'status' } },
+            { type: 'mcp_tool_call_output', call_id: 'call_lookup', output: [{ text: 'green' }] },
+            { type: 'local_shell_call', call_id: 'call_shell', action: { cmd: 'sleep 20 && echo done' } },
+            { type: 'local_shell_call_output', call_id: 'call_shell', output: 'done\n' },
+            { type: 'local_shell_call_output', call_id: 'orphaned', output: 'must be dropped' }
+        ],
+        tools: [
+            { type: 'custom_tool', name: 'apply_patch' },
+            { type: 'local_shell', name: 'local_shell' },
+            { type: 'namespace', tools: [{ type: 'function', name: 'lookup', parameters: { type: 'object' } }] },
+            { type: 'image_generation' }
+        ],
+        tool_choice: { type: 'local_shell', name: 'local_shell' },
+        stream: true
+    });
+
+    assert.equal(converted.error, undefined);
+    assert.equal(converted.streamRequested, true);
+    assert.equal(converted.chat.messages[0].role, 'system');
+    assert.match(converted.chat.messages[0].content, /agent rules/);
+    const toolMessages = converted.chat.messages.filter((msg) => msg.role === 'tool');
+    assert.deepStrictEqual(toolMessages.map((msg) => msg.tool_call_id), ['call_patch', 'call_lookup', 'call_shell']);
+    assert.equal(toolMessages.some((msg) => /orphaned/.test(msg.content)), false);
+
+    const assistantToolMessages = converted.chat.messages.filter((msg) => Array.isArray(msg.tool_calls));
+    assert.equal(assistantToolMessages.length, 3);
+    assert.deepStrictEqual(
+        assistantToolMessages.flatMap((msg) => msg.tool_calls.map((call) => call.function.name)),
+        ['apply_patch', 'lookup', 'local_shell']
+    );
+    assert.deepStrictEqual(converted.chat.tools.map((tool) => tool.function.name), ['apply_patch', 'local_shell', 'lookup']);
+    assert.deepStrictEqual(converted.chat.tool_choice, { type: 'function', function: { name: 'local_shell' } });
+});
+
+test('openai-bridge prunes invalid tool_choice after dropping hosted-only Responses tools', () => {
+    const converted = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: 'draw a cat',
+        tools: [{ type: 'image_generation', name: 'image_generation' }],
+        tool_choice: { type: 'function', name: 'image_generation' },
+        stream: false
+    });
+
+    assert.equal(converted.error, undefined);
+    assert.equal(Object.prototype.hasOwnProperty.call(converted.chat, 'tools'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(converted.chat, 'tool_choice'), false);
+});
+
+test('openai-bridge tells chat fallback to poll running Codex exec sessions', () => {
+    const converted = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: [
+            { role: 'user', content: [{ type: 'input_text', text: 'run slow command' }] },
+            { type: 'function_call', call_id: 'call_slow', name: 'exec_command', arguments: '{"cmd":"sleep 20"}' },
+            {
+                type: 'function_call_output',
+                call_id: 'call_slow',
+                output: 'Chunk ID: abc\nWall time: 1.001 seconds\nProcess running with session ID 78313\nOutput:\n'
+            }
+        ],
+        tools: [
+            { type: 'function', name: 'exec_command', parameters: { type: 'object' } },
+            { type: 'function', name: 'write_stdin', parameters: { type: 'object' } }
+        ],
+        stream: true
+    });
+
+    assert.equal(converted.error, undefined);
+    assert.equal(converted.chat.messages[0].role, 'system');
+    assert.match(converted.chat.messages[0].content, /write_stdin/);
+    assert.match(converted.chat.messages[0].content, /session_id/);
+    assert.match(converted.chat.messages[0].content, /Do not merely say that you are waiting/);
 });
