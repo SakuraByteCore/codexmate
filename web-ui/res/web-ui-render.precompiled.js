@@ -6688,7 +6688,7 @@ return function render(_ctx, _cache) {
                   : (_openBlock(), _createElementBlock("span", { key: 1 }, "保存仅写入本地配置库。点击“保存并应用”后会写入 openclaw.json。"))
               ])
             ]),
-            _createElementVNode("div", { class: "btn-group openclaw-modal-footer" }, [
+            _createElementVNode("div", { class: "btn-group" }, [
               _createElementVNode("button", {
                 class: "btn btn-cancel",
                 onClick: _ctx.closeOpenclawConfigModal,
