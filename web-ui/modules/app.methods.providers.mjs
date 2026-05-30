@@ -50,6 +50,9 @@ function normalizeProviderDraftState(target) {
     if (typeof target.model === 'string') {
         target.model = target.model.trim();
     }
+    if (typeof target.key === 'string') {
+        target.key = target.key.trim();
+    }
 }
 
 function maskKeyLocal(key) {
@@ -70,9 +73,11 @@ function getProviderValidationForContext(vm, mode = 'add') {
     const name = normalizeText(draft && draft.name);
     const url = normalizeProviderUrl(draft && draft.url);
     const model = normalizeText(draft && draft.model);
+    const key = normalizeText(draft && draft.key);
     const errors = {
         name: '',
         url: '',
+        key: '',
         model: ''
     };
 
@@ -96,6 +101,10 @@ function getProviderValidationForContext(vm, mode = 'add') {
         errors.url = 'URL 仅支持 http/https';
     }
 
+    if (mode === 'add' && !key) {
+        errors.key = 'API Key 必填';
+    }
+
     if (mode === 'add' && !model) {
         errors.model = '模型名称必填';
     }
@@ -104,9 +113,10 @@ function getProviderValidationForContext(vm, mode = 'add') {
         mode,
         name,
         url,
+        key,
         model,
         errors,
-        ok: !errors.name && !errors.url && !errors.model
+        ok: !errors.name && !errors.url && !errors.key && !errors.model
     };
 }
 
@@ -160,14 +170,14 @@ export function createProvidersMethods(options = {}) {
             normalizeProviderDraftState(this.newProvider);
             const validation = getProviderValidationForContext(this, 'add');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.model || '名称、URL 和模型名称必填', 'error');
+                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.key || validation.errors.model || '名称、URL、API Key 和模型名称必填', 'error');
             }
 
             try {
                 const payload = {
                     name: validation.name,
                     url: validation.url,
-                    key: this.newProvider.key || '',
+                    key: validation.key,
                     model: validation.model
                 };
                 if (this.newProvider && this.newProvider.useTransform) {

@@ -5341,12 +5341,21 @@ return function render(_ctx, _cache) {
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.apiKey')), 1 /* TEXT */),
               _withDirectives(_createElementVNode("input", {
                 "onUpdate:modelValue": $event => ((_ctx.newProvider.key) = $event),
-                class: "form-input",
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('add', 'key') }]),
                 type: "password",
-                placeholder: "sk-..."
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                placeholder: "sk-...",
+                autocomplete: "off",
+                spellcheck: "false",
+                onBlur: $event => (_ctx.normalizeProviderDraft('add'))
+              }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
                 [_vModelText, _ctx.newProvider.key]
-              ])
+              ]),
+              (_ctx.providerFieldError('add', 'key'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.providerFieldError('add', 'key')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, [
@@ -5602,14 +5611,20 @@ return function render(_ctx, _cache) {
               _createElementVNode("label", { class: "form-label" }, "API Key"),
               _withDirectives(_createElementVNode("input", {
                 "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.apiKey) = $event),
-                class: "form-input",
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('add', 'apiKey') }]),
                 type: "password",
                 autocomplete: "off",
                 spellcheck: "false",
                 placeholder: _ctx.t('placeholder.apiKeyExampleClaude')
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                 [_vModelText, _ctx.newClaudeConfig.apiKey]
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('add', 'apiKey'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('add', 'apiKey')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.baseUrl')), 1 /* TEXT */),
@@ -5698,12 +5713,12 @@ return function render(_ctx, _cache) {
               _createElementVNode("div", { class: "input-with-toggle" }, [
                 _withDirectives(_createElementVNode("input", {
                   "onUpdate:modelValue": $event => ((_ctx.editingConfig.apiKey) = $event),
-                  class: "form-input",
+                  class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('edit', 'apiKey') }]),
                   type: _ctx.showEditClaudeConfigKey ? 'text' : 'password',
                   autocomplete: "off",
                   spellcheck: "false",
                   placeholder: _ctx.t('placeholder.apiKeyExampleClaude')
-                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
+                }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
                   [_vModelDynamic, _ctx.editingConfig.apiKey]
                 ]),
                 _createElementVNode("button", {
@@ -5741,7 +5756,13 @@ return function render(_ctx, _cache) {
                         _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title"])
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('edit', 'apiKey'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('edit', 'apiKey')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.baseUrl')), 1 /* TEXT */),

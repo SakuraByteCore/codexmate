@@ -32,7 +32,7 @@ test('provider validation rejects invalid add-provider fields before submit', as
         newProvider: {
             name: 'bad name',
             url: 'not-a-url',
-            key: 'sk-test',
+            key: '',
             model: ''
         }
     }, async (action, params) => {
@@ -43,6 +43,8 @@ test('provider validation rejects invalid add-provider fields before submit', as
     assert.strictEqual(context.canSubmitProvider('add'), false);
     assert.strictEqual(context.providerFieldError('add', 'name'), '名称仅支持字母/数字/._-');
     assert.strictEqual(context.providerFieldError('add', 'url'), 'URL 仅支持 http/https');
+    assert.strictEqual(context.providerFieldError('add', 'key'), 'API Key 必填');
+    assert.strictEqual(context.providerFieldError('add', 'model'), '模型名称必填');
 
     await context.addProvider();
 
@@ -76,7 +78,7 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
         params: {
             name: 'beta.provider',
             url: 'https://api.example.com/v1',
-            key: ' sk-live ',
+            key: 'sk-live',
             model: 'gpt-e2e'
         }
     }]);
@@ -98,13 +100,13 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
     });
 });
 
-test('provider validation requires model when adding provider', async () => {
+test('provider validation requires API key and model when adding provider', async () => {
     const apiCalls = [];
     const { context, messages } = createContext({
         newProvider: {
             name: 'beta',
             url: 'https://api.example.com/v1',
-            key: 'sk-test',
+            key: '   ',
             model: '   '
         }
     }, async (action, params) => {
@@ -119,7 +121,7 @@ test('provider validation requires model when adding provider', async () => {
 
     assert.deepStrictEqual(apiCalls, []);
     assert.deepStrictEqual(messages[0], {
-        text: '模型名称必填',
+        text: 'API Key 必填',
         type: 'error'
     });
 });
@@ -130,7 +132,7 @@ test('updateProvider blocks invalid edit URL and skips api call', async () => {
         editingProvider: {
             name: 'alpha',
             url: 'ftp://api.example.com',
-            key: '',
+            key: 'sk-test',
             readOnly: false,
             nonEditable: false
         }
@@ -152,12 +154,14 @@ test('updateProvider blocks invalid edit URL and skips api call', async () => {
     });
 });
 
+
+
 test('provider validation rejects reserved proxy name on add', () => {
     const { context } = createContext({
         newProvider: {
             name: 'codexmate-proxy',
             url: 'https://api.example.com/v1',
-            key: '',
+            key: 'sk-test',
             model: 'gpt-e2e'
         }
     });

@@ -7,7 +7,7 @@ function normalizeClaudeBaseUrl(value) {
 }
 
 function isValidClaudeHttpUrl(value) {
-    if (!value) return true;
+    if (!value) return false;
     try {
         const parsed = new URL(value);
         return parsed.protocol === 'http:' || parsed.protocol === 'https:';
@@ -19,10 +19,12 @@ function isValidClaudeHttpUrl(value) {
 function getClaudeConfigValidationForContext(vm, mode = 'add') {
     const draft = mode === 'edit' ? vm.editingConfig : vm.newClaudeConfig;
     const name = normalizeClaudeText(draft && draft.name);
+    const apiKey = normalizeClaudeText(draft && draft.apiKey);
     const baseUrl = normalizeClaudeBaseUrl(draft && draft.baseUrl);
     const model = normalizeClaudeText(draft && draft.model);
     const errors = {
         name: '',
+        apiKey: '',
         baseUrl: '',
         model: ''
     };
@@ -33,7 +35,13 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
         errors.name = '名称已存在';
     }
 
-    if (baseUrl && !isValidClaudeHttpUrl(baseUrl)) {
+    if (!apiKey) {
+        errors.apiKey = 'API Key 必填';
+    }
+
+    if (!baseUrl) {
+        errors.baseUrl = 'Base URL 必填';
+    } else if (!isValidClaudeHttpUrl(baseUrl)) {
         errors.baseUrl = 'Base URL 仅支持 http/https';
     }
 
@@ -44,10 +52,11 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
     return {
         mode,
         name,
+        apiKey,
         baseUrl,
         model,
         errors,
-        ok: !errors.name && !errors.baseUrl && !errors.model
+        ok: !errors.name && !errors.apiKey && !errors.baseUrl && !errors.model
     };
 }
 
@@ -140,9 +149,10 @@ export function createClaudeConfigMethods(options = {}) {
         updateConfig() {
             const validation = getClaudeConfigValidationForContext(this, 'edit');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.baseUrl || validation.errors.model || '请检查 Claude 配置', 'error');
+                return this.showMessage(validation.errors.name || validation.errors.apiKey || validation.errors.baseUrl || validation.errors.model || '请检查 Claude 配置', 'error');
             }
             const name = validation.name;
+            this.editingConfig.apiKey = validation.apiKey;
             this.editingConfig.baseUrl = validation.baseUrl;
             this.editingConfig.model = validation.model;
             this.claudeConfigs[name] = this.mergeClaudeConfig(this.claudeConfigs[name], this.editingConfig);
@@ -167,9 +177,10 @@ export function createClaudeConfigMethods(options = {}) {
         async saveAndApplyConfig() {
             const validation = getClaudeConfigValidationForContext(this, 'edit');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.baseUrl || validation.errors.model || '请检查 Claude 配置', 'error');
+                return this.showMessage(validation.errors.name || validation.errors.apiKey || validation.errors.baseUrl || validation.errors.model || '请检查 Claude 配置', 'error');
             }
             const name = validation.name;
+            this.editingConfig.apiKey = validation.apiKey;
             this.editingConfig.baseUrl = validation.baseUrl;
             this.editingConfig.model = validation.model;
             this.claudeConfigs[name] = this.mergeClaudeConfig(this.claudeConfigs[name], this.editingConfig);
@@ -207,9 +218,10 @@ export function createClaudeConfigMethods(options = {}) {
         addClaudeConfig() {
             const validation = getClaudeConfigValidationForContext(this, 'add');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.baseUrl || validation.errors.model || '请检查 Claude 配置', 'error');
+                return this.showMessage(validation.errors.name || validation.errors.apiKey || validation.errors.baseUrl || validation.errors.model || '请检查 Claude 配置', 'error');
             }
             this.newClaudeConfig.name = validation.name;
+            this.newClaudeConfig.apiKey = validation.apiKey;
             this.newClaudeConfig.baseUrl = validation.baseUrl;
             this.newClaudeConfig.model = validation.model;
             const name = validation.name;

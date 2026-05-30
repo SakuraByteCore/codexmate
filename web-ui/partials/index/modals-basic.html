@@ -38,7 +38,8 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.apiKey') }}</label>
-                    <input v-model="newProvider.key" class="form-input" type="password" placeholder="sk-...">
+                    <input v-model="newProvider.key" :class="['form-input', { invalid: !!providerFieldError('add', 'key') }]" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" @blur="normalizeProviderDraft('add')">
+                    <div v-if="providerFieldError('add', 'key')" class="form-hint form-error">{{ providerFieldError('add', 'key') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">
@@ -139,7 +140,8 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">API Key</label>
-                    <input v-model="newClaudeConfig.apiKey" class="form-input" type="password" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                    <input v-model="newClaudeConfig.apiKey" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'apiKey') }]" type="password" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                    <div v-if="claudeConfigFieldError('add', 'apiKey')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'apiKey') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.baseUrl') }}</label>
@@ -172,12 +174,13 @@
                 <div class="form-group">
                     <label class="form-label">API Key</label>
                     <div class="input-with-toggle">
-                        <input v-model="editingConfig.apiKey" class="form-input" :type="showEditClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                        <input v-model="editingConfig.apiKey" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'apiKey') }]" :type="showEditClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
                         <button type="button" class="input-toggle-btn" @click="toggleEditClaudeConfigKey" :title="showEditClaudeConfigKey ? t('common.hide') : t('common.show')">
                             <svg v-if="!showEditClaudeConfigKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
                     </div>
+                    <div v-if="claudeConfigFieldError('edit', 'apiKey')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'apiKey') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.baseUrl') }}</label>

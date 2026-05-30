@@ -275,12 +275,18 @@ ${extractMethodAsFunction(appSource, 'canSubmitClaudeConfig')}`;
     };
 
     assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'name'), '名称已存在');
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'apiKey'), 'API Key 必填');
     assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'baseUrl'), 'Base URL 仅支持 http/https');
     assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'model'), '模型名称必填');
     assert.strictEqual(canSubmitClaudeConfig.call(context, 'add'), false);
+    assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'apiKey'), 'API Key 必填');
     assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'baseUrl'), 'Base URL 仅支持 http/https');
     assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'model'), '模型名称必填');
     assert.strictEqual(canSubmitClaudeConfig.call(context, 'edit'), false);
+
+    context.newClaudeConfig = { name: 'Fresh', apiKey: 'sk-test', baseUrl: '   ', model: 'claude-sonnet-4' };
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'baseUrl'), 'Base URL 必填');
+    assert.strictEqual(canSubmitClaudeConfig.call(context, 'add'), false);
 });
 
 test('addClaudeConfig trims and persists the entered model', () => {
