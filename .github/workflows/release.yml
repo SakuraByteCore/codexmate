@@ -194,8 +194,18 @@ jobs:
       - name: Print release changelog
         env:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+          TAG_EXISTS: ${{ steps.resolve.outputs.tag_exists }}
           RELEASE_CHANGELOG_FILE: release-changelog.md
-        run: node tools/release/changelog.js
+        run: |
+          if [ "${TAG_EXISTS}" = "true" ] && [ ! -f tools/release/changelog.js ]; then
+            echo "::notice title=Release changelog skipped::tools/release/changelog.js is not present in existing tag ${RELEASE_TAG}."
+            exit 0
+          fi
+          if [ ! -f tools/release/changelog.js ]; then
+            echo "::notice title=Release changelog skipped::tools/release/changelog.js is not present in this ref."
+            exit 0
+          fi
+          node tools/release/changelog.js
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
