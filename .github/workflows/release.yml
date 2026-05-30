@@ -191,6 +191,11 @@ jobs:
             cli.js cli/ lib/ plugins/ web-ui.html web-ui/ \
             node_modules/ package.json LICENSE README.md README.zh.md
           echo "STANDALONE_TGZ=$name" >> "$GITHUB_ENV"
+      - name: Print release changelog
+        env:
+          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+          RELEASE_CHANGELOG_FILE: release-changelog.md
+        run: node tools/release/changelog.js
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
