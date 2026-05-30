@@ -361,9 +361,21 @@
     padding: 4px 0 0;
 }
 
-.openclaw-workspace-card,
+.openclaw-workspace-card.settings-card,
 .openclaw-configs-card {
     margin: 0;
+    padding: 12px 14px;
+}
+
+/* Nested workspace card - distinguish from outer section */
+.openclaw-workspace-card.settings-card > .settings-card-body > .openclaw-workspace-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
 }
 
 /* Workspace tool button */
@@ -436,17 +448,6 @@
     height: 18px;
     color: var(--color-text-muted);
     flex-shrink: 0;
-}
-
-/* Workspace file card */
-.openclaw-workspace-card {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px 14px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border-soft);
-    background: rgba(255, 255, 255, 0.6);
 }
 
 .workspace-label {
