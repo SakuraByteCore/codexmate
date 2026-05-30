@@ -170,7 +170,7 @@
     border: none;
     border-radius: 0;
     box-shadow: none;
-    padding: 0 28px 28px;
+    padding: 0 16px 16px;
     backdrop-filter: none;
     position: relative;
     overflow-x: hidden;
@@ -189,8 +189,8 @@
     position: sticky;
     top: 0;
     z-index: 12;
-    margin: 0 -28px 18px;
-    padding: 0 28px 14px;
+    margin: 0 -16px 18px;
+    padding: 0 16px 14px;
     background: linear-gradient(180deg, var(--color-bg-topbar-strong) 0%, var(--color-bg-topbar-soft) 78%, var(--color-bg-topbar-clear) 100%);
     backdrop-filter: blur(18px) saturate(130%);
 }
