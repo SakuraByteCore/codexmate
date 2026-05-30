@@ -20,6 +20,7 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
     const draft = mode === 'edit' ? vm.editingConfig : vm.newClaudeConfig;
     const name = normalizeClaudeText(draft && draft.name);
     const apiKey = normalizeClaudeText(draft && draft.apiKey);
+    const externalCredentialType = normalizeClaudeText(draft && draft.externalCredentialType);
     const baseUrl = normalizeClaudeBaseUrl(draft && draft.baseUrl);
     const model = normalizeClaudeText(draft && draft.model);
     const errors = {
@@ -35,7 +36,7 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
         errors.name = '名称已存在';
     }
 
-    if (!apiKey) {
+    if (!apiKey && !externalCredentialType) {
         errors.apiKey = 'API Key 必填';
     }
 
@@ -53,6 +54,7 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
         mode,
         name,
         apiKey,
+        externalCredentialType,
         baseUrl,
         model,
         errors,
@@ -139,6 +141,7 @@ export function createClaudeConfigMethods(options = {}) {
             this.editingConfig = {
                 name: name,
                 apiKey: config.apiKey || '',
+                externalCredentialType: config.externalCredentialType || '',
                 baseUrl: config.baseUrl || '',
                 model: config.model || ''
             };
@@ -167,7 +170,7 @@ export function createClaudeConfigMethods(options = {}) {
         closeEditConfigModal() {
             this.showEditConfigModal = false;
             this.showEditClaudeConfigKey = false;
-            this.editingConfig = { name: '', apiKey: '', baseUrl: '', model: '' };
+            this.editingConfig = { name: '', apiKey: '', externalCredentialType: '', baseUrl: '', model: '' };
         },
 
         toggleEditClaudeConfigKey() {

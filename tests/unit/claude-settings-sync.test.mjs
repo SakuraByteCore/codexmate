@@ -289,6 +289,60 @@ ${extractMethodAsFunction(appSource, 'canSubmitClaudeConfig')}`;
     assert.strictEqual(canSubmitClaudeConfig.call(context, 'add'), false);
 });
 
+test('Claude edit validation allows external credential configs without api key', () => {
+    const support = claudeValidationSupportSource();
+    const fieldErrorSource = `${support}
+${extractMethodAsFunction(appSource, 'claudeConfigFieldError')}`;
+    const canSubmitSource = `${support}
+${extractMethodAsFunction(appSource, 'canSubmitClaudeConfig')}`;
+    const claudeConfigFieldError = instantiateFunction(fieldErrorSource, 'claudeConfigFieldError');
+    const canSubmitClaudeConfig = instantiateFunction(canSubmitSource, 'canSubmitClaudeConfig');
+    const context = {
+        newClaudeConfig: { name: '', apiKey: '', baseUrl: '', model: '' },
+        editingConfig: {
+            name: 'Imported Auth Token',
+            apiKey: '',
+            externalCredentialType: 'auth-token',
+            baseUrl: 'https://api.anthropic.com',
+            model: 'claude-opus-4-6'
+        },
+        claudeConfigs: {}
+    };
+
+    assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'apiKey'), '');
+    assert.strictEqual(canSubmitClaudeConfig.call(context, 'edit'), true);
+});
+
+test('openEditConfigModal carries external credential metadata into edit validation state', () => {
+    const source = extractMethodAsFunction(appSource, 'openEditConfigModal');
+    const openEditConfigModal = instantiateFunction(source, 'openEditConfigModal');
+    const context = {
+        claudeConfigs: {
+            imported: {
+                apiKey: '',
+                externalCredentialType: 'auth-token',
+                baseUrl: 'https://api.anthropic.com',
+                model: 'claude-opus-4-6'
+            }
+        },
+        editingConfig: {},
+        showEditClaudeConfigKey: true,
+        showEditConfigModal: false
+    };
+
+    openEditConfigModal.call(context, 'imported');
+
+    assert.deepStrictEqual(context.editingConfig, {
+        name: 'imported',
+        apiKey: '',
+        externalCredentialType: 'auth-token',
+        baseUrl: 'https://api.anthropic.com',
+        model: 'claude-opus-4-6'
+    });
+    assert.strictEqual(context.showEditClaudeConfigKey, false);
+    assert.strictEqual(context.showEditConfigModal, true);
+});
+
 test('addClaudeConfig trims and persists the entered model', () => {
     const source = extractClaudeMethodAsFunction(appSource, 'addClaudeConfig');
     const addClaudeConfig = instantiateFunction(source, 'addClaudeConfig');
@@ -537,6 +591,57 @@ test('saveAndApplyConfig writes the edited Claude model through apply api', asyn
         }
     }]);
     assert.deepStrictEqual(messages, [{ msg: 'Claude 配置已生效', type: 'success' }]);
+});
+
+test('saveAndApplyConfig saves external credential config without api key', async () => {
+    const source = extractClaudeMethodAsFunction(appSource, 'saveAndApplyConfig');
+    const applyCalls = [];
+    const saveAndApplyConfig = instantiateFunction(source, 'saveAndApplyConfig', {
+        api: async (action, params) => {
+            applyCalls.push({ action, params });
+            return { success: true };
+        }
+    });
+
+    const messages = [];
+    let saveCount = 0;
+    let closed = false;
+    let refreshCount = 0;
+    const context = {
+        editingConfig: {
+            name: 'Imported Auth Token',
+            apiKey: '',
+            externalCredentialType: 'auth-token',
+            baseUrl: 'https://api.anthropic.com',
+            model: 'claude-opus-4-6'
+        },
+        claudeConfigs: {
+            'Imported Auth Token': {
+                apiKey: '',
+                externalCredentialType: 'auth-token',
+                baseUrl: 'https://api.anthropic.com',
+                model: 'claude-3-7-sonnet'
+            }
+        },
+        currentClaudeConfig: 'Imported Auth Token',
+        mergeClaudeConfig(existing, updates) {
+            return { ...existing, ...updates };
+        },
+        saveClaudeConfigs() { saveCount += 1; },
+        closeEditConfigModal() { closed = true; },
+        refreshClaudeModelContext() { refreshCount += 1; },
+        showMessage(msg, type) { messages.push({ msg, type }); }
+    };
+
+    await saveAndApplyConfig.call(context);
+
+    assert.strictEqual(context.claudeConfigs['Imported Auth Token'].model, 'claude-opus-4-6');
+    assert.strictEqual(context.claudeConfigs['Imported Auth Token'].externalCredentialType, 'auth-token');
+    assert.strictEqual(saveCount, 1);
+    assert.strictEqual(closed, true);
+    assert.strictEqual(refreshCount, 1);
+    assert.deepStrictEqual(applyCalls, []);
+    assert.deepStrictEqual(messages, [{ msg: '已保存（未填写 API Key）', type: 'info' }]);
 });
 
 test('applyClaudeConfig reports informative message for external credential only config', async () => {
