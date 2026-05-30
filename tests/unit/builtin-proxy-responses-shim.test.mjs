@@ -273,6 +273,85 @@ test('builtin-proxy /v1/responses stream=true streams chat fallback as Responses
     }
 });
 
+test('builtin-proxy /v1/responses stream=true bypasses hanging upstream Responses probe for ordinary Codex tasks', async () => {
+    let responsesHit = false;
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            responsesHit = true;
+            // Simulate an OpenAI-compatible gateway that accepts /responses but never
+            // produces a usable body. Streaming Codex requests must not block here.
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+                res.write('data: {"id":"chatcmpl_real_task","model":"gpt-test","choices":[{"delta":{"role":"assistant"}}]}\n\n');
+                res.write('data: {"id":"chatcmpl_real_task","model":"gpt-test","choices":[{"delta":{"content":"real"}}]}\n\n');
+                res.write('data: {"id":"chatcmpl_real_task","model":"gpt-test","choices":[{"delta":{"content":" task"}}]}\n\n');
+                res.end('data: [DONE]\n\n');
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort, { timeoutMs: 1000 });
+        const proxyPort = proxyRuntime.server.address().port;
+        const started = Date.now();
+        const sse = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'text/event-stream'
+            },
+            body: {
+                model: 'gpt-test',
+                instructions: 'You are Codex. Be concise.',
+                input: [
+                    { type: 'message', role: 'developer', content: [{ type: 'input_text', text: 'follow repo rules' }] },
+                    { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'do a normal task' }] }
+                ],
+                max_output_tokens: 512,
+                temperature: 0.2,
+                stream: true
+            }
+        });
+        const elapsedMs = Date.now() - started;
+
+        assert.equal(sse.status, 200);
+        assert.equal(responsesHit, false, 'streaming Codex tasks should not probe hanging upstream /responses first');
+        assert.ok(elapsedMs < 900, `streaming fast path should not wait for upstream responses timeout; took ${elapsedMs}ms`);
+        assert.ok(capturedChatRequest, 'streaming request should be converted to chat/completions');
+        assert.deepStrictEqual(capturedChatRequest.messages, [
+            { role: 'system', content: 'You are Codex. Be concise.' },
+            { role: 'system', content: [{ type: 'text', text: 'follow repo rules' }] },
+            { role: 'user', content: [{ type: 'text', text: 'do a normal task' }] }
+        ]);
+        assert.equal(capturedChatRequest.stream, true);
+        assert.equal(capturedChatRequest.max_tokens, 512);
+        assert.equal(capturedChatRequest.temperature, 0.2);
+        assert.match(sse.headers['content-type'], /text\/event-stream/i);
+        assert.match(sse.text, /event: response\.created/);
+        assert.match(sse.text, /"delta":"real"/);
+        assert.match(sse.text, /"delta":" task"/);
+        assert.match(sse.text, /event: response\.completed/);
+        assert.match(sse.text, /data: \[DONE\]/);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
 test('builtin-proxy /v1/responses stream=true returns SSE wrapper with done sentinel', async () => {
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
