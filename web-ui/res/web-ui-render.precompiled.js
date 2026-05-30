@@ -1978,8 +1978,7 @@ return function render(_ctx, _cache) {
                   _createElementVNode("h2", {
                     id: "openclaw-workspace-title",
                     class: "settings-card-title"
-                  }, _toDisplayString(_ctx.t('openclaw.workspace.title')), 1 /* TEXT */),
-                  _createElementVNode("p", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.applyHint')), 1 /* TEXT */)
+                  }, _toDisplayString(_ctx.t('openclaw.workspace.title')), 1 /* TEXT */)
                 ]),
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "openclaw-tools-grid" }, [
