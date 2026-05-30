@@ -368,9 +368,9 @@
 
 /* Workspace tool button */
 .openclaw-tools-grid {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .openclaw-tool-btn {
