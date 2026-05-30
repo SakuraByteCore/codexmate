@@ -484,6 +484,10 @@
     gap: 10px;
 }
 
+.openclaw-card-list .card-icon {
+    display: none;
+}
+
 .openclaw-card-list .card-leading {
     width: 100%;
 }
