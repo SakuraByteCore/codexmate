@@ -2035,6 +2035,7 @@ return function render(_ctx, _cache) {
                         ],
                         tabindex: "0",
                         role: "button",
+                        "aria-label": _ctx.t('openclaw.action.applyAria', { name }),
                         "aria-current": _ctx.currentOpenclawConfig === name ? 'true' : null
                       }, [
                         _createElementVNode("div", { class: "card-leading" }, [
@@ -2089,7 +2090,7 @@ return function render(_ctx, _cache) {
                               : _createCommentVNode("v-if", true)
                           ], 8 /* PROPS */, ["onClick"])
                         ])
-                      ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onClick", "onKeydown", "aria-current"]))
+                      ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onClick", "onKeydown", "aria-label", "aria-current"]))
                     }), 128 /* KEYED_FRAGMENT */))
                   ])
                 ])

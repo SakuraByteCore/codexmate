@@ -1069,6 +1069,7 @@ const DICT = Object.freeze({
         'modal.openclaw.quick.subtitle': '按 3 步完成：填 Provider 和模型，写入编辑器，保存并应用。',
         'modal.openclaw.quick.step2': '点击写入编辑器',
         'modal.openclaw.structured.writeHint': '写入编辑器会重排 JSON，注释可能丢失。',
+        'openclaw.action.applyAria': '应用 OpenClaw 配置：{name}',
         'openclaw.action.editAria': '编辑 OpenClaw 配置：{name}',
         'openclaw.action.deleteAria': '删除 OpenClaw 配置：{name}'
     },
@@ -2129,6 +2130,7 @@ const DICT = Object.freeze({
         'modal.openclaw.quick.subtitle': '3ステップで完了：Provider とモデルを入力、エディタに書き込み、保存して適用。',
         'modal.openclaw.quick.step2': 'エディタに書き込みをクリック',
         'modal.openclaw.structured.writeHint': 'エディタに書き込むと JSON が再配置され、コメントが失われる可能性があります。',
+        'openclaw.action.applyAria': 'OpenClaw 設定を適用：{name}',
         'openclaw.action.editAria': 'OpenClaw 設定を編集：{name}',
         'openclaw.action.deleteAria': 'OpenClaw 設定を削除：{name}',
     
@@ -3201,6 +3203,7 @@ const DICT = Object.freeze({
         'modal.openclaw.quick.subtitle': '3 steps: fill provider/model, write to editor, save & apply.',
         'modal.openclaw.quick.step2': 'Write to editor',
         'modal.openclaw.structured.writeHint': 'Writing to editor may reformat JSON and drop comments.',
+        'openclaw.action.applyAria': 'Apply OpenClaw config: {name}',
         'openclaw.action.editAria': 'Edit OpenClaw config: {name}',
         'openclaw.action.deleteAria': 'Delete OpenClaw config: {name}'
     }

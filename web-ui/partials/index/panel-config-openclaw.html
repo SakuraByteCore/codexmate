@@ -53,6 +53,7 @@
                                      @keydown.space.self.prevent="applyOpenclawConfig(name)"
                                      tabindex="0"
                                      role="button"
+                                     :aria-label="t('openclaw.action.applyAria', { name })"
                                      :aria-current="currentOpenclawConfig === name ? 'true' : null">
                                     <div class="card-leading">
                                         <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
