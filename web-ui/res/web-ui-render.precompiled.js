@@ -2035,8 +2035,7 @@ return function render(_ctx, _cache) {
                   _createElementVNode("h2", {
                     id: "openclaw-configs-title",
                     class: "settings-card-title"
-                  }, _toDisplayString(_ctx.t('status.openclawConfig')), 1 /* TEXT */),
-                  _createElementVNode("p", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.configs.hint')), 1 /* TEXT */)
+                  }, _toDisplayString(_ctx.t('status.openclawConfig')), 1 /* TEXT */)
                 ]),
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
