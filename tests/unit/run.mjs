@@ -60,6 +60,7 @@ await import(pathToFileURL(path.join(__dirname, 'session-tab-switch-performance.
 await import(pathToFileURL(path.join(__dirname, 'session-trash-state.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-ui-restart.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-ui-behavior-parity.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'i18n-locales.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-run-host.test.mjs')));
 
 let failures = 0;

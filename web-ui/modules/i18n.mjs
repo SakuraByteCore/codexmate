@@ -37,6 +37,7 @@ function applyDocumentLanguage(next) {
         document.documentElement.lang = meta.htmlLang || meta.code || 'zh-CN';
         document.documentElement.dir = meta.dir || 'ltr';
     } catch (_) {}
+}
 
 function interpolate(template, params) {
     if (!params || typeof params !== 'object') return template;
