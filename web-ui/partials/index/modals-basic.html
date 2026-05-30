@@ -26,14 +26,26 @@
                     <div v-if="providerFieldError('add', 'url')" class="form-hint form-error">{{ providerFieldError('add', 'url') }}</div>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">{{ t('field.modelName') }}</label>
+                    <input
+                        v-model="newProvider.model"
+                        :class="['form-input', { invalid: !!providerFieldError('add', 'model') }]"
+                        :placeholder="t('placeholder.modelExample')"
+                        autocomplete="off"
+                        spellcheck="false"
+                        @blur="normalizeProviderDraft('add')">
+                    <div v-if="providerFieldError('add', 'model')" class="form-hint form-error">{{ providerFieldError('add', 'model') }}</div>
+                </div>
+                <div class="form-group">
                     <label class="form-label">{{ t('field.apiKey') }}</label>
                     <div class="input-with-toggle">
-                        <input v-model="newProvider.key" class="form-input" :type="showAddProviderKey ? 'text' : 'password'" placeholder="sk-..." autocomplete="off" spellcheck="false">
+                        <input v-model="newProvider.key" :class="['form-input', { invalid: !!providerFieldError('add', 'key') }]" :type="showAddProviderKey ? 'text' : 'password'" placeholder="sk-..." autocomplete="off" spellcheck="false" @blur="normalizeProviderDraft('add')">
                         <button type="button" class="input-toggle-btn" @click="toggleAddProviderKey" :title="showAddProviderKey ? t('common.hide') : t('common.show')" :aria-label="showAddProviderKey ? t('common.hide') : t('common.show')">
                             <svg v-if="!showAddProviderKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
                     </div>
+                    <div v-if="providerFieldError('add', 'key')" class="form-hint form-error">{{ providerFieldError('add', 'key') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">
@@ -129,26 +141,34 @@
 
                 <div class="form-group">
                     <label class="form-label">{{ t('field.configName') }}</label>
-                    <input v-model="newClaudeConfig.name" class="form-input" :placeholder="t('placeholder.configNameExample')">
+                    <input v-model="newClaudeConfig.name" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'name') }]" :placeholder="t('placeholder.configNameExample')">
+                    <div v-if="claudeConfigFieldError('add', 'name')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'name') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">API Key</label>
                     <div class="input-with-toggle">
-                        <input v-model="newClaudeConfig.apiKey" class="form-input" :type="showAddClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                        <input v-model="newClaudeConfig.apiKey" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'apiKey') }]" :type="showAddClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
                         <button type="button" class="input-toggle-btn" @click="toggleAddClaudeConfigKey" :title="showAddClaudeConfigKey ? t('common.hide') : t('common.show')" :aria-label="showAddClaudeConfigKey ? t('common.hide') : t('common.show')">
                             <svg v-if="!showAddClaudeConfigKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
                     </div>
+                    <div v-if="claudeConfigFieldError('add', 'apiKey')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'apiKey') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.baseUrl') }}</label>
-                    <input v-model="newClaudeConfig.baseUrl" class="form-input" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <input v-model="newClaudeConfig.baseUrl" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'baseUrl') }]" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <div v-if="claudeConfigFieldError('add', 'baseUrl')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'baseUrl') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ t('field.modelName') }}</label>
+                    <input v-model="newClaudeConfig.model" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'model') }]" :placeholder="t('placeholder.modelExample')" autocomplete="off" spellcheck="false">
+                    <div v-if="claudeConfigFieldError('add', 'model')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'model') }}</div>
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closeClaudeConfigModal">{{ t('common.cancel') }}</button>
-                    <button class="btn btn-confirm" @click="addClaudeConfig">{{ t('common.add') }}</button>
+                    <button class="btn btn-confirm" @click="addClaudeConfig" :disabled="!canSubmitClaudeConfig('add')">{{ t('common.add') }}</button>
                 </div>
             </div>
         </div>
@@ -160,26 +180,34 @@
 
                 <div class="form-group">
                     <label class="form-label">{{ t('field.configName') }}</label>
-                    <input v-model="editingConfig.name" class="form-input" :placeholder="t('field.configName')" readonly>
+                    <input v-model="editingConfig.name" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'name') }]" :placeholder="t('field.configName')" readonly>
+                    <div v-if="claudeConfigFieldError('edit', 'name')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'name') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">API Key</label>
                     <div class="input-with-toggle">
-                        <input v-model="editingConfig.apiKey" class="form-input" :type="showEditClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                        <input v-model="editingConfig.apiKey" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'apiKey') }]" :type="showEditClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
                         <button type="button" class="input-toggle-btn" @click="toggleEditClaudeConfigKey" :title="showEditClaudeConfigKey ? t('common.hide') : t('common.show')" :aria-label="showEditClaudeConfigKey ? t('common.hide') : t('common.show')">
                             <svg v-if="!showEditClaudeConfigKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
                     </div>
+                    <div v-if="claudeConfigFieldError('edit', 'apiKey')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'apiKey') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.baseUrl') }}</label>
-                    <input v-model="editingConfig.baseUrl" class="form-input" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <input v-model="editingConfig.baseUrl" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'baseUrl') }]" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <div v-if="claudeConfigFieldError('edit', 'baseUrl')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'baseUrl') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ t('field.modelName') }}</label>
+                    <input v-model="editingConfig.model" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'model') }]" :placeholder="t('placeholder.modelExample')" autocomplete="off" spellcheck="false">
+                    <div v-if="claudeConfigFieldError('edit', 'model')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'model') }}</div>
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closeEditConfigModal">{{ t('common.cancel') }}</button>
-                    <button class="btn btn-confirm" @click="saveAndApplyConfig">{{ t('common.saveApply') }}</button>
+                    <button class="btn btn-confirm" @click="saveAndApplyConfig" :disabled="!canSubmitClaudeConfig('edit')">{{ t('common.saveApply') }}</button>
                 </div>
             </div>
         </div>

@@ -980,7 +980,7 @@ return function render(_ctx, _cache) {
                               key: tpl.name,
                               type: "button",
                               class: "btn-mini",
-                              onClick: $event => {_ctx.newProvider.name = tpl.name; _ctx.newProvider.url = tpl.url; _ctx.newProvider._suggestedModel = tpl.model || ''; _ctx.newProvider.useTransform = !!tpl.useTransform; _ctx.showAddProviderKey = false; _ctx.showAddModal = true}
+                              onClick: $event => {_ctx.newProvider.name = tpl.name; _ctx.newProvider.url = tpl.url; _ctx.newProvider.model = tpl.model || ''; _ctx.newProvider.useTransform = !!tpl.useTransform; _ctx.showAddProviderKey = false; _ctx.showAddModal = true}
                             }, _toDisplayString(tpl.label), 9 /* TEXT, PROPS */, ["onClick"]))
                           }), 128 /* KEYED_FRAGMENT */))
                         ])
@@ -1967,153 +1967,144 @@ return function render(_ctx, _cache) {
                   }, _toDisplayString(_ctx.t('tab.config.openclaw')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                 ]))
               : _createCommentVNode("v-if", true),
-            _createElementVNode("div", { class: "openclaw-panel" }, [
-              _createElementVNode("section", { class: "openclaw-primary-card" }, [
-                _createElementVNode("div", { class: "openclaw-primary-main" }, [
-                  _createElementVNode("div", { class: "openclaw-kicker" }, _toDisplayString(_ctx.t('openclaw.main.kicker')), 1 /* TEXT */),
-                  _createElementVNode("h2", { class: "openclaw-title" }, _toDisplayString(_ctx.t('openclaw.main.title')), 1 /* TEXT */),
-                  _createElementVNode("p", { class: "openclaw-summary" }, _toDisplayString(_ctx.t('openclaw.main.hint')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "openclaw-primary-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('openclaw.main.current')), 1 /* TEXT */),
-                    _createElementVNode("strong", null, _toDisplayString(_ctx.currentOpenclawConfig || '-'), 1 /* TEXT */),
-                    _createElementVNode("span", {
-                      class: _normalizeClass(['pill', _ctx.openclawHasContent(_ctx.openclawConfigs && _ctx.openclawConfigs[_ctx.currentOpenclawConfig]) ? 'configured' : 'empty'])
-                    }, _toDisplayString(_ctx.openclawHasContent(_ctx.openclawConfigs && _ctx.openclawConfigs[_ctx.currentOpenclawConfig]) ? _ctx.t('openclaw.configured') : _ctx.t('openclaw.notConfigured')), 3 /* TEXT, CLASS */)
+            _createElementVNode("div", { class: "openclaw-layout" }, [
+              _createElementVNode("section", {
+                class: "settings-card settings-card--wide openclaw-overview-card",
+                "aria-labelledby": "openclaw-workspace-title"
+              }, [
+                _createElementVNode("div", { class: "settings-card-header settings-card-header-row" }, [
+                  _createElementVNode("div", null, [
+                    _createElementVNode("div", {
+                      id: "openclaw-workspace-title",
+                      class: "settings-card-title"
+                    }, _toDisplayString(_ctx.t('openclaw.workspace.title')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.applyHint')), 1 /* TEXT */)
                   ])
                 ]),
-                _createElementVNode("div", { class: "openclaw-primary-side" }, [
-                  _createElementVNode("div", { class: "openclaw-stat" }, [
-                    _createElementVNode("span", { class: "openclaw-stat-label" }, _toDisplayString(_ctx.t('openclaw.main.profiles')), 1 /* TEXT */),
-                    _createElementVNode("strong", null, _toDisplayString(Object.keys(_ctx.openclawConfigs || {}).length), 1 /* TEXT */)
-                  ]),
-                  _createElementVNode("div", { class: "openclaw-primary-actions" }, [
-                    _createElementVNode("button", {
-                      class: "btn btn-cancel",
-                      type: "button",
-                      onClick: $event => (_ctx.openOpenclawEditModal(_ctx.currentOpenclawConfig)),
-                      disabled: _ctx.loading || !!_ctx.initError || !_ctx.currentOpenclawConfig
-                    }, _toDisplayString(_ctx.t('openclaw.action.editCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    _createElementVNode("button", {
-                      class: "btn btn-confirm secondary",
-                      type: "button",
-                      onClick: $event => (_ctx.applyOpenclawConfig(_ctx.currentOpenclawConfig)),
-                      disabled: _ctx.loading || !!_ctx.initError || _ctx.openclawApplying || !_ctx.currentOpenclawConfig || !_ctx.openclawHasContent(_ctx.openclawConfigs && _ctx.openclawConfigs[_ctx.currentOpenclawConfig])
-                    }, _toDisplayString(_ctx.openclawApplying ? _ctx.t('common.applying') : _ctx.t('openclaw.action.applyCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    _createElementVNode("button", {
-                      class: "btn btn-cancel",
-                      type: "button",
-                      onClick: _ctx.openOpenclawAddModal,
-                      disabled: _ctx.loading || !!_ctx.initError
-                    }, _toDisplayString(_ctx.t('openclaw.action.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                _createElementVNode("div", { class: "settings-card-body" }, [
+                  _createElementVNode("div", { class: "openclaw-tools-grid" }, [
+                    _createElementVNode("div", { class: "openclaw-tool-card" }, [
+                      _createElementVNode("div", { class: "openclaw-tool-copy" }, [
+                        _createElementVNode("div", { class: "openclaw-tool-title" }, "AGENTS.md"),
+                        _createElementVNode("div", { class: "openclaw-tool-meta" }, _toDisplayString(_ctx.t('openclaw.agents.hint')), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "openclaw-tool-actions" }, [
+                        _createElementVNode("button", {
+                          class: "btn-tool btn-tool-compact",
+                          onClick: _ctx.openOpenclawAgentsEditor,
+                          disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                        }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ]),
+                    _createElementVNode("div", { class: "openclaw-tool-card openclaw-tool-card--workspace" }, [
+                      _createElementVNode("div", { class: "openclaw-tool-copy" }, [
+                        _createElementVNode("label", {
+                          class: "openclaw-tool-title",
+                          for: "openclaw-workspace-file"
+                        }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "openclaw-tool-meta" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "openclaw-workspace-row" }, [
+                        _withDirectives(_createElementVNode("input", {
+                          id: "openclaw-workspace-file",
+                          class: "form-input",
+                          "onUpdate:modelValue": $event => ((_ctx.openclawWorkspaceFileName) = $event),
+                          placeholder: _ctx.t('openclaw.workspace.placeholder')
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                          [_vModelText, _ctx.openclawWorkspaceFileName]
+                        ]),
+                        _createElementVNode("button", {
+                          class: "btn-tool btn-tool-compact",
+                          onClick: _ctx.openOpenclawWorkspaceEditor,
+                          disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                        }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.workspace.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ])
                   ])
                 ])
               ]),
-              _createElementVNode("div", { class: "openclaw-section-head" }, [
-                _createElementVNode("div", null, [
-                  _createElementVNode("div", { class: "openclaw-section-kicker" }, _toDisplayString(_ctx.t('openclaw.library.kicker')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "openclaw-section-title" }, _toDisplayString(_ctx.t('openclaw.library.title')), 1 /* TEXT */)
+              _createElementVNode("section", {
+                class: "settings-card settings-card--wide openclaw-configs-card",
+                "aria-labelledby": "openclaw-configs-title"
+              }, [
+                _createElementVNode("div", { class: "settings-card-header settings-card-header-row" }, [
+                  _createElementVNode("div", null, [
+                    _createElementVNode("div", {
+                      id: "openclaw-configs-title",
+                      class: "settings-card-title"
+                    }, _toDisplayString(_ctx.t('status.openclawConfig')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "settings-card-meta" }, _toDisplayString(_ctx.t('openclaw.configs.hint')), 1 /* TEXT */)
+                  ])
                 ]),
-                _createElementVNode("button", {
-                  class: "btn-tool btn-tool-compact",
-                  type: "button",
-                  onClick: _ctx.openOpenclawAddModal,
-                  disabled: _ctx.loading || !!_ctx.initError
-                }, _toDisplayString(_ctx.t('openclaw.action.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-              ]),
-              _createElementVNode("div", { class: "card-list openclaw-config-list" }, [
-                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
-                  return (_openBlock(), _createElementBlock("div", {
-                    key: name,
-                    class: _normalizeClass(['card', { active: _ctx.currentOpenclawConfig === name }]),
-                    "aria-current": _ctx.currentOpenclawConfig === name ? 'true' : null
-                  }, [
-                    _createElementVNode("div", { class: "card-leading" }, [
-                      _createElementVNode("div", { class: "card-icon" }, _toDisplayString(name.charAt(0).toUpperCase()), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "card-content" }, [
-                        _createElementVNode("div", { class: "card-title-row" }, [
-                          _createElementVNode("div", { class: "card-title" }, _toDisplayString(name), 1 /* TEXT */),
-                          (_ctx.currentOpenclawConfig === name)
-                            ? (_openBlock(), _createElementBlock("span", {
-                                key: 0,
-                                class: "pill configured"
-                              }, _toDisplayString(_ctx.t('openclaw.main.active')), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true)
+                _createElementVNode("div", { class: "settings-card-body" }, [
+                  _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
+                      return (_openBlock(), _createElementBlock("div", {
+                        key: name,
+                        class: _normalizeClass(['card', { active: _ctx.currentOpenclawConfig === name }]),
+                        onClick: $event => (_ctx.applyOpenclawConfig(name)),
+                        onKeydown: [
+                          _withKeys(_withModifiers($event => (_ctx.applyOpenclawConfig(name)), ["self","prevent"]), ["enter"]),
+                          _withKeys(_withModifiers($event => (_ctx.applyOpenclawConfig(name)), ["self","prevent"]), ["space"])
+                        ],
+                        tabindex: "0",
+                        role: "button",
+                        "aria-current": _ctx.currentOpenclawConfig === name ? 'true' : null
+                      }, [
+                        _createElementVNode("div", { class: "card-leading" }, [
+                          _createElementVNode("div", { class: "card-icon" }, _toDisplayString(name.charAt(0).toUpperCase()), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "card-content" }, [
+                            _createElementVNode("div", { class: "card-title" }, _toDisplayString(name), 1 /* TEXT */),
+                            _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.openclawSubtitle(config)), 1 /* TEXT */)
+                          ])
                         ]),
-                        _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.openclawSubtitle(config)), 1 /* TEXT */)
-                      ])
-                    ]),
-                    _createElementVNode("div", { class: "card-trailing" }, [
-                      _createElementVNode("span", {
-                        class: _normalizeClass(['pill', _ctx.openclawHasContent(config) ? 'configured' : 'empty'])
-                      }, _toDisplayString(_ctx.openclawHasContent(config) ? _ctx.t('openclaw.configured') : _ctx.t('openclaw.notConfigured')), 3 /* TEXT, CLASS */),
-                      _createElementVNode("div", { class: "card-actions openclaw-card-actions" }, [
-                        _createElementVNode("button", {
-                          class: "btn-mini",
-                          type: "button",
-                          onClick: $event => (_ctx.openOpenclawEditModal(name)),
-                          "aria-label": _ctx.t('openclaw.action.editAria', { name })
-                        }, _toDisplayString(_ctx.t('openclaw.action.edit')), 9 /* TEXT, PROPS */, ["onClick", "aria-label"]),
-                        _createElementVNode("button", {
-                          class: "btn-mini",
-                          type: "button",
-                          onClick: $event => (_ctx.applyOpenclawConfig(name)),
-                          "aria-label": _ctx.t('openclaw.action.applyAria', { name }),
-                          disabled: _ctx.openclawApplying || !_ctx.openclawHasContent(config)
-                        }, _toDisplayString(_ctx.t('openclaw.action.apply')), 9 /* TEXT, PROPS */, ["onClick", "aria-label", "disabled"]),
-                        (name !== '默认配置')
-                          ? (_openBlock(), _createElementBlock("button", {
-                              key: 0,
-                              class: "btn-mini delete",
-                              type: "button",
-                              onClick: $event => (_ctx.deleteOpenclawConfig(name)),
-                              "aria-label": _ctx.t('openclaw.action.deleteAria', { name })
-                            }, _toDisplayString(_ctx.t('openclaw.action.delete')), 9 /* TEXT, PROPS */, ["onClick", "aria-label"]))
-                          : _createCommentVNode("v-if", true)
-                      ])
-                    ])
-                  ], 10 /* CLASS, PROPS */, ["aria-current"]))
-                }), 128 /* KEYED_FRAGMENT */))
-              ]),
-              _createElementVNode("details", { class: "openclaw-tools-panel" }, [
-                _createElementVNode("summary", null, [
-                  _createElementVNode("span", null, _toDisplayString(_ctx.t('openclaw.tools.title')), 1 /* TEXT */),
-                  _createElementVNode("small", null, _toDisplayString(_ctx.t('openclaw.tools.hint')), 1 /* TEXT */)
-                ]),
-                _createElementVNode("div", { class: "openclaw-action-grid" }, [
-                  _createElementVNode("section", { class: "openclaw-action-card" }, [
-                    _createElementVNode("div", { class: "openclaw-action-icon" }, "A"),
-                    _createElementVNode("div", { class: "openclaw-action-main" }, [
-                      _createElementVNode("div", { class: "openclaw-action-title" }, "AGENTS.md"),
-                      _createElementVNode("div", { class: "openclaw-action-hint" }, _toDisplayString(_ctx.t('openclaw.agents.hint')), 1 /* TEXT */)
-                    ]),
-                    _createElementVNode("button", {
-                      class: "btn-tool",
-                      onClick: _ctx.openOpenclawAgentsEditor,
-                      disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                    }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ]),
-                  _createElementVNode("section", { class: "openclaw-action-card openclaw-workspace-card" }, [
-                    _createElementVNode("div", { class: "openclaw-action-icon" }, "W"),
-                    _createElementVNode("div", { class: "openclaw-action-main" }, [
-                      _createElementVNode("label", {
-                        class: "openclaw-action-title",
-                        for: "openclaw-workspace-file"
-                      }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
-                      _withDirectives(_createElementVNode("input", {
-                        id: "openclaw-workspace-file",
-                        class: "form-input",
-                        "onUpdate:modelValue": $event => ((_ctx.openclawWorkspaceFileName) = $event),
-                        placeholder: _ctx.t('openclaw.workspace.placeholder')
-                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                        [_vModelText, _ctx.openclawWorkspaceFileName]
-                      ]),
-                      _createElementVNode("div", { class: "openclaw-action-hint" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */)
-                    ]),
-                    _createElementVNode("button", {
-                      class: "btn-tool",
-                      onClick: _ctx.openOpenclawWorkspaceEditor,
-                      disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                    }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.workspace.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                        _createElementVNode("div", { class: "card-trailing" }, [
+                          _createElementVNode("span", {
+                            class: _normalizeClass(['pill', _ctx.openclawHasContent(config) ? 'configured' : 'empty'])
+                          }, _toDisplayString(_ctx.openclawHasContent(config) ? _ctx.t('openclaw.configured') : _ctx.t('openclaw.notConfigured')), 3 /* TEXT, CLASS */),
+                          _createElementVNode("div", {
+                            class: "card-actions",
+                            onClick: _withModifiers(() => {}, ["stop"])
+                          }, [
+                            _createElementVNode("button", {
+                              class: "card-action-btn",
+                              onClick: $event => (_ctx.openOpenclawEditModal(name)),
+                              "aria-label": _ctx.t('openclaw.action.editAria', { name }),
+                              title: _ctx.t('openclaw.action.edit')
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }),
+                                _createElementVNode("path", { d: "M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" })
+                              ]))
+                            ], 8 /* PROPS */, ["onClick", "aria-label", "title"]),
+                            (!_ctx.isDefaultOpenclawConfig(name, config))
+                              ? (_openBlock(), _createElementBlock("button", {
+                                  key: 0,
+                                  class: "card-action-btn delete",
+                                  onClick: $event => (_ctx.deleteOpenclawConfig(name)),
+                                  "aria-label": _ctx.t('openclaw.action.deleteAria', { name }),
+                                  title: _ctx.t('openclaw.action.delete')
+                                }, [
+                                  (_openBlock(), _createElementBlock("svg", {
+                                    viewBox: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2"
+                                  }, [
+                                    _createElementVNode("path", { d: "M3 6h18" }),
+                                    _createElementVNode("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" })
+                                  ]))
+                                ], 8 /* PROPS */, ["onClick", "aria-label", "title"]))
+                              : _createCommentVNode("v-if", true)
+                          ], 8 /* PROPS */, ["onClick"])
+                        ])
+                      ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onClick", "onKeydown", "aria-current"]))
+                    }), 128 /* KEYED_FRAGMENT */))
                   ])
                 ])
               ])
@@ -5300,16 +5291,36 @@ return function render(_ctx, _cache) {
                 : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
+              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.modelName')), 1 /* TEXT */),
+              _withDirectives(_createElementVNode("input", {
+                "onUpdate:modelValue": $event => ((_ctx.newProvider.model) = $event),
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('add', 'model') }]),
+                placeholder: _ctx.t('placeholder.modelExample'),
+                autocomplete: "off",
+                spellcheck: "false",
+                onBlur: $event => (_ctx.normalizeProviderDraft('add'))
+              }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onBlur"]), [
+                [_vModelText, _ctx.newProvider.model]
+              ]),
+              (_ctx.providerFieldError('add', 'model'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.providerFieldError('add', 'model')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
+            ]),
+            _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.apiKey')), 1 /* TEXT */),
               _createElementVNode("div", { class: "input-with-toggle" }, [
                 _withDirectives(_createElementVNode("input", {
                   "onUpdate:modelValue": $event => ((_ctx.newProvider.key) = $event),
-                  class: "form-input",
+                  class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('add', 'key') }]),
                   type: _ctx.showAddProviderKey ? 'text' : 'password',
                   placeholder: "sk-...",
                   autocomplete: "off",
-                  spellcheck: "false"
-                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type"]), [
+                  spellcheck: "false",
+                  onBlur: $event => (_ctx.normalizeProviderDraft('add'))
+                }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "type", "onBlur"]), [
                   [_vModelDynamic, _ctx.newProvider.key]
                 ]),
                 _createElementVNode("button", {
@@ -5348,7 +5359,13 @@ return function render(_ctx, _cache) {
                         _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
-              ])
+              ]),
+              (_ctx.providerFieldError('add', 'key'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.providerFieldError('add', 'key')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, [
@@ -5589,23 +5606,29 @@ return function render(_ctx, _cache) {
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.configName')), 1 /* TEXT */),
               _withDirectives(_createElementVNode("input", {
                 "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.name) = $event),
-                class: "form-input",
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('add', 'name') }]),
                 placeholder: _ctx.t('placeholder.configNameExample')
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                 [_vModelText, _ctx.newClaudeConfig.name]
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('add', 'name'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('add', 'name')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, "API Key"),
               _createElementVNode("div", { class: "input-with-toggle" }, [
                 _withDirectives(_createElementVNode("input", {
                   "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.apiKey) = $event),
-                  class: "form-input",
+                  class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('add', 'apiKey') }]),
                   type: _ctx.showAddClaudeConfigKey ? 'text' : 'password',
                   autocomplete: "off",
                   spellcheck: "false",
                   placeholder: _ctx.t('placeholder.apiKeyExampleClaude')
-                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
+                }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
                   [_vModelDynamic, _ctx.newClaudeConfig.apiKey]
                 ]),
                 _createElementVNode("button", {
@@ -5644,17 +5667,47 @@ return function render(_ctx, _cache) {
                         _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('add', 'apiKey'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('add', 'apiKey')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.baseUrl')), 1 /* TEXT */),
               _withDirectives(_createElementVNode("input", {
                 "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.baseUrl) = $event),
-                class: "form-input",
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('add', 'baseUrl') }]),
                 placeholder: _ctx.t('placeholder.baseUrlExampleClaude')
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                 [_vModelText, _ctx.newClaudeConfig.baseUrl]
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('add', 'baseUrl'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('add', 'baseUrl')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
+            ]),
+            _createElementVNode("div", { class: "form-group" }, [
+              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.modelName')), 1 /* TEXT */),
+              _withDirectives(_createElementVNode("input", {
+                "onUpdate:modelValue": $event => ((_ctx.newClaudeConfig.model) = $event),
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('add', 'model') }]),
+                placeholder: _ctx.t('placeholder.modelExample'),
+                autocomplete: "off",
+                spellcheck: "false"
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                [_vModelText, _ctx.newClaudeConfig.model]
+              ]),
+              (_ctx.claudeConfigFieldError('add', 'model'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('add', 'model')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "btn-group" }, [
               _createElementVNode("button", {
@@ -5663,8 +5716,9 @@ return function render(_ctx, _cache) {
               }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"]),
               _createElementVNode("button", {
                 class: "btn btn-confirm",
-                onClick: _ctx.addClaudeConfig
-              }, _toDisplayString(_ctx.t('common.add')), 9 /* TEXT, PROPS */, ["onClick"])
+                onClick: _ctx.addClaudeConfig,
+                disabled: !_ctx.canSubmitClaudeConfig('add')
+              }, _toDisplayString(_ctx.t('common.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
             ])
           ])
         ], 8 /* PROPS */, ["onClick"]))
@@ -5690,24 +5744,30 @@ return function render(_ctx, _cache) {
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.configName')), 1 /* TEXT */),
               _withDirectives(_createElementVNode("input", {
                 "onUpdate:modelValue": $event => ((_ctx.editingConfig.name) = $event),
-                class: "form-input",
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('edit', 'name') }]),
                 placeholder: _ctx.t('field.configName'),
                 readonly: ""
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                 [_vModelText, _ctx.editingConfig.name]
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('edit', 'name'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('edit', 'name')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, "API Key"),
               _createElementVNode("div", { class: "input-with-toggle" }, [
                 _withDirectives(_createElementVNode("input", {
                   "onUpdate:modelValue": $event => ((_ctx.editingConfig.apiKey) = $event),
-                  class: "form-input",
+                  class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('edit', 'apiKey') }]),
                   type: _ctx.showEditClaudeConfigKey ? 'text' : 'password',
                   autocomplete: "off",
                   spellcheck: "false",
                   placeholder: _ctx.t('placeholder.apiKeyExampleClaude')
-                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
+                }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "type", "placeholder"]), [
                   [_vModelDynamic, _ctx.editingConfig.apiKey]
                 ]),
                 _createElementVNode("button", {
@@ -5746,17 +5806,47 @@ return function render(_ctx, _cache) {
                         _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                       ]))
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('edit', 'apiKey'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('edit', 'apiKey')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "form-group" }, [
               _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.baseUrl')), 1 /* TEXT */),
               _withDirectives(_createElementVNode("input", {
                 "onUpdate:modelValue": $event => ((_ctx.editingConfig.baseUrl) = $event),
-                class: "form-input",
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('edit', 'baseUrl') }]),
                 placeholder: _ctx.t('placeholder.baseUrlExampleClaude')
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                 [_vModelText, _ctx.editingConfig.baseUrl]
-              ])
+              ]),
+              (_ctx.claudeConfigFieldError('edit', 'baseUrl'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('edit', 'baseUrl')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
+            ]),
+            _createElementVNode("div", { class: "form-group" }, [
+              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.modelName')), 1 /* TEXT */),
+              _withDirectives(_createElementVNode("input", {
+                "onUpdate:modelValue": $event => ((_ctx.editingConfig.model) = $event),
+                class: _normalizeClass(['form-input', { invalid: !!_ctx.claudeConfigFieldError('edit', 'model') }]),
+                placeholder: _ctx.t('placeholder.modelExample'),
+                autocomplete: "off",
+                spellcheck: "false"
+              }, null, 10 /* CLASS, PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                [_vModelText, _ctx.editingConfig.model]
+              ]),
+              (_ctx.claudeConfigFieldError('edit', 'model'))
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "form-hint form-error"
+                  }, _toDisplayString(_ctx.claudeConfigFieldError('edit', 'model')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "btn-group" }, [
               _createElementVNode("button", {
@@ -5765,8 +5855,9 @@ return function render(_ctx, _cache) {
               }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"]),
               _createElementVNode("button", {
                 class: "btn btn-confirm",
-                onClick: _ctx.saveAndApplyConfig
-              }, _toDisplayString(_ctx.t('common.saveApply')), 9 /* TEXT, PROPS */, ["onClick"])
+                onClick: _ctx.saveAndApplyConfig,
+                disabled: !_ctx.canSubmitClaudeConfig('edit')
+              }, _toDisplayString(_ctx.t('common.saveApply')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
             ])
           ])
         ], 8 /* PROPS */, ["onClick"]))
@@ -6590,7 +6681,7 @@ return function render(_ctx, _cache) {
                 [_vModelText, _ctx.openclawEditing.content]
               ]),
               _createElementVNode("div", { class: "template-editor-warning" }, [
-                (_ctx.openclawEditing.lockName && _ctx.openclawEditing.name === '默认配置')
+                (_ctx.openclawEditing.lockName && _ctx.isDefaultOpenclawConfig(_ctx.openclawEditing.name))
                   ? (_openBlock(), _createElementBlock("span", { key: 0 }, "默认配置始终映射当前 openclaw.json，请直接使用“保存并应用”。"))
                   : (_openBlock(), _createElementBlock("span", { key: 1 }, "保存仅写入本地配置库。点击“保存并应用”后会写入 openclaw.json。"))
               ])
@@ -6604,7 +6695,7 @@ return function render(_ctx, _cache) {
               _createElementVNode("button", {
                 class: "btn btn-confirm",
                 onClick: _ctx.saveOpenclawConfig,
-                disabled: _ctx.openclawSaving || _ctx.openclawApplying || (_ctx.openclawEditing.lockName && _ctx.openclawEditing.name === '默认配置')
+                disabled: _ctx.openclawSaving || _ctx.openclawApplying || (_ctx.openclawEditing.lockName && _ctx.isDefaultOpenclawConfig(_ctx.openclawEditing.name))
               }, _toDisplayString(_ctx.openclawSaving ? '保存中...' : '保存'), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
               _createElementVNode("button", {
                 class: "btn btn-confirm secondary",

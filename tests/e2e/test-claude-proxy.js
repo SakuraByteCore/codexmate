@@ -123,7 +123,8 @@ module.exports = async function testClaudeProxy(ctx) {
         const addProvider = await api('add-provider', {
             name: 'claude-proxy-e2e',
             url: upstreamUrl,
-            key: 'sk-claude-upstream'
+            key: 'sk-claude-upstream',
+            model: 'claude-proxy-e2e-model'
         });
         assert(addProvider.success === true, 'add-provider(claude-proxy-e2e) failed');
 

@@ -35,19 +35,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /isProviderConfigMode/);
     assert.match(html, /provider-fast-switch-select/);
     assert.match(html, /forceCompactLayout/);
-    assert.match(modalsBasic, /v-model="newProvider\.key"[\s\S]*:type="showAddProviderKey \? 'text' : 'password'"/);
-    assert.match(modalsBasic, /@click="toggleAddProviderKey"/);
-    assert.match(modalsBasic, /class="input-toggle-btn"[\s\S]*showAddProviderKey/);
-    assert.match(modalsBasic, /v-model="newClaudeConfig\.apiKey"[\s\S]*:type="showAddClaudeConfigKey \? 'text' : 'password'"/);
-    assert.match(modalsBasic, /@click="toggleAddClaudeConfigKey"/);
-    assert.match(modalsBasic, /class="input-toggle-btn"[\s\S]*showAddClaudeConfigKey/);
-    assert.match(bundledScript, /showAddProviderKey:\s*false/);
-    assert.match(bundledScript, /showAddClaudeConfigKey:\s*false/);
-    assert.match(bundledScript, /toggleAddProviderKey\(\)\s*\{/);
-    assert.match(bundledScript, /toggleAddClaudeConfigKey\(\)\s*\{/);
     assert.match(html, /<script src="\/res\/vue\.runtime\.global\.prod\.js"><\/script>/);
     assert.doesNotMatch(html, /<script src="\/res\/vue\.global\.prod\.js"><\/script>/);
     assert.match(html, /quickSwitchProvider\(\$event\.target\.value\)/);
+    assert.match(html, /newProvider\.model = tpl\.model \|\| ''/);
     assert.match(html, /onMainTabPointerDown\('sessions', \$event\)/);
     assert.match(html, /onConfigTabPointerDown\('codex', \$event\)/);
     assert.match(html, /onMainTabClick\('sessions', \$event\)/);
@@ -293,15 +284,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     );
     assert.match(
         html,
-        /class="openclaw-primary-card"[\s\S]*@click="openOpenclawEditModal\(currentOpenclawConfig\)"[\s\S]*@click="applyOpenclawConfig\(currentOpenclawConfig\)"[\s\S]*@click="openOpenclawAddModal"/
-    );
-    assert.match(
-        html,
-        /:class="\['card', \{ active: currentOpenclawConfig === name \}\]"[\s\S]*:aria-current="currentOpenclawConfig === name \? 'true' : null"[\s\S]*class="card-actions openclaw-card-actions"[\s\S]*@click="openOpenclawEditModal\(name\)"[\s\S]*@click="applyOpenclawConfig\(name\)"/
-    );
-    assert.doesNotMatch(
-        html,
-        /:class="\['card', \{ active: currentOpenclawConfig === name \}\]"[\s\S]*role="button"[\s\S]*@click="applyOpenclawConfig\(name\)"/
+        /:class="\['card', \{ active: currentOpenclawConfig === name \}\]"[\s\S]*@click="applyOpenclawConfig\(name\)"[\s\S]*@keydown\.enter\.self\.prevent="applyOpenclawConfig\(name\)"[\s\S]*@keydown\.space\.self\.prevent="applyOpenclawConfig\(name\)"[\s\S]*tabindex="0"[\s\S]*role="button"[\s\S]*:aria-current="currentOpenclawConfig === name \? 'true' : null"/
     );
     assert.match(html, /class="session-item-copy session-item-pin"/);
     assert.doesNotMatch(sessionsPanel, /sessionsViewMode/);
@@ -358,13 +341,12 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<button class="card-action-btn"[^>]*@click="openEditConfigModal\(name\)"[^>]*:aria-label="t\('claude\.action\.editAria', \{ name \}\)"[^>]*:title="t\('claude\.action\.edit'\)">/);
     assert.match(html, /<button class="card-action-btn delete"[^>]*@click="deleteClaudeConfig\(name\)"[^>]*:aria-label="t\('claude\.action\.deleteAria', \{ name \}\)"[^>]*:title="t\('claude\.action\.delete'\)">/);
     assert.match(html, /<button class="card-action-btn"[^>]*@click="copyClaudeShareCommand\(name\)"[^>]*>/);
-    assert.match(html, /<button class="btn-mini" type="button" @click="openOpenclawEditModal\(name\)" :aria-label="t\('openclaw\.action\.editAria', \{ name \}\)">\{\{\s*t\('openclaw\.action\.edit'\)\s*\}\}<\/button>/);
-    assert.match(html, /<button\s+class="btn-mini"[\s\S]*@click="applyOpenclawConfig\(name\)"[\s\S]*:aria-label="t\('openclaw\.action\.applyAria', \{ name \}\)"[\s\S]*\{\{\s*t\('openclaw\.action\.apply'\)\s*\}\}/);
+    assert.match(html, /<button class="card-action-btn"[^>]*@click="openOpenclawEditModal\(name\)"[^>]*:aria-label="t\('openclaw\.action\.editAria', \{ name \}\)"[^>]*:title="t\('openclaw\.action\.edit'\)">/);
     assert.match(
         html,
         /<div class="docs-command-row">[\s\S]*<div class="docs-command-box"[\s\S]*<code class="install-command">\{\{ target\.command \}\}<\/code>[\s\S]*<button[\s\S]*class="btn-mini docs-copy-btn"/
     );
-    assert.match(html, /<button v-if="name !== '默认配置'" class="btn-mini delete" type="button" @click="deleteOpenclawConfig\(name\)" :aria-label="t\('openclaw\.action\.deleteAria', \{ name \}\)">\{\{\s*t\('openclaw\.action\.delete'\)\s*\}\}<\/button>/);
+    assert.match(html, /<button v-if="!isDefaultOpenclawConfig\(name, config\)" class="card-action-btn delete"[^>]*@click="deleteOpenclawConfig\(name\)"[^>]*:aria-label="t\('openclaw\.action\.deleteAria', \{ name \}\)"[^>]*:title="t\('openclaw\.action\.delete'\)">/);
     assert.match(modalsBasic, /<div v-if="showAddModal" class="modal-overlay" @click\.self="closeAddModal">/);
     assert.match(modalsBasic, /<div v-if="showModelModal" class="modal-overlay" @click\.self="closeModelModal">/);
     assert.match(modalsBasic, /<div v-if="showClaudeConfigModal" class="modal-overlay" @click\.self="closeClaudeConfigModal">/);
@@ -381,10 +363,20 @@ test('config template keeps expected config tabs in top and side navigation', ()
     }
     assert.doesNotMatch(modalsBasic, /install-cli-modal-title/);
     assert.doesNotMatch(modalsBasic, /showInstallModal/);
-    assert.match(modalsBasic, /<input v-model="newProvider\.key" class="form-input" :type="showAddProviderKey \? 'text' : 'password'" placeholder="sk-\.\.\." autocomplete="off" spellcheck="false">/);
+    assert.match(modalsBasic, /<input[\s\S]*v-model="newProvider\.model"[\s\S]*:placeholder="t\('placeholder\.modelExample'\)"[\s\S]*@blur="normalizeProviderDraft\('add'\)">/);
+    assert.match(modalsBasic, /<input v-model="newProvider\.key"[^>]*:class="\['form-input', \{ invalid: !!providerFieldError\('add', 'key'\) \}\]"[^>]*:type="showAddProviderKey \? 'text' : 'password'"[^>]*placeholder="sk-\.\.\."[^>]*autocomplete="off"[^>]*spellcheck="false"[^>]*@blur="normalizeProviderDraft\('add'\)">/);
+    assert.match(modalsBasic, /<div v-if="providerFieldError\('add', 'key'\)" class="form-hint form-error">\{\{ providerFieldError\('add', 'key'\) \}\}<\/div>/);
     assert.match(modalsBasic, /<input v-model="editingProvider\.key" class="form-input" :type="showEditProviderKey \? 'text' : 'password'" placeholder="sk-\.\.\." autocomplete="off" spellcheck="false">/);
-    assert.match(modalsBasic, /<input v-model="newClaudeConfig\.apiKey" class="form-input" :type="showAddClaudeConfigKey \? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
-    assert.match(modalsBasic, /<input v-model="editingConfig\.apiKey" class="form-input" :type="showEditClaudeConfigKey \? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
+    assert.match(modalsBasic, /<input v-model="newClaudeConfig\.apiKey"[^>]*:class="\['form-input', \{ invalid: !!claudeConfigFieldError\('add', 'apiKey'\) \}\]"[^>]*:type="showAddClaudeConfigKey \? 'text' : 'password'"[^>]*autocomplete="off"[^>]*spellcheck="false"[^>]*:placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
+    assert.match(modalsBasic, /<div v-if="claudeConfigFieldError\('add', 'apiKey'\)" class="form-hint form-error">\{\{ claudeConfigFieldError\('add', 'apiKey'\) \}\}<\/div>/);
+    assert.match(modalsBasic, /<input v-model="newClaudeConfig\.model"[^>]*:class="\['form-input', \{ invalid: !!claudeConfigFieldError\('add', 'model'\) \}\]"[^>]*:placeholder="t\('placeholder\.modelExample'\)"[^>]*autocomplete="off"[^>]*spellcheck="false">/);
+    assert.match(modalsBasic, /<div v-if="claudeConfigFieldError\('add', 'model'\)" class="form-hint form-error">\{\{ claudeConfigFieldError\('add', 'model'\) \}\}<\/div>/);
+    assert.match(modalsBasic, /<button class="btn btn-confirm" @click="addClaudeConfig" :disabled="!canSubmitClaudeConfig\('add'\)">/);
+    assert.match(modalsBasic, /<input v-model="editingConfig\.apiKey"[^>]*:class="\['form-input', \{ invalid: !!claudeConfigFieldError\('edit', 'apiKey'\) \}\]"[^>]*:type="showEditClaudeConfigKey \? 'text' : 'password'"[^>]*autocomplete="off"[^>]*spellcheck="false"[^>]*:placeholder="t\('placeholder\.apiKeyExampleClaude'\)">/);
+    assert.match(modalsBasic, /<div v-if="claudeConfigFieldError\('edit', 'apiKey'\)" class="form-hint form-error">\{\{ claudeConfigFieldError\('edit', 'apiKey'\) \}\}<\/div>/);
+    assert.match(modalsBasic, /<input v-model="editingConfig\.model"[^>]*:class="\['form-input', \{ invalid: !!claudeConfigFieldError\('edit', 'model'\) \}\]"[^>]*:placeholder="t\('placeholder\.modelExample'\)"[^>]*autocomplete="off"[^>]*spellcheck="false">/);
+    assert.match(modalsBasic, /<div v-if="claudeConfigFieldError\('edit', 'model'\)" class="form-hint form-error">\{\{ claudeConfigFieldError\('edit', 'model'\) \}\}<\/div>/);
+    assert.match(modalsBasic, /<button class="btn btn-confirm" @click="saveAndApplyConfig" :disabled="!canSubmitClaudeConfig\('edit'\)">/);
     assert.strictEqual([...modalsBasic.matchAll(/\? 'text' : 'password'/g)].length, 4);
     assert.match(templateAgentModals, /<div v-if="showConfigTemplateModal" class="modal-overlay" @click\.self="!configTemplateApplying && closeConfigTemplateModal\(\)">/);
     assert.match(templateAgentModals, /<div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="config-template-modal-title">/);
@@ -399,7 +391,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(openclawModal, /<div class="modal-title" id="openclaw-config-modal-title">{{ openclawEditorTitle }}<\/div>/);
     assert.match(openclawModal, /:readonly="openclawSaving \|\| openclawApplying"/);
     assert.match(openclawModal, /<button class="btn btn-cancel" @click="closeOpenclawConfigModal" :disabled="openclawSaving \|\| openclawApplying">取消<\/button>/);
-    assert.match(openclawModal, /<button class="btn btn-confirm" @click="saveOpenclawConfig" :disabled="openclawSaving \|\| openclawApplying \|\| \(openclawEditing\.lockName && openclawEditing\.name === '默认配置'\)">/);
+    assert.match(openclawModal, /<button class="btn btn-confirm" @click="saveOpenclawConfig" :disabled="openclawSaving \|\| openclawApplying \|\| \(openclawEditing\.lockName && isDefaultOpenclawConfig\(openclawEditing\.name\)\)">/);
     assert.match(openclawModal, /<button class="btn btn-confirm secondary" @click="saveAndApplyOpenclawConfig" :disabled="openclawSaving \|\| openclawApplying">/);
     assert.doesNotMatch(baseTheme, /fonts\.googleapis\.com/);
     assert.match(controlsForms, /\.btn-tool-compact:disabled:hover,\s*\.btn-tool-compact\[disabled\]:hover/);

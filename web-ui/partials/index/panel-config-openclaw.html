@@ -10,124 +10,94 @@
                     <button type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
                     <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
-                <div class="openclaw-panel">
-                    <section class="openclaw-primary-card">
-                        <div class="openclaw-primary-main">
-                            <div class="openclaw-kicker">{{ t('openclaw.main.kicker') }}</div>
-                            <h2 class="openclaw-title">{{ t('openclaw.main.title') }}</h2>
-                            <p class="openclaw-summary">{{ t('openclaw.main.hint') }}</p>
-                            <div class="openclaw-primary-meta">
-                                <span>{{ t('openclaw.main.current') }}</span>
-                                <strong>{{ currentOpenclawConfig || '-' }}</strong>
-                                <span :class="['pill', openclawHasContent(openclawConfigs && openclawConfigs[currentOpenclawConfig]) ? 'configured' : 'empty']">
-                                    {{ openclawHasContent(openclawConfigs && openclawConfigs[currentOpenclawConfig]) ? t('openclaw.configured') : t('openclaw.notConfigured') }}
-                                </span>
+                <div class="openclaw-layout">
+                    <section class="settings-card settings-card--wide openclaw-overview-card" aria-labelledby="openclaw-workspace-title">
+                        <div class="settings-card-header settings-card-header-row">
+                            <div>
+                                <div id="openclaw-workspace-title" class="settings-card-title">{{ t('openclaw.workspace.title') }}</div>
+                                <div class="settings-card-meta">{{ t('openclaw.applyHint') }}</div>
                             </div>
                         </div>
-                        <div class="openclaw-primary-side">
-                            <div class="openclaw-stat">
-                                <span class="openclaw-stat-label">{{ t('openclaw.main.profiles') }}</span>
-                                <strong>{{ Object.keys(openclawConfigs || {}).length }}</strong>
-                            </div>
-                            <div class="openclaw-primary-actions">
-                                <button
-                                    class="btn btn-cancel"
-                                    type="button"
-                                    @click="openOpenclawEditModal(currentOpenclawConfig)"
-                                    :disabled="loading || !!initError || !currentOpenclawConfig">
-                                    {{ t('openclaw.action.editCurrent') }}
-                                </button>
-                                <button
-                                    class="btn btn-confirm secondary"
-                                    type="button"
-                                    @click="applyOpenclawConfig(currentOpenclawConfig)"
-                                    :disabled="loading || !!initError || openclawApplying || !currentOpenclawConfig || !openclawHasContent(openclawConfigs && openclawConfigs[currentOpenclawConfig])">
-                                    {{ openclawApplying ? t('common.applying') : t('openclaw.action.applyCurrent') }}
-                                </button>
-                                <button class="btn btn-cancel" type="button" @click="openOpenclawAddModal" :disabled="loading || !!initError">
-                                    {{ t('openclaw.action.add') }}
-                                </button>
+                        <div class="settings-card-body">
+                            <div class="openclaw-tools-grid">
+                                <div class="openclaw-tool-card">
+                                    <div class="openclaw-tool-copy">
+                                        <div class="openclaw-tool-title">AGENTS.md</div>
+                                        <div class="openclaw-tool-meta">{{ t('openclaw.agents.hint') }}</div>
+                                    </div>
+                                    <div class="openclaw-tool-actions">
+                                        <button class="btn-tool btn-tool-compact" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
+                                            {{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.open') }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="openclaw-tool-card openclaw-tool-card--workspace">
+                                    <div class="openclaw-tool-copy">
+                                        <label class="openclaw-tool-title" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
+                                        <div class="openclaw-tool-meta">{{ t('openclaw.workspace.hint') }}</div>
+                                    </div>
+                                    <div class="openclaw-workspace-row">
+                                        <input
+                                            id="openclaw-workspace-file"
+                                            class="form-input"
+                                            v-model="openclawWorkspaceFileName"
+                                            :placeholder="t('openclaw.workspace.placeholder')">
+                                        <button class="btn-tool btn-tool-compact" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
+                                            {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </section>
 
-                    <div class="openclaw-section-head">
-                        <div>
-                            <div class="openclaw-section-kicker">{{ t('openclaw.library.kicker') }}</div>
-                            <div class="openclaw-section-title">{{ t('openclaw.library.title') }}</div>
+                    <section class="settings-card settings-card--wide openclaw-configs-card" aria-labelledby="openclaw-configs-title">
+                        <div class="settings-card-header settings-card-header-row">
+                            <div>
+                                <div id="openclaw-configs-title" class="settings-card-title">{{ t('status.openclawConfig') }}</div>
+                                <div class="settings-card-meta">{{ t('openclaw.configs.hint') }}</div>
+                            </div>
                         </div>
-                        <button class="btn-tool btn-tool-compact" type="button" @click="openOpenclawAddModal" :disabled="loading || !!initError">
-                            {{ t('openclaw.action.add') }}
-                        </button>
-                    </div>
-
-                    <div class="card-list openclaw-config-list">
-                        <div v-for="(config, name) in openclawConfigs" :key="name"
-                             :class="['card', { active: currentOpenclawConfig === name }]"
-                             :aria-current="currentOpenclawConfig === name ? 'true' : null">
-                            <div class="card-leading">
-                                <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
-                                <div class="card-content">
-                                    <div class="card-title-row">
-                                        <div class="card-title">{{ name }}</div>
-                                        <span v-if="currentOpenclawConfig === name" class="pill configured">{{ t('openclaw.main.active') }}</span>
+                        <div class="settings-card-body">
+                            <div class="card-list openclaw-card-list">
+                                <div v-for="(config, name) in openclawConfigs" :key="name"
+                                     :class="['card', { active: currentOpenclawConfig === name }]"
+                                     @click="applyOpenclawConfig(name)"
+                                     @keydown.enter.self.prevent="applyOpenclawConfig(name)"
+                                     @keydown.space.self.prevent="applyOpenclawConfig(name)"
+                                     tabindex="0"
+                                     role="button"
+                                     :aria-current="currentOpenclawConfig === name ? 'true' : null">
+                                    <div class="card-leading">
+                                        <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
+                                        <div class="card-content">
+                                            <div class="card-title">{{ name }}</div>
+                                            <div class="card-subtitle">{{ openclawSubtitle(config) }}</div>
+                                        </div>
                                     </div>
-                                    <div class="card-subtitle">{{ openclawSubtitle(config) }}</div>
-                                </div>
-                            </div>
-                            <div class="card-trailing">
-                                <span :class="['pill', openclawHasContent(config) ? 'configured' : 'empty']">
-                                    {{ openclawHasContent(config) ? t('openclaw.configured') : t('openclaw.notConfigured') }}
-                                </span>
-                                <div class="card-actions openclaw-card-actions">
-                                    <button class="btn-mini" type="button" @click="openOpenclawEditModal(name)" :aria-label="t('openclaw.action.editAria', { name })">{{ t('openclaw.action.edit') }}</button>
-                                    <button
-                                        class="btn-mini"
-                                        type="button"
-                                        @click="applyOpenclawConfig(name)"
-                                        :aria-label="t('openclaw.action.applyAria', { name })"
-                                        :disabled="openclawApplying || !openclawHasContent(config)">
-                                        {{ t('openclaw.action.apply') }}
-                                    </button>
-                                    <button v-if="name !== '默认配置'" class="btn-mini delete" type="button" @click="deleteOpenclawConfig(name)" :aria-label="t('openclaw.action.deleteAria', { name })">{{ t('openclaw.action.delete') }}</button>
+                                    <div class="card-trailing">
+                                        <span :class="['pill', openclawHasContent(config) ? 'configured' : 'empty']">
+                                            {{ openclawHasContent(config) ? t('openclaw.configured') : t('openclaw.notConfigured') }}
+                                        </span>
+                                        <div class="card-actions" @click.stop>
+                                            <button class="card-action-btn" @click="openOpenclawEditModal(name)" :aria-label="t('openclaw.action.editAria', { name })" :title="t('openclaw.action.edit')">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                </svg>
+                                            </button>
+                                            <button v-if="!isDefaultOpenclawConfig(name, config)" class="card-action-btn delete" @click="deleteOpenclawConfig(name)" :aria-label="t('openclaw.action.deleteAria', { name })" :title="t('openclaw.action.delete')">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <details class="openclaw-tools-panel">
-                        <summary>
-                            <span>{{ t('openclaw.tools.title') }}</span>
-                            <small>{{ t('openclaw.tools.hint') }}</small>
-                        </summary>
-                        <div class="openclaw-action-grid">
-                            <section class="openclaw-action-card">
-                                <div class="openclaw-action-icon">A</div>
-                                <div class="openclaw-action-main">
-                                    <div class="openclaw-action-title">AGENTS.md</div>
-                                    <div class="openclaw-action-hint">{{ t('openclaw.agents.hint') }}</div>
-                                </div>
-                                <button class="btn-tool" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
-                                    {{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.open') }}
-                                </button>
-                            </section>
-
-                            <section class="openclaw-action-card openclaw-workspace-card">
-                                <div class="openclaw-action-icon">W</div>
-                                <div class="openclaw-action-main">
-                                    <label class="openclaw-action-title" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
-                                    <input
-                                        id="openclaw-workspace-file"
-                                        class="form-input"
-                                        v-model="openclawWorkspaceFileName"
-                                        :placeholder="t('openclaw.workspace.placeholder')">
-                                    <div class="openclaw-action-hint">{{ t('openclaw.workspace.hint') }}</div>
-                                </div>
-                                <button class="btn-tool" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
-                                    {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
-                                </button>
-                            </section>
-                        </div>
-                    </details>
+                    </section>
                 </div>
             </div>

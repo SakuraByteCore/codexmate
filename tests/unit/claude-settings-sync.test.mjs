@@ -1,7 +1,8 @@
-﻿import assert from 'assert';
-import { readBundledWebUiScript } from './helpers/web-ui-source.mjs';
+import assert from 'assert';
+import { readBundledWebUiScript, readProjectFile } from './helpers/web-ui-source.mjs';
 
 const appSource = readBundledWebUiScript();
+const claudeConfigModuleSource = readProjectFile('web-ui/modules/app.methods.claude-config.mjs');
 
 function escapeRegExp(value) {
     return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -179,6 +180,31 @@ function extractMethodAsFunction(source, methodName) {
     return `function ${methodBlock}`;
 }
 
+function extractFunctionDeclaration(source, functionName) {
+    const pattern = new RegExp(`(?:^|\\n)(function\\s+${escapeRegExp(functionName)}\\s*\\([^)]*\\)\\s*\\{)`, 'm');
+    const match = pattern.exec(source);
+    if (!match) {
+        throw new Error(`Function declaration not found: ${functionName}`);
+    }
+    const startIndex = match.index + match[0].lastIndexOf(match[1]);
+    const braceStart = startIndex + match[1].lastIndexOf('{');
+    const endIndex = findMatchingBraceRespectingSyntax(source, braceStart);
+    return source.slice(startIndex, endIndex + 1);
+}
+
+function claudeValidationSupportSource() {
+    return [
+        'normalizeClaudeText',
+        'normalizeClaudeBaseUrl',
+        'isValidClaudeHttpUrl',
+        'getClaudeConfigValidationForContext'
+    ].map((name) => extractFunctionDeclaration(claudeConfigModuleSource, name)).join('\n');
+}
+
+function extractClaudeMethodAsFunction(source, methodName) {
+    return `${claudeValidationSupportSource()}\n${extractMethodAsFunction(claudeConfigModuleSource, methodName)}`;
+}
+
 function instantiateFunction(funcSource, funcName, bindings = {}) {
     const bindingNames = Object.keys(bindings);
     const bindingValues = Object.values(bindings);
@@ -190,6 +216,165 @@ test('buildClaudeImportedConfigName derives host-based fallback name', () => {
     const buildClaudeImportedConfigName = instantiateFunction(source, 'buildClaudeImportedConfigName', { URL });
     const name = buildClaudeImportedConfigName('https://maxx-direct.cloverstd.com/project/ym/111');
     assert.strictEqual(name, '导入-maxx-direct.cloverstd.com');
+});
+
+
+test('addClaudeConfig requires a visible model value before saving', () => {
+    const source = extractClaudeMethodAsFunction(appSource, 'addClaudeConfig');
+    const addClaudeConfig = instantiateFunction(source, 'addClaudeConfig');
+    const messages = [];
+    let saveCount = 0;
+    const context = {
+        newClaudeConfig: {
+            name: 'Claude Test',
+            apiKey: 'sk-test',
+            baseUrl: 'https://api.example.com/anthropic',
+            model: '   '
+        },
+        claudeConfigs: {},
+        currentClaudeConfig: '',
+        showMessage(text, type) { messages.push({ text, type }); },
+        findDuplicateClaudeConfigName: () => '',
+        mergeClaudeConfig: (_, cfg) => ({ ...cfg }),
+        saveClaudeConfigs() { saveCount += 1; },
+        closeClaudeConfigModal() {},
+        refreshClaudeModelContext() {}
+    };
+
+    addClaudeConfig.call(context);
+
+    assert.deepStrictEqual(messages, [{ text: '模型名称必填', type: 'error' }]);
+    assert.deepStrictEqual(context.claudeConfigs, {});
+    assert.strictEqual(saveCount, 0);
+});
+
+test('Claude config validation exposes inline add/edit field errors', () => {
+    const support = claudeValidationSupportSource();
+    const fieldErrorSource = `${support}
+${extractMethodAsFunction(appSource, 'claudeConfigFieldError')}`;
+    const canSubmitSource = `${support}
+${extractMethodAsFunction(appSource, 'canSubmitClaudeConfig')}`;
+    const claudeConfigFieldError = instantiateFunction(fieldErrorSource, 'claudeConfigFieldError');
+    const canSubmitClaudeConfig = instantiateFunction(canSubmitSource, 'canSubmitClaudeConfig');
+    const context = {
+        newClaudeConfig: {
+            name: 'Existing',
+            apiKey: '',
+            baseUrl: 'ftp://bad.example.com',
+            model: '   '
+        },
+        editingConfig: {
+            name: 'Edit Me',
+            apiKey: '',
+            baseUrl: 'not-a-url',
+            model: ''
+        },
+        claudeConfigs: {
+            Existing: { model: 'claude-old' }
+        }
+    };
+
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'name'), '名称已存在');
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'apiKey'), 'API Key 必填');
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'baseUrl'), 'Base URL 仅支持 http/https');
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'model'), '模型名称必填');
+    assert.strictEqual(canSubmitClaudeConfig.call(context, 'add'), false);
+    assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'apiKey'), 'API Key 必填');
+    assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'baseUrl'), 'Base URL 仅支持 http/https');
+    assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'model'), '模型名称必填');
+    assert.strictEqual(canSubmitClaudeConfig.call(context, 'edit'), false);
+
+    context.newClaudeConfig = { name: 'Fresh', apiKey: 'sk-test', baseUrl: '   ', model: 'claude-sonnet-4' };
+    assert.strictEqual(claudeConfigFieldError.call(context, 'add', 'baseUrl'), 'Base URL 必填');
+    assert.strictEqual(canSubmitClaudeConfig.call(context, 'add'), false);
+});
+
+test('Claude edit validation allows external credential configs without api key', () => {
+    const support = claudeValidationSupportSource();
+    const fieldErrorSource = `${support}
+${extractMethodAsFunction(appSource, 'claudeConfigFieldError')}`;
+    const canSubmitSource = `${support}
+${extractMethodAsFunction(appSource, 'canSubmitClaudeConfig')}`;
+    const claudeConfigFieldError = instantiateFunction(fieldErrorSource, 'claudeConfigFieldError');
+    const canSubmitClaudeConfig = instantiateFunction(canSubmitSource, 'canSubmitClaudeConfig');
+    const context = {
+        newClaudeConfig: { name: '', apiKey: '', baseUrl: '', model: '' },
+        editingConfig: {
+            name: 'Imported Auth Token',
+            apiKey: '',
+            externalCredentialType: 'auth-token',
+            baseUrl: 'https://api.anthropic.com',
+            model: 'claude-opus-4-6'
+        },
+        claudeConfigs: {}
+    };
+
+    assert.strictEqual(claudeConfigFieldError.call(context, 'edit', 'apiKey'), '');
+    assert.strictEqual(canSubmitClaudeConfig.call(context, 'edit'), true);
+});
+
+test('openEditConfigModal carries external credential metadata into edit validation state', () => {
+    const source = extractMethodAsFunction(appSource, 'openEditConfigModal');
+    const openEditConfigModal = instantiateFunction(source, 'openEditConfigModal');
+    const context = {
+        claudeConfigs: {
+            imported: {
+                apiKey: '',
+                externalCredentialType: 'auth-token',
+                baseUrl: 'https://api.anthropic.com',
+                model: 'claude-opus-4-6'
+            }
+        },
+        editingConfig: {},
+        showEditClaudeConfigKey: true,
+        showEditConfigModal: false
+    };
+
+    openEditConfigModal.call(context, 'imported');
+
+    assert.deepStrictEqual(context.editingConfig, {
+        name: 'imported',
+        apiKey: '',
+        externalCredentialType: 'auth-token',
+        baseUrl: 'https://api.anthropic.com',
+        model: 'claude-opus-4-6'
+    });
+    assert.strictEqual(context.showEditClaudeConfigKey, false);
+    assert.strictEqual(context.showEditConfigModal, true);
+});
+
+test('addClaudeConfig trims and persists the entered model', () => {
+    const source = extractClaudeMethodAsFunction(appSource, 'addClaudeConfig');
+    const addClaudeConfig = instantiateFunction(source, 'addClaudeConfig');
+    const messages = [];
+    let saveCount = 0;
+    let closed = false;
+    let refreshed = false;
+    const context = {
+        newClaudeConfig: {
+            name: 'Claude Test',
+            apiKey: 'sk-test',
+            baseUrl: 'https://api.example.com/anthropic',
+            model: ' claude-test-model '
+        },
+        claudeConfigs: {},
+        currentClaudeConfig: '',
+        showMessage(text, type) { messages.push({ text, type }); },
+        findDuplicateClaudeConfigName: () => '',
+        mergeClaudeConfig: (_, cfg) => ({ ...cfg }),
+        saveClaudeConfigs() { saveCount += 1; },
+        closeClaudeConfigModal() { closed = true; },
+        refreshClaudeModelContext() { refreshed = true; }
+    };
+
+    addClaudeConfig.call(context);
+
+    assert.strictEqual(context.currentClaudeConfig, 'Claude Test');
+    assert.strictEqual(context.claudeConfigs['Claude Test'].model, 'claude-test-model');
+    assert.strictEqual(saveCount, 1);
+    assert.strictEqual(closed, true);
+    assert.strictEqual(refreshed, true);
+    assert.deepStrictEqual(messages, [{ text: '操作成功', type: 'success' }]);
 });
 
 test('ensureClaudeConfigFromSettings creates imported config for unmatched Claude settings', () => {
@@ -346,6 +531,117 @@ test('ensureClaudeConfigFromSettings imports external auth-token backed Claude s
         hasKey: true,
         externalCredentialType: 'auth-token'
     });
+});
+
+
+test('saveAndApplyConfig writes the edited Claude model through apply api', async () => {
+    const source = extractClaudeMethodAsFunction(appSource, 'saveAndApplyConfig');
+    const applyCalls = [];
+    const saveAndApplyConfig = instantiateFunction(source, 'saveAndApplyConfig', {
+        api: async (action, params) => {
+            applyCalls.push({ action, params });
+            return { success: true };
+        }
+    });
+
+    const messages = [];
+    let saveCount = 0;
+    let closed = false;
+    let refreshCount = 0;
+    const context = {
+        editingConfig: {
+            name: 'UI Claude Use',
+            apiKey: 'sk-test',
+            baseUrl: 'https://api.example.com/anthropic',
+            model: ' claude-model-from-edit '
+        },
+        claudeConfigs: {
+            'UI Claude Use': {
+                apiKey: 'old-key',
+                baseUrl: 'https://old.example.com/anthropic',
+                model: 'old-model'
+            }
+        },
+        currentClaudeConfig: 'UI Claude Use',
+        _lastAppliedClaudeKey: '',
+        mergeClaudeConfig(existing, updates) {
+            return { ...existing, ...updates };
+        },
+        saveClaudeConfigs() { saveCount += 1; },
+        closeEditConfigModal() { closed = true; },
+        refreshClaudeModelContext() { refreshCount += 1; },
+        showMessage(msg, type) { messages.push({ msg, type }); }
+    };
+
+    await saveAndApplyConfig.call(context);
+
+    assert.strictEqual(context.claudeConfigs['UI Claude Use'].model, 'claude-model-from-edit');
+    assert.strictEqual(saveCount, 1);
+    assert.strictEqual(closed, true);
+    assert.strictEqual(refreshCount, 1);
+    assert.deepStrictEqual(applyCalls, [{
+        action: 'apply-claude-config',
+        params: {
+            config: {
+                apiKey: 'sk-test',
+                baseUrl: 'https://api.example.com/anthropic',
+                model: 'claude-model-from-edit',
+                name: 'UI Claude Use'
+            }
+        }
+    }]);
+    assert.deepStrictEqual(messages, [{ msg: 'Claude 配置已生效', type: 'success' }]);
+});
+
+test('saveAndApplyConfig saves external credential config without api key', async () => {
+    const source = extractClaudeMethodAsFunction(appSource, 'saveAndApplyConfig');
+    const applyCalls = [];
+    const saveAndApplyConfig = instantiateFunction(source, 'saveAndApplyConfig', {
+        api: async (action, params) => {
+            applyCalls.push({ action, params });
+            return { success: true };
+        }
+    });
+
+    const messages = [];
+    let saveCount = 0;
+    let closed = false;
+    let refreshCount = 0;
+    const context = {
+        editingConfig: {
+            name: 'Imported Auth Token',
+            apiKey: '',
+            externalCredentialType: 'auth-token',
+            baseUrl: 'https://api.anthropic.com',
+            model: 'claude-opus-4-6'
+        },
+        claudeConfigs: {
+            'Imported Auth Token': {
+                apiKey: '',
+                externalCredentialType: 'auth-token',
+                baseUrl: 'https://api.anthropic.com',
+                model: 'claude-3-7-sonnet'
+            }
+        },
+        currentClaudeConfig: 'Imported Auth Token',
+        mergeClaudeConfig(existing, updates) {
+            return { ...existing, ...updates };
+        },
+        saveClaudeConfigs() { saveCount += 1; },
+        closeEditConfigModal() { closed = true; },
+        refreshClaudeModelContext() { refreshCount += 1; },
+        showMessage(msg, type) { messages.push({ msg, type }); }
+    };
+
+    await saveAndApplyConfig.call(context);
+
+    assert.strictEqual(context.claudeConfigs['Imported Auth Token'].model, 'claude-opus-4-6');
+    assert.strictEqual(context.claudeConfigs['Imported Auth Token'].externalCredentialType, 'auth-token');
+    assert.strictEqual(saveCount, 1);
+    assert.strictEqual(closed, true);
+    assert.strictEqual(refreshCount, 1);
+    assert.deepStrictEqual(applyCalls, []);
+    assert.deepStrictEqual(messages, [{ msg: '已保存（未填写 API Key）', type: 'info' }]);
 });
 
 test('applyClaudeConfig reports informative message for external credential only config', async () => {

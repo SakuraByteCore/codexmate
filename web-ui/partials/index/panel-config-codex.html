@@ -36,7 +36,7 @@
                         <span class="selector-title">{{ t('config.providerTemplate.title') }}</span>
                     </div>
                     <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
-                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider._suggestedModel = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddProviderKey = false; showAddModal = true">{{ tpl.label }}</button>
+                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider.model = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddProviderKey = false; showAddModal = true">{{ tpl.label }}</button>
                     </div>
                 </div>
 

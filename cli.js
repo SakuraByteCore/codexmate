@@ -2081,12 +2081,22 @@ function addProviderToConfig(params = {}) {
     const name = typeof params.name === 'string' ? params.name.trim() : '';
     const url = typeof params.url === 'string' ? params.url.trim() : '';
     const key = typeof params.key === 'string' ? params.key.trim() : '';
+    const requireModel = !!params.requireModel;
+    const fallbackModel = (() => {
+        if (requireModel) return '';
+        const list = readModels();
+        return Array.isArray(list) && typeof list[0] === 'string' ? list[0].trim() : '';
+    })();
+    const model = typeof params.model === 'string' && params.model.trim()
+        ? params.model.trim()
+        : fallbackModel;
     const useTransform = !!params.useTransform;
     const allowManaged = !!params.allowManaged;
     const normalizedUrl = normalizeBaseUrl(url);
 
     if (!name) return { error: '名称不能为空' };
     if (!url) return { error: 'URL 不能为空' };
+    if (!model) return { error: '模型名称不能为空' };
     if (!isValidProviderName(name)) {
         return { error: '名称仅支持字母/数字/._-' };
     }
@@ -2163,6 +2173,7 @@ function addProviderToConfig(params = {}) {
         `wire_api = "responses"`,
         `requires_openai_auth = ${requiresOpenaiAuth ? 'true' : 'false'}`,
         `preferred_auth_method = "${safeKey}"`,
+        `models = [{ id = "${escapeTomlBasicString(model)}", name = "${escapeTomlBasicString(model)}" }]`,
         ...extraLines,
         `request_max_retries = 4`,
         `stream_max_retries = 10`,
@@ -2173,6 +2184,13 @@ function addProviderToConfig(params = {}) {
 
     try {
         writeConfig(newContent);
+        const models = readModels();
+        if (!models.includes(model)) {
+            writeModels([...models, model]);
+        }
+        const currentModels = readCurrentModels();
+        currentModels[name] = model;
+        writeCurrentModels(currentModels);
     } catch (e) {
         return { error: `写入配置失败: ${e.message}` };
     }
@@ -10866,7 +10884,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             result = buildConfigTemplateDiff(params || {});
                             break;
                         case 'add-provider':
-                            result = addProviderToConfig(params || {});
+                            result = addProviderToConfig({ ...(params || {}), requireModel: true });
                             break;
                         case 'update-provider':
                             result = updateProviderInConfig(params || {});

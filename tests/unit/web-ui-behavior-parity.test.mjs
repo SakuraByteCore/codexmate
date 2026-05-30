@@ -626,7 +626,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isClaudeLocalBridgeDisabled',
         'languageOptions',
         'currentLanguageLabel',
-        'openLanguageSettings'
+        'openLanguageSettings',
+        'isDefaultOpenclawConfig',
+        'getClaudeConfigValidation',
+        'claudeConfigFieldError',
+        'canSubmitClaudeConfig'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

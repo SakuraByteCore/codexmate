@@ -292,7 +292,7 @@ preferred_auth_method = "shadow-key"
 
     // ========== Add Provider Tests ==========
     const addProviderInputUrl = `${mockProviderUrl}/`;
-    const addProvider = await api('add-provider', { name: 'e2e-api', url: addProviderInputUrl, key: 'sk-e2e-api' });
+    const addProvider = await api('add-provider', { name: 'e2e-api', url: addProviderInputUrl, key: 'sk-e2e-api', model: 'gpt-e2e-api' });
     assert(addProvider.success === true, 'add-provider failed');
 
     const apiListAfterAdd = await api('list');
@@ -301,6 +301,23 @@ preferred_auth_method = "shadow-key"
         : null;
     assert(addedProvider, 'add-provider not reflected in list');
     assert(addedProvider.url === mockProviderUrl, 'add-provider should persist normalized provider url');
+    assert(
+        Array.isArray(addedProvider.models) && addedProvider.models.some((model) => model && model.id === 'gpt-e2e-api'),
+        'add-provider should expose the entered model on the new provider'
+    );
+    const exportAfterAdd = await api('export-config', { includeKeys: true });
+    assert(exportAfterAdd.data && exportAfterAdd.data.currentModels && exportAfterAdd.data.currentModels['e2e-api'] === 'gpt-e2e-api', 'add-provider should persist entered model as provider current model');
+    assert(exportAfterAdd.data && Array.isArray(exportAfterAdd.data.models) && exportAfterAdd.data.models.includes('gpt-e2e-api'), 'add-provider should persist entered model in model list');
+    const addedProviderTemplate = await api('get-config-template', {
+        provider: 'e2e-api',
+        model: exportAfterAdd.data.currentModels['e2e-api']
+    });
+    assert(!addedProviderTemplate.error, `get-config-template should accept add-provider model: ${addedProviderTemplate.error || ''}`);
+    assert(addedProviderTemplate.template.includes('model_provider = "e2e-api"'), 'entered provider should be usable in generated config template');
+    assert(addedProviderTemplate.template.includes('model = "gpt-e2e-api"'), 'entered model should be used in generated config template');
+
+    const addProviderMissingModel = await api('add-provider', { name: 'test-empty-model', url: mockProviderUrl, key: 'sk-empty-model', model: '   ' });
+    assert(addProviderMissingModel.error, 'add-provider should reject empty model');
 
     const addProviderEmptyName = await api('add-provider', { name: '', url: mockProviderUrl });
     assert(addProviderEmptyName.error, 'add-provider should reject empty name');
@@ -318,6 +335,19 @@ preferred_auth_method = "shadow-key"
     assert(addProviderInvalidName.error, 'add-provider should reject invalid provider name');
     const addProviderInvalidUrl = await api('add-provider', { name: 'bad-url', url: 'not-a-url' });
     assert(addProviderInvalidUrl.error, 'add-provider should reject invalid provider url');
+
+    const cliAddBridgeNoModel = runSync(node, [cliPath, 'add', 'legacy-bridge-no-model', mockProviderUrl, 'sk-legacy-bridge', '--bridge', 'openai'], { env });
+    assert(
+        cliAddBridgeNoModel.status === 0,
+        `CLI add --bridge without model should remain backward compatible: ${cliAddBridgeNoModel.stderr || cliAddBridgeNoModel.stdout}`
+    );
+    const exportAfterLegacyBridgeAdd = await api('export-config', { includeKeys: true });
+    assert(
+        exportAfterLegacyBridgeAdd.data
+            && exportAfterLegacyBridgeAdd.data.currentModels
+            && exportAfterLegacyBridgeAdd.data.currentModels['legacy-bridge-no-model'],
+        'legacy CLI add --bridge should initialize a fallback current model'
+    );
     const cliAddInvalidUrl = runSync(node, [cliPath, 'add', 'cli-bad-url', 'not-a-url'], { env });
     assert(cliAddInvalidUrl.status !== 0, 'cli add should reject invalid provider url');
     const apiListAfterInvalidName = await api('list');
@@ -428,7 +458,8 @@ preferred_auth_method = "shadow-key"
         const legacyAddDup = await legacyApi('add-provider', {
             name: 'foo.bar',
             url: 'https://dup.example.com/v1',
-            key: 'sk-dup'
+            key: 'sk-dup',
+            model: 'gpt-dup'
         });
         assert(legacyAddDup.error, 'legacy duplicate add-provider should be rejected');
         const legacyConfigAfterDup = fs.readFileSync(legacyConfigPath, 'utf-8');
