@@ -357,22 +357,27 @@
 /* OpenClaw config tab: align with current settings/card system */
 .openclaw-layout {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     padding: 0;
     width: 100%;
-    max-width: 980px;
-    margin: 0 auto;
 }
 
 .openclaw-workspace-card.settings-card,
 .openclaw-configs-card {
     margin: 0;
-    padding: 14px 16px;
+    padding: 0;
     width: 100%;
     align-items: stretch;
-    border-color: rgba(137, 111, 94, 0.13);
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 8px 24px rgba(92, 68, 52, 0.055);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.openclaw-workspace-card.settings-card:hover,
+.openclaw-configs-card:hover {
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .openclaw-workspace-card.settings-card > .settings-card-body,
@@ -385,31 +390,35 @@
 .openclaw-workspace-card.settings-card > .settings-card-body > .openclaw-workspace-card {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 8px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
+    min-height: 70px;
+    padding: 14px 16px;
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.76);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 /* Workspace tool button */
 .openclaw-tools-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 8px;
+    align-items: stretch;
 }
 
 .openclaw-tool-btn {
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-height: 74px;
+    gap: 12px;
+    min-height: 70px;
     padding: 14px 16px;
     width: 100%;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border-soft);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 242, 0.9));
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    background: rgba(255, 255, 255, 0.76);
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: left;
@@ -417,8 +426,8 @@
 }
 
 .openclaw-tool-btn:hover:not(:disabled) {
-    border-color: rgba(200, 121, 99, 0.3);
-    box-shadow: 0 4px 16px rgba(200, 121, 99, 0.1);
+    border-color: rgba(137, 111, 94, 0.18);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
 }
 
@@ -474,8 +483,8 @@
 
 .workspace-input-group {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 8px;
     align-items: center;
     width: 100%;
 }
@@ -501,6 +510,7 @@
 
 .openclaw-card-list .card {
     width: 100%;
+    min-height: 70px;
     flex-direction: row;
     align-items: center;
     gap: 14px;
@@ -533,11 +543,16 @@
 .openclaw-card-list .card-trailing {
     width: auto;
     min-width: max-content;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
     justify-content: end;
 }
 
 .openclaw-card-list .card {
     background: rgba(255, 255, 255, 0.76);
+    border-color: rgba(137, 111, 94, 0.12);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .openclaw-card-list .card-subtitle {
@@ -549,18 +564,14 @@
 }
 
 @media (min-width: 1200px) {
-    .openclaw-tool-btn {
-        padding: 18px;
-    }
-
     .tool-icon {
-        width: 44px;
-        height: 44px;
-        font-size: 22px;
+        width: 42px;
+        height: 42px;
+        font-size: 21px;
     }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 820px) {
     .openclaw-tools-grid {
         grid-template-columns: 1fr;
     }
@@ -599,6 +610,7 @@
     .openclaw-card-list .card-trailing {
         width: auto;
         min-width: max-content;
+        grid-auto-flow: column;
         justify-content: end;
     }
 }
