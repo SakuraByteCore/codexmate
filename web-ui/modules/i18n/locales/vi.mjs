@@ -1,4 +1,13 @@
 const vi = Object.freeze({
+    'plugins.catalog.promptTemplates.title': 'Mẫu prompt',
+    'plugins.catalog.promptTemplates.description': 'Công cụ prompt theo mẫu, hỗ trợ biến, sao chép và xuất.',
+    'plugins.status.standard': 'tiêu chuẩn',
+    'plugins.builtin.commentPolish.name': 'Chỉnh chú thích mã',
+    'plugins.builtin.commentPolish.desc': 'Chỉnh nhẹ các chú thích mã sau {{code}}',
+    'plugins.builtin.commentPolish.line1': 'Chỉnh nhẹ các chú thích mã sau',
+    'plugins.builtin.ruleAck.name': 'Xác nhận quy tắc',
+    'plugins.builtin.ruleAck.desc': 'Hãy làm theo【{{rule}}】, nhận được thì phản hồi',
+    'plugins.builtin.ruleAck.line1': 'Hãy làm theo【{{rule}}】, nhận được thì phản hồi',
     // Global
     'lang.zh': 'Tiếng Trung',
     'lang.en': 'Tiếng Anh',

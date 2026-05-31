@@ -24,6 +24,18 @@ function localeSourceKeys(code) {
     return [...readLocaleSource(code).matchAll(/^\s*'([^']+)'\s*:/gm)].map(match => match[1]);
 }
 
+function makeT(lang) {
+    return (key, params = null) => {
+        const table = DICT[lang] || DICT.zh;
+        const raw = (table && table[key]) || (DICT.en && DICT.en[key]) || (DICT.zh && DICT.zh[key]) || key;
+        if (!params || typeof params !== 'object') return raw;
+        return String(raw).replace(/\{(\w+)\}/g, (_, name) => {
+            const value = params[name];
+            return value === undefined || value === null ? '' : String(value);
+        });
+    };
+}
+
 test('i18n dictionaries are split into locale modules', () => {
     const localeFiles = fs.readdirSync(localeDir)
         .filter(name => name.endsWith('.mjs'))
@@ -82,4 +94,40 @@ test('Japanese orchestration template copy stays localized', () => {
     for (const phrase of staleChineseCopy) {
         assert(!templateCopy.includes(phrase), `Japanese template copy should not include stale Chinese phrase: ${phrase}`);
     }
+});
+
+
+test('plugins catalog metadata is localized from i18n dictionaries', async () => {
+    const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');
+    const computed = createPluginsComputed();
+    const catalog = computed.pluginsCatalog.call({ t: makeT('ja') });
+    assert(catalog.length > 0, 'plugins catalog should not be empty');
+    const promptTemplates = catalog.find((item) => item && item.id === 'prompt-templates');
+    assert(promptTemplates, 'prompt templates plugin should be listed');
+    assert.strictEqual(promptTemplates.title, DICT.ja['plugins.catalog.promptTemplates.title']);
+    assert.strictEqual(promptTemplates.description, DICT.ja['plugins.catalog.promptTemplates.description']);
+    assert.strictEqual(promptTemplates.statusLabel, DICT.ja['plugins.status.standard']);
+});
+
+test('builtin prompt templates re-localize when language changes', async () => {
+    const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');
+    const computed = createPluginsComputed();
+    const rawBuiltin = [{
+        id: 'builtin_comment_polish',
+        name: '代码注释润色',
+        description: '轻微收敛以下代码注释 {{code}}',
+        template: '轻微收敛以下代码注释\n\n{{code}}',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        isBuiltin: true
+    }];
+    const viList = computed.promptTemplatesList.call({ promptTemplatesListRaw: rawBuiltin, t: makeT('vi') });
+    assert.strictEqual(viList[0].name, DICT.vi['plugins.builtin.commentPolish.name']);
+    assert.strictEqual(viList[0].description, DICT.vi['plugins.builtin.commentPolish.desc']);
+    assert(viList[0].template.includes(DICT.vi['plugins.builtin.commentPolish.line1']));
+    assert(!viList[0].template.includes('轻微收敛以下代码注释'), 'Vietnamese builtin template should not keep stale Chinese copy');
+
+    const jaDraft = computed.promptTemplateDraft.call({ promptTemplateDraftRaw: rawBuiltin[0], t: makeT('ja') });
+    assert.strictEqual(jaDraft.name, DICT.ja['plugins.builtin.commentPolish.name']);
+    assert(jaDraft.template.includes(DICT.ja['plugins.builtin.commentPolish.line1']));
 });
