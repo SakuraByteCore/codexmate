@@ -108,6 +108,7 @@ const vi = Object.freeze({
     'side.system.settings': 'Cài đặt runtime',
     'side.system.settings.meta': 'Dữ liệu / Sao lưu',
     'side.newTab': 'Tab mới',
+    'config.localBridge.enabledCount': 'Đã bật {enabled}/{total}',
     'side.usage.meta': 'Thống kê / Xu hướng',
     'side.orchestration.meta': 'Kế hoạch / Hàng đợi / Runs',
 
@@ -121,6 +122,7 @@ const vi = Object.freeze({
     'kicker.plugins': 'Plugin',
     'kicker.docs': 'Tài liệu',
     'kicker.settings': 'Cài đặt',
+    'kicker.trash': 'Thùng rác',
 
     'title.dashboard': 'Dashboard / Doctor',
     'title.config': 'Bảng điều khiển cấu hình cục bộ',
@@ -144,6 +146,11 @@ const vi = Object.freeze({
 
 
     // Task orchestration readiness
+    // Trash
+    'settings.trash.empty': 'Thùng rác trống',
+    'settings.trash.emptyHint': 'Không có phiên đã xóa trong thời gian lưu {days} ngày.',
+    'settings.trash.retentionUnit': 'ngày',
+
     'orchestration.readiness.target.label': 'Mục tiêu',
     'orchestration.readiness.target.done': 'Đã viết mục tiêu',
     'orchestration.readiness.target.missing': 'Chưa viết mục tiêu',

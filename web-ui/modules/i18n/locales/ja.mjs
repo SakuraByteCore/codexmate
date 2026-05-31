@@ -168,6 +168,7 @@ const ja = Object.freeze({
     'kicker.market': 'Skills',
     'kicker.plugins': 'Plugins',
     'kicker.docs': 'Docs',
+    'kicker.trash': 'ゴミ箱',
     'kicker.settings': 'Settings',
 
     'title.dashboard': 'Dashboard / Doctor',
@@ -703,6 +704,7 @@ const ja = Object.freeze({
     'config.models.notInList.other': '現在のモデルは一覧にありません。手動入力可能です。',
     'config.template.editFirst': '先にテンプレートを編集してから適用してください。',
     'config.template.bridgeCodexOnly': '{hint} テンプレートは Codex のみ編集可能です。',
+    'config.localBridge.enabledCount': '{enabled}/{total} 件有効',
     'config.template.openEditor': 'テンプレートエディタを開く',
     'modal.configTemplate.title': 'Config テンプレートエディタ（手動確認適用）',
     'modal.configTemplate.placeholder': 'ここに config.toml テンプレート内容を編集してください',
@@ -964,6 +966,7 @@ const ja = Object.freeze({
     'settings.trash.clearing': 'クリア中...',
     'settings.trash.loading': 'ゴミ箱を読み込み中...',
     'settings.trash.empty': 'ゴミ箱は空です',
+    'settings.trash.emptyHint': '保持期間 {days} 日以内の削除済みセッションはありません。',
     'settings.trash.retry': 'ゴミ箱リストの読み込みに失敗しました。更新して再試行してください',
     'settings.trash.restore': '復元',
     'settings.trash.restoring': '復元中...',
@@ -975,6 +978,7 @@ const ja = Object.freeze({
     'settings.trash.retention': '自動クリーンアップ',
     'settings.trash.retentionMeta': '保持日数を超えたゴミ箱レコードは自動的に削除されます',
     'settings.trash.retentionLabel': '保持日数',
+    'settings.trash.retentionUnit': '日',
     'settings.trash.retentionHint': '範囲 1-365 日、デフォルト 30 日。ゴミ箱読み込み時に期限切れレコードを自動クリーンアップします。',
 
     'settings.webhook.title': 'Webhook',

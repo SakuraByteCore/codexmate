@@ -167,6 +167,7 @@ const zh = Object.freeze({
     'kicker.market': 'Skills',
     'kicker.plugins': 'Plugins',
     'kicker.docs': 'Docs',
+    'kicker.trash': '回收站',
     'kicker.settings': 'Settings',
 
     'title.dashboard': 'Dashboard / Doctor',
@@ -714,6 +715,7 @@ const zh = Object.freeze({
     'config.models.notInList.other': '当前模型不在列表，可手填。',
     'config.template.editFirst': '先改模板，再应用。',
     'config.template.bridgeCodexOnly': '{hint} 模板仅限 Codex 编辑。',
+    'config.localBridge.enabledCount': '已启用 {enabled}/{total}',
     'config.template.openEditor': '打开模板编辑器',
     'modal.configTemplate.title': 'Config 模板编辑器（手动确认应用）',
     'modal.configTemplate.placeholder': '在这里编辑 config.toml 模板内容',
@@ -975,6 +977,7 @@ const zh = Object.freeze({
     'settings.trash.clearing': '清空中...',
     'settings.trash.loading': '正在加载回收站...',
     'settings.trash.empty': '回收站为空',
+    'settings.trash.emptyHint': '保留期 {days} 天内没有已删除会话。',
     'settings.trash.retry': '回收站列表加载失败，请刷新重试',
     'settings.trash.restore': '恢复',
     'settings.trash.restoring': '恢复中...',
@@ -986,6 +989,7 @@ const zh = Object.freeze({
     'settings.trash.retention': '自动清理',
     'settings.trash.retentionMeta': '超过保留天数的回收站记录将自动清除',
     'settings.trash.retentionLabel': '保留天数',
+    'settings.trash.retentionUnit': '天',
     'settings.trash.retentionHint': '范围 1-365 天，默认 30 天。每次加载回收站时自动清理过期记录。',
 
     'settings.webhook.title': 'Webhook',

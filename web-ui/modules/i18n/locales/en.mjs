@@ -167,6 +167,7 @@ const en = Object.freeze({
     'kicker.market': 'Skills',
     'kicker.plugins': 'Plugins',
     'kicker.docs': 'Docs',
+    'kicker.trash': 'Trash',
     'kicker.settings': 'Settings',
 
     'title.dashboard': 'Dashboard / Doctor',
@@ -715,6 +716,7 @@ const en = Object.freeze({
     'config.models.notInList.other': 'Current model is not in the list. Enter manually.',
     'config.template.editFirst': 'Edit template first, then apply.',
     'config.template.bridgeCodexOnly': '{hint} template is editable in Codex mode only.',
+    'config.localBridge.enabledCount': '{enabled}/{total} enabled',
     'config.template.openEditor': 'Open template editor',
     'modal.configTemplate.title': 'Config template editor (manual confirm)',
     'modal.configTemplate.placeholder': 'Edit config.toml template here',
@@ -972,6 +974,7 @@ const en = Object.freeze({
     'settings.trash.clearing': 'Clearing...',
     'settings.trash.loading': 'Loading trash...',
     'settings.trash.empty': 'Trash is empty',
+    'settings.trash.emptyHint': 'No deleted sessions within the {days}-day retention window.',
     'settings.trash.retry': 'Failed to load trash. Refresh to retry.',
     'settings.trash.restore': 'Restore',
     'settings.trash.restoring': 'Restoring...',
@@ -983,6 +986,7 @@ const en = Object.freeze({
     'settings.trash.retention': 'Auto-purge',
     'settings.trash.retentionMeta': 'Trash entries older than retention days are auto-purged',
     'settings.trash.retentionLabel': 'Retention days',
+    'settings.trash.retentionUnit': 'days',
     'settings.trash.retentionHint': 'Range 1-365 days, default 30. Expired entries are purged on each trash load.',
 
     'settings.webhook.title': 'Webhook',
