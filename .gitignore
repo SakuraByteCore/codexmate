@@ -57,11 +57,3 @@ log.txt
 tmp/
 .gitnexus/
 
-# Internal project configs (local-only)
-.project-identity
-*.code-workspace
-help.html
-AGENTS.md
-CLAUDE.md
-CODEBASE.md
-.claude/
