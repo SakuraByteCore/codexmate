@@ -35,6 +35,20 @@ module.exports = async function testConfig(ctx) {
     assert(apiList.providers.every(p => 'url' in p), 'provider missing url');
     assert(apiList.providers.every(p => 'hasKey' in p), 'provider missing hasKey');
 
+    // ========== Tool Config Write Permission Tests ==========
+    const permissionsBefore = await api('get-tool-config-permissions');
+    assert(permissionsBefore.permissions && permissionsBefore.permissions.codex === false, 'codex write permission should default to disabled');
+    const deniedAddProvider = await api('add-provider', {
+        name: 'blocked-by-default',
+        url: mockProviderUrl,
+        key: 'sk-blocked',
+        model: 'blocked-model'
+    });
+    assert(deniedAddProvider.errorCode === 'tool-config-write-disabled', 'add-provider should be blocked until codex writes are enabled');
+    const enableCodexWrites = await api('set-tool-config-permission', { target: 'codex', allowWrite: true });
+    assert(enableCodexWrites.success === true, 'set-tool-config-permission(codex) should succeed');
+    assert(enableCodexWrites.permissions && enableCodexWrites.permissions.codex === true, 'codex write permission should be enabled for config e2e writes');
+
     // ========== Get Config Template Tests - Service Tier ==========
     const templateOverride = await api('get-config-template', {
         provider: 'shadow',
@@ -455,6 +469,8 @@ preferred_auth_method = "shadow-key"
             !/^\s*model_reasoning_effort\s*=.+$/m.test(legacyTemplateDefaults.template),
             'legacy get-config-template should keep default medium reasoning without model_reasoning_effort'
         );
+        const legacyEnableCodexWrites = await legacyApi('set-tool-config-permission', { target: 'codex', allowWrite: true });
+        assert(legacyEnableCodexWrites.success === true, 'legacy set-tool-config-permission(codex) should succeed');
         const legacyAddDup = await legacyApi('add-provider', {
             name: 'foo.bar',
             url: 'https://dup.example.com/v1',

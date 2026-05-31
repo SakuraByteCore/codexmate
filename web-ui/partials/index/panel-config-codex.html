@@ -26,7 +26,27 @@
                     </div>
                 </template>
                 <template v-else>
-                <button class="btn-add" @click="showAddProviderKey = false; showAddModal = true" v-if="!loading && !initError">
+                <section class="tool-config-write-card" :aria-label="t('toolConfig.codex.title')">
+                    <div class="tool-config-write-copy">
+                        <div class="tool-config-write-title">{{ t('toolConfig.codex.title') }}</div>
+                        <p class="tool-config-write-desc">{{ t('toolConfig.codex.desc') }}</p>
+                    </div>
+                    <label class="settings-toggle-row tool-config-write-toggle">
+                        <input
+                            type="checkbox"
+                            :checked="isToolConfigWriteAllowed('codex')"
+                            :disabled="toolConfigPermissionSaving.codex"
+                            @change="setToolConfigPermission('codex', $event.target.checked)">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <span>{{ toolConfigPermissionStatusLabel('codex') }}</span>
+                    </label>
+                </section>
+
+                <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('codex') }">
+                    <div class="tool-config-write-body">
+                <button class="btn-add" @click="showAddProviderKey = false; showAddModal = true" v-if="!loading && !initError" :disabled="!isToolConfigWriteAllowed('codex')">
                     <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('config.addProvider') }}
                 </button>
@@ -170,6 +190,15 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                    <div v-if="!isToolConfigWriteAllowed('codex')" class="tool-config-write-overlay">
+                        <div class="tool-config-write-overlay-card">
+                            <div class="tool-config-write-overlay-title">{{ t('toolConfig.codex.lockedTitle') }}</div>
+                            <p>{{ t('toolConfig.codex.lockedDesc') }}</p>
+                            <button type="button" class="btn-tool" @click="setToolConfigPermission('codex', true)" :disabled="toolConfigPermissionSaving.codex">{{ t('toolConfig.enableWrite') }}</button>
                         </div>
                     </div>
                 </div>

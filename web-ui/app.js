@@ -366,6 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 codexDownloadProgress: 0,
                 codexDownloadTimer: null,
                 settingsTab: 'general',
+                toolConfigPermissions: { codex: false, claude: false },
+                toolConfigPermissionSaving: { codex: false, claude: false },
                 sessionTrashEnabled: true,
                 sessionTrashItems: [],
                 sessionTrashVisibleCount: SESSION_TRASH_PAGE_SIZE,

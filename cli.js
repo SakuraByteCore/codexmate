@@ -213,6 +213,7 @@ const CLAUDE_PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
 const CODEBUDDY_DIR = path.join(os.homedir(), '.codebuddy');
 const CODEBUDDY_PROJECTS_DIR = path.join(CODEBUDDY_DIR, 'projects');
 const CODEXMATE_DIR = path.join(os.homedir(), '.codexmate');
+const CODEXMATE_PREFERENCES_FILE = path.join(CODEXMATE_DIR, 'preferences.json');
 const CODEXMATE_SESSIONS_DIR = path.join(CODEXMATE_DIR, 'sessions');
 const CODEXMATE_DERIVED_SESSIONS_DIR = path.join(CODEXMATE_SESSIONS_DIR, 'derived');
 const CODEXMATE_DERIVED_CODEX_DIR = path.join(CODEXMATE_DERIVED_SESSIONS_DIR, 'codex');
@@ -717,6 +718,7 @@ function readConfig() {
 }
 
 function writeConfig(content) {
+    assertToolConfigWriteAllowed('codex');
     try {
         fs.writeFileSync(CONFIG_FILE, content, 'utf-8');
     } catch (e) {
@@ -734,6 +736,7 @@ function readModels() {
 }
 
 function writeModels(models) {
+    assertToolConfigWriteAllowed('codex');
     fs.writeFileSync(MODELS_FILE, JSON.stringify(models, null, 2), 'utf-8');
 }
 
@@ -747,10 +750,12 @@ function readCurrentModels() {
 }
 
 function writeCurrentModels(data) {
+    assertToolConfigWriteAllowed('codex');
     fs.writeFileSync(CURRENT_MODELS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 function updateAuthJson(apiKey) {
+    assertToolConfigWriteAllowed('codex');
     let authData = {};
     if (fs.existsSync(AUTH_FILE)) {
         try {
@@ -764,6 +769,141 @@ function updateAuthJson(apiKey) {
 
 function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude']);
+const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false });
+let toolConfigWriteGuardDepth = 0;
+
+function enterToolConfigWriteGuard() {
+    toolConfigWriteGuardDepth += 1;
+    let active = true;
+    return () => {
+        if (!active) return;
+        active = false;
+        toolConfigWriteGuardDepth = Math.max(0, toolConfigWriteGuardDepth - 1);
+    };
+}
+
+function isToolConfigWriteGuardActive() {
+    return toolConfigWriteGuardDepth > 0;
+}
+
+function normalizeToolConfigTarget(value) {
+    const target = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return TOOL_CONFIG_PERMISSION_TARGETS.has(target) ? target : '';
+}
+
+function normalizeToolConfigPermissions(value) {
+    const source = isPlainObject(value) ? value : {};
+    return {
+        codex: source.codex === true,
+        claude: source.claude === true
+    };
+}
+
+function readCodexmatePreferences() {
+    if (!fs.existsSync(CODEXMATE_PREFERENCES_FILE)) return {};
+    try {
+        const raw = fs.readFileSync(CODEXMATE_PREFERENCES_FILE, 'utf-8');
+        const parsed = raw && raw.trim() ? JSON.parse(raw) : {};
+        return isPlainObject(parsed) ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function writeCodexmatePreferences(preferences) {
+    ensureDir(CODEXMATE_DIR);
+    writeJsonAtomic(CODEXMATE_PREFERENCES_FILE, isPlainObject(preferences) ? preferences : {});
+}
+
+function readToolConfigPermissions() {
+    const preferences = readCodexmatePreferences();
+    return normalizeToolConfigPermissions(preferences.toolConfigPermissions || TOOL_CONFIG_PERMISSION_DEFAULTS);
+}
+
+function isToolConfigWriteAllowed(target) {
+    const normalizedTarget = normalizeToolConfigTarget(target);
+    if (!normalizedTarget) return false;
+    return readToolConfigPermissions()[normalizedTarget] === true;
+}
+
+function buildToolConfigWriteDeniedPayload(target) {
+    const normalizedTarget = normalizeToolConfigTarget(target) || target || '';
+    return {
+        error: '当前为仅浏览，未修改配置。',
+        errorCode: 'tool-config-write-disabled',
+        target: normalizedTarget,
+        permissions: readToolConfigPermissions()
+    };
+}
+
+function assertToolConfigWriteAllowed(target) {
+    if (!isToolConfigWriteGuardActive()) return;
+    if (isToolConfigWriteAllowed(target)) return;
+    const payload = buildToolConfigWriteDeniedPayload(target);
+    const err = new Error(payload.error);
+    err.code = payload.errorCode;
+    err.target = payload.target;
+    throw err;
+}
+
+function getApiToolConfigWriteTarget(action) {
+    const name = typeof action === 'string' ? action.trim() : '';
+    if (!name) return '';
+    const codexWriteActions = new Set([
+        'apply-config-template',
+        'add-provider',
+        'update-provider',
+        'delete-provider',
+        'reset-config',
+        'add-model',
+        'delete-model',
+        'restore-codex-dir',
+        'import-config',
+        'import-auth-profile',
+        'switch-auth-profile',
+        'delete-auth-profile',
+        'proxy-enable-codex-default',
+        'proxy-apply-provider',
+        'local-bridge-toggle',
+        'local-bridge-set-excluded'
+    ]);
+    const claudeWriteActions = new Set([
+        'apply-claude-settings-raw',
+        'apply-claude-config',
+        'restore-claude-dir',
+        'claude-local-bridge-toggle',
+        'claude-local-bridge-set-excluded',
+        'claude-local-bridge-sync-providers'
+    ]);
+    if (codexWriteActions.has(name)) return 'codex';
+    if (claudeWriteActions.has(name)) return 'claude';
+    return '';
+}
+
+function setToolConfigPermission(params = {}) {
+    const target = normalizeToolConfigTarget(params && params.target);
+    if (!target) return { error: '未知配置对象' };
+    const preferences = readCodexmatePreferences();
+    const current = normalizeToolConfigPermissions(preferences.toolConfigPermissions || TOOL_CONFIG_PERMISSION_DEFAULTS);
+    current[target] = params && params.allowWrite === true;
+    preferences.toolConfigPermissions = current;
+    writeCodexmatePreferences(preferences);
+
+    let bootstrapNotice = '';
+    if (target === 'codex' && current.codex) {
+        const bootstrap = ensureManagedConfigBootstrap({ allowWrite: true });
+        bootstrapNotice = bootstrap && bootstrap.notice ? bootstrap.notice : '';
+    }
+
+    return {
+        success: true,
+        target,
+        permissions: current,
+        bootstrapNotice
+    };
 }
 
 const PROVIDER_CONFIG_KEYS = new Set([
@@ -5543,6 +5683,7 @@ function readLocalBridgeSettings() {
 }
 
 function writeLocalBridgeSettings(settings) {
+    assertToolConfigWriteAllowed('codex');
     fs.writeFileSync(LOCAL_BRIDGE_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
 }
 
@@ -5641,6 +5782,7 @@ function readClaudeLocalBridgeSettings() {
 }
 
 function writeClaudeLocalBridgeSettings(settings) {
+    assertToolConfigWriteAllowed('claude');
     fs.writeFileSync(CLAUDE_LOCAL_BRIDGE_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
 }
 
@@ -5655,6 +5797,7 @@ function readClaudeLocalProvidersFile() {
 }
 
 function writeClaudeLocalProvidersFile(data) {
+    assertToolConfigWriteAllowed('claude');
     ensureDir(CONFIG_DIR);
     fs.writeFileSync(CLAUDE_LOCAL_PROVIDERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -5669,6 +5812,7 @@ function syncClaudeProvidersToBridgeFile() {
 }
 
 function toggleClaudeLocalBridge(params = {}) {
+    assertToolConfigWriteAllowed('claude');
     const enable = !!params.enable;
     const settings = readClaudeLocalBridgeSettings();
 
@@ -9177,6 +9321,7 @@ function maskKey(key) {
 
 // 应用到 Claude Code settings.json（跨平台）
 function applyToClaudeSettings(config = {}) {
+    assertToolConfigWriteAllowed('claude');
     try {
         const apiKey = (config.apiKey || '').trim();
         if (!apiKey) {
@@ -9276,6 +9421,7 @@ function readClaudeSettingsRaw() {
 }
 
 function applyClaudeSettingsRaw(params = {}) {
+    assertToolConfigWriteAllowed('claude');
     const content = typeof params.content === 'string' ? params.content : '';
     if (!content.trim()) {
         return { error: '内容不能为空' };
@@ -10769,13 +10915,27 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             });
             req.on('end', async () => {
                 if (bodyTooLarge) return;
+                let leaveToolConfigWriteGuard = null;
                 try {
                     const { action, params } = JSON.parse(body || '{}');
+                    leaveToolConfigWriteGuard = typeof enterToolConfigWriteGuard === 'function'
+                        ? enterToolConfigWriteGuard()
+                        : () => {};
                     let result;
 
-                    switch (action) {
+                    const guardedToolConfigTarget = getApiToolConfigWriteTarget(action);
+                    if (guardedToolConfigTarget && !isToolConfigWriteAllowed(guardedToolConfigTarget)) {
+                        result = buildToolConfigWriteDeniedPayload(guardedToolConfigTarget);
+                    } else {
+                        switch (action) {
                         case 'health-check':
                             result = { ok: true };
+                            break;
+                        case 'get-tool-config-permissions':
+                            result = { permissions: readToolConfigPermissions() };
+                            break;
+                        case 'set-tool-config-permission':
+                            result = setToolConfigPermission(params || {});
                             break;
                         case 'status': {
                             const statusConfigResult = readConfigOrVirtualDefault();
@@ -10815,7 +10975,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 configReady: !statusConfigResult.isVirtual,
                                 configErrorType: statusConfigResult.errorType || '',
                                 configNotice: statusConfigResult.reason || '',
-                                initNotice: consumeInitNotice()
+                                initNotice: consumeInitNotice(),
+                                toolConfigPermissions: readToolConfigPermissions()
                             };
                             break;
                         }
@@ -11455,6 +11616,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         default:
                             result = { error: '未知操作' };
+                        }
                     }
 
                     const responseBody = JSON.stringify(result, null, 2);
@@ -11463,7 +11625,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         'Content-Length': Buffer.byteLength(responseBody, 'utf-8')
                     });
                     res.end(responseBody, 'utf-8');
+                    if (leaveToolConfigWriteGuard) leaveToolConfigWriteGuard();
                 } catch (e) {
+                    if (leaveToolConfigWriteGuard) leaveToolConfigWriteGuard();
                     const errorBody = JSON.stringify({ error: e.message }, null, 2);
                     res.writeHead(500, {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -16062,7 +16226,10 @@ async function main() {
     const args = process.argv.slice(2);
     const command = args[0];
     const isMcpCommand = command === 'mcp';
-    const bootstrap = ensureManagedConfigBootstrap();
+    const shouldGateInitialBootstrap = command === 'run' || isMcpCommand;
+    const bootstrap = ensureManagedConfigBootstrap({
+        allowWrite: shouldGateInitialBootstrap ? isToolConfigWriteAllowed('codex') : true
+    });
     if (bootstrap && bootstrap.notice) {
         // MCP stdio transport requires stdout to be protocol-clean.
         if (!isMcpCommand) {

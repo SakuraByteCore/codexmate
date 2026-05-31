@@ -20,6 +20,7 @@ import { createOpenclawEditingMethods } from './app.methods.openclaw-editing.mjs
 import { createOpenclawPersistMethods } from './app.methods.openclaw-persist.mjs';
 import { createProvidersMethods } from './app.methods.providers.mjs';
 import { createRuntimeMethods } from './app.methods.runtime.mjs';
+import { createToolConfigPermissionMethods } from './app.methods.tool-config-permissions.mjs';
 import { createTaskOrchestrationMethods } from './app.methods.task-orchestration.mjs';
 import { createSessionActionMethods } from './app.methods.session-actions.mjs';
 import { createSessionBrowserMethods } from './app.methods.session-browser.mjs';
@@ -81,6 +82,7 @@ export function createAppMethods() {
         ...createAgentsMethods({ api, apiWithMeta }),
         ...createProvidersMethods({ api }),
         ...createClaudeConfigMethods({ api }),
+        ...createToolConfigPermissionMethods({ api }),
         ...createOpenclawCoreMethods(),
         ...createOpenclawEditingMethods(),
         ...createOpenclawPersistMethods({

@@ -44,6 +44,15 @@ module.exports = async function testClaude(ctx) {
     assert(claudeShareDefaultModel.payload.model === 'glm-4.7', 'export-claude-share should use default model');
 
     // ========== Apply Claude Config Tests ==========
+    const permissionsBefore = await api('get-tool-config-permissions');
+    assert(permissionsBefore.permissions && permissionsBefore.permissions.claude === false, 'claude write permission should default to disabled');
+    const deniedClaudeApply = await api('apply-claude-config', {
+        config: { baseUrl: mockProviderUrl, apiKey: 'sk-denied', model: 'denied-model' }
+    });
+    assert(deniedClaudeApply.errorCode === 'tool-config-write-disabled', 'apply-claude-config should be blocked until claude writes are enabled');
+    const enableClaudeWrites = await api('set-tool-config-permission', { target: 'claude', allowWrite: true });
+    assert(enableClaudeWrites.success === true, 'set-tool-config-permission(claude) should succeed');
+
     const applyClaudeEmpty = await api('apply-claude-config', { config: {} });
     assert(applyClaudeEmpty.error, 'apply-claude-config should fail for empty config');
 

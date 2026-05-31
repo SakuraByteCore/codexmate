@@ -699,6 +699,15 @@ function createWebServerHarness({
                 errors.push(args);
             }
         },
+        getApiToolConfigWriteTarget() {
+            return '';
+        },
+        isToolConfigWriteAllowed() {
+            return false;
+        },
+        readToolConfigPermissions() {
+            return { codex: false, claude: false };
+        },
         startWinTray() {}
     });
 
@@ -1048,6 +1057,15 @@ test('createWebServer health-check does not consume init notice before the first
         consumeInitNotice() {
             consumed += 1;
             return 'startup notice';
+        },
+        getApiToolConfigWriteTarget() {
+            return '';
+        },
+        isToolConfigWriteAllowed() {
+            return false;
+        },
+        readToolConfigPermissions() {
+            return { codex: false, claude: false };
         },
         startWinTray() {}
     });

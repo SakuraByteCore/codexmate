@@ -120,6 +120,12 @@ export function createStartupClaudeMethods(options = {}) {
                                 : String(defaultModelAutoCompactTokenLimit);
                         }
                     }
+                    if (statusRes.toolConfigPermissions && typeof statusRes.toolConfigPermissions === 'object') {
+                        this.toolConfigPermissions = {
+                            codex: statusRes.toolConfigPermissions.codex === true,
+                            claude: statusRes.toolConfigPermissions.claude === true
+                        };
+                    }
                     this.providersList = listRes.providers;
                     if (typeof this.loadLocalBridgeExcluded === 'function') { this.loadLocalBridgeExcluded(); }
                     if (typeof this.loadClaudeLocalBridgeStatus === 'function') { this.loadClaudeLocalBridgeStatus(); }

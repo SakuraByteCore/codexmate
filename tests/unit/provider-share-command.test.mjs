@@ -6,6 +6,7 @@ import {
 } from './helpers/web-ui-source.mjs';
 
 const require = createRequire(import.meta.url);
+const { createConfigBootstrapController } = require('../../cli/config-bootstrap');
 const cliSource = readProjectFile('cli.js');
 const appSource = readBundledWebUiScript();
 
@@ -94,6 +95,136 @@ function createClaudeShareCommandBuilder(appSourceText, shareCommandPrefix = 'np
         shareCommandPrefix
     }, payload);
 }
+
+
+
+test('managed config bootstrap is a no-op when tool config writes are disabled', () => {
+    const calls = [];
+    const controller = createConfigBootstrapController({
+        fs: {
+            existsSync() {
+                calls.push('existsSync');
+                return false;
+            },
+            readFileSync() {
+                throw new Error('unexpected read');
+            },
+            writeFileSync() {
+                throw new Error('unexpected writeFileSync');
+            },
+            appendFileSync() {
+                throw new Error('unexpected appendFileSync');
+            },
+            copyFileSync() {
+                throw new Error('unexpected copyFileSync');
+            }
+        },
+        path: require('path'),
+        readJsonFile() {
+            throw new Error('unexpected readJsonFile');
+        },
+        readJsonArrayFile() {
+            throw new Error('unexpected readJsonArrayFile');
+        },
+        writeJsonAtomic() {
+            throw new Error('unexpected writeJsonAtomic');
+        },
+        formatTimestampForFileName: () => 'stamp',
+        isPlainObject: (value) => !!value && typeof value === 'object' && !Array.isArray(value),
+        ensureConfigDir() {
+            throw new Error('unexpected ensureConfigDir');
+        },
+        readConfig() {
+            throw new Error('unexpected readConfig');
+        },
+        removePersistedBuiltinProxyProviderFromConfig() {
+            throw new Error('unexpected remove proxy');
+        },
+        writeConfig() {
+            throw new Error('unexpected writeConfig');
+        },
+        readModels() {
+            throw new Error('unexpected readModels');
+        },
+        writeModels() {
+            throw new Error('unexpected writeModels');
+        },
+        readCurrentModels() {
+            throw new Error('unexpected readCurrentModels');
+        },
+        writeCurrentModels() {
+            throw new Error('unexpected writeCurrentModels');
+        },
+        updateAuthJson() {
+            throw new Error('unexpected updateAuthJson');
+        },
+        CONFIG_DIR: '/tmp/codex',
+        CONFIG_FILE: '/tmp/codex/config.toml',
+        AUTH_FILE: '/tmp/codex/auth.json',
+        MODELS_FILE: '/tmp/codex/models.json',
+        RECENT_CONFIGS_FILE: '/tmp/codex/recent.json',
+        INIT_MARK_FILE: '/tmp/codex/.init.json',
+        MAX_RECENT_CONFIGS: 5,
+        DEFAULT_MODELS: ['gpt-test'],
+        DEFAULT_MODEL_CONTEXT_WINDOW: 190000,
+        DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT: 185000,
+        CODEXMATE_MANAGED_MARKER: '# managed',
+        BUILTIN_PROXY_PROVIDER_NAME: 'codexmate-proxy',
+        BUILTIN_LOCAL_PROVIDER_NAME: 'local',
+        EMPTY_CONFIG_FALLBACK_TEMPLATE: 'model_provider = "local"\nmodel = "gpt-test"\n'
+    });
+
+    assert.deepStrictEqual(controller.ensureManagedConfigBootstrap({ allowWrite: false }), { notice: '', readOnly: true });
+    assert.deepStrictEqual(calls, []);
+});
+
+test('tool config write guard maps provider write actions to per-tab permission targets', () => {
+    const source = extractBlockBySignature(cliSource, 'function getApiToolConfigWriteTarget(action) {');
+    const getApiToolConfigWriteTarget = instantiateFunction(source, 'getApiToolConfigWriteTarget');
+
+    assert.strictEqual(getApiToolConfigWriteTarget('add-provider'), 'codex');
+    assert.strictEqual(getApiToolConfigWriteTarget('delete-provider'), 'codex');
+    assert.strictEqual(getApiToolConfigWriteTarget('local-bridge-set-excluded'), 'codex');
+    assert.strictEqual(getApiToolConfigWriteTarget('apply-claude-config'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('claude-local-bridge-set-excluded'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('claude-local-bridge-sync-providers'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('status'), '');
+    assert.strictEqual(getApiToolConfigWriteTarget('list-sessions'), '');
+});
+
+test('tool config write guard does not lock direct CLI write helpers', () => {
+    const source = extractBlockBySignature(cliSource, 'function assertToolConfigWriteAllowed(target) {');
+    const assertToolConfigWriteAllowed = instantiateFunction(source, 'assertToolConfigWriteAllowed', {
+        isToolConfigWriteGuardActive: () => false,
+        isToolConfigWriteAllowed: () => false,
+        buildToolConfigWriteDeniedPayload: () => ({
+            error: 'blocked',
+            errorCode: 'tool-config-write-disabled',
+            target: 'codex'
+        })
+    });
+
+    assert.doesNotThrow(() => assertToolConfigWriteAllowed('codex'));
+});
+
+test('tool config write guard still blocks Web API writes when disabled', () => {
+    const source = extractBlockBySignature(cliSource, 'function assertToolConfigWriteAllowed(target) {');
+    const assertToolConfigWriteAllowed = instantiateFunction(source, 'assertToolConfigWriteAllowed', {
+        isToolConfigWriteGuardActive: () => true,
+        isToolConfigWriteAllowed: () => false,
+        buildToolConfigWriteDeniedPayload: () => ({
+            error: 'blocked',
+            errorCode: 'tool-config-write-disabled',
+            target: 'codex'
+        })
+    });
+
+    assert.throws(() => assertToolConfigWriteAllowed('codex'), (err) => {
+        assert.strictEqual(err.code, 'tool-config-write-disabled');
+        assert.strictEqual(err.target, 'codex');
+        return true;
+    });
+});
 
 test('buildProviderSharePayload includes model for shared provider', () => {
     const source = extractBlockBySignature(cliSource, 'function buildProviderSharePayload(params = {}) {');
@@ -623,7 +754,8 @@ test('status api case does not synthesize budget defaults after config load erro
             hasConfigLoadError,
             readPositiveIntegerConfigValue,
             readCurrentModels: () => ({}),
-            consumeInitNotice: () => ''
+            consumeInitNotice: () => '',
+            readToolConfigPermissions: () => ({ codex: false, claude: false })
         }
     );
 

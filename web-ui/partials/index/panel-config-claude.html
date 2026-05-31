@@ -26,7 +26,27 @@
                     </div>
                 </template>
                 <template v-else>
-                <button class="btn-add" @click="openClaudeConfigModal" v-if="!loading && !initError">
+                <section class="tool-config-write-card" :aria-label="t('toolConfig.claude.title')">
+                    <div class="tool-config-write-copy">
+                        <div class="tool-config-write-title">{{ t('toolConfig.claude.title') }}</div>
+                        <p class="tool-config-write-desc">{{ t('toolConfig.claude.desc') }}</p>
+                    </div>
+                    <label class="settings-toggle-row tool-config-write-toggle">
+                        <input
+                            type="checkbox"
+                            :checked="isToolConfigWriteAllowed('claude')"
+                            :disabled="toolConfigPermissionSaving.claude"
+                            @change="setToolConfigPermission('claude', $event.target.checked)">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <span>{{ toolConfigPermissionStatusLabel('claude') }}</span>
+                    </label>
+                </section>
+
+                <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('claude') }">
+                    <div class="tool-config-write-body">
+                <button class="btn-add" @click="openClaudeConfigModal" v-if="!loading && !initError" :disabled="!isToolConfigWriteAllowed('claude')">
                     <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('claude.addProvider') }}
                 </button>
@@ -149,6 +169,16 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                    </div>
+                    <div v-if="!isToolConfigWriteAllowed('claude')" class="tool-config-write-overlay">
+                        <div class="tool-config-write-overlay-card">
+                            <div class="tool-config-write-overlay-title">{{ t('toolConfig.claude.lockedTitle') }}</div>
+                            <p>{{ t('toolConfig.claude.lockedDesc') }}</p>
+                            <button type="button" class="btn-tool" @click="setToolConfigPermission('claude', true)" :disabled="toolConfigPermissionSaving.claude">{{ t('toolConfig.enableWrite') }}</button>
                         </div>
                     </div>
                 </div>

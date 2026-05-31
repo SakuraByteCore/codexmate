@@ -353,7 +353,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'showAddClaudeConfigKey',
         'showAddProviderKey',
         'showEditClaudeConfigKey',
-        'showEditProviderKey'
+        'showEditProviderKey',
+        'toolConfigPermissionSaving',
+        'toolConfigPermissions'
     ] : [
         'appVersion',
         '__mainTabSwitchState',
@@ -455,7 +457,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionsUsageSelectedDayKey',
         'currentModels',
         'openclawAccordionStep',
-        'openclawValidation'
+        'openclawValidation',
+        'toolConfigPermissionSaving',
+        'toolConfigPermissions'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -567,7 +571,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'toggleAddClaudeConfigKey',
         'toggleAddProviderKey',
         'toggleEditClaudeConfigKey',
-        'toggleEditProviderKey'
+        'toggleEditProviderKey',
+        'isToolConfigWriteAllowed',
+        'toolConfigPermissionStatusLabel',
+        'setToolConfigPermission'
     ];
     allowedExtraCurrentMethodKeys.push(
         'hasActiveSessionFilters',
