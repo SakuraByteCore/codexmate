@@ -241,6 +241,12 @@
                                             :disabled="!activeSession">
                                             {{ t('sessions.preview.copyLink') }}
                                         </button>
+                                        <button
+                                            class="btn-session-open"
+                                            @click="copySessionPath(activeSession)"
+                                            :disabled="!activeSession || !getSessionFilePath(activeSession)">
+                                            {{ t('sessions.preview.copyPath') }}
+                                        </button>
                                     </div>
                                 </div>
 

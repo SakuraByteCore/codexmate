@@ -554,6 +554,8 @@ const ja = Object.freeze({
     'sessions.preview.converting': '変換中...',
     'sessions.preview.convert.loadedOnly': '読み込み済みのみ変換',
     'sessions.preview.openStandalone': 'スタンドアロンで開く',
+    'sessions.preview.copyLink': 'リンクをコピー',
+    'sessions.preview.copyPath': 'パスをコピー',
     'sessions.preview.loadingBody': 'メッセージ読み込み中...',
     'sessions.preview.emptyMsgs': 'メッセージがありません',
     'sessions.preview.rendering': 'レンダリング中...',

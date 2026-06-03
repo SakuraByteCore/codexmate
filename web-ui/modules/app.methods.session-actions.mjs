@@ -129,6 +129,32 @@ export function createSessionActionMethods(options = {}) {
             this.showMessage('复制失败', 'error');
         },
 
+        getSessionFilePath(session) {
+            const filePath = typeof session?.filePath === 'string' ? session.filePath.trim() : '';
+            return filePath;
+        },
+
+        async copySessionPath(session) {
+            const filePath = this.getSessionFilePath(session);
+            if (!filePath) {
+                this.showMessage('无本地文件路径', 'error');
+                return;
+            }
+            const ok = this.fallbackCopyText(filePath);
+            if (ok) {
+                this.showMessage('已复制路径', 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(filePath);
+                    this.showMessage('已复制路径', 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage('复制失败', 'error');
+        },
+
         getSessionExportKey(session) {
             return `${session.source || 'unknown'}:${session.sessionId || ''}:${session.filePath || ''}`;
         },

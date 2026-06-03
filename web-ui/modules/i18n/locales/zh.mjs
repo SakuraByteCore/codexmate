@@ -565,6 +565,7 @@ const zh = Object.freeze({
     'sessions.preview.importNative.failed': '导入失败',
     'sessions.preview.importNative.failedWithReason': '导入原生目录失败：{reason}',
     'sessions.preview.copyLink': '复制链接',
+    'sessions.preview.copyPath': '复制路径',
     'sessions.preview.loadingBody': '正在加载会话内容...',
     'sessions.preview.emptyMsgs': '当前会话暂无可展示消息',
     'sessions.preview.rendering': '正在渲染会话内容...',

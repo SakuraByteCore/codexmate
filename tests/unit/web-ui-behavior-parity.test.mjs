@@ -645,7 +645,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'prevAccordionStep',
         'finishAccordionStep',
         'validateProviderName',
-        'validateModelId'
+        'validateModelId',
+        'getSessionFilePath',
+        'copySessionPath'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

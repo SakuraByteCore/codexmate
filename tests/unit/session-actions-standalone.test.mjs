@@ -59,3 +59,58 @@ test('copySessionLink shows an error when url cannot be built', async () => {
         type: 'error'
     }]);
 });
+
+test('copySessionPath copies the session file path', async () => {
+    const methods = createSessionActionMethods({ apiBase: '' });
+    const copied = [];
+    const context = {
+        ...methods,
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        fallbackCopyText(value) {
+            copied.push(value);
+            return true;
+        }
+    };
+
+    await methods.copySessionPath.call(context, {
+        source: 'codex',
+        sessionId: 'session-1',
+        filePath: '  /tmp/codexmate/session-1.jsonl  '
+    });
+
+    assert.deepStrictEqual(copied, ['/tmp/codexmate/session-1.jsonl']);
+    assert.deepStrictEqual(context.shownMessages, [{
+        message: '已复制路径',
+        type: 'success'
+    }]);
+});
+
+test('copySessionPath reports an error when the session has no file path', async () => {
+    const methods = createSessionActionMethods({ apiBase: '' });
+    let copied = false;
+    const context = {
+        ...methods,
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        fallbackCopyText() {
+            copied = true;
+            return true;
+        }
+    };
+
+    await methods.copySessionPath.call(context, {
+        source: 'codex',
+        sessionId: 'session-1'
+    });
+
+    assert.strictEqual(copied, false);
+    assert.deepStrictEqual(context.shownMessages, [{
+        message: '无本地文件路径',
+        type: 'error'
+    }]);
+});

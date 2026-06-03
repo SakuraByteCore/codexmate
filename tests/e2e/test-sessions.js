@@ -18,16 +18,27 @@ module.exports = async function testSessions(ctx) {
     assert(Array.isArray(apiSessions.sessions), 'api sessions missing');
     assert(apiSessions.sessions.some(item => item.sessionId === sessionId), 'api sessions missing codex entry');
     assert(typeof apiSessions.source === 'string', 'list-sessions missing source');
+    const apiCodexEntry = apiSessions.sessions.find(item => item.sessionId === sessionId);
+    assert(apiCodexEntry && path.isAbsolute(apiCodexEntry.filePath || ''), 'codex session filePath should be absolute for copy-path');
+    assert(apiCodexEntry && fs.existsSync(apiCodexEntry.filePath), 'codex session filePath should point to an existing file');
+    assert(fs.statSync(apiCodexEntry.filePath).isFile(), 'codex session filePath should point to a file');
+    assert(fs.readFileSync(apiCodexEntry.filePath, 'utf8').includes(sessionId), 'codex copied filePath should be readable session content');
 
     // ========== List Sessions Tests - Claude ==========
     const apiSessionsClaude = await api('list-sessions', { source: 'claude', limit: 50, forceRefresh: true });
     assert(Array.isArray(apiSessionsClaude.sessions), 'api sessions(claude) missing');
     assert(apiSessionsClaude.sessions.some(item => item.sessionId === claudeSessionId), 'api sessions(claude) missing claude entry');
+    const apiClaudeEntry = apiSessionsClaude.sessions.find(item => item.sessionId === claudeSessionId);
+    assert(apiClaudeEntry && path.isAbsolute(apiClaudeEntry.filePath || ''), 'claude session filePath should be absolute for copy-path');
+    assert(apiClaudeEntry && fs.existsSync(apiClaudeEntry.filePath), 'claude session filePath should point to an existing file');
 
     // ========== List Sessions Tests - Gemini ==========
     const apiSessionsGemini = await api('list-sessions', { source: 'gemini', limit: 50, forceRefresh: true });
     assert(Array.isArray(apiSessionsGemini.sessions), 'api sessions(gemini) missing');
     assert(apiSessionsGemini.sessions.some(item => item.sessionId === geminiSessionId), 'api sessions(gemini) missing gemini entry');
+    const apiGeminiEntry = apiSessionsGemini.sessions.find(item => item.sessionId === geminiSessionId);
+    assert(apiGeminiEntry && path.isAbsolute(apiGeminiEntry.filePath || ''), 'gemini session filePath should be absolute for copy-path');
+    assert(apiGeminiEntry && fs.existsSync(apiGeminiEntry.filePath), 'gemini session filePath should point to an existing file');
 
     // ========== List Sessions Tests - All Sources ==========
     const apiSessionsAll = await api('list-sessions', { source: 'all', limit: 50, forceRefresh: true });

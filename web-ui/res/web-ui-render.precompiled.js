@@ -2604,7 +2604,12 @@ return function render(_ctx, _cache) {
                                           class: "btn-session-open",
                                           onClick: $event => (_ctx.copySessionLink(_ctx.activeSession)),
                                           disabled: !_ctx.activeSession
-                                        }, _toDisplayString(_ctx.t('sessions.preview.copyLink')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                        }, _toDisplayString(_ctx.t('sessions.preview.copyLink')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                        _createElementVNode("button", {
+                                          class: "btn-session-open",
+                                          onClick: $event => (_ctx.copySessionPath(_ctx.activeSession)),
+                                          disabled: !_ctx.activeSession || !_ctx.getSessionFilePath(_ctx.activeSession)
+                                        }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                       ])
                                     ], 512 /* NEED_PATCH */),
                                     (_ctx.sessionDetailLoading && !_ctx.sessionPreviewLoadingMore)
