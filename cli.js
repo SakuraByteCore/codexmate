@@ -10451,7 +10451,9 @@ function assertRequestAuthorized(req, res) {
     }
     const actual = extractRequestToken(req);
     if (!actual || !safeTimingEqual(actual, expected)) {
-        writeJsonResponse(res, 401, { error: 'Unauthorized' });
+        writeJsonResponse(res, 401, { error: 'Unauthorized' }, {
+            'WWW-Authenticate': 'Basic realm="codexmate"'
+        });
         return { ok: false, mode: 'unauthorized' };
     }
     return { ok: true, mode: 'token' };

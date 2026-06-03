@@ -726,6 +726,11 @@ const extractRequestTokenSource = extractFunctionBySignature(
     'extractRequestToken'
 );
 const extractRequestToken = instantiateFunction(extractRequestTokenSource, 'extractRequestToken', { Buffer });
+const assertRequestAuthorizedSource = extractFunctionBySignature(
+    cliContent,
+    'function assertRequestAuthorized(req, res) {',
+    'assertRequestAuthorized'
+);
 const createWebServerSource = extractFunctionBySignature(
     cliContent,
     'function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {',
@@ -810,24 +815,10 @@ function createWebServerHarness({
         isAnyAddressHost() {
             return false;
         },
-        isLoopbackRemoteAddress(value) {
-            return value === '127.0.0.1' || value === '::1' || value === '::ffff:127.0.0.1';
-        },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
         assertRequestAuthorized: authorizeRequest,
-        writeJsonResponse(res, statusCode, payload, headers = {}) {
-            const body = JSON.stringify(payload || {}, null, 2);
-            res.writeHead(statusCode, {
-                'Content-Type': 'application/json; charset=utf-8',
-                ...headers
-            });
-            res.end(body);
-        },
-        isProtectedWebSurfacePath(requestPath) {
-            return requestPath === '/'
-                || requestPath === '/web-ui/index.html'
-                || requestPath.startsWith('/web-ui/')
-                || requestPath.startsWith('/res/');
-        },
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {} },
         exec() {},
         console: {
@@ -914,6 +905,31 @@ test('extractRequestToken accepts bearer, custom header, and browser-friendly ba
     assert.strictEqual(extractRequestToken({ headers: { 'x-codexmate-token': ' header-token ' } }), 'header-token');
     assert.strictEqual(extractRequestToken({ headers: { authorization: `Basic ${Buffer.from(':basic-token').toString('base64')}` } }), 'basic-token');
     assert.strictEqual(extractRequestToken({ headers: { authorization: `Basic ${Buffer.from('codexmate:basic-token').toString('base64')}` } }), 'basic-token');
+});
+
+test('assertRequestAuthorized returns a basic auth challenge for unauthorized remote clients', () => {
+    const assertRequestAuthorized = instantiateFunction(assertRequestAuthorizedSource, 'assertRequestAuthorized', {
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        readServerToken() {
+            return 'expected-token';
+        },
+        extractRequestToken,
+        safeTimingEqual(actual, expected) {
+            return actual === expected;
+        },
+        writeJsonResponse: mockWriteJsonResponse
+    });
+    const response = createMockResponse();
+
+    const result = assertRequestAuthorized({
+        headers: {},
+        socket: { remoteAddress: '192.0.2.10' }
+    }, response);
+
+    assert.deepStrictEqual(result, { ok: false, mode: 'unauthorized' });
+    assert.strictEqual(response.statusCode, 401);
+    assert.strictEqual(response.headers['WWW-Authenticate'], 'Basic realm="codexmate"');
+    assert.strictEqual(response.body, '{\n  "error": "Unauthorized"\n}');
 });
 
 test('resolveSkillTarget still falls back to default target when target is omitted', () => {
@@ -1008,6 +1024,27 @@ test('createWebServer requires auth before serving web-ui assets to remote clien
     assert.strictEqual(response.statusCode, 401);
     assert.deepStrictEqual(calls, ['/web-ui/app.js']);
     assert.strictEqual(response.body, '{"error":"Unauthorized"}');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer serves root page to authorized remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            return '<!doctype html><title>authorized remote</title>';
+        },
+        authorizeRequest(req) {
+            calls.push(req.url);
+            return { ok: true, mode: 'token' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.deepStrictEqual(calls, ['/']);
+    assert.strictEqual(response.body, '<!doctype html><title>authorized remote</title>');
     assert.deepStrictEqual(errors, []);
 });
 
