@@ -720,6 +720,12 @@ const handleImportSkillsZipUploadSource = extractFunctionBySignature(
     'async function handleImportSkillsZipUpload(req, res, options = {}) {',
     'handleImportSkillsZipUpload'
 );
+const extractRequestTokenSource = extractFunctionBySignature(
+    cliContent,
+    'function extractRequestToken(req) {',
+    'extractRequestToken'
+);
+const extractRequestToken = instantiateFunction(extractRequestTokenSource, 'extractRequestToken', { Buffer });
 const createWebServerSource = extractFunctionBySignature(
     cliContent,
     'function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {',
@@ -750,7 +756,8 @@ function createMockResponse() {
 
 function createWebServerHarness({
     htmlReader = () => '<!doctype html>',
-    dynamicAssets = new Map()
+    dynamicAssets = new Map(),
+    authorizeRequest = () => ({ ok: true })
 } = {}) {
     let requestHandler = null;
     const errors = [];
@@ -802,6 +809,24 @@ function createWebServerHarness({
         DEFAULT_WEB_OPEN_HOST: '127.0.0.1',
         isAnyAddressHost() {
             return false;
+        },
+        isLoopbackRemoteAddress(value) {
+            return value === '127.0.0.1' || value === '::1' || value === '::ffff:127.0.0.1';
+        },
+        assertRequestAuthorized: authorizeRequest,
+        writeJsonResponse(res, statusCode, payload, headers = {}) {
+            const body = JSON.stringify(payload || {}, null, 2);
+            res.writeHead(statusCode, {
+                'Content-Type': 'application/json; charset=utf-8',
+                ...headers
+            });
+            res.end(body);
+        },
+        isProtectedWebSurfacePath(requestPath) {
+            return requestPath === '/'
+                || requestPath === '/web-ui/index.html'
+                || requestPath.startsWith('/web-ui/')
+                || requestPath.startsWith('/res/');
         },
         process: { env: {} },
         exec() {},
@@ -860,6 +885,37 @@ function assertNotFoundResponse(response) {
     assert.strictEqual(response.destroyedWith, null);
 }
 
+function mockIsLoopbackRemoteAddress(value) {
+    return value === '127.0.0.1' || value === '::1' || value === '::ffff:127.0.0.1';
+}
+
+function mockWriteJsonResponse(res, statusCode, payload, headers = {}) {
+    const body = JSON.stringify(payload || {}, null, 2);
+    res.writeHead(statusCode, {
+        'Content-Type': 'application/json; charset=utf-8',
+        ...headers
+    });
+    res.end(body);
+}
+
+function mockIsProtectedWebSurfacePath(requestPath) {
+    return requestPath === '/'
+        || requestPath === '/web-ui/index.html'
+        || requestPath.startsWith('/web-ui/')
+        || requestPath.startsWith('/res/');
+}
+
+function mockAssertRequestAuthorized() {
+    return { ok: true };
+}
+
+test('extractRequestToken accepts bearer, custom header, and browser-friendly basic auth', () => {
+    assert.strictEqual(extractRequestToken({ headers: { authorization: 'Bearer web-token' } }), 'web-token');
+    assert.strictEqual(extractRequestToken({ headers: { 'x-codexmate-token': ' header-token ' } }), 'header-token');
+    assert.strictEqual(extractRequestToken({ headers: { authorization: `Basic ${Buffer.from(':basic-token').toString('base64')}` } }), 'basic-token');
+    assert.strictEqual(extractRequestToken({ headers: { authorization: `Basic ${Buffer.from('codexmate:basic-token').toString('base64')}` } }), 'basic-token');
+});
+
 test('resolveSkillTarget still falls back to default target when target is omitted', () => {
     assert.deepStrictEqual(resolveSkillTarget({}), SKILL_TARGETS[0]);
     assert.deepStrictEqual(resolveSkillTarget({ items: [] }), SKILL_TARGETS[0]);
@@ -909,6 +965,70 @@ test('createWebServer redirects bundled index URL to the canonical root URL', ()
         'X-Frame-Options': 'DENY'
     });
     assert.strictEqual(response.body, 'Found');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer requires auth before serving root page to remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            throw new Error('html should not be read before auth');
+        },
+        authorizeRequest(req, res) {
+            calls.push(req.url);
+            res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end('{"error":"Unauthorized"}');
+            return { ok: false, mode: 'unauthorized' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.deepStrictEqual(calls, ['/']);
+    assert.strictEqual(response.body, '{"error":"Unauthorized"}');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer requires auth before serving web-ui assets to remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        authorizeRequest(req, res) {
+            calls.push(req.url);
+            res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end('{"error":"Unauthorized"}');
+            return { ok: false, mode: 'unauthorized' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/web-ui/app.js', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.deepStrictEqual(calls, ['/web-ui/app.js']);
+    assert.strictEqual(response.body, '{"error":"Unauthorized"}');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer keeps loopback root page access unchanged', () => {
+    let authCalled = false;
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            return '<!doctype html><title>codexmate</title>';
+        },
+        authorizeRequest() {
+            authCalled = true;
+            return { ok: false };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/', socket: { remoteAddress: '127.0.0.1' } }, response);
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.strictEqual(response.body, '<!doctype html><title>codexmate</title>');
+    assert.strictEqual(authCalled, false);
     assert.deepStrictEqual(errors, []);
 });
 
@@ -984,6 +1104,10 @@ test('createWebServer prints port override guidance for EACCES listen errors', (
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: {
             env: {},
             platform: 'linux',
@@ -1101,6 +1225,10 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {}, platform: 'win32' },
         spawn(command, args, options) {
             spawnCalls.push({ command, args, options, unrefCalled: false });
@@ -1235,6 +1363,10 @@ test('createWebServer health-check does not consume init notice before the first
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {}, platform: 'linux' },
         exec() {},
         console: {
@@ -1413,6 +1545,10 @@ test('createWebServer retries readiness probe failures before auto-opening the b
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {}, platform: 'linux' },
         spawn(command, args, options) {
             spawnCalls.push({ command, args, options, unrefCalled: false });

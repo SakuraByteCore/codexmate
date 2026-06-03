@@ -10412,8 +10412,20 @@ function extractRequestToken(req) {
     const headers = req && req.headers && typeof req.headers === 'object' ? req.headers : {};
     const rawAuth = typeof headers.authorization === 'string' ? headers.authorization.trim() : '';
     if (rawAuth) {
-        const match = rawAuth.match(/^bearer\s+(.+)$/i);
-        if (match && match[1]) return match[1].trim();
+        const bearerMatch = rawAuth.match(/^bearer\s+(.+)$/i);
+        if (bearerMatch && bearerMatch[1]) return bearerMatch[1].trim();
+        const basicMatch = rawAuth.match(/^basic\s+(.+)$/i);
+        if (basicMatch && basicMatch[1]) {
+            try {
+                const decoded = Buffer.from(basicMatch[1].trim(), 'base64').toString('utf-8');
+                const separatorIndex = decoded.indexOf(':');
+                if (separatorIndex >= 0) {
+                    const password = decoded.slice(separatorIndex + 1).trim();
+                    if (password) return password;
+                }
+                if (decoded.trim()) return decoded.trim();
+            } catch (_) { }
+        }
         return rawAuth;
     }
     const raw = typeof headers['x-codexmate-token'] === 'string' ? headers['x-codexmate-token'].trim() : '';
@@ -10443,6 +10455,13 @@ function assertRequestAuthorized(req, res) {
         return { ok: false, mode: 'unauthorized' };
     }
     return { ok: true, mode: 'token' };
+}
+
+function isProtectedWebSurfacePath(requestPath) {
+    return requestPath === '/'
+        || requestPath === '/web-ui/index.html'
+        || requestPath.startsWith('/web-ui/')
+        || requestPath.startsWith('/res/');
 }
 
 const g_webhookDeliveryCache = new Map();
@@ -10941,6 +10960,21 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         }
         if (typeof openaiBridgeHandler === 'function' && openaiBridgeHandler(req, res)) {
             return;
+        }
+        if (isProtectedWebSurfacePath(requestPath)) {
+            const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
+            const isLoopback = !remoteAddr || isLoopbackRemoteAddress(remoteAddr);
+            if (!isLoopback) {
+                const rateLimitKey = (remoteAddr || 'unknown') + ':' + requestPath;
+                if (!checkRateLimit(rateLimitKey)) {
+                    writeJsonResponse(res, 429, { error: 'Rate limit exceeded' }, { 'Retry-After': '60' });
+                    return;
+                }
+                const auth = assertRequestAuthorized(req, res);
+                if (!auth.ok) {
+                    return;
+                }
+            }
         }
         if (
             requestPath === '/api'
