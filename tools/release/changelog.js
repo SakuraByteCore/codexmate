@@ -104,6 +104,24 @@ function groupCommits(commits) {
     return { prs, directCommits };
 }
 
+function formatContributorName(author) {
+    const value = String(author || '').trim();
+    return value || 'Unknown contributor';
+}
+
+function listContributors(commits) {
+    const seen = new Set();
+    const contributors = [];
+    for (const commit of commits) {
+        const contributor = formatContributorName(commit.author);
+        const key = contributor.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        contributors.push(contributor);
+    }
+    return contributors;
+}
+
 function compareUrl(repository, previousTag, currentTag, currentRef) {
     if (!repository || !previousTag) return '';
     const right = currentTag || currentRef || 'HEAD';
@@ -113,14 +131,20 @@ function compareUrl(repository, previousTag, currentTag, currentRef) {
 function formatChangelog({ repository = '', previousTag = '', currentTag = '', currentRef = 'HEAD', commits = [] }) {
     const currentLabel = currentTag || currentRef || 'HEAD';
     const lines = [];
+    const releaseName = repository ? repository.split('/').pop() : 'Release';
+    lines.push(`## ${releaseName} ${currentLabel}`);
+    lines.push('');
+
     if (!previousTag) {
-        lines.push(`### Release changelog: Initial release → ${currentLabel}`);
-        lines.push('');
+        lines.push(`### Changes`);
         lines.push('No previous semver tag was found. Treating this as the initial release.');
+        lines.push('');
+        lines.push('### Contributors');
+        lines.push('- Unknown contributor');
         return `${lines.join('\n')}\n`;
     }
 
-    lines.push(`### Release changelog: ${previousTag} → ${currentLabel}`);
+    lines.push(`### Changes since ${previousTag}`);
     lines.push('');
 
     const { prs, directCommits } = groupCommits(commits);
@@ -147,6 +171,17 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
     const url = compareUrl(repository, previousTag, currentTag, currentRef);
     if (url) {
         lines.push(`Compare: ${url}`);
+        lines.push('');
+    }
+
+    lines.push('### Contributors');
+    const contributors = listContributors(commits);
+    if (!contributors.length) {
+        lines.push('- Unknown contributor');
+    } else {
+        for (const contributor of contributors) {
+            lines.push(`- ${contributor}`);
+        }
     }
     return `${lines.join('\n').replace(/\n{3,}/g, '\n\n')}\n`;
 }
@@ -197,6 +232,7 @@ module.exports = {
     selectPreviousSemverTag,
     parseLogLine,
     groupCommits,
+    listContributors,
     compareUrl,
     formatChangelog,
     main

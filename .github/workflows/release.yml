@@ -206,6 +206,7 @@ jobs:
             exit 0
           fi
           node tools/release/changelog.js
+          test -s "${RELEASE_CHANGELOG_FILE}"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -214,7 +215,8 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           prerelease: false
           draft: false
+          body_path: ${{ env.RELEASE_CHANGELOG_FILE }}
           files: |
             ${{ env.PACKAGE_TGZ }}
             ${{ env.STANDALONE_TGZ }}
-          generate_release_notes: true
+          generate_release_notes: false
