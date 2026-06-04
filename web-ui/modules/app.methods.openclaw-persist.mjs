@@ -274,7 +274,7 @@ export function createOpenclawPersistMethods(options = {}) {
             try {
                 const name = this.persistOpenclawConfig();
                 if (!name) return;
-                this.showMessage('操作成功', 'success');
+                this.showMessage(this.t('toast.operation.success'), 'success');
             } finally {
                 this.openclawSaving = false;
             }

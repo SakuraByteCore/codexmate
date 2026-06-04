@@ -125,6 +125,9 @@ export function createStartupClaudeMethods(options = {}) {
                             codex: statusRes.toolConfigPermissions.codex === true,
                             claude: statusRes.toolConfigPermissions.claude === true
                         };
+                        try {
+                            localStorage.setItem('toolConfigPermissions', JSON.stringify(this.toolConfigPermissions));
+                        } catch (_) {}
                     }
                     this.providersList = listRes.providers;
                     if (typeof this.loadLocalBridgeExcluded === 'function') { this.loadLocalBridgeExcluded(); }

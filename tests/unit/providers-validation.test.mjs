@@ -1,11 +1,22 @@
 import assert from 'assert';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { createProvidersMethods } from '../../web-ui/modules/app.methods.providers.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 function createContext(overrides = {}, apiImpl = async () => ({ success: true })) {
     const messages = [];
     const loadAllCalls = [];
     const methods = createProvidersMethods({ api: apiImpl });
     const context = {
+        ...createI18nMethods(),
+        lang: 'zh',
         providersList: [],
         codexAuthProfiles: [],
         showAddModal: true,

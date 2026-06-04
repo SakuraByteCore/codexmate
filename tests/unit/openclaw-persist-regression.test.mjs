@@ -8,6 +8,9 @@ const __dirname = path.dirname(__filename);
 const { createOpenclawPersistMethods, DEFAULT_OPENCLAW_CONFIG_NAME } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.openclaw-persist.mjs'))
 );
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 function deferred() {
     let resolve;
@@ -21,7 +24,9 @@ function deferred() {
 
 function createContext(methods, overrides = {}) {
     return {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         openclawConfigs: {
             saved: {
                 content: 'saved-local'

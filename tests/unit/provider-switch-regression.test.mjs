@@ -1,8 +1,17 @@
 import assert from 'assert';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
     captureCurrentBundledAppOptions,
     withGlobalOverrides
 } from './helpers/web-ui-app-options.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 const currentAppOptions = await captureCurrentBundledAppOptions();
 const currentMethods = currentAppOptions.methods;
@@ -13,6 +22,8 @@ function createProviderSwitchContext() {
     const messages = [];
 
     return {
+        ...createI18nMethods(),
+        lang: 'zh',
         currentProvider: 'alpha',
         currentModel: 'alpha-model',
         models: ['alpha-model'],
@@ -58,6 +69,8 @@ function createProviderSwitchContext() {
 function createProviderUpdateContext() {
     const messages = [];
     return {
+        ...createI18nMethods(),
+        lang: 'zh',
         editingProvider: {
             name: 'alpha',
             url: ' https://api.example.com/v1 ',

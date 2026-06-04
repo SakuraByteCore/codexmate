@@ -60,7 +60,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -92,7 +92,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -127,7 +127,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -171,7 +171,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -588,7 +588,7 @@ export function createAgentsMethods(options = {}) {
             }
             if (!this.agentsDiffVisible) {
                 if (!this.hasAgentsContentChanged()) {
-                    this.showMessage('未检测到改动', 'info');
+                    this.showMessage(this.t('toast.noChanges'), 'info');
                     return;
                 }
                 await this.prepareAgentsDiff();
@@ -642,7 +642,7 @@ export function createAgentsMethods(options = {}) {
                 this.showMessage(successLabel, 'success');
                 this.closeAgentsModal({ force: true });
             } catch (e) {
-                this.showMessage('保存失败', 'error');
+                this.showMessage(this.t('toast.save.fail'), 'error');
             } finally {
                 this.agentsSaving = false;
             }

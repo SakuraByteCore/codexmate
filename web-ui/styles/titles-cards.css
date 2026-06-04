@@ -75,10 +75,16 @@
    卡片列表
    ============================================ */
 .card-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .card-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ============================================
@@ -368,9 +374,9 @@
    状态徽章
    ============================================ */
 .pill {
-    padding: 5px 11px;
+    padding: 4px 9px;
     border-radius: var(--radius-full);
-    font-size: var(--font-size-caption);
+    font-size: 9px;
     font-weight: var(--font-weight-caption);
     background-color: rgba(255, 255, 255, 0.8);
     color: var(--color-text-tertiary);

@@ -87,6 +87,18 @@ npm install -g codexmate
 codexmate run
 ```
 
+If the default Web UI port `3737` is unavailable, Codex Mate automatically tries the next ports (`3738`, `3739`, ...). To force a fixed port, set `CODEXMATE_PORT`:
+
+```bash
+CODEXMATE_PORT=8080 codexmate run
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CODEXMATE_PORT=8080; codexmate run
+```
+
 ### Install via curl (Standalone)
 
 ```bash

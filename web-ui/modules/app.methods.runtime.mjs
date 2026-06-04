@@ -4,21 +4,21 @@ import {
 } from '../logic.mjs';
 
 const UI_MESSAGE_KEY_BY_TEXT = Object.freeze({
-    '操作成功': 'toast.operationSuccess',
-    '操作失败': 'toast.operationFailed',
-    '添加失败': 'toast.addFailed',
-    '更新失败': 'toast.updateFailed',
-    '删除失败': 'toast.deleteFailed',
-    '已删除': 'toast.deleted',
-    '已复制': 'toast.copied',
-    '复制失败': 'toast.copyFailed',
+    '操作成功': 'toast.operation.success',
+    '操作失败': 'toast.operation.fail',
+    '添加失败': 'toast.provider.addFail',
+    '更新失败': 'toast.provider.updateFail',
+    '删除失败': 'toast.delete.fail',
+    '已删除': 'toast.delete.ok',
+    '已复制': 'toast.copy.ok',
+    '复制失败': 'toast.copy.fail',
     '剪贴板为空': 'toast.clipboardEmpty',
     '无法读取剪贴板': 'toast.clipboardReadFailed',
     '已粘贴': 'toast.pasted',
     '未检测到改动': 'toast.noChanges',
-    '配置已应用': 'toast.configApplied',
-    '应用配置失败': 'toast.applyConfigFailed',
-    '应用失败': 'toast.applyFailed',
+    '配置已应用': 'toast.apply.success',
+    '应用配置失败': 'toast.apply.fail',
+    '应用失败': 'toast.apply.fail',
     '配置已加载': 'toast.configLoaded',
     '配置就绪': 'toast.configReady',
     '加载配置失败': 'toast.loadConfigFailed',
@@ -26,12 +26,12 @@ const UI_MESSAGE_KEY_BY_TEXT = Object.freeze({
     '读取配置超时': 'toast.readConfigTimeout',
     '备份失败': 'toast.backupFailed',
     '备份成功，开始下载': 'toast.backupReadyDownload',
-    '导入失败': 'toast.importFailed',
-    '导入成功': 'toast.importSuccess',
+    '导入失败': 'toast.import.fail',
+    '导入成功': 'toast.import.ok',
     '导入 skill 失败': 'toast.importSkillFailed',
-    '导出失败': 'toast.exportFailed',
-    '保存失败': 'toast.saveFailed',
-    '加载文件失败': 'toast.loadFileFailed',
+    '导出失败': 'toast.export.fail',
+    '保存失败': 'toast.save.fail',
+    '加载文件失败': 'toast.load.fail',
     '请填写名称': 'toast.nameRequired',
     '请输入名称': 'toast.nameRequired',
     '名称已存在': 'toast.nameExists',
@@ -45,8 +45,8 @@ const UI_MESSAGE_KEY_BY_TEXT = Object.freeze({
     '不可分享': 'toast.notShareable',
     '已移入回收站': 'toast.movedToTrash',
     '生成命令失败': 'toast.commandGenerationFailed',
-    '没有可复制内容': 'toast.nothingToCopy',
-    '没有可导出内容': 'toast.nothingToExport',
+    '没有可复制内容': 'toast.copy.empty',
+    '没有可导出内容': 'toast.export.empty',
     '会话已恢复': 'toast.sessionRestored',
     '恢复失败': 'toast.restoreFailed',
     '已彻底删除': 'toast.purged',
@@ -66,16 +66,22 @@ const UI_MESSAGE_PREFIX_ENTRIES = Object.freeze(
     Object.entries(UI_MESSAGE_KEY_BY_TEXT).sort((a, b) => b[0].length - a[0].length)
 );
 
-function translateUiMessage(context, text) {
+export function translateUiMessage(context, text) {
     if (!context || typeof context.t !== 'function' || typeof text !== 'string') return text;
+    const translateKey = (key) => {
+        const translated = context.t(key);
+        return typeof translated === 'string' && translated && translated !== key ? translated : '';
+    };
     const exactKey = UI_MESSAGE_KEY_BY_TEXT[text];
-    if (exactKey) return context.t(exactKey);
+    if (exactKey) return translateKey(exactKey) || text;
     const prefixEntry = UI_MESSAGE_PREFIX_ENTRIES.find(([sourceText]) => {
         return text.length > sourceText.length && text.startsWith(sourceText);
     });
     if (!prefixEntry) return text;
     const [sourceText, key] = prefixEntry;
-    return `${context.t(key)}${text.slice(sourceText.length)}`;
+    const translatedPrefix = translateKey(key);
+    if (!translatedPrefix) return text;
+    return `${translatedPrefix}${text.slice(sourceText.length)}`;
 }
 
 function clearProgressResetTimer(context, timerKey) {

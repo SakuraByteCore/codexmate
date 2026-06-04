@@ -1,9 +1,18 @@
 ﻿import assert from 'assert';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
     captureBehaviorParityBaselineAppOptions,
     captureCurrentBundledAppOptions,
     withGlobalOverrides
 } from './helpers/web-ui-app-options.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 const currentAppOptions = await captureCurrentBundledAppOptions();
 const parityBaseline = await captureBehaviorParityBaselineAppOptions();
@@ -289,6 +298,8 @@ function createDownloadEnvironment() {
 function createCopyActionContext(methods) {
     const messages = createMessagesRecorder();
     return {
+        ...createI18nMethods(),
+        lang: 'zh',
         ...messages,
         sessionResumeWithYolo: true,
         shareCommandPrefix: 'npm start',
@@ -658,7 +669,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'prevAccordionStep',
         'finishAccordionStep',
         'validateProviderName',
-        'validateModelId'
+        'validateModelId',
+        'getSessionFilePath',
+        'copySessionPath'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

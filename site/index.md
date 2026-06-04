@@ -51,6 +51,18 @@ codexmate run
 codexmate run --no-browser
 ```
 
+如果默认端口 `3737` 不可用，Codex Mate 会自动尝试后续端口（`3738`、`3739` ...）。如需固定端口，可指定：
+
+```bash
+CODEXMATE_PORT=8080 codexmate run
+```
+
+Windows PowerShell：
+
+```powershell
+$env:CODEXMATE_PORT=8080; codexmate run
+```
+
 ## 命令速查
 
 - `codexmate status`

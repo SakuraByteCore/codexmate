@@ -11,6 +11,9 @@ const { createAgentsMethods } = await import(
 const { createCodexConfigMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.codex-config.mjs'))
 );
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 test('closeConfigTemplateModal ignores user close attempts while template apply is busy', () => {
     const methods = createCodexConfigMethods({
@@ -20,7 +23,9 @@ test('closeConfigTemplateModal ignores user close attempts while template apply 
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: true,
         configTemplateContent: 'draft-template'
@@ -52,7 +57,9 @@ test('applyConfigTemplate force closes the modal after a successful apply', asyn
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: false,
         configTemplateContent: 'draft-template',
@@ -103,7 +110,9 @@ test('applyConfigTemplate keeps the successful apply result when only the refres
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: false,
         configTemplateContent: 'draft-template',
@@ -161,7 +170,9 @@ test('applyConfigTemplate applies immediately when diff confirm is disabled', as
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: false,
         configTemplateContent: 'draft-template',
@@ -192,7 +203,9 @@ test('runHealthCheck treats backend error payloads as failures', async () => {
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         providersList: ['alpha'],
         speedResults: {},
         speedLoading: {},
@@ -227,7 +240,9 @@ test('runHealthCheck skips Claude speed tests when the primary health check alre
     });
     let claudeSpeedTestCalls = 0;
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         providersList: ['alpha'],
         speedResults: {},
         speedLoading: {},
@@ -276,7 +291,9 @@ test('runHealthCheck preserves backend remote health result while appending spee
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         providersList: ['alpha', 'beta'],
         speedResults: {},
         speedLoading: {},
@@ -324,7 +341,9 @@ test('applyCodexConfigDirect keeps the successful apply result when only the ref
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         codexApplying: false,
         _pendingCodexApplyOptions: null,
         currentProvider: 'alpha',

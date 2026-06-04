@@ -1,11 +1,19 @@
 ﻿import assert from 'assert';
 import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
     readBundledWebUiCss,
     readBundledWebUiHtml,
     readBundledWebUiScript,
     readProjectFile
 } from './helpers/web-ui-source.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 const appSource = readBundledWebUiScript();
 const cliSource = readProjectFile('cli.js');
@@ -1904,7 +1912,10 @@ test('cloneSession keeps success message when refresh fails after clone succeeds
     });
 
     const messages = [];
+    const i18nMethods = createI18nMethods();
     const context = {
+        ...i18nMethods,
+        lang: 'zh',
         sessionCloning: {},
         sessionsList: [],
         isCloneAvailable: () => true,
@@ -1941,7 +1952,10 @@ test('cloneSession keeps success message when selecting the cloned session fails
     });
 
     const messages = [];
+    const i18nMethods = createI18nMethods();
     const context = {
+        ...i18nMethods,
+        lang: 'zh',
         sessionCloning: {},
         sessionsList: [],
         isCloneAvailable: () => true,

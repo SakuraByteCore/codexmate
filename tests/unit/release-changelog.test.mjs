@@ -19,7 +19,7 @@ test('release changelog selects the previous semver tag below the current releas
         'v0.0.38'
     );
     assert.equal(
-        selectPreviousSemverTag(['v0.0.39', 'v0.0.40'], 'v0.0.39'),
+        selectPreviousSemverTag(['v0.0.40', 'v0.0.41'], 'v0.0.40'),
         ''
     );
 });

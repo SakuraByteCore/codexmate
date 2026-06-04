@@ -170,7 +170,7 @@ export function createProvidersMethods(options = {}) {
             normalizeProviderDraftState(this.newProvider);
             const validation = getProviderValidationForContext(this, 'add');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.key || validation.errors.model || '名称、URL、API Key 和模型名称必填', 'error');
+                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.key || validation.errors.model || this.t('toast.provider.fieldsRequired'), 'error');
             }
 
             try {
@@ -206,7 +206,7 @@ export function createProvidersMethods(options = {}) {
                 };
                 this.providersList = [...this.providersList, newProvider];
 
-                this.showMessage('操作成功', 'success');
+                this.showMessage(this.t('toast.operation.success'), 'success');
                 this.closeAddModal();
 
                 if (suggestedModel) {
@@ -214,7 +214,7 @@ export function createProvidersMethods(options = {}) {
                     this.currentModels[validation.name] = suggestedModel;
                 }
             } catch (e) {
-                this.showMessage('添加失败', 'error');
+                this.showMessage(this.t('toast.provider.addFail'), 'error');
             }
         },
 
@@ -275,7 +275,7 @@ export function createProvidersMethods(options = {}) {
 
         async deleteProvider(name) {
             if (this.isNonDeletableProvider(name)) {
-                this.showMessage('该 provider 为保留项，不可删除', 'info');
+                this.showMessage(this.t('toast.provider.notDeletable'), 'info');
                 return;
             }
             try {
@@ -301,12 +301,13 @@ export function createProvidersMethods(options = {}) {
                         ...p,
                         current: p.name === res.provider
                     }));
-                    this.showMessage(`已删除提供商，自动切换到 ${res.provider}${res.model ? ` / ${res.model}` : ''}`, 'success');
+                    const modelSuffix = res.model ? ` / ${res.model}` : '';
+                    this.showMessage(this.t('toast.provider.deletedAndSwitched', { provider: res.provider, model: modelSuffix }), 'success');
                 } else {
-                    this.showMessage('操作成功', 'success');
+                    this.showMessage(this.t('toast.operation.success'), 'success');
                 }
             } catch (_) {
-                this.showMessage('删除失败', 'error');
+                this.showMessage(this.t('toast.delete.fail'), 'error');
             }
         },
 
@@ -330,7 +331,7 @@ export function createProvidersMethods(options = {}) {
             const requestId = Symbol('openEditModal');
             this._openEditModalRequestId = requestId;
             if (!this.shouldShowProviderEdit(provider)) {
-                this.showMessage('该 provider 为保留项，不可编辑', 'info');
+                this.showMessage(this.t('toast.provider.notEditable'), 'info');
                 return;
             }
             const isTransformProvider = (() => {
@@ -398,14 +399,14 @@ export function createProvidersMethods(options = {}) {
 
         async updateProvider() {
             if (this.editingProvider.readOnly || this.editingProvider.nonEditable) {
-                this.showMessage('该 provider 为保留项，不可编辑', 'error');
+                this.showMessage(this.t('toast.provider.notEditable'), 'error');
                 this.closeEditModal();
                 return;
             }
             normalizeProviderDraftState(this.editingProvider);
             const validation = getProviderValidationForContext(this, 'edit');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.url || 'URL 必填', 'error');
+                return this.showMessage(validation.errors.name || validation.errors.url || this.t('toast.provider.urlRequired'), 'error');
             }
 
             const params = { name: validation.name, url: validation.url };
@@ -441,9 +442,9 @@ export function createProvidersMethods(options = {}) {
                 });
 
                 this.closeEditModal();
-                this.showMessage('操作成功', 'success');
+                this.showMessage(this.t('toast.operation.success'), 'success');
             } catch (e) {
-                this.showMessage('更新失败', 'error');
+                this.showMessage(this.t('toast.provider.updateFail'), 'error');
             }
         },
 
@@ -469,10 +470,10 @@ export function createProvidersMethods(options = {}) {
                     return;
                 }
                 const backup = res.backupFile ? `（已备份: ${res.backupFile}）` : '';
-                this.showMessage(`配置已重装${backup}`, 'success');
+                this.showMessage(this.t('toast.provider.resetSuccess', { backup }), 'success');
                 await this.loadAll();
             } catch (e) {
-                this.showMessage('重装失败', 'error');
+                this.showMessage(this.t('toast.provider.resetFail'), 'error');
             } finally {
                 this.resetConfigLoading = false;
             }
@@ -501,7 +502,7 @@ export function createProvidersMethods(options = {}) {
                         }
                         return p;
                     });
-                    this.showMessage('操作成功', 'success');
+                    this.showMessage(this.t('toast.operation.success'), 'success');
                     this.closeModelModal();
                 }
             } catch (_) {
@@ -525,7 +526,7 @@ export function createProvidersMethods(options = {}) {
                         }
                         return p;
                     });
-                    this.showMessage('操作成功', 'success');
+                    this.showMessage(this.t('toast.operation.success'), 'success');
                 }
             } catch (_) {
                 this.showMessage('删除模型失败', 'error');

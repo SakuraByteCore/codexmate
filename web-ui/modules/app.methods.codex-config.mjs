@@ -66,7 +66,7 @@ export function createCodexConfigMethods(options = {}) {
                     const maxLabel = res.maxMessages === 'all' ? 'all' : res.maxMessages;
                     this.showMessage(`会话导出完成（已截断：最多 ${maxLabel} 条消息）`, 'info');
                 } else {
-                    this.showMessage('操作成功', 'success');
+                    this.showMessage(this.t('toast.operation.success'), 'success');
                 }
             } catch (e) {
                 this.showMessage('导出失败', 'error');
@@ -325,7 +325,7 @@ export function createCodexConfigMethods(options = {}) {
                     if (hasResponseError(res)) {
                         this.healthCheckResult = null;
                         if (!silent) {
-                            this.showMessage(getResponseMessage(res, '检查失败'), 'error');
+                            this.showMessage(getResponseMessage(res, this.t('toast.check.fail')), 'error');
                         }
                         return;
                     }
@@ -342,13 +342,13 @@ export function createCodexConfigMethods(options = {}) {
                         this.healthCheckBatchDone = total;
                         this.healthCheckBatchFailed = errors + warns;
                         if (!silent && res.ok) {
-                            this.showMessage('检查通过', 'success');
+                            this.showMessage(this.t('toast.check.success'), 'success');
                         }
                         return;
                     }
                     this.healthCheckResult = null;
                     if (!silent) {
-                        this.showMessage('检查失败', 'error');
+                        this.showMessage(this.t('toast.check.fail'), 'error');
                     }
                     return;
                 }
@@ -473,7 +473,7 @@ export function createCodexConfigMethods(options = {}) {
                 } else {
                     this.healthCheckResult = null;
                     if (!silent) {
-                        this.showMessage('检查失败', 'error');
+                        this.showMessage(this.t('toast.check.fail'), 'error');
                     }
                 }
             } catch (e) {
@@ -561,7 +561,7 @@ export function createCodexConfigMethods(options = {}) {
                 this.configTemplateContext = 'codex';
                 this.showConfigTemplateModal = true;
             } catch (e) {
-                this.showMessage('加载模板失败', 'error');
+                this.showMessage(this.t('toast.template.loadFail'), 'error');
             }
         },
 
@@ -797,7 +797,7 @@ export function createCodexConfigMethods(options = {}) {
                 return;
             }
             if (!this.configTemplateContent || !this.configTemplateContent.trim()) {
-                this.showMessage('模板不能为空', 'error');
+                this.showMessage(this.t('toast.template.empty'), 'error');
                 return;
             }
 
@@ -822,15 +822,15 @@ export function createCodexConfigMethods(options = {}) {
                         this.showMessage(res.error, 'error');
                         return;
                     }
-                    this.showMessage('模板已应用', 'success');
+                    this.showMessage(this.t('toast.template.applied'), 'success');
                     this.closeConfigTemplateModal({ force: true });
                     try {
                         await this.loadAll();
                     } catch (_) {
-                        this.showMessage('模板已应用，但界面刷新失败，请手动刷新', 'error');
+                        this.showMessage(this.t('toast.template.appliedButRefreshFail'), 'error');
                     }
                 } catch (e) {
-                    this.showMessage('应用模板失败', 'error');
+                    this.showMessage(this.t('toast.template.applyFail'), 'error');
                 } finally {
                     this.configTemplateApplying = false;
                 }

@@ -87,6 +87,18 @@ npm install -g codexmate
 codexmate run
 ```
 
+如果默认 Web UI 端口 `3737` 不可用，Codex Mate 会自动尝试后续端口（`3738`、`3739` ...）。如需固定端口，可以指定 `CODEXMATE_PORT`：
+
+```bash
+CODEXMATE_PORT=8080 codexmate run
+```
+
+Windows PowerShell：
+
+```powershell
+$env:CODEXMATE_PORT=8080; codexmate run
+```
+
 ### 通过 curl 安装 (独立包)
 
 ```bash

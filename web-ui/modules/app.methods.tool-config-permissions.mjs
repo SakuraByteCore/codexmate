@@ -64,6 +64,9 @@ export function createToolConfigPermissionMethods(options = {}) {
                     return;
                 }
                 this.toolConfigPermissions = normalizePermissions(res && res.permissions);
+                try {
+                    localStorage.setItem('toolConfigPermissions', JSON.stringify(this.toolConfigPermissions));
+                } catch (_) {}
                 this.showMessage(
                     nextAllowWrite
                         ? this.t('toolConfig.allowToast')
