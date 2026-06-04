@@ -10461,6 +10461,7 @@ function assertRequestAuthorized(req, res) {
 
 function isProtectedWebSurfacePath(requestPath) {
     return requestPath === '/'
+        || requestPath === '/session'
         || requestPath === '/web-ui/index.html'
         || requestPath.startsWith('/web-ui/')
         || requestPath.startsWith('/res/');
@@ -11889,8 +11890,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             });
             fs.createReadStream(filePath).pipe(res);
         } else {
-            // Only serve HTML for root path; /web-ui returns 404.
-            if (requestPath === '/') {
+            // Serve the SPA shell for routable entry points. Keep /web-ui as 404.
+            if (requestPath === '/' || requestPath === '/session') {
                 try {
                     const html = readBundledWebUiHtml(htmlPath);
                     res.writeHead(200, {

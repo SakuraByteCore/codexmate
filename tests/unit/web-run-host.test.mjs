@@ -135,10 +135,19 @@ const releaseRunPortIfNeededSource = extractFunctionBySignature(
     'function releaseRunPortIfNeeded(port, host, deps = {}) {',
     'releaseRunPortIfNeeded'
 );
+const isProtectedWebSurfacePathSource = extractFunctionBySignature(
+    cliContent,
+    'function isProtectedWebSurfacePath(requestPath) {',
+    'isProtectedWebSurfacePath'
+);
 const resolveWebHost = instantiateFunction(resolveWebHostSource, 'resolveWebHost', {
     DEFAULT_WEB_HOST: defaultHostMatch[1],
     process: { env: {} }
 });
+const isProtectedWebSurfacePath = instantiateFunction(
+    isProtectedWebSurfacePathSource,
+    'isProtectedWebSurfacePath'
+);
 
 test('resolveWebHost defaults to LAN host', () => {
     assert.strictEqual(resolveWebHost({}), '127.0.0.1');
@@ -891,6 +900,7 @@ function mockWriteJsonResponse(res, statusCode, payload, headers = {}) {
 
 function mockIsProtectedWebSurfacePath(requestPath) {
     return requestPath === '/'
+        || requestPath === '/session'
         || requestPath === '/web-ui/index.html'
         || requestPath.startsWith('/web-ui/')
         || requestPath.startsWith('/res/');
@@ -930,6 +940,11 @@ test('assertRequestAuthorized returns a basic auth challenge for unauthorized re
     assert.strictEqual(response.statusCode, 401);
     assert.strictEqual(response.headers['WWW-Authenticate'], 'Basic realm="codexmate"');
     assert.strictEqual(response.body, '{\n  "error": "Unauthorized"\n}');
+});
+
+test('isProtectedWebSurfacePath protects standalone session links', () => {
+    assert.strictEqual(isProtectedWebSurfacePath('/session'), true);
+    assert.strictEqual(isProtectedWebSurfacePath('/session/extra'), false);
 });
 
 test('resolveSkillTarget still falls back to default target when target is omitted', () => {
@@ -981,6 +996,44 @@ test('createWebServer redirects bundled index URL to the canonical root URL', ()
         'X-Frame-Options': 'DENY'
     });
     assert.strictEqual(response.body, 'Found');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer serves the SPA shell for standalone session links', () => {
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            return '<!doctype html><title>standalone session</title>';
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/session?source=codex&sessionId=session-1' }, response);
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.strictEqual(response.body, '<!doctype html><title>standalone session</title>');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer requires auth before serving standalone session links to remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            throw new Error('html should not be read before auth');
+        },
+        authorizeRequest(req, res) {
+            calls.push(req.url);
+            res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end('{"error":"Unauthorized"}');
+            return { ok: false, mode: 'unauthorized' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/session?source=codex&sessionId=session-1', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.deepStrictEqual(calls, ['/session?source=codex&sessionId=session-1']);
+    assert.strictEqual(response.body, '{"error":"Unauthorized"}');
     assert.deepStrictEqual(errors, []);
 });
 

@@ -459,13 +459,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.replace(url.toString());
                     return;
                 }
-                // 清理任何查询参数和 hash，保持 URL 为 /
-                if (window.location.search || window.location.hash) {
-                    const url = new URL(window.location.href);
-                    url.search = '';
-                    url.hash = '';
-                    window.history.replaceState(null, '', url.toString());
-                }
+                // Do not strip query/hash during startup: /session uses them to identify the
+                // standalone session, and shareable tab/filter URLs are consumed below before
+                // later runtime canonicalization can clean the address bar.
             } catch (_) {}
 
             if (typeof this.initI18n === 'function') {
