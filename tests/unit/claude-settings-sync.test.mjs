@@ -9,6 +9,12 @@ const __dirname = path.dirname(__filename);
 const { createI18nMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
 );
+const {
+    isLikelyBuiltinClaudeProxySettingsEnv,
+    matchBuiltinClaudeProxyConfigFromSettings
+} = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'logic.mjs'))
+);
 
 const appSource = readBundledWebUiScript();
 const claudeConfigModuleSource = readProjectFile('web-ui/modules/app.methods.claude-config.mjs');
@@ -518,6 +524,8 @@ test('refreshClaudeSelectionFromSettings selects imported config when settings m
         currentClaudeConfig: '',
         currentClaudeModel: '',
         matchClaudeConfigFromSettings: () => '',
+        matchBuiltinClaudeProxyConfigFromSettings: () => '',
+        shouldSuppressClaudeSettingsImport: () => false,
         ensureClaudeConfigFromSettings: function () {
             this.claudeConfigs['导入-maxx-direct.cloverstd.com'] = {
                 apiKey: 'maxx-key',
@@ -540,6 +548,87 @@ test('refreshClaudeSelectionFromSettings selects imported config when settings m
     assert.strictEqual(context.currentClaudeConfig, '导入-maxx-direct.cloverstd.com');
     assert.strictEqual(refreshCount, 1);
     assert.deepStrictEqual(messages, []);
+});
+
+test('refreshClaudeSelectionFromSettings keeps builtin Claude proxy selection without importing duplicate config', async () => {
+    const source = extractMethodAsFunction(appSource, 'refreshClaudeSelectionFromSettings');
+    const proxyEnv = {
+        ANTHROPIC_API_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef',
+        ANTHROPIC_BASE_URL: 'http://127.0.0.1:34567',
+        ANTHROPIC_MODEL: 'deepseek-r1:8b'
+    };
+    const refreshClaudeSelectionFromSettings = instantiateFunction(source, 'refreshClaudeSelectionFromSettings', {
+        api: async () => ({ exists: true, env: proxyEnv })
+    });
+
+    let refreshCount = 0;
+    let ensureCount = 0;
+    let saveCount = 0;
+    const messages = [];
+    const context = {
+        claudeConfigs: {
+            'Local Ollama': {
+                apiKey: '',
+                baseUrl: 'http://127.0.0.1:11434',
+                model: 'deepseek-r1:8b',
+                hasKey: false,
+                externalCredentialType: '',
+                targetApi: 'ollama'
+            }
+        },
+        currentClaudeConfig: 'Local Ollama',
+        currentClaudeModel: '',
+        matchClaudeConfigFromSettings(env) {
+            return '';
+        },
+        matchBuiltinClaudeProxyConfigFromSettings(env) {
+            return matchBuiltinClaudeProxyConfigFromSettings(this.claudeConfigs, env, this.currentClaudeConfig);
+        },
+        shouldSuppressClaudeSettingsImport(env) {
+            return isLikelyBuiltinClaudeProxySettingsEnv(env);
+        },
+        ensureClaudeConfigFromSettings() {
+            ensureCount += 1;
+            throw new Error('builtin proxy settings must not be imported as external config');
+        },
+        saveClaudeConfigs() {
+            saveCount += 1;
+        },
+        refreshClaudeModelContext: () => {
+            refreshCount += 1;
+        },
+        resetClaudeModelsState: () => {
+            throw new Error('should not reset when builtin proxy selection matches current config');
+        },
+        showMessage: (msg, type) => messages.push({ msg, type })
+    };
+
+    await refreshClaudeSelectionFromSettings.call(context, { silent: true });
+
+    assert.strictEqual(context.currentClaudeConfig, 'Local Ollama');
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['Local Ollama']);
+    assert.strictEqual(ensureCount, 0);
+    assert.strictEqual(saveCount, 0);
+    assert.strictEqual(refreshCount, 1);
+    assert.deepStrictEqual(messages, []);
+});
+
+test('builtin Claude proxy settings detection requires loopback URL and generated proxy token shape', () => {
+    assert.strictEqual(isLikelyBuiltinClaudeProxySettingsEnv({
+        ANTHROPIC_API_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef',
+        ANTHROPIC_BASE_URL: 'http://localhost:34567',
+        ANTHROPIC_MODEL: 'deepseek-r1:8b'
+    }), true);
+    assert.strictEqual(isLikelyBuiltinClaudeProxySettingsEnv({
+        ANTHROPIC_API_KEY: 'sk-real-provider-key',
+        ANTHROPIC_BASE_URL: 'https://api.example.com/anthropic',
+        ANTHROPIC_MODEL: 'claude-opus-4-6'
+    }), false);
+    assert.strictEqual(isLikelyBuiltinClaudeProxySettingsEnv({
+        ANTHROPIC_API_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef',
+        ANTHROPIC_BASE_URL: 'https://api.example.com/anthropic',
+        ANTHROPIC_MODEL: 'claude-opus-4-6'
+    }), false);
 });
 
 test('ensureClaudeConfigFromSettings imports external auth-token backed Claude settings', () => {

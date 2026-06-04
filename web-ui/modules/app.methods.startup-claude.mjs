@@ -1,6 +1,8 @@
 import {
     findDuplicateClaudeConfigName,
     getClaudeModelCatalogForBaseUrl,
+    isLikelyBuiltinClaudeProxySettingsEnv,
+    matchBuiltinClaudeProxyConfigFromSettings,
     matchClaudeConfigFromSettings,
     normalizeClaudeConfig,
     normalizeClaudeSettingsEnv,
@@ -241,6 +243,14 @@ export function createStartupClaudeMethods(options = {}) {
             return matchClaudeConfigFromSettings(this.claudeConfigs, env);
         },
 
+        matchBuiltinClaudeProxyConfigFromSettings(env) {
+            return matchBuiltinClaudeProxyConfigFromSettings(this.claudeConfigs, env, this.currentClaudeConfig);
+        },
+
+        shouldSuppressClaudeSettingsImport(env) {
+            return isLikelyBuiltinClaudeProxySettingsEnv(env);
+        },
+
         findDuplicateClaudeConfigName(config) {
             return findDuplicateClaudeConfigName(this.claudeConfigs, config);
         },
@@ -333,7 +343,8 @@ export function createStartupClaudeMethods(options = {}) {
                         }
                         return;
                     }
-                    const matchName = this.matchClaudeConfigFromSettings((res && res.env) || {});
+                    const settingsEnv = (res && res.env) || {};
+                    const matchName = this.matchClaudeConfigFromSettings(settingsEnv);
                     if (matchName) {
                         if (this.currentClaudeConfig !== matchName) {
                             this.currentClaudeConfig = matchName;
@@ -342,7 +353,18 @@ export function createStartupClaudeMethods(options = {}) {
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         return;
                     }
-                    const importedName = this.ensureClaudeConfigFromSettings((res && res.env) || {});
+                    const builtinProxyMatch = this.matchBuiltinClaudeProxyConfigFromSettings(settingsEnv);
+                    if (builtinProxyMatch) {
+                        if (this.currentClaudeConfig !== builtinProxyMatch) {
+                            this.currentClaudeConfig = builtinProxyMatch;
+                            try { localStorage.setItem('currentClaudeConfig', builtinProxyMatch); } catch (_) {}
+                        }
+                        this.refreshClaudeModelContext({ silentError: silentModelError });
+                        return;
+                    }
+                    const importedName = this.shouldSuppressClaudeSettingsImport(settingsEnv)
+                        ? ''
+                        : this.ensureClaudeConfigFromSettings(settingsEnv);
                     if (importedName) {
                         if (this.currentClaudeConfig !== importedName) {
                             this.currentClaudeConfig = importedName;

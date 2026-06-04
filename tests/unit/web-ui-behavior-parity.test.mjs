@@ -664,6 +664,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'getClaudeConfigValidation',
         'claudeConfigFieldError',
         'canSubmitClaudeConfig',
+        'matchBuiltinClaudeProxyConfigFromSettings',
+        'shouldSuppressClaudeSettingsImport',
         'toggleAccordionStep',
         'nextAccordionStep',
         'prevAccordionStep',

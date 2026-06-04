@@ -110,6 +110,60 @@ function normalizeClaudeComparableUrl(value) {
     return trimmed.replace(/\/+$/g, '');
 }
 
+function isLoopbackClaudeProxyUrl(value) {
+    const raw = normalizeClaudeComparableUrl(value);
+    if (!raw) return false;
+    try {
+        const parsed = new URL(raw);
+        if (parsed.protocol !== 'http:') return false;
+        const host = normalizeClaudeValue(parsed.hostname).toLowerCase();
+        return host === '127.0.0.1' || host === 'localhost' || host === '[::1]' || host === '::1';
+    } catch (_) {
+        return false;
+    }
+}
+
+export function isLikelyBuiltinClaudeProxySettingsEnv(env = {}) {
+    const normalized = normalizeClaudeSettingsEnv(env);
+    return !!(
+        normalized.baseUrl
+        && normalized.model
+        && /^[a-f0-9]{48}$/i.test(normalized.apiKey)
+        && isLoopbackClaudeProxyUrl(normalized.baseUrl)
+    );
+}
+
+function isClaudeTransformConfig(config = {}) {
+    const targetApi = normalizeClaudeConfig(config).targetApi;
+    return targetApi === 'chat_completions' || targetApi === 'ollama';
+}
+
+export function matchBuiltinClaudeProxyConfigFromSettings(claudeConfigs = {}, env = {}, preferredName = '') {
+    if (!isLikelyBuiltinClaudeProxySettingsEnv(env)) {
+        return '';
+    }
+    const normalizedSettings = normalizeClaudeSettingsEnv(env);
+    const preferred = normalizeClaudeValue(preferredName);
+    if (preferred && claudeConfigs && claudeConfigs[preferred]) {
+        const config = normalizeClaudeConfig(claudeConfigs[preferred]);
+        if (isClaudeTransformConfig(config) && config.model === normalizedSettings.model) {
+            return preferred;
+        }
+    }
+
+    const matches = [];
+    for (const [name, config] of Object.entries(claudeConfigs || {})) {
+        const normalizedConfig = normalizeClaudeConfig(config);
+        if (!isClaudeTransformConfig(normalizedConfig)) {
+            continue;
+        }
+        if (normalizedConfig.model === normalizedSettings.model) {
+            matches.push(name);
+        }
+    }
+    return matches.length === 1 ? matches[0] : '';
+}
+
 function hasClaudeCredential(config = {}) {
     return !!(config.apiKey || config.authToken || config.useKey);
 }
