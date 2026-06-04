@@ -47,6 +47,7 @@ Have you ever felt overwhelmed by managing multiple local AI agents? Each has it
 Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 - **Unified Session Browser**: Search and export sessions across all tools in one place.
 - **OpenAI-Compatible Bridge**: Use Codex with any OpenAI-compatible UI by normalizing the Responses API.
+- **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
 - **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
 - **Task Orchestrator**: Plan and execute complex tasks with dependency tracking.
 
@@ -63,6 +64,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 | **Local Skills Market** | ✅ | Cross-app import/export of agent skills |
 | **Task Queue** | ✅ | DAG-based task execution and logs |
 | **OpenAI Bridge** | ✅ | Convert Codex Responses API to standard OpenAI format |
+| **Claude Provider Bridge** | ✅ | Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama via the built-in Claude-compatible proxy |
 | **Prompt Templates** | ✅ | Reusable prompt plugins with variables |
 | **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
 | **Auto Update** | ✅ | Quick update CLI via `codexmate update` |

@@ -47,6 +47,7 @@
 不同于简单的封装，Codex Mate 充当了 **本地智能体桥接器**：
 - **统一会话浏览器**：在一个地方搜索并导出所有工具的会话。
 - **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用。
+- **Claude Provider 桥接**：通过内建本地 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama。
 - **Skills 市场**：本地优先的市场，支持在不同的智能体应用之间共享和导入 Skills。
 - **任务编排器**：支持带有依赖跟踪的复杂任务规划与执行。
 
@@ -63,6 +64,7 @@
 | **本地 Skills 市场** | ✅ | 跨应用的智能体 Skills 导入与导出 |
 | **任务队列** | ✅ | 基于 DAG 的任务执行与日志查看 |
 | **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式 |
+| **Claude Provider 桥接** | ✅ | 通过内建 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama |
 | **提示词模板** | ✅ | 支持变量的可复用提示词插件 |
 | **MCP 集成** | ✅ | 通过 MCP stdio 暴露本地工具与资源 |
 | **自动更新** | ✅ | 通过 `codexmate update` 快速更新 CLI |
