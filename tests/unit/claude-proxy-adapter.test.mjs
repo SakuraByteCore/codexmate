@@ -417,6 +417,27 @@ function findFreePortForTest() {
     });
 }
 
+async function startBuiltinClaudeProxyRuntimeForTest(controller, payload = {}, attempts = 4) {
+    let lastResult = null;
+    const payloadHasPort = Object.prototype.hasOwnProperty.call(payload, 'port');
+    for (let i = 0; i < attempts; i += 1) {
+        const nextPayload = payloadHasPort
+            ? { ...payload }
+            : { ...payload, port: await findFreePortForTest() };
+        const result = await controller.startBuiltinClaudeProxyRuntime(nextPayload);
+        if (result && result.success === true) {
+            return result;
+        }
+        lastResult = result;
+        const error = result && typeof result.error === 'string' ? result.error : '';
+        if (payloadHasPort || !/EADDRINUSE|address already in use/i.test(error) || i === attempts - 1) {
+            return result;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 30 * (i + 1)));
+    }
+    return lastResult || { error: 'failed to start test Claude proxy' };
+}
+
 test('builtin Claude proxy sends Ollama traffic to /api paths without injecting /v1', async () => {
     const upstreamRequests = [];
     const upstream = http.createServer((req, res) => {
@@ -446,14 +467,13 @@ test('builtin Claude proxy sends Ollama traffic to /api paths without injecting 
     });
 
     const upstreamAddress = await listenForTest(upstream);
-    const proxyPort = await findFreePortForTest();
     const settingsFile = path.join(os.tmpdir(), `codexmate-claude-proxy-test-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
     const controller = createBuiltinClaudeProxyRuntimeController({
         BUILTIN_CLAUDE_PROXY_SETTINGS_FILE: settingsFile,
         DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS: {
             enabled: true,
             host: '127.0.0.1',
-            port: proxyPort,
+            port: 1,
             provider: '',
             authSource: 'none',
             targetApi: 'ollama',
@@ -471,9 +491,8 @@ test('builtin Claude proxy sends Ollama traffic to /api paths without injecting 
     });
 
     try {
-        const start = await controller.startBuiltinClaudeProxyRuntime({
+        const start = await startBuiltinClaudeProxyRuntimeForTest(controller, {
             host: '127.0.0.1',
-            port: proxyPort,
             authSource: 'none',
             targetApi: 'ollama',
             upstreamBaseUrl: `http://127.0.0.1:${upstreamAddress.port}`,
@@ -534,14 +553,13 @@ test('builtin Claude proxy maps Ollama upstream errors into Anthropic errors', a
     });
 
     const upstreamAddress = await listenForTest(upstream);
-    const proxyPort = await findFreePortForTest();
     const settingsFile = path.join(os.tmpdir(), `codexmate-claude-proxy-error-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
     const controller = createBuiltinClaudeProxyRuntimeController({
         BUILTIN_CLAUDE_PROXY_SETTINGS_FILE: settingsFile,
         DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS: {
             enabled: true,
             host: '127.0.0.1',
-            port: proxyPort,
+            port: 1,
             provider: '',
             authSource: 'none',
             targetApi: 'ollama',
@@ -559,9 +577,8 @@ test('builtin Claude proxy maps Ollama upstream errors into Anthropic errors', a
     });
 
     try {
-        const start = await controller.startBuiltinClaudeProxyRuntime({
+        const start = await startBuiltinClaudeProxyRuntimeForTest(controller, {
             host: '127.0.0.1',
-            port: proxyPort,
             authSource: 'none',
             targetApi: 'ollama',
             upstreamBaseUrl: `http://127.0.0.1:${upstreamAddress.port}`,
@@ -613,14 +630,13 @@ test('builtin Claude proxy can restart Ollama direct upstream from saved share i
     });
 
     const upstreamAddress = await listenForTest(upstream);
-    const proxyPort = await findFreePortForTest();
     const settingsFile = path.join(os.tmpdir(), `codexmate-claude-proxy-restart-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
     const baseOptions = {
         BUILTIN_CLAUDE_PROXY_SETTINGS_FILE: settingsFile,
         DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS: {
             enabled: true,
             host: '127.0.0.1',
-            port: proxyPort,
+            port: 1,
             provider: '',
             upstreamProviderName: '',
             upstreamBaseUrl: '',
@@ -643,9 +659,8 @@ test('builtin Claude proxy can restart Ollama direct upstream from saved share i
     const firstController = createBuiltinClaudeProxyRuntimeController(baseOptions);
     let secondController = null;
     try {
-        const firstStart = await firstController.startBuiltinClaudeProxyRuntime({
+        const firstStart = await startBuiltinClaudeProxyRuntimeForTest(firstController, {
             host: '127.0.0.1',
-            port: proxyPort,
             authSource: 'none',
             targetApi: 'ollama',
             upstreamBaseUrl: `http://127.0.0.1:${upstreamAddress.port}`,
