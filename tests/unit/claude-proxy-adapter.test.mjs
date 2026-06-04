@@ -194,11 +194,13 @@ test('buildBuiltinClaudeOllamaChatRequest maps anthropic messages/tools into Oll
             { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'toolu_1', content: 'tool ok' }] }
         ],
         tools: [{ name: 'lookup', description: 'Lookup', input_schema: { type: 'object', properties: { q: { type: 'string' } } } }],
-        stop_sequences: ['END']
+        stop_sequences: ['END'],
+        thinking: { type: 'disabled' }
     });
 
     assert.strictEqual(payload.model, 'qwen2.5-coder:7b');
     assert.strictEqual(payload.stream, false);
+    assert.strictEqual(payload.think, false);
     assert.deepStrictEqual(payload.options, { num_predict: 80, temperature: 0.2, top_p: 0.9, stop: ['END'] });
     assert.deepStrictEqual(payload.messages, [
         { role: 'system', content: 'system prompt' },
@@ -225,6 +227,7 @@ test('buildBuiltinClaudeOllamaChatRequest drops incompatible bridge-only blocks 
                 { type: 'text', text: 'describe this' },
                 { type: 'thinking', thinking: 'hidden chain' },
                 { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'aW1n' } },
+                { type: 'video', source: { type: 'url', url: 'https://example.com/demo.mp4' } },
                 { type: 'document', source: { type: 'text', data: 'unsupported doc' } }
             ]
         }]
@@ -306,6 +309,7 @@ test('buildAnthropicMessageFromOllamaChat maps Ollama /api/chat output into anth
         model: 'qwen2.5-coder:7b',
         message: {
             role: 'assistant',
+            thinking: 'checking the tool result',
             content: 'proxy ok',
             tool_calls: [{ function: { name: 'lookup', arguments: { city: 'tokyo' } } }]
         },
@@ -317,10 +321,11 @@ test('buildAnthropicMessageFromOllamaChat maps Ollama /api/chat output into anth
     assert.strictEqual(message.stop_reason, 'tool_use');
     assert.deepStrictEqual(message.usage, { input_tokens: 9, output_tokens: 4 });
     assert.deepStrictEqual(message.content, [
+        { type: 'thinking', thinking: 'checking the tool result' },
         { type: 'text', text: 'proxy ok' },
-        { type: 'tool_use', id: message.content[1].id, name: 'lookup', input: { city: 'tokyo' } }
+        { type: 'tool_use', id: message.content[2].id, name: 'lookup', input: { city: 'tokyo' } }
     ]);
-    assert(message.content[1].id.startsWith('toolu_'));
+    assert(message.content[2].id.startsWith('toolu_'));
 });
 
 test('buildAnthropicStreamEvents emits anthropic-style SSE events', () => {
@@ -330,6 +335,7 @@ test('buildAnthropicStreamEvents emits anthropic-style SSE events', () => {
         role: 'assistant',
         model: 'gpt-4.1',
         content: [
+            { type: 'thinking', thinking: 'brief hidden reasoning' },
             { type: 'text', text: 'hello stream' },
             { type: 'tool_use', id: 'toolu_stream', name: 'lookup', input: { city: 'tokyo' } }
         ],
@@ -349,13 +355,17 @@ test('buildAnthropicStreamEvents emits anthropic-style SSE events', () => {
         'content_block_start',
         'content_block_delta',
         'content_block_stop',
+        'content_block_start',
+        'content_block_delta',
+        'content_block_stop',
         'message_delta',
         'message_stop'
     ]);
-    assert.strictEqual(events[2].data.delta.text, 'hello stream');
-    assert.strictEqual(events[5].data.delta.partial_json, '{"city":"tokyo"}');
-    assert.strictEqual(events[7].data.delta.stop_reason, 'tool_use');
-    assert.strictEqual(events[7].data.usage.output_tokens, 4);
+    assert.strictEqual(events[2].data.delta.thinking, 'brief hidden reasoning');
+    assert.strictEqual(events[5].data.delta.text, 'hello stream');
+    assert.strictEqual(events[8].data.delta.partial_json, '{"city":"tokyo"}');
+    assert.strictEqual(events[10].data.delta.stop_reason, 'tool_use');
+    assert.strictEqual(events[10].data.usage.output_tokens, 4);
 });
 
 test('buildAnthropicModelsPayload reshapes upstream models list', () => {
@@ -422,7 +432,7 @@ test('builtin Claude proxy sends Ollama traffic to /api paths without injecting 
             if (req.method === 'POST' && req.url === '/api/chat') {
                 res.end(JSON.stringify({
                     model: 'qwen2.5-coder:7b',
-                    message: { role: 'assistant', content: 'proxy ok' },
+                    message: { role: 'assistant', thinking: 'short thought', content: 'proxy ok' },
                     done: true,
                     done_reason: 'stop',
                     prompt_eval_count: 3,
@@ -481,20 +491,102 @@ test('builtin Claude proxy sends Ollama traffic to /api paths without injecting 
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
                 model: 'qwen2.5-coder:7b',
-                messages: [{ role: 'user', content: [{ type: 'text', text: 'hello' }] }]
+                thinking: { type: 'disabled' },
+                messages: [{
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: 'hello' },
+                        { type: 'video', source: { type: 'url', url: 'https://example.com/demo.mp4' } }
+                    ]
+                }]
             })
         });
         assert.strictEqual(messageRes.status, 200);
         const message = await messageRes.json();
-        assert.deepStrictEqual(message.content, [{ type: 'text', text: 'proxy ok' }]);
+        assert.deepStrictEqual(message.content, [
+            { type: 'thinking', thinking: 'short thought' },
+            { type: 'text', text: 'proxy ok' }
+        ]);
 
         assert.deepStrictEqual(upstreamRequests.map((item) => `${item.method} ${item.url}`), [
             'GET /api/tags',
             'POST /api/chat'
         ]);
+        const chatBody = JSON.parse(upstreamRequests[1].body);
+        assert.strictEqual(chatBody.think, false);
+        assert.deepStrictEqual(chatBody.messages, [{ role: 'user', content: 'hello' }]);
     } finally {
         await controller.stopBuiltinClaudeProxyRuntime();
         await closeServerForTest(upstream);
+    }
+});
+
+test('builtin Claude proxy maps Ollama upstream errors into Anthropic errors', async () => {
+    const upstream = http.createServer((req, res) => {
+        req.resume();
+        res.statusCode = 429;
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({
+            StatusCode: 429,
+            Status: '429 Too Many Requests',
+            error: 'weekly usage limit reached'
+        }));
+    });
+
+    const upstreamAddress = await listenForTest(upstream);
+    const proxyPort = await findFreePortForTest();
+    const settingsFile = path.join(os.tmpdir(), `codexmate-claude-proxy-error-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
+    const controller = createBuiltinClaudeProxyRuntimeController({
+        BUILTIN_CLAUDE_PROXY_SETTINGS_FILE: settingsFile,
+        DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS: {
+            enabled: true,
+            host: '127.0.0.1',
+            port: proxyPort,
+            provider: '',
+            authSource: 'none',
+            targetApi: 'ollama',
+            timeoutMs: 30000
+        },
+        BUILTIN_PROXY_PROVIDER_NAME: 'codexmate-builtin-proxy',
+        MAX_API_BODY_SIZE: 1024 * 1024,
+        HTTP_KEEP_ALIVE_AGENT: new HttpAgent({ keepAlive: false }),
+        HTTPS_KEEP_ALIVE_AGENT: new HttpsAgent({ keepAlive: false }),
+        readConfigOrVirtualDefault: () => ({ config: { model_providers: {}, model_provider: '' } }),
+        resolveBuiltinProxyProviderName: () => '',
+        resolveAuthTokenFromCurrentProfile: () => '',
+        OPENAI_BRIDGE_SETTINGS_FILE: '',
+        resolveOpenaiBridgeUpstream: () => null
+    });
+
+    try {
+        const start = await controller.startBuiltinClaudeProxyRuntime({
+            host: '127.0.0.1',
+            port: proxyPort,
+            authSource: 'none',
+            targetApi: 'ollama',
+            upstreamBaseUrl: `http://127.0.0.1:${upstreamAddress.port}`,
+            upstreamProviderName: 'ollama-error-test'
+        });
+        assert.strictEqual(start.success, true, JSON.stringify(start));
+
+        const messageRes = await fetch(`${start.listenUrl}/v1/messages`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                model: 'gemma4:31b-cloud',
+                messages: [{ role: 'user', content: 'hello' }]
+            })
+        });
+        assert.strictEqual(messageRes.status, 429);
+        const errorPayload = await messageRes.json();
+        assert.deepStrictEqual(errorPayload, {
+            type: 'error',
+            error: { type: 'api_error', message: 'weekly usage limit reached' }
+        });
+    } finally {
+        await controller.stopBuiltinClaudeProxyRuntime();
+        await closeServerForTest(upstream);
+        try { require('fs').rmSync(settingsFile, { force: true }); } catch (_) {}
     }
 });
 

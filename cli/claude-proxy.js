@@ -113,6 +113,11 @@ function isDroppableAnthropicBridgeBlock(block) {
     return type === 'thinking' || type === 'document';
 }
 
+function isDroppableAnthropicOllamaBlock(block) {
+    const type = block && typeof block.type === 'string' ? block.type : '';
+    return type === 'thinking' || type === 'document' || type === 'video';
+}
+
 function appendAnthropicMessageToResponsesInput(target, message) {
     if (!message || typeof message !== 'object') return;
     const roleRaw = typeof message.role === 'string' ? message.role.trim().toLowerCase() : '';
@@ -453,7 +458,7 @@ function appendAnthropicMessageToOllamaMessages(target, message) {
             if (image) images.push(image);
             continue;
         }
-        if (isDroppableAnthropicBridgeBlock(block)) {
+        if (isDroppableAnthropicOllamaBlock(block)) {
             continue;
         }
         if (block.type === 'tool_use' && role === 'assistant' && typeof block.name === 'string' && block.name.trim()) {
@@ -515,6 +520,14 @@ function buildBuiltinClaudeOllamaChatRequest(payload = {}) {
         if (stop.length) options.stop = stop;
     }
     if (Object.keys(options).length) requestBody.options = options;
+
+    if (isPlainObject(payload.thinking)) {
+        const thinkingType = typeof payload.thinking.type === 'string'
+            ? payload.thinking.type.trim().toLowerCase()
+            : '';
+        if (thinkingType === 'enabled') requestBody.think = true;
+        if (thinkingType === 'disabled') requestBody.think = false;
+    }
 
     if (Array.isArray(payload.tools) && payload.tools.length) {
         requestBody.tools = payload.tools
@@ -694,6 +707,9 @@ function buildAnthropicMessageFromChatCompletion(payload, requestPayload = {}) {
 function buildAnthropicMessageFromOllamaChat(payload, requestPayload = {}) {
     const ollamaMessage = payload && payload.message && typeof payload.message === 'object' ? payload.message : {};
     const content = [];
+    if (typeof ollamaMessage.thinking === 'string' && ollamaMessage.thinking) {
+        content.push({ type: 'thinking', thinking: ollamaMessage.thinking });
+    }
     if (typeof ollamaMessage.content === 'string' && ollamaMessage.content) {
         content.push({ type: 'text', text: ollamaMessage.content });
     }
@@ -733,7 +749,7 @@ function buildAnthropicMessageFromOllamaChat(payload, requestPayload = {}) {
         content,
         stop_reason: Array.isArray(content) && content.some((item) => item && item.type === 'tool_use')
             ? 'tool_use'
-            : (doneReason === 'length' ? 'max_tokens' : 'end_turn'),
+            : (doneReason === 'length' || doneReason === 'max_tokens' ? 'max_tokens' : 'end_turn'),
         stop_sequence: null,
         usage
     };
@@ -797,6 +813,28 @@ function buildAnthropicStreamEvents(message) {
                         type: 'content_block_delta',
                         index,
                         delta: { type: 'text_delta', text: block.text }
+                    }
+                });
+            }
+            events.push({ event: 'content_block_stop', data: { type: 'content_block_stop', index } });
+            return;
+        }
+        if (block.type === 'thinking') {
+            events.push({
+                event: 'content_block_start',
+                data: {
+                    type: 'content_block_start',
+                    index,
+                    content_block: { type: 'thinking', thinking: '' }
+                }
+            });
+            if (typeof block.thinking === 'string' && block.thinking) {
+                events.push({
+                    event: 'content_block_delta',
+                    data: {
+                        type: 'content_block_delta',
+                        index,
+                        delta: { type: 'thinking_delta', thinking: block.thinking }
                     }
                 });
             }
