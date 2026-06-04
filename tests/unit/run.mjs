@@ -54,6 +54,7 @@ await import(pathToFileURL(path.join(__dirname, 'builtin-proxy-responses-shim.te
 await import(pathToFileURL(path.join(__dirname, 'claude-proxy-adapter.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'coderabbit-workflows.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'release-changelog.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'update-version-status.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'ci-workflow-contract.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'lint-contract.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'npm-package-files.test.mjs')));

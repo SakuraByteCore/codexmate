@@ -1,11 +1,39 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, normalizeClass: _normalizeClass, createElementVNode: _createElementVNode, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox } = Vue
 
 return function render(_ctx, _cache) {
   return (_openBlock(), _createElementBlock(_Fragment, null, [
     (!_ctx.sessionStandalone)
       ? (_openBlock(), _createElementBlock("div", {
           key: 0,
+          class: "mobile-brand-bar"
+        }, [
+          _createElementVNode("div", { class: "mobile-brand-title" }, [
+            _createTextVNode("Codex Mate"),
+            (_ctx.appVersion)
+              ? (_openBlock(), _createElementBlock("span", {
+                  key: 0,
+                  class: "brand-version"
+                }, " v" + _toDisplayString(_ctx.appVersion), 1 /* TEXT */))
+              : _createCommentVNode("v-if", true)
+          ]),
+          (_ctx.isAppVersionStatusVisible())
+            ? (_openBlock(), _createElementBlock("button", {
+                key: 0,
+                type: "button",
+                class: _normalizeClass(['mobile-update-chip', 'mobile-update-chip--' + _ctx.appVersionStatusKind()]),
+                title: _ctx.appVersionStatusTitle(),
+                onClick: _ctx.handleAppVersionStatusClick
+              }, [
+                _createElementVNode("span", { class: "side-update-dot" }),
+                _createElementVNode("span", { class: "mobile-update-text" }, _toDisplayString(_ctx.appUpdateNoticeText()), 1 /* TEXT */)
+              ], 10 /* CLASS, PROPS */, ["title", "onClick"]))
+            : _createCommentVNode("v-if", true)
+        ]))
+      : _createCommentVNode("v-if", true),
+    (!_ctx.sessionStandalone)
+      ? (_openBlock(), _createElementBlock("div", {
+          key: 1,
           class: "top-tabs",
           role: "tablist",
           "aria-label": _ctx.t('nav.topTabs.aria')
@@ -126,7 +154,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (!_ctx.sessionStandalone)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 1,
+          key: 2,
           class: "lang-fab"
         }, [
           _createElementVNode("button", {
@@ -164,20 +192,20 @@ return function render(_ctx, _cache) {
                   ])
                 ])
               ]),
-              (_ctx.isAppUpdateAvailable())
+              (_ctx.isAppVersionStatusVisible())
                 ? (_openBlock(), _createElementBlock("button", {
                     key: 0,
                     type: "button",
-                    class: "side-update-notice",
-                    title: _ctx.appUpdateNoticeMeta(),
-                    onClick: _ctx.openAppUpdateDocs
+                    class: _normalizeClass(['side-update-notice', 'side-update-notice--' + _ctx.appVersionStatusKind()]),
+                    title: _ctx.appVersionStatusTitle(),
+                    onClick: _ctx.handleAppVersionStatusClick
                   }, [
                     _createElementVNode("span", { class: "side-update-dot" }),
                     _createElementVNode("span", { class: "side-update-copy" }, [
                       _createElementVNode("span", { class: "side-update-title" }, _toDisplayString(_ctx.appUpdateNoticeText()), 1 /* TEXT */),
                       _createElementVNode("span", { class: "side-update-meta" }, _toDisplayString(_ctx.appUpdateNoticeMeta()), 1 /* TEXT */)
                     ])
-                  ], 8 /* PROPS */, ["title", "onClick"]))
+                  ], 10 /* CLASS, PROPS */, ["title", "onClick"]))
                 : _createCommentVNode("v-if", true)
             ]),
             _createElementVNode("div", { class: "side-rail-nav" }, [
@@ -5357,7 +5385,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加提供商模态框 "),
     (_ctx.showAddModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 2,
+          key: 3,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAddModal, ["self"])
         }, [
@@ -5514,7 +5542,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑提供商模态框 "),
     (_ctx.showEditModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 3,
+          key: 4,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditModal, ["self"])
         }, [
@@ -5626,7 +5654,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加模型模态框 "),
     (_ctx.showModelModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 4,
+          key: 5,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeModelModal, ["self"])
         }, [
@@ -5666,7 +5694,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 模型列表模态框 "),
     (_ctx.showModelListModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 5,
+          key: 6,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showModelListModal = false), ["self"])
         }, [
@@ -5707,7 +5735,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加Claude配置模态框 "),
     (_ctx.showClaudeConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 6,
+          key: 7,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeClaudeConfigModal, ["self"])
         }, [
@@ -5859,7 +5887,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑Claude配置模态框 "),
     (_ctx.showEditConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 7,
+          key: 8,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditConfigModal, ["self"])
         }, [
@@ -6012,7 +6040,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Codex bridge pool modal "),
     (_ctx.showCodexBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 8,
+          key: 9,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showCodexBridgePoolModal = false), ["self"])
         }, [
@@ -6105,7 +6133,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showClaudeBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 9,
+          key: 10,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showClaudeBridgePoolModal = false), ["self"])
         }, [
@@ -6199,7 +6227,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Webhook settings modal "),
     (_ctx.showWebhookModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 10,
+          key: 11,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeWebhookModal, ["self"])
         }, [
@@ -6272,7 +6300,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showOpenclawConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 11,
+          key: 12,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!(_ctx.openclawSaving || _ctx.openclawApplying) && _ctx.closeOpenclawConfigModal()), ["self"])
         }, [
@@ -6984,7 +7012,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfigTemplateModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 12,
+          key: 13,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!_ctx.configTemplateApplying && _ctx.closeConfigTemplateModal()), ["self"])
         }, [
@@ -7129,7 +7157,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showAgentsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 13,
+          key: 14,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAgentsModal, ["self"])
         }, [
@@ -7297,7 +7325,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showSkillsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 14,
+          key: 15,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeSkillsModal, ["self"])
         }, [
@@ -7595,7 +7623,7 @@ return function render(_ctx, _cache) {
     }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
     (_ctx.showHealthCheckModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 15,
+          key: 16,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
@@ -7686,7 +7714,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfirmDialog)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 16,
+          key: 17,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeConfirmDialog, ["self"])
         }, [
@@ -7724,7 +7752,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Toast "),
     (_ctx.message)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 17,
+          key: 18,
           class: _normalizeClass(['toast', _ctx.messageType]),
           role: "status",
           "aria-live": "polite",

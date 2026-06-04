@@ -1,4 +1,16 @@
     <div id="app" class="container" v-cloak>
+        <div v-if="!sessionStandalone" class="mobile-brand-bar">
+            <div class="mobile-brand-title">Codex Mate<span v-if="appVersion" class="brand-version"> v{{ appVersion }}</span></div>
+            <button
+                v-if="isAppVersionStatusVisible()"
+                type="button"
+                :class="['mobile-update-chip', 'mobile-update-chip--' + appVersionStatusKind()]"
+                :title="appVersionStatusTitle()"
+                @click="handleAppVersionStatusClick">
+                <span class="side-update-dot"></span>
+                <span class="mobile-update-text">{{ appUpdateNoticeText() }}</span>
+            </button>
+        </div>
         <div v-if="!sessionStandalone" class="top-tabs" role="tablist" :aria-label="t('nav.topTabs.aria')">
             <button type="button" class="top-tab"
                 id="tab-dashboard"
@@ -111,11 +123,11 @@
                         </div>
                     </div>
                     <button
-                        v-if="isAppUpdateAvailable()"
+                        v-if="isAppVersionStatusVisible()"
                         type="button"
-                        class="side-update-notice"
-                        :title="appUpdateNoticeMeta()"
-                        @click="openAppUpdateDocs">
+                        :class="['side-update-notice', 'side-update-notice--' + appVersionStatusKind()]"
+                        :title="appVersionStatusTitle()"
+                        @click="handleAppVersionStatusClick">
                         <span class="side-update-dot"></span>
                         <span class="side-update-copy">
                             <span class="side-update-title">{{ appUpdateNoticeText() }}</span>

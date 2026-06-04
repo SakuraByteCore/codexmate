@@ -507,6 +507,69 @@ body::after {
     -webkit-text-fill-color: #8e8e93;
 }
 
+.mobile-brand-bar {
+    display: none;
+}
+
+.mobile-brand-title {
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 760;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-update-chip {
+    min-width: 0;
+    max-width: 58vw;
+    height: 30px;
+    padding: 0 9px;
+    border: 1px solid rgba(200, 121, 99, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.58);
+    color: var(--color-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+.mobile-update-chip--current {
+    border-color: rgba(72, 138, 102, 0.14);
+}
+
+.mobile-update-chip--current .side-update-dot {
+    background: rgba(72, 138, 102, 0.70);
+    box-shadow: 0 0 0 4px rgba(72, 138, 102, 0.08);
+}
+
+.mobile-update-chip--loading .side-update-dot {
+    animation: side-update-pulse 1.2s ease-in-out infinite;
+}
+
+.mobile-update-chip--error {
+    border-color: rgba(203, 75, 75, 0.18);
+}
+
+.mobile-update-chip--error .side-update-dot {
+    background: rgba(203, 75, 75, 0.78);
+    box-shadow: 0 0 0 4px rgba(203, 75, 75, 0.08);
+}
+
+.mobile-update-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    font-weight: 680;
+}
+
 .side-update-notice {
     width: 100%;
     margin-top: 12px;
@@ -528,6 +591,33 @@ body::after {
     border-color: rgba(200, 121, 99, 0.30);
     background: rgba(255, 255, 255, 0.74);
     color: var(--color-text-primary);
+}
+
+.side-update-notice--current {
+    border-color: rgba(72, 138, 102, 0.14);
+}
+
+.side-update-notice--current .side-update-dot {
+    background: rgba(72, 138, 102, 0.70);
+    box-shadow: 0 0 0 4px rgba(72, 138, 102, 0.08);
+}
+
+.side-update-notice--loading .side-update-dot {
+    animation: side-update-pulse 1.2s ease-in-out infinite;
+}
+
+.side-update-notice--error {
+    border-color: rgba(203, 75, 75, 0.18);
+}
+
+.side-update-notice--error .side-update-dot {
+    background: rgba(203, 75, 75, 0.78);
+    box-shadow: 0 0 0 4px rgba(203, 75, 75, 0.08);
+}
+
+@keyframes side-update-pulse {
+    0%, 100% { opacity: 0.48; transform: scale(0.94); }
+    50% { opacity: 1; transform: scale(1.08); }
 }
 
 .side-update-dot {

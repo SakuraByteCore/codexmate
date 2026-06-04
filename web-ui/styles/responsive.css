@@ -94,6 +94,18 @@ textarea:focus-visible {
         overflow: hidden;
     }
 
+    .mobile-brand-bar {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 12px 6px;
+        background: rgba(255, 248, 241, 0.96);
+        position: relative;
+        z-index: 32;
+    }
+
     .app-shell {
         grid-template-columns: 1fr;
         flex: 1 1 auto;

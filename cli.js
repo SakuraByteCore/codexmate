@@ -148,7 +148,7 @@ const {
     deleteCodexSkills
 } = require('./cli/skills');
 const { cmdImportSkills: cmdImportSkillsFromUrl } = require('./cli/import-skills-url');
-const { cmdToolUpdate, fetchLatestVersion } = require('./cli/update');
+const { cmdToolUpdate, fetchLatestVersionStatus } = require('./cli/update');
 const {
     getFileStatSafe,
     isBootstrapLikeText,
@@ -11246,12 +11246,16 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 }
                             })();
                             try {
-                                const latestVersion = await fetchLatestVersion({ timeoutMs: 2000 });
-                                result = { currentVersion, latestVersion };
+                                const force = !!(params && params.force);
+                                result = await fetchLatestVersionStatus({ currentVersion, timeoutMs: 2000, cacheTtlMs: force ? 0 : undefined });
                             } catch (e) {
                                 result = {
                                     currentVersion,
                                     latestVersion: '',
+                                    updateAvailable: false,
+                                    source: 'npm',
+                                    checkedAt: new Date().toISOString(),
+                                    cached: false,
                                     error: e && e.message ? e.message : '获取最新版本失败'
                                 };
                             }
