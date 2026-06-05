@@ -112,7 +112,7 @@
                             {{ t('common.backToEdit') }}
                         </button>
                         <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (agentsDiffVisible && !agentsDiffHasChanges)">
-                            {{ agentsSaving ? (agentsDiffVisible ? t('common.applying') : t('common.confirming')) : (agentsDiffVisible ? t('common.apply') : t('common.confirm')) }}
+                            {{ agentsSaving ? (agentsDiffVisible ? t('common.saving') : t('common.previewing')) : (agentsDiffVisible ? t('common.save') : t('common.preview')) }}
                         </button>
                     </div>
                 </div>

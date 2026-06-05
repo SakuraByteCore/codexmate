@@ -58,6 +58,8 @@ const vi = Object.freeze({
     'common.apply': 'Áp dụng',
     'common.applying': 'Đang áp dụng...',
     'common.confirming': 'Đang xác nhận...',
+    'common.preview': 'Xem trước',
+    'common.previewing': 'Đang xem trước...',
     'common.writeToEditor': 'Ghi vào trình soạn thảo',
     'common.refreshFromText': 'Làm mới từ văn bản',
     'common.backToEdit': 'Quay lại chỉnh sửa',

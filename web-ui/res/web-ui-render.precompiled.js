@@ -5390,7 +5390,7 @@ return function render(_ctx, _cache) {
             style: {"display":"none"},
             onChange: _ctx.handlePromptTemplatesImportChange
           }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
-          _createCommentVNode(" Prompts 编辑器 "),
+          _createCommentVNode(" Prompts editor "),
           _withDirectives(_createElementVNode("div", {
             class: "mode-content mode-cards",
             id: "panel-prompts",
@@ -5418,51 +5418,48 @@ return function render(_ctx, _cache) {
                     : _createCommentVNode("v-if", true)
                 ]),
                 _createElementVNode("div", { class: "prompts-editor-actions" }, [
-                  _createElementVNode("button", {
-                    class: "btn-mini btn-modal-copy",
-                    onClick: _ctx.exportAgentsContent,
-                    disabled: _ctx.agentsLoading
-                  }, _toDisplayString(_ctx.t('modal.agents.export')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                  _createElementVNode("button", {
-                    class: "btn-mini btn-modal-copy",
-                    onClick: _ctx.copyAgentsContent,
-                    disabled: _ctx.agentsLoading
-                  }, _toDisplayString(_ctx.t('modal.agents.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                  _createElementVNode("button", {
-                    class: "btn-mini btn-modal-copy",
-                    onClick: _ctx.pasteAgentsContent,
-                    disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible
-                  }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                  _createElementVNode("span", { class: "prompts-editor-actions-sep" }),
-                  _createElementVNode("button", {
-                    class: "btn-mini",
-                    onClick: _ctx.loadPromptsContent,
-                    disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                  }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                  (_ctx.agentsDiffVisible)
-                    ? (_openBlock(), _createElementBlock("button", {
-                        key: 0,
-                        class: "btn-mini",
-                        onClick: _ctx.resetAgentsDiffState,
-                        disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                      }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                    : _createCommentVNode("v-if", true),
-                  _createElementVNode("button", {
-                    class: "btn-mini btn-confirm-mini",
-                    onClick: _ctx.applyAgentsContent,
-                    disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
-                  }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.applying') : _ctx.t('common.confirming')) : (_ctx.agentsDiffVisible ? _ctx.t('common.apply') : _ctx.t('common.confirm'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
+                    _createElementVNode("button", {
+                      class: "btn-mini",
+                      onClick: _ctx.exportAgentsContent,
+                      disabled: _ctx.agentsLoading
+                    }, _toDisplayString(_ctx.t('modal.agents.export')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                    _createElementVNode("button", {
+                      class: "btn-mini",
+                      onClick: _ctx.copyAgentsContent,
+                      disabled: _ctx.agentsLoading
+                    }, _toDisplayString(_ctx.t('modal.agents.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                    _createElementVNode("button", {
+                      class: "btn-mini",
+                      onClick: _ctx.pasteAgentsContent,
+                      disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible
+                    }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ]),
+                  _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
+                    _createElementVNode("button", {
+                      class: "btn-mini",
+                      onClick: _ctx.loadPromptsContent,
+                      disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                    }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                    (_ctx.agentsDiffVisible)
+                      ? (_openBlock(), _createElementBlock("button", {
+                          key: 0,
+                          class: "btn-mini",
+                          onClick: _ctx.resetAgentsDiffState,
+                          disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                        }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("button", {
+                      class: "btn-mini btn-confirm-mini",
+                      onClick: _ctx.applyAgentsContent,
+                      disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (!_ctx.agentsDiffVisible && !_ctx.hasAgentsContentChanged()) || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
+                    }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.saving') : _ctx.t('common.previewing')) : (_ctx.agentsDiffVisible ? _ctx.t('common.save') : _ctx.t('common.preview'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ])
                 ])
               ]),
               _createElementVNode("div", { class: "form-group" }, [
-                (!_ctx.agentsLoading && (_ctx.hasAgentsContentChanged() || _ctx.agentsDiffVisible))
-                  ? (_openBlock(), _createElementBlock("div", {
-                      key: 0,
-                      class: "agents-diff-save-alert"
-                    }, _toDisplayString(_ctx.agentsDiffVisible ? _ctx.t('modal.agents.unsaved.previewModeHint') : _ctx.t('modal.agents.unsaved.detectedHint')), 1 /* TEXT */))
-                  : _createCommentVNode("v-if", true),
                 (_ctx.agentsDiffVisible)
-                  ? (_openBlock(), _createElementBlock("div", { key: 1 }, [
+                  ? (_openBlock(), _createElementBlock("div", { key: 0 }, [
                       (!_ctx.agentsDiffLoading && !_ctx.agentsDiffError && !_ctx.agentsDiffTruncated && (_ctx.agentsDiffStats.added || _ctx.agentsDiffStats.removed))
                         ? (_openBlock(), _createElementBlock("div", {
                             key: 0,
@@ -5508,49 +5505,69 @@ return function render(_ctx, _cache) {
                                 ]))
                     ]))
                   : _createCommentVNode("v-if", true),
-                _withDirectives(_createElementVNode("textarea", {
-                  "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
-                  class: "form-input template-editor",
-                  spellcheck: "false",
-                  readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
-                  onInput: _ctx.onAgentsContentInput,
-                  placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')
-                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
-                  [_vModelText, _ctx.agentsContent]
-                ]),
-                _createElementVNode("div", { class: "template-editor-warning" }, [
-                  _createTextVNode(_toDisplayString(_ctx.promptsHint) + " ", 1 /* TEXT */),
-                  _createElementVNode("div", { class: "agents-diff-hint" }, _toDisplayString(_ctx.t('modal.agents.hint.shortcuts')), 1 /* TEXT */),
-                  (!_ctx.agentsDiffVisible)
+                _createElementVNode("div", {
+                  class: _normalizeClass(['editor-frame', { 'editor-frame--loading': _ctx.agentsLoading }])
+                }, [
+                  (_ctx.agentsLoading)
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 0,
-                        class: "agents-diff-hint"
-                      }, _toDisplayString(_ctx.t('modal.agents.hint.twoStepSave')), 1 /* TEXT */))
-                    : (_ctx.agentsDiffLoading || _ctx.agentsSaving)
+                        class: "editor-skeleton"
+                      }, [
+                        (_openBlock(), _createElementBlock(_Fragment, null, _renderList(6, (i) => {
+                          return _createElementVNode("div", {
+                            class: "skeleton-line",
+                            key: i
+                          })
+                        }), 64 /* STABLE_FRAGMENT */))
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  _withDirectives(_createElementVNode("textarea", {
+                    "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
+                    class: "form-input template-editor",
+                    spellcheck: "false",
+                    readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                    onInput: _ctx.onAgentsContentInput,
+                    placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')
+                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
+                    [_vModelText, _ctx.agentsContent]
+                  ])
+                ], 2 /* CLASS */),
+                (!_ctx.agentsLoading && !_ctx.agentsDiffVisible && _ctx.hasAgentsContentChanged())
+                  ? (_openBlock(), _createElementBlock("div", {
+                      key: 1,
+                      class: "prompts-context-hint prompts-context-hint--warn"
+                    }, _toDisplayString(_ctx.t('modal.agents.unsaved.detectedHint')), 1 /* TEXT */))
+                  : (_ctx.agentsDiffVisible && (_ctx.agentsDiffLoading || _ctx.agentsSaving))
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 2,
+                        class: "prompts-context-hint"
+                      }, _toDisplayString(_ctx.t('diff.hint.busy')), 1 /* TEXT */))
+                    : (_ctx.agentsDiffVisible && _ctx.agentsDiffError)
                       ? (_openBlock(), _createElementBlock("div", {
-                          key: 1,
-                          class: "agents-diff-hint"
-                        }, _toDisplayString(_ctx.t('diff.hint.busy')), 1 /* TEXT */))
-                      : (_ctx.agentsDiffError)
+                          key: 3,
+                          class: "prompts-context-hint"
+                        }, _toDisplayString(_ctx.t('diff.hint.failedBack')), 1 /* TEXT */))
+                      : (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
                         ? (_openBlock(), _createElementBlock("div", {
-                            key: 2,
-                            class: "agents-diff-hint"
-                          }, _toDisplayString(_ctx.t('diff.hint.failedBack')), 1 /* TEXT */))
-                        : (!_ctx.agentsDiffHasChanges)
+                            key: 4,
+                            class: "prompts-context-hint"
+                          }, _toDisplayString(_ctx.t('diff.hint.noChangesBack')), 1 /* TEXT */))
+                        : (_ctx.agentsDiffVisible && _ctx.agentsDiffTruncated)
                           ? (_openBlock(), _createElementBlock("div", {
-                              key: 3,
-                              class: "agents-diff-hint"
-                            }, _toDisplayString(_ctx.t('diff.hint.noChangesBack')), 1 /* TEXT */))
-                          : (_ctx.agentsDiffTruncated)
+                              key: 5,
+                              class: "prompts-context-hint"
+                            }, _toDisplayString(_ctx.t('diff.viewHint.truncated')), 1 /* TEXT */))
+                          : (_ctx.agentsDiffVisible)
                             ? (_openBlock(), _createElementBlock("div", {
-                                key: 4,
-                                class: "agents-diff-hint"
-                              }, _toDisplayString(_ctx.t('diff.viewHint.truncated')), 1 /* TEXT */))
-                            : (_openBlock(), _createElementBlock("div", {
-                                key: 5,
-                                class: "agents-diff-hint"
+                                key: 6,
+                                class: "prompts-context-hint"
                               }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
-                ])
+                            : (!_ctx.agentsLoading)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 7,
+                                  class: "prompts-context-hint"
+                                }, _toDisplayString(_ctx.t('modal.agents.hint.twoStepSave')), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true)
               ])
             ])
           ], 512 /* NEED_PATCH */), [
@@ -7398,7 +7415,7 @@ return function render(_ctx, _cache) {
                   class: "btn-mini btn-confirm-mini",
                   onClick: _ctx.applyAgentsContent,
                   disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
-                }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.applying') : _ctx.t('common.confirming')) : (_ctx.agentsDiffVisible ? _ctx.t('common.apply') : _ctx.t('common.confirm'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.saving') : _ctx.t('common.previewing')) : (_ctx.agentsDiffVisible ? _ctx.t('common.save') : _ctx.t('common.preview'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
               ])
             ]),
             _createElementVNode("div", { class: "modal-editor-body" }, [

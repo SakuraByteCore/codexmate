@@ -184,6 +184,27 @@ textarea:focus-visible {
         gap: 6px;
     }
 
+    .mode-cards > .segmented-control {
+        flex-direction: row;
+    }
+
+    .prompts-editor-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .prompts-editor-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .template-editor,
+    .agents-diff-editor {
+        min-height: min(50vh, 400px);
+        max-height: min(56vh, 480px);
+    }
+
     .status-strip {
         gap: 12px;
     }
