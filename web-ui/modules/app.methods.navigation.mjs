@@ -15,7 +15,8 @@
         'plugins',
         'docs',
         'settings',
-        'trash'
+        'trash',
+        'prompts'
     ]);
     const loadDoctorOverview = async (vm, options = {}) => {
         if (!vm || typeof vm !== 'object') return false;

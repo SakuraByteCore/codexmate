@@ -1,0 +1,105 @@
+                <!-- Prompts 编辑器 -->
+                <div
+                    v-show="mainTab === 'prompts'"
+                    class="mode-content mode-cards"
+                    id="panel-prompts"
+                    role="tabpanel"
+                    aria-labelledby="tab-prompts">
+                <div class="segmented-control">
+                    <button type="button" :class="['segment', { active: promptsSubTab === 'codex' }]" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
+                    <button type="button" :class="['segment', { active: promptsSubTab === 'claude-md' }]" @click="switchPromptsSubTab('claude-md')">{{ t('prompts.subTab.claude') }}</button>
+                </div>
+
+                <div class="prompts-editor">
+                    <div class="prompts-editor-toolbar">
+                        <div class="form-hint">
+                            {{ agentsPath || t('common.notLoaded') }}
+                            <span v-if="agentsPath">
+                                （{{ agentsExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
+                            </span>
+                        </div>
+                        <div class="prompts-editor-actions">
+                            <button
+                                class="btn-mini btn-modal-copy"
+                                @click="exportAgentsContent"
+                                :disabled="agentsLoading">
+                                {{ t('modal.agents.export') }}
+                            </button>
+                            <button
+                                class="btn-mini btn-modal-copy"
+                                @click="copyAgentsContent"
+                                :disabled="agentsLoading">
+                                {{ t('modal.agents.copy') }}
+                            </button>
+                            <button
+                                class="btn-mini btn-modal-copy"
+                                @click="pasteAgentsContent"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible">
+                                {{ t('common.paste') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div
+                            v-if="!agentsLoading && (hasAgentsContentChanged() || agentsDiffVisible)"
+                            class="agents-diff-save-alert">
+                            {{ agentsDiffVisible ? t('modal.agents.unsaved.previewModeHint') : t('modal.agents.unsaved.detectedHint') }}
+                        </div>
+                        <div v-if="agentsDiffVisible">
+                            <div
+                                v-if="!agentsDiffLoading && !agentsDiffError && !agentsDiffTruncated && (agentsDiffStats.added || agentsDiffStats.removed)"
+                                class="agents-diff-summary">
+                                <span class="agents-diff-stat add">+{{ agentsDiffStats.added }}</span>
+                                <span class="agents-diff-stat del">-{{ agentsDiffStats.removed }}</span>
+                            </div>
+                            <div v-if="agentsDiffLoading" class="state-message">{{ t('diff.generating') }}</div>
+                            <div v-else-if="agentsDiffError" class="state-message error">{{ agentsDiffError }}</div>
+                            <div v-else-if="agentsDiffTruncated" class="agents-diff-empty">{{ t('diff.tooLargeSkip') }}</div>
+                            <div v-else-if="!agentsDiffHasChanges" class="agents-diff-empty">{{ t('diff.noChanges') }}</div>
+                            <div v-else class="agents-diff-view agents-diff-editor">
+                                <div
+                                    v-for="(line, index) in agentsDiffLines"
+                                    :key="line.key || (line.type + '-' + index)"
+                                    :class="['agents-diff-line', line.type]">
+                                    <span class="agents-diff-line-sign">
+                                        {{ line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ') }}
+                                    </span>
+                                    <span class="agents-diff-line-text">{{ line.value }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <textarea
+                            v-model="agentsContent"
+                            class="form-input template-editor"
+                            spellcheck="false"
+                            :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
+                            @input="onAgentsContentInput"
+                            :placeholder="t(promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')"></textarea>
+                        <div class="template-editor-warning">
+                            {{ promptsHint }}
+                            <div class="agents-diff-hint">{{ t('modal.agents.hint.shortcuts') }}</div>
+                            <div v-if="!agentsDiffVisible" class="agents-diff-hint">{{ t('modal.agents.hint.twoStepSave') }}</div>
+                            <div v-else-if="agentsDiffLoading || agentsSaving" class="agents-diff-hint">{{ t('diff.hint.busy') }}</div>
+                            <div v-else-if="agentsDiffError" class="agents-diff-hint">{{ t('diff.hint.failedBack') }}</div>
+                            <div v-else-if="!agentsDiffHasChanges" class="agents-diff-hint">{{ t('diff.hint.noChangesBack') }}</div>
+                            <div v-else-if="agentsDiffTruncated" class="agents-diff-hint">{{ t('diff.viewHint.truncated') }}</div>
+                            <div v-else class="agents-diff-hint">{{ t('diff.viewHint.preview') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-cancel" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading">{{ t('common.cancel') }}</button>
+                        <button
+                            v-if="agentsDiffVisible"
+                            class="btn"
+                            @click="resetAgentsDiffState"
+                            :disabled="agentsSaving || agentsDiffLoading">
+                            {{ t('common.backToEdit') }}
+                        </button>
+                        <button class="btn btn-confirm" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (agentsDiffVisible && !agentsDiffHasChanges)">
+                            {{ agentsSaving ? (agentsDiffVisible ? t('common.applying') : t('common.confirming')) : (agentsDiffVisible ? t('common.apply') : t('common.confirm')) }}
+                        </button>
+                    </div>
+                </div>
+                </div>

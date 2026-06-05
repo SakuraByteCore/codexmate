@@ -130,12 +130,14 @@ const ja = Object.freeze({
     'tab.market': 'Skills',
     'tab.plugins': 'プラグイン',
     'tab.settings': '設定',
+    'tab.prompts': 'Prompts',
 
     // Side rail section titles
     'side.overview': '概要',
     'side.docs': 'ドキュメント',
     'side.config': '設定',
     'side.sessions': 'セッション',
+    'side.prompts': 'Prompts',
     'side.plugins': 'プラグイン',
     'side.system': 'システム',
     'side.orchestration': 'タスク',
@@ -165,6 +167,10 @@ const ja = Object.freeze({
     'side.config.openclaw.meta': 'JSON5 / AGENTS',
     'side.sessions.browser': 'セッション閲覧',
     'side.sessions.browser.meta': '閲覧 / エクスポート / クリーンアップ',
+    'side.prompts.agents': 'AGENTS.md',
+    'side.prompts.agents.meta': 'Codex プロンプトファイル',
+    'side.prompts.claude': 'CLAUDE.md',
+    'side.prompts.claude.meta': 'Claude プロンプトファイル',
     'side.plugins.tools': 'プロンプトツール',
     'side.plugins.tools.meta': 'テンプレート / 変数',
     'side.plugins.templatesCount': '{count} 件のテンプレート',
@@ -183,6 +189,7 @@ const ja = Object.freeze({
     'kicker.docs': 'Docs',
     'kicker.trash': 'ゴミ箱',
     'kicker.settings': 'Settings',
+    'kicker.prompts': 'Prompts',
 
     'title.dashboard': 'Dashboard / Doctor',
     'title.config': 'ローカル設定コンソール',
@@ -193,6 +200,7 @@ const ja = Object.freeze({
     'title.plugins': 'プラグインとテンプレート',
     'title.docs': 'CLI インストールとドキュメント',
     'title.settings': 'システムとデータ設定',
+    'title.prompts': 'プロンプトファイルエディタ',
 
     'subtitle.dashboard': '集約状態と診断エントリ。',
     'subtitle.config': 'ローカル設定とモデルの管理。',
@@ -203,6 +211,9 @@ const ja = Object.freeze({
     'subtitle.plugins': 'テンプレート化されたプロンプトと再利用可能なプラグインの管理。',
     'subtitle.docs': 'CLI インストールコマンドとトラブルシューティング。',
     'subtitle.settings': 'ダウンロード・ディレクトリ・ゴミ箱の管理。',
+    'subtitle.prompts': 'AGENTS.md と CLAUDE.md を編集。',
+    'prompts.subTab.codex': 'AGENTS.md (Codex)',
+    'prompts.subTab.claude': 'CLAUDE.md (Claude)',
 
     'dashboard.doctor.title': 'Doctor',
     'dashboard.doctor.runChecks': 'チェックを実行',

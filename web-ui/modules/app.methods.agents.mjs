@@ -640,11 +640,64 @@ export function createAgentsMethods(options = {}) {
                         ? 'CLAUDE.md 已保存'
                         : (this.agentsContext === 'openclaw' ? 'OpenClaw AGENTS.md 已保存' : 'AGENTS.md 已保存'));
                 this.showMessage(successLabel, 'success');
-                this.closeAgentsModal({ force: true });
+                if (this.mainTab === 'prompts') {
+                    this.loadPromptsContent();
+                } else {
+                    this.closeAgentsModal({ force: true });
+                }
             } catch (e) {
                 this.showMessage(this.t('toast.save.fail'), 'error');
             } finally {
                 this.agentsSaving = false;
+            }
+        },
+
+        switchPromptsSubTab(subTab) {
+            const normalized = subTab === 'claude-md' ? 'claude-md' : 'codex';
+            if (this.promptsSubTab === normalized) {
+                this.loadPromptsContent();
+                return;
+            }
+            this.promptsSubTab = normalized;
+        },
+
+        async loadPromptsContent() {
+            const requestToken = issueLatestRequestToken(this, '_agentsOpenRequestToken');
+            this.agentsLoading = true;
+            this.resetAgentsDiffState();
+            try {
+                const isClaude = this.promptsSubTab === 'claude-md';
+                const action = isClaude ? 'get-claude-md-file' : 'get-agents-file';
+                const res = await api(action);
+                if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
+                    return;
+                }
+                if (res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                this.agentsContent = res.content || '';
+                this.agentsOriginalContent = this.agentsContent;
+                this.agentsPath = res.path || '';
+                this.agentsExists = !!res.exists;
+                this.agentsLineEnding = res.lineEnding === '\r\n' ? '\r\n' : '\n';
+                this.agentsContext = isClaude ? 'claude-md' : 'codex';
+                const t = typeof this.t === 'function' ? this.t : null;
+                const tr = (key, fallback) => (t ? t(key) : fallback);
+                if (isClaude) {
+                    this.promptsHint = tr('modal.agents.hint.claudeMd', '保存后会写入 ~/.claude/CLAUDE.md。');
+                } else {
+                    this.promptsHint = tr('modal.agents.hint.default', '保存后会写入目标 AGENTS.md（与 config.toml 同级）。');
+                }
+            } catch (e) {
+                if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
+                    return;
+                }
+                this.showMessage(this.t('toast.load.fail'), 'error');
+            } finally {
+                if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
+                    this.agentsLoading = false;
+                }
             }
         }
     };

@@ -151,6 +151,7 @@ export function createMainTabsComputed() {
             if (this.mainTab === 'plugins') return this.t('kicker.plugins');
             if (this.mainTab === 'docs') return this.t('kicker.docs');
             if (this.mainTab === 'trash') return this.t('kicker.trash');
+            if (this.mainTab === 'prompts') return this.t('kicker.prompts');
             return this.t('kicker.settings');
         },
         mainTabTitle() {
@@ -163,6 +164,7 @@ export function createMainTabsComputed() {
             if (this.mainTab === 'plugins') return this.t('title.plugins');
             if (this.mainTab === 'docs') return this.t('title.docs');
             if (this.mainTab === 'trash') return this.t('settings.trash.title');
+            if (this.mainTab === 'prompts') return this.t('title.prompts');
             return this.t('title.settings');
         },
         mainTabSubtitle() {
@@ -175,6 +177,7 @@ export function createMainTabsComputed() {
             if (this.mainTab === 'plugins') return this.t('subtitle.plugins');
             if (this.mainTab === 'docs') return this.t('subtitle.docs');
             if (this.mainTab === 'trash') return this.t('settings.trash.meta');
+            if (this.mainTab === 'prompts') return this.t('subtitle.prompts');
             return this.t('subtitle.settings');
         },
         taskOrchestrationSelectedRun() {

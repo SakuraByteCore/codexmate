@@ -94,6 +94,16 @@
                 @pointerdown="onMainTabPointerDown('plugins', $event)"
                 @click="onMainTabClick('plugins', $event)">{{ t('tab.plugins') }}</button>
             <button type="button" class="top-tab"
+                id="tab-prompts"
+                role="tab"
+                data-main-tab="prompts"
+                :tabindex="mainTab === 'prompts' ? 0 : -1"
+                :aria-selected="mainTab === 'prompts'"
+                aria-controls="panel-prompts"
+                :class="{ active: isMainTabNavActive('prompts') }"
+                @pointerdown="onMainTabPointerDown('prompts', $event)"
+                @click="onMainTabClick('prompts', $event)">{{ t('tab.prompts') }}</button>
+            <button type="button" class="top-tab"
                 id="tab-settings"
                 role="tab"
                 data-main-tab="settings"
@@ -211,6 +221,36 @@
                         <div class="side-item-meta">
                             <span>{{ t('side.config.openclaw.meta') }}</span>
                             <span v-if="currentOpenclawConfig">{{ t('common.current', { value: currentOpenclawConfig }) }}</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="side-section" role="navigation" :aria-label="t('side.prompts')">
+                    <div class="side-section-title">{{ t('side.prompts') }}</div>
+                    <button
+                        id="side-tab-prompts-agents"
+                        data-main-tab="prompts"
+                        data-prompts-sub-tab="codex"
+                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'codex' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'codex' }]"
+                        @pointerdown="onMainTabPointerDown('prompts', $event)"
+                        @click="promptsSubTab = 'codex'; onMainTabClick('prompts')">
+                        <div class="side-item-title">{{ t('side.prompts.agents') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.prompts.agents.meta') }}</span>
+                        </div>
+                    </button>
+                    <button
+                        id="side-tab-prompts-claude"
+                        data-main-tab="prompts"
+                        data-prompts-sub-tab="claude-md"
+                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'claude-md' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'claude-md' }]"
+                        @pointerdown="onMainTabPointerDown('prompts', $event)"
+                        @click="promptsSubTab = 'claude-md'; onMainTabClick('prompts')">
+                        <div class="side-item-title">{{ t('side.prompts.claude') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.prompts.claude.meta') }}</span>
                         </div>
                     </button>
                 </div>

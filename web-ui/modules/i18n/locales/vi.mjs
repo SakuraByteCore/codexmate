@@ -90,12 +90,14 @@ const vi = Object.freeze({
     'tab.market': 'Skills',
     'tab.plugins': 'Plugin',
     'tab.settings': 'Cài đặt',
+    'tab.prompts': 'Prompts',
 
     // Side rail section titles
     'side.overview': 'Tổng quan',
     'side.docs': 'Tài liệu',
     'side.config': 'Cấu hình',
     'side.sessions': 'Phiên',
+    'side.prompts': 'Prompts',
     'side.plugins': 'Plugin',
     'side.system': 'Hệ thống',
     'side.orchestration': 'Tác vụ',
@@ -125,6 +127,10 @@ const vi = Object.freeze({
     'side.config.openclaw.meta': 'JSON5 / AGENTS',
     'side.sessions.browser': 'Trình duyệt phiên',
     'side.sessions.browser.meta': 'Duyệt / Xuất / Dọn dẹp',
+    'side.prompts.agents': 'AGENTS.md',
+    'side.prompts.agents.meta': 'Tệp lệnh Codex',
+    'side.prompts.claude': 'CLAUDE.md',
+    'side.prompts.claude.meta': 'Tệp lệnh Claude',
     'side.plugins.tools': 'Công cụ prompt',
     'side.plugins.tools.meta': 'Mẫu / Biến',
     'side.system.settings': 'Cài đặt runtime',
@@ -162,6 +168,7 @@ const vi = Object.freeze({
     'kicker.plugins': 'Plugin',
     'kicker.docs': 'Tài liệu',
     'kicker.settings': 'Cài đặt',
+    'kicker.prompts': 'Prompts',
     'kicker.trash': 'Thùng rác',
 
     'title.dashboard': 'Dashboard / Doctor',
@@ -173,6 +180,7 @@ const vi = Object.freeze({
     'title.plugins': 'Plugin & Mẫu',
     'title.docs': 'Cài CLI & Tài liệu',
     'title.settings': 'Hệ thống & Dữ liệu',
+    'title.prompts': 'Trình chỉnh sửa tệp lệnh',
 
     'subtitle.dashboard': 'Tổng hợp trạng thái và chẩn đoán.',
     'subtitle.config': 'Quản lý cấu hình và mô hình cục bộ.',
@@ -183,6 +191,9 @@ const vi = Object.freeze({
     'subtitle.plugins': 'Quản lý plugin và mẫu tái sử dụng.',
     'subtitle.docs': 'Lệnh cài CLI và hướng dẫn.',
     'subtitle.settings': 'Quản lý tải xuống, thư mục và dữ liệu.',
+    'subtitle.prompts': 'Chỉnh sửa AGENTS.md và CLAUDE.md.',
+    'prompts.subTab.codex': 'AGENTS.md (Codex)',
+    'prompts.subTab.claude': 'CLAUDE.md (Claude)',
 
 
     // Task orchestration readiness

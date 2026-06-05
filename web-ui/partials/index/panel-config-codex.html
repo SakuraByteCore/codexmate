@@ -62,11 +62,6 @@
                 </div>
 
                 <div class="selector-section">
-                    <div class="selector-header"><span class="selector-title">AGENTS.md</span></div>
-                    <button class="btn-tool" @click="openAgentsEditor" :disabled="loading || !!initError || agentsLoading">{{ agentsLoading ? t('config.modelLoading') : t('config.agents.open') }}</button>
-                </div>
-
-                <div class="selector-section">
                     <div class="selector-header">
                         <span class="selector-title">{{ t('config.models') }}</span>
                         <div class="selector-actions">

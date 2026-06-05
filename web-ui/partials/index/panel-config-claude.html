@@ -109,12 +109,6 @@
                 </div>
 
                 <div class="selector-section">
-                    <div class="selector-header"><span class="selector-title">CLAUDE.md</span></div>
-                    <button class="btn-tool" @click="openClaudeMdEditor" :disabled="loading || !!initError || agentsLoading">{{ agentsLoading ? t('config.modelLoading') : t('claude.md.open') }}</button>
-                    <div class="config-template-hint">{{ t('claude.md.hint') }}</div>
-                </div>
-
-                <div class="selector-section">
                     <div class="selector-header"><span class="selector-title">{{ t('config.health.title') }}</span></div>
                     <button class="btn-tool" @click="runHealthCheck" :disabled="healthCheckLoading || loading || !!initError">{{ healthCheckLoading ? t('config.health.running') : t('config.health.run') }}</button>
                     <div class="config-template-hint">{{ t('config.health.hint') }}</div>

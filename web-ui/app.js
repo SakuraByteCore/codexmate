@@ -73,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showOpenclawConfigModal: false,
                 showConfigTemplateModal: false,
                 showAgentsModal: false,
+                promptsSubTab: 'codex',
+                promptsHint: '',
                 showSkillsModal: false,
                 showHealthCheckModal: false,
                 showCodexBridgePoolModal: false,
@@ -486,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             {
                 const NAV_STATE_STORAGE_KEY = 'codexmateNavState.v1';
-                const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash']);
+                const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
                 let restored = null;
                 try {
                     const raw = localStorage.getItem(NAV_STATE_STORAGE_KEY) || '';
@@ -708,6 +710,19 @@ document.addEventListener('DOMContentLoaded', () => {
             this.sessionPreviewContainerEl = null;
             this.sessionPreviewHeaderEl = null;
             this.clearSessionTimelineRefs();
+        },
+
+        watch: {
+            mainTab(newTab) {
+                if (newTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
+                    this.loadPromptsContent();
+                }
+            },
+            promptsSubTab() {
+                if (this.mainTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
+                    this.loadPromptsContent();
+                }
+            }
         },
 
         computed: createAppComputed(),
