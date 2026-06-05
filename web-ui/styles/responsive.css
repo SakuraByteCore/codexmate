@@ -237,6 +237,15 @@ textarea:focus-visible {
         grid-template-columns: 1fr;
     }
 
+    .usage-wave-container {
+        grid-template-columns: 28px 1fr;
+        padding: 16px 14px 16px 8px;
+    }
+
+    .usage-wave-ytick {
+        font-size: 9px;
+    }
+
 }
 
 @media (max-width: 540px) {

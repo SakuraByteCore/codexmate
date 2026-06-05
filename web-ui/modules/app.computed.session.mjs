@@ -777,7 +777,7 @@ export function createSessionComputed() {
                 ? this.sessionUsageDaily
                 : null;
             if (!daily || !Array.isArray(daily.rows) || daily.rows.length === 0) {
-                return { points: [], labels: [], linePath: '', areaPath: '', width: 800, maxTokens: 0 };
+                return { points: [], labels: [], linePath: '', areaPath: '', width: 800, maxTokens: 0, yTicks: [] };
             }
 
             const rows = daily.rows;
@@ -806,6 +806,29 @@ export function createSessionComputed() {
             const selectedKey = this.sessionsUsageSelectedDayKey;
             const selectedPoint = points.find(p => p.key === selectedKey) || points[points.length - 1] || null;
 
+            const yTicks = [];
+            if (maxTokens > 0) {
+                const rawStep = maxTokens / 4;
+                const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+                const residual = rawStep / magnitude;
+                const niceStep = residual <= 1.5 ? magnitude : (residual <= 3.5 ? 2 * magnitude : 5 * magnitude);
+                const tickCount = Math.ceil(maxTokens / niceStep);
+                for (let i = 0; i <= tickCount; i++) {
+                    const value = i * niceStep;
+                    if (value > maxTokens + niceStep * 0.5) break;
+                    const normalized = value / maxTokens;
+                    const y = padding.top + chartHeight - (normalized * chartHeight);
+                    yTicks.push({
+                        value,
+                        label: formatCompactUsageSummaryNumber(value),
+                        y,
+                        percent: (((height - y) / height) * 100).toFixed(1)
+                    });
+                }
+            } else {
+                yTicks.push({ value: 0, label: '0', y: padding.top + chartHeight, percent: (((height - (padding.top + chartHeight)) / height) * 100).toFixed(1) });
+            }
+
             return {
                 points,
                 labels: rows.map((row, index) => ({
@@ -817,6 +840,7 @@ export function createSessionComputed() {
                 width,
                 height,
                 maxTokens,
+                yTicks,
                 hoverX: selectedPoint ? selectedPoint.x : 0,
                 hoverY: selectedPoint ? selectedPoint.y : 0
             };

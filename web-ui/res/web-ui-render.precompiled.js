@@ -3006,80 +3006,104 @@ return function render(_ctx, _cache) {
                           }, [
                             _createElementVNode("div", { class: "usage-card-title" }, _toDisplayString(_ctx.t('usage.daily.title')), 1 /* TEXT */),
                             _createElementVNode("div", { class: "usage-wave-container" }, [
-                              (_openBlock(), _createElementBlock("svg", {
-                                class: "usage-wave-chart",
-                                viewBox: "0 0 800 140",
-                                preserveAspectRatio: "none"
-                              }, [
-                                _createElementVNode("defs", null, [
-                                  _createElementVNode("linearGradient", {
-                                    id: 'wave-gradient-' + _ctx.sessionsUsageTimeRange,
-                                    x1: "0",
-                                    y1: "0",
-                                    x2: "0",
-                                    y2: "1"
-                                  }, [
-                                    _createElementVNode("stop", {
-                                      offset: "0%",
-                                      "stop-color": 'var(--color-brand)',
-                                      "stop-opacity": "0.35"
-                                    }),
-                                    _createElementVNode("stop", {
-                                      offset: "100%",
-                                      "stop-color": 'var(--color-brand)',
-                                      "stop-opacity": "0"
-                                    })
-                                  ], 8 /* PROPS */, ["id"])
-                                ]),
-                                _createElementVNode("path", {
-                                  d: _ctx.sessionUsageWave.areaPath,
-                                  fill: 'url(#wave-gradient-' + _ctx.sessionsUsageTimeRange + ')',
-                                  class: "usage-wave-area"
-                                }, null, 8 /* PROPS */, ["d", "fill"]),
-                                _createElementVNode("path", {
-                                  d: _ctx.sessionUsageWave.linePath,
-                                  fill: "none",
-                                  stroke: 'var(--color-brand)',
-                                  "stroke-width": "2.5",
-                                  "stroke-linecap": "round",
-                                  "stroke-linejoin": "round",
-                                  class: "usage-wave-line"
-                                }, null, 8 /* PROPS */, ["d"]),
-                                (_ctx.sessionsUsageSelectedDay)
-                                  ? (_openBlock(), _createElementBlock("line", {
-                                      key: 0,
+                              _createElementVNode("div", { class: "usage-wave-yaxis" }, [
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageWave.yTicks, (tick) => {
+                                  return (_openBlock(), _createElementBlock("span", {
+                                    key: tick.value,
+                                    class: "usage-wave-ytick",
+                                    style: _normalizeStyle({ bottom: tick.percent + '%' })
+                                  }, _toDisplayString(tick.label), 5 /* TEXT, STYLE */))
+                                }), 128 /* KEYED_FRAGMENT */))
+                              ]),
+                              _createElementVNode("div", { class: "usage-wave-chart-area" }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "usage-wave-chart",
+                                  viewBox: "0 0 800 140",
+                                  preserveAspectRatio: "none"
+                                }, [
+                                  _createElementVNode("defs", null, [
+                                    _createElementVNode("linearGradient", {
+                                      id: 'wave-gradient-' + _ctx.sessionsUsageTimeRange,
+                                      x1: "0",
+                                      y1: "0",
+                                      x2: "0",
+                                      y2: "1"
+                                    }, [
+                                      _createElementVNode("stop", {
+                                        offset: "0%",
+                                        "stop-color": 'var(--color-brand)',
+                                        "stop-opacity": "0.35"
+                                      }),
+                                      _createElementVNode("stop", {
+                                        offset: "100%",
+                                        "stop-color": 'var(--color-brand)',
+                                        "stop-opacity": "0"
+                                      })
+                                    ], 8 /* PROPS */, ["id"])
+                                  ]),
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageWave.yTicks, (tick) => {
+                                    return (_openBlock(), _createElementBlock("line", {
+                                      key: 'g-' + tick.value,
                                       x1: "0",
                                       x2: _ctx.sessionUsageWave.width,
-                                      y1: _ctx.sessionUsageWave.hoverY,
-                                      y2: _ctx.sessionUsageWave.hoverY,
+                                      y1: tick.y,
+                                      y2: tick.y,
                                       stroke: "currentColor",
-                                      "stroke-width": "1",
-                                      "stroke-dasharray": "4 4",
-                                      opacity: "0.5",
-                                      class: "usage-wave-hover-line"
+                                      "stroke-width": "0.5",
+                                      opacity: "0.12",
+                                      class: "usage-wave-gridline"
                                     }, null, 8 /* PROPS */, ["x2", "y1", "y2"]))
-                                  : _createCommentVNode("v-if", true),
-                                (_ctx.sessionsUsageSelectedDay)
-                                  ? (_openBlock(), _createElementBlock("circle", {
-                                      key: 1,
-                                      cx: _ctx.sessionUsageWave.hoverX,
-                                      cy: _ctx.sessionUsageWave.hoverY,
-                                      r: "5",
-                                      fill: 'var(--color-surface)',
-                                      stroke: 'var(--color-brand)',
-                                      "stroke-width": "2.5",
-                                      class: "usage-wave-hover-point"
-                                    }, null, 8 /* PROPS */, ["cx", "cy"]))
-                                  : _createCommentVNode("v-if", true)
-                              ])),
-                              _createElementVNode("div", { class: "usage-wave-labels" }, [
-                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageWave.labels, (label) => {
-                                  return (_openBlock(), _createElementBlock("span", {
-                                    key: label.key,
-                                    class: _normalizeClass(["usage-wave-label", { active: _ctx.sessionsUsageSelectedDay === label.key }]),
-                                    onClick: $event => (_ctx.selectSessionsUsageDay(label.key))
-                                  }, _toDisplayString(label.text), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
-                                }), 128 /* KEYED_FRAGMENT */))
+                                  }), 128 /* KEYED_FRAGMENT */)),
+                                  _createElementVNode("path", {
+                                    d: _ctx.sessionUsageWave.areaPath,
+                                    fill: 'url(#wave-gradient-' + _ctx.sessionsUsageTimeRange + ')',
+                                    class: "usage-wave-area"
+                                  }, null, 8 /* PROPS */, ["d", "fill"]),
+                                  _createElementVNode("path", {
+                                    d: _ctx.sessionUsageWave.linePath,
+                                    fill: "none",
+                                    stroke: 'var(--color-brand)',
+                                    "stroke-width": "2.5",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    class: "usage-wave-line"
+                                  }, null, 8 /* PROPS */, ["d"]),
+                                  (_ctx.sessionsUsageSelectedDay)
+                                    ? (_openBlock(), _createElementBlock("line", {
+                                        key: 0,
+                                        x1: "0",
+                                        x2: _ctx.sessionUsageWave.width,
+                                        y1: _ctx.sessionUsageWave.hoverY,
+                                        y2: _ctx.sessionUsageWave.hoverY,
+                                        stroke: "currentColor",
+                                        "stroke-width": "1",
+                                        "stroke-dasharray": "4 4",
+                                        opacity: "0.5",
+                                        class: "usage-wave-hover-line"
+                                      }, null, 8 /* PROPS */, ["x2", "y1", "y2"]))
+                                    : _createCommentVNode("v-if", true),
+                                  (_ctx.sessionsUsageSelectedDay)
+                                    ? (_openBlock(), _createElementBlock("circle", {
+                                        key: 1,
+                                        cx: _ctx.sessionUsageWave.hoverX,
+                                        cy: _ctx.sessionUsageWave.hoverY,
+                                        r: "5",
+                                        fill: 'var(--color-surface)',
+                                        stroke: 'var(--color-brand)',
+                                        "stroke-width": "2.5",
+                                        class: "usage-wave-hover-point"
+                                      }, null, 8 /* PROPS */, ["cx", "cy"]))
+                                    : _createCommentVNode("v-if", true)
+                                ])),
+                                _createElementVNode("div", { class: "usage-wave-labels" }, [
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageWave.labels, (label) => {
+                                    return (_openBlock(), _createElementBlock("span", {
+                                      key: label.key,
+                                      class: _normalizeClass(["usage-wave-label", { active: _ctx.sessionsUsageSelectedDay === label.key }]),
+                                      onClick: $event => (_ctx.selectSessionsUsageDay(label.key))
+                                    }, _toDisplayString(label.text), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                                  }), 128 /* KEYED_FRAGMENT */))
+                                ])
                               ])
                             ]),
                             (_ctx.sessionsUsageSelectedDaySummary)
@@ -5574,7 +5598,7 @@ return function render(_ctx, _cache) {
             [_vShow, _ctx.mainTab === 'prompts']
           ]),
           _createCommentVNode(" 加载状态 "),
-          (_ctx.loading)
+          (_ctx.loading && _ctx.mainTab !== 'usage')
             ? (_openBlock(), _createElementBlock("div", {
                 key: 1,
                 class: "state-message"
