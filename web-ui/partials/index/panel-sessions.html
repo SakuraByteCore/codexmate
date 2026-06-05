@@ -219,33 +219,47 @@
                                         </div>
                                     </div>
                                     <div class="session-actions">
-                                        <button class="btn-session-refresh" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession">
-                                            {{ sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh') }}
+                                        <button class="btn-session-refresh" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
+                                            :title="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.8"/><path d="M13.5 8a5.5 5.5 0 0 1-9.4 3.8"/><polyline points="2.5 2 2.5 5 5.5 5"/><polyline points="13.5 14 13.5 11 10.5 11"/></svg>
                                         </button>
                                         <button
                                             v-if="isDeleteAvailable(activeSession)"
                                             class="btn-session-delete"
                                             @click="deleteSession(activeSession)"
-                                            :disabled="!activeSession || sessionsLoading || sessionDeleting[getSessionExportKey(activeSession)]">
-                                            {{ (activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash')) }}
+                                            :disabled="!activeSession || sessionsLoading || sessionDeleting[getSessionExportKey(activeSession)]"
+                                            :title="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 4 4 4 13 4"/><path d="M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4"/><path d="M12 4v9.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 13.5V4"/></svg>
                                         </button>
                                         <button
                                             class="btn-session-export"
                                             @click="exportSession(activeSession)"
-                                            :disabled="!activeSession || sessionExporting[getSessionExportKey(activeSession)]">
-                                            {{ (activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export') }}
+                                            :disabled="!activeSession || sessionExporting[getSessionExportKey(activeSession)]"
+                                            :title="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"/><polyline points="4 7 8 10.5 12 7"/><path d="M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12"/></svg>
                                         </button>
+                                        <div class="session-link-group">
                                         <button
                                             class="btn-session-open"
                                             @click="copySessionLink(activeSession)"
-                                            :disabled="!activeSession">
-                                            {{ t('sessions.preview.copyLink') }}
+                                            :disabled="!activeSession"
+                                            :title="t('sessions.preview.copyLink')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="4" height="2" rx="1"/><path d="M4.5 4h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5"/><line x1="6" y1="7.5" x2="10" y2="7.5"/><line x1="6" y1="10" x2="10" y2="10"/></svg>
                                         </button>
                                         <button
                                             class="btn-session-open"
+                                            @click="openSessionLink(activeSession)"
+                                            :disabled="!activeSession"
+                                            :title="t('sessions.preview.openLink')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2h-8.5A1.5 1.5 0 0 0 2 3.5v8A1.5 1.5 0 0 0 3.5 13h8a1.5 1.5 0 0 0 1.5-1.5v-3"/><path d="M13 2v4h-4"/><path d="M13 2L7 8"/></svg>
+                                        </button>
+                                        </div>
+                                        <button
+                                            class="btn-session-open"
                                             @click="copySessionPath(activeSession)"
-                                            :disabled="!activeSession || !getSessionFilePath(activeSession)">
-                                            {{ t('sessions.preview.copyPath') }}
+                                            :disabled="!activeSession || !getSessionFilePath(activeSession)"
+                                            :title="t('sessions.preview.copyPath')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="4" height="2" rx="1"/><path d="M4.5 4h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5"/><line x1="6" y1="7.5" x2="10" y2="7.5"/><line x1="6" y1="10" x2="10" y2="10"/></svg>
                                         </button>
                                     </div>
                                 </div>

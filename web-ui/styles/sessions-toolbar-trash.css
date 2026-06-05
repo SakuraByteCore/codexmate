@@ -388,31 +388,33 @@
 .btn-session-open,
 .btn-session-clone,
 .btn-session-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
     border: 1px solid var(--color-border-soft);
     border-radius: var(--radius-md);
     background: var(--color-surface);
     color: var(--color-text-secondary);
-    padding: 7px 12px;
-    font-size: var(--font-size-secondary);
-    font-weight: var(--font-weight-secondary);
     cursor: pointer;
     transition: all var(--transition-fast) var(--ease-spring);
-    white-space: nowrap;
-    letter-spacing: -0.01em;
 }
 
 .btn-session-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
     border: 1px solid rgba(189, 70, 68, 0.4);
     border-radius: var(--radius-md);
     background: var(--color-surface);
     color: #b74545;
-    padding: 7px 12px;
-    font-size: var(--font-size-secondary);
-    font-weight: var(--font-weight-secondary);
     cursor: pointer;
     transition: all var(--transition-fast) var(--ease-spring);
-    white-space: nowrap;
-    letter-spacing: -0.01em;
 }
 
 .btn-session-refresh:hover {
@@ -425,6 +427,39 @@
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+}
+
+.btn-session-refresh svg,
+.btn-session-delete svg,
+.btn-session-export svg,
+.btn-session-open svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.session-link-group {
+    display: inline-flex;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-soft);
+    overflow: hidden;
+}
+
+.session-link-group .btn-session-open {
+    border: none;
+    border-radius: 0;
+}
+
+.session-link-group .btn-session-open + .btn-session-open {
+    border-left: 1px solid var(--color-border-soft);
+}
+
+.session-link-group:hover {
+    border-color: var(--color-brand);
+}
+
+.session-link-group .btn-session-open:disabled {
+    opacity: 0.45;
 }
 
 .btn-session-export:hover,

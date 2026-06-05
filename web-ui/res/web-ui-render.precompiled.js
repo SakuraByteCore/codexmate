@@ -2676,31 +2676,157 @@ return function render(_ctx, _cache) {
                                         _createElementVNode("button", {
                                           class: "btn-session-refresh",
                                           onClick: _ctx.loadActiveSessionDetail,
-                                          disabled: _ctx.sessionDetailLoading || !_ctx.activeSession
-                                        }, _toDisplayString(_ctx.sessionDetailLoading ? _ctx.t('sessions.preview.loading') : _ctx.t('sessions.preview.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                          disabled: _ctx.sessionDetailLoading || !_ctx.activeSession,
+                                          title: _ctx.sessionDetailLoading ? _ctx.t('sessions.preview.loading') : _ctx.t('sessions.preview.refresh')
+                                        }, [
+                                          (_openBlock(), _createElementBlock("svg", {
+                                            viewBox: "0 0 16 16",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "1.8",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round"
+                                          }, [
+                                            _createElementVNode("path", { d: "M2.5 8a5.5 5.5 0 0 1 9.4-3.8" }),
+                                            _createElementVNode("path", { d: "M13.5 8a5.5 5.5 0 0 1-9.4 3.8" }),
+                                            _createElementVNode("polyline", { points: "2.5 2 2.5 5 5.5 5" }),
+                                            _createElementVNode("polyline", { points: "13.5 14 13.5 11 10.5 11" })
+                                          ]))
+                                        ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
                                         (_ctx.isDeleteAvailable(_ctx.activeSession))
                                           ? (_openBlock(), _createElementBlock("button", {
                                               key: 0,
                                               class: "btn-session-delete",
                                               onClick: $event => (_ctx.deleteSession(_ctx.activeSession)),
-                                              disabled: !_ctx.activeSession || _ctx.sessionsLoading || _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]
-                                            }, _toDisplayString((_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                                              disabled: !_ctx.activeSession || _ctx.sessionsLoading || _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)],
+                                              title: (_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))
+                                            }, [
+                                              (_openBlock(), _createElementBlock("svg", {
+                                                viewBox: "0 0 16 16",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                "stroke-width": "1.8",
+                                                "stroke-linecap": "round",
+                                                "stroke-linejoin": "round"
+                                              }, [
+                                                _createElementVNode("polyline", { points: "3 4 4 4 13 4" }),
+                                                _createElementVNode("path", { d: "M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4" }),
+                                                _createElementVNode("path", { d: "M12 4v9.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 13.5V4" })
+                                              ]))
+                                            ], 8 /* PROPS */, ["onClick", "disabled", "title"]))
                                           : _createCommentVNode("v-if", true),
                                         _createElementVNode("button", {
                                           class: "btn-session-export",
                                           onClick: $event => (_ctx.exportSession(_ctx.activeSession)),
-                                          disabled: !_ctx.activeSession || _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]
-                                        }, _toDisplayString((_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                                        _createElementVNode("button", {
-                                          class: "btn-session-open",
-                                          onClick: $event => (_ctx.copySessionLink(_ctx.activeSession)),
-                                          disabled: !_ctx.activeSession
-                                        }, _toDisplayString(_ctx.t('sessions.preview.copyLink')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                          disabled: !_ctx.activeSession || _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)],
+                                          title: (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')
+                                        }, [
+                                          (_openBlock(), _createElementBlock("svg", {
+                                            viewBox: "0 0 16 16",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "1.8",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round"
+                                          }, [
+                                            _createElementVNode("path", { d: "M8 2v8" }),
+                                            _createElementVNode("polyline", { points: "4 7 8 10.5 12 7" }),
+                                            _createElementVNode("path", { d: "M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12" })
+                                          ]))
+                                        ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                                        _createElementVNode("div", { class: "session-link-group" }, [
+                                          _createElementVNode("button", {
+                                            class: "btn-session-open",
+                                            onClick: $event => (_ctx.copySessionLink(_ctx.activeSession)),
+                                            disabled: !_ctx.activeSession,
+                                            title: _ctx.t('sessions.preview.copyLink')
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 16 16",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "1.8",
+                                              "stroke-linecap": "round",
+                                              "stroke-linejoin": "round"
+                                            }, [
+                                              _createElementVNode("rect", {
+                                                x: "6",
+                                                y: "2.5",
+                                                width: "4",
+                                                height: "2",
+                                                rx: "1"
+                                              }),
+                                              _createElementVNode("path", { d: "M4.5 4h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5" }),
+                                              _createElementVNode("line", {
+                                                x1: "6",
+                                                y1: "7.5",
+                                                x2: "10",
+                                                y2: "7.5"
+                                              }),
+                                              _createElementVNode("line", {
+                                                x1: "6",
+                                                y1: "10",
+                                                x2: "10",
+                                                y2: "10"
+                                              })
+                                            ]))
+                                          ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                                          _createElementVNode("button", {
+                                            class: "btn-session-open",
+                                            onClick: $event => (_ctx.openSessionLink(_ctx.activeSession)),
+                                            disabled: !_ctx.activeSession,
+                                            title: _ctx.t('sessions.preview.openLink')
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 16 16",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "1.8",
+                                              "stroke-linecap": "round",
+                                              "stroke-linejoin": "round"
+                                            }, [
+                                              _createElementVNode("path", { d: "M12 2h-8.5A1.5 1.5 0 0 0 2 3.5v8A1.5 1.5 0 0 0 3.5 13h8a1.5 1.5 0 0 0 1.5-1.5v-3" }),
+                                              _createElementVNode("path", { d: "M13 2v4h-4" }),
+                                              _createElementVNode("path", { d: "M13 2L7 8" })
+                                            ]))
+                                          ], 8 /* PROPS */, ["onClick", "disabled", "title"])
+                                        ]),
                                         _createElementVNode("button", {
                                           class: "btn-session-open",
                                           onClick: $event => (_ctx.copySessionPath(_ctx.activeSession)),
-                                          disabled: !_ctx.activeSession || !_ctx.getSessionFilePath(_ctx.activeSession)
-                                        }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                          disabled: !_ctx.activeSession || !_ctx.getSessionFilePath(_ctx.activeSession),
+                                          title: _ctx.t('sessions.preview.copyPath')
+                                        }, [
+                                          (_openBlock(), _createElementBlock("svg", {
+                                            viewBox: "0 0 16 16",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "1.8",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round"
+                                          }, [
+                                            _createElementVNode("rect", {
+                                              x: "6",
+                                              y: "2.5",
+                                              width: "4",
+                                              height: "2",
+                                              rx: "1"
+                                            }),
+                                            _createElementVNode("path", { d: "M4.5 4h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5" }),
+                                            _createElementVNode("line", {
+                                              x1: "6",
+                                              y1: "7.5",
+                                              x2: "10",
+                                              y2: "7.5"
+                                            }),
+                                            _createElementVNode("line", {
+                                              x1: "6",
+                                              y1: "10",
+                                              x2: "10",
+                                              y2: "10"
+                                            })
+                                          ]))
+                                        ], 8 /* PROPS */, ["onClick", "disabled", "title"])
                                       ])
                                     ], 512 /* NEED_PATCH */),
                                     (_ctx.sessionDetailLoading && !_ctx.sessionPreviewLoadingMore)

@@ -303,16 +303,25 @@ textarea:focus-visible {
     .btn-add,
     .btn-tool,
     .card-action-btn,
-    .btn-session-export,
-    .btn-session-open,
-    .btn-session-clone,
-    .btn-session-refresh,
-    .btn-session-delete,
     .btn-icon,
     .session-item-copy {
         min-height: 44px;
         padding-top: 12px;
         padding-bottom: 12px;
+    }
+
+    .btn-session-export,
+    .btn-session-open,
+    .btn-session-clone,
+    .btn-session-refresh,
+    .btn-session-delete {
+        width: 44px;
+        height: 44px;
+    }
+
+    .session-link-group .btn-session-open {
+        width: 44px;
+        height: 44px;
     }
 
     .btn-icon,

@@ -626,6 +626,7 @@ const ja = Object.freeze({
     'sessions.preview.openStandalone': 'スタンドアロンで開く',
     'sessions.preview.copyLink': 'リンクをコピー',
     'sessions.preview.copyPath': 'パスをコピー',
+    'sessions.preview.openLink': 'リンクを開く',
     'sessions.preview.loadingBody': 'メッセージ読み込み中...',
     'sessions.preview.emptyMsgs': 'メッセージがありません',
     'sessions.preview.rendering': 'レンダリング中...',

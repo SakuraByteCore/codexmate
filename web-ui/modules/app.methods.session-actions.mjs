@@ -129,6 +129,12 @@ export function createSessionActionMethods(options = {}) {
             this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
+        openSessionLink(session) {
+            const url = this.buildSessionStandaloneUrl(session);
+            if (!url) { this.showMessage('无法生成链接', 'error'); return; }
+            window.open(url, '_blank', 'noopener');
+        },
+
         getSessionFilePath(session) {
             const filePath = typeof session?.filePath === 'string' ? session.filePath.trim() : '';
             return filePath;
