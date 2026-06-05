@@ -205,6 +205,11 @@ textarea:focus-visible {
         max-height: min(56vh, 480px);
     }
 
+    .prompts-editor .template-editor {
+        min-height: 60vh;
+        max-height: none;
+    }
+
     .status-strip {
         gap: 12px;
     }
