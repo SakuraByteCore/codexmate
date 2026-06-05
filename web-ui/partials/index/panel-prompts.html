@@ -37,6 +37,18 @@
                                 :disabled="agentsLoading || agentsSaving || agentsDiffVisible">
                                 {{ t('common.paste') }}
                             </button>
+                            <span class="prompts-editor-actions-sep"></span>
+                            <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading">{{ t('common.cancel') }}</button>
+                            <button
+                                v-if="agentsDiffVisible"
+                                class="btn-mini"
+                                @click="resetAgentsDiffState"
+                                :disabled="agentsSaving || agentsDiffLoading">
+                                {{ t('common.backToEdit') }}
+                            </button>
+                            <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (agentsDiffVisible && !agentsDiffHasChanges)">
+                                {{ agentsSaving ? (agentsDiffVisible ? t('common.applying') : t('common.confirming')) : (agentsDiffVisible ? t('common.apply') : t('common.confirm')) }}
+                            </button>
                         </div>
                     </div>
 
@@ -88,18 +100,5 @@
                         </div>
                     </div>
 
-                    <div class="btn-group">
-                        <button class="btn btn-cancel" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading">{{ t('common.cancel') }}</button>
-                        <button
-                            v-if="agentsDiffVisible"
-                            class="btn"
-                            @click="resetAgentsDiffState"
-                            :disabled="agentsSaving || agentsDiffLoading">
-                            {{ t('common.backToEdit') }}
-                        </button>
-                        <button class="btn btn-confirm" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (agentsDiffVisible && !agentsDiffHasChanges)">
-                            {{ agentsSaving ? (agentsDiffVisible ? t('common.applying') : t('common.confirming')) : (agentsDiffVisible ? t('common.apply') : t('common.confirm')) }}
-                        </button>
-                    </div>
                 </div>
                 </div>

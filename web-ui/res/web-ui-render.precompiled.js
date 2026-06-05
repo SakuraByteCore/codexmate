@@ -5432,7 +5432,26 @@ return function render(_ctx, _cache) {
                     class: "btn-mini btn-modal-copy",
                     onClick: _ctx.pasteAgentsContent,
                     disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible
-                  }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  _createElementVNode("span", { class: "prompts-editor-actions-sep" }),
+                  _createElementVNode("button", {
+                    class: "btn-mini",
+                    onClick: _ctx.loadPromptsContent,
+                    disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                  }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  (_ctx.agentsDiffVisible)
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 0,
+                        class: "btn-mini",
+                        onClick: _ctx.resetAgentsDiffState,
+                        disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                      }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                    : _createCommentVNode("v-if", true),
+                  _createElementVNode("button", {
+                    class: "btn-mini btn-confirm-mini",
+                    onClick: _ctx.applyAgentsContent,
+                    disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
+                  }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.applying') : _ctx.t('common.confirming')) : (_ctx.agentsDiffVisible ? _ctx.t('common.apply') : _ctx.t('common.confirm'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                 ])
               ]),
               _createElementVNode("div", { class: "form-group" }, [
@@ -5532,26 +5551,6 @@ return function render(_ctx, _cache) {
                                 class: "agents-diff-hint"
                               }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
                 ])
-              ]),
-              _createElementVNode("div", { class: "btn-group" }, [
-                _createElementVNode("button", {
-                  class: "btn btn-cancel",
-                  onClick: _ctx.loadPromptsContent,
-                  disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                (_ctx.agentsDiffVisible)
-                  ? (_openBlock(), _createElementBlock("button", {
-                      key: 0,
-                      class: "btn",
-                      onClick: _ctx.resetAgentsDiffState,
-                      disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                    }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                  : _createCommentVNode("v-if", true),
-                _createElementVNode("button", {
-                  class: "btn btn-confirm",
-                  onClick: _ctx.applyAgentsContent,
-                  disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
-                }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.applying') : _ctx.t('common.confirming')) : (_ctx.agentsDiffVisible ? _ctx.t('common.apply') : _ctx.t('common.confirm'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
               ])
             ])
           ], 512 /* NEED_PATCH */), [
@@ -7380,7 +7379,26 @@ return function render(_ctx, _cache) {
                   class: "btn-mini btn-modal-copy",
                   onClick: _ctx.pasteAgentsContent,
                   disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible
-                }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                _createElementVNode("span", { class: "prompts-editor-actions-sep" }),
+                _createElementVNode("button", {
+                  class: "btn-mini",
+                  onClick: _ctx.closeAgentsModal,
+                  disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                (_ctx.agentsDiffVisible)
+                  ? (_openBlock(), _createElementBlock("button", {
+                      key: 0,
+                      class: "btn-mini",
+                      onClick: _ctx.resetAgentsDiffState,
+                      disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                    }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                  : _createCommentVNode("v-if", true),
+                _createElementVNode("button", {
+                  class: "btn-mini btn-confirm-mini",
+                  onClick: _ctx.applyAgentsContent,
+                  disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
+                }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.applying') : _ctx.t('common.confirming')) : (_ctx.agentsDiffVisible ? _ctx.t('common.apply') : _ctx.t('common.confirm'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
               ])
             ]),
             _createElementVNode("div", { class: "modal-editor-body" }, [
@@ -7492,26 +7510,6 @@ return function render(_ctx, _cache) {
                               }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
                 ])
               ])
-            ]),
-            _createElementVNode("div", { class: "btn-group modal-editor-footer" }, [
-              _createElementVNode("button", {
-                class: "btn btn-cancel",
-                onClick: _ctx.closeAgentsModal,
-                disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-              }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-              (_ctx.agentsDiffVisible)
-                ? (_openBlock(), _createElementBlock("button", {
-                    key: 0,
-                    class: "btn",
-                    onClick: _ctx.resetAgentsDiffState,
-                    disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                  }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                : _createCommentVNode("v-if", true),
-              _createElementVNode("button", {
-                class: "btn btn-confirm",
-                onClick: _ctx.applyAgentsContent,
-                disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
-              }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.applying') : _ctx.t('common.confirming')) : (_ctx.agentsDiffVisible ? _ctx.t('common.apply') : _ctx.t('common.confirm'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
             ])
           ])
         ], 8 /* PROPS */, ["onClick"]))
