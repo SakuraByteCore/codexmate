@@ -90,6 +90,10 @@ export function createSessionActionMethods(options = {}) {
             this.loadSessionStandalonePlain();
         },
 
+        canBuildStandaloneUrl(session) {
+            return !!this.buildSessionStandaloneUrl(session);
+        },
+
         buildSessionStandaloneUrl(session) {
             if (!session) return '';
             const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';

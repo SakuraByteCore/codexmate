@@ -101,12 +101,14 @@
                                             <circle v-if="sessionsUsageSelectedDay" :cx="sessionUsageWave.hoverX" :cy="sessionUsageWave.hoverY" r="5" :fill="'var(--color-surface)'" :stroke="'var(--color-brand)'" stroke-width="2.5" class="usage-wave-hover-point"/>
                                         </svg>
                                         <div class="usage-wave-labels">
-                                            <span v-for="label in sessionUsageWave.labels" :key="label.key"
+                                            <button v-for="label in sessionUsageWave.labels" :key="label.key"
+                                                  type="button"
                                                   class="usage-wave-label"
                                                   :class="{ active: sessionsUsageSelectedDay === label.key }"
+                                                  :aria-pressed="sessionsUsageSelectedDay === label.key"
                                                   @click="selectSessionsUsageDay(label.key)">
                                                 {{ label.text }}
-                                            </span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
