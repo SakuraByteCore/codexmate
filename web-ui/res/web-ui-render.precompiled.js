@@ -5684,42 +5684,12 @@ return function render(_ctx, _cache) {
                         [_vModelText, _ctx.agentsContent]
                       ])
                     ], 2 /* CLASS */),
-                    (!_ctx.agentsLoading && !_ctx.agentsDiffVisible && _ctx.hasAgentsContentChanged())
+                    (_ctx.promptsContextHint)
                       ? (_openBlock(), _createElementBlock("div", {
                           key: 1,
-                          class: "prompts-context-hint prompts-context-hint--warn"
-                        }, _toDisplayString(_ctx.t('modal.agents.unsaved.detectedHint')), 1 /* TEXT */))
-                      : (_ctx.agentsDiffVisible && (_ctx.agentsDiffLoading || _ctx.agentsSaving))
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 2,
-                            class: "prompts-context-hint"
-                          }, _toDisplayString(_ctx.t('diff.hint.busy')), 1 /* TEXT */))
-                        : (_ctx.agentsDiffVisible && _ctx.agentsDiffError)
-                          ? (_openBlock(), _createElementBlock("div", {
-                              key: 3,
-                              class: "prompts-context-hint"
-                            }, _toDisplayString(_ctx.t('diff.hint.failedBack')), 1 /* TEXT */))
-                          : (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 4,
-                                class: "prompts-context-hint"
-                              }, _toDisplayString(_ctx.t('diff.hint.noChangesBack')), 1 /* TEXT */))
-                            : (_ctx.agentsDiffVisible && _ctx.agentsDiffTruncated)
-                              ? (_openBlock(), _createElementBlock("div", {
-                                  key: 5,
-                                  class: "prompts-context-hint"
-                                }, _toDisplayString(_ctx.t('diff.viewHint.truncated')), 1 /* TEXT */))
-                              : (_ctx.agentsDiffVisible)
-                                ? (_openBlock(), _createElementBlock("div", {
-                                    key: 6,
-                                    class: "prompts-context-hint"
-                                  }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
-                                : (!_ctx.agentsLoading)
-                                  ? (_openBlock(), _createElementBlock("div", {
-                                      key: 7,
-                                      class: "prompts-context-hint"
-                                    }, _toDisplayString(_ctx.t('modal.agents.hint.twoStepSave')), 1 /* TEXT */))
-                                  : _createCommentVNode("v-if", true)
+                          class: _normalizeClass(['prompts-context-hint', { 'prompts-context-hint--warn': _ctx.promptsContextHint.warn }])
+                        }, _toDisplayString(_ctx.promptsContextHint.text), 3 /* TEXT, CLASS */))
+                      : _createCommentVNode("v-if", true)
                   ])
                 ])
               ]))

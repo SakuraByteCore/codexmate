@@ -91,26 +91,8 @@
                                 @input="onAgentsContentInput"
                                 :placeholder="t(promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')"></textarea>
                         </div>
-                        <div v-if="!agentsLoading && !agentsDiffVisible && hasAgentsContentChanged()" class="prompts-context-hint prompts-context-hint--warn">
-                            {{ t('modal.agents.unsaved.detectedHint') }}
-                        </div>
-                        <div v-else-if="agentsDiffVisible && (agentsDiffLoading || agentsSaving)" class="prompts-context-hint">
-                            {{ t('diff.hint.busy') }}
-                        </div>
-                        <div v-else-if="agentsDiffVisible && agentsDiffError" class="prompts-context-hint">
-                            {{ t('diff.hint.failedBack') }}
-                        </div>
-                        <div v-else-if="agentsDiffVisible && !agentsDiffHasChanges" class="prompts-context-hint">
-                            {{ t('diff.hint.noChangesBack') }}
-                        </div>
-                        <div v-else-if="agentsDiffVisible && agentsDiffTruncated" class="prompts-context-hint">
-                            {{ t('diff.viewHint.truncated') }}
-                        </div>
-                        <div v-else-if="agentsDiffVisible" class="prompts-context-hint">
-                            {{ t('diff.viewHint.preview') }}
-                        </div>
-                        <div v-else-if="!agentsLoading" class="prompts-context-hint">
-                            {{ t('modal.agents.hint.twoStepSave') }}
+                        <div v-if="promptsContextHint" :class="['prompts-context-hint', { 'prompts-context-hint--warn': promptsContextHint.warn }]">
+                            {{ promptsContextHint.text }}
                         </div>
                     </div>
 

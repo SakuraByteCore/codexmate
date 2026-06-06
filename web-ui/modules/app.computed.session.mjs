@@ -812,7 +812,7 @@ export function createSessionComputed() {
                 const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
                 const residual = rawStep / magnitude;
                 const niceStep = residual <= 1.5 ? magnitude : (residual <= 3.5 ? 2 * magnitude : 5 * magnitude);
-                const tickCount = Math.ceil(maxTokens / niceStep);
+                const tickCount = Math.min(Math.ceil(maxTokens / niceStep), 8);
                 for (let i = 0; i <= tickCount; i++) {
                     const value = i * niceStep;
                     if (value > maxTokens + niceStep * 0.5) break;
