@@ -11,6 +11,7 @@ const {
     listContributors,
     contributorProfile,
     formatContributorCard,
+    formatChangeSummary,
     compareUrl,
     formatChangelog
 } = require('../../tools/release/changelog.js');
@@ -49,15 +50,31 @@ test('release changelog groups PR commits and direct commits for action logs', (
 
     assert.doesNotMatch(changelog, /## codexmate v0\.0\.39/);
     assert.doesNotMatch(changelog, /Changes since v0\.0\.38/);
+    assert.match(changelog, /### Changes/);
+    assert.match(changelog, /- proxy: bypass responses probe for streaming codex tasks \(#180\)/);
+    assert.match(changelog, /- update generated assets/);
     assert.match(changelog, /### PRs/);
     assert.match(changelog, /#180 fix\(proxy\): bypass responses probe for streaming codex tasks \(f5700cf\)/);
     assert.match(changelog, /### Commits without PR/);
     assert.match(changelog, /abc1234 chore: update generated assets/);
     assert.match(changelog, /https:\/\/github\.com\/SakuraByteCore\/codexmate\/compare\/v0\.0\.38\.\.\.v0\.0\.39/);
     assert.match(changelog, /### Contributors\n<a href="https:\/\/github\.com\/awsl233777" title="Awsl">/);
-    assert.match(changelog, /<img src="https:\/\/github\.com\/awsl233777\.png\?size=96" width="64" height="64" alt="Awsl" \/>/);
+    assert.match(changelog, /<img src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2Fgithub\.com%2Fawsl233777\.png%3Fsize%3D96&w=96&h=96&fit=cover&mask=circle" width="64" height="64" alt="Awsl" \/>/);
     assert.doesNotMatch(changelog, /<sub><b>Awsl<\/b><\/sub>/);
     assert.ok(changelog.trimEnd().endsWith('</a>'));
+});
+
+test('release changelog summarizes actual commit changes without release housekeeping', () => {
+    const commits = [
+        parseLogLine('628d451\u001ffeat: add Claude proxy target APIs with Ollama support (#171)\u001fAwsl'),
+        parseLogLine('5b92004\u001ffeat(web-ui): add Prompts tab for inline AGENTS.md and CLAUDE.md editing\u001fymkiux'),
+        parseLogLine('1587cce\u001fchore: bump version to 0.0.45\u001fymkiux')
+    ];
+
+    assert.deepStrictEqual(formatChangeSummary(commits), [
+        '- add Claude proxy target APIs with Ollama support (#171)',
+        '- web-ui: add Prompts tab for inline AGENTS.md and CLAUDE.md editing'
+    ]);
 });
 
 test('release changelog maps contributor display names to GitHub avatar cards', () => {
@@ -66,7 +83,7 @@ test('release changelog maps contributor display names to GitHub avatar cards', 
 
     const card = formatContributorCard('ymkiux');
     assert.match(card, /href="https:\/\/github\.com\/ymkiux"/);
-    assert.match(card, /src="https:\/\/github\.com\/ymkiux\.png\?size=96"/);
+    assert.match(card, /src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2Fgithub\.com%2Fymkiux\.png%3Fsize%3D96&w=96&h=96&fit=cover&mask=circle"/);
     assert.doesNotMatch(card, /<sub><b>ymkiux<\/b><\/sub>/);
 });
 

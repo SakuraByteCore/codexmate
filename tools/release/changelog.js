@@ -134,9 +134,11 @@ function formatContributorCard(author) {
     const { login, displayName } = contributorProfile(author);
     const safeLogin = encodeURIComponent(login);
     const safeDisplayName = escapeHtml(displayName);
+    const githubAvatarUrl = `https://github.com/${safeLogin}.png?size=96`;
+    const roundedAvatarUrl = `https://wsrv.nl/?url=${encodeURIComponent(githubAvatarUrl)}&w=96&h=96&fit=cover&mask=circle`;
     return [
         `<a href="https://github.com/${safeLogin}" title="${safeDisplayName}">`,
-        `  <img src="https://github.com/${safeLogin}.png?size=96" width="64" height="64" alt="${safeDisplayName}" />`,
+        `  <img src="${roundedAvatarUrl}" width="64" height="64" alt="${safeDisplayName}" />`,
         `</a>`
     ].join('\n');
 }
@@ -160,6 +162,36 @@ function compareUrl(repository, previousTag, currentTag, currentRef) {
     return `https://github.com/${repository}/compare/${previousTag}...${right}`;
 }
 
+function stripPullRequestSuffix(subject) {
+    return String(subject || '').replace(/\s*\(#\d+\)\s*$/, '').trim();
+}
+
+function formatChangeSummaryLine(commit) {
+    const subject = stripPullRequestSuffix(commit?.subject || '');
+    if (!subject) return '';
+    if (/^chore:\s*bump version\b/i.test(subject)) return '';
+
+    const conventional = subject.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.+)$/);
+    const summary = conventional
+        ? `${conventional[2] ? `${conventional[2]}: ` : ''}${conventional[3]}`
+        : subject;
+    return `- ${summary}${commit.pr ? ` (#${commit.pr})` : ''}`;
+}
+
+function formatChangeSummary(commits) {
+    const lines = [];
+    const seen = new Set();
+    for (const commit of commits) {
+        const line = formatChangeSummaryLine(commit);
+        if (!line) continue;
+        const key = line.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        lines.push(line);
+    }
+    return lines;
+}
+
 function formatChangelog({ repository = '', previousTag = '', currentTag = '', currentRef = 'HEAD', commits = [] }) {
     const lines = [];
 
@@ -175,10 +207,17 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
     if (!commits.length) {
         lines.push('No commits found in this range.');
     } else {
+        const changeSummary = formatChangeSummary([...commits].reverse());
+        if (changeSummary.length) {
+            lines.push('### Changes');
+            lines.push(...changeSummary);
+            lines.push('');
+        }
+
         if (prs.length) {
             lines.push('### PRs');
             for (const commit of prs) {
-                lines.push(`- #${commit.pr} ${commit.subject.replace(/\s*\(#\d+\)\s*$/, '')} (${commit.hash})`);
+                lines.push(`- #${commit.pr} ${stripPullRequestSuffix(commit.subject)} (${commit.hash})`);
             }
             lines.push('');
         }
@@ -257,6 +296,9 @@ module.exports = {
     listContributors,
     contributorProfile,
     formatContributorCard,
+    stripPullRequestSuffix,
+    formatChangeSummaryLine,
+    formatChangeSummary,
     compareUrl,
     formatChangelog,
     main
