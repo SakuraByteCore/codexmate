@@ -191,7 +191,7 @@ jobs:
             cli.js cli/ lib/ plugins/ web-ui.html web-ui/ \
             node_modules/ package.json LICENSE README.md README.zh.md
           echo "STANDALONE_TGZ=$name" >> "$GITHUB_ENV"
-      - name: Print release changelog
+      - name: Generate release notes from actual commit range
         env:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
           TAG_EXISTS: ${{ steps.resolve.outputs.tag_exists }}

@@ -88,20 +88,7 @@ function readCommits(previousTag, currentRef) {
 }
 
 function groupCommits(commits) {
-    const prs = [];
-    const seenPrs = new Set();
-    const directCommits = [];
-    for (const commit of commits) {
-        if (commit.pr) {
-            if (!seenPrs.has(commit.pr)) {
-                seenPrs.add(commit.pr);
-                prs.push(commit);
-            }
-        } else {
-            directCommits.push(commit);
-        }
-    }
-    return { prs, directCommits };
+    return { directCommits: commits };
 }
 
 function formatContributorName(author) {
@@ -203,7 +190,7 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
         return `${lines.join('\n')}\n`;
     }
 
-    const { prs, directCommits } = groupCommits(commits);
+    const { directCommits } = groupCommits(commits);
     if (!commits.length) {
         lines.push('No commits found in this range.');
     } else {
@@ -211,14 +198,6 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
         if (changeSummary.length) {
             lines.push('### Changes');
             lines.push(...changeSummary);
-            lines.push('');
-        }
-
-        if (prs.length) {
-            lines.push('### PRs');
-            for (const commit of prs) {
-                lines.push(`- #${commit.pr} ${stripPullRequestSuffix(commit.subject)} (${commit.hash})`);
-            }
             lines.push('');
         }
 

@@ -36,8 +36,7 @@ test('release changelog groups PR commits and direct commits for action logs', (
     ];
     const grouped = groupCommits(commits);
 
-    assert.deepStrictEqual(grouped.prs.map((commit) => commit.pr), [180]);
-    assert.deepStrictEqual(grouped.directCommits.map((commit) => commit.hash), ['abc1234']);
+    assert.deepStrictEqual(grouped.directCommits.map((commit) => commit.hash), ['f5700cf', 'abc1234']);
     assert.deepStrictEqual(listContributors(commits), ['awsl233777']);
 
     const changelog = formatChangelog({
@@ -53,9 +52,9 @@ test('release changelog groups PR commits and direct commits for action logs', (
     assert.match(changelog, /### Changes/);
     assert.match(changelog, /- proxy: bypass responses probe for streaming codex tasks \(#180\)/);
     assert.match(changelog, /- update generated assets/);
-    assert.match(changelog, /### PRs/);
-    assert.match(changelog, /#180 fix\(proxy\): bypass responses probe for streaming codex tasks \(f5700cf\)/);
+    assert.doesNotMatch(changelog, /### PRs/);
     assert.match(changelog, /### Commits without PR/);
+    assert.match(changelog, /f5700cf fix\(proxy\): bypass responses probe for streaming codex tasks \(#180\)/);
     assert.match(changelog, /abc1234 chore: update generated assets/);
     assert.match(changelog, /https:\/\/github\.com\/SakuraByteCore\/codexmate\/compare\/v0\.0\.38\.\.\.v0\.0\.39/);
     assert.match(changelog, /### Contributors\n<a href="https:\/\/github\.com\/awsl233777" title="Awsl">/);
@@ -106,6 +105,7 @@ test('release workflow uses generated changelog as release body', () => {
     const workflow = fs.readFileSync('.github/workflows/release.yml', 'utf8');
 
     assert.match(workflow, /RELEASE_CHANGELOG_FILE:\s*release-changelog\.md/);
+    assert.match(workflow, /Generate release notes from actual commit range/);
     assert.match(workflow, /node tools\/release\/changelog\.js/);
     assert.match(workflow, /test -s "\$\{RELEASE_CHANGELOG_FILE\}"/);
     assert.match(workflow, /body_path:\s*\$\{\{ env\.RELEASE_CHANGELOG_FILE \}\}/);
