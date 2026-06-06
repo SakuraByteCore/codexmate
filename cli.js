@@ -973,8 +973,13 @@ function getApiToolConfigWriteTarget(action) {
         'claude-local-bridge-set-excluded',
         'claude-local-bridge-sync-providers'
     ]);
+    const opencodeWriteActions = new Set([
+        'apply-opencode-config',
+        'update-opencode-selection'
+    ]);
     if (codexWriteActions.has(name)) return 'codex';
     if (claudeWriteActions.has(name)) return 'claude';
+    if (opencodeWriteActions.has(name)) return 'opencode';
     return '';
 }
 

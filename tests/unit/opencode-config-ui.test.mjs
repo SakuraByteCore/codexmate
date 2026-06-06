@@ -123,6 +123,10 @@ test('opencode backend actions are permission guarded in cli source', () => {
     assert.match(cli, /case 'get-opencode-config':/);
     assert.match(cli, /case 'apply-opencode-config':/);
     assert.match(cli, /case 'update-opencode-selection':/);
+    assert.match(cli, /const opencodeWriteActions = new Set\(\[/);
+    assert.match(cli, /'apply-opencode-config'/);
+    assert.match(cli, /'update-opencode-selection'/);
+    assert.match(cli, /if \(opencodeWriteActions\.has\(name\)\) return 'opencode';/);
 });
 
 

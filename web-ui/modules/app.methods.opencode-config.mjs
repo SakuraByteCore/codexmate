@@ -51,9 +51,13 @@ export function createOpencodeConfigMethods(options = {}) {
             if (!name) return;
             this.opencodeProvider = name;
             const models = this.opencodeModelCatalogForProvider(name);
-            if (!this.opencodeModel && models.length) {
-                this.opencodeModel = models[0];
+            if (!this.opencodeModel || !models.includes(this.opencodeModel)) {
+                this.opencodeModel = models[0] || '';
             }
+            const selectedProvider = Array.isArray(this.opencodeProviders)
+                ? this.opencodeProviders.find(item => normalizeOpencodeProviderName(item && item.name) === name)
+                : null;
+            this.opencodeProviderDisabled = !!(selectedProvider && selectedProvider.disabled);
         },
 
         refreshOpencodeSelectionFromSummary(res = {}) {
@@ -71,12 +75,16 @@ export function createOpencodeConfigMethods(options = {}) {
             const enabledProvider = providers.find(item => item && item.disabled !== true && item.hasKey);
             const firstProvider = providers.find(item => item && item.name);
             this.opencodeProvider = normalizeOpencodeProviderName(res.currentProvider)
-                || normalizeOpencodeProviderName(this.opencodeProvider)
                 || normalizeOpencodeProviderName(enabledProvider && enabledProvider.name)
                 || normalizeOpencodeProviderName(firstProvider && firstProvider.name)
+                || normalizeOpencodeProviderName(this.opencodeProvider)
                 || 'anthropic';
-            const selectedProvider = providers.find(item => item && item.name === this.opencodeProvider);
+            const selectedProvider = providers.find(item => normalizeOpencodeProviderName(item && item.name) === this.opencodeProvider);
             this.opencodeProviderDisabled = !!(selectedProvider && selectedProvider.disabled);
+            const models = this.opencodeModelCatalogForProvider(this.opencodeProvider);
+            if (!this.opencodeModel || (models.length && !models.includes(this.opencodeModel))) {
+                this.opencodeModel = models[0] || '';
+            }
         },
 
         async loadOpencodeConfig(options = {}) {
