@@ -39,7 +39,7 @@
                 :data-config-mode="configMode"
                 :tabindex="mainTab === 'config' ? 0 : -1"
                 :aria-selected="mainTab === 'config'"
-                :aria-controls="configMode === 'claude' ? 'panel-config-claude' : (configMode === 'openclaw' ? 'panel-config-openclaw' : 'panel-config-provider')"
+                :aria-controls="configMode === 'claude' ? 'panel-config-claude' : (configMode === 'openclaw' ? 'panel-config-openclaw' : (configMode === 'opencode' ? 'panel-config-opencode' : 'panel-config-provider'))"
                 :class="{ active: isMainTabNavActive('config') }"
                 @pointerdown="onMainTabPointerDown('config', $event)"
                 @click="onMainTabClick('config', $event)">{{ t('tab.config') }}</button>
@@ -431,6 +431,20 @@
                             <div class="status-chip">
                                 <span class="label">{{ t('status.workspaceFile') }}</span>
                                 <span class="value">{{ openclawWorkspaceFileName || t('common.notSelected') }}</span>
+                            </div>
+                        </template>
+                        <template v-else-if="configMode === 'opencode'">
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.opencodeProvider') }}</span>
+                                <span class="value">{{ opencodeProvider || t('common.notSelected') }}</span>
+                            </div>
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.opencodeModel') }}</span>
+                                <span class="value">{{ opencodeModel || t('common.notSelected') }}</span>
+                            </div>
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.opencodeConfig') }}</span>
+                                <span class="value">{{ opencodeConfigPath || t('common.notSelected') }}</span>
                             </div>
                         </template>
                         <template v-else>

@@ -359,6 +359,10 @@ const vi = Object.freeze({
     'modal.claudeDelete.confirm': 'Xóa',
     'modal.claudeDelete.cancel': 'Hủy',
 
+    'status.opencodeProvider': 'Provider OpenCode',
+    'status.opencodeModel': 'Model OpenCode',
+    'status.opencodeConfig': 'Cấu hình OpenCode',
+
     // Sessions
     'sessions.preview.openLink': 'Mở liên kết',
 

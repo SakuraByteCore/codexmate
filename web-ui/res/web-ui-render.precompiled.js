@@ -71,7 +71,7 @@ return function render(_ctx, _cache) {
             "data-config-mode": _ctx.configMode,
             tabindex: _ctx.mainTab === 'config' ? 0 : -1,
             "aria-selected": _ctx.mainTab === 'config',
-            "aria-controls": _ctx.configMode === 'claude' ? 'panel-config-claude' : (_ctx.configMode === 'openclaw' ? 'panel-config-openclaw' : 'panel-config-provider'),
+            "aria-controls": _ctx.configMode === 'claude' ? 'panel-config-claude' : (_ctx.configMode === 'openclaw' ? 'panel-config-openclaw' : (_ctx.configMode === 'opencode' ? 'panel-config-opencode' : 'panel-config-provider')),
             onPointerdown: $event => (_ctx.onMainTabPointerDown('config', $event)),
             onClick: $event => (_ctx.onMainTabClick('config', $event))
           }, _toDisplayString(_ctx.t('tab.config')), 43 /* TEXT, CLASS, PROPS, NEED_HYDRATION */, ["data-config-mode", "tabindex", "aria-selected", "aria-controls", "onPointerdown", "onClick"]),
@@ -587,13 +587,28 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.openclawWorkspaceFileName || _ctx.t('common.notSelected')), 1 /* TEXT */)
                           ])
                         ], 64 /* STABLE_FRAGMENT */))
-                      : (_openBlock(), _createElementBlock("div", {
-                          key: 3,
-                          class: "status-chip"
-                        }, [
-                          _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.configMode')), 1 /* TEXT */),
-                          _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.t('common.notSelected')), 1 /* TEXT */)
-                        ]))
+                      : (_ctx.configMode === 'opencode')
+                        ? (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
+                            _createElementVNode("div", { class: "status-chip" }, [
+                              _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.opencodeProvider')), 1 /* TEXT */),
+                              _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.opencodeProvider || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                            ]),
+                            _createElementVNode("div", { class: "status-chip" }, [
+                              _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.opencodeModel')), 1 /* TEXT */),
+                              _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.opencodeModel || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                            ]),
+                            _createElementVNode("div", { class: "status-chip" }, [
+                              _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.opencodeConfig')), 1 /* TEXT */),
+                              _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.opencodeConfigPath || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                            ])
+                          ], 64 /* STABLE_FRAGMENT */))
+                        : (_openBlock(), _createElementBlock("div", {
+                            key: 4,
+                            class: "status-chip"
+                          }, [
+                            _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.configMode')), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.t('common.notSelected')), 1 /* TEXT */)
+                          ]))
               ]))
             : (!_ctx.sessionStandalone && _ctx.mainTab === 'sessions')
               ? (_openBlock(), _createElementBlock("div", {
