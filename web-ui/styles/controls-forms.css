@@ -275,6 +275,32 @@
     line-height: 1.35;
 }
 
+.config-template-hint.error-text {
+    color: #8f2d21;
+}
+
+.template-textarea {
+    width: 100%;
+    min-height: 300px;
+    resize: vertical;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    outline: none;
+    box-shadow: var(--shadow-subtle);
+}
+
+.template-textarea:focus {
+    background: var(--color-surface);
+    border-color: var(--color-brand);
+    box-shadow: var(--shadow-input-focus);
+}
+
 .codex-config-grid {
     display: grid;
     gap: 10px;

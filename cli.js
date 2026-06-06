@@ -185,6 +185,8 @@ const DEFAULT_WEB_OPEN_HOST = '127.0.0.1';
 const CONFIG_DIR = path.join(os.homedir(), '.codex');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.toml');
 const AUTH_FILE = path.join(CONFIG_DIR, 'auth.json');
+const OPENCODE_HOME_CONFIG_FILE = path.join(os.homedir(), '.opencode.json');
+const OPENCODE_XDG_CONFIG_FILE = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode', '.opencode.json');
 const AUTH_PROFILES_DIR = path.join(CONFIG_DIR, 'auth-profiles');
 const AUTH_REGISTRY_FILE = path.join(AUTH_PROFILES_DIR, 'registry.json');
 const MODELS_FILE = path.join(CONFIG_DIR, 'models.json');
@@ -860,8 +862,8 @@ function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude']);
-const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false });
+const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode']);
+const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false });
 let toolConfigWriteGuardDepth = 0;
 
 function enterToolConfigWriteGuard() {
@@ -887,7 +889,8 @@ function normalizeToolConfigPermissions(value) {
     const source = isPlainObject(value) ? value : {};
     return {
         codex: source.codex === true,
-        claude: source.claude === true
+        claude: source.claude === true,
+        opencode: source.opencode === true
     };
 }
 
@@ -9628,6 +9631,221 @@ function applyClaudeSettingsRaw(params = {}) {
     }
 }
 
+function getOpencodeConfigCandidates() {
+    const candidates = [OPENCODE_HOME_CONFIG_FILE, OPENCODE_XDG_CONFIG_FILE]
+        .filter(Boolean)
+        .map(item => path.resolve(item));
+    return [...new Set(candidates)];
+}
+
+function resolveOpencodeConfigFile() {
+    const candidates = getOpencodeConfigCandidates();
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+    return candidates[0] || OPENCODE_HOME_CONFIG_FILE;
+}
+
+function readOpencodeConfigObject(content) {
+    const raw = typeof content === 'string' ? content : '';
+    if (!raw.trim()) {
+        return {};
+    }
+    const parsed = JSON5.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('OpenCode config must be a JSON object');
+    }
+    return parsed;
+}
+
+function normalizeOpencodeAgentName(value) {
+    const name = typeof value === 'string' ? value.trim() : '';
+    return /^[a-zA-Z0-9_.-]+$/.test(name) ? name : '';
+}
+
+function normalizeOpencodeProviderName(value) {
+    const name = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return /^[a-z0-9_.-]+$/.test(name) ? name : '';
+}
+
+function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfigFile(), exists = false) {
+    const providers = config.providers && typeof config.providers === 'object' && !Array.isArray(config.providers)
+        ? config.providers
+        : {};
+    const agents = config.agents && typeof config.agents === 'object' && !Array.isArray(config.agents)
+        ? config.agents
+        : {};
+    const agentEntries = Object.entries(agents)
+        .filter(([, agent]) => agent && typeof agent === 'object' && !Array.isArray(agent))
+        .map(([name, agent]) => ({
+            name,
+            model: typeof agent.model === 'string' ? agent.model : '',
+            maxTokens: Number.isFinite(Number(agent.maxTokens)) ? Number(agent.maxTokens) : null,
+            reasoningEffort: typeof agent.reasoningEffort === 'string' ? agent.reasoningEffort : ''
+        }));
+    const primaryAgent = agentEntries.find(item => item.name === 'coder') || agentEntries[0] || null;
+    return {
+        exists: !!exists,
+        targetPath,
+        providers: Object.entries(providers)
+            .filter(([, provider]) => provider && typeof provider === 'object' && !Array.isArray(provider))
+            .map(([name, provider]) => ({
+                name,
+                apiKey: maskKey(typeof provider.apiKey === 'string' ? provider.apiKey : ''),
+                hasKey: typeof provider.apiKey === 'string' && provider.apiKey.trim().length > 0,
+                disabled: provider.disabled === true
+            })),
+        agents: agentEntries,
+        currentAgent: primaryAgent ? primaryAgent.name : 'coder',
+        currentModel: primaryAgent ? primaryAgent.model : '',
+        autoCompact: config.autoCompact !== false,
+        redacted: true
+    };
+}
+
+function readOpencodeConfigInfo() {
+    const targetPath = resolveOpencodeConfigFile();
+    if (!fs.existsSync(targetPath)) {
+        const config = {};
+        return {
+            ...summarizeOpencodeConfig(config, targetPath, false),
+            content: JSON.stringify(config, null, 2),
+            candidates: getOpencodeConfigCandidates()
+        };
+    }
+    try {
+        const raw = fs.readFileSync(targetPath, 'utf-8');
+        const config = readOpencodeConfigObject(raw);
+        return {
+            ...summarizeOpencodeConfig(config, targetPath, true),
+            content: raw || '{}',
+            candidates: getOpencodeConfigCandidates()
+        };
+    } catch (e) {
+        return {
+            error: e.message || '读取 OpenCode 配置失败',
+            exists: true,
+            targetPath,
+            candidates: getOpencodeConfigCandidates()
+        };
+    }
+}
+
+function applyOpencodeConfigRaw(params = {}) {
+    assertToolConfigWriteAllowed('opencode');
+    const content = typeof params.content === 'string' ? params.content : '';
+    if (!content.trim()) {
+        return { error: '内容不能为空' };
+    }
+    if (content.length > 1024 * 1024) {
+        return { error: '内容过大（最大 1MB）' };
+    }
+    let parsed;
+    try {
+        parsed = readOpencodeConfigObject(content);
+    } catch (e) {
+        return { error: `OpenCode JSON 解析失败: ${e.message}` };
+    }
+    const targetPath = resolveOpencodeConfigFile();
+    try {
+        ensureDir(path.dirname(targetPath));
+        backupFileIfNeededOnce(targetPath);
+        fs.writeFileSync(targetPath, JSON.stringify(parsed, null, 2) + '\n', { encoding: 'utf-8', mode: 0o600 });
+        return {
+            success: true,
+            targetPath,
+            ...summarizeOpencodeConfig(parsed, targetPath, true)
+        };
+    } catch (e) {
+        return { error: e.message || '写入 OpenCode 配置失败' };
+    }
+}
+
+function updateOpencodeSelection(params = {}) {
+    assertToolConfigWriteAllowed('opencode');
+    const providerName = normalizeOpencodeProviderName(params.provider);
+    const model = typeof params.model === 'string' ? params.model.trim() : '';
+    const agentName = normalizeOpencodeAgentName(params.agent || 'coder') || 'coder';
+    if (!providerName) {
+        return { error: '请选择 OpenCode provider' };
+    }
+    if (!model) {
+        return { error: '请选择或输入 OpenCode model' };
+    }
+
+    const targetPath = resolveOpencodeConfigFile();
+    let config = {};
+    if (fs.existsSync(targetPath)) {
+        try {
+            config = readOpencodeConfigObject(fs.readFileSync(targetPath, 'utf-8'));
+        } catch (e) {
+            return { error: `OpenCode JSON 解析失败: ${e.message}` };
+        }
+    }
+    if (!config || typeof config !== 'object' || Array.isArray(config)) {
+        config = {};
+    }
+    if (!config.providers || typeof config.providers !== 'object' || Array.isArray(config.providers)) {
+        config.providers = {};
+    }
+    const previousProvider = config.providers[providerName] && typeof config.providers[providerName] === 'object' && !Array.isArray(config.providers[providerName])
+        ? config.providers[providerName]
+        : {};
+    const apiKey = typeof params.apiKey === 'string' ? params.apiKey.trim() : '';
+    config.providers[providerName] = {
+        ...previousProvider,
+        disabled: params.disabled === true
+    };
+    if (apiKey) {
+        config.providers[providerName].apiKey = apiKey;
+    } else if (!Object.prototype.hasOwnProperty.call(config.providers[providerName], 'apiKey')) {
+        config.providers[providerName].apiKey = '';
+    }
+
+    if (!config.agents || typeof config.agents !== 'object' || Array.isArray(config.agents)) {
+        config.agents = {};
+    }
+    const coreAgents = params.applyToCoreAgents === true
+        ? ['coder', 'task', 'summarizer', 'title']
+        : [agentName];
+    for (const name of coreAgents) {
+        const previousAgent = config.agents[name] && typeof config.agents[name] === 'object' && !Array.isArray(config.agents[name])
+            ? config.agents[name]
+            : {};
+        config.agents[name] = {
+            ...previousAgent,
+            model
+        };
+        const maxTokens = normalizePositiveIntegerParam(params.maxTokens);
+        if (maxTokens !== null) {
+            config.agents[name].maxTokens = maxTokens;
+        }
+        const effort = typeof params.reasoningEffort === 'string' ? params.reasoningEffort.trim().toLowerCase() : '';
+        if (effort === 'low' || effort === 'medium' || effort === 'high') {
+            config.agents[name].reasoningEffort = effort;
+        }
+    }
+    if (params.autoCompact !== undefined) {
+        config.autoCompact = params.autoCompact !== false;
+    }
+
+    try {
+        ensureDir(path.dirname(targetPath));
+        backupFileIfNeededOnce(targetPath);
+        fs.writeFileSync(targetPath, JSON.stringify(config, null, 2) + '\n', { encoding: 'utf-8', mode: 0o600 });
+        return {
+            success: true,
+            targetPath,
+            ...summarizeOpencodeConfig(config, targetPath, true),
+            content: JSON.stringify(config, null, 2) + '\n'
+        };
+    } catch (e) {
+        return { error: e.message || '写入 OpenCode 配置失败' };
+    }
+}
+
 // API: 打包 Claude 配置目录（系统 zip 可用则使用，否则回退 zip-lib）
 async function prepareClaudeDirDownload() {
     return await prepareDirectoryDownload(CLAUDE_DIR, {
@@ -11451,6 +11669,15 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'apply-claude-settings-raw':
                             result = applyClaudeSettingsRaw(params || {});
+                            break;
+                        case 'get-opencode-config':
+                            result = readOpencodeConfigInfo();
+                            break;
+                        case 'apply-opencode-config':
+                            result = applyOpencodeConfigRaw(params || {});
+                            break;
+                        case 'update-opencode-selection':
+                            result = updateOpencodeSelection(params || {});
                             break;
                         case 'apply-claude-config':
                             result = await applyToClaudeSettings(params.config);

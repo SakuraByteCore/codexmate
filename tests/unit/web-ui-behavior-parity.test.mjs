@@ -487,7 +487,28 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'openclawAccordionStep',
         'openclawValidation',
         'toolConfigPermissionSaving',
-        'toolConfigPermissions'
+        'toolConfigPermissions',
+        'opencodeConfigPath',
+        'opencodeConfigExists',
+        'opencodeContent',
+        'opencodeLoading',
+        'opencodeSaving',
+        'opencodeApplying',
+        'opencodeError',
+        'opencodeImportError',
+        'opencodeImportFileName',
+        'opencodeProviders',
+        'opencodeAgents',
+        'opencodeProvider',
+        'opencodeModel',
+        'opencodeApiKey',
+        'opencodeShowKey',
+        'opencodeProviderDisabled',
+        'opencodeAgent',
+        'opencodeApplyToCoreAgents',
+        'opencodeAutoCompact',
+        'opencodeMaxTokens',
+        'opencodeReasoningEffort'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -605,7 +626,16 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'toggleEditProviderKey',
         'isToolConfigWriteAllowed',
         'toolConfigPermissionStatusLabel',
-        'setToolConfigPermission'
+        'setToolConfigPermission',
+        'opencodeProviderCatalog',
+        'opencodeModelCatalogForProvider',
+        'fillOpencodeProvider',
+        'refreshOpencodeSelectionFromSummary',
+        'loadOpencodeConfig',
+        'parseOpencodeImportContent',
+        'handleOpencodeImportChange',
+        'saveOpencodeConfig',
+        'applyOpencodeSelection'
     ];
     allowedExtraCurrentMethodKeys.push(
         'normalizePackageVersion',

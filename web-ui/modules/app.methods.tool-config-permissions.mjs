@@ -3,14 +3,15 @@ export function createToolConfigPermissionMethods(options = {}) {
 
     function normalizeTarget(value) {
         const target = typeof value === 'string' ? value.trim().toLowerCase() : '';
-        return target === 'codex' || target === 'claude' ? target : '';
+        return target === 'codex' || target === 'claude' || target === 'opencode' ? target : '';
     }
 
     function normalizePermissions(value) {
         const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
         return {
             codex: source.codex === true,
-            claude: source.claude === true
+            claude: source.claude === true,
+            opencode: source.opencode === true
         };
     }
 

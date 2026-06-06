@@ -223,6 +223,20 @@
                             <span v-if="currentOpenclawConfig">{{ t('common.current', { value: currentOpenclawConfig }) }}</span>
                         </div>
                     </button>
+                    <button
+                        id="side-tab-config-opencode"
+                        data-main-tab="config"
+                        data-config-mode="opencode"
+                        :aria-current="mainTab === 'config' && configMode === 'opencode' ? 'page' : null"
+                        :class="['side-item', { active: isConfigModeNavActive('opencode') }]"
+                        @pointerdown="onConfigTabPointerDown('opencode', $event)"
+                        @click="onConfigTabClick('opencode', $event)">
+                        <div class="side-item-title">{{ t('side.config.opencode') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.config.opencode.meta') }}</span>
+                            <span v-if="opencodeModel">{{ t('common.current', { value: opencodeModel }) }}</span>
+                        </div>
+                    </button>
                 </div>
 
                 <div class="side-section" role="navigation" :aria-label="t('side.prompts')">

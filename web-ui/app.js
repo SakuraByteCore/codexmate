@@ -383,14 +383,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
                                 return {
                                     codex: parsed.codex === true,
-                                    claude: parsed.claude === true
+                                    claude: parsed.claude === true,
+                                    opencode: parsed.opencode === true
                                 };
                             }
                         }
                     } catch (_) {}
-                    return { codex: false, claude: false };
+                    return { codex: false, claude: false, opencode: false };
                 })(),
-                toolConfigPermissionSaving: { codex: false, claude: false },
+                toolConfigPermissionSaving: { codex: false, claude: false, opencode: false },
                 sessionTrashEnabled: true,
                 sessionTrashItems: [],
                 sessionTrashVisibleCount: SESSION_TRASH_PAGE_SIZE,
@@ -411,6 +412,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 claudeImportLoading: false,
                 codexImportLoading: false,
                 codexAuthProfiles: [],
+                opencodeConfigPath: '',
+                opencodeConfigExists: false,
+                opencodeContent: '{}',
+                opencodeLoading: false,
+                opencodeSaving: false,
+                opencodeApplying: false,
+                opencodeError: '',
+                opencodeImportError: '',
+                opencodeImportFileName: '',
+                opencodeProviders: [],
+                opencodeAgents: [],
+                opencodeProvider: 'anthropic',
+                opencodeModel: '',
+                opencodeApiKey: '',
+                opencodeShowKey: false,
+                opencodeProviderDisabled: false,
+                opencodeAgent: 'coder',
+                opencodeApplyToCoreAgents: true,
+                opencodeAutoCompact: true,
+                opencodeMaxTokens: '',
+                opencodeReasoningEffort: '',
                 forceCompactLayout: false,
                 taskOrchestrationTabEnabled: true,
                 taskOrchestration: {
@@ -522,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (nextConfigMode && typeof this.switchConfigMode === 'function') {
                     this.__navStateRestoring = true;
                     try {
-                        if (nextConfigMode === 'codex' || nextConfigMode === 'claude' || nextConfigMode === 'openclaw') {
+                        if (nextConfigMode === 'codex' || nextConfigMode === 'claude' || nextConfigMode === 'openclaw' || nextConfigMode === 'opencode') {
                             this.configMode = nextConfigMode;
                         }
                         if (resolvedMainTab && mainTabSet.has(resolvedMainTab) && resolvedMainTab !== this.mainTab) {

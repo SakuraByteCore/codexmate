@@ -125,7 +125,8 @@ export function createStartupClaudeMethods(options = {}) {
                     if (statusRes.toolConfigPermissions && typeof statusRes.toolConfigPermissions === 'object') {
                         this.toolConfigPermissions = {
                             codex: statusRes.toolConfigPermissions.codex === true,
-                            claude: statusRes.toolConfigPermissions.claude === true
+                            claude: statusRes.toolConfigPermissions.claude === true,
+                            opencode: statusRes.toolConfigPermissions.opencode === true
                         };
                         try {
                             localStorage.setItem('toolConfigPermissions', JSON.stringify(this.toolConfigPermissions));
@@ -134,6 +135,7 @@ export function createStartupClaudeMethods(options = {}) {
                     this.providersList = listRes.providers;
                     if (typeof this.loadLocalBridgeExcluded === 'function') { this.loadLocalBridgeExcluded(); }
                     if (typeof this.loadClaudeLocalBridgeStatus === 'function') { this.loadClaudeLocalBridgeStatus(); }
+                    if (typeof this.loadOpencodeConfig === 'function') { this.loadOpencodeConfig(); }
                     if (statusRes.configReady === false) {
                         this.showMessage('配置已加载', 'info');
                     }

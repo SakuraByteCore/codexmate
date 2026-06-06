@@ -24,7 +24,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     const sideTabModes = [...html.matchAll(/id="side-tab-config-([a-z]+)"/g)]
         .map((match) => match[1]);
 
-    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw']);
+    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode']);
     assert.match(html, /id="tab-dashboard"/);
     assert.match(html, /v-if="healthCheckResult && healthCheckResult\.report" class="doctor-action-list"/);
     assert.match(html, /v-if="healthCheckResult\.report\.issues && healthCheckResult\.report\.issues\.length"/);
@@ -211,9 +211,11 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /class="segmented-control"[\s\S]*@click="switchConfigMode\('codex'\)"/);
     assert.match(html, /class="segmented-control"[\s\S]*@click="switchConfigMode\('claude'\)"/);
     assert.match(html, /class="segmented-control"[\s\S]*@click="switchConfigMode\('openclaw'\)"/);
+    assert.match(html, /class="segmented-control"[\s\S]*@click="switchConfigMode\('opencode'\)"/);
     assert.doesNotMatch(sideRail, /role="tablist"/);
     assert.doesNotMatch(sideRail, /role="tab"/);
     assert.match(sideRail, /id="side-tab-config-codex"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'codex' \? 'page' : null"/);
+    assert.match(sideRail, /id="side-tab-config-opencode"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'opencode' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-docs"[\s\S]*:aria-current="mainTab === 'docs' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-settings"[\s\S]*:aria-current="mainTab === 'settings' \? 'page' : null"/);
     assert.match(html, /skillsDefaultRootPath/);
@@ -261,6 +263,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /data-main-tab=\"sessions\"/);
     assert.match(html, /data-main-tab=\"market\"/);
     assert.match(html, /data-config-mode=\"codex\"/);
+    assert.match(html, /data-config-mode=\"opencode\"/);
     assert.match(html, /isMainTabNavActive\('settings'\)/);
     assert.match(html, /isMainTabNavActive\('market'\)/);
     assert.match(html, /isConfigModeNavActive\('codex'\)/);
@@ -303,6 +306,15 @@ test('config template keeps expected config tabs in top and side navigation', ()
         html,
         /type="checkbox"\s+autocomplete="off"\s+:checked="isToolConfigWriteAllowed\('claude'\)"[\s\S]*@change="setToolConfigPermission\('claude', \$event\.target\.checked\)"/
     );
+    assert.match(
+        html,
+        /id="panel-config-opencode"[\s\S]*:checked="isToolConfigWriteAllowed\('opencode'\)"[\s\S]*@change="setToolConfigPermission\('opencode', \$event\.target\.checked\)"/
+    );
+    assert.match(html, /id="opencode-provider"[\s\S]*v-model="opencodeProvider"/);
+    assert.match(html, /id="opencode-model"[\s\S]*v-model="opencodeModel"/);
+    assert.match(html, /@change="handleOpencodeImportChange"/);
+    assert.match(html, /@click="saveOpencodeConfig"/);
+    assert.match(html, /@click="applyOpencodeSelection"/);
     assert.match(
         html,
         /<span v-if="claudeSpeedResults\[name\]"[\s\S]*class="\['latency', claudeSpeedResults\[name\]\.ok \? 'ok' : 'error'\]"[\s\S]*>\s*\{\{\s*formatLatency\(claudeSpeedResults\[name\]\)\s*\}\}\s*<\/span>[\s\S]*<span :class="\['pill', config\.hasKey \? 'configured' : 'empty'\]">/
