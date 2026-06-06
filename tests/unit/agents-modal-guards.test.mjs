@@ -593,6 +593,7 @@ test('applyAgentsContent ignores duplicate save attempts while a save is already
     });
     const closeCalls = [];
     const context = {
+        ...createI18nMethods(),
         ...methods,
         agentsContext: 'codex',
         agentsDiffVisible: true,

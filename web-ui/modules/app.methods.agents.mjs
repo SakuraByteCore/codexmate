@@ -635,10 +635,10 @@ export function createAgentsMethods(options = {}) {
                     return;
                 }
                 const successLabel = this.agentsContext === 'openclaw-workspace'
-                    ? `工作区文件已保存${this.agentsWorkspaceFileName ? `: ${this.agentsWorkspaceFileName}` : ''}`
+                    ? this.t('toast.agents.saved.workspace', { name: this.agentsWorkspaceFileName || '' }).replace(/:\s*$/, '')
                     : (this.agentsContext === 'claude-md'
-                        ? 'CLAUDE.md 已保存'
-                        : (this.agentsContext === 'openclaw' ? 'OpenClaw AGENTS.md 已保存' : 'AGENTS.md 已保存'));
+                        ? this.t('toast.agents.saved.claudeMd')
+                        : (this.agentsContext === 'openclaw' ? this.t('toast.agents.saved.openclaw') : this.t('toast.agents.saved.agents')));
                 this.showMessage(successLabel, 'success');
                 if (this.mainTab === 'prompts') {
                     this.loadPromptsContent();

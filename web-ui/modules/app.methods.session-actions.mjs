@@ -136,7 +136,7 @@ export function createSessionActionMethods(options = {}) {
         openSessionLink(session) {
             const url = this.buildSessionStandaloneUrl(session);
             if (!url) { this.showMessage(this.t('toast.link.fail'), 'error'); return; }
-            window.open(url, '_blank', 'noopener');
+            window.open(url, '_blank', 'noopener,noreferrer');
         },
 
         getSessionFilePath(session) {

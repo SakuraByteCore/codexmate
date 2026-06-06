@@ -277,6 +277,10 @@ const vi = Object.freeze({
     'toast.link.fail': 'Không thể tạo liên kết',
     'toast.save.ok': 'Đã lưu',
     'toast.save.fail': 'Lưu thất bại',
+    'toast.agents.saved.agents': 'AGENTS.md đã lưu',
+    'toast.agents.saved.claudeMd': 'CLAUDE.md đã lưu',
+    'toast.agents.saved.openclaw': 'OpenClaw AGENTS.md đã lưu',
+    'toast.agents.saved.workspace': 'Tệp workspace đã lưu: {name}',
     'toast.delete.ok': 'Đã xóa',
     'toast.delete.fail': 'Xóa thất bại',
     'toast.operation.success': 'Thao tác thành công',
@@ -323,6 +327,19 @@ const vi = Object.freeze({
     'modal.claudeDelete.message': 'Xóa cấu hình "{name}"?',
     'modal.claudeDelete.confirm': 'Xóa',
     'modal.claudeDelete.cancel': 'Hủy',
+
+    // Sessions
+    'sessions.preview.openLink': 'Mở liên kết',
+
+    // Diff / Agents hints
+    'diff.hint.busy': 'Đang tạo diff hoặc áp dụng. Thao tác tạm thời bị vô hiệu hóa.',
+    'diff.hint.failedBack': 'Xem trước diff thất bại. Hãy quay lại chỉnh sửa và thử lại.',
+    'diff.hint.noChangesBack': 'Không phát hiện thay đổi. Quay lại chỉnh sửa hoặc hủy.',
+    'diff.hint.previewMode': 'Đang xem trước. Nhấp "Lưu" để ghi hoặc "Quay lại chỉnh sửa" để tiếp tục.',
+    'modal.agents.unsaved.detectedHint': 'Phát hiện thay đổi chưa lưu: lưu trước khi đóng hoặc áp dụng.',
+    'modal.agents.hint.twoStepSave': 'Lưu hai bước: "Xem trước" để kiểm tra diff, rồi "Lưu" để ghi.',
+    'diff.viewHint.preview': 'Đang xem trước. Nhấp "Lưu" để ghi hoặc "Quay lại chỉnh sửa" để tiếp tục.',
+    'diff.viewHint.truncated': 'Bỏ qua xem trước do nội dung quá lớn. Nhấp "Lưu" để ghi hoặc "Quay lại chỉnh sửa" để tiếp tục.',
 });
 
 export { vi };
