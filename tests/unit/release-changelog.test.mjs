@@ -9,6 +9,8 @@ const {
     parseLogLine,
     groupCommits,
     listContributors,
+    contributorProfile,
+    formatContributorCard,
     compareUrl,
     formatChangelog
 } = require('../../tools/release/changelog.js');
@@ -45,15 +47,27 @@ test('release changelog groups PR commits and direct commits for action logs', (
         commits
     });
 
-    assert.match(changelog, /## codexmate v0\.0\.39/);
-    assert.match(changelog, /Changes since v0\.0\.38/);
-    assert.match(changelog, /PRs:/);
+    assert.doesNotMatch(changelog, /## codexmate v0\.0\.39/);
+    assert.doesNotMatch(changelog, /Changes since v0\.0\.38/);
+    assert.match(changelog, /### PRs/);
     assert.match(changelog, /#180 fix\(proxy\): bypass responses probe for streaming codex tasks \(f5700cf\)/);
-    assert.match(changelog, /Commits without PR:/);
+    assert.match(changelog, /### Commits without PR/);
     assert.match(changelog, /abc1234 chore: update generated assets/);
     assert.match(changelog, /https:\/\/github\.com\/SakuraByteCore\/codexmate\/compare\/v0\.0\.38\.\.\.v0\.0\.39/);
-    assert.match(changelog, /### Contributors\n- awsl233777/);
-    assert.ok(changelog.trimEnd().endsWith('- awsl233777'));
+    assert.match(changelog, /### Contributors\n<a href="https:\/\/github\.com\/awsl233777" title="Awsl">/);
+    assert.match(changelog, /<img src="https:\/\/github\.com\/awsl233777\.png\?size=96" width="64" height="64" alt="Awsl" \/>/);
+    assert.doesNotMatch(changelog, /<sub><b>Awsl<\/b><\/sub>/);
+    assert.ok(changelog.trimEnd().endsWith('</a>'));
+});
+
+test('release changelog maps contributor display names to GitHub avatar cards', () => {
+    assert.deepStrictEqual(contributorProfile('Awsl'), { login: 'awsl233777', displayName: 'Awsl' });
+    assert.deepStrictEqual(contributorProfile('ymkiux'), { login: 'ymkiux', displayName: 'ymkiux' });
+
+    const card = formatContributorCard('ymkiux');
+    assert.match(card, /href="https:\/\/github\.com\/ymkiux"/);
+    assert.match(card, /src="https:\/\/github\.com\/ymkiux\.png\?size=96"/);
+    assert.doesNotMatch(card, /<sub><b>ymkiux<\/b><\/sub>/);
 });
 
 test('release changelog reports initial release when no previous tag exists', () => {
@@ -65,7 +79,7 @@ test('release changelog reports initial release when no previous tag exists', ()
         commits: []
     });
 
-    assert.match(changelog, /## codexmate v0\.0\.1/);
+    assert.doesNotMatch(changelog, /## codexmate v0\.0\.1/);
     assert.match(changelog, /No previous semver tag was found/);
     assert.match(changelog, /### Contributors\n- Unknown contributor/);
     assert.equal(compareUrl('SakuraByteCore/codexmate', '', 'v0.0.1', 'HEAD'), '');
