@@ -160,10 +160,10 @@ const vi = Object.freeze({
     'toolConfig.claude.lockedDesc': 'Cấu hình Claude sẽ không bị sửa. Hãy bật ghi trong tab này để thêm, áp dụng, sửa hoặc xóa provider.',
     'toolConfig.claude.confirmMessage': 'Sau khi bật, thao tác áp dụng trong tab Claude có thể ghi ~/.claude/settings.json và cấu hình Claude liên quan.',
     'toolConfig.opencode.title': 'Ghi cấu hình OpenCode',
-    'toolConfig.opencode.desc': 'Cấu hình OpenCode mặc định chỉ đọc; bật công tắc này trước khi ghi ~/.opencode.json.',
+    'toolConfig.opencode.desc': 'Cấu hình OpenCode mặc định chỉ đọc; bật công tắc này trước khi ghi file cấu hình XDG OpenCode (ví dụ ~/.config/opencode/opencode.jsonc).',
     'toolConfig.opencode.lockedTitle': 'Cấu hình OpenCode đang chỉ đọc',
     'toolConfig.opencode.lockedDesc': 'Cấu hình OpenCode sẽ không bị sửa cho đến khi bật ghi trong tab này.',
-    'toolConfig.opencode.confirmMessage': 'Sau khi bật, thao tác trong tab OpenCode có thể ghi ~/.opencode.json hoặc file cấu hình XDG OpenCode.',
+    'toolConfig.opencode.confirmMessage': 'Sau khi bật, thao tác trong tab OpenCode có thể ghi file cấu hình XDG OpenCode (ví dụ ~/.config/opencode/opencode.jsonc) hoặc file do OPENCODE_CONFIG chỉ định.',
     'side.usage.meta': 'Thống kê / Xu hướng',
     'side.orchestration.meta': 'Kế hoạch / Hàng đợi / Runs',
 

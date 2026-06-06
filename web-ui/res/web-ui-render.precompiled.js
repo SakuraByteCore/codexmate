@@ -2375,7 +2375,7 @@ return function render(_ctx, _cache) {
                       }, _toDisplayString(_ctx.opencodeApplying ? '应用中...' : '应用选择'), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                     ])
                   ]),
-                  _createElementVNode("div", { class: "config-template-hint" }, "目标文件：" + _toDisplayString(_ctx.opencodeConfigPath || '~/.opencode.json') + " · " + _toDisplayString(_ctx.opencodeConfigExists ? '已存在' : '尚未创建'), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "config-template-hint" }, "目标文件：" + _toDisplayString(_ctx.opencodeConfigPath || '~/.config/opencode/opencode.jsonc') + " · " + _toDisplayString(_ctx.opencodeConfigExists ? '已存在' : '尚未创建'), 1 /* TEXT */),
                   _createElementVNode("div", { class: "codex-config-grid" }, [
                     _createElementVNode("div", { class: "form-group codex-config-field" }, [
                       _createElementVNode("label", {
@@ -2441,14 +2441,16 @@ return function render(_ctx, _cache) {
                         list: "opencode-agent-options",
                         autocomplete: "off",
                         spellcheck: "false",
-                        placeholder: "coder"
+                        placeholder: "build"
                       }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
                         [_vModelText, _ctx.opencodeAgent]
                       ]),
                       _createElementVNode("datalist", { id: "opencode-agent-options" }, [
-                        _createElementVNode("option", { value: "coder" }),
-                        _createElementVNode("option", { value: "task" }),
-                        _createElementVNode("option", { value: "summarizer" }),
+                        _createElementVNode("option", { value: "build" }),
+                        _createElementVNode("option", { value: "plan" }),
+                        _createElementVNode("option", { value: "general" }),
+                        _createElementVNode("option", { value: "summary" }),
+                        _createElementVNode("option", { value: "compaction" }),
                         _createElementVNode("option", { value: "title" }),
                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.opencodeAgents, (agent) => {
                           return (_openBlock(), _createElementBlock("option", {
@@ -2531,7 +2533,7 @@ return function render(_ctx, _cache) {
                     _createElementVNode("span", { class: "toggle-track" }, [
                       _createElementVNode("span", { class: "toggle-thumb" })
                     ]),
-                    _createElementVNode("span", null, "同步应用到 coder / task / summarizer / title")
+                    _createElementVNode("span", null, "同步应用到 build / plan / general / title / summary / compaction")
                   ]),
                   _createElementVNode("label", {
                     class: "settings-toggle-row",
@@ -2546,7 +2548,7 @@ return function render(_ctx, _cache) {
                     _createElementVNode("span", { class: "toggle-track" }, [
                       _createElementVNode("span", { class: "toggle-thumb" })
                     ]),
-                    _createElementVNode("span", null, "启用 autoCompact")
+                    _createElementVNode("span", null, "启用 compaction.auto")
                   ]),
                   _createElementVNode("label", {
                     class: "settings-toggle-row",
@@ -2605,11 +2607,11 @@ return function render(_ctx, _cache) {
                     "onUpdate:modelValue": $event => ((_ctx.opencodeContent) = $event),
                     spellcheck: "false",
                     readonly: _ctx.opencodeSaving || _ctx.opencodeLoading,
-                    placeholder: "在这里展示/编辑 ~/.opencode.json"
+                    placeholder: "在这里展示/编辑 ~/.config/opencode/opencode.jsonc"
                   }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly"]), [
                     [_vModelText, _ctx.opencodeContent]
                   ]),
-                  _createElementVNode("div", { class: "config-template-hint" }, "支持导入现有 OpenCode JSON 配置；保存前会先解析，避免把坏 JSON 写进去。")
+                  _createElementVNode("div", { class: "config-template-hint" }, "支持导入现有 OpenCode JSON/JSONC 配置；保存前会先解析，避免把坏配置写进去。")
                 ]),
                 (_ctx.opencodeProviders.length || _ctx.opencodeAgents.length)
                   ? (_openBlock(), _createElementBlock("section", {

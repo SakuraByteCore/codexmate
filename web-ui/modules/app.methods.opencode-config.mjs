@@ -8,10 +8,19 @@ function normalizeOpencodeAgentName(value) {
     return /^[a-zA-Z0-9_.-]+$/.test(name) ? name : '';
 }
 
+function getOpencodeJsonParser() {
+    const root = typeof globalThis !== 'undefined' ? globalThis : {};
+    const json5 = root.JSON5 || (root.window && root.window.JSON5);
+    if (json5 && typeof json5.parse === 'function') {
+        return json5;
+    }
+    return JSON;
+}
+
 function summarizeOpencodeDraft(content) {
-    const parsed = JSON.parse(content || '{}');
+    const parsed = getOpencodeJsonParser().parse(content || '{}');
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('OpenCode config must be a JSON object');
+        throw new Error('OpenCode config must be a JSON/JSONC object');
     }
     return parsed;
 }
@@ -52,7 +61,7 @@ export function createOpencodeConfigMethods(options = {}) {
             const agents = Array.isArray(res.agents) ? res.agents : [];
             this.opencodeProviders = providers;
             this.opencodeAgents = agents;
-            const currentAgent = normalizeOpencodeAgentName(res.currentAgent) || 'coder';
+            const currentAgent = normalizeOpencodeAgentName(res.currentAgent) || 'build';
             this.opencodeAgent = currentAgent;
             const currentModel = typeof res.currentModel === 'string' ? res.currentModel.trim() : '';
             this.opencodeModel = currentModel;
@@ -61,7 +70,8 @@ export function createOpencodeConfigMethods(options = {}) {
             }
             const enabledProvider = providers.find(item => item && item.disabled !== true && item.hasKey);
             const firstProvider = providers.find(item => item && item.name);
-            this.opencodeProvider = normalizeOpencodeProviderName(this.opencodeProvider)
+            this.opencodeProvider = normalizeOpencodeProviderName(res.currentProvider)
+                || normalizeOpencodeProviderName(this.opencodeProvider)
                 || normalizeOpencodeProviderName(enabledProvider && enabledProvider.name)
                 || normalizeOpencodeProviderName(firstProvider && firstProvider.name)
                 || 'anthropic';
@@ -103,7 +113,7 @@ export function createOpencodeConfigMethods(options = {}) {
                 const pretty = JSON.stringify(parsed, null, 2) + '\n';
                 return { content: pretty, fileName };
             } catch (e) {
-                return { error: `OpenCode JSON 解析失败: ${e.message}` };
+                return { error: `OpenCode JSON/JSONC 解析失败: ${e.message}` };
             }
         },
 
@@ -178,7 +188,7 @@ export function createOpencodeConfigMethods(options = {}) {
                     provider,
                     model,
                     apiKey: this.opencodeApiKey,
-                    agent: this.opencodeAgent || 'coder',
+                    agent: this.opencodeAgent || 'build',
                     applyToCoreAgents: this.opencodeApplyToCoreAgents === true,
                     disabled: this.opencodeProviderDisabled === true,
                     autoCompact: this.opencodeAutoCompact !== false,

@@ -41,7 +41,7 @@
                                         <button type="button" class="btn-tool btn-tool-compact" @click="applyOpencodeSelection" :disabled="opencodeApplying || opencodeLoading || !isToolConfigWriteAllowed('opencode')">{{ opencodeApplying ? '应用中...' : '应用选择' }}</button>
                                     </div>
                                 </div>
-                                <div class="config-template-hint">目标文件：{{ opencodeConfigPath || '~/.opencode.json' }} · {{ opencodeConfigExists ? '已存在' : '尚未创建' }}</div>
+                                <div class="config-template-hint">目标文件：{{ opencodeConfigPath || '~/.config/opencode/opencode.jsonc' }} · {{ opencodeConfigExists ? '已存在' : '尚未创建' }}</div>
                                 <div class="codex-config-grid">
                                     <div class="form-group codex-config-field">
                                         <label class="form-label" for="opencode-provider">Provider</label>
@@ -59,11 +59,13 @@
                                     </div>
                                     <div class="form-group codex-config-field">
                                         <label class="form-label" for="opencode-agent">Agent</label>
-                                        <input id="opencode-agent" class="form-input" v-model="opencodeAgent" list="opencode-agent-options" autocomplete="off" spellcheck="false" placeholder="coder">
+                                        <input id="opencode-agent" class="form-input" v-model="opencodeAgent" list="opencode-agent-options" autocomplete="off" spellcheck="false" placeholder="build">
                                         <datalist id="opencode-agent-options">
-                                            <option value="coder"></option>
-                                            <option value="task"></option>
-                                            <option value="summarizer"></option>
+                                            <option value="build"></option>
+                                            <option value="plan"></option>
+                                            <option value="general"></option>
+                                            <option value="summary"></option>
+                                            <option value="compaction"></option>
                                             <option value="title"></option>
                                             <option v-for="agent in opencodeAgents" :key="agent.name" :value="agent.name"></option>
                                         </datalist>
@@ -92,12 +94,12 @@
                                 <label class="settings-toggle-row" style="margin-top: 12px;">
                                     <input type="checkbox" v-model="opencodeApplyToCoreAgents">
                                     <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                                    <span>同步应用到 coder / task / summarizer / title</span>
+                                    <span>同步应用到 build / plan / general / title / summary / compaction</span>
                                 </label>
                                 <label class="settings-toggle-row" style="margin-top: 8px;">
                                     <input type="checkbox" v-model="opencodeAutoCompact">
                                     <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                                    <span>启用 autoCompact</span>
+                                    <span>启用 compaction.auto</span>
                                 </label>
                                 <label class="settings-toggle-row" style="margin-top: 8px;">
                                     <input type="checkbox" v-model="opencodeProviderDisabled">
@@ -117,8 +119,8 @@
                                 <input ref="opencodeImportInput" class="sr-only" type="file" accept=".json,.jsonc,.opencode" @change="handleOpencodeImportChange">
                                 <div v-if="opencodeImportFileName" class="config-template-hint">已解析：{{ opencodeImportFileName }}</div>
                                 <div v-if="opencodeError || opencodeImportError" class="config-template-hint error-text">{{ opencodeError || opencodeImportError }}</div>
-                                <textarea class="template-textarea" v-model="opencodeContent" spellcheck="false" :readonly="opencodeSaving || opencodeLoading" placeholder="在这里展示/编辑 ~/.opencode.json"></textarea>
-                                <div class="config-template-hint">支持导入现有 OpenCode JSON 配置；保存前会先解析，避免把坏 JSON 写进去。</div>
+                                <textarea class="template-textarea" v-model="opencodeContent" spellcheck="false" :readonly="opencodeSaving || opencodeLoading" placeholder="在这里展示/编辑 ~/.config/opencode/opencode.jsonc"></textarea>
+                                <div class="config-template-hint">支持导入现有 OpenCode JSON/JSONC 配置；保存前会先解析，避免把坏配置写进去。</div>
                             </section>
 
                             <section class="selector-section" v-if="opencodeProviders.length || opencodeAgents.length">

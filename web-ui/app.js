@@ -428,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 opencodeApiKey: '',
                 opencodeShowKey: false,
                 opencodeProviderDisabled: false,
-                opencodeAgent: 'coder',
+                opencodeAgent: 'build',
                 opencodeApplyToCoreAgents: true,
                 opencodeAutoCompact: true,
                 opencodeMaxTokens: '',

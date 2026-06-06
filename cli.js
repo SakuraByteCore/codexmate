@@ -185,8 +185,11 @@ const DEFAULT_WEB_OPEN_HOST = '127.0.0.1';
 const CONFIG_DIR = path.join(os.homedir(), '.codex');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.toml');
 const AUTH_FILE = path.join(CONFIG_DIR, 'auth.json');
-const OPENCODE_HOME_CONFIG_FILE = path.join(os.homedir(), '.opencode.json');
-const OPENCODE_XDG_CONFIG_FILE = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode', '.opencode.json');
+const OPENCODE_CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode');
+const OPENCODE_CONFIG_ENV_FILE = process.env.OPENCODE_CONFIG ? path.resolve(process.env.OPENCODE_CONFIG) : '';
+const OPENCODE_GLOBAL_JSONC_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'opencode.jsonc');
+const OPENCODE_GLOBAL_JSON_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'opencode.json');
+const OPENCODE_LEGACY_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'config.json');
 const AUTH_PROFILES_DIR = path.join(CONFIG_DIR, 'auth-profiles');
 const AUTH_REGISTRY_FILE = path.join(AUTH_PROFILES_DIR, 'registry.json');
 const MODELS_FILE = path.join(CONFIG_DIR, 'models.json');
@@ -9632,7 +9635,12 @@ function applyClaudeSettingsRaw(params = {}) {
 }
 
 function getOpencodeConfigCandidates() {
-    const candidates = [OPENCODE_HOME_CONFIG_FILE, OPENCODE_XDG_CONFIG_FILE]
+    const candidates = [
+        OPENCODE_CONFIG_ENV_FILE,
+        OPENCODE_GLOBAL_JSONC_CONFIG_FILE,
+        OPENCODE_GLOBAL_JSON_CONFIG_FILE,
+        OPENCODE_LEGACY_CONFIG_FILE
+    ]
         .filter(Boolean)
         .map(item => path.resolve(item));
     return [...new Set(candidates)];
@@ -9645,7 +9653,7 @@ function resolveOpencodeConfigFile() {
             return candidate;
         }
     }
-    return candidates[0] || OPENCODE_HOME_CONFIG_FILE;
+    return OPENCODE_CONFIG_ENV_FILE || OPENCODE_GLOBAL_JSONC_CONFIG_FILE;
 }
 
 function readOpencodeConfigObject(content) {
@@ -9655,7 +9663,7 @@ function readOpencodeConfigObject(content) {
     }
     const parsed = JSON5.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('OpenCode config must be a JSON object');
+        throw new Error('OpenCode config must be a JSON/JSONC object');
     }
     return parsed;
 }
@@ -9670,37 +9678,82 @@ function normalizeOpencodeProviderName(value) {
     return /^[a-z0-9_.-]+$/.test(name) ? name : '';
 }
 
+function splitOpencodeModelRef(modelRef) {
+    const raw = typeof modelRef === 'string' ? modelRef.trim() : '';
+    const slash = raw.indexOf('/');
+    if (slash <= 0 || slash === raw.length - 1) {
+        return { provider: '', model: raw };
+    }
+    return {
+        provider: normalizeOpencodeProviderName(raw.slice(0, slash)),
+        model: raw.slice(slash + 1).trim()
+    };
+}
+
+function joinOpencodeModelRef(providerName, model) {
+    const provider = normalizeOpencodeProviderName(providerName);
+    const modelName = typeof model === 'string' ? model.trim().replace(/^\/+/, '') : '';
+    return provider && modelName ? `${provider}/${modelName}` : '';
+}
+
+function getRecord(value) {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
 function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfigFile(), exists = false) {
-    const providers = config.providers && typeof config.providers === 'object' && !Array.isArray(config.providers)
-        ? config.providers
-        : {};
-    const agents = config.agents && typeof config.agents === 'object' && !Array.isArray(config.agents)
-        ? config.agents
-        : {};
+    const providers = getRecord(config.provider);
+    const agents = getRecord(config.agent);
+    const disabledProviders = Array.isArray(config.disabled_providers)
+        ? config.disabled_providers.map(item => normalizeOpencodeProviderName(item)).filter(Boolean)
+        : [];
+    const topLevelModel = splitOpencodeModelRef(config.model);
     const agentEntries = Object.entries(agents)
         .filter(([, agent]) => agent && typeof agent === 'object' && !Array.isArray(agent))
-        .map(([name, agent]) => ({
-            name,
-            model: typeof agent.model === 'string' ? agent.model : '',
-            maxTokens: Number.isFinite(Number(agent.maxTokens)) ? Number(agent.maxTokens) : null,
-            reasoningEffort: typeof agent.reasoningEffort === 'string' ? agent.reasoningEffort : ''
-        }));
-    const primaryAgent = agentEntries.find(item => item.name === 'coder') || agentEntries[0] || null;
+        .map(([name, agent]) => {
+            const modelRef = typeof agent.model === 'string' ? agent.model : '';
+            const parsedModel = splitOpencodeModelRef(modelRef);
+            const requestBody = getRecord(getRecord(agent.request).body);
+            return {
+                name,
+                model: parsedModel.model || modelRef,
+                modelRef,
+                provider: parsedModel.provider,
+                maxTokens: Number.isFinite(Number(requestBody.max_tokens)) ? Number(requestBody.max_tokens) : null,
+                reasoningEffort: typeof requestBody.reasoning_effort === 'string' ? requestBody.reasoning_effort : ''
+            };
+        });
+    const preferredAgentName = normalizeOpencodeAgentName(config.default_agent) || 'build';
+    const primaryAgent = agentEntries.find(item => item.name === preferredAgentName)
+        || agentEntries.find(item => item.name === 'build')
+        || agentEntries[0]
+        || null;
+    const currentProvider = topLevelModel.provider || (primaryAgent && primaryAgent.provider) || '';
+    const currentModel = topLevelModel.model || (primaryAgent && primaryAgent.model) || '';
+    const providerNames = [...new Set([
+        ...Object.keys(providers),
+        currentProvider,
+        ...(agentEntries.map(item => item.provider))
+    ].map(item => normalizeOpencodeProviderName(item)).filter(Boolean))];
     return {
         exists: !!exists,
         targetPath,
-        providers: Object.entries(providers)
-            .filter(([, provider]) => provider && typeof provider === 'object' && !Array.isArray(provider))
-            .map(([name, provider]) => ({
+        providers: providerNames.map((name) => {
+            const provider = getRecord(providers[name]);
+            const options = getRecord(provider.options);
+            const apiKey = typeof options.apiKey === 'string' ? options.apiKey : '';
+            return {
                 name,
-                apiKey: maskKey(typeof provider.apiKey === 'string' ? provider.apiKey : ''),
-                hasKey: typeof provider.apiKey === 'string' && provider.apiKey.trim().length > 0,
-                disabled: provider.disabled === true
-            })),
+                apiKey: maskKey(apiKey),
+                hasKey: apiKey.trim().length > 0,
+                disabled: disabledProviders.includes(name)
+            };
+        }),
         agents: agentEntries,
-        currentAgent: primaryAgent ? primaryAgent.name : 'coder',
-        currentModel: primaryAgent ? primaryAgent.model : '',
-        autoCompact: config.autoCompact !== false,
+        currentAgent: primaryAgent ? primaryAgent.name : preferredAgentName,
+        currentProvider,
+        currentModel,
+        currentModelRef: joinOpencodeModelRef(currentProvider, currentModel),
+        autoCompact: getRecord(config.compaction).auto !== false,
         redacted: true
     };
 }
@@ -9708,10 +9761,10 @@ function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfig
 function readOpencodeConfigInfo() {
     const targetPath = resolveOpencodeConfigFile();
     if (!fs.existsSync(targetPath)) {
-        const config = {};
+        const config = { $schema: 'https://opencode.ai/config.json' };
         return {
             ...summarizeOpencodeConfig(config, targetPath, false),
-            content: JSON.stringify(config, null, 2),
+            content: JSON.stringify(config, null, 2) + '\n',
             candidates: getOpencodeConfigCandidates()
         };
     }
@@ -9746,7 +9799,7 @@ function applyOpencodeConfigRaw(params = {}) {
     try {
         parsed = readOpencodeConfigObject(content);
     } catch (e) {
-        return { error: `OpenCode JSON 解析失败: ${e.message}` };
+        return { error: `OpenCode JSON/JSONC 解析失败: ${e.message}` };
     }
     const targetPath = resolveOpencodeConfigFile();
     try {
@@ -9756,6 +9809,7 @@ function applyOpencodeConfigRaw(params = {}) {
         return {
             success: true,
             targetPath,
+            content: JSON.stringify(parsed, null, 2) + '\n',
             ...summarizeOpencodeConfig(parsed, targetPath, true)
         };
     } catch (e) {
@@ -9767,7 +9821,7 @@ function updateOpencodeSelection(params = {}) {
     assertToolConfigWriteAllowed('opencode');
     const providerName = normalizeOpencodeProviderName(params.provider);
     const model = typeof params.model === 'string' ? params.model.trim() : '';
-    const agentName = normalizeOpencodeAgentName(params.agent || 'coder') || 'coder';
+    const agentName = normalizeOpencodeAgentName(params.agent || 'build') || 'build';
     if (!providerName) {
         return { error: '请选择 OpenCode provider' };
     }
@@ -9781,65 +9835,100 @@ function updateOpencodeSelection(params = {}) {
         try {
             config = readOpencodeConfigObject(fs.readFileSync(targetPath, 'utf-8'));
         } catch (e) {
-            return { error: `OpenCode JSON 解析失败: ${e.message}` };
+            return { error: `OpenCode JSON/JSONC 解析失败: ${e.message}` };
         }
     }
     if (!config || typeof config !== 'object' || Array.isArray(config)) {
         config = {};
     }
-    if (!config.providers || typeof config.providers !== 'object' || Array.isArray(config.providers)) {
-        config.providers = {};
+    if (!config.$schema) {
+        config.$schema = 'https://opencode.ai/config.json';
     }
-    const previousProvider = config.providers[providerName] && typeof config.providers[providerName] === 'object' && !Array.isArray(config.providers[providerName])
-        ? config.providers[providerName]
-        : {};
+    const modelRef = joinOpencodeModelRef(providerName, model);
+    config.model = modelRef;
+
+    if (!config.provider || typeof config.provider !== 'object' || Array.isArray(config.provider)) {
+        config.provider = {};
+    }
+    const previousProvider = getRecord(config.provider[providerName]);
+    const previousOptions = getRecord(previousProvider.options);
     const apiKey = typeof params.apiKey === 'string' ? params.apiKey.trim() : '';
-    config.providers[providerName] = {
+    config.provider[providerName] = {
         ...previousProvider,
-        disabled: params.disabled === true
+        options: {
+            ...previousOptions
+        }
     };
     if (apiKey) {
-        config.providers[providerName].apiKey = apiKey;
-    } else if (!Object.prototype.hasOwnProperty.call(config.providers[providerName], 'apiKey')) {
-        config.providers[providerName].apiKey = '';
+        config.provider[providerName].options.apiKey = apiKey;
+    }
+    if (Object.keys(config.provider[providerName].options).length === 0) {
+        delete config.provider[providerName].options;
     }
 
-    if (!config.agents || typeof config.agents !== 'object' || Array.isArray(config.agents)) {
-        config.agents = {};
+    const disabledSet = new Set(Array.isArray(config.disabled_providers)
+        ? config.disabled_providers.map(item => normalizeOpencodeProviderName(item)).filter(Boolean)
+        : []);
+    if (params.disabled === true) {
+        disabledSet.add(providerName);
+    } else {
+        disabledSet.delete(providerName);
+    }
+    if (disabledSet.size) {
+        config.disabled_providers = [...disabledSet].sort();
+    } else {
+        delete config.disabled_providers;
+    }
+
+    if (!config.agent || typeof config.agent !== 'object' || Array.isArray(config.agent)) {
+        config.agent = {};
     }
     const coreAgents = params.applyToCoreAgents === true
-        ? ['coder', 'task', 'summarizer', 'title']
+        ? ['build', 'plan', 'general', 'title', 'summary', 'compaction']
         : [agentName];
     for (const name of coreAgents) {
-        const previousAgent = config.agents[name] && typeof config.agents[name] === 'object' && !Array.isArray(config.agents[name])
-            ? config.agents[name]
-            : {};
-        config.agents[name] = {
+        const previousAgent = getRecord(config.agent[name]);
+        const previousRequest = getRecord(previousAgent.request);
+        const previousBody = getRecord(previousRequest.body);
+        const nextAgent = {
             ...previousAgent,
-            model
+            model: modelRef
         };
+        const requestBody = { ...previousBody };
         const maxTokens = normalizePositiveIntegerParam(params.maxTokens);
         if (maxTokens !== null) {
-            config.agents[name].maxTokens = maxTokens;
+            requestBody.max_tokens = maxTokens;
         }
         const effort = typeof params.reasoningEffort === 'string' ? params.reasoningEffort.trim().toLowerCase() : '';
         if (effort === 'low' || effort === 'medium' || effort === 'high') {
-            config.agents[name].reasoningEffort = effort;
+            requestBody.reasoning_effort = effort;
         }
+        if (Object.keys(requestBody).length) {
+            nextAgent.request = {
+                ...previousRequest,
+                body: requestBody
+            };
+        }
+        config.agent[name] = nextAgent;
     }
-    if (params.autoCompact !== undefined) {
-        config.autoCompact = params.autoCompact !== false;
+    if (!config.default_agent) {
+        config.default_agent = agentName;
     }
+    if (!config.compaction || typeof config.compaction !== 'object' || Array.isArray(config.compaction)) {
+        config.compaction = {};
+    }
+    config.compaction.auto = params.autoCompact !== false;
 
     try {
         ensureDir(path.dirname(targetPath));
         backupFileIfNeededOnce(targetPath);
-        fs.writeFileSync(targetPath, JSON.stringify(config, null, 2) + '\n', { encoding: 'utf-8', mode: 0o600 });
+        const content = JSON.stringify(config, null, 2) + '\n';
+        fs.writeFileSync(targetPath, content, { encoding: 'utf-8', mode: 0o600 });
         return {
             success: true,
             targetPath,
             ...summarizeOpencodeConfig(config, targetPath, true),
-            content: JSON.stringify(config, null, 2) + '\n'
+            content
         };
     } catch (e) {
         return { error: e.message || '写入 OpenCode 配置失败' };
