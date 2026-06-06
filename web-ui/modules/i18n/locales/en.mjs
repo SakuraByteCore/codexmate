@@ -391,6 +391,7 @@ const en = Object.freeze({
     'toast.copy.empty': 'Nothing to copy',
     'toast.copy.ok': 'Copied',
     'toast.copy.fail': 'Copy failed',
+    'toast.link.fail': 'Failed to generate link',
     'toast.save.ok': 'Saved',
     'toast.save.fail': 'Save failed',
     'toast.delete.ok': 'Deleted',

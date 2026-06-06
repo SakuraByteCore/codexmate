@@ -499,6 +499,19 @@
     opacity: 1;
 }
 
+.btn-confirm-mini {
+    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(210, 107, 90, 0.2);
+}
+
+.btn-confirm-mini:hover {
+    box-shadow: 0 4px 8px rgba(210, 107, 90, 0.25);
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+}
+
 .prompts-editor {
     margin-top: 12px;
     flex: 1;

@@ -21,8 +21,8 @@ test('agents modal exposes diff preview hooks in template and script', () => {
     assert.match(template, /:readonly="configTemplateApplying \|\| configTemplateDiffLoading"/);
     assert.match(template, /<button class="btn btn-cancel" @click="closeConfigTemplateModal" :disabled="configTemplateApplying \|\| configTemplateDiffLoading">\{\{\s*t\('common\.cancel'\)\s*\}\}<\/button>/);
     assert.match(template, /:readonly="agentsLoading \|\| agentsSaving \|\| agentsDiffVisible"/);
-    assert.match(template, /agentsDiffVisible\s*\?\s*t\('common\.apply'\)/);
-    assert.match(template, /t\('common\.applying'\)/);
+    assert.match(template, /agentsDiffVisible\s*\?\s*t\('common\.save'\)/);
+    assert.match(template, /t\('common\.saving'\)/);
     assert.match(template, /showConfirmDialog/);
     assert.match(template, /confirm-dialog/);
     assert.match(template, /aria-describedby="confirm-dialog-message"/);

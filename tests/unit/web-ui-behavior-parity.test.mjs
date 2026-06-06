@@ -442,6 +442,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptTemplateVarDraftName',
         'showPromptTemplateVarModal',
         'brandHovered',
+        'promptsHint',
     ];
     allowedExtraCurrentKeys.push(
         'lang',

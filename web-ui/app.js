@@ -74,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showConfigTemplateModal: false,
                 showAgentsModal: false,
                 promptsSubTab: 'codex',
-                promptsHint: '',
                 showSkillsModal: false,
                 showHealthCheckModal: false,
                 showCodexBridgePoolModal: false,

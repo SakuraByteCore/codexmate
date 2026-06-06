@@ -274,6 +274,7 @@ const vi = Object.freeze({
     'toast.copy.empty': 'Không có gì để sao chép',
     'toast.copy.ok': 'Đã sao chép',
     'toast.copy.fail': 'Sao chép thất bại',
+    'toast.link.fail': 'Không thể tạo liên kết',
     'toast.save.ok': 'Đã lưu',
     'toast.save.fail': 'Lưu thất bại',
     'toast.delete.ok': 'Đã xóa',

@@ -391,6 +391,7 @@ const zh = Object.freeze({
     'toast.copy.empty': '没有可复制内容',
     'toast.copy.ok': '已复制',
     'toast.copy.fail': '复制失败',
+    'toast.link.fail': '无法生成链接',
     'toast.save.ok': '已保存',
     'toast.save.fail': '保存失败',
     'toast.delete.ok': '已删除',

@@ -682,13 +682,6 @@ export function createAgentsMethods(options = {}) {
                 this.agentsExists = !!res.exists;
                 this.agentsLineEnding = res.lineEnding === '\r\n' ? '\r\n' : '\n';
                 this.agentsContext = isClaude ? 'claude-md' : 'codex';
-                const t = typeof this.t === 'function' ? this.t : null;
-                const tr = (key, fallback) => (t ? t(key) : fallback);
-                if (isClaude) {
-                    this.promptsHint = tr('modal.agents.hint.claudeMd', '保存后会写入 ~/.claude/CLAUDE.md。');
-                } else {
-                    this.promptsHint = tr('modal.agents.hint.default', '保存后会写入目标 AGENTS.md（与 config.toml 同级）。');
-                }
             } catch (e) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;

@@ -825,8 +825,6 @@ export function createSessionComputed() {
                         percent: (((height - y) / height) * 100).toFixed(1)
                     });
                 }
-            } else {
-                yTicks.push({ value: 0, label: '0', y: padding.top + chartHeight, percent: (((height - (padding.top + chartHeight)) / height) * 100).toFixed(1) });
             }
 
             return {

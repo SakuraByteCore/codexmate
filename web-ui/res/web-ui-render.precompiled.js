@@ -334,7 +334,7 @@ return function render(_ctx, _cache) {
                   "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'codex' ? 'page' : null,
                   class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'codex' }]),
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
-                  onClick: $event => {_ctx.promptsSubTab = 'codex'; _ctx.onMainTabClick('prompts')}
+                  onClick: $event => {_ctx.switchPromptsSubTab('codex'); _ctx.onMainTabClick('prompts')}
                 }, [
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.agents')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
@@ -348,7 +348,7 @@ return function render(_ctx, _cache) {
                   "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'claude-md' ? 'page' : null,
                   class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'claude-md' }]),
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
-                  onClick: $event => {_ctx.promptsSubTab = 'claude-md'; _ctx.onMainTabClick('prompts')}
+                  onClick: $event => {_ctx.switchPromptsSubTab('claude-md'); _ctx.onMainTabClick('prompts')}
                 }, [
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.claude')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
@@ -5541,197 +5541,198 @@ return function render(_ctx, _cache) {
             onChange: _ctx.handlePromptTemplatesImportChange
           }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
           _createCommentVNode(" Prompts editor "),
-          _withDirectives(_createElementVNode("div", {
-            class: "mode-content mode-cards",
-            id: "panel-prompts",
-            role: "tabpanel",
-            "aria-labelledby": "tab-prompts"
-          }, [
-            _createElementVNode("div", { class: "segmented-control" }, [
-              _createElementVNode("button", {
-                type: "button",
-                class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'codex' }]),
-                onClick: $event => (_ctx.switchPromptsSubTab('codex'))
-              }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
-              _createElementVNode("button", {
-                type: "button",
-                class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'claude-md' }]),
-                onClick: $event => (_ctx.switchPromptsSubTab('claude-md'))
-              }, _toDisplayString(_ctx.t('prompts.subTab.claude')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
-            ]),
-            _createElementVNode("div", { class: "prompts-editor" }, [
-              _createElementVNode("div", { class: "prompts-editor-toolbar" }, [
-                _createElementVNode("div", { class: "form-hint" }, [
-                  _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
-                  (_ctx.agentsPath)
-                    ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
-                    : _createCommentVNode("v-if", true)
+          (_ctx.mainTab === 'prompts')
+            ? (_openBlock(), _createElementBlock("div", {
+                key: 1,
+                class: "mode-content mode-cards",
+                id: "panel-prompts",
+                role: "tabpanel",
+                "aria-labelledby": "tab-prompts"
+              }, [
+                _createElementVNode("div", { class: "segmented-control" }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'codex' }]),
+                    onClick: $event => (_ctx.switchPromptsSubTab('codex'))
+                  }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'claude-md' }]),
+                    onClick: $event => (_ctx.switchPromptsSubTab('claude-md'))
+                  }, _toDisplayString(_ctx.t('prompts.subTab.claude')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                 ]),
-                _createElementVNode("div", { class: "prompts-editor-actions" }, [
-                  _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
-                    _createElementVNode("button", {
-                      class: "btn-mini",
-                      onClick: _ctx.exportAgentsContent,
-                      disabled: _ctx.agentsLoading
-                    }, _toDisplayString(_ctx.t('modal.agents.export')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    _createElementVNode("button", {
-                      class: "btn-mini",
-                      onClick: _ctx.copyAgentsContent,
-                      disabled: _ctx.agentsLoading
-                    }, _toDisplayString(_ctx.t('modal.agents.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    _createElementVNode("button", {
-                      class: "btn-mini",
-                      onClick: _ctx.pasteAgentsContent,
-                      disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible
-                    }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ]),
-                  _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
-                    _createElementVNode("button", {
-                      class: "btn-mini",
-                      onClick: _ctx.loadPromptsContent,
-                      disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                    }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    (_ctx.agentsDiffVisible)
-                      ? (_openBlock(), _createElementBlock("button", {
-                          key: 0,
+                _createElementVNode("div", { class: "prompts-editor" }, [
+                  _createElementVNode("div", { class: "prompts-editor-toolbar" }, [
+                    _createElementVNode("div", { class: "form-hint" }, [
+                      _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
+                      (_ctx.agentsPath)
+                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ]),
+                    _createElementVNode("div", { class: "prompts-editor-actions" }, [
+                      _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
+                        _createElementVNode("button", {
                           class: "btn-mini",
-                          onClick: _ctx.resetAgentsDiffState,
+                          onClick: _ctx.exportAgentsContent,
+                          disabled: _ctx.agentsLoading
+                        }, _toDisplayString(_ctx.t('modal.agents.export')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                        _createElementVNode("button", {
+                          class: "btn-mini",
+                          onClick: _ctx.copyAgentsContent,
+                          disabled: _ctx.agentsLoading
+                        }, _toDisplayString(_ctx.t('modal.agents.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                        _createElementVNode("button", {
+                          class: "btn-mini",
+                          onClick: _ctx.pasteAgentsContent,
+                          disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible
+                        }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ]),
+                      _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
+                        _createElementVNode("button", {
+                          class: "btn-mini",
+                          onClick: _ctx.loadPromptsContent,
                           disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
-                        }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                        }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                        (_ctx.agentsDiffVisible)
+                          ? (_openBlock(), _createElementBlock("button", {
+                              key: 0,
+                              class: "btn-mini",
+                              onClick: _ctx.resetAgentsDiffState,
+                              disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading
+                            }, _toDisplayString(_ctx.t('common.backToEdit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                          : _createCommentVNode("v-if", true),
+                        _createElementVNode("button", {
+                          class: "btn-mini btn-confirm-mini",
+                          onClick: _ctx.applyAgentsContent,
+                          disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (!_ctx.agentsDiffVisible && !_ctx.hasAgentsContentChanged()) || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
+                        }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.saving') : _ctx.t('common.previewing')) : (_ctx.agentsDiffVisible ? _ctx.t('common.save') : _ctx.t('common.preview'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "form-group" }, [
+                    (_ctx.agentsDiffVisible)
+                      ? (_openBlock(), _createElementBlock("div", { key: 0 }, [
+                          (!_ctx.agentsDiffLoading && !_ctx.agentsDiffError && !_ctx.agentsDiffTruncated && (_ctx.agentsDiffStats.added || _ctx.agentsDiffStats.removed))
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 0,
+                                class: "agents-diff-summary"
+                              }, [
+                                _createElementVNode("span", { class: "agents-diff-stat add" }, "+" + _toDisplayString(_ctx.agentsDiffStats.added), 1 /* TEXT */),
+                                _createElementVNode("span", { class: "agents-diff-stat del" }, "-" + _toDisplayString(_ctx.agentsDiffStats.removed), 1 /* TEXT */)
+                              ]))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.agentsDiffLoading)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 1,
+                                class: "state-message"
+                              }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
+                            : (_ctx.agentsDiffError)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 2,
+                                  class: "state-message error"
+                                }, _toDisplayString(_ctx.agentsDiffError), 1 /* TEXT */))
+                              : (_ctx.agentsDiffTruncated)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 3,
+                                    class: "agents-diff-empty"
+                                  }, _toDisplayString(_ctx.t('diff.tooLargeSkip')), 1 /* TEXT */))
+                                : (!_ctx.agentsDiffHasChanges)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 4,
+                                      class: "agents-diff-empty"
+                                    }, _toDisplayString(_ctx.t('diff.noChanges')), 1 /* TEXT */))
+                                  : (_openBlock(), _createElementBlock("div", {
+                                      key: 5,
+                                      class: "agents-diff-view agents-diff-editor"
+                                    }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.agentsDiffLines, (line, index) => {
+                                        return (_openBlock(), _createElementBlock("div", {
+                                          key: line.key || (line.type + '-' + index),
+                                          class: _normalizeClass(['agents-diff-line', line.type])
+                                        }, [
+                                          _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ')), 1 /* TEXT */),
+                                          _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
+                                        ], 2 /* CLASS */))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ]))
+                        ]))
                       : _createCommentVNode("v-if", true),
-                    _createElementVNode("button", {
-                      class: "btn-mini btn-confirm-mini",
-                      onClick: _ctx.applyAgentsContent,
-                      disabled: _ctx.agentsSaving || _ctx.agentsLoading || _ctx.agentsDiffLoading || (!_ctx.agentsDiffVisible && !_ctx.hasAgentsContentChanged()) || (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
-                    }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.saving') : _ctx.t('common.previewing')) : (_ctx.agentsDiffVisible ? _ctx.t('common.save') : _ctx.t('common.preview'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ])
-                ])
-              ]),
-              _createElementVNode("div", { class: "form-group" }, [
-                (_ctx.agentsDiffVisible)
-                  ? (_openBlock(), _createElementBlock("div", { key: 0 }, [
-                      (!_ctx.agentsDiffLoading && !_ctx.agentsDiffError && !_ctx.agentsDiffTruncated && (_ctx.agentsDiffStats.added || _ctx.agentsDiffStats.removed))
+                    _createElementVNode("div", {
+                      class: _normalizeClass(['editor-frame', { 'editor-frame--loading': _ctx.agentsLoading }])
+                    }, [
+                      (_ctx.agentsLoading)
                         ? (_openBlock(), _createElementBlock("div", {
                             key: 0,
-                            class: "agents-diff-summary"
+                            class: "editor-skeleton"
                           }, [
-                            _createElementVNode("span", { class: "agents-diff-stat add" }, "+" + _toDisplayString(_ctx.agentsDiffStats.added), 1 /* TEXT */),
-                            _createElementVNode("span", { class: "agents-diff-stat del" }, "-" + _toDisplayString(_ctx.agentsDiffStats.removed), 1 /* TEXT */)
+                            (_openBlock(), _createElementBlock(_Fragment, null, _renderList(6, (i) => {
+                              return _createElementVNode("div", {
+                                class: "skeleton-line",
+                                key: i
+                              })
+                            }), 64 /* STABLE_FRAGMENT */))
                           ]))
                         : _createCommentVNode("v-if", true),
-                      (_ctx.agentsDiffLoading)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 1,
-                            class: "state-message"
-                          }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
-                        : (_ctx.agentsDiffError)
-                          ? (_openBlock(), _createElementBlock("div", {
-                              key: 2,
-                              class: "state-message error"
-                            }, _toDisplayString(_ctx.agentsDiffError), 1 /* TEXT */))
-                          : (_ctx.agentsDiffTruncated)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 3,
-                                class: "agents-diff-empty"
-                              }, _toDisplayString(_ctx.t('diff.tooLargeSkip')), 1 /* TEXT */))
-                            : (!_ctx.agentsDiffHasChanges)
-                              ? (_openBlock(), _createElementBlock("div", {
-                                  key: 4,
-                                  class: "agents-diff-empty"
-                                }, _toDisplayString(_ctx.t('diff.noChanges')), 1 /* TEXT */))
-                              : (_openBlock(), _createElementBlock("div", {
-                                  key: 5,
-                                  class: "agents-diff-view agents-diff-editor"
-                                }, [
-                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.agentsDiffLines, (line, index) => {
-                                    return (_openBlock(), _createElementBlock("div", {
-                                      key: line.key || (line.type + '-' + index),
-                                      class: _normalizeClass(['agents-diff-line', line.type])
-                                    }, [
-                                      _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ')), 1 /* TEXT */),
-                                      _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
-                                    ], 2 /* CLASS */))
-                                  }), 128 /* KEYED_FRAGMENT */))
-                                ]))
-                    ]))
-                  : _createCommentVNode("v-if", true),
-                _createElementVNode("div", {
-                  class: _normalizeClass(['editor-frame', { 'editor-frame--loading': _ctx.agentsLoading }])
-                }, [
-                  (_ctx.agentsLoading)
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 0,
-                        class: "editor-skeleton"
-                      }, [
-                        (_openBlock(), _createElementBlock(_Fragment, null, _renderList(6, (i) => {
-                          return _createElementVNode("div", {
-                            class: "skeleton-line",
-                            key: i
-                          })
-                        }), 64 /* STABLE_FRAGMENT */))
-                      ]))
-                    : _createCommentVNode("v-if", true),
-                  _withDirectives(_createElementVNode("textarea", {
-                    "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
-                    class: "form-input template-editor",
-                    spellcheck: "false",
-                    readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
-                    onInput: _ctx.onAgentsContentInput,
-                    placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')
-                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
-                    [_vModelText, _ctx.agentsContent]
-                  ])
-                ], 2 /* CLASS */),
-                (!_ctx.agentsLoading && !_ctx.agentsDiffVisible && _ctx.hasAgentsContentChanged())
-                  ? (_openBlock(), _createElementBlock("div", {
-                      key: 1,
-                      class: "prompts-context-hint prompts-context-hint--warn"
-                    }, _toDisplayString(_ctx.t('modal.agents.unsaved.detectedHint')), 1 /* TEXT */))
-                  : (_ctx.agentsDiffVisible && (_ctx.agentsDiffLoading || _ctx.agentsSaving))
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 2,
-                        class: "prompts-context-hint"
-                      }, _toDisplayString(_ctx.t('diff.hint.busy')), 1 /* TEXT */))
-                    : (_ctx.agentsDiffVisible && _ctx.agentsDiffError)
+                      _withDirectives(_createElementVNode("textarea", {
+                        "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
+                        class: "form-input template-editor",
+                        spellcheck: "false",
+                        readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                        onInput: _ctx.onAgentsContentInput,
+                        placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
+                        [_vModelText, _ctx.agentsContent]
+                      ])
+                    ], 2 /* CLASS */),
+                    (!_ctx.agentsLoading && !_ctx.agentsDiffVisible && _ctx.hasAgentsContentChanged())
                       ? (_openBlock(), _createElementBlock("div", {
-                          key: 3,
-                          class: "prompts-context-hint"
-                        }, _toDisplayString(_ctx.t('diff.hint.failedBack')), 1 /* TEXT */))
-                      : (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
+                          key: 1,
+                          class: "prompts-context-hint prompts-context-hint--warn"
+                        }, _toDisplayString(_ctx.t('modal.agents.unsaved.detectedHint')), 1 /* TEXT */))
+                      : (_ctx.agentsDiffVisible && (_ctx.agentsDiffLoading || _ctx.agentsSaving))
                         ? (_openBlock(), _createElementBlock("div", {
-                            key: 4,
+                            key: 2,
                             class: "prompts-context-hint"
-                          }, _toDisplayString(_ctx.t('diff.hint.noChangesBack')), 1 /* TEXT */))
-                        : (_ctx.agentsDiffVisible && _ctx.agentsDiffTruncated)
+                          }, _toDisplayString(_ctx.t('diff.hint.busy')), 1 /* TEXT */))
+                        : (_ctx.agentsDiffVisible && _ctx.agentsDiffError)
                           ? (_openBlock(), _createElementBlock("div", {
-                              key: 5,
+                              key: 3,
                               class: "prompts-context-hint"
-                            }, _toDisplayString(_ctx.t('diff.viewHint.truncated')), 1 /* TEXT */))
-                          : (_ctx.agentsDiffVisible)
+                            }, _toDisplayString(_ctx.t('diff.hint.failedBack')), 1 /* TEXT */))
+                          : (_ctx.agentsDiffVisible && !_ctx.agentsDiffHasChanges)
                             ? (_openBlock(), _createElementBlock("div", {
-                                key: 6,
+                                key: 4,
                                 class: "prompts-context-hint"
-                              }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
-                            : (!_ctx.agentsLoading)
+                              }, _toDisplayString(_ctx.t('diff.hint.noChangesBack')), 1 /* TEXT */))
+                            : (_ctx.agentsDiffVisible && _ctx.agentsDiffTruncated)
                               ? (_openBlock(), _createElementBlock("div", {
-                                  key: 7,
+                                  key: 5,
                                   class: "prompts-context-hint"
-                                }, _toDisplayString(_ctx.t('modal.agents.hint.twoStepSave')), 1 /* TEXT */))
-                              : _createCommentVNode("v-if", true)
-              ])
-            ])
-          ], 512 /* NEED_PATCH */), [
-            [_vShow, _ctx.mainTab === 'prompts']
-          ]),
+                                }, _toDisplayString(_ctx.t('diff.viewHint.truncated')), 1 /* TEXT */))
+                              : (_ctx.agentsDiffVisible)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 6,
+                                    class: "prompts-context-hint"
+                                  }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
+                                : (!_ctx.agentsLoading)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 7,
+                                      class: "prompts-context-hint"
+                                    }, _toDisplayString(_ctx.t('modal.agents.hint.twoStepSave')), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true)
+                  ])
+                ])
+              ]))
+            : _createCommentVNode("v-if", true),
           _createCommentVNode(" 加载状态 "),
           (_ctx.loading && _ctx.mainTab !== 'usage')
             ? (_openBlock(), _createElementBlock("div", {
-                key: 1,
+                key: 2,
                 class: "state-message"
               }, _toDisplayString(_ctx.t('app.loadingConfig')), 1 /* TEXT */))
             : (_ctx.initError)
               ? (_openBlock(), _createElementBlock("div", {
-                  key: 2,
+                  key: 3,
                   class: "state-message error"
                 }, [
                   _createCommentVNode(" 错误状态 "),

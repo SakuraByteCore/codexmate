@@ -234,7 +234,7 @@
                         :aria-current="mainTab === 'prompts' && promptsSubTab === 'codex' ? 'page' : null"
                         :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'codex' }]"
                         @pointerdown="onMainTabPointerDown('prompts', $event)"
-                        @click="promptsSubTab = 'codex'; onMainTabClick('prompts')">
+                        @click="switchPromptsSubTab('codex'); onMainTabClick('prompts')">
                         <div class="side-item-title">{{ t('side.prompts.agents') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.prompts.agents.meta') }}</span>
@@ -247,7 +247,7 @@
                         :aria-current="mainTab === 'prompts' && promptsSubTab === 'claude-md' ? 'page' : null"
                         :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'claude-md' }]"
                         @pointerdown="onMainTabPointerDown('prompts', $event)"
-                        @click="promptsSubTab = 'claude-md'; onMainTabClick('prompts')">
+                        @click="switchPromptsSubTab('claude-md'); onMainTabClick('prompts')">
                         <div class="side-item-title">{{ t('side.prompts.claude') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.prompts.claude.meta') }}</span>

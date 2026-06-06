@@ -393,6 +393,7 @@ const ja = Object.freeze({
     'toast.copy.empty': 'コピーする内容がありません',
     'toast.copy.ok': 'コピーしました',
     'toast.copy.fail': 'コピーに失敗しました',
+    'toast.link.fail': 'リンクの生成に失敗しました',
     'toast.save.ok': '保存しました',
     'toast.save.fail': '保存に失敗しました',
     'toast.delete.ok': '削除しました',
