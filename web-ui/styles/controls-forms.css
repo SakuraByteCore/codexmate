@@ -104,6 +104,30 @@
     flex: 0 0 auto;
 }
 
+.selector-actions.opencode-provider-actions {
+    display: inline-flex;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.selector-actions.opencode-provider-actions > .btn-tool,
+.selector-actions.opencode-provider-actions > .btn-tool-compact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    height: 28px;
+    min-height: 28px;
+    margin: 0;
+    padding: 0 10px;
+    line-height: 1;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
 .sessions-header-actions {
     display: flex !important;
     flex-direction: row !important;

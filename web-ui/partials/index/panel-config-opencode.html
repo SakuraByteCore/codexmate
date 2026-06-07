@@ -36,7 +36,7 @@
                             <section class="selector-section">
                                 <div class="selector-header">
                                     <span class="selector-title">{{ t('opencode.providerModel.title') }}</span>
-                                    <div class="selector-actions">
+                                    <div class="selector-actions opencode-provider-actions">
                                         <button type="button" class="btn-tool btn-tool-compact" @click="loadOpencodeConfig({ toast: true })" :disabled="opencodeLoading">{{ opencodeLoading ? t('common.refreshing') : t('common.refresh') }}</button>
                                         <button type="button" class="btn-tool btn-tool-compact" @click="applyOpencodeSelection" :disabled="opencodeApplying || opencodeLoading || !isToolConfigWriteAllowed('opencode')">{{ opencodeApplying ? t('common.applying') : t('opencode.applySelection') }}</button>
                                     </div>
