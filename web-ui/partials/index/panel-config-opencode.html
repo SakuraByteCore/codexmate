@@ -42,6 +42,7 @@
                                     </div>
                                 </div>
                                 <div class="config-template-hint">{{ t('opencode.targetFile', { path: opencodeConfigPath || '~/.config/opencode/opencode.jsonc', status: opencodeConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }) }}</div>
+                                <div class="config-template-hint">{{ t('opencode.providerStoreFile', { path: opencodeProviderStorePath || '~/.codexmate/opencode/providers.json' }) }}</div>
                                 <div class="codex-config-grid">
                                     <div class="form-group codex-config-field">
                                         <label class="form-label" for="opencode-provider">{{ t('field.provider') }}</label>
@@ -136,6 +137,7 @@
                                         </div>
                                         <div class="card-trailing">
                                             <span :class="['pill', provider.disabled ? 'empty' : 'configured']">{{ provider.disabled ? t('common.disabled') : t('common.enabled') }}</span>
+                                            <span class="pill empty">{{ provider.source === 'codexmate' ? t('opencode.summary.sourceCodexMate') : t('opencode.summary.sourceOpenCode') }}</span>
                                         </div>
                                     </div>
                                     <div v-for="agent in opencodeAgents" :key="agent.name" class="card">

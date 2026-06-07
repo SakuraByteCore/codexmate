@@ -99,6 +99,7 @@ export function createOpencodeConfigMethods(options = {}) {
                 }
                 this.opencodeContent = typeof res.content === 'string' ? res.content : '{}';
                 this.opencodeConfigPath = typeof res.targetPath === 'string' ? res.targetPath : '';
+                this.opencodeProviderStorePath = typeof res.providerStorePath === 'string' ? res.providerStorePath : '';
                 this.opencodeConfigExists = res.exists === true;
                 this.refreshOpencodeSelectionFromSummary(res || {});
                 if (options.toast === true) {
@@ -166,6 +167,7 @@ export function createOpencodeConfigMethods(options = {}) {
                 }
                 this.opencodeConfigExists = true;
                 if (res && typeof res.targetPath === 'string') this.opencodeConfigPath = res.targetPath;
+                if (res && typeof res.providerStorePath === 'string') this.opencodeProviderStorePath = res.providerStorePath;
                 this.refreshOpencodeSelectionFromSummary(res || {});
                 this.showMessage('OpenCode 配置已保存', 'success');
                 await this.loadOpencodeConfig();
@@ -210,6 +212,7 @@ export function createOpencodeConfigMethods(options = {}) {
                 }
                 if (res && typeof res.content === 'string') this.opencodeContent = res.content;
                 if (res && typeof res.targetPath === 'string') this.opencodeConfigPath = res.targetPath;
+                if (res && typeof res.providerStorePath === 'string') this.opencodeProviderStorePath = res.providerStorePath;
                 this.opencodeConfigExists = true;
                 this.opencodeApiKey = '';
                 this.refreshOpencodeSelectionFromSummary(res || {});

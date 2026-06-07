@@ -413,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 codexImportLoading: false,
                 codexAuthProfiles: [],
                 opencodeConfigPath: '',
+                opencodeProviderStorePath: '',
                 opencodeConfigExists: false,
                 opencodeContent: '{}',
                 opencodeLoading: false,

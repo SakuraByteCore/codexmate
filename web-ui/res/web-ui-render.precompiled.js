@@ -2391,6 +2391,7 @@ return function render(_ctx, _cache) {
                     ])
                   ]),
                   _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('opencode.targetFile', { path: _ctx.opencodeConfigPath || '~/.config/opencode/opencode.jsonc', status: _ctx.opencodeConfigExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave') })), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('opencode.providerStoreFile', { path: _ctx.opencodeProviderStorePath || '~/.codexmate/opencode/providers.json' })), 1 /* TEXT */),
                   _createElementVNode("div", { class: "codex-config-grid" }, [
                     _createElementVNode("div", { class: "form-group codex-config-field" }, [
                       _createElementVNode("label", {
@@ -2652,7 +2653,8 @@ return function render(_ctx, _cache) {
                             _createElementVNode("div", { class: "card-trailing" }, [
                               _createElementVNode("span", {
                                 class: _normalizeClass(['pill', provider.disabled ? 'empty' : 'configured'])
-                              }, _toDisplayString(provider.disabled ? _ctx.t('common.disabled') : _ctx.t('common.enabled')), 3 /* TEXT, CLASS */)
+                              }, _toDisplayString(provider.disabled ? _ctx.t('common.disabled') : _ctx.t('common.enabled')), 3 /* TEXT, CLASS */),
+                              _createElementVNode("span", { class: "pill empty" }, _toDisplayString(provider.source === 'codexmate' ? _ctx.t('opencode.summary.sourceCodexMate') : _ctx.t('opencode.summary.sourceOpenCode')), 1 /* TEXT */)
                             ])
                           ]))
                         }), 128 /* KEYED_FRAGMENT */)),

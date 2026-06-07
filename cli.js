@@ -219,6 +219,8 @@ const CODEBUDDY_DIR = path.join(os.homedir(), '.codebuddy');
 const CODEBUDDY_PROJECTS_DIR = path.join(CODEBUDDY_DIR, 'projects');
 const CODEXMATE_DIR = path.join(os.homedir(), '.codexmate');
 const CODEXMATE_PREFERENCES_FILE = path.join(CODEXMATE_DIR, 'preferences.json');
+const CODEXMATE_OPENCODE_DIR = path.join(CODEXMATE_DIR, 'opencode');
+const CODEXMATE_OPENCODE_PROVIDER_STORE_FILE = path.join(CODEXMATE_OPENCODE_DIR, 'providers.json');
 const CODEXMATE_SESSIONS_DIR = path.join(CODEXMATE_DIR, 'sessions');
 const CODEXMATE_DERIVED_SESSIONS_DIR = path.join(CODEXMATE_SESSIONS_DIR, 'derived');
 const CODEXMATE_DERIVED_CODEX_DIR = path.join(CODEXMATE_DERIVED_SESSIONS_DIR, 'codex');
@@ -9705,8 +9707,85 @@ function getRecord(value) {
     return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 }
 
-function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfigFile(), exists = false) {
+function stableOpencodeJson(value) {
+    if (Array.isArray(value)) {
+        return `[${value.map(item => stableOpencodeJson(item)).join(',')}]`;
+    }
+    if (value && typeof value === 'object') {
+        return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableOpencodeJson(value[key])}`).join(',')}}`;
+    }
+    return JSON.stringify(value);
+}
+
+function hashOpencodeManagedValue(value) {
+    return crypto.createHash('sha256').update(stableOpencodeJson(value === undefined ? null : value)).digest('hex');
+}
+
+function normalizeOpencodeProviderStore(raw) {
+    const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const providers = {};
+    const sourceProviders = getRecord(source.providers);
+    for (const [rawName, rawProvider] of Object.entries(sourceProviders)) {
+        const name = normalizeOpencodeProviderName(rawName);
+        const provider = getRecord(rawProvider);
+        if (!name) continue;
+        const apiKey = typeof provider.apiKey === 'string' ? provider.apiKey : '';
+        const model = typeof provider.model === 'string' ? provider.model.trim() : '';
+        const maxTokens = Number.isFinite(Number(provider.maxTokens)) && Number(provider.maxTokens) > 0
+            ? Number(provider.maxTokens)
+            : null;
+        const reasoningEffort = typeof provider.reasoningEffort === 'string' ? provider.reasoningEffort.trim().toLowerCase() : '';
+        providers[name] = {
+            apiKey,
+            model,
+            disabled: provider.disabled === true,
+            maxTokens,
+            reasoningEffort: ['low', 'medium', 'high'].includes(reasoningEffort) ? reasoningEffort : '',
+            updatedAt: typeof provider.updatedAt === 'string' ? provider.updatedAt : ''
+        };
+    }
+    const rawLastApplied = getRecord(source.lastApplied);
+    const lastAppliedProvider = normalizeOpencodeProviderName(rawLastApplied.provider);
+    const lastApplied = lastAppliedProvider
+        ? {
+            provider: lastAppliedProvider,
+            modelRef: typeof rawLastApplied.modelRef === 'string' ? rawLastApplied.modelRef : '',
+            providerHash: typeof rawLastApplied.providerHash === 'string' ? rawLastApplied.providerHash : '',
+            disabledProvidersHash: typeof rawLastApplied.disabledProvidersHash === 'string' ? rawLastApplied.disabledProvidersHash : '',
+            providerCreatedByCodexMate: rawLastApplied.providerCreatedByCodexMate === true,
+            disabledProviderAddedByCodexMate: rawLastApplied.disabledProviderAddedByCodexMate === true
+        }
+        : null;
+    return {
+        version: 1,
+        providers,
+        lastApplied
+    };
+}
+
+function readOpencodeProviderStore() {
+    if (!fs.existsSync(CODEXMATE_OPENCODE_PROVIDER_STORE_FILE)) {
+        return normalizeOpencodeProviderStore({});
+    }
+    try {
+        const raw = JSON.parse(fs.readFileSync(CODEXMATE_OPENCODE_PROVIDER_STORE_FILE, 'utf-8') || '{}');
+        return normalizeOpencodeProviderStore(raw);
+    } catch (e) {
+        return normalizeOpencodeProviderStore({});
+    }
+}
+
+function writeOpencodeProviderStore(store) {
+    ensureDir(CODEXMATE_OPENCODE_DIR);
+    writeJsonAtomic(CODEXMATE_OPENCODE_PROVIDER_STORE_FILE, normalizeOpencodeProviderStore(store));
+    try {
+        fs.chmodSync(CODEXMATE_OPENCODE_PROVIDER_STORE_FILE, 0o600);
+    } catch (e) {}
+}
+
+function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfigFile(), exists = false, providerStore = readOpencodeProviderStore()) {
     const providers = getRecord(config.provider);
+    const storedProviders = getRecord(providerStore.providers);
     const agents = getRecord(config.agent);
     const disabledProviders = Array.isArray(config.disabled_providers)
         ? config.disabled_providers.map(item => normalizeOpencodeProviderName(item)).filter(Boolean)
@@ -9735,6 +9814,7 @@ function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfig
     const currentProvider = topLevelModel.provider || (primaryAgent && primaryAgent.provider) || '';
     const currentModel = topLevelModel.model || (primaryAgent && primaryAgent.model) || '';
     const providerNames = [...new Set([
+        ...Object.keys(storedProviders),
         ...Object.keys(providers),
         currentProvider,
         ...(agentEntries.map(item => item.provider))
@@ -9742,15 +9822,20 @@ function summarizeOpencodeConfig(config = {}, targetPath = resolveOpencodeConfig
     return {
         exists: !!exists,
         targetPath,
+        providerStorePath: CODEXMATE_OPENCODE_PROVIDER_STORE_FILE,
         providers: providerNames.map((name) => {
             const provider = getRecord(providers[name]);
+            const storedProvider = getRecord(storedProviders[name]);
             const options = getRecord(provider.options);
-            const apiKey = typeof options.apiKey === 'string' ? options.apiKey : '';
+            const apiKey = typeof options.apiKey === 'string' && options.apiKey.trim()
+                ? options.apiKey
+                : (typeof storedProvider.apiKey === 'string' ? storedProvider.apiKey : '');
             return {
                 name,
                 apiKey: maskKey(apiKey),
                 hasKey: apiKey.trim().length > 0,
-                disabled: disabledProviders.includes(name)
+                disabled: disabledProviders.includes(name) || storedProvider.disabled === true,
+                source: Object.prototype.hasOwnProperty.call(providers, name) ? 'opencode' : 'codexmate'
             };
         }),
         agents: agentEntries,
@@ -9822,6 +9907,37 @@ function applyOpencodeConfigRaw(params = {}) {
     }
 }
 
+function removePreviousCodexMateOpencodeProjection(config, lastApplied, nextProviderName) {
+    const previousProvider = normalizeOpencodeProviderName(lastApplied && lastApplied.provider);
+    const nextProvider = normalizeOpencodeProviderName(nextProviderName);
+    if (!previousProvider || previousProvider === nextProvider) return;
+
+    const providers = getRecord(config.provider);
+    if (lastApplied.providerCreatedByCodexMate === true && providers[previousProvider] && lastApplied.providerHash) {
+        const currentHash = hashOpencodeManagedValue(providers[previousProvider]);
+        if (currentHash === lastApplied.providerHash) {
+            delete providers[previousProvider];
+        }
+    }
+    if (Object.keys(providers).length) {
+        config.provider = providers;
+    } else {
+        delete config.provider;
+    }
+
+    if (lastApplied.disabledProviderAddedByCodexMate === true && Array.isArray(config.disabled_providers) && lastApplied.disabledProvidersHash) {
+        const currentDisabled = config.disabled_providers.map(item => normalizeOpencodeProviderName(item)).filter(Boolean).sort();
+        if (hashOpencodeManagedValue(currentDisabled) === lastApplied.disabledProvidersHash) {
+            const nextDisabled = currentDisabled.filter(item => item !== previousProvider);
+            if (nextDisabled.length) {
+                config.disabled_providers = nextDisabled;
+            } else {
+                delete config.disabled_providers;
+            }
+        }
+    }
+}
+
 function updateOpencodeSelection(params = {}) {
     assertToolConfigWriteAllowed('opencode');
     const providerName = normalizeOpencodeProviderName(params.provider);
@@ -9846,6 +9962,13 @@ function updateOpencodeSelection(params = {}) {
     if (!config || typeof config !== 'object' || Array.isArray(config)) {
         config = {};
     }
+
+    const providerStore = readOpencodeProviderStore();
+    removePreviousCodexMateOpencodeProjection(config, providerStore.lastApplied, providerName);
+    const providerExistedBeforeApply = !!(getRecord(config.provider)[providerName]);
+    const disabledContainedBeforeApply = Array.isArray(config.disabled_providers)
+        && config.disabled_providers.map(item => normalizeOpencodeProviderName(item)).filter(Boolean).includes(providerName);
+
     if (!config.$schema) {
         config.$schema = 'https://opencode.ai/config.json';
     }
@@ -9855,9 +9978,12 @@ function updateOpencodeSelection(params = {}) {
     if (!config.provider || typeof config.provider !== 'object' || Array.isArray(config.provider)) {
         config.provider = {};
     }
+    const storedProvider = getRecord(providerStore.providers[providerName]);
     const previousProvider = getRecord(config.provider[providerName]);
     const previousOptions = getRecord(previousProvider.options);
-    const apiKey = typeof params.apiKey === 'string' ? params.apiKey.trim() : '';
+    const explicitApiKey = typeof params.apiKey === 'string' ? params.apiKey.trim() : '';
+    const storedApiKey = typeof storedProvider.apiKey === 'string' ? storedProvider.apiKey.trim() : '';
+    const apiKey = explicitApiKey || storedApiKey;
     config.provider[providerName] = {
         ...previousProvider,
         options: {
@@ -9924,22 +10050,45 @@ function updateOpencodeSelection(params = {}) {
     }
     config.compaction.auto = params.autoCompact !== false;
 
+    const maxTokens = normalizePositiveIntegerParam(params.maxTokens);
+    const effort = typeof params.reasoningEffort === 'string' ? params.reasoningEffort.trim().toLowerCase() : '';
+    providerStore.providers[providerName] = {
+        ...storedProvider,
+        apiKey: apiKey || '',
+        model,
+        disabled: params.disabled === true,
+        maxTokens,
+        reasoningEffort: ['low', 'medium', 'high'].includes(effort) ? effort : '',
+        updatedAt: new Date().toISOString()
+    };
+
     try {
         ensureDir(path.dirname(targetPath));
         backupFileIfNeededOnce(targetPath);
         const content = JSON.stringify(config, null, 2) + '\n';
         fs.writeFileSync(targetPath, content, { encoding: 'utf-8', mode: 0o600 });
+        const disabledProviders = Array.isArray(config.disabled_providers)
+            ? config.disabled_providers.map(item => normalizeOpencodeProviderName(item)).filter(Boolean).sort()
+            : [];
+        providerStore.lastApplied = {
+            provider: providerName,
+            modelRef,
+            providerHash: hashOpencodeManagedValue(getRecord(config.provider)[providerName]),
+            disabledProvidersHash: hashOpencodeManagedValue(disabledProviders),
+            providerCreatedByCodexMate: providerExistedBeforeApply !== true,
+            disabledProviderAddedByCodexMate: params.disabled === true && disabledContainedBeforeApply !== true
+        };
+        writeOpencodeProviderStore(providerStore);
         return {
             success: true,
             targetPath,
-            ...summarizeOpencodeConfig(config, targetPath, true),
+            ...summarizeOpencodeConfig(config, targetPath, true, providerStore),
             content
         };
     } catch (e) {
         return { error: e.message || '写入 OpenCode 配置失败' };
     }
 }
-
 // API: 打包 Claude 配置目录（系统 zip 可用则使用，否则回退 zip-lib）
 async function prepareClaudeDirDownload() {
     return await prepareDirectoryDownload(CLAUDE_DIR, {
