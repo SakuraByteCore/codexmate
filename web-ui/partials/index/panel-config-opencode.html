@@ -12,7 +12,7 @@
                         <button type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
                     </div>
 
-                    <section class="tool-config-write-card" aria-label="OpenCode 写入">
+                    <section class="tool-config-write-card" :aria-label="t('opencode.writeAria')">
                         <div class="tool-config-write-copy">
                             <div class="tool-config-write-title">{{ t('toolConfig.opencode.title') }}</div>
                             <p class="tool-config-write-desc">{{ t('toolConfig.opencode.desc') }}</p>
@@ -86,9 +86,9 @@
                                         <label class="form-label" for="opencode-reasoning-effort">{{ t('opencode.field.reasoningEffort') }}</label>
                                         <select id="opencode-reasoning-effort" class="model-select" v-model="opencodeReasoningEffort">
                                             <option value="">{{ t('opencode.option.keepUnchanged') }}</option>
-                                            <option value="low">low</option>
-                                            <option value="medium">medium</option>
-                                            <option value="high">high</option>
+                                            <option value="low">{{ t('opencode.option.reasoningLow') }}</option>
+                                            <option value="medium">{{ t('opencode.option.reasoningMedium') }}</option>
+                                            <option value="high">{{ t('opencode.option.reasoningHigh') }}</option>
                                         </select>
                                     </div>
                                 </div>

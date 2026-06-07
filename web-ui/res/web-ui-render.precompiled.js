@@ -2348,7 +2348,7 @@ return function render(_ctx, _cache) {
               : _createCommentVNode("v-if", true),
             _createElementVNode("section", {
               class: "tool-config-write-card",
-              "aria-label": "OpenCode 写入"
+              "aria-label": _ctx.t('opencode.writeAria')
             }, [
               _createElementVNode("div", { class: "tool-config-write-copy" }, [
                 _createElementVNode("div", { class: "tool-config-write-title" }, _toDisplayString(_ctx.t('toolConfig.opencode.title')), 1 /* TEXT */),
@@ -2367,7 +2367,7 @@ return function render(_ctx, _cache) {
                 ]),
                 _createElementVNode("span", null, _toDisplayString(_ctx.toolConfigPermissionStatusLabel('opencode')), 1 /* TEXT */)
               ])
-            ]),
+            ], 8 /* PROPS */, ["aria-label"]),
             _createElementVNode("div", {
               class: _normalizeClass(["tool-config-write-scope", { locked: !_ctx.isToolConfigWriteAllowed('opencode') }])
             }, [
@@ -2528,9 +2528,9 @@ return function render(_ctx, _cache) {
                         "onUpdate:modelValue": $event => ((_ctx.opencodeReasoningEffort) = $event)
                       }, [
                         _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('opencode.option.keepUnchanged')), 1 /* TEXT */),
-                        _createElementVNode("option", { value: "low" }, "low"),
-                        _createElementVNode("option", { value: "medium" }, "medium"),
-                        _createElementVNode("option", { value: "high" }, "high")
+                        _createElementVNode("option", { value: "low" }, _toDisplayString(_ctx.t('opencode.option.reasoningLow')), 1 /* TEXT */),
+                        _createElementVNode("option", { value: "medium" }, _toDisplayString(_ctx.t('opencode.option.reasoningMedium')), 1 /* TEXT */),
+                        _createElementVNode("option", { value: "high" }, _toDisplayString(_ctx.t('opencode.option.reasoningHigh')), 1 /* TEXT */)
                       ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
                         [_vModelSelect, _ctx.opencodeReasoningEffort]
                       ])
