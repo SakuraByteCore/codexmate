@@ -24,7 +24,15 @@
 
 <br />
 
-<img src="site/.vitepress/public/images/readme-hero.png" alt="Codex Mate screenshot" width="100%" />
+<p>
+  <img src="site/.vitepress/public/images/readme/config-codex.png" alt="Codex Mate Codex provider configuration" width="100%" />
+</p>
+<p>
+  <img src="site/.vitepress/public/images/readme/config-opencode.png" alt="Codex Mate OpenCode provider configuration" width="100%" />
+</p>
+<p>
+  <img src="site/.vitepress/public/images/readme/sessions.png" alt="Codex Mate unified session browser" width="100%" />
+</p>
 
 </div>
 
