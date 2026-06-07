@@ -59,13 +59,33 @@ function readJson(filePath) {
     return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
+function allocateEphemeralPort() {
+    return new Promise((resolve, reject) => {
+        const server = http.createServer();
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', () => {
+            const address = server.address();
+            const port = address && typeof address.port === 'number' ? address.port : 0;
+            server.close((err) => {
+                if (err) {
+                    reject(err);
+                } else if (port > 0) {
+                    resolve(port);
+                } else {
+                    reject(new Error('failed to allocate ephemeral port'));
+                }
+            });
+        });
+    });
+}
+
 async function withCodexMateServer(fn) {
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'codexmate-opencode-store-'));
     const home = path.join(tmpRoot, 'home');
     const xdg = path.join(tmpRoot, 'xdg');
     fs.mkdirSync(home, { recursive: true });
     fs.mkdirSync(xdg, { recursive: true });
-    const port = 25000 + Math.floor(Math.random() * 10000);
+    const port = await allocateEphemeralPort();
     const child = spawn(process.execPath, [path.join(projectRoot, 'cli.js'), 'run', '--no-browser'], {
         cwd: projectRoot,
         env: {
@@ -79,7 +99,7 @@ async function withCodexMateServer(fn) {
             CODEXMATE_PORT: String(port),
             CODEXMATE_NO_BROWSER: '1'
         },
-        stdio: ['ignore', 'pipe', 'pipe']
+        stdio: ['ignore', 'ignore', 'pipe']
     });
     let stderr = '';
     child.stderr.on('data', chunk => stderr += chunk.toString());
