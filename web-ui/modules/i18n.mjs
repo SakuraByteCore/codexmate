@@ -4,6 +4,7 @@ const I18N_STORAGE_KEY = 'codexmateLang';
 
 const LANGUAGE_META = Object.freeze([
     Object.freeze({ code: 'zh', nativeName: '中文', englishName: 'Chinese', htmlLang: 'zh-CN', dir: 'ltr' }),
+    Object.freeze({ code: 'zh-tw', nativeName: '繁體中文', englishName: 'Chinese-TW', htmlLang: 'zh-TW', dir: 'ltr' }),
     Object.freeze({ code: 'en', nativeName: 'English', englishName: 'English', htmlLang: 'en', dir: 'ltr' }),
     Object.freeze({ code: 'ja', nativeName: '日本語', englishName: 'Japanese', htmlLang: 'ja', dir: 'ltr' }),
     Object.freeze({ code: 'vi', nativeName: 'Tiếng Việt', englishName: 'Vietnamese', htmlLang: 'vi', dir: 'ltr' })
@@ -102,9 +103,9 @@ export function createI18nMethods() {
         t(key, params = null) {
             const lang = normalizeLang(this.lang);
             const table = DICT[lang] || DICT.zh;
-            const fallbackEn = DICT.en;
             const fallbackZh = DICT.zh;
-            const raw = (table && table[key]) || (fallbackEn && fallbackEn[key]) || (fallbackZh && fallbackZh[key]) || key;
+            const fallbackEn = DICT.en;
+            const raw = (table && table[key]) || (fallbackZh && fallbackZh[key]) || (fallbackEn && fallbackEn[key]) || key;
             return interpolate(raw, params);
         }
     };

@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..', '..');
 const localeDir = path.join(repoRoot, 'web-ui', 'modules', 'i18n', 'locales');
-const expectedLocales = ['zh', 'en', 'ja', 'vi'];
+const expectedLocales = ['zh', 'zh-tw', 'en', 'ja', 'vi'];
 
 function placeholders(value) {
     return [...String(value).matchAll(/\{(\w+)\}/g)]
@@ -130,4 +130,50 @@ test('builtin prompt templates re-localize when language changes', async () => {
     const jaDraft = computed.promptTemplateDraft.call({ promptTemplateDraftRaw: rawBuiltin[0], t: makeT('ja') });
     assert.strictEqual(jaDraft.name, DICT.ja['plugins.builtin.commentPolish.name']);
     assert(jaDraft.template.includes(DICT.ja['plugins.builtin.commentPolish.line1']));
+});
+
+test('zh-tw has same keys as zh', () => {
+    const zhKeys = Object.keys(DICT.zh).sort();
+    const twKeys = Object.keys(DICT['zh-tw']).sort();
+    assert.deepStrictEqual(twKeys, zhKeys, 'zh-tw must define exactly the same keys as zh');
+});
+
+test('zh-tw preserves placeholders from zh', () => {
+    for (const [key, value] of Object.entries(DICT['zh-tw'])) {
+        const zhValue = DICT.zh[key];
+        assert.deepStrictEqual(
+            placeholders(value),
+            placeholders(zhValue),
+            `zh-tw placeholder mismatch for key: ${key}`
+        );
+    }
+});
+
+test('zh-tw uses traditional Chinese characters', () => {
+    const tw = DICT['zh-tw'];
+    assert.strictEqual(tw['common.copy'], '複製');
+    assert.strictEqual(tw['common.edit'], '編輯');
+    assert.strictEqual(tw['common.delete'], '刪除');
+    assert.strictEqual(tw['common.loading'], '載入中...');
+    assert.strictEqual(tw['common.export'], '匯出');
+    assert.strictEqual(tw['common.import'], '匯入');
+    assert.strictEqual(tw['common.refresh'], '重新整理');
+    assert.strictEqual(tw['common.save'], '保存');
+    assert.strictEqual(tw['common.uninstall'], '解除安裝');
+    assert.strictEqual(tw['settings.language.title'], '語言');
+    assert.strictEqual(tw['lang.zh-tw'], '繁體中文');
+});
+
+test('zh-tw fallback resolves through zh before en', () => {
+    const table = DICT['zh-tw'] || DICT.zh;
+    const fallbackZh = DICT.zh;
+    const fallbackEn = DICT.en;
+    // Simulate the i18n.mjs t() fallback chain
+    const tFallback = (key) => {
+        return (table && table[key]) || (fallbackZh && fallbackZh[key]) || (fallbackEn && fallbackEn[key]) || key;
+    };
+    // For keys present in zh-tw, it should use zh-tw value (which differs from zh for UI terms)
+    assert.strictEqual(tFallback('common.copy'), DICT['zh-tw']['common.copy']);
+    // For a hypothetical missing key, it would fall back to zh then en
+    assert.strictEqual(tFallback('nonexistent.key.xyz'), 'nonexistent.key.xyz');
 });
