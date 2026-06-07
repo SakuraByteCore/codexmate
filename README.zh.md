@@ -45,7 +45,7 @@
 ### 有什么独特之处？
 
 不同于简单的封装，Codex Mate 充当了 **本地智能体桥接器**：
-- **统一会话浏览器**：在一个地方检索、预览、筛选并导出 Codex、Claude Code、Gemini CLI、CodeBuddy Code 以及 CodexMate 派生会话。
+- **统一会话浏览器**：在一个地方检索、预览、筛选并导出 Codex、Claude Code、Gemini CLI 与 CodeBuddy Code 的本地会话。
 - **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用。
 - **Claude Provider 桥接**：通过内建本地 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama。
 - **OpenCode Provider 控制**：在 `~/.codexmate` 下维护 CodexMate 自有的 OpenCode 多 provider 存储，只将当前选中的 provider 投影到 OpenCode 原生配置，避免污染或误删用户已有配置。
@@ -60,7 +60,7 @@
 | --- | --- | --- |
 | **Provider 管理** | ✅ | 切换 Codex、Claude、OpenCode 和 OpenClaw 的 provider/model |
 | **状态实时同步** | ✅ | 实时感知 Codex/Claude 的配置与运行状态变更 |
-| **会话浏览器** | ✅ | 跨 Codex、Claude Code、Gemini CLI、CodeBuddy Code 及 CodexMate 派生会话进行检索、预览、筛选与导出 |
+| **会话浏览器** | ✅ | 跨 Codex、Claude Code、Gemini CLI 与 CodeBuddy Code 的本地会话进行检索、预览、筛选与导出 |
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
 | **本地 Skills 市场** | ✅ | 跨应用的智能体 Skills 导入与导出 |
 | **任务队列** | ✅ | 基于 DAG 的任务执行与日志查看 |
