@@ -2375,7 +2375,7 @@ return function render(_ctx, _cache) {
                 _createElementVNode("section", { class: "selector-section" }, [
                   _createElementVNode("div", { class: "selector-header" }, [
                     _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('opencode.providerModel.title')), 1 /* TEXT */),
-                    _createElementVNode("div", { class: "selector-actions" }, [
+                    _createElementVNode("div", { class: "selector-actions opencode-provider-actions" }, [
                       _createElementVNode("button", {
                         type: "button",
                         class: "btn-tool btn-tool-compact",
