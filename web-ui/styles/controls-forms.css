@@ -413,6 +413,13 @@
     margin-top: var(--spacing-xs);
 }
 
+.selector-section .opencode-provider-actions > .btn-tool + .btn-tool,
+.selector-section .opencode-provider-actions > .btn-tool-compact + .btn-tool,
+.selector-section .opencode-provider-actions > .btn-tool + .btn-tool-compact,
+.selector-section .opencode-provider-actions > .btn-tool-compact + .btn-tool-compact {
+    margin-top: 0;
+}
+
 .selector-header .settings-tab-actions > .btn-tool + .btn-tool,
 .selector-header .settings-tab-actions > .btn-tool-compact + .btn-tool,
 .selector-header .settings-tab-actions > .btn-tool + .btn-tool-compact,
