@@ -189,12 +189,12 @@
                         </div>
                     </div>
                 </div>
-                    </div>
-                    <div v-if="!isToolConfigWriteAllowed('codex')" class="tool-config-write-overlay">
-                        <div class="tool-config-write-overlay-card">
-                            <div class="tool-config-write-overlay-title">{{ t('toolConfig.codex.lockedTitle') }}</div>
-                            <p>{{ t('toolConfig.codex.lockedDesc') }}</p>
-                            <button type="button" class="btn-tool" @click="setToolConfigPermission('codex', true)" :disabled="toolConfigPermissionSaving.codex">{{ t('toolConfig.enableWrite') }}</button>
+                        <div v-if="!isToolConfigWriteAllowed('codex')" class="tool-config-write-overlay">
+                            <div class="tool-config-write-overlay-card">
+                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.codex.lockedTitle') }}</div>
+                                <p>{{ t('toolConfig.codex.lockedDesc') }}</p>
+                                <button type="button" class="btn-tool" @click="setToolConfigPermission('codex', true)" :disabled="toolConfigPermissionSaving.codex">{{ t('toolConfig.enableWrite') }}</button>
+                            </div>
                         </div>
                     </div>
                 </div>

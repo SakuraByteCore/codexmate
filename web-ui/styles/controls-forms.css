@@ -529,6 +529,7 @@
 }
 
 .tool-config-write-body {
+    position: relative;
     transition: filter 0.2s ease, opacity 0.2s ease;
 }
 
@@ -540,15 +541,15 @@
 }
 
 .tool-config-write-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 90;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    min-height: 100dvh;
-    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    min-height: 100%;
+    padding: 32px 16px;
     border-radius: 0;
     background: rgba(247, 240, 233, 0.78);
     background: color-mix(in srgb, var(--color-bg) 68%, transparent);

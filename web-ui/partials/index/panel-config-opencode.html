@@ -154,12 +154,12 @@
                                     </div>
                                 </div>
                             </section>
-                        </div>
-                        <div v-if="!isToolConfigWriteAllowed('opencode')" class="tool-config-write-overlay">
-                            <div class="tool-config-write-overlay-card">
-                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.opencode.lockedTitle') }}</div>
-                                <p>{{ t('toolConfig.opencode.lockedDesc') }}</p>
-                                <button type="button" class="btn-tool" @click="setToolConfigPermission('opencode', true)" :disabled="toolConfigPermissionSaving.opencode">{{ t('toolConfig.enableWrite') }}</button>
+                            <div v-if="!isToolConfigWriteAllowed('opencode')" class="tool-config-write-overlay">
+                                <div class="tool-config-write-overlay-card">
+                                    <div class="tool-config-write-overlay-title">{{ t('toolConfig.opencode.lockedTitle') }}</div>
+                                    <p>{{ t('toolConfig.opencode.lockedDesc') }}</p>
+                                    <button type="button" class="btn-tool" @click="setToolConfigPermission('opencode', true)" :disabled="toolConfigPermissionSaving.opencode">{{ t('toolConfig.enableWrite') }}</button>
+                                </div>
                             </div>
                         </div>
                     </div>

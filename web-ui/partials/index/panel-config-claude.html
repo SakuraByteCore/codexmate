@@ -170,12 +170,12 @@
                     </div>
                 </div>
 
-                    </div>
-                    <div v-if="!isToolConfigWriteAllowed('claude')" class="tool-config-write-overlay">
-                        <div class="tool-config-write-overlay-card">
-                            <div class="tool-config-write-overlay-title">{{ t('toolConfig.claude.lockedTitle') }}</div>
-                            <p>{{ t('toolConfig.claude.lockedDesc') }}</p>
-                            <button type="button" class="btn-tool" @click="setToolConfigPermission('claude', true)" :disabled="toolConfigPermissionSaving.claude">{{ t('toolConfig.enableWrite') }}</button>
+                        <div v-if="!isToolConfigWriteAllowed('claude')" class="tool-config-write-overlay">
+                            <div class="tool-config-write-overlay-card">
+                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.claude.lockedTitle') }}</div>
+                                <p>{{ t('toolConfig.claude.lockedDesc') }}</p>
+                                <button type="button" class="btn-tool" @click="setToolConfigPermission('claude', true)" :disabled="toolConfigPermissionSaving.claude">{{ t('toolConfig.enableWrite') }}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
