@@ -833,7 +833,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providersHealthSummary',
         'providersHealthTone',
         'sessionContextUtilization',
-        'isLocalProviderDisabled'
+        'isLocalProviderDisabled',
+        'currentClaudeHaikuModel',
+        'currentClaudeSonnetModel',
+        'currentClaudeOpusModel'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

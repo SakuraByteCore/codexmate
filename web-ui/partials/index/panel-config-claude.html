@@ -109,6 +109,39 @@
                 </div>
 
                 <div class="selector-section">
+                    <div class="selector-header"><span class="selector-title">{{ t('claude.model.haiku') }}</span></div>
+                    <input
+                        class="model-input"
+                        v-model.lazy="currentClaudeHaikuModel"
+                        :placeholder="t('claude.model.sub.placeholder')"
+                        :readonly="currentClaudeConfig === 'claude-local'"
+                        list="claude-model-options"
+                    >
+                </div>
+
+                <div class="selector-section">
+                    <div class="selector-header"><span class="selector-title">{{ t('claude.model.sonnet') }}</span></div>
+                    <input
+                        class="model-input"
+                        v-model.lazy="currentClaudeSonnetModel"
+                        :placeholder="t('claude.model.sub.placeholder')"
+                        :readonly="currentClaudeConfig === 'claude-local'"
+                        list="claude-model-options"
+                    >
+                </div>
+
+                <div class="selector-section">
+                    <div class="selector-header"><span class="selector-title">{{ t('claude.model.opus') }}</span></div>
+                    <input
+                        class="model-input"
+                        v-model.lazy="currentClaudeOpusModel"
+                        :placeholder="t('claude.model.sub.placeholder')"
+                        :readonly="currentClaudeConfig === 'claude-local'"
+                        list="claude-model-options"
+                    >
+                </div>
+
+                <div class="selector-section">
                     <div class="selector-header"><span class="selector-title">{{ t('config.health.title') }}</span></div>
                     <button class="btn-tool" @click="runHealthCheck" :disabled="healthCheckLoading || loading || !!initError">{{ healthCheckLoading ? t('config.health.running') : t('config.health.run') }}</button>
                     <div class="config-template-hint">{{ t('config.health.hint') }}</div>

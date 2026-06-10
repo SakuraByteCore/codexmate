@@ -31,6 +31,48 @@ export function createDashboardComputed() {
             }
             return list;
         },
+        currentClaudeHaikuModel: {
+            get() {
+                const config = this.claudeConfigs && this.claudeConfigs[this.currentClaudeConfig];
+                return (config && config.haikuModel) || this.currentClaudeModel || '';
+            },
+            set(val) {
+                const config = this.claudeConfigs && this.claudeConfigs[this.currentClaudeConfig];
+                if (config) {
+                    this.$set(config, 'haikuModel', (val || '').trim());
+                    this.saveClaudeConfigs();
+                    if (this.currentClaudeConfig) this.applyClaudeConfig(this.currentClaudeConfig);
+                }
+            }
+        },
+        currentClaudeSonnetModel: {
+            get() {
+                const config = this.claudeConfigs && this.claudeConfigs[this.currentClaudeConfig];
+                return (config && config.sonnetModel) || this.currentClaudeModel || '';
+            },
+            set(val) {
+                const config = this.claudeConfigs && this.claudeConfigs[this.currentClaudeConfig];
+                if (config) {
+                    this.$set(config, 'sonnetModel', (val || '').trim());
+                    this.saveClaudeConfigs();
+                    if (this.currentClaudeConfig) this.applyClaudeConfig(this.currentClaudeConfig);
+                }
+            }
+        },
+        currentClaudeOpusModel: {
+            get() {
+                const config = this.claudeConfigs && this.claudeConfigs[this.currentClaudeConfig];
+                return (config && config.opusModel) || this.currentClaudeModel || '';
+            },
+            set(val) {
+                const config = this.claudeConfigs && this.claudeConfigs[this.currentClaudeConfig];
+                if (config) {
+                    this.$set(config, 'opusModel', (val || '').trim());
+                    this.saveClaudeConfigs();
+                    if (this.currentClaudeConfig) this.applyClaudeConfig(this.currentClaudeConfig);
+                }
+            }
+        },
         activeProviderModel() {
             return (name) => {
                 const target = String(name || '').trim();

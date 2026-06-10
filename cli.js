@@ -9528,6 +9528,12 @@ async function applyToClaudeSettings(config = {}) {
         };
         delete nextEnv.ANTHROPIC_AUTH_TOKEN;
         delete nextEnv.CLAUDE_CODE_USE_KEY;
+        const subModels = {
+            ANTHROPIC_DEFAULT_HAIKU_MODEL: (config.haikuModel || model).trim(),
+            ANTHROPIC_DEFAULT_SONNET_MODEL: (config.sonnetModel || model).trim(),
+            ANTHROPIC_DEFAULT_OPUS_MODEL: (config.opusModel || model).trim()
+        };
+        Object.assign(nextEnv, subModels);
 
         const nextSettings = {
             ...currentSettings,
@@ -9546,7 +9552,10 @@ async function applyToClaudeSettings(config = {}) {
             updatedKeys: [
                 'env.ANTHROPIC_API_KEY',
                 'env.ANTHROPIC_BASE_URL',
-                'env.ANTHROPIC_MODEL'
+                'env.ANTHROPIC_MODEL',
+                'env.ANTHROPIC_DEFAULT_HAIKU_MODEL',
+                'env.ANTHROPIC_DEFAULT_SONNET_MODEL',
+                'env.ANTHROPIC_DEFAULT_OPUS_MODEL'
             ]
         };
         if (proxyResult) {
@@ -9597,6 +9606,9 @@ function readClaudeSettingsInfo() {
         useKey: typeof env.CLAUDE_CODE_USE_KEY === 'string' ? env.CLAUDE_CODE_USE_KEY : '',
         baseUrl: typeof env.ANTHROPIC_BASE_URL === 'string' ? env.ANTHROPIC_BASE_URL : '',
         model: typeof env.ANTHROPIC_MODEL === 'string' ? env.ANTHROPIC_MODEL : '',
+        haikuModel: typeof env.ANTHROPIC_DEFAULT_HAIKU_MODEL === 'string' ? env.ANTHROPIC_DEFAULT_HAIKU_MODEL : '',
+        sonnetModel: typeof env.ANTHROPIC_DEFAULT_SONNET_MODEL === 'string' ? env.ANTHROPIC_DEFAULT_SONNET_MODEL : '',
+        opusModel: typeof env.ANTHROPIC_DEFAULT_OPUS_MODEL === 'string' ? env.ANTHROPIC_DEFAULT_OPUS_MODEL : '',
         env
     };
 }

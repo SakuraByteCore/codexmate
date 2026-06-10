@@ -1884,6 +1884,63 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("div", { class: "selector-section" }, [
                         _createElementVNode("div", { class: "selector-header" }, [
+                          _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('claude.model.haiku')), 1 /* TEXT */)
+                        ]),
+                        _withDirectives(_createElementVNode("input", {
+                          class: "model-input",
+                          "onUpdate:modelValue": $event => ((_ctx.currentClaudeHaikuModel) = $event),
+                          placeholder: _ctx.t('claude.model.sub.placeholder'),
+                          readonly: _ctx.currentClaudeConfig === 'claude-local',
+                          list: "claude-model-options"
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder", "readonly"]), [
+                          [
+                            _vModelText,
+                            _ctx.currentClaudeHaikuModel,
+                            void 0,
+                            { lazy: true }
+                          ]
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "selector-section" }, [
+                        _createElementVNode("div", { class: "selector-header" }, [
+                          _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('claude.model.sonnet')), 1 /* TEXT */)
+                        ]),
+                        _withDirectives(_createElementVNode("input", {
+                          class: "model-input",
+                          "onUpdate:modelValue": $event => ((_ctx.currentClaudeSonnetModel) = $event),
+                          placeholder: _ctx.t('claude.model.sub.placeholder'),
+                          readonly: _ctx.currentClaudeConfig === 'claude-local',
+                          list: "claude-model-options"
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder", "readonly"]), [
+                          [
+                            _vModelText,
+                            _ctx.currentClaudeSonnetModel,
+                            void 0,
+                            { lazy: true }
+                          ]
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "selector-section" }, [
+                        _createElementVNode("div", { class: "selector-header" }, [
+                          _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('claude.model.opus')), 1 /* TEXT */)
+                        ]),
+                        _withDirectives(_createElementVNode("input", {
+                          class: "model-input",
+                          "onUpdate:modelValue": $event => ((_ctx.currentClaudeOpusModel) = $event),
+                          placeholder: _ctx.t('claude.model.sub.placeholder'),
+                          readonly: _ctx.currentClaudeConfig === 'claude-local',
+                          list: "claude-model-options"
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder", "readonly"]), [
+                          [
+                            _vModelText,
+                            _ctx.currentClaudeOpusModel,
+                            void 0,
+                            { lazy: true }
+                          ]
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "selector-section" }, [
+                        _createElementVNode("div", { class: "selector-header" }, [
                           _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('config.health.title')), 1 /* TEXT */)
                         ]),
                         _createElementVNode("button", {
