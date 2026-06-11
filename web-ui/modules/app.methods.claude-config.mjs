@@ -292,7 +292,7 @@ export function createClaudeConfigMethods(options = {}) {
                 return this.showMessage(this.t('toast.claude.apiKeyRequired'), 'error');
             }
 
-            const _claudeKey2 = `${name}|${config.apiKey || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
+            const _claudeKey2 = `${name}|${config.apiKey || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}|${config.haikuModel || ""}|${config.sonnetModel || ""}|${config.opusModel || ""}`;
             try {
                 const res = await api('apply-claude-config', { config: { ...config, name } });
                 if (res.error || res.success === false) {
