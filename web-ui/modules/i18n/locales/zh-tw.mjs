@@ -486,6 +486,7 @@ const zhTw = Object.freeze({
     'modal.configTemplate.mode.twoStep': '兩步確認：先預覽差異，再應用寫入。',
     'modal.configTemplate.mode.oneStep': '一步應用：點擊“應用”直接寫入。',
     'diff.title.configTemplate': '差異預覽（config.toml）',
+    'diff.title.claudeSettings': '差異預覽（settings.json）',
     'diff.generating': '生成中...',
     'diff.failed': '生成失敗',
     'diff.noChanges': '未檢測到改動',

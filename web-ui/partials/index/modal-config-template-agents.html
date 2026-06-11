@@ -12,7 +12,7 @@
                     <div v-if="configTemplateDiffVisible" class="agents-diff-container">
                         <div class="agents-diff-header">
                             <div class="agents-diff-title">
-                                {{ t('diff.title.configTemplate') }}
+                                {{ configTemplateContext === 'claude' ? t('diff.title.claudeSettings') : t('diff.title.configTemplate') }}
                                 <span v-if="configTemplateDiffLoading" class="agents-diff-subtitle">{{ t('diff.generating') }}</span>
                                 <span v-else-if="configTemplateDiffError" class="agents-diff-subtitle">{{ t('diff.failed') }}</span>
                                 <span v-else-if="!configTemplateDiffHasChanges" class="agents-diff-subtitle">{{ t('diff.noChanges') }}</span>

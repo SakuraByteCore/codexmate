@@ -486,6 +486,7 @@ const en = Object.freeze({
     'modal.configTemplate.mode.twoStep': 'Two-step confirm: preview diff, then apply.',
     'modal.configTemplate.mode.oneStep': 'One-step apply: write immediately.',
     'diff.title.configTemplate': 'Diff preview (config.toml)',
+    'diff.title.claudeSettings': 'Diff preview (settings.json)',
     'diff.generating': 'Generating...',
     'diff.failed': 'Failed',
     'diff.noChanges': 'No changes detected',

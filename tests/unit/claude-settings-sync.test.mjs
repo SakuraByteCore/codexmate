@@ -9,6 +9,9 @@ const __dirname = path.dirname(__filename);
 const { createI18nMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
 );
+const { createCodexConfigMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.codex-config.mjs'))
+);
 const {
     isLikelyBuiltinClaudeProxySettingsEnv,
     matchBuiltinClaudeProxyConfigFromSettings
@@ -1423,4 +1426,97 @@ test('MCP Claude config schema allows Ollama without API key only for ollama tar
     assert.match(schemaSource, /properties:\s*\{ targetApi:\s*\{ type: 'string', pattern: '\^\[\\\\s\]\*\[oO\]\[lL\]\[lL\]\[aA\]\[mM\]\[aA\]\[\\\\s\]\*\$' \} \}/);
     assert.match(schemaSource, /then:\s*\{ required:\s*\['apiKey'\] \}/);
     assert.doesNotMatch(schemaSource, /required:\s*\['apiKey'\],\s*additionalProperties/);
+});
+
+test('buildClaudeSettingsDiff uses JSON.parse instead of TOML for Claude settings', () => {
+    const fnMatch = cliSource.match(/function buildClaudeSettingsDiff\([\s\S]*?\n\}/);
+    assert(fnMatch, 'buildClaudeSettingsDiff function should exist in cli.js');
+    const fnBody = fnMatch[0];
+    assert.match(fnBody, /JSON\.parse\(content\)/);
+    assert.doesNotMatch(fnBody, /toml\.parse/);
+    assert.match(fnBody, /CLAUDE_SETTINGS_FILE/);
+    assert.match(fnBody, /buildLineDiff/);
+});
+
+test('buildClaudeSettingsDiff is wired up as preview-claude-settings-diff route', () => {
+    const routeIndex = cliSource.indexOf("'preview-claude-settings-diff'");
+    assert.notStrictEqual(routeIndex, -1, 'route should be registered');
+    const routeSnippet = cliSource.slice(routeIndex, routeIndex + 120);
+    assert.match(routeSnippet, /buildClaudeSettingsDiff/);
+});
+
+test('prepareConfigTemplateDiff calls preview-claude-settings-diff for Claude context', async () => {
+    const capturedCalls = [];
+    const methods = createCodexConfigMethods({
+        api: async (action, params) => {
+            capturedCalls.push({ action, params });
+            return {
+                diff: {
+                    lines: [{ type: 'add', value: '{"env": {}}' }],
+                    stats: { added: 1, removed: 0, unchanged: 0 },
+                    hasChanges: true
+                }
+            };
+        },
+        getProviderConfigModeMeta() { return null; }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        configTemplateContext: 'claude',
+        configTemplateContent: '{"env":{"ANTHROPIC_MODEL":"test"}}',
+        configTemplateDiffVisible: false,
+        configTemplateDiffLoading: false,
+        configTemplateDiffError: '',
+        configTemplateDiffLines: [],
+        configTemplateDiffStats: { added: 0, removed: 0, unchanged: 0 },
+        configTemplateDiffHasChangesValue: false,
+        configTemplateDiffFingerprint: ''
+    };
+
+    await methods.prepareConfigTemplateDiff.call(context);
+
+    assert.strictEqual(capturedCalls.length, 1);
+    assert.strictEqual(capturedCalls[0].action, 'preview-claude-settings-diff');
+    assert.strictEqual(capturedCalls[0].params.content, '{"env":{"ANTHROPIC_MODEL":"test"}}');
+    assert.strictEqual(context.configTemplateDiffLines.length, 1);
+    assert.strictEqual(context.configTemplateDiffHasChangesValue, true);
+});
+
+test('prepareConfigTemplateDiff calls preview-config-template-diff for codex context', async () => {
+    const capturedCalls = [];
+    const methods = createCodexConfigMethods({
+        api: async (action, params) => {
+            capturedCalls.push({ action, params });
+            return {
+                diff: {
+                    lines: [{ type: 'context', value: 'model = "test"' }],
+                    stats: { added: 0, removed: 0, unchanged: 1 },
+                    hasChanges: false
+                }
+            };
+        },
+        getProviderConfigModeMeta() { return null; }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        configTemplateContext: 'codex',
+        configTemplateContent: 'model = "test"',
+        configTemplateDiffVisible: false,
+        configTemplateDiffLoading: false,
+        configTemplateDiffError: '',
+        configTemplateDiffLines: [],
+        configTemplateDiffStats: { added: 0, removed: 0, unchanged: 0 },
+        configTemplateDiffHasChangesValue: false,
+        configTemplateDiffFingerprint: ''
+    };
+
+    await methods.prepareConfigTemplateDiff.call(context);
+
+    assert.strictEqual(capturedCalls.length, 1);
+    assert.strictEqual(capturedCalls[0].action, 'preview-config-template-diff');
+    assert.strictEqual(capturedCalls[0].params.template, 'model = "test"');
 });

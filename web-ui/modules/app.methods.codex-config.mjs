@@ -750,9 +750,13 @@ export function createCodexConfigMethods(options = {}) {
                     && this._configTemplateDiffPreviewRequestToken === requestToken
                     && this.buildConfigTemplateDiffFingerprint() === requestFingerprint
                 );
-                const res = await api('preview-config-template-diff', {
-                    template: this.configTemplateContent
-                });
+                const res = this.configTemplateContext === 'claude'
+                    ? await api('preview-claude-settings-diff', {
+                        content: this.configTemplateContent
+                    })
+                    : await api('preview-config-template-diff', {
+                        template: this.configTemplateContent
+                    });
                 if (!shouldApply()) {
                     return;
                 }

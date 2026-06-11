@@ -486,6 +486,7 @@ const zh = Object.freeze({
     'modal.configTemplate.mode.twoStep': '两步确认：先预览差异，再应用写入。',
     'modal.configTemplate.mode.oneStep': '一步应用：点击“应用”直接写入。',
     'diff.title.configTemplate': '差异预览（config.toml）',
+    'diff.title.claudeSettings': '差异预览（settings.json）',
     'diff.generating': '生成中...',
     'diff.failed': '生成失败',
     'diff.noChanges': '未检测到改动',

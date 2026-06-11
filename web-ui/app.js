@@ -290,9 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         apiKey: '',
                         baseUrl: 'https://open.bigmodel.cn/api/anthropic',
                         model: 'glm-4.7',
-                        haikuModel: '',
-                        sonnetModel: '',
-                        opusModel: '',
                         targetApi: 'responses',
                         hasKey: false
                     }
@@ -589,9 +586,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             config.apiKey = '';
                             config.hasKey = false;
                         }
-                        if (!('haikuModel' in config)) this.$set(config, 'haikuModel', '');
-                        if (!('sonnetModel' in config)) this.$set(config, 'sonnetModel', '');
-                        if (!('opusModel' in config)) this.$set(config, 'opusModel', '');
                         const targetApiRaw = typeof config.targetApi === 'string' ? config.targetApi.trim().toLowerCase() : '';
                         if (targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions') {
                             config.targetApi = 'chat_completions';

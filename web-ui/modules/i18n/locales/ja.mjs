@@ -488,6 +488,7 @@ const ja = Object.freeze({
     'modal.configTemplate.mode.twoStep': '二段階確認：先に差分をプレビューし、その後適用します。',
     'modal.configTemplate.mode.oneStep': '一段階適用：「適用」をクリックすると直接書き込みます。',
     'diff.title.configTemplate': '差分プレビュー（config.toml）',
+    'diff.title.claudeSettings': '差分プレビュー（settings.json）',
     'diff.generating': '生成中...',
     'diff.failed': '生成失敗',
     'diff.noChanges': '変更が検出されませんでした',

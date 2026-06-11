@@ -51,7 +51,7 @@ test('normalizeClaudeValue trims strings and ignores non-string', () => {
 
 test('normalizeClaudeConfig trims all fields', () => {
     const cfg = normalizeClaudeConfig({ apiKey: ' key ', baseUrl: ' url ', model: ' model ', authToken: ' token ', useKey: ' yes ', externalCredentialType: ' auth-token ' });
-    assert.deepStrictEqual(cfg, { apiKey: 'key', baseUrl: 'url', model: 'model', haikuModel: '', sonnetModel: '', opusModel: '', authToken: 'token', useKey: 'yes', externalCredentialType: 'auth-token', targetApi: 'responses' });
+    assert.deepStrictEqual(cfg, { apiKey: 'key', baseUrl: 'url', model: 'model', authToken: 'token', useKey: 'yes', externalCredentialType: 'auth-token', targetApi: 'responses' });
 });
 
 test('normalizeClaudeConfig infers external credential type from authToken and useKey', () => {
@@ -61,9 +61,6 @@ test('normalizeClaudeConfig infers external credential type from authToken and u
             apiKey: '',
             baseUrl: '',
             model: '',
-            haikuModel: '',
-            sonnetModel: '',
-            opusModel: '',
             authToken: 'token',
             useKey: '',
             externalCredentialType: 'auth-token',
@@ -76,9 +73,6 @@ test('normalizeClaudeConfig infers external credential type from authToken and u
             apiKey: '',
             baseUrl: '',
             model: '',
-            haikuModel: '',
-            sonnetModel: '',
-            opusModel: '',
             authToken: '',
             useKey: '1',
             externalCredentialType: 'claude-code-use-key',
@@ -105,9 +99,6 @@ test('normalizeClaudeSettingsEnv trims settings env', () => {
         apiKey: 'key',
         baseUrl: 'url',
         model: 'model',
-        haikuModel: '',
-        sonnetModel: '',
-        opusModel: '',
         authToken: 'token',
         useKey: 'true',
         externalCredentialType: ''
@@ -120,9 +111,6 @@ test('normalizeClaudeSettingsEnv fills missing fields with empty strings', () =>
         apiKey: 'k',
         baseUrl: '',
         model: 'glm-4.7',
-        haikuModel: '',
-        sonnetModel: '',
-        opusModel: '',
         authToken: '',
         useKey: '',
         externalCredentialType: ''
