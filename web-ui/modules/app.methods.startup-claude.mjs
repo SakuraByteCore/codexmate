@@ -145,9 +145,9 @@ export function createStartupClaudeMethods(options = {}) {
                     this.maybeShowStarPrompt();
                     return true;
                 } catch (e) {
-                    this.initError = e && e.message === 'timeout'
-                        ? '读取配置超时'
-                        : '连接失败: ' + (e && e.message ? e.message : '');
+                    if (e && e.message !== 'timeout') {
+                        this.initError = '连接失败: ' + (e.message || '');
+                    }
                     return false;
                 } finally {
                     if (!preserveLoading) {
