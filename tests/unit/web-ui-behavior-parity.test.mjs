@@ -374,7 +374,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'toolConfigPermissionSaving',
         'toolConfigPermissions',
         'promptsHint',
-        'promptsSubTab'
+        'promptsSubTab',
+        'projectClaudeMdPath',
+        'projectPathOptions',
+        'projectPathOptionsLoading'
     ] : [
         'appVersion',
         'appLatestVersion',
@@ -636,7 +639,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'parseOpencodeImportContent',
         'handleOpencodeImportChange',
         'saveOpencodeConfig',
-        'applyOpencodeSelection'
+        'applyOpencodeSelection',
+        'selectProjectClaudeMdPath',
+        'setProjectClaudeMdPathManual',
+        'loadProjectPathOptions'
     ];
     allowedExtraCurrentMethodKeys.push(
         'normalizePackageVersion',

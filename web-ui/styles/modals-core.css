@@ -580,6 +580,39 @@
     border-left: 1px solid var(--color-border-soft);
 }
 
+.project-path-selector {
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.project-path-label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.project-path-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.project-path-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.project-path-manual {
+    flex: 1;
+    min-width: 0;
+}
+
+.project-path-detected {
+    margin-top: 4px;
+    font-size: 0.82em;
+}
+
 .editor-frame {
     position: relative;
     border-radius: var(--radius-md);

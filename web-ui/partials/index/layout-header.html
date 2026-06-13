@@ -255,13 +255,13 @@
                         </div>
                     </button>
                     <button
-                        id="side-tab-prompts-claude"
+                        id="side-tab-prompts-project"
                         data-main-tab="prompts"
-                        data-prompts-sub-tab="claude-md"
-                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'claude-md' ? 'page' : null"
-                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'claude-md' }]"
+                        data-prompts-sub-tab="claude-project"
+                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'claude-project' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'claude-project' }]"
                         @pointerdown="onMainTabPointerDown('prompts', $event)"
-                        @click="switchPromptsSubTab('claude-md'); onMainTabClick('prompts')">
+                        @click="switchPromptsSubTab('claude-project'); onMainTabClick('prompts')">
                         <div class="side-item-title">{{ t('side.prompts.claude') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.prompts.claude.meta') }}</span>

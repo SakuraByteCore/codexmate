@@ -1828,6 +1828,8 @@ async function fetchProviderModels(providerName, overrides = {}) {
 const {
     resolveAgentsFilePath,
     validateAgentsBaseDir,
+    detectProjectClaudeMdDir,
+    validateClaudeMdBaseDir,
     resolveClaudeMdFilePath,
     readClaudeMdFile,
     applyClaudeMdFile,
@@ -11876,9 +11878,15 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'apply-claude-md-file':
                             result = applyClaudeMdFile(params || {});
                             if (result && !result.error) {
-                                const mdTarget = (params && params.targetPath) ? String(params.targetPath) : 'CLAUDE.md';
-                                notifyWebhook('claude-md-edit', 'CLAUDE.md modified: ' + mdTarget, { targetPath: mdTarget }).catch(function () { });
+                                const mdBaseDir = params && params.baseDir ? String(params.baseDir).trim() : '';
+                                const mdTarget = mdBaseDir
+                                    ? path.join(mdBaseDir, 'CLAUDE.md')
+                                    : ((params && params.targetPath) ? String(params.targetPath) : 'CLAUDE.md');
+                                notifyWebhook('claude-md-edit', 'CLAUDE.md modified: ' + mdTarget, { targetPath: mdTarget, projectPath: mdBaseDir }).catch(function () { });
                             }
+                            break;
+                        case 'detect-project-claude-md':
+                            result = detectProjectClaudeMdDir((params && params.baseDir) || '');
                             break;
                         case 'preview-agents-diff':
                             result = buildAgentsDiff(params || {});

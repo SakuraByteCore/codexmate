@@ -7,7 +7,29 @@
                     aria-labelledby="tab-prompts">
                 <div class="segmented-control">
                     <button type="button" :class="['segment', { active: promptsSubTab === 'codex' }]" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
-                    <button type="button" :class="['segment', { active: promptsSubTab === 'claude-md' }]" @click="switchPromptsSubTab('claude-md')">{{ t('prompts.subTab.claude') }}</button>
+                    <button type="button" :class="['segment', { active: promptsSubTab === 'claude-project' }]" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                </div>
+
+                <div v-if="promptsSubTab === 'claude-project'" class="project-path-selector">
+                    <label class="project-path-label">{{ t('prompts.project.pathLabel') }}</label>
+                    <div class="project-path-row">
+                        <select
+                            class="form-input project-path-select"
+                            :value="projectClaudeMdPath"
+                            @change="selectProjectClaudeMdPath($event.target.value)">
+                            <option value="">{{ t('prompts.project.selectPlaceholder') }}</option>
+                            <option v-for="p in projectPathOptions" :key="p" :value="p">{{ p }}</option>
+                        </select>
+                        <input
+                            type="text"
+                            class="form-input project-path-manual"
+                            :placeholder="t('prompts.project.manualPlaceholder')"
+                            :value="projectClaudeMdPath"
+                            @change="setProjectClaudeMdPathManual($event.target.value)">
+                    </div>
+                    <div v-if="projectClaudeMdPath" class="form-hint project-path-detected">
+                        {{ t('prompts.project.detected', { path: projectClaudeMdPath }) }}
+                    </div>
                 </div>
 
                 <div class="prompts-editor">
@@ -89,7 +111,7 @@
                                 spellcheck="false"
                                 :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
                                 @input="onAgentsContentInput"
-                                :placeholder="t(promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')"></textarea>
+                                :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
                         </div>
                         <div v-if="promptsContextHint" :class="['prompts-context-hint', { 'prompts-context-hint--warn': promptsContextHint.warn }]">
                             {{ promptsContextHint.text }}

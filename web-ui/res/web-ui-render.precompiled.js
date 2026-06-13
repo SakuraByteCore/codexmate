@@ -351,13 +351,13 @@ return function render(_ctx, _cache) {
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
-                  id: "side-tab-prompts-claude",
+                  id: "side-tab-prompts-project",
                   "data-main-tab": "prompts",
-                  "data-prompts-sub-tab": "claude-md",
-                  "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'claude-md' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'claude-md' }]),
+                  "data-prompts-sub-tab": "claude-project",
+                  "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'claude-project' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'claude-project' }]),
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
-                  onClick: $event => {_ctx.switchPromptsSubTab('claude-md'); _ctx.onMainTabClick('prompts')}
+                  onClick: $event => {_ctx.switchPromptsSubTab('claude-project'); _ctx.onMainTabClick('prompts')}
                 }, [
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.claude')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
@@ -5977,10 +5977,46 @@ return function render(_ctx, _cache) {
                   }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
                   _createElementVNode("button", {
                     type: "button",
-                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'claude-md' }]),
-                    onClick: $event => (_ctx.switchPromptsSubTab('claude-md'))
-                  }, _toDisplayString(_ctx.t('prompts.subTab.claude')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
+                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'claude-project' }]),
+                    onClick: $event => (_ctx.switchPromptsSubTab('claude-project'))
+                  }, _toDisplayString(_ctx.t('prompts.subTab.project')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                 ]),
+                (_ctx.promptsSubTab === 'claude-project')
+                  ? (_openBlock(), _createElementBlock("div", {
+                      key: 0,
+                      class: "project-path-selector"
+                    }, [
+                      _createElementVNode("label", { class: "project-path-label" }, _toDisplayString(_ctx.t('prompts.project.pathLabel')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "project-path-row" }, [
+                        _createElementVNode("select", {
+                          class: "form-input project-path-select",
+                          value: _ctx.projectClaudeMdPath,
+                          onChange: $event => (_ctx.selectProjectClaudeMdPath($event.target.value))
+                        }, [
+                          _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('prompts.project.selectPlaceholder')), 1 /* TEXT */),
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectPathOptions, (p) => {
+                            return (_openBlock(), _createElementBlock("option", {
+                              key: p,
+                              value: p
+                            }, _toDisplayString(p), 9 /* TEXT, PROPS */, ["value"]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange"]),
+                        _createElementVNode("input", {
+                          type: "text",
+                          class: "form-input project-path-manual",
+                          placeholder: _ctx.t('prompts.project.manualPlaceholder'),
+                          value: _ctx.projectClaudeMdPath,
+                          onChange: $event => (_ctx.setProjectClaudeMdPathManual($event.target.value))
+                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["placeholder", "value", "onChange"])
+                      ]),
+                      (_ctx.projectClaudeMdPath)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 0,
+                            class: "form-hint project-path-detected"
+                          }, _toDisplayString(_ctx.t('prompts.project.detected', { path: _ctx.projectClaudeMdPath })), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ]))
+                  : _createCommentVNode("v-if", true),
                 _createElementVNode("div", { class: "prompts-editor" }, [
                   _createElementVNode("div", { class: "prompts-editor-toolbar" }, [
                     _createElementVNode("div", { class: "form-hint" }, [
@@ -6099,7 +6135,7 @@ return function render(_ctx, _cache) {
                         spellcheck: "false",
                         readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
                         onInput: _ctx.onAgentsContentInput,
-                        placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')
+                        placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')
                       }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
                         [_vModelText, _ctx.agentsContent]
                       ])
@@ -7970,7 +8006,7 @@ return function render(_ctx, _cache) {
                 ])
               ]),
               _createElementVNode("div", { class: "form-group" }, [
-                _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t(_ctx.agentsContext === 'claude-md' ? 'modal.agents.contentLabel.claudeMd' : 'modal.agents.contentLabel')), 1 /* TEXT */),
+                _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t(_ctx.agentsContext === 'claude-project' ? 'modal.agents.contentLabel.claudeProject' : 'modal.agents.contentLabel')), 1 /* TEXT */),
                 (!_ctx.agentsLoading && (_ctx.hasAgentsContentChanged() || _ctx.agentsDiffVisible))
                   ? (_openBlock(), _createElementBlock("div", {
                       key: 0,
@@ -8030,7 +8066,7 @@ return function render(_ctx, _cache) {
                   spellcheck: "false",
                   readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
                   onInput: _ctx.onAgentsContentInput,
-                  placeholder: _ctx.t(_ctx.agentsContext === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')
+                  placeholder: _ctx.t(_ctx.agentsContext === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')
                 }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
                   [_vModelText, _ctx.agentsContent]
                 ]),
