@@ -58,6 +58,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 - **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
 - **OpenCode Provider Control**: Manage OpenCode provider/model selection with a CodexMate-owned provider store under `~/.codexmate`, projecting only the active provider into native OpenCode config to avoid polluting or deleting user-owned settings.
 - **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
+- **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` with auto-detection of project paths.
 - **Task Orchestrator**: Plan and execute complex tasks with dependency tracking.
 
 ---
@@ -76,6 +77,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 | **Claude Provider Bridge** | ✅ | Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama via the built-in Claude-compatible proxy |
 | **OpenCode Provider Store** | ✅ | Keep multiple OpenCode providers in `~/.codexmate` while projecting only the selected provider to native OpenCode config |
 | **Prompt Templates** | ✅ | Reusable prompt plugins with variables |
+| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with auto-detect and path switching |
 | **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
 | **Auto Update** | ✅ | Quick update CLI via `codexmate update` |
 
