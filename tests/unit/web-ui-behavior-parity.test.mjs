@@ -420,7 +420,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'showEditClaudeConfigKey',
         'showEditProviderKey',
         'promptsHint',
-        'promptsSubTab'
+        'promptsSubTab',
+        'projectClaudeMdPath',
+        'projectPathOptions',
+        'projectPathOptionsLoading'
     ];
     const allowedMissingCurrentKeys = [
         'localProxyRunning',
