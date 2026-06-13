@@ -583,6 +583,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.projectClaudeMdPath = savedProjectPath;
                 }
             } catch (_) {}
+            try {
+                var savedSubTab = localStorage.getItem('codexmate_prompts_sub_tab');
+                if (savedSubTab === 'codex' || savedSubTab === 'claude-project') {
+                    this.promptsSubTab = savedSubTab;
+                }
+            } catch (_) {}
             window.addEventListener('resize', this.onWindowResize);
             window.addEventListener('keydown', this.handleGlobalKeydown);
             window.addEventListener('beforeunload', this.handleBeforeUnload);
@@ -749,7 +755,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.loadPromptsContent();
                 }
             },
-            promptsSubTab() {
+            promptsSubTab(newVal) {
+                try {
+                    localStorage.setItem('codexmate_prompts_sub_tab', newVal);
+                } catch (_) {}
                 if (this.mainTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
                     this.loadPromptsContent();
                 }
