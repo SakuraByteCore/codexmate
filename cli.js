@@ -65,6 +65,7 @@ const {
     resolveMaxMessagesValue
 } = require('./lib/cli-session-utils');
 const { createMcpStdioServer } = require('./lib/mcp-stdio');
+const { saveMemory, searchMemories, listMemories, updateMemory, deleteMemory } = require('./lib/memory-store');
 const {
     validateWorkflowDefinition,
     executeWorkflowDefinition
@@ -16750,6 +16751,90 @@ function createMcpTools(options = {}) {
             additionalProperties: true
         },
         handler: async (args = {}) => applyBuiltinProxyProvider(args || {})
+    });
+
+    pushTool({
+        name: 'codexmate.memory.save',
+        description: 'Save a cross-session memory entry (decision, fix, context) for future retrieval.',
+        readOnly: false,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                tags: { type: 'array', items: { type: 'string' } },
+                summary: { type: 'string' },
+                content: { type: 'string' },
+                sourceSession: { type: 'string' }
+            },
+            required: ['summary', 'content'],
+            additionalProperties: false
+        },
+        handler: async (args = {}) => saveMemory(process.cwd(), args || {})
+    });
+
+    pushTool({
+        name: 'codexmate.memory.search',
+        description: 'Search cross-session memories by keyword. Supports multi-word AND queries and tag filtering.',
+        readOnly: true,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                query: { type: 'string' },
+                tags: { type: 'array', items: { type: 'string' } },
+                limit: { type: 'integer' }
+            },
+            required: ['query'],
+            additionalProperties: false
+        },
+        handler: async (args = {}) => searchMemories(process.cwd(), args || {})
+    });
+
+    pushTool({
+        name: 'codexmate.memory.list',
+        description: 'List cross-session memories with optional tag filter and pagination.',
+        readOnly: true,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                tags: { type: 'array', items: { type: 'string' } },
+                limit: { type: 'integer' },
+                offset: { type: 'integer' }
+            },
+            additionalProperties: false
+        },
+        handler: async (args = {}) => listMemories(process.cwd(), args || {})
+    });
+
+    pushTool({
+        name: 'codexmate.memory.update',
+        description: 'Update an existing memory entry by id.',
+        readOnly: false,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                id: { type: 'string' },
+                tags: { type: 'array', items: { type: 'string' } },
+                summary: { type: 'string' },
+                content: { type: 'string' }
+            },
+            required: ['id'],
+            additionalProperties: false
+        },
+        handler: async (args = {}) => updateMemory(process.cwd(), args.id, args)
+    });
+
+    pushTool({
+        name: 'codexmate.memory.delete',
+        description: 'Delete a cross-session memory entry by id.',
+        readOnly: false,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                id: { type: 'string' }
+            },
+            required: ['id'],
+            additionalProperties: false
+        },
+        handler: async (args = {}) => deleteMemory(process.cwd(), args.id)
     });
 
     return tools;

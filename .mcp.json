@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "codexmate": {
+      "command": "node",
+      "args": ["cli.js", "mcp", "serve", "--allow-write"]
+    }
+  }
+}

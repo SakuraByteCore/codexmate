@@ -174,6 +174,11 @@ module.exports = async function testMcp(ctx) {
     assert(toolNames.has('codexmate.workflow.get'), 'mcp read-only tools missing codexmate.workflow.get');
     assert(toolNames.has('codexmate.workflow.validate'), 'mcp read-only tools missing codexmate.workflow.validate');
     assert(toolNames.has('codexmate.workflow.run'), 'mcp read-only tools missing codexmate.workflow.run');
+    assert(toolNames.has('codexmate.memory.search'), 'mcp read-only tools missing codexmate.memory.search');
+    assert(toolNames.has('codexmate.memory.list'), 'mcp read-only tools missing codexmate.memory.list');
+    assert(!toolNames.has('codexmate.memory.save'), 'mcp read-only tools should not expose codexmate.memory.save');
+    assert(!toolNames.has('codexmate.memory.update'), 'mcp read-only tools should not expose codexmate.memory.update');
+    assert(!toolNames.has('codexmate.memory.delete'), 'mcp read-only tools should not expose codexmate.memory.delete');
 
     const sessionResource = readOnlyById.get(3).result || {};
     assert(Array.isArray(sessionResource.contents), 'mcp resources/read should return contents');
@@ -298,6 +303,9 @@ module.exports = async function testMcp(ctx) {
         })
     ].join('\n') + '\n', 'utf-8');
 
+    const e2eCodexmateDir = path.join(process.cwd(), '.codexmate');
+    try { fs.rmSync(e2eCodexmateDir, { recursive: true, force: true }); } catch (_) {}
+
     const writeEnabledRequests = [
         { jsonrpc: '2.0', id: 11, method: 'initialize', params: {} },
         { jsonrpc: '2.0', id: 12, method: 'tools/list', params: {} },
@@ -322,6 +330,76 @@ module.exports = async function testMcp(ctx) {
                 arguments: {
                     source: 'codex',
                     file: mcpDeleteSessionPath
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 15,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.save',
+                arguments: {
+                    summary: 'JWT refresh token race condition',
+                    content: 'Added mutex to refresh flow in src/auth/refresh.ts',
+                    tags: ['auth', 'jwt', 'bug-fix'],
+                    sourceSession: 'test-session-001'
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 16,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.save',
+                arguments: {
+                    summary: 'API rate limiting strategy',
+                    content: 'Use sliding window with Redis sorted sets',
+                    tags: ['api', 'performance']
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 17,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.search',
+                arguments: {
+                    query: 'jwt race'
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 18,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.list',
+                arguments: {}
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 19,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.update',
+                arguments: {
+                    id: 'mem_nonexistent_000000',
+                    summary: 'should fail'
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 20,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.delete',
+                arguments: {
+                    id: 'mem_nonexistent_000000'
                 }
             }
         }
@@ -380,4 +458,87 @@ module.exports = async function testMcp(ctx) {
         item.sessionId === mcpDeleteSessionId
     ));
     assert(!deleteTrashItem, 'mcp session.delete should not create a trash entry');
+
+    assert(writeToolNames.has('codexmate.memory.save'), 'mcp write mode should expose codexmate.memory.save');
+    assert(writeToolNames.has('codexmate.memory.update'), 'mcp write mode should expose codexmate.memory.update');
+    assert(writeToolNames.has('codexmate.memory.delete'), 'mcp write mode should expose codexmate.memory.delete');
+
+    const memSave1 = ((writeById.get(15).result || {}).structuredContent) || {};
+    assert(memSave1.success === true, 'mcp memory.save first entry should succeed');
+    assert(typeof (memSave1.memory || {}).id === 'string', 'mcp memory.save should return memory id');
+    assert((memSave1.memory || {}).summary === 'JWT refresh token race condition', 'mcp memory.save should return summary');
+    assert(JSON.stringify((memSave1.memory || {}).tags) === JSON.stringify(['auth', 'jwt', 'bug-fix']), 'mcp memory.save should return tags');
+
+    const memSave2 = ((writeById.get(16).result || {}).structuredContent) || {};
+    assert(memSave2.success === true, 'mcp memory.save second entry should succeed');
+
+    const memSearch = ((writeById.get(17).result || {}).structuredContent) || {};
+    assert(memSearch.count === 1, 'mcp memory.search should find one match');
+    assert((memSearch.memories || [])[0] && (memSearch.memories || [])[0].summary === 'JWT refresh token race condition', 'mcp memory.search should return matching entry');
+
+    const memList = ((writeById.get(18).result || {}).structuredContent) || {};
+    assert(memList.total === 2, 'mcp memory.list should return both entries');
+    assert(Array.isArray(memList.memories) && memList.memories.length === 2, 'mcp memory.list should include 2 items');
+
+    const memUpdateBad = ((writeById.get(19).result || {}).structuredContent) || {};
+    assert(typeof memUpdateBad.error === 'string' && memUpdateBad.error.includes('not found'), 'mcp memory.update should error on nonexistent id');
+
+    const memDeleteBad = ((writeById.get(20).result || {}).structuredContent) || {};
+    assert(typeof memDeleteBad.error === 'string' && memDeleteBad.error.includes('not found'), 'mcp memory.delete should error on nonexistent id');
+
+    const savedMemoryId = (memSave1.memory || {}).id;
+    const memoryUpdateDeleteRequests = [
+        { jsonrpc: '2.0', id: 21, method: 'initialize', params: {} },
+        {
+            jsonrpc: '2.0',
+            id: 22,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.update',
+                arguments: {
+                    id: savedMemoryId,
+                    summary: 'JWT refresh token race condition (fixed)',
+                    tags: ['auth', 'jwt', 'resolved']
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 23,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.delete',
+                arguments: {
+                    id: (memSave2.memory || {}).id
+                }
+            }
+        },
+        {
+            jsonrpc: '2.0',
+            id: 24,
+            method: 'tools/call',
+            params: {
+                name: 'codexmate.memory.search',
+                arguments: {
+                    query: 'api rate limiting'
+                }
+            }
+        }
+    ];
+    const memUpdateDeleteResponses = runMcpExchange(node, cliPath, {
+        ...env,
+        CODEXMATE_MCP_ALLOW_WRITE: '1'
+    }, [], memoryUpdateDeleteRequests);
+    const udById = new Map(memUpdateDeleteResponses.map((item) => [item.id, item]));
+
+    const memUpdated = ((udById.get(22).result || {}).structuredContent) || {};
+    assert(memUpdated.success === true, 'mcp memory.update should succeed');
+    assert((memUpdated.memory || {}).summary === 'JWT refresh token race condition (fixed)', 'mcp memory.update should reflect new summary');
+    assert(JSON.stringify((memUpdated.memory || {}).tags) === JSON.stringify(['auth', 'jwt', 'resolved']), 'mcp memory.update should reflect new tags');
+
+    const memDeleted = ((udById.get(23).result || {}).structuredContent) || {};
+    assert(memDeleted.success === true, 'mcp memory.delete should succeed');
+
+    const memSearchAfterDelete = ((udById.get(24).result || {}).structuredContent) || {};
+    assert(memSearchAfterDelete.count === 0, 'mcp memory.search should find nothing after delete');
 };
