@@ -23,7 +23,7 @@ const testSessionResumeCommands = require('./test-session-resume-commands');
 const testOpenclaw = require('./test-openclaw');
 const testHealthSpeed = require('./test-health-speed');
 const testMessages = require('./test-messages');
-const testMcp = require('./test-mcp');
+const { testMcp, testMcpFromConfig } = require('./test-mcp');
 const testWorkflow = require('./test-workflow');
 const testTaskOrchestration = require('./test-task-orchestration');
 const testInvalidConfig = require('./test-invalid-config');
@@ -159,6 +159,7 @@ async function main() {
         await testHealthSpeed(ctx);
         await testMessages(ctx);
         await testMcp(ctx);
+        await testMcpFromConfig(ctx);
         await testWorkflow(ctx);
         await testTaskOrchestration(ctx);
         await testInstallStatus(ctx);

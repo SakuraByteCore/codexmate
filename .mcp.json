@@ -2,7 +2,7 @@
   "mcpServers": {
     "codexmate": {
       "command": "node",
-      "args": ["cli.js", "mcp", "serve", "--allow-write"]
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/cli.js", "mcp", "serve"]
     }
   }
 }

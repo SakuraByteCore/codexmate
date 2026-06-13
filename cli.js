@@ -14166,6 +14166,7 @@ function parseMcpOptions(args = []) {
         subcommand: 'serve',
         transport: 'stdio',
         allowWrite: false,
+        projectDir: '',
         help: false
     };
 
@@ -14177,6 +14178,10 @@ function parseMcpOptions(args = []) {
     const envAllowWrite = typeof process.env.CODEXMATE_MCP_ALLOW_WRITE === 'string'
         && ['1', 'true', 'yes', 'on'].includes(process.env.CODEXMATE_MCP_ALLOW_WRITE.trim().toLowerCase());
     options.allowWrite = envAllowWrite;
+
+    if (typeof process.env.CODEXMATE_PROJECT_ROOT === 'string' && process.env.CODEXMATE_PROJECT_ROOT.trim()) {
+        options.projectDir = process.env.CODEXMATE_PROJECT_ROOT.trim();
+    }
 
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
@@ -14191,6 +14196,15 @@ function parseMcpOptions(args = []) {
         }
         if (arg === '--read-only') {
             options.allowWrite = false;
+            continue;
+        }
+        if (arg.startsWith('--project-root=')) {
+            options.projectDir = arg.slice('--project-root='.length).trim();
+            continue;
+        }
+        if (arg === '--project-root') {
+            options.projectDir = String(argv[i + 1] || '').trim();
+            i += 1;
             continue;
         }
         if (arg.startsWith('--transport=')) {
@@ -16218,6 +16232,9 @@ async function cmdTaskWorker(args = []) {
 
 function createMcpTools(options = {}) {
     const allowWrite = !!options.allowWrite;
+    const projectDir = typeof options.projectDir === 'string' && options.projectDir.trim()
+        ? options.projectDir.trim()
+        : process.cwd();
     const tools = [];
 
     const pushTool = (tool) => {
@@ -16768,7 +16785,7 @@ function createMcpTools(options = {}) {
             required: ['summary', 'content'],
             additionalProperties: false
         },
-        handler: async (args = {}) => saveMemory(process.cwd(), args || {})
+        handler: async (args = {}) => saveMemory(projectDir, args || {})
     });
 
     pushTool({
@@ -16785,7 +16802,7 @@ function createMcpTools(options = {}) {
             required: ['query'],
             additionalProperties: false
         },
-        handler: async (args = {}) => searchMemories(process.cwd(), args || {})
+        handler: async (args = {}) => searchMemories(projectDir, args || {})
     });
 
     pushTool({
@@ -16801,7 +16818,7 @@ function createMcpTools(options = {}) {
             },
             additionalProperties: false
         },
-        handler: async (args = {}) => listMemories(process.cwd(), args || {})
+        handler: async (args = {}) => listMemories(projectDir, args || {})
     });
 
     pushTool({
@@ -16819,7 +16836,7 @@ function createMcpTools(options = {}) {
             required: ['id'],
             additionalProperties: false
         },
-        handler: async (args = {}) => updateMemory(process.cwd(), args.id, args)
+        handler: async (args = {}) => updateMemory(projectDir, args.id, args)
     });
 
     pushTool({
@@ -16834,7 +16851,7 @@ function createMcpTools(options = {}) {
             required: ['id'],
             additionalProperties: false
         },
-        handler: async (args = {}) => deleteMemory(process.cwd(), args.id)
+        handler: async (args = {}) => deleteMemory(projectDir, args.id)
     });
 
     return tools;
@@ -17058,9 +17075,10 @@ function createMcpPrompts() {
 async function cmdMcp(args = []) {
     const options = parseMcpOptions(args);
     if (options.help) {
-        console.log('\n用法: codexmate mcp [serve] [--transport stdio] [--allow-write|--read-only]');
+        console.log('\n用法: codexmate mcp [serve] [--transport stdio] [--allow-write|--read-only] [--project-root <path>]');
         console.log('  默认 transport=stdio，默认 read-only。');
         console.log('  设置环境变量 CODEXMATE_MCP_ALLOW_WRITE=1 可默认开启写工具。');
+        console.log('  设置 --project-root 或 CODEXMATE_PROJECT_ROOT 指定项目根目录（memory 存储位置）。');
         console.log();
         return;
     }
@@ -17081,13 +17099,17 @@ async function cmdMcp(args = []) {
         }
     })();
 
+    const projectDir = options.projectDir
+        || (typeof process.env.CLAUDE_PROJECT_DIR === 'string' && process.env.CLAUDE_PROJECT_DIR.trim())
+        || process.cwd();
+
     const server = createMcpStdioServer({
         protocolVersion: '2025-11-25',
         serverInfo: {
             name: 'codexmate-mcp',
             version: packageVersion
         },
-        tools: createMcpTools({ allowWrite: options.allowWrite }),
+        tools: createMcpTools({ allowWrite: options.allowWrite, projectDir }),
         resources: createMcpResources(),
         prompts: createMcpPrompts(),
         logger: (level, message) => {
