@@ -55,14 +55,14 @@
     color: var(--color-text-secondary);
     cursor: pointer;
     border-radius: var(--radius-sm);
-    transition: color var(--transition-fast) var(--ease-smooth), background-color var(--transition-fast) var(--ease-smooth);
     position: relative;
     z-index: 2;
     letter-spacing: 0;
 }
 
-.segment:hover {
+.segment:not(.active):hover {
     color: var(--color-text-primary);
+    transition: color var(--transition-fast) var(--ease-smooth), background-color var(--transition-fast) var(--ease-smooth);
 }
 
 .segment.active {
