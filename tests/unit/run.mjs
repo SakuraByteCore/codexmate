@@ -20,7 +20,7 @@ await import(pathToFileURL(path.join(__dirname, 'task-orchestrator.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'task-codex-exec-windows.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'skills-modal-ui.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'skills-market-runtime.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'codexmate-cross-session-search-skill.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'codexmate-project-context-recovery-skill.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'readme-docs-consistency.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'config-tabs-ui.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'opencode-config-ui.test.mjs')));
