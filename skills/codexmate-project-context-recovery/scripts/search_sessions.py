@@ -72,6 +72,16 @@ def home() -> Path:
     return Path(os.path.expanduser("~"))
 
 
+def positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"{value!r} is not an integer") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"{value!r} must be greater than 0")
+    return parsed
+
+
 def candidate_roots(selected: str) -> list[tuple[str, Path]]:
     h = home()
     roots = [
@@ -510,14 +520,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Search local agent sessions and build project context briefs.")
     parser.add_argument("query", help="Search query, e.g. owner/repo, PR number, branch, file path, or exact error text")
     parser.add_argument("--mode", default="search", choices=["search", "brief"], help="search returns hits; brief returns a structured handoff summary")
-    parser.add_argument("--source", default="all", choices=["all", "codex", "claude", "gemini", "codebuddy", "codexmate-derived-codex", "codexmate-derived-claude"], help="Session source to search")
+    parser.add_argument("--source", default="all", choices=["all", "codex", "claude", "gemini", "codebuddy", "codexmate-derived", "codexmate-derived-codex", "codexmate-derived-claude"], help="Session source to search")
     parser.add_argument("--match", default="any", choices=["any", "all"], help="Whether any or all query tokens must match")
     parser.add_argument("--path-filter", default="", help="Optional substring that must appear in the session path or content, useful for project/worktree filtering")
-    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="Maximum hits to scan/print")
-    parser.add_argument("--brief-items", type=int, default=8, help="Maximum timeline items in brief mode")
-    parser.add_argument("--snippets", type=int, default=2, help="Maximum snippets per hit")
-    parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES, help="Tail bytes to scan per session file")
-    parser.add_argument("--max-files-per-root", type=int, default=5000, help="Maximum files to scan per root")
+    parser.add_argument("--limit", type=positive_int, default=DEFAULT_LIMIT, help="Maximum hits to scan/print")
+    parser.add_argument("--brief-items", type=positive_int, default=8, help="Maximum timeline items in brief mode")
+    parser.add_argument("--snippets", type=positive_int, default=2, help="Maximum snippets per hit")
+    parser.add_argument("--max-bytes", type=positive_int, default=DEFAULT_MAX_BYTES, help="Tail bytes to scan per session file")
+    parser.add_argument("--max-files-per-root", type=positive_int, default=5000, help="Maximum files to scan per root")
     parser.add_argument("--format", choices=["json", "text"], default="json")
     args = parser.parse_args()
     hits = search(args)

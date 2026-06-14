@@ -34,8 +34,10 @@ test('project context recovery skill script finds evidence and builds a handoff 
     const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), 'codexmate-skill-search-'));
     try {
         const codexDir = path.join(tempHome, '.codex', 'sessions', '2026', '06', '14');
+        const derivedCodexDir = path.join(tempHome, '.codexmate', 'sessions', 'derived', 'codex');
         const claudeDir = path.join(tempHome, '.claude', 'projects', '-tmp-project');
         fs.mkdirSync(codexDir, { recursive: true });
+        fs.mkdirSync(derivedCodexDir, { recursive: true });
         fs.mkdirSync(claudeDir, { recursive: true });
 
         fs.writeFileSync(path.join(codexDir, 'codex-session.jsonl'), [
@@ -51,6 +53,10 @@ test('project context recovery skill script finds evidence and builds a handoff 
             JSON.stringify({ role: 'user', content: 'Investigate SakuraByteCore/codexmate PR 197 project context recovery skill' }),
             JSON.stringify({ role: 'assistant', content: 'Updated skills/codexmate-project-context-recovery/SKILL.md and scripts/search_sessions.py. Validation passed: npm run lint and npm run test:unit.' })
         ].join('\n'));
+        fs.writeFileSync(path.join(derivedCodexDir, 'derived-session.jsonl'), JSON.stringify({
+            cwd: '/work/SakuraByteCore/codexmate',
+            content: 'Derived codexmate session marker umbrella-source-ok'
+        }));
         fs.writeFileSync(path.join(claudeDir, 'claude-session.jsonl'), JSON.stringify({
             cwd: '/work/other',
             content: 'Unrelated Claude Code session'
@@ -87,6 +93,24 @@ test('project context recovery skill script finds evidence and builds a handoff 
         assert.ok(brief.summary.files.includes('scripts/search_sessions.py'));
         assert.ok(brief.evidence.validations.some(item => item.includes('npm run lint')));
         assert.ok(brief.timeline[0].evidence.some(item => item.includes('feat/project-context-recovery')));
+
+        const derivedOutput = runSearch([
+            'umbrella-source-ok',
+            '--source', 'codexmate-derived',
+            '--match', 'all',
+            '--path-filter', 'SakuraByteCore/codexmate',
+            '--format', 'json',
+            '--limit', '5'
+        ], tempHome);
+        const derivedParsed = JSON.parse(derivedOutput);
+        assert.equal(derivedParsed.hits.length, 1, 'umbrella codexmate-derived source should search derived codex sessions');
+        assert.equal(derivedParsed.hits[0].source, 'codexmate-derived-codex');
+
+        assert.throws(() => runSearch([
+            'SakuraByteCore/codexmate',
+            '--source', 'all',
+            '--limit', '-1'
+        ], tempHome), /must be greater than 0/);
 
         const missOutput = runSearch([
             'completely-nonexistent-token-zzq-197',
