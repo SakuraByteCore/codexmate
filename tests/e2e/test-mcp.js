@@ -546,22 +546,34 @@ async function testMcp(ctx) {
 async function testMcpFromConfig(ctx) {
     const { node, cliPath } = ctx;
     const projectRoot = path.resolve(__dirname, '..', '..');
-    const mcpConfigPath = path.join(projectRoot, '.mcp.json');
 
-    assert(fs.existsSync(mcpConfigPath), '.mcp.json should exist in project root');
-    const mcpConfig = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf-8'));
+    const tmpConfigDir = require('os').mkdtempSync(path.join(require('os').tmpdir(), 'mcp-cfg-'));
+    const tmpConfigPath = path.join(tmpConfigDir, '.mcp.json');
+    const tmpProjectDir = require('os').mkdtempSync(path.join(require('os').tmpdir(), 'mcp-proj-'));
+
+    const config = {
+        mcpServers: {
+            codexmate: {
+                command: node,
+                args: [cliPath, 'mcp', 'serve', '--project-root', tmpProjectDir]
+            }
+        }
+    };
+    fs.writeFileSync(tmpConfigPath, JSON.stringify(config, null, 2));
+
+    const mcpConfig = JSON.parse(fs.readFileSync(tmpConfigPath, 'utf-8'));
     const serverDef = (mcpConfig.mcpServers || {}).codexmate;
     assert(serverDef, '.mcp.json should define codexmate server');
     assert(serverDef.command, '.mcp.json codexmate should have command');
 
-    const serverArgs = (serverDef.args || []).map((a) =>
-        a.replace('${CLAUDE_PROJECT_DIR}', projectRoot).replace('${CLAUDE_PROJECT_DIR:-.}', projectRoot)
-    );
-    const serverCmd = serverDef.command === 'node' ? node : serverDef.command;
+    const serverCmd = serverDef.command;
+    const serverArgs = serverDef.args || [];
 
     const roRequests = [
-        { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', clientInfo: { name: 'e2e-test' } } },
-        { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }
+        { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', capabilities: { roots: {} }, clientInfo: { name: 'e2e-test', version: '1.0' } } },
+        { jsonrpc: '2.0', method: 'notifications/initialized', params: {} },
+        { jsonrpc: '2.0', id: 2, method: 'ping', params: {} },
+        { jsonrpc: '2.0', id: 3, method: 'tools/list', params: {} }
     ];
     const roInput = Buffer.concat(roRequests.map((r) => encodeFrame(r)));
     const roResult = spawnSync(serverCmd, serverArgs, {
@@ -575,16 +587,20 @@ async function testMcpFromConfig(ctx) {
 
     const stdoutText = (roResult.stdout || Buffer.alloc(0)).toString('utf-8');
     const stderrText = (roResult.stderr || Buffer.alloc(0)).toString('utf-8');
-    const nonFrameStdout = stdoutText.replace(/Content-Length:\s*\d+\r\n\r\n/g, '').replace(/\{[^]*?\}/g, '').trim();
-    assert(nonFrameStdout.length === 0 || /^[{}\[\]":\d\s,.\-_\w\r\n]*$/.test(nonFrameStdout.replace(/Content-Length:\s*\d+\r\n\r\n/g, '')), 'stdout should only contain MCP frames, no log pollution');
+    assert(stdoutText.indexOf('Content-Length:') === 0, 'stdout should start with MCP frame header');
 
     const roResponses = decodeFrames(Buffer.from(stdoutText, 'utf-8'));
     const roById = new Map(roResponses.map((item) => [item.id, item]));
 
+    assert(roById.has(1), 'initialize response missing');
     const initResult = roById.get(1).result || {};
-    assert(initResult.protocolVersion === '2025-11-25', `.mcp.json server should negotiate protocol version, got ${initResult.protocolVersion}`);
+    assert(initResult.protocolVersion === '2025-11-25', `protocol negotiation failed, got ${initResult.protocolVersion}`);
+    assert(initResult.serverInfo && initResult.serverInfo.name, 'serverInfo.name should be present');
 
-    const roTools = (roById.get(2).result || {}).tools || [];
+    assert(roById.has(2), 'ping response missing');
+    assert(roById.has(3), 'tools/list response missing');
+
+    const roTools = (roById.get(3).result || {}).tools || [];
     const roNames = new Set(roTools.map((t) => t.name));
     assert(roNames.has('codexmate.memory.search'), '.mcp.json read-only should expose memory.search');
     assert(roNames.has('codexmate.memory.list'), '.mcp.json read-only should expose memory.list');
@@ -592,11 +608,11 @@ async function testMcpFromConfig(ctx) {
     assert(!roNames.has('codexmate.memory.update'), '.mcp.json read-only should NOT expose memory.update');
     assert(!roNames.has('codexmate.memory.delete'), '.mcp.json read-only should NOT expose memory.delete');
 
-    const e2eCodexmateDir = path.join(projectRoot, '.codexmate');
-    try { fs.rmSync(e2eCodexmateDir, { recursive: true, force: true }); } catch (_) {}
+    try { fs.rmSync(path.join(tmpProjectDir, '.codexmate'), { recursive: true, force: true }); } catch (_) {}
 
     const writeRequests = [
         { jsonrpc: '2.0', id: 10, method: 'initialize', params: {} },
+        { jsonrpc: '2.0', method: 'notifications/initialized', params: {} },
         { jsonrpc: '2.0', id: 11, method: 'tools/call', params: { name: 'codexmate.memory.save', arguments: { summary: 'Config spawn test', content: 'Verifying .mcp.json spawn works end-to-end', tags: ['e2e', 'config'] } } },
         { jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'codexmate.memory.search', arguments: { query: 'config spawn' } } },
         { jsonrpc: '2.0', id: 13, method: 'tools/call', params: { name: 'codexmate.memory.list', arguments: {} } }
@@ -608,7 +624,7 @@ async function testMcpFromConfig(ctx) {
         maxBuffer: 5 * 1024 * 1024,
         cwd: projectRoot
     });
-    assert(writeResult.status === 0, `.mcp.json write server should exit 0`);
+    assert(writeResult.status === 0, '.mcp.json write server should exit 0');
     const writeResponses = decodeFrames(Buffer.from((writeResult.stdout || Buffer.alloc(0)).toString('utf-8'), 'utf-8'));
     const wById = new Map(writeResponses.map((item) => [item.id, item]));
 
@@ -621,6 +637,9 @@ async function testMcpFromConfig(ctx) {
 
     const listed = ((wById.get(13).result || {}).structuredContent) || {};
     assert(listed.total === 1, '.mcp.json memory.list should show 1 entry');
+
+    const memFile = path.join(tmpProjectDir, '.codexmate', 'memories.json');
+    assert(fs.existsSync(memFile), 'memories.json should be created in --project-root');
 
     const udRequests = [
         { jsonrpc: '2.0', id: 20, method: 'initialize', params: {} },
@@ -645,7 +664,8 @@ async function testMcpFromConfig(ctx) {
     const deleted = ((udById.get(22).result || {}).structuredContent) || {};
     assert(deleted.success === true, '.mcp.json memory.delete should succeed');
 
-    try { fs.rmSync(e2eCodexmateDir, { recursive: true, force: true }); } catch (_) {}
+    try { fs.rmSync(tmpConfigDir, { recursive: true, force: true }); } catch (_) {}
+    try { fs.rmSync(tmpProjectDir, { recursive: true, force: true }); } catch (_) {}
 }
 
 module.exports = { testMcp, testMcpFromConfig };

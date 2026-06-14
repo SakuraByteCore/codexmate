@@ -17083,6 +17083,44 @@ async function cmdMcp(args = []) {
         return;
     }
 
+    if (options.subcommand === 'doctor') {
+        const checks = [];
+        const addCheck = (label, ok, detail) => {
+            checks.push({ label, ok, detail: detail || '' });
+            const mark = ok ? 'OK' : 'FAIL';
+            console.error(`  [${mark}] ${label}${detail ? ': ' + detail : ''}`);
+        };
+
+        console.error('codexmate mcp doctor\n');
+
+        const nodePath = process.execPath;
+        addCheck('node binary', !!nodePath && require('fs').existsSync(nodePath), nodePath);
+
+        const cliPath = require('path').resolve(__dirname, 'cli.js');
+        addCheck('cli.js', require('fs').existsSync(cliPath), cliPath);
+
+        let depsOk = true;
+        let depsDetail = '';
+        try { require('@iarna/toml'); } catch (e) { depsOk = false; depsDetail = e.message; }
+        try { require('json5'); } catch (e) { depsOk = false; depsDetail += (depsDetail ? '; ' : '') + e.message; }
+        addCheck('dependencies (npm install)', depsOk, depsDetail || 'all required modules loaded');
+
+        const projectRoot = options.projectDir || process.cwd();
+        const memoriesDir = require('path').join(projectRoot, '.codexmate');
+        let dirWritable = true;
+        try {
+            require('fs').mkdirSync(memoriesDir, { recursive: true });
+            const testFile = require('path').join(memoriesDir, '.doctor-test');
+            require('fs').writeFileSync(testFile, 'ok');
+            require('fs').unlinkSync(testFile);
+        } catch (e) { dirWritable = false; }
+        addCheck('project-root writable', dirWritable, memoriesDir);
+
+        const allOk = checks.every((c) => c.ok);
+        console.error(allOk ? '\nAll checks passed.' : '\nSome checks failed. Fix the issues above before using MCP.');
+        process.exit(allOk ? 0 : 1);
+    }
+
     if (options.subcommand !== 'serve') {
         throw new Error(`未知 mcp 子命令: ${options.subcommand}`);
     }

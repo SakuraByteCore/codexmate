@@ -1,8 +1,15 @@
 {
+  "_comment": "Rename to .mcp.json and fill in your absolute paths. Default is read-only.",
   "mcpServers": {
     "codexmate": {
-      "command": "node",
-      "args": ["/absolute/path/to/codexmate/cli.js", "mcp", "serve"]
+      "command": "/absolute/path/to/node",
+      "args": [
+        "/absolute/path/to/codexmate/cli.js",
+        "mcp",
+        "serve",
+        "--project-root",
+        "/absolute/path/to/your/project"
+      ]
     }
   }
 }
