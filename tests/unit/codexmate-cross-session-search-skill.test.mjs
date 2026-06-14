@@ -56,6 +56,22 @@ test('cross-session search skill script finds local session evidence', () => {
         assert.equal(parsed.hits.length, 1, 'script should find only the matching fixture session');
         assert.equal(parsed.hits[0].source, 'codex');
         assert.ok(parsed.hits[0].snippets.some(snippet => snippet.includes('PR 197')));
+
+        const missOutput = execFileSync('python3', [
+            searchScript,
+            'completely-nonexistent-token-zzq-197',
+            '--source', 'all',
+            '--match', 'all',
+            '--path-filter', 'SakuraByteCore/codexmate',
+            '--format', 'json',
+            '--limit', '5'
+        ], {
+            cwd: projectRoot,
+            env: { ...process.env, HOME: tempHome },
+            encoding: 'utf8'
+        });
+        const missParsed = JSON.parse(missOutput);
+        assert.deepEqual(missParsed.hits, [], 'hyphenated unknown terms must not match just because one split part appears');
     } finally {
         fs.rmSync(tempHome, { recursive: true, force: true });
     }

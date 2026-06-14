@@ -7,7 +7,7 @@ description: Searches local Codex, Claude Code, Gemini, CodeBuddy, and codexmate
 
 ## Overview
 
-Use this skill to recover project history from local agent sessions. Keep the answer evidence-based: old sessions explain prior work, but mutable facts such as PR state, CI, releases, deployments, and current files still need live verification.
+Use this skill as a best-effort way to locate evidence in local agent sessions. It is a deterministic local search helper, not semantic memory: it works best with hard identifiers such as repo names, branches, file paths, commit hashes, exact errors, and PR/issue numbers plus project filters. Keep the answer evidence-based: old sessions explain prior work, but mutable facts such as PR state, CI, releases, deployments, and current files still need live verification.
 
 ## Quick Start
 
@@ -22,10 +22,11 @@ Use `--path-filter` when the project/worktree is known, `--match all` for precis
 ## Workflow
 
 1. **Confirm the object**: repo/project, PR/issue number, branch, file path, command, error text, person, or date range. If multiple projects match, state the chosen object before searching.
-2. **Try query variants**: exact `owner/repo`, short repo name, PR/issue number, branch, unique file path, error string, and user wording.
+2. **Prefer hard identifiers**: exact `owner/repo`, short repo name, PR/issue number with repo filter, branch, unique file path, commit hash, exact error string, and then user wording.
 3. **Search broadly then narrow**: start with `--source all`, add `--path-filter` for the project/worktree, then retry with `--source codex` or `--source claude` when hits are noisy.
-4. **Inspect only strong hits**: use session file paths from script output, or codexmate MCP `codexmate.session.detail` if available.
-5. **Synthesize with boundaries**: cite source/session/file snippets, separate confirmed facts from inference, and list anything needing fresh verification.
+4. **Treat weak hits skeptically**: short PR numbers, common words, and generic phrases can be noisy or miss context. Re-query with stronger identifiers before concluding.
+5. **Inspect only strong hits**: use session file paths from script output, or codexmate MCP `codexmate.session.detail` if available.
+6. **Synthesize with boundaries**: cite source/session/file snippets, separate confirmed facts from inference, and list anything needing fresh verification.
 
 ## Optional codexmate MCP Path
 

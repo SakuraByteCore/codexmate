@@ -104,6 +104,21 @@ def flatten_groups(groups: list[list[str]]) -> list[str]:
     return tokens
 
 
+def contains_token(lower: str, path_text: str, token: str) -> bool:
+    return token in lower or token in path_text
+
+
+def group_matches_all(lower: str, path_text: str, group: list[str]) -> bool:
+    raw = group[0]
+    if contains_token(lower, path_text, raw):
+        return True
+    if "-" in raw or "/" in raw:
+        parts = [part for part in re.split(r"[-/]", raw) if part]
+        if parts and all(contains_token(lower, path_text, part) for part in parts):
+            return True
+    return False
+
+
 def extract_json_field(text: str, names: list[str]) -> str:
     for name in names:
         m = re.search(rf'"{re.escape(name)}"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"', text)
@@ -166,9 +181,9 @@ def search(args: argparse.Namespace) -> list[Hit]:
             path_filter = (args.path_filter or "").strip().lower()
             if path_filter and path_filter not in path_text and path_filter not in lower:
                 continue
-            if args.match == "all" and not all(any(t in lower or t in path_text for t in group) for group in groups):
+            if args.match == "all" and not all(group_matches_all(lower, path_text, group) for group in groups):
                 continue
-            if args.match == "any" and not any(t in lower or t in path_text for t in tokens):
+            if args.match == "any" and not any(contains_token(lower, path_text, t) for t in tokens):
                 continue
             score = score_text(lower, tokens, path_text, phrase)
             if score <= 0:
