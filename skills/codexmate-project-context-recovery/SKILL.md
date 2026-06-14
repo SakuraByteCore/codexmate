@@ -13,7 +13,7 @@ Old sessions are historical evidence. Mutable facts such as PR state, CI, releas
 
 ## Quick Start
 
-Generate a context brief first:
+Generate a context brief first. Resolve `scripts/search_sessions.py` relative to this skill directory; after npm installation the full package path is `node_modules/codexmate/skills/codexmate-project-context-recovery/scripts/search_sessions.py`.
 
 ```bash
 python3 scripts/search_sessions.py "SakuraByteCore/codexmate feat/task-orchestration-tab" --mode brief --source all --path-filter codexmate --match all --format text --limit 8
@@ -30,17 +30,17 @@ python3 scripts/search_sessions.py "exact error text" --mode search --source all
 1. **Confirm the object**: repo/project, PR/issue number, branch, file path, command, exact error text, person, or date range. If multiple projects match, state the chosen object before searching.
 2. **Prefer hard identifiers**: exact `owner/repo`, short repo name, PR/issue number with repo filter, branch, file path, commit hash, exact error, then user wording.
 3. **Generate a brief**: use `--mode brief`; add `--path-filter` for project/worktree isolation; use `--match all` when the query has strong identifiers.
-4. **Check confidence**: `high` means multiple hard signals appeared; `medium/weak` means re-query with stronger identifiers before relying on it.
+4. **Check confidence**: `high` means multiple hard signals appeared; `medium/weak` means re-query with stronger identifiers before relying on it; `none` means no hits were found.
 5. **Use the brief as a handoff**: extract timeline, decisions, validations, risks, files, commands, commits, and top evidence sessions.
 6. **Live-check mutable facts**: before commenting, merging, releasing, or claiming current status, check GitHub/current files directly.
 
 ## What Good Output Looks Like
 
-- **当前对象:** repo / PR / branch / file / error
+- **Target Object:** repo / PR / branch / file / error
 - **Context Brief:** confidence, top sources, timeline, repos/branches/PRs/files
-- **历史证据:** session source/id/path + snippets
-- **接手简报:** decisions, validations, risks, commands, commits
-- **实时核查:** PR/check/review/release/current-file facts that still need live verification
+- **Historical Evidence:** session source/id/path + snippets
+- **Handoff Summary:** decisions, validations, risks, commands, commits
+- **Live Verification:** PR/check/review/release/current-file facts that still need live verification
 
 ## Optional codexmate MCP Path
 
