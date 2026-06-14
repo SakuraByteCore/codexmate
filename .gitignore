@@ -49,6 +49,7 @@ codex-switcher.exe
 *.env
 .env.*
 .npmrc
+.mcp.json
 
 # Package manager lockfiles (keep package-lock.json)
 # pnpm-lock.yaml
