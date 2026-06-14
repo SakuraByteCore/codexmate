@@ -17141,6 +17141,8 @@ async function cmdMcp(args = []) {
         || (typeof process.env.CLAUDE_PROJECT_DIR === 'string' && process.env.CLAUDE_PROJECT_DIR.trim())
         || process.cwd();
 
+    console.error(`[codexmate-mcp] starting v${packageVersion}, projectDir=${projectDir}, allowWrite=${options.allowWrite}`);
+
     const server = createMcpStdioServer({
         protocolVersion: '2025-11-25',
         serverInfo: {
@@ -17157,6 +17159,13 @@ async function cmdMcp(args = []) {
     });
 
     server.start();
+
+    process.on('uncaughtException', (err) => {
+        console.error(`[codexmate-mcp] uncaughtException: ${err && err.message}`);
+    });
+    process.on('unhandledRejection', (reason) => {
+        console.error(`[codexmate-mcp] unhandledRejection: ${reason}`);
+    });
 
     await new Promise((resolve) => {
         let done = false;
