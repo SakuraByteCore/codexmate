@@ -602,6 +602,7 @@ module.exports = async function testSessions(ctx) {
 
     const pathsClaude = await api('list-session-paths', { source: 'claude', limit: 100, forceRefresh: true });
     assert(Array.isArray(pathsClaude.paths), 'list-session-paths(claude) missing');
+    assert(pathsClaude.paths.includes(ctx.claudeProjectDir), 'list-session-paths(claude) missing project path');
 
     const pathsAll = await api('list-session-paths', { source: 'all', limit: 100, forceRefresh: true });
     assert(Array.isArray(pathsAll.paths), 'list-session-paths(all) missing');

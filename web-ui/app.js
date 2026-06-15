@@ -752,6 +752,9 @@ document.addEventListener('DOMContentLoaded', () => {
         watch: {
             mainTab(newTab) {
                 if (newTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
+                    if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
+                        this.loadProjectPathOptions();
+                    }
                     this.loadPromptsContent();
                 }
             },

@@ -12,7 +12,8 @@ module.exports = async function testConfig(ctx) {
         mockProviderUrl,
         noModelsUrl,
         htmlModelsUrl,
-        authFailUrl
+        authFailUrl,
+        claudeProjectDir
     } = ctx;
 
     // ========== Status API Tests ==========
@@ -297,6 +298,7 @@ preferred_auth_method = "shadow-key"
 
     const apiPathsClaude = await api('list-session-paths', { source: 'claude', limit: 10, forceRefresh: true });
     assert(Array.isArray(apiPathsClaude.paths), 'api session paths(claude) missing');
+    assert(apiPathsClaude.paths.includes(claudeProjectDir), 'api session paths(claude) missing project path');
 
     const apiPathsAll = await api('list-session-paths', { source: 'all', limit: 10, forceRefresh: true });
     assert(Array.isArray(apiPathsAll.paths), 'api session paths(all) missing');

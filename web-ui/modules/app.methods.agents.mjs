@@ -727,6 +727,9 @@ export function createAgentsMethods(options = {}) {
                 const rpcParams = {};
                 if (subTab === 'claude-project') {
                     action = 'get-claude-md-file';
+                    if (!this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
+                        this.loadProjectPathOptions();
+                    }
                     const projectPath = (this.projectClaudeMdPath || '').trim();
                     if (projectPath) {
                         rpcParams.baseDir = projectPath;

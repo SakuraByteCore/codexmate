@@ -619,6 +619,69 @@ test('prepareAgentsDiff supports global CLAUDE.md from claude-project tab withou
     assert.strictEqual(context.agentsDiffHasChangesValue, true);
 });
 
+test('loadPromptsContent auto-loads project path options for claude-project tab', async () => {
+    const apiCalls = [];
+    let pathLoadCalls = 0;
+    const methods = createAgentsMethods({
+        api: async (action, params) => {
+            apiCalls.push({ action, params });
+            return {
+                content: 'global claude',
+                path: '/home/user/.claude/CLAUDE.md',
+                exists: true,
+                lineEnding: '\n'
+            };
+        }
+    });
+    const context = {
+        ...methods,
+        promptsSubTab: 'claude-project',
+        mainTab: 'prompts',
+        projectClaudeMdPath: '',
+        projectPathOptions: [],
+        projectPathOptionsLoading: false,
+        resetAgentsDiffState() {},
+        showMessage() {},
+        loadProjectPathOptions() {
+            pathLoadCalls += 1;
+        }
+    };
+
+    await methods.loadPromptsContent.call(context);
+
+    assert.strictEqual(pathLoadCalls, 1);
+    assert.deepStrictEqual(apiCalls, [{
+        action: 'get-claude-md-file',
+        params: {}
+    }]);
+    assert.strictEqual(context.agentsContent, 'global claude');
+    assert.strictEqual(context.agentsContext, 'claude-project');
+});
+
+test('loadPromptsContent does not duplicate project path loading while already loading', async () => {
+    let pathLoadCalls = 0;
+    const methods = createAgentsMethods({
+        api: async () => ({ content: '', path: '', exists: false, lineEnding: '\n' })
+    });
+    const context = {
+        ...methods,
+        promptsSubTab: 'claude-project',
+        mainTab: 'prompts',
+        projectClaudeMdPath: '',
+        projectPathOptions: [],
+        projectPathOptionsLoading: true,
+        resetAgentsDiffState() {},
+        showMessage() {},
+        loadProjectPathOptions() {
+            pathLoadCalls += 1;
+        }
+    };
+
+    await methods.loadPromptsContent.call(context);
+
+    assert.strictEqual(pathLoadCalls, 0);
+});
+
 test('applyAgentsContent saves global CLAUDE.md from claude-project tab without baseDir', async () => {
     const apiCalls = [];
     const methods = createAgentsMethods({
