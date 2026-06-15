@@ -210,13 +210,16 @@ test('buildAgentsDiff with claude-project context dispatches correctly', () => {
     assert.strictEqual(result.exists, true);
 });
 
-test('buildAgentsDiff with claude-project but missing baseDir returns error', () => {
-    const { ctrl } = createTestController();
+test('buildAgentsDiff with claude-project but missing baseDir previews global CLAUDE.md', () => {
+    const { tmpDir, ctrl } = createTestController();
+    fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), 'global old', 'utf-8');
     const result = ctrl.buildAgentsDiff({
         context: 'claude-project',
-        content: 'test',
+        content: 'global new',
         lineEnding: '\n'
     });
-    assert.ok(result.error);
-    assert.match(result.error, /project path is required/);
+    assert.strictEqual(result.error, undefined);
+    assert.strictEqual(result.context, 'claude-project');
+    assert.strictEqual(result.path, path.join(tmpDir, 'CLAUDE.md'));
+    assert.strictEqual(result.exists, true);
 });

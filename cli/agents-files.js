@@ -244,9 +244,6 @@ function createAgentsFileController(deps = {}) {
         if (context === 'claude-md') {
             readResult = readClaudeMdFile({ metaOnly });
         } else if (context === 'claude-project') {
-            if (!params.baseDir || !String(params.baseDir).trim()) {
-                return { error: 'project path is required for claude-project context' };
-            }
             readResult = readClaudeMdFile({ ...params, metaOnly });
         } else if (context === 'openclaw') {
             readResult = readOpenclawAgentsFile({ metaOnly });

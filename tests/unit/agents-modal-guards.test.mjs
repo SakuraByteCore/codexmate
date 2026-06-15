@@ -580,6 +580,96 @@ test('applyAgentsContent rejects invalid workspace filenames before save api', a
     }]);
 });
 
+test('prepareAgentsDiff supports global CLAUDE.md from claude-project tab without baseDir', async () => {
+    const previewCalls = [];
+    const methods = createAgentsMethods({
+        api: async () => ({ success: true }),
+        apiWithMeta: async (action, params) => {
+            previewCalls.push({ action, params });
+            return {
+                diff: {
+                    lines: [{ type: 'add', value: 'after' }],
+                    stats: { added: 1, removed: 0, unchanged: 0 },
+                    hasChanges: true
+                }
+            };
+        }
+    });
+    const context = {
+        ...methods,
+        agentsContext: 'claude-project',
+        projectClaudeMdPath: '',
+        agentsContent: 'after',
+        agentsOriginalContent: 'before',
+        agentsLineEnding: '\n'
+    };
+
+    await methods.prepareAgentsDiff.call(context);
+
+    assert.deepStrictEqual(previewCalls, [{
+        action: 'preview-agents-diff',
+        params: {
+            content: 'after',
+            lineEnding: '\n',
+            context: 'claude-project',
+            baseContent: 'before'
+        }
+    }]);
+    assert.strictEqual(context.agentsDiffError, '');
+    assert.strictEqual(context.agentsDiffHasChangesValue, true);
+});
+
+test('applyAgentsContent saves global CLAUDE.md from claude-project tab without baseDir', async () => {
+    const apiCalls = [];
+    const methods = createAgentsMethods({
+        api: async (action, params) => {
+            apiCalls.push({ action, params });
+            return { success: true };
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        agentsContext: 'claude-project',
+        projectClaudeMdPath: '',
+        agentsDiffVisible: true,
+        agentsDiffLoading: false,
+        agentsDiffError: '',
+        agentsDiffHasChanges: true,
+        agentsDiffHasChangesValue: true,
+        agentsDiffFingerprint: 'same',
+        agentsContent: 'after',
+        agentsOriginalContent: 'before',
+        agentsLineEnding: '\n',
+        mainTab: 'sessions',
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        buildAgentsDiffFingerprint() {
+            return 'same';
+        },
+        closeAgentsModal(options) {
+            this.closeOptions = options;
+        }
+    };
+
+    await methods.applyAgentsContent.call(context);
+
+    assert.deepStrictEqual(apiCalls, [{
+        action: 'apply-claude-md-file',
+        params: {
+            content: 'after',
+            lineEnding: '\n'
+        }
+    }]);
+    assert.deepStrictEqual(context.shownMessages, [{
+        message: '项目 CLAUDE.md 已保存',
+        type: 'success'
+    }]);
+    assert.deepStrictEqual(context.closeOptions, { force: true });
+});
+
 test('applyAgentsContent ignores duplicate save attempts while a save is already running', async () => {
     const resolvers = [];
     const apiCalls = [];
