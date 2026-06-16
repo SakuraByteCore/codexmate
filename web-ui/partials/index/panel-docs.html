@@ -22,7 +22,6 @@
                             <div class="docs-toolbar-card docs-toolbar-card-wide">
                                 <label class="form-label">{{ t('common.mirror') }}</label>
                                 <div class="install-action-tabs">
-                                    <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'default' }" @click="setInstallRegistryPreset('default')">{{ t('common.official') }}</button>
                                     <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'npmmirror' }" @click="setInstallRegistryPreset('npmmirror')">npmmirror</button>
                                     <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'tencent' }" @click="setInstallRegistryPreset('tencent')">{{ t('docs.registry.tencent') }}</button>
                                     <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'custom' }" @click="setInstallRegistryPreset('custom')">{{ t('common.custom') }}</button>
@@ -52,7 +51,7 @@
                             </div>
                             <div class="docs-summary-item docs-summary-item-wide">
                                 <span class="docs-summary-label">{{ t('common.registry') }}</span>
-                                <strong class="docs-summary-value">{{ installRegistryPreview || t('common.defaultOfficial') }}</strong>
+                                <strong class="docs-summary-value">{{ installRegistryPreview || 'npmmirror' }}</strong>
                             </div>
                         </div>
                     </div>

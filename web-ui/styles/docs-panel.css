@@ -113,6 +113,7 @@
 .docs-command-box .install-command {
     flex: 1;
     min-width: 0;
+    max-width: calc(100% - 80px);
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     background: var(--color-surface);

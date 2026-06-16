@@ -707,7 +707,7 @@ return function render(_ctx, _cache) {
                           ]),
                           _createElementVNode("div", { class: "status-chip" }, [
                             _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.registry')), 1 /* TEXT */),
-                            _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.installRegistryPreview || _ctx.t('common.defaultOfficial')), 1 /* TEXT */)
+                            _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.installRegistryPreview || 'npmmirror'), 1 /* TEXT */)
                           ])
                         ]))
                       : (!_ctx.sessionStandalone)
@@ -4528,11 +4528,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "install-action-tabs" }, [
                     _createElementVNode("button", {
                       type: "button",
-                      class: _normalizeClass(["btn-mini", { active: _ctx.installRegistryPreset === 'default' }]),
-                      onClick: $event => (_ctx.setInstallRegistryPreset('default'))
-                    }, _toDisplayString(_ctx.t('common.official')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
-                    _createElementVNode("button", {
-                      type: "button",
                       class: _normalizeClass(["btn-mini", { active: _ctx.installRegistryPreset === 'npmmirror' }]),
                       onClick: $event => (_ctx.setInstallRegistryPreset('npmmirror'))
                     }, "npmmirror", 10 /* CLASS, PROPS */, ["onClick"]),
@@ -4601,7 +4596,7 @@ return function render(_ctx, _cache) {
                 ]),
                 _createElementVNode("div", { class: "docs-summary-item docs-summary-item-wide" }, [
                   _createElementVNode("span", { class: "docs-summary-label" }, _toDisplayString(_ctx.t('common.registry')), 1 /* TEXT */),
-                  _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(_ctx.installRegistryPreview || _ctx.t('common.defaultOfficial')), 1 /* TEXT */)
+                  _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(_ctx.installRegistryPreview || 'npmmirror'), 1 /* TEXT */)
                 ])
               ])
             ]),

@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 healthCheckBatchFailed: 0,
                 installPackageManager: 'npm',
                 installCommandAction: 'install',
-                installRegistryPreset: 'default',
+                installRegistryPreset: 'npmmirror',
                 installRegistryCustom: '',
                 installStatusTargets: null,
                 appLatestVersion: '',

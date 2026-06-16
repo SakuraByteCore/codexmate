@@ -541,7 +541,7 @@
                         </div>
                         <div class="status-chip">
                             <span class="label">{{ t('status.registry') }}</span>
-                            <span class="value">{{ installRegistryPreview || t('common.defaultOfficial') }}</span>
+                            <span class="value">{{ installRegistryPreview || 'npmmirror' }}</span>
                         </div>
                     </div>
                     <div class="status-strip status-strip-placeholder" v-else-if="!sessionStandalone" aria-hidden="true">
