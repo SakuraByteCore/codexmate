@@ -265,6 +265,12 @@ export function createSessionActionMethods(options = {}) {
             return true;
         },
 
+        normalizeSessionTimelineStyle(value) {
+            const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+            if (normalized === 'bar') return 'bar';
+            return 'dots';
+        },
+
         normalizeConfigTemplateDiffConfirmEnabled(value) {
             return normalizeConfigTemplateDiffConfirmEnabled(value);
         },
@@ -274,6 +280,14 @@ export function createSessionActionMethods(options = {}) {
             this.sessionTrashEnabled = enabled;
             try {
                 localStorage.setItem('codexmateSessionTrashEnabled', enabled ? 'true' : 'false');
+            } catch (_) {}
+        },
+
+        setSessionTimelineStyle(style) {
+            const normalized = style === 'bar' ? 'bar' : 'dots';
+            this.sessionTimelineStyle = normalized;
+            try {
+                localStorage.setItem('codexmateSessionTimelineStyle', normalized);
             } catch (_) {}
         },
 

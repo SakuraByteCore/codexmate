@@ -1146,6 +1146,12 @@ const ja = Object.freeze({
     'settings.templateConfirm.toggle': 'テンプレート適用前に差分をプレビュー（2段階：確認 → 適用）',
     'settings.templateConfirm.hint': '有効時：先に差分プレビューを表示し、確認後に書き込みます。',
 
+    'settings.timeline.style.title': 'タイムラインスタイル',
+    'settings.timeline.style.meta': 'セッションプレビューのタイムラインナビゲーションスタイルを選択',
+    'settings.timeline.style.dots': 'ドット',
+    'settings.timeline.style.bar': 'バー',
+    'settings.timeline.style.hint': 'ドットは素早いナビゲーション、バーは進捗を直感的に表示',
+
     'settings.reset.title': '設定リセット',
     'settings.reset.meta': '注意して操作してください',
     'settings.reset.hint': '先に config.toml をバックアップし、デフォルト設定を書き込みます。',

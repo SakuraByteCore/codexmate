@@ -472,11 +472,12 @@
     content: "";
     position: absolute;
     left: 0;
-    top: 10px;
-    bottom: 10px;
-    width: 3px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
     border-radius: 999px;
     background: var(--color-border-soft);
+    opacity: 0.6;
     transition: background var(--transition-fast) var(--ease-spring);
 }
 

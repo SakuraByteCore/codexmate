@@ -382,6 +382,13 @@ const vi = Object.freeze({
     // Sessions
     'sessions.preview.openLink': 'Mở liên kết',
 
+    // Settings
+    'settings.timeline.style.title': 'Kiểu dòng thời gian',
+    'settings.timeline.style.meta': 'Chọn kiểu điều hướng dòng thời gian trong xem trước phiên',
+    'settings.timeline.style.dots': 'Chấm',
+    'settings.timeline.style.bar': 'Thanh',
+    'settings.timeline.style.hint': 'Chấm để điều hướng nhanh, Thanh để hiển thị tiến trình trực quan',
+
     // Diff / Agents hints
     'diff.hint.busy': 'Đang tạo diff hoặc áp dụng. Thao tác tạm thời bị vô hiệu hóa.',
     'diff.hint.failedBack': 'Xem trước diff thất bại. Hãy quay lại chỉnh sửa và thử lại.',

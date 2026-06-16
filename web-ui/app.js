@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionTimelineLastAnchorY: 0,
                 sessionTimelineLastDirection: 0,
                 sessionTimelineEnabled: true,
+                sessionTimelineStyle: 'dots',
                 sessionMessageRefMap: Object.create(null),
                 sessionMessageRefBinderMap: Object.create(null),
                 sessionPreviewScrollEl: null,
@@ -576,6 +577,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.shareCommandPrefix = this.normalizeShareCommandPrefix(localStorage.getItem('codexmateShareCommandPrefix'));
             this.sessionTrashEnabled = this.normalizeSessionTrashEnabled(localStorage.getItem('codexmateSessionTrashEnabled'));
             this.sessionTrashRetentionDays = this.normalizeSessionTrashRetentionDays(localStorage.getItem('codexmateSessionTrashRetentionDays'));
+            try {
+                var savedTimelineStyle = localStorage.getItem('codexmateSessionTimelineStyle');
+                this.sessionTimelineStyle = savedTimelineStyle === 'bar' ? 'bar' : 'dots';
+            } catch (_) {}
             this.configTemplateDiffConfirmEnabled = loadConfigTemplateDiffConfirmEnabledFromStorage(localStorage);
             try {
                 var savedProjectPath = localStorage.getItem('codexmate_project_claude_md_path');

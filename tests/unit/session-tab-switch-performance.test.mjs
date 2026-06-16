@@ -592,7 +592,7 @@ test('session template removes timeline switch button and binds refs by timeline
     assert.doesNotMatch(template, /@click="toggleSessionTimeline"/);
     assert.doesNotMatch(template, /开启时间轴|关闭时间轴/);
     assert.match(template, /:ref="getSessionMessageRefBinder\(getRecordRenderKey\(msg,\s*idx\)\)"/);
-    assert.match(template, /<aside v-if="sessionPreviewRenderEnabled && sessionTimelineNodes.length" class="session-timeline"/);
+    assert.match(template, /:class="(\['session-timeline', 'session-timeline-' \+ sessionTimelineStyle\]|session-timeline-\$\{sessionTimelineStyle\})"/);
 });
 
 test('loadActiveSessionDetail primes visible messages even when timeline is disabled', async () => {

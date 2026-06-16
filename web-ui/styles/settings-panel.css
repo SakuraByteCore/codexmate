@@ -191,6 +191,53 @@
     color: var(--color-text-secondary);
 }
 
+/* ---- 切换按钮组 ---- */
+.settings-toggle-group {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-soft);
+    margin: 12px 0;
+}
+
+.settings-toggle-group .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-secondary);
+    font-family: var(--font-family);
+    font-weight: var(--font-weight-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast) var(--ease-spring);
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    flex: 1;
+}
+
+.settings-toggle-group .toggle-btn:hover:not(:disabled) {
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+}
+
+.settings-toggle-group .toggle-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.settings-toggle-group .toggle-btn.active {
+    color: #fff;
+    background: var(--color-brand);
+    box-shadow: 0 1px 3px rgba(200, 121, 99, 0.35);
+    font-weight: var(--font-weight-primary);
+}
+
 /* ---- 保留天数输入 ---- */
 .settings-retention {
     display: inline-flex;

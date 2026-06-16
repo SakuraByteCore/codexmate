@@ -525,17 +525,19 @@
 }
 
 .session-match-snippets {
-    margin-top: 4px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--color-border-soft);
     grid-column: 1 / -1;
 }
 
 .session-match-snippet {
     font-size: var(--font-size-caption);
     color: var(--color-text-tertiary);
-    line-height: 1.35;
-    padding: 3px 8px;
+    line-height: 1.4;
+    padding: 4px 8px;
     margin-bottom: 2px;
-    background: var(--color-surface-alt);
+    background: rgba(0, 0, 0, 0.02);
     border-radius: var(--radius-sm);
     border-left: 2px solid var(--color-brand-light);
     overflow: hidden;

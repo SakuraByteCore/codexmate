@@ -1153,6 +1153,12 @@ const en = Object.freeze({
     'settings.templateConfirm.toggle': 'Preview diffs before apply (Confirm → Apply)',
     'settings.templateConfirm.hint': 'When enabled: show a diff preview first, then confirm writing.',
 
+    'settings.timeline.style.title': 'Timeline Style',
+    'settings.timeline.style.meta': 'Choose timeline navigation style in session preview',
+    'settings.timeline.style.dots': 'Dots',
+    'settings.timeline.style.bar': 'Bar',
+    'settings.timeline.style.hint': 'Dots for quick navigation, Bar for visual progress',
+
     'settings.reset.title': 'Config reset',
     'settings.reset.meta': 'Proceed with caution',
     'settings.reset.hint': 'Backs up config.toml, then writes default config.',

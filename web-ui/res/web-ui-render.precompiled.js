@@ -3320,34 +3320,70 @@ return function render(_ctx, _cache) {
                                   (_ctx.sessionPreviewRenderEnabled && _ctx.sessionTimelineNodes.length)
                                     ? (_openBlock(), _createElementBlock("aside", {
                                         key: 0,
-                                        class: "session-timeline",
+                                        class: _normalizeClass(['session-timeline', 'session-timeline-' + _ctx.sessionTimelineStyle]),
                                         "aria-label": _ctx.t('sessions.timeline.aria')
                                       }, [
-                                        _createElementVNode("div", { class: "session-timeline-track" }),
-                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
-                                          const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
-                                          if (_cached && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
-                                          const _item = (_openBlock(), _createElementBlock("button", {
-                                            key: 'timeline-' + node.key,
-                                            type: "button",
-                                            class: _normalizeClass(['session-timeline-node', { active: _ctx.sessionTimelineActiveKey === node.key }]),
-                                            "aria-current": _ctx.sessionTimelineActiveKey === node.key ? 'true' : null,
-                                            style: _normalizeStyle({ top: `${node.safePercent}%` }),
-                                            title: node.title,
-                                            onClick: $event => (_ctx.jumpToSessionTimelineNode(node.key))
-                                          }, [
-                                            _createElementVNode("span", { class: "sr-only" }, _toDisplayString(node.title), 1 /* TEXT */)
-                                          ], 14 /* CLASS, STYLE, PROPS */, ["aria-current", "title", "onClick"]))
-                                          _item.memo = _memo
-                                          return _item
-                                        }, _cache, 4), 128 /* KEYED_FRAGMENT */)),
-                                        (_ctx.sessionTimelineActiveTitle)
-                                          ? (_openBlock(), _createElementBlock("div", {
-                                              key: 0,
-                                              class: "session-timeline-current"
-                                            }, _toDisplayString(_ctx.sessionTimelineActiveTitle), 1 /* TEXT */))
-                                          : _createCommentVNode("v-if", true)
-                                      ], 8 /* PROPS */, ["aria-label"]))
+                                        _createCommentVNode(" 点状模式 "),
+                                        (_ctx.sessionTimelineStyle === 'dots')
+                                          ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                                              _createElementVNode("div", { class: "session-timeline-track" }),
+                                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
+                                                const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
+                                                if (_cached && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                                const _item = (_openBlock(), _createElementBlock("button", {
+                                                  key: 'timeline-' + node.key,
+                                                  type: "button",
+                                                  class: _normalizeClass(['session-timeline-node', { active: _ctx.sessionTimelineActiveKey === node.key }]),
+                                                  "aria-current": _ctx.sessionTimelineActiveKey === node.key ? 'true' : null,
+                                                  style: _normalizeStyle({ top: `${node.safePercent}%` }),
+                                                  title: node.title,
+                                                  onClick: $event => (_ctx.jumpToSessionTimelineNode(node.key))
+                                                }, [
+                                                  _createElementVNode("span", { class: "sr-only" }, _toDisplayString(node.title), 1 /* TEXT */)
+                                                ], 14 /* CLASS, STYLE, PROPS */, ["aria-current", "title", "onClick"]))
+                                                _item.memo = _memo
+                                                return _item
+                                              }, _cache, 4), 128 /* KEYED_FRAGMENT */)),
+                                              (_ctx.sessionTimelineActiveTitle)
+                                                ? (_openBlock(), _createElementBlock("div", {
+                                                    key: 0,
+                                                    class: "session-timeline-current"
+                                                  }, _toDisplayString(_ctx.sessionTimelineActiveTitle), 1 /* TEXT */))
+                                                : _createCommentVNode("v-if", true)
+                                            ], 64 /* STABLE_FRAGMENT */))
+                                          : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                                              _createCommentVNode(" 条状模式 "),
+                                              _createElementVNode("div", { class: "session-timeline-bar-track" }, [
+                                                _createElementVNode("div", {
+                                                  class: "session-timeline-bar-progress",
+                                                  style: _normalizeStyle({ height: _ctx.sessionTimelineProgressPercent + '%' })
+                                                }, null, 4 /* STYLE */)
+                                              ]),
+                                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
+                                                const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
+                                                if (_cached && _cached.key === 'timeline-bar-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                                const _item = (_openBlock(), _createElementBlock("button", {
+                                                  key: 'timeline-bar-' + node.key,
+                                                  type: "button",
+                                                  class: _normalizeClass(['session-timeline-bar-node', { active: _ctx.sessionTimelineActiveKey === node.key }]),
+                                                  "aria-current": _ctx.sessionTimelineActiveKey === node.key ? 'true' : null,
+                                                  style: _normalizeStyle({ top: `${node.safePercent}%` }),
+                                                  title: node.title,
+                                                  onClick: $event => (_ctx.jumpToSessionTimelineNode(node.key))
+                                                }, [
+                                                  _createElementVNode("span", { class: "sr-only" }, _toDisplayString(node.title), 1 /* TEXT */)
+                                                ], 14 /* CLASS, STYLE, PROPS */, ["aria-current", "title", "onClick"]))
+                                                _item.memo = _memo
+                                                return _item
+                                              }, _cache, 6), 128 /* KEYED_FRAGMENT */)),
+                                              (_ctx.sessionTimelineActiveTitle)
+                                                ? (_openBlock(), _createElementBlock("div", {
+                                                    key: 0,
+                                                    class: "session-timeline-current"
+                                                  }, _toDisplayString(_ctx.sessionTimelineActiveTitle), 1 /* TEXT */))
+                                                : _createCommentVNode("v-if", true)
+                                            ], 64 /* STABLE_FRAGMENT */))
+                                      ], 10 /* CLASS, PROPS */, ["aria-label"]))
                                     : _createCommentVNode("v-if", true)
                                 ], 64 /* STABLE_FRAGMENT */))
                               : (_openBlock(), _createElementBlock("div", {
@@ -4843,6 +4879,30 @@ return function render(_ctx, _cache) {
                       ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.webhookConfig.url ? _ctx.t('settings.webhook.edit') : _ctx.t('settings.webhook.configure')), 1 /* TEXT */))
                       : (_openBlock(), _createElementBlock("span", { key: 1 }, _toDisplayString(_ctx.t('settings.webhook.enable')), 1 /* TEXT */))
                   ], 10 /* CLASS, PROPS */, ["onClick"])
+                ], 8 /* PROPS */, ["aria-label"]),
+                _createElementVNode("section", {
+                  class: "settings-card",
+                  "aria-label": _ctx.t('settings.timeline.style.title')
+                }, [
+                  _createElementVNode("div", { class: "settings-card-main" }, [
+                    _createElementVNode("div", { class: "settings-card-content" }, [
+                      _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.timeline.style.title')), 1 /* TEXT */),
+                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.timeline.style.meta')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "settings-toggle-group" }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: _normalizeClass(['toggle-btn', { active: _ctx.sessionTimelineStyle === 'dots' }]),
+                          onClick: $event => (_ctx.setSessionTimelineStyle('dots'))
+                        }, _toDisplayString(_ctx.t('settings.timeline.style.dots')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: _normalizeClass(['toggle-btn', { active: _ctx.sessionTimelineStyle === 'bar' }]),
+                          onClick: $event => (_ctx.setSessionTimelineStyle('bar'))
+                        }, _toDisplayString(_ctx.t('settings.timeline.style.bar')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
+                      ]),
+                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.timeline.style.hint')), 1 /* TEXT */)
+                    ])
+                  ])
                 ], 8 /* PROPS */, ["aria-label"])
               ])
             ], 512 /* NEED_PATCH */), [

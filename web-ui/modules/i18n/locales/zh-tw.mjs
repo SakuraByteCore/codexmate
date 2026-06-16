@@ -1156,6 +1156,12 @@ const zhTw = Object.freeze({
     'settings.templateConfirm.toggle': '應用模板前先預覽差異（兩步：確認 → 應用）',
     'settings.templateConfirm.hint': '開啟後：先展示差異預覽，再確認寫入。',
 
+    'settings.timeline.style.title': '時間線樣式',
+    'settings.timeline.style.meta': '選擇會話預覽中的時間線導航樣式',
+    'settings.timeline.style.dots': '點狀',
+    'settings.timeline.style.bar': '條狀',
+    'settings.timeline.style.hint': '點狀適合快速定位，條狀更直觀顯示進度',
+
     'settings.reset.title': '設定重置',
     'settings.reset.meta': '謹慎操作',
     'settings.reset.hint': '會先備份 config.toml，再寫入預設設定。',

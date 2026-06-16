@@ -114,6 +114,30 @@
                                     <span v-else>{{ t('settings.webhook.enable') }}</span>
                                 </button>
                             </section>
+
+                            <section class="settings-card" :aria-label="t('settings.timeline.style.title')">
+                                <div class="settings-card-main">
+                                    <div class="settings-card-content">
+                                        <div class="settings-card-title">{{ t('settings.timeline.style.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.timeline.style.meta') }}</p>
+                                        <div class="settings-toggle-group">
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: sessionTimelineStyle === 'dots' }]"
+                                                @click="setSessionTimelineStyle('dots')">
+                                                {{ t('settings.timeline.style.dots') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: sessionTimelineStyle === 'bar' }]"
+                                                @click="setSessionTimelineStyle('bar')">
+                                                {{ t('settings.timeline.style.bar') }}
+                                            </button>
+                                        </div>
+                                        <p class="settings-card-hint">{{ t('settings.timeline.style.hint') }}</p>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </div>
 

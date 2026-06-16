@@ -261,6 +261,12 @@ export function createSessionComputed() {
             const matched = nodes.find(node => node.key === this.sessionTimelineActiveKey);
             return matched ? matched.title : '';
         },
+        sessionTimelineProgressPercent() {
+            if (!this.sessionTimelineActiveKey || !this.sessionTimelineNodes.length) return 0;
+            const index = this.sessionTimelineNodes.findIndex(node => node.key === this.sessionTimelineActiveKey);
+            if (index < 0) return 0;
+            return Math.round(((index + 1) / this.sessionTimelineNodes.length) * 100);
+        },
         sessionQueryPlaceholder() {
             if (this.isSessionQueryEnabled) {
                 return typeof this.t === 'function'

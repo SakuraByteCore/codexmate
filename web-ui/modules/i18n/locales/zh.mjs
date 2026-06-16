@@ -1156,6 +1156,12 @@ const zh = Object.freeze({
     'settings.templateConfirm.toggle': '应用模板前先预览差异（两步：确认 → 应用）',
     'settings.templateConfirm.hint': '开启后：先展示差异预览，再确认写入。',
 
+    'settings.timeline.style.title': '时间线样式',
+    'settings.timeline.style.meta': '选择会话预览中的时间线导航样式',
+    'settings.timeline.style.dots': '点状',
+    'settings.timeline.style.bar': '条状',
+    'settings.timeline.style.hint': '点状适合快速定位，条状更直观显示进度',
+
     'settings.reset.title': '配置重置',
     'settings.reset.meta': '谨慎操作',
     'settings.reset.hint': '会先备份 config.toml，再写入默认配置。',
