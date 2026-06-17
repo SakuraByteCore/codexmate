@@ -3165,26 +3165,8 @@ return function render(_ctx, _cache) {
                                               "stroke-linecap": "round",
                                               "stroke-linejoin": "round"
                                             }, [
-                                              _createElementVNode("rect", {
-                                                x: "6",
-                                                y: "2.5",
-                                                width: "4",
-                                                height: "2",
-                                                rx: "1"
-                                              }),
-                                              _createElementVNode("path", { d: "M4.5 4h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5" }),
-                                              _createElementVNode("line", {
-                                                x1: "6",
-                                                y1: "7.5",
-                                                x2: "10",
-                                                y2: "7.5"
-                                              }),
-                                              _createElementVNode("line", {
-                                                x1: "6",
-                                                y1: "10",
-                                                x2: "10",
-                                                y2: "10"
-                                              })
+                                              _createElementVNode("path", { d: "M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1" }),
+                                              _createElementVNode("path", { d: "M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" })
                                             ]))
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                           _createElementVNode("button", {
@@ -3223,26 +3205,7 @@ return function render(_ctx, _cache) {
                                             "stroke-linecap": "round",
                                             "stroke-linejoin": "round"
                                           }, [
-                                            _createElementVNode("rect", {
-                                              x: "6",
-                                              y: "2.5",
-                                              width: "4",
-                                              height: "2",
-                                              rx: "1"
-                                            }),
-                                            _createElementVNode("path", { d: "M4.5 4h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5" }),
-                                            _createElementVNode("line", {
-                                              x1: "6",
-                                              y1: "7.5",
-                                              x2: "10",
-                                              y2: "7.5"
-                                            }),
-                                            _createElementVNode("line", {
-                                              x1: "6",
-                                              y1: "10",
-                                              x2: "10",
-                                              y2: "10"
-                                            })
+                                            _createElementVNode("path", { d: "M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z" })
                                           ]))
                                         ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
                                       ])
