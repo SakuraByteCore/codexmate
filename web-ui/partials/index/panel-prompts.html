@@ -45,33 +45,40 @@
                                 <button
                                     class="btn-mini"
                                     @click="exportAgentsContent"
-                                    :disabled="agentsLoading">
-                                    {{ t('modal.agents.export') }}
+                                    :disabled="agentsLoading"
+                                    :title="t('modal.agents.export')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 17v2h16v-2"/></svg>
                                 </button>
                                 <button
                                     class="btn-mini"
                                     @click="copyAgentsContent"
-                                    :disabled="agentsLoading">
-                                    {{ t('modal.agents.copy') }}
+                                    :disabled="agentsLoading"
+                                    :title="t('modal.agents.copy')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                                 </button>
                                 <button
                                     class="btn-mini"
                                     @click="pasteAgentsContent"
-                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible">
-                                    {{ t('common.paste') }}
+                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
+                                    :title="t('common.paste')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
                                 </button>
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
-                                <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading">{{ t('common.cancel') }}</button>
+                                <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
                                 <button
                                     v-if="agentsDiffVisible"
                                     class="btn-mini"
                                     @click="resetAgentsDiffState"
-                                    :disabled="agentsSaving || agentsDiffLoading">
-                                    {{ t('common.backToEdit') }}
+                                    :disabled="agentsSaving || agentsDiffLoading"
+                                    :title="t('common.backToEdit')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                 </button>
-                                <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (!agentsDiffVisible && !hasAgentsContentChanged()) || (agentsDiffVisible && !agentsDiffHasChanges)">
-                                    {{ agentsSaving ? (agentsDiffVisible ? t('common.saving') : t('common.previewing')) : (agentsDiffVisible ? t('common.save') : t('common.preview')) }}
+                                <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (!agentsDiffVisible && !hasAgentsContentChanged()) || (agentsDiffVisible && !agentsDiffHasChanges)" :title="agentsDiffVisible ? t('common.save') : t('common.preview')">
+                                    <svg v-if="agentsDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                    <svg v-else class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
                         </div>
