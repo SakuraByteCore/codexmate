@@ -238,7 +238,7 @@ test('buildClaudeImportedConfigName derives host-based fallback name', () => {
 });
 
 
-test('addClaudeConfig requires a visible model value before saving', () => {
+test('addClaudeConfig requires a visible model value before saving', async () => {
     const source = extractClaudeMethodAsFunction(appSource, 'addClaudeConfig');
     const addClaudeConfig = instantiateFunction(source, 'addClaudeConfig');
     const messages = [];
@@ -263,7 +263,7 @@ test('addClaudeConfig requires a visible model value before saving', () => {
         refreshClaudeModelContext() {}
     };
 
-    addClaudeConfig.call(context);
+    await addClaudeConfig.call(context);
 
     assert.deepStrictEqual(messages, [{ text: '模型名称必填', type: 'error' }]);
     assert.deepStrictEqual(context.claudeConfigs, {});
@@ -406,13 +406,13 @@ test('openEditConfigModal carries external credential metadata into edit validat
     assert.strictEqual(context.showEditConfigModal, true);
 });
 
-test('addClaudeConfig trims and persists the entered model', () => {
+test('addClaudeConfig trims, persists, and applies the entered model', async () => {
     const source = extractClaudeMethodAsFunction(appSource, 'addClaudeConfig');
     const addClaudeConfig = instantiateFunction(source, 'addClaudeConfig');
     const messages = [];
     let saveCount = 0;
     let closed = false;
-    let refreshed = false;
+    const applied = [];
     const i18nMethods = createI18nMethods();
     const context = {
         ...i18nMethods,
@@ -430,17 +430,17 @@ test('addClaudeConfig trims and persists the entered model', () => {
         mergeClaudeConfig: (_, cfg) => ({ ...cfg }),
         saveClaudeConfigs() { saveCount += 1; },
         closeClaudeConfigModal() { closed = true; },
-        refreshClaudeModelContext() { refreshed = true; }
+        async applyClaudeConfig(name) { applied.push(name); }
     };
 
-    addClaudeConfig.call(context);
+    await addClaudeConfig.call(context);
 
     assert.strictEqual(context.currentClaudeConfig, 'Claude Test');
     assert.strictEqual(context.claudeConfigs['Claude Test'].model, 'claude-test-model');
     assert.strictEqual(saveCount, 1);
     assert.strictEqual(closed, true);
-    assert.strictEqual(refreshed, true);
-    assert.deepStrictEqual(messages, [{ text: '操作成功', type: 'success' }]);
+    assert.deepStrictEqual(applied, ['Claude Test']);
+    assert.deepStrictEqual(messages, []);
 });
 
 test('ensureClaudeConfigFromSettings creates imported config for unmatched Claude settings', () => {

@@ -231,7 +231,7 @@ export function createClaudeConfigMethods(options = {}) {
             }
         },
 
-        addClaudeConfig() {
+        async addClaudeConfig() {
             const validation = getClaudeConfigValidationForContext(this, 'add');
             if (!validation.ok) {
                 return this.showMessage(validation.errors.name || validation.errors.apiKey || validation.errors.baseUrl || validation.errors.model || this.t('toast.claude.checkConfig'), 'error');
@@ -252,9 +252,8 @@ export function createClaudeConfigMethods(options = {}) {
 
             this.currentClaudeConfig = name;
             this.saveClaudeConfigs();
-            this.showMessage(this.t('toast.operation.success'), 'success');
             this.closeClaudeConfigModal();
-            this.refreshClaudeModelContext();
+            await this.applyClaudeConfig(name);
         },
 
         async deleteClaudeConfig(name) {
