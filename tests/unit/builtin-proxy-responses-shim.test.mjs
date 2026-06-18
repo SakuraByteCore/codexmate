@@ -149,7 +149,7 @@ test('builtin-proxy /v1/responses sends Codex client identity upstream', async (
 
         const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Originator': 'codex-tui' },
             body: { model: 'gpt-5', input: 'hello', stream: false }
         });
 

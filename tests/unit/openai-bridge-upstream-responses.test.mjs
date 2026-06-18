@@ -144,7 +144,8 @@ test('openai-bridge keeps streaming Codex requests on upstream Responses before 
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/event-stream',
-            'Authorization': 'Bearer codexmate'
+            'Authorization': 'Bearer codexmate',
+            'Originator': 'codex-tui'
         },
         body: {
             model: 'gpt-test',
@@ -215,7 +216,8 @@ test('openai-bridge streams upstream Responses SSE with Codex identity headers',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/event-stream',
-            'Authorization': 'Bearer codexmate'
+            'Authorization': 'Bearer codexmate',
+            'Originator': 'codex-tui'
         },
         body: { model: 'gpt-test', input: 'ping', stream: true }
     });

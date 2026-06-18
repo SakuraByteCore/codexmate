@@ -84,16 +84,22 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         return DEFAULT_CODEX_USER_AGENT;
     }
 
+    function resolveCodexOriginator() {
+        // Some Codex-only upstreams validate Originator separately from User-Agent.
+        // The local TUI may send values such as `codex-tui`, but upstream Codex
+        // gates commonly expect the official Rust CLI originator token.
+        return DEFAULT_CODEX_ORIGINATOR;
+    }
+
     function codexUpstreamHeaders(req, upstream) {
         const version = firstHeaderValue(req, 'version').trim() || DEFAULT_CODEX_VERSION;
         const openaiBeta = firstHeaderValue(req, 'openai-beta').trim() || DEFAULT_OPENAI_BETA;
-        const originator = firstHeaderValue(req, 'originator').trim() || DEFAULT_CODEX_ORIGINATOR;
         return {
             ...(upstream && upstream.authHeader ? { 'Authorization': upstream.authHeader } : {}),
             'User-Agent': resolveCodexUserAgent(req),
             'Version': version,
             'OpenAI-Beta': openaiBeta,
-            'Originator': originator,
+            'Originator': resolveCodexOriginator(),
             'X-Codexmate-Proxy': '1'
         };
     }
