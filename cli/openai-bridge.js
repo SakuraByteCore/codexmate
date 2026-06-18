@@ -1597,9 +1597,14 @@ function streamResponsesSse(targetUrl, options = {}) {
         let settled = false;
         let upstreamReq = null;
         let streamAccepted = false;
+        let streamIdleTimer = null;
         const finish = (value) => {
             if (settled) return;
             settled = true;
+            if (streamIdleTimer) {
+                clearTimeout(streamIdleTimer);
+                streamIdleTimer = null;
+            }
             resolve(value);
         };
         const abortUpstream = () => {
@@ -1656,6 +1661,23 @@ function streamResponsesSse(targetUrl, options = {}) {
             if (/text\/event-stream/i.test(contentType)) {
                 streamAccepted = true;
                 upstreamReq.setTimeout(0);
+                const failAcceptedStream = (message) => {
+                    if (!res.writableEnded && !res.destroyed) {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: message });
+                        writeSse(res, 'done', '[DONE]');
+                        res.end();
+                    }
+                    try { upstreamRes.destroy(new Error(message)); } catch (_) {}
+                    try { upstreamReq.destroy(new Error(message)); } catch (_) {}
+                    finish({ ok: true });
+                };
+                const resetStreamIdleTimer = () => {
+                    if (streamIdleTimer) clearTimeout(streamIdleTimer);
+                    streamIdleTimer = setTimeout(() => {
+                        failAcceptedStream('upstream stream idle timeout');
+                    }, timeoutMs);
+                    if (typeof streamIdleTimer.unref === 'function') streamIdleTimer.unref();
+                };
                 if (!res.headersSent) {
                     res.writeHead(200, {
                         'Content-Type': 'text/event-stream; charset=utf-8',
@@ -1665,7 +1687,9 @@ function streamResponsesSse(targetUrl, options = {}) {
                     });
                     if (typeof res.flushHeaders === 'function') res.flushHeaders();
                 }
+                resetStreamIdleTimer();
                 upstreamRes.on('data', (chunk) => {
+                    resetStreamIdleTimer();
                     if (chunk && !res.writableEnded && !res.destroyed) res.write(chunk);
                 });
                 upstreamRes.on('end', () => {
