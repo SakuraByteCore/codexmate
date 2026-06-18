@@ -54,7 +54,7 @@
 
 不同于简单的封装，Codex Mate 充当了 **本地智能体桥接器**：
 - **统一会话浏览器**：在一个地方检索、预览、筛选并导出 Codex、Claude Code、Gemini CLI 与 CodeBuddy Code 的本地会话。
-- **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用。
+- **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用；内建 Codex 转换会补齐并规范化 `User-Agent`、`Version`、`OpenAI-Beta`、`Originator` 等 Codex 指纹，对上游伪装为官方 Codex CLI 请求。
 - **Claude Provider 桥接**：通过内建本地 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama。
 - **OpenCode Provider 控制**：在 `~/.codexmate` 下维护 CodexMate 自有的 OpenCode 多 provider 存储，只将当前选中的 provider 投影到 OpenCode 原生配置，避免污染或误删用户已有配置。
 - **Skills 市场**：本地优先的市场，支持在不同的智能体应用之间共享和导入 Skills。
@@ -73,7 +73,7 @@
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
 | **本地 Skills 市场** | ✅ | 跨应用的智能体 Skills 导入与导出 |
 | **任务队列** | ✅ | 基于 DAG 的任务执行与日志查看 |
-| **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式 |
+| **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式，并在内建转换中附加/规范化 Codex 指纹 |
 | **Claude Provider 桥接** | ✅ | 通过内建 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama |
 | **OpenCode Provider 存储** | ✅ | 在 `~/.codexmate` 中保留多个 OpenCode provider，只将当前选中的 provider 投影到 OpenCode 原生配置 |
 | **提示词模板** | ✅ | 支持变量的可复用提示词插件 |
