@@ -128,6 +128,46 @@ function createNestedNamespace(depth, leafTool) {
     return current;
 }
 
+test('builtin-proxy /v1/responses sends Codex client identity upstream', async () => {
+    let capturedHeaders = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            capturedHeaders = req.headers;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ id: 'resp_test', model: 'gpt-5', output: [] }));
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+
+    let proxyRuntime;
+    try {
+        const { port: upstreamPort } = await listen(upstream);
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { model: 'gpt-5', input: 'hello', stream: false }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.ok(capturedHeaders, 'upstream should receive /v1/responses request');
+        assert.match(capturedHeaders['user-agent'] || '', /^codex_cli_rs\//);
+        assert.equal(capturedHeaders.version, '0.98.0');
+        assert.equal(capturedHeaders['openai-beta'], 'responses=experimental');
+        assert.equal(capturedHeaders.originator, 'codex_cli_rs');
+        assert.equal(capturedHeaders['x-codexmate-proxy'], '1');
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
 test('builtin-proxy /v1/responses falls back to chat-only upstream and returns Responses JSON', async () => {
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
@@ -384,6 +424,7 @@ test('builtin-proxy /v1/responses falls back to chat when upstream responses tim
 
 test('builtin-proxy /v1/responses stream=true streams chat fallback as Responses SSE', async () => {
     let capturedChatRequest = null;
+    let capturedChatHeaders = null;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
             res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -391,6 +432,7 @@ test('builtin-proxy /v1/responses stream=true streams chat fallback as Responses
             return;
         }
         if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            capturedChatHeaders = req.headers;
             const chunks = [];
             req.on('data', (chunk) => chunks.push(chunk));
             req.on('end', () => {
@@ -420,6 +462,10 @@ test('builtin-proxy /v1/responses stream=true streams chat fallback as Responses
         assert.equal(sse.status, 200);
         assert.ok(capturedChatRequest, 'streaming chat fallback should be called');
         assert.equal(capturedChatRequest.stream, true);
+        assert.match(capturedChatHeaders['user-agent'] || '', /^codex_cli_rs\//);
+        assert.equal(capturedChatHeaders.version, '0.98.0');
+        assert.equal(capturedChatHeaders['openai-beta'], 'responses=experimental');
+        assert.equal(capturedChatHeaders.originator, 'codex_cli_rs');
         assert.match(sse.headers['content-type'], /text\/event-stream/i);
         assert.match(sse.text, /event: response\.created/);
         assert.match(sse.text, /event: response\.output_text\.delta/);

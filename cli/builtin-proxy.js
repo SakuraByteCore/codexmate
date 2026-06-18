@@ -66,6 +66,38 @@ function createBuiltinProxyRuntimeController(deps = {}) {
 
     let runtime = null;
 
+    const DEFAULT_CODEX_VERSION = '0.98.0';
+    const DEFAULT_CODEX_USER_AGENT = 'codex_cli_rs/0.98.0 (Mac OS 26.0.1; arm64) Apple_Terminal/464';
+    const DEFAULT_CODEX_ORIGINATOR = 'codex_cli_rs';
+    const DEFAULT_OPENAI_BETA = 'responses=experimental';
+
+    function firstHeaderValue(req, name) {
+        if (!req || !req.headers || typeof req.headers !== 'object') return '';
+        const value = req.headers[String(name || '').toLowerCase()];
+        if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
+        return typeof value === 'string' ? value : '';
+    }
+
+    function resolveCodexUserAgent(req) {
+        const incoming = firstHeaderValue(req, 'user-agent').trim();
+        if (/^(codex_cli_rs|codex-cli)\//i.test(incoming)) return incoming;
+        return DEFAULT_CODEX_USER_AGENT;
+    }
+
+    function codexUpstreamHeaders(req, upstream) {
+        const version = firstHeaderValue(req, 'version').trim() || DEFAULT_CODEX_VERSION;
+        const openaiBeta = firstHeaderValue(req, 'openai-beta').trim() || DEFAULT_OPENAI_BETA;
+        const originator = firstHeaderValue(req, 'originator').trim() || DEFAULT_CODEX_ORIGINATOR;
+        return {
+            ...(upstream && upstream.authHeader ? { 'Authorization': upstream.authHeader } : {}),
+            'User-Agent': resolveCodexUserAgent(req),
+            'Version': version,
+            'OpenAI-Beta': openaiBeta,
+            'Originator': originator,
+            'X-Codexmate-Proxy': '1'
+        };
+    }
+
     function readRequestBody(req, maxBytes) {
         return new Promise((resolve) => {
             let body = '';
@@ -1813,10 +1845,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     const payload = parsed.value && typeof parsed.value === 'object' ? parsed.value : {};
                     const wantsStream = payload.stream === true;
 
-                    const commonHeaders = {
-                        ...(upstream.authHeader ? { 'Authorization': upstream.authHeader } : {}),
-                        'X-Codexmate-Proxy': '1'
-                    };
+                    const commonHeaders = codexUpstreamHeaders(req, upstream);
 
                     const model = typeof payload.model === 'string' ? payload.model : '';
                     const chatBody = buildChatCompletionsBodyFromResponsesPayload(payload);
