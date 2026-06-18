@@ -11,6 +11,10 @@ const SETTINGS_VERSION = 1;
 const STREAM_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
 const RESPONSES_UNSUPPORTED_TTL_MS = 30 * 60 * 1000;
+const DEFAULT_CODEX_VERSION = '0.98.0';
+const DEFAULT_CODEX_USER_AGENT = 'codex_cli_rs/0.98.0 (Mac OS 26.0.1; arm64) Apple_Terminal/464';
+const DEFAULT_CODEX_ORIGINATOR = 'codex_cli_rs';
+const DEFAULT_OPENAI_BETA = 'responses=experimental';
 
 function normalizeText(value) {
     return typeof value === 'string' ? value.trim() : '';
@@ -19,6 +23,36 @@ function normalizeText(value) {
 function normalizeProviderName(value) {
     // Provider name validation is done elsewhere; keep this conservative.
     return normalizeText(value);
+}
+
+function firstHeaderValue(req, name) {
+    if (!req || !req.headers || typeof req.headers !== 'object') return '';
+    const value = req.headers[String(name || '').toLowerCase()];
+    if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
+    return typeof value === 'string' ? value : '';
+}
+
+function resolveCodexUserAgent(req) {
+    const incoming = firstHeaderValue(req, 'user-agent').trim();
+    if (/^(codex_cli_rs|codex-cli)\//i.test(incoming)) return incoming;
+    return DEFAULT_CODEX_USER_AGENT;
+}
+
+function buildCodexBridgeHeaders(req, upstream, authHeader) {
+    const upstreamHeaders = upstream && upstream.headers && typeof upstream.headers === 'object' && !Array.isArray(upstream.headers)
+        ? upstream.headers
+        : {};
+    const version = firstHeaderValue(req, 'version').trim() || DEFAULT_CODEX_VERSION;
+    const openaiBeta = firstHeaderValue(req, 'openai-beta').trim() || DEFAULT_OPENAI_BETA;
+    const originator = firstHeaderValue(req, 'originator').trim() || DEFAULT_CODEX_ORIGINATOR;
+    return {
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        ...upstreamHeaders,
+        'User-Agent': resolveCodexUserAgent(req),
+        'Version': version,
+        'OpenAI-Beta': openaiBeta,
+        'Originator': originator
+    };
 }
 
 function normalizeOpenaiUpstreamBaseUrl(rawValue) {
@@ -1533,6 +1567,160 @@ function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
     });
 }
 
+function streamResponsesSse(targetUrl, options = {}) {
+    const parsed = new URL(targetUrl);
+    const transport = parsed.protocol === 'https:' ? https : http;
+    const bodyText = options.body ? JSON.stringify(options.body) : '';
+    const maxBytes = Number.isFinite(options.maxBytes) && options.maxBytes > 0
+        ? Math.floor(options.maxBytes)
+        : 0;
+    const headers = {
+        'Accept': 'text/event-stream',
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(options.headers || {})
+    };
+    if (options.body) {
+        headers['Content-Length'] = Buffer.byteLength(bodyText, 'utf-8');
+    }
+    const timeoutMs = Number.isFinite(options.timeoutMs)
+        ? Math.max(1000, Number(options.timeoutMs))
+        : STREAM_IDLE_TIMEOUT_MS;
+    const res = options.res;
+
+    return new Promise((resolve) => {
+        let settled = false;
+        let upstreamReq = null;
+        let streamAccepted = false;
+        const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+        };
+        const abortUpstream = () => {
+            if (upstreamReq) {
+                try { upstreamReq.destroy(new Error('client aborted')); } catch (_) {}
+            }
+        };
+        if (res && typeof res.once === 'function') {
+            res.once('close', abortUpstream);
+        }
+
+        upstreamReq = transport.request({
+            protocol: parsed.protocol,
+            hostname: parsed.hostname,
+            port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+            method: options.method || 'POST',
+            path: `${parsed.pathname}${parsed.search}`,
+            headers,
+            agent: parsed.protocol === 'https:' ? options.httpsAgent : options.httpAgent
+        }, (upstreamRes) => {
+            const status = upstreamRes.statusCode || 0;
+            const chunks = [];
+            let size = 0;
+            const contentType = String(upstreamRes.headers && upstreamRes.headers['content-type'] || '');
+            const collectChunk = (chunk) => {
+                if (!chunk) return true;
+                if (maxBytes > 0) {
+                    size += chunk.length;
+                    if (size > maxBytes) {
+                        chunks.length = 0;
+                        try { upstreamRes.destroy(new Error('response too large')); } catch (_) {}
+                        try { upstreamReq.destroy(new Error('response too large')); } catch (_) {}
+                        finish({ ok: false, status, error: 'response too large' });
+                        return false;
+                    }
+                }
+                chunks.push(chunk);
+                return true;
+            };
+            const bodyFromChunks = () => (chunks.length ? Buffer.concat(chunks).toString('utf-8') : '');
+
+            if (status === 404 || status === 405) {
+                upstreamRes.on('data', collectChunk);
+                upstreamRes.on('end', () => finish({ retry: true, status, bodyText: bodyFromChunks() }));
+                return;
+            }
+
+            if (status >= 400) {
+                upstreamRes.on('data', collectChunk);
+                upstreamRes.on('end', () => finish({ ok: false, status, bodyText: bodyFromChunks() }));
+                return;
+            }
+
+            if (/text\/event-stream/i.test(contentType)) {
+                streamAccepted = true;
+                upstreamReq.setTimeout(0);
+                if (!res.headersSent) {
+                    res.writeHead(200, {
+                        'Content-Type': 'text/event-stream; charset=utf-8',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'X-Accel-Buffering': 'no'
+                    });
+                    if (typeof res.flushHeaders === 'function') res.flushHeaders();
+                }
+                upstreamRes.on('data', (chunk) => {
+                    if (chunk && !res.writableEnded && !res.destroyed) res.write(chunk);
+                });
+                upstreamRes.on('end', () => {
+                    if (!res.writableEnded && !res.destroyed) res.end();
+                    finish({ ok: true });
+                });
+                upstreamRes.on('aborted', () => {
+                    if (!res.writableEnded && !res.destroyed) {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: 'upstream stream aborted' });
+                        writeSse(res, 'done', '[DONE]');
+                        res.end();
+                    }
+                    finish({ ok: true });
+                });
+                upstreamRes.on('error', (err) => {
+                    if (!res.writableEnded && !res.destroyed) {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: err && err.message ? err.message : 'upstream stream failed' });
+                        writeSse(res, 'done', '[DONE]');
+                        res.end();
+                    }
+                    finish({ ok: true });
+                });
+                return;
+            }
+
+            upstreamRes.on('data', collectChunk);
+            upstreamRes.on('end', () => {
+                const text = bodyFromChunks();
+                const parsedJson = parseJsonOrError(text);
+                if (!res.headersSent) {
+                    res.writeHead(200, {
+                        'Content-Type': 'text/event-stream; charset=utf-8',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'X-Accel-Buffering': 'no'
+                    });
+                    if (typeof res.flushHeaders === 'function') res.flushHeaders();
+                }
+                if (parsedJson.error) {
+                    writeSse(res, 'response.failed', { type: 'response.failed', error: `invalid upstream response: ${parsedJson.error}` });
+                    writeSse(res, 'done', '[DONE]');
+                    if (!res.writableEnded && !res.destroyed) res.end();
+                    finish({ ok: true });
+                    return;
+                }
+                sendResponsesSse(res, ensureResponseMetadata(parsedJson.value));
+                if (!res.writableEnded && !res.destroyed) res.end();
+                finish({ ok: true });
+            });
+        });
+        upstreamReq.setTimeout(timeoutMs, () => {
+            if (streamAccepted) return;
+            try { upstreamReq.destroy(new Error('timeout')); } catch (_) {}
+            finish({ ok: false, error: 'timeout' });
+        });
+        upstreamReq.on('error', (err) => finish({ ok: false, error: err && err.message ? err.message : 'request failed' }));
+        if (bodyText) upstreamReq.write(bodyText);
+        upstreamReq.end();
+    });
+}
+
 async function proxyRequestJson(targetUrl, options = {}) {
     const parsed = new URL(targetUrl);
     const transport = parsed.protocol === 'https:' ? https : http;
@@ -1618,6 +1806,9 @@ function createOpenaiBridgeHttpHandler(options = {}) {
     const maxUpstreamBytes = Number.isFinite(options.maxUpstreamBytes) && options.maxUpstreamBytes > 0
         ? Math.floor(options.maxUpstreamBytes)
         : Math.max(16 * 1024 * 1024, maxBodySize > 0 ? maxBodySize * 4 : 0);
+    const streamTimeoutMs = Number.isFinite(options.streamTimeoutMs) && options.streamTimeoutMs > 0
+        ? Math.floor(options.streamTimeoutMs)
+        : STREAM_IDLE_TIMEOUT_MS;
 
     if (!settingsFile) {
         throw new Error('createOpenaiBridgeHttpHandler 缺少 settingsFile');
@@ -1708,6 +1899,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             const upstreamHeaders = upstream && upstream.headers && typeof upstream.headers === 'object' && !Array.isArray(upstream.headers)
                 ? upstream.headers
                 : {};
+            const codexHeaders = buildCodexBridgeHeaders(req, upstream, authHeader);
 
             if (!normalizedSuffix) {
                 if ((req.method || 'GET').toUpperCase() !== 'GET') {
@@ -1784,6 +1976,47 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             const wantsSse = /text\/event-stream/i.test(String(acceptHeader || ''));
 
             if (streamRequested && wantsSse) {
+                const upstreamResponsesUrl = joinApiUrl(upstream.baseUrl, 'responses');
+                const skipResponsesProbe = isResponsesKnownUnsupported(upstream.baseUrl);
+                const streamedResponses = skipResponsesProbe
+                    ? { ok: false, status: 404, bodyText: '' }
+                    : await retryTransientRequest(() => streamResponsesSse(upstreamResponsesUrl, {
+                        method: 'POST',
+                        body: responsesRequest,
+                        headers: codexHeaders,
+                        timeoutMs: streamTimeoutMs,
+                        maxBytes: maxUpstreamBytes,
+                        httpAgent,
+                        httpsAgent,
+                        res
+                    }));
+
+                if (streamedResponses.ok) {
+                    clearResponsesUnsupported(upstream.baseUrl);
+                    return;
+                }
+
+                const canFallbackToChat = streamedResponses.status
+                    ? shouldFallbackFromUpstreamResponses(streamedResponses.status, streamedResponses.bodyText)
+                    : false;
+                if (!canFallbackToChat) {
+                    if (res.writableEnded || res.destroyed) return;
+                    const status = streamedResponses.status && streamedResponses.status >= 400 ? streamedResponses.status : 502;
+                    if (!res.headersSent) {
+                        res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(streamedResponses.bodyText || JSON.stringify({ error: streamedResponses.error || 'Upstream request failed' }));
+                    } else {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: streamedResponses.error || streamedResponses.bodyText || 'Upstream request failed' });
+                        writeSse(res, 'done', '[DONE]');
+                        res.end();
+                    }
+                    return;
+                }
+
+                if (!skipResponsesProbe && isResponsesEndpointUnsupported(streamedResponses.status, streamedResponses.bodyText)) {
+                    markResponsesUnsupported(upstream.baseUrl);
+                }
+
                 const converted = convertResponsesRequestToChatCompletions(responsesRequest);
                 if (converted.error) {
                     res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -1795,10 +2028,8 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                 const streamed = await retryTransientRequest(() => streamChatCompletionsAsResponsesSse(upstreamUrl, {
                     method: 'POST',
                     body: chatBody,
-                    headers: {
-                        ...(authHeader ? { Authorization: authHeader } : {}),
-                        ...upstreamHeaders
-                    },
+                    headers: codexHeaders,
+                    timeoutMs: streamTimeoutMs,
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
                     httpsAgent,
@@ -1832,10 +2063,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                 : await retryTransientRequest(() => proxyRequestJson(upstreamResponsesUrl, {
                     method: 'POST',
                     body: toUpstreamNonStreamingResponsesPayload(responsesRequest),
-                    headers: {
-                        ...(authHeader ? { Authorization: authHeader } : {}),
-                        ...upstreamHeaders
-                    },
+                    headers: codexHeaders,
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
                     httpsAgent
@@ -1897,10 +2125,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             const upstreamResult = await retryTransientRequest(() => proxyRequestJson(upstreamUrl, {
                 method: 'POST',
                 body: converted.chat,
-                headers: {
-                    ...(authHeader ? { Authorization: authHeader } : {}),
-                    ...upstreamHeaders
-                },
+                headers: codexHeaders,
                 maxBytes: maxUpstreamBytes,
                 httpAgent,
                 httpsAgent
