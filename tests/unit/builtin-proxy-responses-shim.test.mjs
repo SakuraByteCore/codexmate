@@ -481,27 +481,23 @@ test('builtin-proxy /v1/responses stream=true streams chat fallback as Responses
     }
 });
 
-test('builtin-proxy /v1/responses stream=true bypasses hanging upstream Responses probe for ordinary Codex tasks', async () => {
+test('builtin-proxy /v1/responses stream=true does not fallback to chat when upstream Responses hangs', async () => {
     let responsesHit = false;
-    let capturedChatRequest = null;
+    let chatHit = false;
+    let capturedResponsesHeaders = null;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
             responsesHit = true;
-            // Simulate an OpenAI-compatible gateway that accepts /responses but never
-            // produces a usable body. Streaming Codex requests must not block here.
+            capturedResponsesHeaders = req.headers;
+            // A hanging Responses endpoint is not proof that Responses is unsupported.
+            // Falling back to chat/completions can route through non-Codex client paths
+            // and break Codex-only upstream groups.
             return;
         }
         if (req.url === '/v1/chat/completions' && req.method === 'POST') {
-            const chunks = [];
-            req.on('data', (chunk) => chunks.push(chunk));
-            req.on('end', () => {
-                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
-                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
-                res.write('data: {"id":"chatcmpl_real_task","model":"gpt-test","choices":[{"delta":{"role":"assistant"}}]}\n\n');
-                res.write('data: {"id":"chatcmpl_real_task","model":"gpt-test","choices":[{"delta":{"content":"real"}}]}\n\n');
-                res.write('data: {"id":"chatcmpl_real_task","model":"gpt-test","choices":[{"delta":{"content":" task"}}]}\n\n');
-                res.end('data: [DONE]\n\n');
-            });
+            chatHit = true;
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.end('data: [DONE]\n\n');
             return;
         }
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -534,24 +530,16 @@ test('builtin-proxy /v1/responses stream=true bypasses hanging upstream Response
         });
         const elapsedMs = Date.now() - started;
 
-        assert.equal(sse.status, 200);
-        assert.equal(responsesHit, false, 'streaming Codex tasks should not probe hanging upstream /responses first');
-        assert.ok(elapsedMs < 900, `streaming fast path should not wait for upstream responses timeout; took ${elapsedMs}ms`);
-        assert.ok(capturedChatRequest, 'streaming request should be converted to chat/completions');
-        assert.deepStrictEqual(capturedChatRequest.messages, [
-            { role: 'system', content: 'You are Codex. Be concise.' },
-            { role: 'system', content: [{ type: 'text', text: 'follow repo rules' }] },
-            { role: 'user', content: [{ type: 'text', text: 'do a normal task' }] }
-        ]);
-        assert.equal(capturedChatRequest.stream, true);
-        assert.equal(capturedChatRequest.max_tokens, 512);
-        assert.equal(capturedChatRequest.temperature, 0.2);
-        assert.match(sse.headers['content-type'], /text\/event-stream/i);
-        assert.match(sse.text, /event: response\.created/);
-        assert.match(sse.text, /"delta":"real"/);
-        assert.match(sse.text, /"delta":" task"/);
-        assert.match(sse.text, /event: response\.completed/);
-        assert.match(sse.text, /data: \[DONE\]/);
+        assert.equal(sse.status, 502);
+        assert.equal(responsesHit, true, 'streaming Codex tasks should probe upstream /responses first');
+        assert.match(capturedResponsesHeaders['user-agent'] || '', /^codex_cli_rs\//);
+        assert.equal(capturedResponsesHeaders.version, '0.98.0');
+        assert.equal(capturedResponsesHeaders['openai-beta'], 'responses=experimental');
+        assert.equal(capturedResponsesHeaders.originator, 'codex_cli_rs');
+        assert.equal(chatHit, false, 'hanging Responses must not fallback to chat/completions');
+        assert.ok(elapsedMs >= 900, `proxy should wait for the upstream Responses timeout; took ${elapsedMs}ms`);
+        assert.match(sse.headers['content-type'], /application\/json/i);
+        assert.match(sse.text, /timeout/);
     } finally {
         if (proxyRuntime) {
             await closeServer(proxyRuntime.server, proxyRuntime.connections);

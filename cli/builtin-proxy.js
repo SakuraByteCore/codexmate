@@ -1459,6 +1459,127 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         });
     }
 
+    function streamResponsesSse(targetUrl, options = {}) {
+        const parsed = new URL(targetUrl);
+        const transport = parsed.protocol === 'https:' ? https : http;
+        const bodyText = options.body ? JSON.stringify(options.body) : '';
+        const headers = {
+            'Accept': 'text/event-stream',
+            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+            ...(options.headers || {})
+        };
+        if (options.body) {
+            headers['Content-Length'] = Buffer.byteLength(bodyText, 'utf-8');
+        }
+        const timeoutMs = Number.isFinite(options.timeoutMs)
+            ? Math.max(1000, Number(options.timeoutMs))
+            : 30000;
+        const res = options.res;
+
+        return new Promise((resolve) => {
+            let settled = false;
+            let streamAccepted = false;
+            const finish = (value) => {
+                if (settled) return;
+                settled = true;
+                resolve(value);
+            };
+            const req = transport.request({
+                protocol: parsed.protocol,
+                hostname: parsed.hostname,
+                port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+                method: options.method || 'POST',
+                path: `${parsed.pathname}${parsed.search}`,
+                headers,
+                agent: parsed.protocol === 'https:' ? HTTPS_KEEP_ALIVE_AGENT : HTTP_KEEP_ALIVE_AGENT
+            }, (upstreamRes) => {
+                const status = upstreamRes.statusCode || 0;
+                const chunks = [];
+                const contentType = String(upstreamRes.headers && upstreamRes.headers['content-type'] || '');
+
+                const collectBody = (done) => {
+                    upstreamRes.on('data', (chunk) => chunk && chunks.push(chunk));
+                    upstreamRes.on('end', () => done(chunks.length ? Buffer.concat(chunks).toString('utf-8') : ''));
+                };
+
+                upstreamRes.on('error', (err) => finish({ ok: false, error: err && err.message ? err.message : 'upstream stream failed' }));
+                upstreamRes.on('aborted', () => finish({ ok: false, retryTransient: true, error: 'upstream stream aborted' }));
+
+                if (status === 404 || status === 405) {
+                    collectBody((bodyTextResult) => finish({ retry: true, status, bodyText: bodyTextResult }));
+                    return;
+                }
+
+                if (status >= 400) {
+                    collectBody((bodyTextResult) => finish({ ok: false, status, bodyText: bodyTextResult }));
+                    return;
+                }
+
+                if (/text\/event-stream/i.test(contentType)) {
+                    streamAccepted = true;
+                    req.setTimeout(0);
+                    res.writeHead(200, {
+                        'Content-Type': 'text/event-stream; charset=utf-8',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'X-Accel-Buffering': 'no'
+                    });
+                    upstreamRes.on('data', (chunk) => {
+                        if (chunk && !res.writableEnded) res.write(chunk);
+                    });
+                    upstreamRes.on('end', () => {
+                        if (!res.writableEnded) res.end();
+                        finish({ ok: true });
+                    });
+                    return;
+                }
+
+                collectBody((text) => {
+                    const parsedJson = parseJsonOrError(text);
+                    res.writeHead(200, {
+                        'Content-Type': 'text/event-stream; charset=utf-8',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'X-Accel-Buffering': 'no'
+                    });
+                    if (parsedJson.error) {
+                        writeSse(res, 'response.failed', { type: 'response.failed', error: `invalid upstream response: ${parsedJson.error}` });
+                        writeSse(res, 'done', '[DONE]');
+                        res.end();
+                        finish({ ok: true });
+                        return;
+                    }
+                    sendResponsesSse(res, ensureResponseMetadata(parsedJson.value));
+                    res.end();
+                    finish({ ok: true });
+                });
+            });
+            req.setTimeout(timeoutMs, () => {
+                if (streamAccepted) return;
+                try { req.destroy(new Error('timeout')); } catch (_) {}
+                finish({ ok: false, error: 'timeout' });
+            });
+            req.on('error', (err) => finish({ ok: false, error: err && err.message ? err.message : 'request failed' }));
+            if (bodyText) req.write(bodyText);
+            req.end();
+        });
+    }
+
+    async function streamResponsesSseWithFallbackUrls(baseUrl, pathSuffix, options = {}) {
+        const urls = buildUpstreamUrlCandidates(baseUrl, pathSuffix);
+        if (urls.length === 0) {
+            return { ok: false, error: 'failed to build upstream URL' };
+        }
+        let lastResult = null;
+        for (const url of urls) {
+            const result = await retryTransientRequest(() => streamResponsesSse(url, options));
+            lastResult = result;
+            if (result && result.retry) continue;
+            return result;
+        }
+        return lastResult || { ok: false, error: 'failed to build upstream URL' };
+    }
+
     async function streamChatCompletionsAsResponsesSseWithFallbackUrls(baseUrl, pathSuffix, options = {}) {
         const urls = buildUpstreamUrlCandidates(baseUrl, pathSuffix);
         if (urls.length === 0) {
@@ -1825,8 +1946,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
 
             // Responses shim：
             // - Codex CLI 默认走 /v1/responses（含 SSE）
-            // - SSE/streaming 任务优先走 chat/completions fallback，避免卡在会接收但不产出 Responses 的兼容网关
-            // - 非流式请求仍优先尝试 /v1/responses（stream=false），失败再转换到 chat/completions 并回包为 responses。
+            // - SSE/streaming 任务优先保持 /v1/responses，避免 Codex-only upstream 把 fallback 后的 chat/completions 链路误判为非 Codex 客户端
+            // - 仅在上游明确不支持 Responses 时，才转换到 chat/completions 并回包为 responses。
             if ((incomingPath === '/v1/responses' || incomingPath === '/v1/responses/') && (req.method || 'GET').toUpperCase() === 'POST') {
                 void (async () => {
                     const { body, error } = await readRequestBody(req, 10 * 1024 * 1024);
@@ -1852,6 +1973,31 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     const toolTypesByName = collectResponsesToolTypesByName(payload.tools);
 
                     if (wantsStream) {
+                        const streamedResponses = await streamResponsesSseWithFallbackUrls(upstream.baseUrl, 'responses', {
+                            method: 'POST',
+                            headers: commonHeaders,
+                            timeoutMs,
+                            body: { ...payload, stream: true },
+                            res,
+                            model
+                        });
+                        if (streamedResponses.ok) return;
+                        const canFallbackToChat = streamedResponses.status
+                            ? shouldFallbackFromUpstreamResponses(streamedResponses.status, streamedResponses.bodyText)
+                            : false;
+                        if (!canFallbackToChat) {
+                            if (!res.headersSent) {
+                                const status = streamedResponses.status && streamedResponses.status >= 400 ? streamedResponses.status : 502;
+                                res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+                                res.end(streamedResponses.bodyText || JSON.stringify({ error: streamedResponses.error || 'proxy request failed' }));
+                            } else if (!res.writableEnded) {
+                                writeSse(res, 'response.failed', { type: 'response.failed', error: streamedResponses.error || streamedResponses.bodyText || 'proxy request failed' });
+                                writeSse(res, 'done', '[DONE]');
+                                res.end();
+                            }
+                            return;
+                        }
+
                         const streamingChatBody = { ...chatBody, stream: true };
                         const streamed = await streamChatCompletionsAsResponsesSseWithFallbackUrls(upstream.baseUrl, 'chat/completions', {
                             method: 'POST',
