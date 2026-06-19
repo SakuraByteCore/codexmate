@@ -1377,3 +1377,176 @@ test('builtin-proxy /v1/responses retries upstream after a transient connection 
         await closeServer(upstream);
     }
 });
+
+test('builtin-proxy /v1/responses adds encrypted reasoning include for upstream Responses', async () => {
+    let capturedRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ id: 'resp_reasoning', model: 'gpt-test', output: [] }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-test',
+                input: 'think privately',
+                reasoning: { effort: 'high' },
+                include: ['file_search_call.results'],
+                stream: false
+            }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.ok(capturedRequest, 'upstream Responses request should be captured');
+        assert.equal(capturedRequest.stream, false);
+        assert.deepStrictEqual(capturedRequest.reasoning, { effort: 'high' });
+        assert.deepStrictEqual(capturedRequest.include, ['file_search_call.results', 'reasoning.encrypted_content']);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
+test('builtin-proxy /v1/responses maps reasoning effort, max_completion_tokens, and finish_reason length through chat fallback', async () => {
+    let capturedChatRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedChatRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    id: 'chatcmpl_length',
+                    model: 'gpt-test',
+                    choices: [{
+                        finish_reason: 'length',
+                        message: { role: 'assistant', content: '' }
+                    }],
+                    usage: { prompt_tokens: 2, completion_tokens: 4, total_tokens: 6 }
+                }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const resp = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-test',
+                input: 'short answer',
+                reasoning: { effort: 'medium' },
+                max_completion_tokens: 64,
+                stream: false
+            }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.ok(capturedChatRequest, 'chat fallback request should be captured');
+        assert.equal(capturedChatRequest.reasoning_effort, 'medium');
+        assert.equal(capturedChatRequest.max_tokens, 128);
+
+        const parsed = JSON.parse(resp.text);
+        assert.equal(parsed.status, 'incomplete');
+        assert.deepStrictEqual(parsed.incomplete_details, { reason: 'max_output_tokens' });
+        assert.equal(parsed.output[0].type, 'message');
+        assert.equal(parsed.output[0].content[0].type, 'output_text');
+        assert.equal(parsed.output[0].content[0].text, '');
+        assert.deepStrictEqual(parsed.usage, { input_tokens: 2, output_tokens: 4, total_tokens: 6 });
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});
+
+test('builtin-proxy /v1/responses stream=true emits reasoning and tool events from chat fallback', async () => {
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'responses endpoint unavailable' }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.write('data: {"id":"chatcmpl_reason_tool","model":"gpt-test","choices":[{"delta":{"reasoning_content":"private "}}]}\n\n');
+            res.write('data: {"id":"chatcmpl_reason_tool","model":"gpt-test","choices":[{"delta":{"reasoning_content":"thought"}}]}\n\n');
+            res.write('data: {"id":"chatcmpl_reason_tool","model":"gpt-test","choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_lookup","type":"function","function":{"name":"lookup","arguments":"{\\\"q\\\":"}}]}}]}\n\n');
+            res.write('data: {"id":"chatcmpl_reason_tool","model":"gpt-test","choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\\\"codexmate\\\"}"}}]},"finish_reason":"tool_calls"}]}\n\n');
+            res.end('data: [DONE]\n\n');
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    let proxyRuntime = null;
+
+    try {
+        proxyRuntime = await startTestProxy(upstreamPort);
+        const proxyPort = proxyRuntime.server.address().port;
+        const sse = await requestText(`http://127.0.0.1:${proxyPort}/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                model: 'gpt-test',
+                input: 'use lookup',
+                tools: [{ type: 'function', name: 'lookup', parameters: { type: 'object' } }],
+                stream: true
+            }
+        });
+
+        assert.equal(sse.status, 200);
+        assert.match(sse.headers['content-type'], /text\/event-stream/i);
+        assert.match(sse.text, /event: response\.reasoning_summary_text\.delta/);
+        assert.match(sse.text, /"delta":"private "/);
+        assert.match(sse.text, /"delta":"thought"/);
+        assert.match(sse.text, /event: response\.reasoning_summary_text\.done/);
+        assert.match(sse.text, /"text":"private thought"/);
+        assert.match(sse.text, /event: response\.function_call_arguments\.delta/);
+        assert.match(sse.text, /"delta":"\{\\"q\\":\\"codexmate\\"\}"/);
+        assert.match(sse.text, /event: response\.function_call_arguments\.done/);
+        assert.match(sse.text, /"arguments":"\{\\"q\\":\\"codexmate\\"\}"/);
+        assert.match(sse.text, /"type":"reasoning"/);
+        assert.match(sse.text, /"type":"function_call"/);
+        assert.match(sse.text, /event: response\.completed/);
+        assert.match(sse.text, /data: \[DONE\]/);
+    } finally {
+        if (proxyRuntime) {
+            await closeServer(proxyRuntime.server, proxyRuntime.connections);
+        }
+        await closeServer(upstream);
+    }
+});

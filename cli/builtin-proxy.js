@@ -940,7 +940,6 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             'n',
             'modalities',
             'audio',
-            'reasoning',
             'reasoning_effort',
             'service_tier'
         ];
@@ -964,16 +963,33 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         if (isRecord(source.text) && asTrimmedString(source.text.verbosity)) {
             chatBody.verbosity = asTrimmedString(source.text.verbosity);
         }
+        if (isRecord(source.reasoning) && asTrimmedString(source.reasoning.effort)) {
+            chatBody.reasoning_effort = asTrimmedString(source.reasoning.effort);
+        }
 
         pruneInvalidChatToolChoice(chatBody);
 
-        if (Object.prototype.hasOwnProperty.call(source, 'max_tokens')) {
+        if (Object.prototype.hasOwnProperty.call(source, 'max_completion_tokens')) {
+            chatBody.max_tokens = Math.max(128, Number(source.max_completion_tokens) || 0);
+        } else if (Object.prototype.hasOwnProperty.call(source, 'max_tokens')) {
             chatBody.max_tokens = source.max_tokens;
         } else if (source.max_output_tokens != null) {
             chatBody.max_tokens = source.max_output_tokens;
         }
 
         return chatBody;
+    }
+
+    function normalizeResponsesPayloadForUpstream(payload, stream) {
+        const source = isRecord(payload) ? payload : {};
+        const normalized = { ...source, stream };
+        if (isRecord(source.reasoning)) {
+            const include = Array.isArray(source.include) ? source.include.filter((item) => typeof item === 'string') : [];
+            if (!include.includes('reasoning.encrypted_content')) {
+                normalized.include = [...include, 'reasoning.encrypted_content'];
+            }
+        }
+        return normalized;
     }
 
     function ensureResponseMetadata(payload) {
@@ -999,6 +1015,112 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             return;
         }
         res.write(`data: ${JSON.stringify(dataObj)}\n\n`);
+    }
+
+    function buildResponsesSseItem(item, fallbackId) {
+        const source = isRecord(item) ? item : {};
+        const itemId = asTrimmedString(source.id || source.call_id) || fallbackId || `item_${crypto.randomBytes(8).toString('hex')}`;
+        if (source.type === 'message') {
+            return {
+                ...source,
+                id: itemId,
+                role: source.role || 'assistant',
+                content: Array.isArray(source.content)
+                    ? source.content.map((part) => {
+                        if (!isRecord(part)) return part;
+                        if (part.type !== 'output_text') return cloneJsonValue(part);
+                        return {
+                            ...part,
+                            text: typeof part.text === 'string' ? part.text : '',
+                            annotations: Array.isArray(part.annotations) ? part.annotations : [],
+                            logprobs: Array.isArray(part.logprobs) ? part.logprobs : []
+                        };
+                    })
+                    : []
+            };
+        }
+        if (source.type === 'reasoning') {
+            return {
+                ...source,
+                id: itemId,
+                summary: Array.isArray(source.summary) ? source.summary : []
+            };
+        }
+        if (source.type === 'function_call') {
+            return {
+                ...source,
+                id: itemId,
+                call_id: asTrimmedString(source.call_id) || itemId,
+                name: asTrimmedString(source.name),
+                arguments: typeof source.arguments === 'string' ? source.arguments : ''
+            };
+        }
+        if (source.type === 'custom_tool_call') {
+            return {
+                ...source,
+                id: itemId,
+                call_id: asTrimmedString(source.call_id) || itemId,
+                name: asTrimmedString(source.name),
+                input: typeof source.input === 'string' ? source.input : ''
+            };
+        }
+        return { ...source, id: itemId };
+    }
+
+    function emitResponsesTextPartAdded(res, itemId, outputIndex, contentIndex, nextSeq) {
+        writeSse(res, 'response.content_part.added', {
+            type: 'response.content_part.added',
+            item_id: itemId,
+            output_index: outputIndex,
+            content_index: contentIndex,
+            part: { type: 'output_text', text: '', annotations: [], logprobs: [] },
+            sequence_number: nextSeq()
+        });
+    }
+
+    function emitResponsesTextPartDone(res, itemId, outputIndex, contentIndex, text, nextSeq) {
+        writeSse(res, 'response.content_part.done', {
+            type: 'response.content_part.done',
+            item_id: itemId,
+            output_index: outputIndex,
+            content_index: contentIndex,
+            part: { type: 'output_text', text: typeof text === 'string' ? text : '', annotations: [], logprobs: [] },
+            sequence_number: nextSeq()
+        });
+    }
+
+    function emitResponsesToolArgumentEvents(res, item, outputIndex, nextSeq) {
+        const eventType = item.type === 'custom_tool_call'
+            ? 'response.custom_tool_call_input.delta'
+            : 'response.function_call_arguments.delta';
+        const doneType = item.type === 'custom_tool_call'
+            ? ''
+            : 'response.function_call_arguments.done';
+        const value = item.type === 'custom_tool_call'
+            ? (typeof item.input === 'string' ? item.input : '')
+            : (typeof item.arguments === 'string' ? item.arguments : '');
+        if (value) {
+            writeSse(res, eventType, {
+                type: eventType,
+                item_id: item.id,
+                output_index: outputIndex,
+                call_id: item.call_id,
+                name: item.name,
+                delta: value,
+                sequence_number: nextSeq()
+            });
+        }
+        if (doneType) {
+            writeSse(res, doneType, {
+                type: doneType,
+                item_id: item.id,
+                output_index: outputIndex,
+                call_id: item.call_id,
+                name: item.name,
+                arguments: value,
+                sequence_number: nextSeq()
+            });
+        }
     }
 
     function sendResponsesSse(res, responsePayload) {
@@ -1027,12 +1149,14 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             const itemType = typeof item.type === 'string' ? item.type : '';
             const itemId = typeof item.id === 'string' && item.id.trim()
                 ? item.id.trim()
-                : `item_${crypto.randomBytes(8).toString('hex')}`;
+                : (typeof item.call_id === 'string' && item.call_id.trim() ? item.call_id.trim() : `item_${crypto.randomBytes(8).toString('hex')}`);
+            const wireItem = buildResponsesSseItem(item, itemId);
 
             writeSse(res, 'response.output_item.added', {
                 type: 'response.output_item.added',
                 output_index: outputIndex,
-                item: { ...item, id: itemId }
+                item: wireItem,
+                sequence_number: nextSeq()
             });
 
             if (itemType === 'message') {
@@ -1042,6 +1166,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     if (!block || typeof block !== 'object') continue;
                     if (block.type !== 'output_text') continue;
                     const text = typeof block.text === 'string' ? block.text : '';
+                    emitResponsesTextPartAdded(res, itemId, outputIndex, contentIndex, nextSeq);
                     if (text) {
                         writeSse(res, 'response.output_text.delta', {
                             type: 'response.output_text.delta',
@@ -1060,13 +1185,40 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         text,
                         sequence_number: nextSeq()
                     });
+                    emitResponsesTextPartDone(res, itemId, outputIndex, contentIndex, text, nextSeq);
+                }
+            } else if (itemType === 'function_call' || itemType === 'custom_tool_call') {
+                emitResponsesToolArgumentEvents(res, wireItem, outputIndex, nextSeq);
+            } else if (itemType === 'reasoning') {
+                const summary = Array.isArray(item.summary) ? item.summary : [];
+                for (let summaryIndex = 0; summaryIndex < summary.length; summaryIndex += 1) {
+                    const block = summary[summaryIndex];
+                    const text = block && typeof block.text === 'string' ? block.text : '';
+                    if (text) {
+                        writeSse(res, 'response.reasoning_summary_text.delta', {
+                            type: 'response.reasoning_summary_text.delta',
+                            item_id: itemId,
+                            output_index: outputIndex,
+                            summary_index: summaryIndex,
+                            delta: text,
+                            sequence_number: nextSeq()
+                        });
+                    }
+                    writeSse(res, 'response.reasoning_summary_text.done', {
+                        type: 'response.reasoning_summary_text.done',
+                        item_id: itemId,
+                        output_index: outputIndex,
+                        summary_index: summaryIndex,
+                        text,
+                        sequence_number: nextSeq()
+                    });
                 }
             }
 
             writeSse(res, 'response.output_item.done', {
                 type: 'response.output_item.done',
                 output_index: outputIndex,
-                item: { ...item, id: itemId },
+                item: wireItem,
                 sequence_number: nextSeq()
             });
         }
@@ -1105,6 +1257,40 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             const delta = choice && choice.delta && typeof choice.delta === 'object' ? choice.delta : null;
             if (!delta) continue;
 
+            const reasoningSegment = typeof delta.reasoning_content === 'string'
+                ? delta.reasoning_content
+                : (typeof delta.reasoning === 'string'
+                    ? delta.reasoning
+                    : (typeof delta.reasoning_text === 'string' ? delta.reasoning_text : ''));
+            if (reasoningSegment) {
+                if (!state.reasoningItem) {
+                    state.reasoningItem = {
+                        id: `rs_${crypto.randomBytes(8).toString('hex')}`,
+                        type: 'reasoning',
+                        summary: [{ type: 'summary_text', text: '' }]
+                    };
+                    state.output.push(state.reasoningItem);
+                    state.outputStarted = true;
+                    beginChatStreamResponsesSse(state);
+                    writeSse(state.res, 'response.output_item.added', {
+                        type: 'response.output_item.added',
+                        output_index: state.output.length - 1,
+                        item: buildResponsesSseItem(state.reasoningItem, state.reasoningItem.id),
+                        sequence_number: state.nextSeq()
+                    });
+                }
+                state.reasoningText += reasoningSegment;
+                state.reasoningItem.summary[0].text = state.reasoningText;
+                writeSse(state.res, 'response.reasoning_summary_text.delta', {
+                    type: 'response.reasoning_summary_text.delta',
+                    item_id: state.reasoningItem.id,
+                    output_index: state.output.indexOf(state.reasoningItem),
+                    summary_index: 0,
+                    delta: reasoningSegment,
+                    sequence_number: state.nextSeq()
+                });
+            }
+
             if (typeof delta.content === 'string' && delta.content) {
                 if (!state.messageItem) {
                     state.messageItem = {
@@ -1119,8 +1305,10 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                     writeSse(state.res, 'response.output_item.added', {
                         type: 'response.output_item.added',
                         output_index: state.output.length - 1,
-                        item: state.messageItem
+                        item: buildResponsesSseItem(state.messageItem, state.messageItem.id),
+                        sequence_number: state.nextSeq()
                     });
+                    emitResponsesTextPartAdded(state.res, state.messageItem.id, state.output.length - 1, 0, state.nextSeq);
                 }
                 state.messageText += delta.content;
                 state.messageItem.content[0].text = state.messageText;
@@ -1172,6 +1360,24 @@ function createBuiltinProxyRuntimeController(deps = {}) {
         state.finished = true;
         stopChatStreamHeartbeat(state);
 
+        if (state.reasoningItem) {
+            const outputIndex = state.output.indexOf(state.reasoningItem);
+            writeSse(state.res, 'response.reasoning_summary_text.done', {
+                type: 'response.reasoning_summary_text.done',
+                item_id: state.reasoningItem.id,
+                output_index: outputIndex,
+                summary_index: 0,
+                text: state.reasoningText,
+                sequence_number: state.nextSeq()
+            });
+            writeSse(state.res, 'response.output_item.done', {
+                type: 'response.output_item.done',
+                output_index: outputIndex,
+                item: buildResponsesSseItem(state.reasoningItem, state.reasoningItem.id),
+                sequence_number: state.nextSeq()
+            });
+        }
+
         if (state.messageItem) {
             const outputIndex = state.output.indexOf(state.messageItem);
             writeSse(state.res, 'response.output_text.done', {
@@ -1182,10 +1388,11 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                 text: state.messageText,
                 sequence_number: state.nextSeq()
             });
+            emitResponsesTextPartDone(state.res, state.messageItem.id, outputIndex, 0, state.messageText, state.nextSeq);
             writeSse(state.res, 'response.output_item.done', {
                 type: 'response.output_item.done',
                 output_index: outputIndex,
-                item: state.messageItem,
+                item: buildResponsesSseItem(state.messageItem, state.messageItem.id),
                 sequence_number: state.nextSeq()
             });
         }
@@ -1200,12 +1407,14 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             writeSse(state.res, 'response.output_item.added', {
                 type: 'response.output_item.added',
                 output_index: outputIndex,
-                item
+                item: buildResponsesSseItem(item, item.call_id),
+                sequence_number: state.nextSeq()
             });
+            emitResponsesToolArgumentEvents(state.res, buildResponsesSseItem(item, item.call_id), outputIndex, state.nextSeq);
             writeSse(state.res, 'response.output_item.done', {
                 type: 'response.output_item.done',
                 output_index: outputIndex,
-                item,
+                item: buildResponsesSseItem(item, item.call_id),
                 sequence_number: state.nextSeq()
             });
         }
@@ -1282,6 +1491,8 @@ function createBuiltinProxyRuntimeController(deps = {}) {
             output: [],
             messageItem: null,
             messageText: '',
+            reasoningItem: null,
+            reasoningText: '',
             toolCalls: [],
             toolTypesByName: options.toolTypesByName || {},
             finished: false,
@@ -1983,7 +2194,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                             method: 'POST',
                             headers: commonHeaders,
                             timeoutMs,
-                            body: { ...payload, stream: true },
+                            body: normalizeResponsesPayloadForUpstream(payload, true),
                             res,
                             model
                         });
@@ -2031,7 +2242,7 @@ function createBuiltinProxyRuntimeController(deps = {}) {
                         method: 'POST',
                         headers: commonHeaders,
                         timeoutMs,
-                        body: { ...payload, stream: false }
+                        body: normalizeResponsesPayloadForUpstream(payload, false)
                     });
 
                     // 优先走上游 /responses（如果支持）。若上游报错且不是“端点不支持”，则直接透传错误。

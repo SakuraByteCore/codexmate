@@ -349,8 +349,11 @@ test('openai-bridge omits upstream reasoning_content from output_text deltas', a
         body: { model: 'deepseek-v4', input: 'ping', stream: true }
     });
     assert.equal(sse.status, 200);
-    assert.doesNotMatch(sse.text, /"delta":"thinking-"/);
-    assert.doesNotMatch(sse.text, /"delta":"step"/);
+    assert.match(sse.text, /event: response\.reasoning_summary_text\.delta/);
+    assert.match(sse.text, /"delta":"thinking-"/);
+    assert.match(sse.text, /"delta":"step"/);
+    const outputTextLines = sse.text.split('\n').filter((line) => line.includes('response.output_text'));
+    assert.equal(outputTextLines.some((line) => line.includes('thinking-') || line.includes('step')), false);
     assert.match(sse.text, /"delta":"answer"/);
     assert.match(sse.text, /"text":"answer"/);
     assert.match(sse.text, /data: \[DONE\]/);
@@ -1434,4 +1437,114 @@ test('openai-bridge tells chat fallback to poll running Codex exec sessions', ()
     assert.match(converted.chat.messages[0].content, /write_stdin/);
     assert.match(converted.chat.messages[0].content, /session_id/);
     assert.match(converted.chat.messages[0].content, /Do not merely say that you are waiting/);
+});
+
+test('openai-bridge converts empty probes, empty tool output, and reasoning effort for chat fallback', () => {
+    const emptyProbe = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: [],
+        reasoning: { effort: 'high' },
+        stream: false
+    });
+
+    assert.equal(emptyProbe.error, undefined);
+    assert.deepStrictEqual(emptyProbe.chat.messages, [{ role: 'user', content: '' }]);
+    assert.equal(emptyProbe.chat.reasoning_effort, 'high');
+
+    const withEmptyToolOutput = convertResponsesRequestToChatCompletions({
+        model: 'gpt-test',
+        input: [
+            { type: 'function_call', call_id: 'call_empty', name: 'lookup', arguments: {} },
+            { type: 'function_call_output', call_id: 'call_empty', output: '' }
+        ],
+        reasoning_effort: 'medium',
+        stream: false
+    });
+
+    assert.equal(withEmptyToolOutput.error, undefined);
+    assert.equal(withEmptyToolOutput.chat.reasoning_effort, 'medium');
+    assert.deepStrictEqual(withEmptyToolOutput.chat.messages, [
+        {
+            role: 'assistant',
+            content: null,
+            tool_calls: [{
+                id: 'call_empty',
+                type: 'function',
+                function: { name: 'lookup', arguments: '{}' }
+            }]
+        },
+        { role: 'tool', tool_call_id: 'call_empty', content: '(empty)' }
+    ]);
+});
+
+test('openai-bridge marks finish_reason length as incomplete Responses payload', () => {
+    const payload = buildResponsesPayloadFromChatResult('gpt-test', '', [], {
+        choices: [{ finish_reason: 'length', message: { role: 'assistant', content: '' } }],
+        usage: { prompt_tokens: 3, completion_tokens: 7, total_tokens: 10 }
+    });
+
+    assert.equal(payload.status, 'incomplete');
+    assert.deepStrictEqual(payload.incomplete_details, { reason: 'max_output_tokens' });
+    assert.deepStrictEqual(payload.output, []);
+    assert.equal(payload.output_text, '');
+    assert.deepStrictEqual(payload.usage, { input_tokens: 3, output_tokens: 7, total_tokens: 10 });
+});
+
+test('openai-bridge adds encrypted reasoning include when proxying upstream Responses', async () => {
+    let capturedRequest = null;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/responses' && req.method === 'POST') {
+            const chunks = [];
+            req.on('data', (chunk) => chunks.push(chunk));
+            req.on('end', () => {
+                capturedRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ id: 'resp_reasoning', model: 'gpt-test', output: [] }));
+            });
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'codexmate-bridge-test-'));
+    const settingsFile = path.join(tmpDir, 'bridge.json');
+    await writeFile(settingsFile, JSON.stringify({
+        version: 1,
+        providers: {
+            test: { baseUrl: `http://127.0.0.1:${upstreamPort}/v1`, apiKey: 'sk-upstream' }
+        }
+    }), 'utf-8');
+
+    const handler = createOpenaiBridgeHttpHandler({ settingsFile, expectedToken: 'codexmate' });
+    const bridge = http.createServer((req, res) => {
+        if (!handler(req, res)) {
+            res.statusCode = 404;
+            res.end('not handled');
+        }
+    });
+    const { port: bridgePort } = await listen(bridge);
+
+    const resp = await requestText(`http://127.0.0.1:${bridgePort}/bridge/openai/test/v1/responses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer codexmate' },
+        body: {
+            model: 'gpt-test',
+            input: 'think privately',
+            reasoning: { effort: 'high' },
+            include: ['file_search_call.results'],
+            stream: false
+        }
+    });
+
+    assert.equal(resp.status, 200);
+    assert.ok(capturedRequest, 'upstream Responses request should be captured');
+    assert.equal(capturedRequest.stream, false);
+    assert.deepStrictEqual(capturedRequest.reasoning, { effort: 'high' });
+    assert.deepStrictEqual(capturedRequest.include, ['file_search_call.results', 'reasoning.encrypted_content']);
+
+    await bridge.close();
+    await upstream.close();
+    await rm(tmpDir, { recursive: true, force: true });
 });
