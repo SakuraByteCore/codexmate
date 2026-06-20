@@ -108,6 +108,9 @@
         try {
             localStorage.setItem(NAV_STATE_STORAGE_KEY, JSON.stringify(snapshot));
         } catch (_) {}
+        if (typeof vm.persistWebUiPreferences === 'function') {
+            vm.persistWebUiPreferences({ navigation: snapshot });
+        }
     };
 
     return {

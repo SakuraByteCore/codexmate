@@ -218,6 +218,20 @@ const CLAUDE_PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
 const CODEBUDDY_DIR = path.join(os.homedir(), '.codebuddy');
 const CODEBUDDY_PROJECTS_DIR = path.join(CODEBUDDY_DIR, 'projects');
 const CODEXMATE_DIR = path.join(os.homedir(), '.codexmate');
+const PROVIDER_CACHE_FILE_GROUPS = Object.freeze({
+    claude: [
+        'claude-providers.json'
+    ],
+    codex: [
+        'codex-providers.json',
+        'codex-provider-current-models.json'
+    ],
+    opencode: [
+        'opencode-providers.json',
+        'opencode-provider-current-models.json'
+    ]
+});
+const PROVIDER_CACHE_MAX_FILE_BYTES = 256 * 1024;
 const CODEXMATE_PREFERENCES_FILE = path.join(CODEXMATE_DIR, 'preferences.json');
 const CODEXMATE_OPENCODE_DIR = path.join(CODEXMATE_DIR, 'opencode');
 const CODEXMATE_OPENCODE_PROVIDER_STORE_FILE = path.join(CODEXMATE_OPENCODE_DIR, 'providers.json');
@@ -913,6 +927,102 @@ function readCodexmatePreferences() {
 function writeCodexmatePreferences(preferences) {
     ensureDir(CODEXMATE_DIR);
     writeJsonAtomic(CODEXMATE_PREFERENCES_FILE, isPlainObject(preferences) ? preferences : {});
+}
+
+function normalizeShareCommandPrefixPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'codexmate' ? 'codexmate' : 'npm start';
+}
+
+function normalizeBooleanPreference(value, defaultValue = true) {
+    if (value === true) return true;
+    if (value === false) return false;
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === '1' || normalized === 'true' || normalized === 'on' || normalized === 'yes') return true;
+    if (normalized === '0' || normalized === 'false' || normalized === 'off' || normalized === 'no') return false;
+    return defaultValue !== false;
+}
+
+function normalizeSessionTrashRetentionPreference(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric < 1) return 30;
+    return Math.min(365, Math.max(1, Math.floor(numeric)));
+}
+
+function normalizeSessionTimelineStylePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'bar' ? 'bar' : 'dots';
+}
+
+function normalizeSettingsTabPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'data' ? 'data' : 'general';
+}
+
+function normalizeMainTabPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    const allowed = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
+    return allowed.has(normalized) ? normalized : 'dashboard';
+}
+
+function normalizeConfigModePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return ['codex', 'claude', 'opencode'].includes(normalized) ? normalized : 'codex';
+}
+
+function normalizeUsageTimeRangePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === 'all' || normalized === '30d') return normalized;
+    return '7d';
+}
+
+function normalizePromptsSubTabPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'claude-project' ? 'claude-project' : 'codex';
+}
+
+function normalizeWebUiPreferences(value = {}) {
+    const source = isPlainObject(value) ? value : {};
+    const navigation = isPlainObject(source.navigation) ? source.navigation : {};
+    return {
+        shareCommandPrefix: normalizeShareCommandPrefixPreference(source.shareCommandPrefix),
+        sessionTrashEnabled: normalizeBooleanPreference(source.sessionTrashEnabled, true),
+        sessionTrashRetentionDays: normalizeSessionTrashRetentionPreference(source.sessionTrashRetentionDays),
+        sessionTimelineStyle: normalizeSessionTimelineStylePreference(source.sessionTimelineStyle),
+        configTemplateDiffConfirmEnabled: normalizeBooleanPreference(source.configTemplateDiffConfirmEnabled, true),
+        sessionsUsageTimeRange: normalizeUsageTimeRangePreference(source.sessionsUsageTimeRange),
+        promptsSubTab: normalizePromptsSubTabPreference(source.promptsSubTab),
+        projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',
+        navigation: {
+            mainTab: normalizeMainTabPreference(navigation.mainTab),
+            configMode: normalizeConfigModePreference(navigation.configMode),
+            settingsTab: normalizeSettingsTabPreference(navigation.settingsTab),
+            skillsTargetApp: navigation.skillsTargetApp === 'claude' ? 'claude' : 'codex',
+            promptTemplatesMode: navigation.promptTemplatesMode === 'manage' ? 'manage' : 'compose'
+        }
+    };
+}
+
+function readWebUiPreferences() {
+    const preferences = readCodexmatePreferences();
+    return normalizeWebUiPreferences(preferences.webUi || {});
+}
+
+function setWebUiPreferences(params = {}) {
+    const preferences = readCodexmatePreferences();
+    const current = isPlainObject(preferences.webUi) ? preferences.webUi : {};
+    const incoming = isPlainObject(params && params.preferences) ? params.preferences : {};
+    const next = normalizeWebUiPreferences({
+        ...current,
+        ...incoming,
+        navigation: {
+            ...(isPlainObject(current.navigation) ? current.navigation : {}),
+            ...(isPlainObject(incoming.navigation) ? incoming.navigation : {})
+        }
+    });
+    preferences.webUi = next;
+    writeCodexmatePreferences(preferences);
+    return { success: true, preferences: next };
 }
 
 function readToolConfigPermissions() {
@@ -2504,6 +2614,213 @@ function updateProviderInConfig(params = {}) {
     } catch (e) {
         return { error: e.message || '更新失败' };
     }
+}
+
+
+function redactProviderCacheValue(value) {
+    const secretKeyPattern = /(?:^key$|api[_-]?key|auth[_-]?token|access[_-]?token|refresh[_-]?token|id[_-]?token|token|password|passwd|secret|credential|authorization|bearer|cookie|session|private[_-]?key|client[_-]?secret|x-api-key)/i;
+    const secretQueryPattern = /(?:api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|token|password|passwd|secret|credential|authorization|client[_-]?secret|key)/i;
+    const secretValuePattern = /^(?:bearer\s+|sk-[A-Za-z0-9]|sk_[A-Za-z0-9]|gsk_|AIza|xox[baprs]-|gh[pousr]_|or-[A-Za-z0-9]|ds-[A-Za-z0-9])/i;
+    const redactString = (text) => {
+        const valueText = String(text || '');
+        if (!valueText) return '';
+        if (valueText.length <= 8) return '***';
+        return `${valueText.slice(0, 4)}…${valueText.slice(-4)}`;
+    };
+    const redactUrlString = (text) => {
+        if (typeof text !== 'string' || !/^https?:\/\//i.test(text)) return text;
+        try {
+            const parsed = new URL(text);
+            if (parsed.username) parsed.username = '***';
+            if (parsed.password) parsed.password = '***';
+            for (const key of Array.from(parsed.searchParams.keys())) {
+                if (secretQueryPattern.test(key)) parsed.searchParams.set(key, '***');
+            }
+            return parsed.toString();
+        } catch (_) {
+            return text.replace(/([?&](?:api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|token|password|passwd|secret|credential|authorization|client[_-]?secret|key)=)[^&#]*/gi, '$1***');
+        }
+    };
+    const visit = (input, key = '') => {
+        if (secretKeyPattern.test(key)) {
+            if (typeof input === 'boolean' || typeof input === 'number') return input;
+            if (input === null || input === undefined || input === '') return input === undefined ? null : input;
+            return redactString(input);
+        }
+        if (Array.isArray(input)) {
+            return input.map((item) => visit(item, key));
+        }
+        if (isPlainObject(input)) {
+            const output = {};
+            for (const [childKey, childValue] of Object.entries(input)) {
+                output[childKey] = visit(childValue, childKey);
+            }
+            return output;
+        }
+        if (typeof input === 'string') {
+            const urlRedacted = redactUrlString(input);
+            if (urlRedacted !== input) return urlRedacted;
+            if (secretValuePattern.test(input.trim())) return redactString(input.trim());
+        }
+        return input;
+    };
+    return visit(value);
+}
+
+function getProviderCacheDisplayPath(fileName) {
+    return `~/.codexmate/${fileName}`;
+}
+
+function pickProviderCacheString(source, keys) {
+    if (!isPlainObject(source)) return '';
+    for (const key of keys) {
+        const value = source[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    }
+    return '';
+}
+
+function summarizeProviderCacheEntry(name, entry = {}) {
+    const provider = isPlainObject(entry) ? entry : {};
+    const providerName = pickProviderCacheString(provider, ['name', 'id', 'provider', 'title']) || String(name || '').trim() || 'provider';
+    const baseUrl = pickProviderCacheString(provider, ['base_url', 'baseUrl', 'url', 'endpoint']);
+    const wireApi = pickProviderCacheString(provider, ['wire_api', 'wireApi', 'api', 'type']);
+    const authMethod = pickProviderCacheString(provider, ['preferred_auth_method', 'authMethod', 'auth_method', 'auth']);
+    const model = pickProviderCacheString(provider, ['model', 'default_model', 'defaultModel']);
+    return {
+        name: providerName,
+        baseUrl: baseUrl ? redactProviderCacheValue(baseUrl) : '',
+        wireApi,
+        authMethod,
+        model,
+        data: redactProviderCacheValue(provider)
+    };
+}
+
+function extractProviderCacheSummaries(data) {
+    const providers = [];
+    const seen = new Set();
+    const addProvider = (name, entry) => {
+        const summary = summarizeProviderCacheEntry(name, entry);
+        const key = `${summary.name}\u0000${summary.baseUrl}\u0000${summary.wireApi}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        providers.push(summary);
+    };
+    const visitContainer = (container) => {
+        if (!container) return;
+        if (Array.isArray(container)) {
+            for (const item of container) {
+                if (!isPlainObject(item)) continue;
+                addProvider(pickProviderCacheString(item, ['name', 'id', 'provider']) || `provider-${providers.length + 1}`, item);
+            }
+            return;
+        }
+        if (!isPlainObject(container)) return;
+        for (const [name, entry] of Object.entries(container)) {
+            if (isPlainObject(entry)) addProvider(name, entry);
+        }
+    };
+
+    if (isPlainObject(data)) {
+        visitContainer(data.providers);
+        visitContainer(data.configs);
+        visitContainer(data.providerConfigs);
+        visitContainer(data.items);
+        if (providers.length === 0 && (data.base_url || data.baseUrl || data.url || data.endpoint)) {
+            addProvider(pickProviderCacheString(data, ['name', 'id', 'provider']) || 'default', data);
+        }
+    } else if (Array.isArray(data)) {
+        visitContainer(data);
+    }
+    return providers.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+}
+
+function buildProviderCacheFileRecord(fileName) {
+    const filePath = path.join(CODEXMATE_DIR, fileName);
+    const displayPath = getProviderCacheDisplayPath(fileName);
+    const record = {
+        name: fileName,
+        path: displayPath,
+        displayPath,
+        exists: false,
+        ok: true,
+        tooLarge: false,
+        size: 0,
+        mtime: '',
+        data: null,
+        providers: [],
+        providerCount: 0,
+        error: ''
+    };
+    if (!fs.existsSync(filePath)) {
+        return record;
+    }
+    record.exists = true;
+    try {
+        const stat = fs.statSync(filePath);
+        record.size = Number(stat.size) || 0;
+        record.mtime = stat.mtime instanceof Date && !Number.isNaN(stat.mtime.getTime())
+            ? stat.mtime.toISOString()
+            : '';
+    } catch (_) {}
+    if (record.size > PROVIDER_CACHE_MAX_FILE_BYTES) {
+        record.ok = false;
+        record.tooLarge = true;
+        record.error = `缓存文件过大，已跳过 JSON 读取（${record.size} bytes > ${PROVIDER_CACHE_MAX_FILE_BYTES} bytes）`;
+        return record;
+    }
+    try {
+        const content = stripUtf8Bom(fs.readFileSync(filePath, 'utf-8'));
+        const parsed = content.trim() ? JSON.parse(content) : null;
+        record.data = redactProviderCacheValue(parsed);
+        record.providers = extractProviderCacheSummaries(parsed);
+        record.providerCount = record.providers.length;
+    } catch (e) {
+        record.ok = false;
+        record.error = e && e.message ? e.message : String(e || '读取缓存文件失败');
+    }
+    return record;
+}
+
+function listProviderCacheFileNamesForGroup(groupKey) {
+    const defaults = PROVIDER_CACHE_FILE_GROUPS[groupKey] || [];
+    const names = new Set(defaults);
+    try {
+        if (fs.existsSync(CODEXMATE_DIR)) {
+            for (const fileName of fs.readdirSync(CODEXMATE_DIR)) {
+                if (typeof fileName !== 'string' || !fileName.endsWith('.json')) continue;
+                if (groupKey === 'opencode' && /^opencode[-_]/i.test(fileName)) {
+                    names.add(fileName);
+                }
+            }
+        }
+    } catch (_) {}
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
+
+function readProviderCacheRecords() {
+    const groupLabels = {
+        claude: 'Claude',
+        codex: 'Codex',
+        opencode: 'OpenCode'
+    };
+    const groups = Object.keys(PROVIDER_CACHE_FILE_GROUPS).map((key) => {
+        const files = listProviderCacheFileNamesForGroup(key).map((fileName) => buildProviderCacheFileRecord(fileName));
+        return {
+            key,
+            label: groupLabels[key] || key,
+            files,
+            existingCount: files.filter((file) => file && file.exists).length
+        };
+    });
+    return {
+        root: '~/.codexmate',
+        maxFileBytes: PROVIDER_CACHE_MAX_FILE_BYTES,
+        generatedAt: new Date().toISOString(),
+        groups
+    };
 }
 
 function getProviderKey(params = {}) {
@@ -11695,6 +12012,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'get-tool-config-permissions':
                             result = { permissions: readToolConfigPermissions() };
                             break;
+                        case 'get-web-ui-preferences':
+                            result = { preferences: readWebUiPreferences() };
+                            break;
+                        case 'set-web-ui-preferences':
+                            result = setWebUiPreferences(params || {});
+                            break;
                         case 'set-tool-config-permission':
                             result = setToolConfigPermission(params || {});
                             break;
@@ -11838,6 +12161,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'get-provider-key':
                             result = getProviderKey(params || {});
+                            break;
+                        case 'get-provider-cache-records':
+                            result = readProviderCacheRecords();
                             break;
                         case 'delete-provider':
                             result = deleteProviderFromConfig(params || {});

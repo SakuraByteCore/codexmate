@@ -464,3 +464,192 @@
 .settings-language-select {
     max-width: 280px;
 }
+
+/* ---- Provider cache records ---- */
+.provider-cache-modal {
+    width: min(1080px, calc(100vw - 32px));
+    max-width: min(1080px, calc(100vw - 32px));
+    max-height: min(86vh, 920px);
+    display: flex;
+    flex-direction: column;
+}
+
+.provider-cache-root,
+.provider-cache-loaded-at {
+    font-family: var(--font-family-mono);
+    word-break: break-all;
+}
+
+.provider-cache-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 10px 0 12px;
+}
+
+.provider-cache-body {
+    min-height: 0;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.provider-cache-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.provider-cache-group {
+    border: 1px solid rgba(137, 111, 94, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 253, 252, 0.76);
+    padding: 12px;
+}
+
+.provider-cache-group-header,
+.provider-cache-file-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.provider-cache-group-title,
+.provider-cache-file-name,
+.provider-cache-provider-name {
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.provider-cache-group-meta,
+.provider-cache-file-meta,
+.provider-cache-file-path,
+.provider-cache-file-summary,
+.provider-cache-empty {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+}
+
+.provider-cache-file-summary {
+    margin-top: 2px;
+}
+
+.provider-cache-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.provider-cache-file {
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: 14px;
+    background: rgba(247, 240, 233, 0.44);
+    padding: 10px;
+}
+
+.provider-cache-file-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    font-family: var(--font-family-mono);
+}
+
+.provider-cache-file-path {
+    margin-top: 6px;
+    font-family: var(--font-family-mono);
+    word-break: break-all;
+}
+
+.provider-cache-provider-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.provider-cache-provider,
+.provider-cache-raw {
+    border: 1px solid rgba(137, 111, 94, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 253, 252, 0.72);
+    overflow: hidden;
+}
+
+.provider-cache-provider-summary,
+.provider-cache-raw summary {
+    cursor: pointer;
+    padding: 9px 10px;
+    list-style-position: inside;
+}
+
+.provider-cache-provider-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.provider-cache-provider-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.provider-cache-provider-badge {
+    max-width: 100%;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(200, 121, 99, 0.10);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family-mono);
+    font-size: 10px;
+    word-break: break-all;
+}
+
+.provider-cache-raw {
+    margin-top: 10px;
+}
+
+.provider-cache-json {
+    margin: 8px 0 0;
+    padding: 10px;
+    max-height: 260px;
+    overflow: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(137, 111, 94, 0.14);
+    background: rgba(43, 37, 33, 0.94);
+    color: #f7efe7;
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.provider-cache-provider .provider-cache-json,
+.provider-cache-raw .provider-cache-json {
+    margin: 0;
+    border-radius: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+}
+
+.provider-cache-json-compact {
+    max-height: 180px;
+}
+
+.provider-cache-json.error {
+    color: #ffd7d0;
+}
+
+.provider-cache-footer {
+    flex-shrink: 0;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(137, 111, 94, 0.14);
+    background: rgba(255, 253, 252, 0.92);
+}

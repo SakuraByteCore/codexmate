@@ -281,6 +281,9 @@ export function createSessionActionMethods(options = {}) {
             try {
                 localStorage.setItem('codexmateSessionTrashEnabled', enabled ? 'true' : 'false');
             } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionTrashEnabled: enabled });
+            }
         },
 
         setSessionTimelineStyle(style) {
@@ -289,12 +292,18 @@ export function createSessionActionMethods(options = {}) {
             try {
                 localStorage.setItem('codexmateSessionTimelineStyle', normalized);
             } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionTimelineStyle: normalized });
+            }
         },
 
         setConfigTemplateDiffConfirmEnabled(value) {
             const enabled = this.normalizeConfigTemplateDiffConfirmEnabled(value);
             this.configTemplateDiffConfirmEnabled = enabled;
             persistConfigTemplateDiffConfirmEnabledToStorage(enabled);
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ configTemplateDiffConfirmEnabled: enabled });
+            }
         },
 
         getShareCommandPrefixInvocation() {
@@ -308,6 +317,9 @@ export function createSessionActionMethods(options = {}) {
             try {
                 localStorage.setItem('codexmateShareCommandPrefix', normalized);
             } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ shareCommandPrefix: normalized });
+            }
         },
 
         fallbackCopyText(text) {

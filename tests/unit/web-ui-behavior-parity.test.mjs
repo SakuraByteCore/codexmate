@@ -516,7 +516,13 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'opencodeAutoCompact',
         'opencodeMaxTokens',
         'opencodeReasoningEffort',
-        'sessionTimelineStyle'
+        'sessionTimelineStyle',
+        'providerCacheError',
+        'providerCacheLoadedAt',
+        'providerCacheLoadedOnce',
+        'providerCacheLoading',
+        'providerCacheRecords',
+        'showProviderCacheModal'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -735,7 +741,26 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'validateModelId',
         'getSessionFilePath',
         'copySessionPath',
-        'canBuildStandaloneUrl'
+        'canBuildStandaloneUrl',
+        'openProviderCacheModal',
+        'closeProviderCacheModal',
+        'loadProviderCacheRecords',
+        'getProviderCacheGroups',
+        'hasProviderCacheExistingFiles',
+        'getProviderCacheExistingFiles',
+        'getProviderCacheFileKey',
+        'getProviderCacheFilePath',
+        'getProviderCacheFileSummary',
+        'formatProviderCacheFileSize',
+        'hasProviderCacheProviders',
+        'getProviderCacheFileProviders',
+        'getProviderCacheProviderMeta',
+        'getProviderCacheProviderText',
+        'getProviderCacheRecordText',
+        'buildWebUiPreferencesSnapshot',
+        'applyWebUiPreferences',
+        'loadWebUiPreferences',
+        'persistWebUiPreferences'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

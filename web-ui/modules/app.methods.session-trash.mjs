@@ -311,6 +311,9 @@ export function createSessionTrashMethods(options = {}) {
             const normalized = this.normalizeSessionTrashRetentionDays(days);
             this.sessionTrashRetentionDays = normalized;
             try { localStorage.setItem('codexmateSessionTrashRetentionDays', String(normalized)); } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionTrashRetentionDays: normalized });
+            }
         },
 
         getSessionTrashActionKey(item) {

@@ -803,6 +803,9 @@ export function createSessionBrowserMethods(options = {}) {
             const range = normalized === 'all' ? 'all' : (normalized === '30d' ? '30d' : '7d');
             this.sessionsUsageTimeRange = range;
             try { localStorage.setItem('sessionsUsageTimeRange', range); } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionsUsageTimeRange: range });
+            }
             if (range === 'all') {
                 this.sessionsUsageCompareEnabled = false;
             }

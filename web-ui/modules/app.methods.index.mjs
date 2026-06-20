@@ -21,6 +21,7 @@ import { createOpenclawEditingMethods } from './app.methods.openclaw-editing.mjs
 import { createOpenclawPersistMethods } from './app.methods.openclaw-persist.mjs';
 import { createOpencodeConfigMethods } from './app.methods.opencode-config.mjs';
 import { createProvidersMethods } from './app.methods.providers.mjs';
+import { createProviderCacheMethods } from './app.methods.provider-cache.mjs';
 import { createRuntimeMethods } from './app.methods.runtime.mjs';
 import { createToolConfigPermissionMethods } from './app.methods.tool-config-permissions.mjs';
 import { createTaskOrchestrationMethods } from './app.methods.task-orchestration.mjs';
@@ -33,6 +34,7 @@ import { createSkillsMethods } from './skills.methods.mjs';
 import { createPluginsMethods } from './plugins.methods.mjs';
 import { createI18nMethods } from './i18n.mjs';
 import { createWebhookMethods } from './app.methods.webhook.mjs';
+import { createWebUiPreferencesMethods } from './app.methods.web-ui-preferences.mjs';
 import {
     CONFIG_MODE_SET,
     getProviderConfigModeMeta
@@ -83,6 +85,8 @@ export function createAppMethods() {
         ...createPluginsMethods(),
         ...createAgentsMethods({ api, apiWithMeta }),
         ...createProvidersMethods({ api }),
+        ...createProviderCacheMethods({ api }),
+        ...createWebUiPreferencesMethods({ api }),
         ...createClaudeConfigMethods({ api }),
         ...createToolConfigPermissionMethods({ api }),
         ...createOpenclawCoreMethods(),
