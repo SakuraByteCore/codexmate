@@ -387,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 providerCacheSyncing: false,
                 providerCacheSyncMessage: '',
                 providerCacheError: '',
+                providerCacheRequestSeq: 0,
                 settingsTab: 'general',
                 toolConfigPermissions: (function() {
                     try {
@@ -716,6 +717,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     void this.refreshClaudeSelectionFromSettings({ silent: true });
                     void this.syncDefaultOpenclawConfigEntry({ silent: true });
+                    if (typeof this.loadProviderCacheRecords === 'function') {
+                        void this.loadProviderCacheRecords({ background: true });
+                    }
                 };
                 if (typeof requestAnimationFrame === 'function') {
                     this._initialLoadRafId = requestAnimationFrame(() => {

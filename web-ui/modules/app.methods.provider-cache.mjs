@@ -29,12 +29,17 @@ export function createProviderCacheMethods(options = {}) {
             await this.openProviderCacheModal({ forceRefresh: false });
         },
 
-        async loadProviderCacheRecords() {
-            if (this.providerCacheLoading) return;
+        async loadProviderCacheRecords(options = {}) {
+            const forceRefresh = options && options.forceRefresh === true;
+            if (this.providerCacheLoading && !forceRefresh) return;
+            const requestSeq = (Number(this.providerCacheRequestSeq) || 0) + 1;
+            this.providerCacheRequestSeq = requestSeq;
+            const isLatestRequest = () => requestSeq === Number(this.providerCacheRequestSeq || 0);
             this.providerCacheLoading = true;
             this.providerCacheError = '';
             try {
                 const res = await api('get-provider-cache-records');
+                if (!isLatestRequest()) return;
                 if (res && res.error) {
                     this.providerCacheError = res.error;
                     return;
@@ -43,9 +48,12 @@ export function createProviderCacheMethods(options = {}) {
                 this.providerCacheLoadedOnce = true;
                 this.providerCacheLoadedAt = this.providerCacheRecords.generatedAt || new Date().toISOString();
             } catch (e) {
+                if (!isLatestRequest()) return;
                 this.providerCacheError = e && e.message ? e.message : this.t('modal.providerCache.loadFailed');
             } finally {
-                this.providerCacheLoading = false;
+                if (isLatestRequest()) {
+                    this.providerCacheLoading = false;
+                }
             }
         },
 
@@ -69,7 +77,7 @@ export function createProviderCacheMethods(options = {}) {
                     this.providerCacheLoadedOnce = true;
                     this.providerCacheLoadedAt = this.providerCacheRecords.generatedAt || new Date().toISOString();
                 }
-                await this.loadProviderCacheRecords();
+                await this.loadProviderCacheRecords({ forceRefresh: true });
             } catch (e) {
                 this.providerCacheError = e && e.message ? e.message : this.t('modal.providerCache.syncFailed');
             } finally {

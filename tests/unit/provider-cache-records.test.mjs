@@ -229,6 +229,42 @@ test('provider cache sync method localizes backend error keys', async () => {
     assert.strictEqual(context.providerCacheSyncing, false);
 });
 
+test('provider cache force refresh ignores stale in-flight loads', async () => {
+    let resolveFirst;
+    const firstLoad = new Promise((resolve) => {
+        resolveFirst = resolve;
+    });
+    const calls = [];
+    const methods = createProviderCacheMethods({
+        api: async (action) => {
+            calls.push(action);
+            if (calls.length === 1) return firstLoad;
+            return { root: '~/.codexmate', generatedAt: 'fresh-time', groups: [{ key: 'codex', files: [] }] };
+        }
+    });
+    const context = {
+        providerCacheRecords: {},
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheRequestSeq: 0,
+        providerCacheError: '',
+        t(key) { return key; },
+        ...methods
+    };
+
+    const stalePromise = context.loadProviderCacheRecords();
+    const freshPromise = context.loadProviderCacheRecords({ forceRefresh: true });
+    await freshPromise;
+    resolveFirst({ root: '~/.codexmate', generatedAt: 'stale-time', groups: [] });
+    await stalePromise;
+
+    assert.deepStrictEqual(calls, ['get-provider-cache-records', 'get-provider-cache-records']);
+    assert.strictEqual(context.providerCacheLoadedAt, 'fresh-time');
+    assert.strictEqual(context.providerCacheLoading, false);
+    assert.deepStrictEqual(context.providerCacheRecords.groups, [{ key: 'codex', files: [] }]);
+});
+
 test('provider cache load fallback uses localized error text', async () => {
     const methods = createProviderCacheMethods({
         api: async () => {
@@ -272,6 +308,8 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
     assert.match(html, /syncProviderCacheRecords/);
     assert.match(html, /modal\.providerCache\.sync/);
     assert.match(readProjectFile('web-ui/partials/index/panel-settings.html'), /settings\.providerCache\.sync/);
+    assert.match(readProjectFile('web-ui/app.js'), /providerCacheRequestSeq: 0/);
+    assert.match(readProjectFile('web-ui/app.js'), /loadProviderCacheRecords\(\{ background: true \}\)/);
     assert.doesNotMatch(html, /v-else-if="providerCacheSyncMessage"/);
     assert.match(html, /\(provider, providerIndex\) in getProviderCacheFileProviders\(file\)/);
     assert.match(html, /getProviderCacheFileKey\(file\) \+ ':' \+ providerIndex/);
