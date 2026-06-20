@@ -522,6 +522,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providerCacheLoadedOnce',
         'providerCacheLoading',
         'providerCacheRecords',
+        'providerCacheSyncing',
+        'providerCacheSyncMessage',
         'showProviderCacheModal'
     );
     if (parityAgainstHead) {
@@ -636,6 +638,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeCandidateProviders',
         'claudeLocalBridgeConfigured',
         'syncClaudeBridgeProviders',
+        'syncProviderCacheRecords',
         'toggleAddClaudeConfigKey',
         'toggleAddProviderKey',
         'toggleEditClaudeConfigKey',

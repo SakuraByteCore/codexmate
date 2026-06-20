@@ -146,13 +146,19 @@
                     <button type="button" class="btn-tool btn-tool-compact" @click="loadProviderCacheRecords" :disabled="providerCacheLoading">
                         {{ providerCacheLoading ? t('modal.providerCache.refreshing') : t('modal.providerCache.refresh') }}
                     </button>
+                    <button type="button" class="btn-tool btn-tool-compact" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
+                        {{ providerCacheSyncing ? t('modal.providerCache.syncing') : t('modal.providerCache.sync') }}
+                    </button>
                     <span v-if="providerCacheLoadedAt" class="provider-cache-loaded-at">{{ t('modal.providerCache.loadedAt') }}: {{ providerCacheLoadedAt }}</span>
                 </div>
 
                 <div v-if="providerCacheError" class="state-message error provider-cache-error">
                     {{ providerCacheError }}
                 </div>
-                <div v-else-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
+                <div v-if="providerCacheSyncMessage" class="state-message provider-cache-sync-message">
+                    {{ providerCacheSyncMessage }}
+                </div>
+                <div v-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
                     {{ t('modal.providerCache.loading') }}
                 </div>
                 <div v-else class="provider-cache-body">

@@ -14,6 +14,8 @@ function createContext(records = {}) {
         providerCacheLoadedOnce: false,
         providerCacheLoadedAt: '',
         providerCacheLoading: false,
+        providerCacheSyncing: false,
+        providerCacheSyncMessage: '',
         providerCacheError: '',
         showProviderCacheModal: false,
         t(key, params = {}) {
@@ -21,6 +23,8 @@ function createContext(records = {}) {
             if (key === 'modal.providerCache.tooLarge') return 'too large';
             if (key === 'modal.providerCache.parseFailed') return 'parse failed';
             if (key === 'modal.providerCache.rawJsonOnly') return 'raw only';
+            if (key === 'modal.providerCache.syncSucceeded') return `synced ${params.count}/${params.fileCount}`;
+            if (key === 'modal.providerCache.syncFailed') return 'sync failed';
             return key;
         },
         ...methods
@@ -66,6 +70,77 @@ test('provider cache methods expose provider summaries before raw JSON', () => {
     assert.match(context.getProviderCacheProviderText(file.providers[0]), /Bear…1234/);
 });
 
+test('provider cache sync method calls sync API then refreshes redacted records', async () => {
+    const calls = [];
+    const syncedRecords = { root: '~/.codexmate', generatedAt: 'sync-time', groups: [] };
+    const refreshedRecords = { root: '~/.codexmate', generatedAt: 'refresh-time', groups: [] };
+    const methods = createProviderCacheMethods({
+        api: async (action) => {
+            calls.push(action);
+            if (action === 'sync-provider-cache-records') {
+                return { success: true, summary: { providerCount: 2, fileCount: 5 }, records: syncedRecords };
+            }
+            if (action === 'get-provider-cache-records') {
+                return refreshedRecords;
+            }
+            throw new Error(`unexpected action: ${action}`);
+        }
+    });
+    const context = {
+        providerCacheRecords: {},
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheSyncing: false,
+        providerCacheSyncMessage: '',
+        providerCacheError: '',
+        showProviderCacheModal: false,
+        t(key, params = {}) {
+            if (key === 'modal.providerCache.syncSucceeded') return `synced ${params.count}/${params.fileCount}`;
+            return key;
+        },
+        ...methods
+    };
+
+    await context.syncProviderCacheRecords();
+
+    assert.deepStrictEqual(calls, ['sync-provider-cache-records', 'get-provider-cache-records']);
+    assert.strictEqual(context.providerCacheSyncing, false);
+    assert.strictEqual(context.providerCacheSyncMessage, 'synced 2/5');
+    assert.strictEqual(context.providerCacheError, '');
+    assert.strictEqual(context.providerCacheLoadedOnce, true);
+    assert.strictEqual(context.providerCacheLoadedAt, 'refresh-time');
+    assert.deepStrictEqual(context.providerCacheRecords, refreshedRecords);
+});
+
+test('provider cache sync method uses localized fallback on thrown errors', async () => {
+    const methods = createProviderCacheMethods({
+        api: async () => {
+            throw new Error('');
+        }
+    });
+    const context = {
+        providerCacheRecords: {},
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheSyncing: false,
+        providerCacheSyncMessage: '',
+        providerCacheError: '',
+        showProviderCacheModal: false,
+        t(key) {
+            assert.strictEqual(key, 'modal.providerCache.syncFailed');
+            return 'localized sync failed';
+        },
+        ...methods
+    };
+
+    await context.syncProviderCacheRecords();
+
+    assert.strictEqual(context.providerCacheError, 'localized sync failed');
+    assert.strictEqual(context.providerCacheSyncing, false);
+});
+
 test('provider cache load fallback uses localized error text', async () => {
     const methods = createProviderCacheMethods({
         api: async () => {
@@ -97,6 +172,10 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
     const css = readBundledWebUiCss();
 
     assert.match(html, /provider-cache-provider-list/);
+    assert.match(html, /syncProviderCacheRecords/);
+    assert.match(html, /modal\.providerCache\.sync/);
+    assert.match(readProjectFile('web-ui/partials/index/panel-settings.html'), /settings\.providerCache\.sync/);
+    assert.doesNotMatch(html, /v-else-if="providerCacheSyncMessage"/);
     assert.match(html, /\(provider, providerIndex\) in getProviderCacheFileProviders\(file\)/);
     assert.match(html, /getProviderCacheFileKey\(file\) \+ ':' \+ providerIndex/);
     assert.match(html, /getProviderCacheProviderMeta\(provider\)/);
@@ -122,6 +201,12 @@ test('provider cache backend avoids absolute path response and readConfig restor
     assert.match(cli, /const PROVIDER_CACHE_MAX_FILE_BYTES = 256 \* 1024/);
     assert.match(cli, /function getProviderCacheDisplayPath\(fileName\)/);
     assert.match(cli, /function sanitizeProviderCacheErrorMessage\(message, fileName/);
+    assert.match(cli, /function syncProviderCacheRecords\(\)/);
+    assert.match(cli, /case 'sync-provider-cache-records'/);
+    assert.match(cli, /mergeProviderCacheFile\('codex-providers\.json'/);
+    assert.match(cli, /mergeProviderCacheFile\('claude-providers\.json'/);
+    assert.match(cli, /mergeProviderCacheFile\('opencode-providers\.json'/);
+    assert.match(cli, /fs\.chmodSync\(filePath, 0o600\)/);
     assert.match(cli, /stat\.isFile\(\)/);
     assert.match(cli, /sanitizeProviderCacheErrorMessage\(e && e\.message/);
     assert.match(cli, /root: '~\/\.codexmate'/);
@@ -129,6 +214,7 @@ test('provider cache backend avoids absolute path response and readConfig restor
     assert.match(cli, /secretQueryPattern/);
     assert.match(cli, /extractProviderCacheSummaries/);
     assert.match(cli, /const authMethod = pickProviderCacheString\(provider, \['preferred_auth_method', 'authMethod', 'auth_method'\]\)/);
+    assert.match(cli, /authMethod: authMethod \? redactProviderCacheValue\(authMethod\) : ''/);
     assert.doesNotMatch(cli, /'authMethod', 'auth_method', 'auth'/);
     assert.match(cli, /const redactSecretString = \(text\) => String\(text \|\| ''\) \? '\*\*\*' : ''/);
     assert.doesNotMatch(cli, /valueText\.slice\(0, 4\).*valueText\.slice\(-4\)/s);

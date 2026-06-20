@@ -33,6 +33,34 @@ export function createProviderCacheMethods(options = {}) {
             }
         },
 
+        async syncProviderCacheRecords() {
+            if (this.providerCacheSyncing) return;
+            this.providerCacheSyncing = true;
+            this.providerCacheError = '';
+            this.providerCacheSyncMessage = '';
+            try {
+                const res = await api('sync-provider-cache-records');
+                if (res && res.error) {
+                    this.providerCacheError = res.error;
+                    return;
+                }
+                const summary = res && res.summary && typeof res.summary === 'object' ? res.summary : {};
+                const providerCount = Number(summary.providerCount || 0);
+                const fileCount = Number(summary.fileCount || 0);
+                this.providerCacheSyncMessage = this.t('modal.providerCache.syncSucceeded', { count: providerCount, fileCount });
+                if (res && res.records && typeof res.records === 'object') {
+                    this.providerCacheRecords = res.records;
+                    this.providerCacheLoadedOnce = true;
+                    this.providerCacheLoadedAt = this.providerCacheRecords.generatedAt || new Date().toISOString();
+                }
+                await this.loadProviderCacheRecords();
+            } catch (e) {
+                this.providerCacheError = e && e.message ? e.message : this.t('modal.providerCache.syncFailed');
+            } finally {
+                this.providerCacheSyncing = false;
+            }
+        },
+
         getProviderCacheGroups() {
             const records = this.providerCacheRecords && typeof this.providerCacheRecords === 'object'
                 ? this.providerCacheRecords

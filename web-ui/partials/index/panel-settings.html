@@ -172,11 +172,18 @@
                                         <div class="settings-card-title">{{ t('settings.providerCache.title') }}</div>
                                         <p class="settings-card-desc">{{ t('settings.providerCache.meta') }}</p>
                                         <p class="settings-card-hint">{{ t('settings.providerCache.hint') }}</p>
+                                        <p v-if="providerCacheSyncMessage" class="settings-card-hint provider-cache-sync-message">{{ providerCacheSyncMessage }}</p>
+                                        <p v-if="providerCacheError" class="settings-card-hint form-error">{{ providerCacheError }}</p>
                                     </div>
                                 </div>
-                                <button class="settings-card-action" @click="openProviderCacheModal({ forceRefresh: true })" :disabled="providerCacheLoading">
-                                    {{ providerCacheLoading ? t('settings.providerCache.loading') : t('settings.providerCache.open') }}
-                                </button>
+                                <div class="settings-card-actions">
+                                    <button class="settings-card-action" @click="openProviderCacheModal({ forceRefresh: true })" :disabled="providerCacheLoading || providerCacheSyncing">
+                                        {{ providerCacheLoading ? t('settings.providerCache.loading') : t('settings.providerCache.open') }}
+                                    </button>
+                                    <button class="settings-card-action" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
+                                        {{ providerCacheSyncing ? t('settings.providerCache.syncing') : t('settings.providerCache.sync') }}
+                                    </button>
+                                </div>
                             </section>
 
                             <section class="settings-card" :aria-label="t('settings.trashConfig.title')">

@@ -2696,7 +2696,7 @@ function summarizeProviderCacheEntry(name, entry = {}) {
         name: providerName,
         baseUrl: baseUrl ? redactProviderCacheValue(baseUrl) : '',
         wireApi,
-        authMethod,
+        authMethod: authMethod ? redactProviderCacheValue(authMethod) : '',
         model,
         data: redactProviderCacheValue(provider)
     };
@@ -2833,6 +2833,166 @@ function readProviderCacheRecords() {
         maxFileBytes: PROVIDER_CACHE_MAX_FILE_BYTES,
         generatedAt: new Date().toISOString(),
         groups
+    };
+}
+
+function readProviderCacheJsonObject(fileName) {
+    const filePath = path.join(CODEXMATE_DIR, fileName);
+    try {
+        if (!fs.existsSync(filePath)) return {};
+        const stat = fs.statSync(filePath);
+        if (!stat.isFile()) return {};
+        const parsed = JSON.parse(stripUtf8Bom(fs.readFileSync(filePath, 'utf-8')) || '{}');
+        return isPlainObject(parsed) ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function writeProviderCacheJsonObject(fileName, data) {
+    ensureDir(CODEXMATE_DIR);
+    const filePath = path.join(CODEXMATE_DIR, fileName);
+    writeJsonAtomic(filePath, isPlainObject(data) ? data : {});
+    try {
+        fs.chmodSync(filePath, 0o600);
+    } catch (_) {}
+    return getProviderCacheDisplayPath(fileName);
+}
+
+function normalizeProviderCacheProviderMap(rawProviders) {
+    const providers = {};
+    if (Array.isArray(rawProviders)) {
+        for (const item of rawProviders) {
+            if (!isPlainObject(item)) continue;
+            const name = pickProviderCacheString(item, ['name', 'id', 'provider']);
+            if (name) providers[name] = item;
+        }
+        return providers;
+    }
+    if (isPlainObject(rawProviders)) {
+        for (const [name, entry] of Object.entries(rawProviders)) {
+            if (isPlainObject(entry)) providers[name] = entry;
+        }
+    }
+    return providers;
+}
+
+function buildProviderCacheSyncProviders() {
+    const configResult = readConfigOrVirtualDefault();
+    if (hasConfigLoadError(configResult)) {
+        return { error: (configResult.error && configResult.error.configPublicReason) || '读取 config.toml 失败' };
+    }
+    const config = configResult.config || {};
+    const providers = isPlainObject(config.model_providers) ? config.model_providers : {};
+    const currentModels = readCurrentModels();
+    const activeProvider = typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+    const activeModel = typeof config.model === 'string' ? config.model.trim() : '';
+    const syncProviders = [];
+
+    for (const [name, provider] of Object.entries(providers)) {
+        if (!name || !isPlainObject(provider) || isBuiltinManagedProvider(name)) continue;
+        const bridgeType = typeof provider.codexmate_bridge === 'string' ? provider.codexmate_bridge.trim() : '';
+        const isOpenaiBridgeProvider = bridgeType === 'openai'
+            || (typeof provider.base_url === 'string' && provider.base_url.includes('/bridge/openai/'));
+        let baseUrl = typeof provider.base_url === 'string' ? provider.base_url.trim() : '';
+        let apiKey = typeof provider.preferred_auth_method === 'string' ? provider.preferred_auth_method : '';
+        if (isOpenaiBridgeProvider) {
+            const upstream = resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, name);
+            if (upstream && !upstream.error) {
+                baseUrl = upstream.baseUrl || baseUrl;
+                apiKey = upstream.apiKey || apiKey;
+            }
+        }
+        const wireApi = typeof provider.wire_api === 'string' && provider.wire_api.trim()
+            ? provider.wire_api.trim()
+            : 'responses';
+        const model = typeof currentModels[name] === 'string' && currentModels[name].trim()
+            ? currentModels[name].trim()
+            : (activeProvider === name ? activeModel : '');
+        syncProviders.push({
+            name,
+            baseUrl,
+            apiKey,
+            wireApi,
+            model,
+            bridge: bridgeType || (isOpenaiBridgeProvider ? 'openai' : '')
+        });
+    }
+    return { providers: syncProviders.sort((a, b) => a.name.localeCompare(b.name)) };
+}
+
+function mergeProviderCacheFile(fileName, nextProviders, buildEntry) {
+    const existing = readProviderCacheJsonObject(fileName);
+    const existingProviders = normalizeProviderCacheProviderMap(existing.providers);
+    const providers = { ...existingProviders };
+    for (const provider of nextProviders) {
+        const previous = isPlainObject(providers[provider.name]) ? providers[provider.name] : {};
+        providers[provider.name] = { ...previous, ...buildEntry(provider) };
+    }
+    const next = {
+        ...existing,
+        version: Number(existing.version) > 0 ? Number(existing.version) : 1,
+        generatedAt: new Date().toISOString(),
+        providers
+    };
+    const displayPath = writeProviderCacheJsonObject(fileName, next);
+    return { path: displayPath, providerCount: Object.keys(providers).length };
+}
+
+function mergeProviderCacheCurrentModelsFile(fileName, nextProviders) {
+    const existing = readProviderCacheJsonObject(fileName);
+    const next = { ...existing };
+    for (const provider of nextProviders) {
+        if (provider.model) next[provider.name] = provider.model;
+    }
+    const displayPath = writeProviderCacheJsonObject(fileName, next);
+    return { path: displayPath, modelCount: Object.keys(next).length };
+}
+
+function syncProviderCacheRecords() {
+    const built = buildProviderCacheSyncProviders();
+    if (built.error) return { error: built.error };
+    const providers = built.providers || [];
+    if (providers.length === 0) {
+        return { error: '没有可同步的 provider' };
+    }
+
+    const writtenFiles = [];
+    writtenFiles.push(mergeProviderCacheFile('codex-providers.json', providers, (provider) => ({
+        name: provider.name,
+        base_url: provider.baseUrl,
+        wire_api: provider.wireApi,
+        preferred_auth_method: provider.apiKey,
+        model: provider.model,
+        ...(provider.bridge ? { codexmate_bridge: provider.bridge } : {})
+    })));
+    writtenFiles.push(mergeProviderCacheCurrentModelsFile('codex-provider-current-models.json', providers));
+    writtenFiles.push(mergeProviderCacheFile('claude-providers.json', providers, (provider) => ({
+        name: provider.name,
+        baseUrl: provider.baseUrl,
+        apiKey: provider.apiKey,
+        model: provider.model,
+        targetApi: normalizeClaudeTargetApi(provider.wireApi),
+        ...(provider.bridge ? { bridge: provider.bridge } : {})
+    })));
+    writtenFiles.push(mergeProviderCacheFile('opencode-providers.json', providers, (provider) => ({
+        name: provider.name,
+        baseUrl: provider.baseUrl,
+        apiKey: provider.apiKey,
+        model: provider.model,
+        disabled: false,
+        ...(provider.bridge ? { bridge: provider.bridge } : {})
+    })));
+    writtenFiles.push(mergeProviderCacheCurrentModelsFile('opencode-provider-current-models.json', providers));
+
+    return {
+        success: true,
+        summary: {
+            providerCount: providers.length,
+            fileCount: writtenFiles.length,
+            writtenFiles
+        },
+        records: readProviderCacheRecords()
     };
 }
 
@@ -12177,6 +12337,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'get-provider-cache-records':
                             result = readProviderCacheRecords();
+                            break;
+                        case 'sync-provider-cache-records':
+                            result = syncProviderCacheRecords();
                             break;
                         case 'delete-provider':
                             result = deleteProviderFromConfig(params || {});

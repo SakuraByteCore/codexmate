@@ -383,6 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 providerCacheLoadedOnce: false,
                 providerCacheLoadedAt: '',
                 providerCacheLoading: false,
+                providerCacheSyncing: false,
+                providerCacheSyncMessage: '',
                 providerCacheError: '',
                 settingsTab: 'general',
                 toolConfigPermissions: (function() {
