@@ -1085,7 +1085,7 @@ const ja = Object.freeze({
     'settings.sharePrefix.title': '共有コマンドプレフィックス',
     'settings.sharePrefix.meta': 'Web UI の「共有コマンドをコピー」のプレフィックスに影響',
     'settings.sharePrefix.label': 'プレフィックス',
-    'settings.sharePrefix.hint': 'デフォルトはプロジェクト内の npm start を使用します。グローバル codexmate に切り替えることもできます。この設定はブラウザローカルにキャッシュされます。',
+    'settings.sharePrefix.hint': 'デフォルトはプロジェクト内の npm start を使用します。グローバル codexmate に切り替えることもできます。この設定は ~/.codexmate/preferences.json に保存されます。',
     'settings.backup.title': 'データバックアップ',
     'settings.backup.meta': 'Claude と Codex 設定のエクスポート / インポート',
     'settings.claude.title': 'Claude 設定',
@@ -1118,6 +1118,7 @@ const ja = Object.freeze({
     'modal.providerCache.parseFailed': 'JSON 解析に失敗しました',
     'modal.providerCache.rawJson': 'Raw JSON',
     'modal.providerCache.errorDetails': 'エラー詳細',
+    'modal.providerCache.loadFailed': 'キャッシュ記録の読み込みに失敗しました',
 
     'settings.trashConfig.title': 'ゴミ箱設定',
     'settings.trashConfig.meta': 'ゴミ箱の有効/無効と自動クリーンアップ日数',

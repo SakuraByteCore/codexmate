@@ -1095,7 +1095,7 @@ const zhTw = Object.freeze({
     'settings.sharePrefix.title': '分享命令前綴',
     'settings.sharePrefix.meta': '影響 Web UI 裡“複製分享命令”的前綴',
     'settings.sharePrefix.label': '前綴',
-    'settings.sharePrefix.hint': '預設走項目內 npm start，也可切到全局 codexmate。該設定會緩存到瀏覽器本地。',
+    'settings.sharePrefix.hint': '預設走項目內 npm start，也可切到全局 codexmate。該設定會寫入 ~/.codexmate/preferences.json。',
     'settings.backup.title': '資料備份',
     'settings.backup.meta': '匯出 / 匯入 Claude 與 Codex 設定',
     'settings.claude.title': 'Claude 設定',
@@ -1128,6 +1128,7 @@ const zhTw = Object.freeze({
     'modal.providerCache.parseFailed': 'JSON 解析失敗',
     'modal.providerCache.rawJson': '原始 JSON',
     'modal.providerCache.errorDetails': '錯誤詳情',
+    'modal.providerCache.loadFailed': '載入快取記錄失敗',
 
     'settings.trashConfig.title': '回收站設定',
     'settings.trashConfig.meta': '回收站開關與自動清理天數',

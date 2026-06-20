@@ -66,6 +66,32 @@ test('provider cache methods expose provider summaries before raw JSON', () => {
     assert.match(context.getProviderCacheProviderText(file.providers[0]), /Bear…1234/);
 });
 
+test('provider cache load fallback uses localized error text', async () => {
+    const methods = createProviderCacheMethods({
+        api: async () => {
+            throw new Error('');
+        }
+    });
+    const context = {
+        providerCacheRecords: {},
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheError: '',
+        showProviderCacheModal: false,
+        t(key) {
+            assert.strictEqual(key, 'modal.providerCache.loadFailed');
+            return 'localized load failed';
+        },
+        ...methods
+    };
+
+    await context.loadProviderCacheRecords();
+
+    assert.strictEqual(context.providerCacheError, 'localized load failed');
+    assert.strictEqual(context.providerCacheLoading, false);
+});
+
 test('provider cache UI template renders provider cards and collapsible raw JSON', () => {
     const html = readProjectFile('web-ui/partials/index/modals-basic.html');
     const css = readBundledWebUiCss();

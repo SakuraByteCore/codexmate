@@ -27,7 +27,7 @@ export function createProviderCacheMethods(options = {}) {
                 this.providerCacheLoadedOnce = true;
                 this.providerCacheLoadedAt = this.providerCacheRecords.generatedAt || new Date().toISOString();
             } catch (e) {
-                this.providerCacheError = e && e.message ? e.message : String(e || '加载缓存记录失败');
+                this.providerCacheError = e && e.message ? e.message : this.t('modal.providerCache.loadFailed');
             } finally {
                 this.providerCacheLoading = false;
             }

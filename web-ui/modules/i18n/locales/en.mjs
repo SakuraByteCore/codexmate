@@ -1096,7 +1096,7 @@ const en = Object.freeze({
     'settings.sharePrefix.title': 'Share command prefix',
     'settings.sharePrefix.meta': 'Used as the prefix for “Copy share command” in the Web UI',
     'settings.sharePrefix.label': 'Prefix',
-    'settings.sharePrefix.hint': 'Defaults to npm start (project-local). You can switch to global codexmate. This setting is stored in the browser.',
+    'settings.sharePrefix.hint': 'Defaults to npm start (project-local). You can switch to global codexmate. This setting is stored in ~/.codexmate/preferences.json.',
     'settings.claude.title': 'Claude config',
     'settings.claude.meta': 'Backup / import ~/.claude',
     'settings.codex.title': 'Codex config',
@@ -1127,6 +1127,10 @@ const en = Object.freeze({
     'modal.providerCache.parseFailed': 'JSON parse failed',
     'modal.providerCache.rawJson': 'Raw JSON',
     'modal.providerCache.errorDetails': 'Error details',
+    'modal.providerCache.loadFailed': 'Failed to load cache records',
+
+    'settings.trashConfig.title': 'Trash configuration',
+    'settings.trashConfig.meta': 'Trash toggle and automatic cleanup retention',
 
     'settings.deleteBehavior.title': 'Session deletion behavior',
     'settings.deleteBehavior.meta': 'Whether “Delete” moves to trash first',

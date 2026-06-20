@@ -242,7 +242,15 @@ const vi = Object.freeze({
 
 
     // Task orchestration readiness
+    // Share command prefix
+    'settings.sharePrefix.title': 'Tiền tố lệnh chia sẻ',
+    'settings.sharePrefix.meta': 'Dùng làm tiền tố cho “Sao chép lệnh chia sẻ” trong Web UI',
+    'settings.sharePrefix.label': 'Tiền tố',
+    'settings.sharePrefix.hint': 'Mặc định dùng npm start theo dự án. Bạn có thể chuyển sang codexmate toàn cục. Thiết lập này được lưu vào ~/.codexmate/preferences.json.',
+
     // Trash
+    'settings.trashConfig.title': 'Cấu hình thùng rác',
+    'settings.trashConfig.meta': 'Bật/tắt thùng rác và số ngày tự động dọn dẹp',
     'settings.trash.empty': 'Thùng rác trống',
     'settings.trash.emptyHint': 'Không có phiên đã xóa trong thời gian lưu {days} ngày.',
     'settings.trash.retentionUnit': 'ngày',
@@ -266,6 +274,7 @@ const vi = Object.freeze({
     'modal.providerCache.parseFailed': 'Phân tích JSON thất bại',
     'modal.providerCache.rawJson': 'JSON gốc',
     'modal.providerCache.errorDetails': 'Chi tiết lỗi',
+    'modal.providerCache.loadFailed': 'Không tải được bản ghi cache',
 
     'orchestration.readiness.target.label': 'Mục tiêu',
     'orchestration.readiness.target.done': 'Đã viết mục tiêu',

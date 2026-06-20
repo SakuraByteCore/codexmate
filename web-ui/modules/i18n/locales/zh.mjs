@@ -1095,7 +1095,7 @@ const zh = Object.freeze({
     'settings.sharePrefix.title': '分享命令前缀',
     'settings.sharePrefix.meta': '影响 Web UI 里“复制分享命令”的前缀',
     'settings.sharePrefix.label': '前缀',
-    'settings.sharePrefix.hint': '默认走项目内 npm start，也可切到全局 codexmate。该设置会缓存到浏览器本地。',
+    'settings.sharePrefix.hint': '默认走项目内 npm start，也可切到全局 codexmate。该设置会写入 ~/.codexmate/preferences.json。',
     'settings.backup.title': '数据备份',
     'settings.backup.meta': '导出 / 导入 Claude 与 Codex 配置',
     'settings.claude.title': 'Claude 配置',
@@ -1128,6 +1128,7 @@ const zh = Object.freeze({
     'modal.providerCache.parseFailed': 'JSON 解析失败',
     'modal.providerCache.rawJson': '原始 JSON',
     'modal.providerCache.errorDetails': '错误详情',
+    'modal.providerCache.loadFailed': '加载缓存记录失败',
 
     'settings.trashConfig.title': '回收站配置',
     'settings.trashConfig.meta': '回收站开关与自动清理天数',
