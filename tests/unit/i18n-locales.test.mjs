@@ -152,6 +152,7 @@ test('provider cache and local Web preference settings are localized in every lo
         'modal.providerCache.syncing',
         'modal.providerCache.syncSucceeded',
         'modal.providerCache.syncFailed',
+        'modal.providerCache.noSyncableProviders',
         'modal.providerCache.loading',
         'modal.providerCache.loadedAt',
         'modal.providerCache.groupMeta',

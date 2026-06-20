@@ -1156,6 +1156,7 @@ const en = Object.freeze({
     'modal.providerCache.syncing': 'Syncing...',
     'modal.providerCache.syncSucceeded': 'Synced {count} providers to {fileCount} cache files',
     'modal.providerCache.syncFailed': 'Failed to sync cache records',
+    'modal.providerCache.noSyncableProviders': 'No syncable providers found',
     'modal.providerCache.loading': 'Loading cache records...',
     'modal.providerCache.loadedAt': 'Loaded at',
     'modal.providerCache.groupMeta': '{count} cache files found',

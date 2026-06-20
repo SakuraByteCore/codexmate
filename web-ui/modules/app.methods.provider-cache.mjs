@@ -57,7 +57,7 @@ export function createProviderCacheMethods(options = {}) {
             try {
                 const res = await api('sync-provider-cache-records');
                 if (res && res.error) {
-                    this.providerCacheError = res.error;
+                    this.providerCacheError = res.errorKey ? this.t(res.errorKey) : res.error;
                     return;
                 }
                 const summary = res && res.summary && typeof res.summary === 'object' ? res.summary : {};

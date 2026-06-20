@@ -201,6 +201,34 @@ test('provider cache sync method uses localized fallback on thrown errors', asyn
     assert.strictEqual(context.providerCacheSyncing, false);
 });
 
+test('provider cache sync method localizes backend error keys', async () => {
+    const methods = createProviderCacheMethods({
+        api: async () => ({ errorKey: 'modal.providerCache.noSyncableProviders', error: 'No syncable providers' })
+    });
+    const context = {
+        providerCacheRecords: {},
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheSyncing: false,
+        providerCacheSyncMessage: '',
+        providerCacheError: '',
+        showProviderCacheModal: false,
+        showProviderCacheAnnouncementModal: false,
+        t(key) {
+            assert.strictEqual(key, 'modal.providerCache.noSyncableProviders');
+            return 'localized no providers';
+        },
+        ...methods
+    };
+
+    await context.syncProviderCacheRecords();
+
+    assert.strictEqual(context.providerCacheError, 'localized no providers');
+    assert.strictEqual(context.providerCacheSyncMessage, '');
+    assert.strictEqual(context.providerCacheSyncing, false);
+});
+
 test('provider cache load fallback uses localized error text', async () => {
     const methods = createProviderCacheMethods({
         api: async () => {
@@ -275,6 +303,8 @@ test('provider cache backend avoids absolute path response and readConfig restor
     assert.match(cli, /function getProviderCacheDisplayPath\(fileName\)/);
     assert.match(cli, /function sanitizeProviderCacheErrorMessage\(message, fileName/);
     assert.match(cli, /function syncProviderCacheRecords\(\)/);
+    assert.match(cli, /errorKey: 'modal\.providerCache\.noSyncableProviders'/);
+    assert.doesNotMatch(cli, /没有可同步的 provider/);
     assert.match(cli, /case 'sync-provider-cache-records'/);
     assert.match(cli, /mergeProviderCacheFile\('codex-providers\.json'/);
     assert.match(cli, /mergeProviderCacheFile\('claude-providers\.json'/);

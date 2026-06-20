@@ -270,6 +270,7 @@ const vi = Object.freeze({
     'modal.providerCache.syncing': 'Đang đồng bộ...',
     'modal.providerCache.syncSucceeded': 'Đã đồng bộ {count} provider vào {fileCount} tệp cache',
     'modal.providerCache.syncFailed': 'Không đồng bộ được bản ghi cache',
+    'modal.providerCache.noSyncableProviders': 'Không tìm thấy provider có thể đồng bộ',
     'modal.providerCache.loading': 'Đang tải bản ghi cache...',
     'modal.providerCache.loadedAt': 'Đã tải lúc',
     'modal.providerCache.groupMeta': 'Đã tìm thấy {count} tệp cache',

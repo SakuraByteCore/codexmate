@@ -1147,6 +1147,7 @@ const ja = Object.freeze({
     'modal.providerCache.syncing': '同期中...',
     'modal.providerCache.syncSucceeded': '{count} 個の provider を {fileCount} 個のキャッシュファイルへ同期しました',
     'modal.providerCache.syncFailed': 'キャッシュ記録の同期に失敗しました',
+    'modal.providerCache.noSyncableProviders': '同期できる provider がありません',
     'modal.providerCache.loading': 'キャッシュ記録を読み込み中...',
     'modal.providerCache.loadedAt': '読み込み時刻',
     'modal.providerCache.groupMeta': '{count} 個のキャッシュファイル',

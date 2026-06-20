@@ -1157,6 +1157,7 @@ const zh = Object.freeze({
     'modal.providerCache.syncing': '同步中...',
     'modal.providerCache.syncSucceeded': '已同步 {count} 个 provider 到 {fileCount} 个缓存文件',
     'modal.providerCache.syncFailed': '同步缓存记录失败',
+    'modal.providerCache.noSyncableProviders': '没有可同步的 provider',
     'modal.providerCache.loading': '正在加载缓存记录...',
     'modal.providerCache.loadedAt': '加载时间',
     'modal.providerCache.groupMeta': '已发现 {count} 个缓存文件',

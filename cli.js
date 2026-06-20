@@ -2954,7 +2954,7 @@ function syncProviderCacheRecords() {
     if (built.error) return { error: built.error };
     const providers = built.providers || [];
     if (providers.length === 0) {
-        return { error: '没有可同步的 provider' };
+        return { errorKey: 'modal.providerCache.noSyncableProviders', error: 'No syncable providers' };
     }
 
     const writtenFiles = [];

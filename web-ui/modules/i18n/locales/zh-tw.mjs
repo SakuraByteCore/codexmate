@@ -1157,6 +1157,7 @@ const zhTw = Object.freeze({
     'modal.providerCache.syncing': '同步中...',
     'modal.providerCache.syncSucceeded': '已同步 {count} 個 provider 到 {fileCount} 個快取文件',
     'modal.providerCache.syncFailed': '同步快取記錄失敗',
+    'modal.providerCache.noSyncableProviders': '沒有可同步的 provider',
     'modal.providerCache.loading': '正在載入快取記錄...',
     'modal.providerCache.loadedAt': '載入時間',
     'modal.providerCache.groupMeta': '已發現 {count} 個快取文件',
