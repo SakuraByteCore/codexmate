@@ -472,6 +472,7 @@
     max-height: min(86vh, 920px);
     display: flex;
     flex-direction: column;
+    font-size: 12px;
 }
 
 .provider-cache-announcement-lede {
@@ -503,7 +504,7 @@
 .project-announcement-section-meta {
     margin-top: 5px;
     color: var(--color-text-secondary);
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.5;
 }
 
@@ -532,7 +533,7 @@
 .provider-cache-announcement-copy {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.55;
 }
 
@@ -553,12 +554,12 @@
     display: block;
     margin-bottom: 6px;
     color: var(--color-text-tertiary);
-    font-size: 11px;
+    font-size: 10px;
 }
 
 .provider-cache-summary-card strong {
     color: var(--color-text-primary);
-    font-size: 20px;
+    font-size: 19px;
     line-height: 1;
 }
 
@@ -577,7 +578,7 @@
     background: rgba(247, 240, 233, 0.44);
     padding: 9px 10px;
     color: var(--color-text-secondary);
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .provider-cache-announcement-row span:last-child {
