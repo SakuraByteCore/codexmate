@@ -119,11 +119,11 @@
                     </div>
                 </div>
 
-                <div v-if="sessionsLoading" class="state-message">
+                <div v-if="sessionsLoading && sessionsList.length === 0" class="state-message">
                     {{ t('sessions.loadingList') }}
                 </div>
 
-                <div v-else-if="sessionsList.length === 0" class="session-empty">
+                <div v-else-if="!sessionsLoading && sessionsList.length === 0" class="session-empty">
                     {{ t('sessions.empty') }}
                 </div>
 
