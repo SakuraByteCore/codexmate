@@ -180,7 +180,7 @@
                                     <div class="provider-cache-file-path">{{ getProviderCacheFilePath(file) }}</div>
 
                                     <div v-if="hasProviderCacheProviders(file)" class="provider-cache-provider-list">
-                                        <details v-for="provider in getProviderCacheFileProviders(file)" :key="provider.name || getProviderCacheFileKey(file)" class="provider-cache-provider" open>
+                                        <details v-for="(provider, providerIndex) in getProviderCacheFileProviders(file)" :key="provider.name || (getProviderCacheFileKey(file) + ':' + providerIndex)" class="provider-cache-provider" open>
                                             <summary class="provider-cache-provider-summary">
                                                 <span class="provider-cache-provider-name">{{ provider.name || 'provider' }}</span>
                                                 <span class="provider-cache-provider-badges">

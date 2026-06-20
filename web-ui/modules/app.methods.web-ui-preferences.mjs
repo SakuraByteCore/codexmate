@@ -32,13 +32,21 @@ export function createWebUiPreferencesMethods(options = {}) {
         return normalized === 'claude-project' ? 'claude-project' : 'codex';
     };
 
-    const normalizeNavigationSnapshot = (vm, source = {}) => ({
-        mainTab: typeof source.mainTab === 'string' ? source.mainTab : vm.mainTab,
-        configMode: typeof source.configMode === 'string' ? source.configMode : vm.configMode,
-        settingsTab: typeof source.settingsTab === 'string' ? source.settingsTab : vm.settingsTab,
-        skillsTargetApp: source.skillsTargetApp === 'claude' ? 'claude' : 'codex',
-        promptTemplatesMode: source.promptTemplatesMode === 'manage' ? 'manage' : 'compose'
-    });
+    const normalizeNavigationSnapshot = (vm, source = {}) => {
+        const currentSkillsTargetApp = vm.skillsTargetApp === 'claude' ? 'claude' : 'codex';
+        const currentPromptTemplatesMode = vm.promptTemplatesMode === 'manage' ? 'manage' : 'compose';
+        return {
+            mainTab: typeof source.mainTab === 'string' ? source.mainTab : vm.mainTab,
+            configMode: typeof source.configMode === 'string' ? source.configMode : vm.configMode,
+            settingsTab: typeof source.settingsTab === 'string' ? source.settingsTab : vm.settingsTab,
+            skillsTargetApp: source.skillsTargetApp === 'claude' || source.skillsTargetApp === 'codex'
+                ? source.skillsTargetApp
+                : currentSkillsTargetApp,
+            promptTemplatesMode: source.promptTemplatesMode === 'manage' || source.promptTemplatesMode === 'compose'
+                ? source.promptTemplatesMode
+                : currentPromptTemplatesMode
+        };
+    };
 
     return {
         buildWebUiPreferencesSnapshot(overrides = {}) {
@@ -70,8 +78,9 @@ export function createWebUiPreferencesMethods(options = {}) {
             };
         },
 
-        applyWebUiPreferences(preferences = {}) {
+        applyWebUiPreferences(preferences = {}, options = {}) {
             const source = preferences && typeof preferences === 'object' ? preferences : {};
+            const shouldApplyNavigation = !(options && options.applyNavigation === false);
             this.__webUiPreferencesApplying = true;
             try {
                 if (typeof source.shareCommandPrefix === 'string' && typeof this.normalizeShareCommandPrefix === 'function') {
@@ -106,13 +115,19 @@ export function createWebUiPreferencesMethods(options = {}) {
                     this.projectClaudeMdPath = source.projectClaudeMdPath;
                     setLocalStorageValue('codexmate_project_claude_md_path', this.projectClaudeMdPath);
                 }
-                if (source.navigation && typeof source.navigation === 'object') {
+                if (shouldApplyNavigation && source.navigation && typeof source.navigation === 'object') {
                     const nav = source.navigation;
                     if (typeof nav.settingsTab === 'string' && typeof this.normalizeSettingsTab === 'function') {
                         this.settingsTab = this.normalizeSettingsTab(nav.settingsTab);
                     }
-                    if (typeof nav.mainTab === 'string') this.mainTab = nav.mainTab;
                     if (typeof nav.configMode === 'string') this.configMode = nav.configMode;
+                    if (typeof nav.mainTab === 'string') {
+                        if (typeof this.switchMainTab === 'function') {
+                            this.switchMainTab(nav.mainTab);
+                        } else {
+                            this.mainTab = nav.mainTab;
+                        }
+                    }
                     if (nav.skillsTargetApp === 'codex' || nav.skillsTargetApp === 'claude') this.skillsTargetApp = nav.skillsTargetApp;
                     if (nav.promptTemplatesMode === 'compose' || nav.promptTemplatesMode === 'manage') this.promptTemplatesMode = nav.promptTemplatesMode;
                     if (typeof this.saveNavState === 'function') this.saveNavState();
@@ -122,11 +137,11 @@ export function createWebUiPreferencesMethods(options = {}) {
             }
         },
 
-        async loadWebUiPreferences() {
+        async loadWebUiPreferences(options = {}) {
             try {
                 const res = await api('get-web-ui-preferences');
                 if (res && res.preferences && typeof res.preferences === 'object') {
-                    this.applyWebUiPreferences(res.preferences);
+                    this.applyWebUiPreferences(res.preferences, options && typeof options === 'object' ? options : {});
                 }
             } catch (_) {}
         },

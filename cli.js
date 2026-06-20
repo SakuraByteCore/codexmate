@@ -967,7 +967,7 @@ function normalizeMainTabPreference(value) {
 
 function normalizeConfigModePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return ['codex', 'claude', 'opencode'].includes(normalized) ? normalized : 'codex';
+    return ['codex', 'claude', 'openclaw', 'opencode'].includes(normalized) ? normalized : 'codex';
 }
 
 function normalizeUsageTimeRangePreference(value) {
@@ -2621,12 +2621,7 @@ function redactProviderCacheValue(value) {
     const secretKeyPattern = /(?:^key$|api[_-]?key|auth[_-]?token|access[_-]?token|refresh[_-]?token|id[_-]?token|token|password|passwd|secret|credential|authorization|bearer|cookie|session|private[_-]?key|client[_-]?secret|x-api-key)/i;
     const secretQueryPattern = /(?:api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|token|password|passwd|secret|credential|authorization|client[_-]?secret|key)/i;
     const secretValuePattern = /^(?:bearer\s+|sk-[A-Za-z0-9]|sk_[A-Za-z0-9]|gsk_|AIza|xox[baprs]-|gh[pousr]_|or-[A-Za-z0-9]|ds-[A-Za-z0-9])/i;
-    const redactString = (text) => {
-        const valueText = String(text || '');
-        if (!valueText) return '';
-        if (valueText.length <= 8) return '***';
-        return `${valueText.slice(0, 4)}…${valueText.slice(-4)}`;
-    };
+    const redactSecretString = (text) => String(text || '') ? '***' : '';
     const redactUrlString = (text) => {
         if (typeof text !== 'string' || !/^https?:\/\//i.test(text)) return text;
         try {
@@ -2645,7 +2640,7 @@ function redactProviderCacheValue(value) {
         if (secretKeyPattern.test(key)) {
             if (typeof input === 'boolean' || typeof input === 'number') return input;
             if (input === null || input === undefined || input === '') return input === undefined ? null : input;
-            return redactString(input);
+            return redactSecretString(input);
         }
         if (Array.isArray(input)) {
             return input.map((item) => visit(item, key));
@@ -2660,7 +2655,7 @@ function redactProviderCacheValue(value) {
         if (typeof input === 'string') {
             const urlRedacted = redactUrlString(input);
             if (urlRedacted !== input) return urlRedacted;
-            if (secretValuePattern.test(input.trim())) return redactString(input.trim());
+            if (secretValuePattern.test(input.trim())) return redactSecretString(input.trim());
         }
         return input;
     };
@@ -2669,6 +2664,15 @@ function redactProviderCacheValue(value) {
 
 function getProviderCacheDisplayPath(fileName) {
     return `~/.codexmate/${fileName}`;
+}
+
+function sanitizeProviderCacheErrorMessage(message, fileName, fallback = '读取缓存文件失败') {
+    const raw = typeof message === 'string' && message.trim() ? message : fallback;
+    const displayPath = getProviderCacheDisplayPath(fileName);
+    const absolutePath = path.join(CODEXMATE_DIR, fileName);
+    return raw
+        .split(absolutePath).join(displayPath)
+        .split(CODEXMATE_DIR).join('~/.codexmate');
 }
 
 function pickProviderCacheString(source, keys) {
@@ -2686,7 +2690,7 @@ function summarizeProviderCacheEntry(name, entry = {}) {
     const providerName = pickProviderCacheString(provider, ['name', 'id', 'provider', 'title']) || String(name || '').trim() || 'provider';
     const baseUrl = pickProviderCacheString(provider, ['base_url', 'baseUrl', 'url', 'endpoint']);
     const wireApi = pickProviderCacheString(provider, ['wire_api', 'wireApi', 'api', 'type']);
-    const authMethod = pickProviderCacheString(provider, ['preferred_auth_method', 'authMethod', 'auth_method', 'auth']);
+    const authMethod = pickProviderCacheString(provider, ['preferred_auth_method', 'authMethod', 'auth_method']);
     const model = pickProviderCacheString(provider, ['model', 'default_model', 'defaultModel']);
     return {
         name: providerName,
@@ -2760,11 +2764,20 @@ function buildProviderCacheFileRecord(fileName) {
     record.exists = true;
     try {
         const stat = fs.statSync(filePath);
+        if (!stat.isFile()) {
+            record.ok = false;
+            record.error = '缓存路径不是普通文件，已跳过读取';
+            return record;
+        }
         record.size = Number(stat.size) || 0;
         record.mtime = stat.mtime instanceof Date && !Number.isNaN(stat.mtime.getTime())
             ? stat.mtime.toISOString()
             : '';
-    } catch (_) {}
+    } catch (e) {
+        record.ok = false;
+        record.error = sanitizeProviderCacheErrorMessage(e && e.message ? e.message : String(e || '读取缓存文件状态失败'), fileName, '读取缓存文件状态失败');
+        return record;
+    }
     if (record.size > PROVIDER_CACHE_MAX_FILE_BYTES) {
         record.ok = false;
         record.tooLarge = true;
@@ -2779,7 +2792,7 @@ function buildProviderCacheFileRecord(fileName) {
         record.providerCount = record.providers.length;
     } catch (e) {
         record.ok = false;
-        record.error = e && e.message ? e.message : String(e || '读取缓存文件失败');
+        record.error = sanitizeProviderCacheErrorMessage(e && e.message ? e.message : String(e || '读取缓存文件失败'), fileName);
     }
     return record;
 }

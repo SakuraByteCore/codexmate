@@ -47,11 +47,12 @@ function createContext(apiCalls = [], storage = null) {
     const sessionActionMethods = createSessionActionMethods({ api: async () => ({}), apiBase: 'http://127.0.0.1' });
     const sessionTrashMethods = createSessionTrashMethods({ api: async () => ({}), sessionTrashListLimit: 20, sessionTrashPageSize: 20 });
     const navigationMethods = createNavigationMethods({
-        configModeSet: new Set(['codex', 'claude', 'opencode']),
+        configModeSet: new Set(['codex', 'claude', 'openclaw', 'opencode']),
         switchMainTabHelper: () => {},
         loadMoreSessionMessagesHelper: () => {}
     });
     return {
+        switchMainTabCalls: [],
         shareCommandPrefix: 'npm start',
         sessionTrashEnabled: true,
         sessionTrashRetentionDays: 30,
@@ -68,8 +69,22 @@ function createContext(apiCalls = [], storage = null) {
         ...sessionActionMethods,
         ...sessionTrashMethods,
         ...navigationMethods,
+        switchMainTab(tab) {
+            this.switchMainTabCalls.push(tab);
+            this.mainTab = tab;
+        },
         ...webPreferenceMethods
     };
+}
+
+async function waitForApiCall(apiCalls, action, timeoutMs = 1000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        const call = apiCalls.find((item) => item.action === action);
+        if (call) return call;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    return apiCalls.find((item) => item.action === action) || null;
 }
 
 test('web UI preferences load from local backend and mirror into localStorage fallback', async () => {
@@ -87,6 +102,7 @@ test('web UI preferences load from local backend and mirror into localStorage fa
     assert.strictEqual(context.promptsSubTab, 'claude-project');
     assert.strictEqual(context.projectClaudeMdPath, '/tmp/project');
     assert.strictEqual(context.mainTab, 'settings');
+    assert.deepStrictEqual(context.switchMainTabCalls, ['settings']);
     assert.strictEqual(context.settingsTab, 'data');
     assert.strictEqual(storage.getItem('codexmateShareCommandPrefix'), 'codexmate');
     assert.strictEqual(storage.getItem('codexmateSessionTrashEnabled'), 'false');
@@ -100,13 +116,43 @@ test('web UI setters persist preferences to local backend', async () => {
     const apiCalls = [];
     const context = createContext(apiCalls, createMemoryStorage());
     context.setShareCommandPrefix('codexmate');
-    await new Promise((resolve) => setTimeout(resolve, 160));
 
-    const writeCall = apiCalls.find((call) => call.action === 'set-web-ui-preferences');
+    const writeCall = await waitForApiCall(apiCalls, 'set-web-ui-preferences');
     assert.ok(writeCall, 'setter must persist web UI preferences');
     assert.strictEqual(writeCall.params.preferences.shareCommandPrefix, 'codexmate');
     assert.strictEqual(writeCall.params.preferences.sessionTrashRetentionDays, 30);
     assert.strictEqual(writeCall.params.preferences.navigation.settingsTab, 'general');
+});
+
+test('web UI preference snapshots preserve unrelated navigation sub-state', async () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+    context.skillsTargetApp = 'claude';
+    context.promptTemplatesMode = 'manage';
+    context.setShareCommandPrefix('codexmate');
+
+    const writeCall = await waitForApiCall(apiCalls, 'set-web-ui-preferences');
+    assert.ok(writeCall, 'setter must persist web UI preferences');
+    assert.strictEqual(writeCall.params.preferences.navigation.skillsTargetApp, 'claude');
+    assert.strictEqual(writeCall.params.preferences.navigation.promptTemplatesMode, 'manage');
+});
+
+test('web UI preference navigation restore can be disabled for explicit routes', () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+
+    context.applyWebUiPreferences({
+        navigation: {
+            mainTab: 'settings',
+            configMode: 'claude',
+            settingsTab: 'data'
+        }
+    }, { applyNavigation: false });
+
+    assert.strictEqual(context.mainTab, 'dashboard');
+    assert.strictEqual(context.configMode, 'codex');
+    assert.strictEqual(context.settingsTab, 'general');
+    assert.deepStrictEqual(context.switchMainTabCalls, []);
 });
 
 test('web UI preferences backend actions and startup hook are wired', () => {
@@ -118,6 +164,8 @@ test('web UI preferences backend actions and startup hook are wired', () => {
     assert.match(cli, /function normalizeWebUiPreferences/);
     assert.match(cli, /case 'get-web-ui-preferences'/);
     assert.match(cli, /case 'set-web-ui-preferences'/);
-    assert.match(app, /loadWebUiPreferences/);
+    assert.match(app, /loadWebUiPreferences\(\{ applyNavigation: applyPreferenceNavigation \}\)/);
+    assert.match(app, /url\.pathname === '\/session'/);
+    assert.match(app, /url\.searchParams\.get\('tab'\)/);
     assert.match(index, /createWebUiPreferencesMethods/);
 });

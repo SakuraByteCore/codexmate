@@ -513,7 +513,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.loadWebhookSettings();
             }
             if (typeof this.loadWebUiPreferences === 'function') {
-                void this.loadWebUiPreferences();
+                const applyPreferenceNavigation = (() => {
+                    try {
+                        const url = new URL(window.location.href);
+                        if (url.pathname === '/session') return false;
+                        return !String(url.searchParams.get('tab') || '').trim();
+                    } catch (_) {
+                        return true;
+                    }
+                })();
+                void this.loadWebUiPreferences({ applyNavigation: applyPreferenceNavigation });
             }
             if (typeof this.t === 'function') {
                 this.confirmDialogConfirmText = this.t('confirm.ok');

@@ -97,7 +97,8 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
     const css = readBundledWebUiCss();
 
     assert.match(html, /provider-cache-provider-list/);
-    assert.match(html, /getProviderCacheFileProviders\(file\)/);
+    assert.match(html, /\(provider, providerIndex\) in getProviderCacheFileProviders\(file\)/);
+    assert.match(html, /getProviderCacheFileKey\(file\) \+ ':' \+ providerIndex/);
     assert.match(html, /getProviderCacheProviderMeta\(provider\)/);
     assert.match(html, /modal\.providerCache\.rawJson/);
     assert.match(html, /provider-cache-footer/);
@@ -112,15 +113,23 @@ test('provider cache backend avoids absolute path response and readConfig restor
     const cli = readProjectFile('cli.js');
     const readConfigStart = cli.indexOf('function readConfig()');
     const readConfigEnd = cli.indexOf('function writeConfig', readConfigStart);
-    const readConfigSource = cli.slice(readConfigStart, readConfigEnd);
 
     assert.ok(readConfigStart >= 0, 'readConfig must exist');
+    assert.ok(readConfigEnd > readConfigStart, 'writeConfig must exist after readConfig');
+    const readConfigSource = cli.slice(readConfigStart, readConfigEnd);
     assert.doesNotMatch(readConfigSource, /appendMissingCachedCodexProviders/);
     assert.doesNotMatch(readConfigSource, /writeConfig\(/);
     assert.match(cli, /const PROVIDER_CACHE_MAX_FILE_BYTES = 256 \* 1024/);
     assert.match(cli, /function getProviderCacheDisplayPath\(fileName\)/);
+    assert.match(cli, /function sanitizeProviderCacheErrorMessage\(message, fileName/);
+    assert.match(cli, /stat\.isFile\(\)/);
+    assert.match(cli, /sanitizeProviderCacheErrorMessage\(e && e\.message/);
     assert.match(cli, /root: '~\/\.codexmate'/);
     assert.doesNotMatch(cli, /root: CODEXMATE_DIR/);
     assert.match(cli, /secretQueryPattern/);
     assert.match(cli, /extractProviderCacheSummaries/);
+    assert.match(cli, /const authMethod = pickProviderCacheString\(provider, \['preferred_auth_method', 'authMethod', 'auth_method'\]\)/);
+    assert.doesNotMatch(cli, /'authMethod', 'auth_method', 'auth'/);
+    assert.match(cli, /const redactSecretString = \(text\) => String\(text \|\| ''\) \? '\*\*\*' : ''/);
+    assert.doesNotMatch(cli, /valueText\.slice\(0, 4\).*valueText\.slice\(-4\)/s);
 });

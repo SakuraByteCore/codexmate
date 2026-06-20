@@ -6738,9 +6738,9 @@ return function render(_ctx, _cache) {
                                           key: 0,
                                           class: "provider-cache-provider-list"
                                         }, [
-                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheFileProviders(file), (provider) => {
+                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheFileProviders(file), (provider, providerIndex) => {
                                             return (_openBlock(), _createElementBlock("details", {
-                                              key: provider.name || _ctx.getProviderCacheFileKey(file),
+                                              key: provider.name || (_ctx.getProviderCacheFileKey(file) + ':' + providerIndex),
                                               class: "provider-cache-provider",
                                               open: ""
                                             }, [
