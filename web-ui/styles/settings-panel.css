@@ -563,6 +563,13 @@
     line-height: 1;
 }
 
+.project-announcement-status-grid .provider-cache-summary-card strong {
+    display: block;
+    font-size: 15px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
 .provider-cache-announcement-list {
     display: flex;
     flex-direction: column;
