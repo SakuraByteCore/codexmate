@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showSkillsModal: false,
                 showHealthCheckModal: false,
                 showProviderCacheModal: false,
+                showProviderCacheAnnouncementModal: false,
                 showCodexBridgePoolModal: false,
                 showClaudeBridgePoolModal: false,
                 showWebhookModal: false,

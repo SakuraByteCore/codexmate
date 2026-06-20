@@ -18,6 +18,7 @@ function createContext(records = {}) {
         providerCacheSyncMessage: '',
         providerCacheError: '',
         showProviderCacheModal: false,
+        showProviderCacheAnnouncementModal: false,
         t(key, params = {}) {
             if (key === 'modal.providerCache.providerCount') return `${params.count} providers`;
             if (key === 'modal.providerCache.tooLarge') return 'too large';
@@ -70,6 +71,63 @@ test('provider cache methods expose provider summaries before raw JSON', () => {
     assert.match(context.getProviderCacheProviderText(file.providers[0]), /Bear…1234/);
 });
 
+test('provider cache announcement modal opens from sidebar and summarizes cache records', async () => {
+    const calls = [];
+    const records = {
+        root: '~/.codexmate',
+        generatedAt: 'summary-time',
+        groups: [
+            {
+                key: 'codex',
+                label: 'Codex',
+                files: [
+                    { exists: true, providerCount: 2, providers: [{ name: 'alpha' }, { name: 'beta' }] },
+                    { exists: false, providerCount: 99, providers: [{ name: 'ignored' }] }
+                ]
+            },
+            {
+                key: 'claude',
+                label: 'Claude',
+                files: [
+                    { exists: true, providers: [{ name: 'gamma' }] }
+                ]
+            }
+        ]
+    };
+    const methods = createProviderCacheMethods({
+        api: async (action) => {
+            calls.push(action);
+            return records;
+        }
+    });
+    const context = {
+        providerCacheRecords: { root: '', generatedAt: '', groups: [] },
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheError: '',
+        showProviderCacheModal: false,
+        showProviderCacheAnnouncementModal: false,
+        t(key) { return key; },
+        ...methods
+    };
+
+    await context.openProviderCacheAnnouncementModal();
+
+    assert.deepStrictEqual(calls, ['get-provider-cache-records']);
+    assert.strictEqual(context.showProviderCacheAnnouncementModal, true);
+    assert.deepStrictEqual(context.getProviderCacheAnnouncementSummary(), {
+        groupCount: 2,
+        fileCount: 2,
+        providerCount: 3,
+        loadedAt: 'summary-time'
+    });
+    assert.deepStrictEqual(context.getProviderCacheAnnouncementGroups(), [
+        { key: 'codex', label: 'Codex', existingCount: 1, providerCount: 2 },
+        { key: 'claude', label: 'Claude', existingCount: 1, providerCount: 1 }
+    ]);
+});
+
 test('provider cache sync method calls sync API then refreshes redacted records', async () => {
     const calls = [];
     const syncedRecords = { root: '~/.codexmate', generatedAt: 'sync-time', groups: [] };
@@ -95,6 +153,7 @@ test('provider cache sync method calls sync API then refreshes redacted records'
         providerCacheSyncMessage: '',
         providerCacheError: '',
         showProviderCacheModal: false,
+        showProviderCacheAnnouncementModal: false,
         t(key, params = {}) {
             if (key === 'modal.providerCache.syncSucceeded') return `synced ${params.count}/${params.fileCount}`;
             return key;
@@ -128,6 +187,7 @@ test('provider cache sync method uses localized fallback on thrown errors', asyn
         providerCacheSyncMessage: '',
         providerCacheError: '',
         showProviderCacheModal: false,
+        showProviderCacheAnnouncementModal: false,
         t(key) {
             assert.strictEqual(key, 'modal.providerCache.syncFailed');
             return 'localized sync failed';
@@ -154,6 +214,7 @@ test('provider cache load fallback uses localized error text', async () => {
         providerCacheLoading: false,
         providerCacheError: '',
         showProviderCacheModal: false,
+        showProviderCacheAnnouncementModal: false,
         t(key) {
             assert.strictEqual(key, 'modal.providerCache.loadFailed');
             return 'localized load failed';
@@ -172,6 +233,12 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
     const css = readBundledWebUiCss();
 
     assert.match(html, /provider-cache-provider-list/);
+    assert.match(html, /showProviderCacheAnnouncementModal/);
+    assert.match(html, /announcement\.providerCache\.title/);
+    assert.match(html, /getProviderCacheAnnouncementSummary\(\)\.providerCount/);
+    assert.match(html, /openProviderCacheDetailsFromAnnouncement/);
+    assert.match(readProjectFile('web-ui/partials/index/layout-header.html'), /side-announcement-button/);
+    assert.match(readProjectFile('web-ui/partials/index/layout-header.html'), /openProviderCacheAnnouncementModal/);
     assert.match(html, /syncProviderCacheRecords/);
     assert.match(html, /modal\.providerCache\.sync/);
     assert.match(readProjectFile('web-ui/partials/index/panel-settings.html'), /settings\.providerCache\.sync/);
@@ -182,6 +249,9 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
     assert.match(html, /modal\.providerCache\.rawJson/);
     assert.match(html, /provider-cache-footer/);
 
+    assert.match(css, /\.side-announcement-button/);
+    assert.match(css, /\.provider-cache-announcement-modal/);
+    assert.match(css, /\.provider-cache-summary-grid/);
     assert.match(css, /\.provider-cache-body/);
     assert.match(css, /\.provider-cache-provider-list/);
     assert.match(css, /\.provider-cache-json-compact/);

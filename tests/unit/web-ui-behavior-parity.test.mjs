@@ -524,7 +524,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providerCacheRecords',
         'providerCacheSyncing',
         'providerCacheSyncMessage',
-        'showProviderCacheModal'
+        'showProviderCacheModal',
+        'showProviderCacheAnnouncementModal'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -747,8 +748,13 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'canBuildStandaloneUrl',
         'openProviderCacheModal',
         'closeProviderCacheModal',
+        'openProviderCacheAnnouncementModal',
+        'closeProviderCacheAnnouncementModal',
+        'openProviderCacheDetailsFromAnnouncement',
         'loadProviderCacheRecords',
         'getProviderCacheGroups',
+        'getProviderCacheAnnouncementSummary',
+        'getProviderCacheAnnouncementGroups',
         'hasProviderCacheExistingFiles',
         'getProviderCacheExistingFiles',
         'getProviderCacheFileKey',

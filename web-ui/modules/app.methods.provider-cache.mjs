@@ -13,6 +13,22 @@ export function createProviderCacheMethods(options = {}) {
             this.showProviderCacheModal = false;
         },
 
+        async openProviderCacheAnnouncementModal() {
+            this.showProviderCacheAnnouncementModal = true;
+            if (!this.providerCacheLoadedOnce) {
+                await this.loadProviderCacheRecords();
+            }
+        },
+
+        closeProviderCacheAnnouncementModal() {
+            this.showProviderCacheAnnouncementModal = false;
+        },
+
+        async openProviderCacheDetailsFromAnnouncement() {
+            this.showProviderCacheAnnouncementModal = false;
+            await this.openProviderCacheModal({ forceRefresh: false });
+        },
+
         async loadProviderCacheRecords() {
             if (this.providerCacheLoading) return;
             this.providerCacheLoading = true;
@@ -66,6 +82,46 @@ export function createProviderCacheMethods(options = {}) {
                 ? this.providerCacheRecords
                 : {};
             return Array.isArray(records.groups) ? records.groups : [];
+        },
+
+        getProviderCacheAnnouncementSummary() {
+            const groups = this.getProviderCacheGroups();
+            let fileCount = 0;
+            let providerCount = 0;
+            for (const group of groups) {
+                const files = this.getProviderCacheExistingFiles(group);
+                fileCount += files.length;
+                for (const file of files) {
+                    const count = Number(file && file.providerCount);
+                    if (Number.isFinite(count) && count > 0) {
+                        providerCount += count;
+                    } else {
+                        providerCount += this.getProviderCacheFileProviders(file).length;
+                    }
+                }
+            }
+            return {
+                groupCount: groups.length,
+                fileCount,
+                providerCount,
+                loadedAt: this.providerCacheLoadedAt || (this.providerCacheRecords && this.providerCacheRecords.generatedAt) || ''
+            };
+        },
+
+        getProviderCacheAnnouncementGroups() {
+            return this.getProviderCacheGroups().map((group) => {
+                const existingFiles = this.getProviderCacheExistingFiles(group);
+                return {
+                    key: group && group.key ? group.key : '',
+                    label: group && group.label ? group.label : '',
+                    existingCount: existingFiles.length,
+                    providerCount: existingFiles.reduce((sum, file) => {
+                        const count = Number(file && file.providerCount);
+                        if (Number.isFinite(count) && count > 0) return sum + count;
+                        return sum + this.getProviderCacheFileProviders(file).length;
+                    }, 0)
+                };
+            });
         },
 
         getProviderCacheExistingFiles(group) {

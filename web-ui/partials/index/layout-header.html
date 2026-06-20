@@ -385,11 +385,24 @@
                 </div>
 
                 <div class="side-rail-lang">
-                    <button
-                        type="button"
-                        class="language-settings-link"
-                        :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
-                        @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
+                    <div class="side-rail-lang-actions">
+                        <button
+                            type="button"
+                            class="language-settings-link"
+                            :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
+                            @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
+                        <button
+                            type="button"
+                            class="side-announcement-button"
+                            :aria-label="t('announcement.providerCache.open')"
+                            :title="t('announcement.providerCache.open')"
+                            @click="openProviderCacheAnnouncementModal">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+                                <path d="M15 8.5a5 5 0 0 0-10 0c0 2.75-1 4.25-2 5.5h14c-1-1.25-2-2.75-2-5.5Z"/>
+                                <path d="M8 16a2 2 0 0 0 4 0"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </aside>
             <main class="main-panel">

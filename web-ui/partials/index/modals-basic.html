@@ -134,6 +134,65 @@
             </div>
         </div>
 
+        <!-- Provider 缓存公告模态框 -->
+        <div v-if="showProviderCacheAnnouncementModal" class="modal-overlay" @click.self="closeProviderCacheAnnouncementModal">
+            <div class="modal provider-cache-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="provider-cache-announcement-title">
+                <div class="modal-title" id="provider-cache-announcement-title">{{ t('announcement.providerCache.title') }}</div>
+                <div class="form-hint provider-cache-root">
+                    {{ t('modal.providerCache.root') }}: {{ (providerCacheRecords && providerCacheRecords.root) || '~/.codexmate' }}
+                </div>
+
+                <div v-if="providerCacheError" class="state-message error provider-cache-error">
+                    {{ providerCacheError }}
+                </div>
+                <div v-if="providerCacheSyncMessage" class="state-message provider-cache-sync-message">
+                    {{ providerCacheSyncMessage }}
+                </div>
+                <div v-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
+                    {{ t('modal.providerCache.loading') }}
+                </div>
+                <div v-else class="provider-cache-announcement-body">
+                    <p class="provider-cache-announcement-copy">{{ t('announcement.providerCache.subtitle') }}</p>
+                    <div class="provider-cache-summary-grid">
+                        <div class="provider-cache-summary-card">
+                            <span class="provider-cache-summary-label">{{ t('announcement.providerCache.summary.files') }}</span>
+                            <strong>{{ getProviderCacheAnnouncementSummary().fileCount }}</strong>
+                        </div>
+                        <div class="provider-cache-summary-card">
+                            <span class="provider-cache-summary-label">{{ t('announcement.providerCache.summary.providers') }}</span>
+                            <strong>{{ getProviderCacheAnnouncementSummary().providerCount }}</strong>
+                        </div>
+                        <div class="provider-cache-summary-card">
+                            <span class="provider-cache-summary-label">{{ t('announcement.providerCache.summary.groups') }}</span>
+                            <strong>{{ getProviderCacheAnnouncementSummary().groupCount }}</strong>
+                        </div>
+                    </div>
+                    <div v-if="getProviderCacheAnnouncementSummary().loadedAt" class="provider-cache-loaded-at">
+                        {{ t('modal.providerCache.loadedAt') }}: {{ getProviderCacheAnnouncementSummary().loadedAt }}
+                    </div>
+                    <div class="provider-cache-announcement-list" :aria-label="t('announcement.providerCache.groupList')">
+                        <div v-for="group in getProviderCacheAnnouncementGroups()" :key="group.key" class="provider-cache-announcement-row">
+                            <span>{{ group.label }}</span>
+                            <span>{{ t('announcement.providerCache.groupSummary', { files: group.existingCount, providers: group.providerCount }) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group provider-cache-footer">
+                    <button type="button" class="btn-tool btn-tool-compact" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
+                        {{ providerCacheSyncing ? t('modal.providerCache.syncing') : t('modal.providerCache.sync') }}
+                    </button>
+                    <button type="button" class="btn-tool btn-tool-compact" @click="loadProviderCacheRecords" :disabled="providerCacheLoading">
+                        {{ providerCacheLoading ? t('modal.providerCache.refreshing') : t('modal.providerCache.refresh') }}
+                    </button>
+                    <button type="button" class="btn-tool btn-tool-compact" @click="openProviderCacheDetailsFromAnnouncement">
+                        {{ t('announcement.providerCache.details') }}
+                    </button>
+                    <button class="btn btn-confirm" @click="closeProviderCacheAnnouncementModal">{{ t('common.close') }}</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Provider 缓存记录模态框 -->
         <div v-if="showProviderCacheModal" class="modal-overlay" @click.self="closeProviderCacheModal">
             <div class="modal modal-wide provider-cache-modal" role="dialog" aria-modal="true" aria-labelledby="provider-cache-modal-title">

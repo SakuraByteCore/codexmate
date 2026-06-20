@@ -844,9 +844,44 @@ body::after {
     transform: translateY(0);
 }
 
-.side-rail-lang .language-settings-link {
+.side-rail-lang-actions {
     width: calc(100% - 20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.side-rail-lang .language-settings-link {
+    min-width: 0;
+    flex: 1 1 auto;
     box-shadow: none;
+}
+
+.side-announcement-button {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(163, 146, 134, 0.28);
+    background: rgba(255, 253, 252, 0.92);
+    color: var(--color-text-secondary);
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-smooth), border-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth), transform var(--transition-fast) var(--ease-smooth);
+}
+
+.side-announcement-button:hover {
+    border-color: rgba(200, 121, 99, 0.58);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--color-text-primary);
+    transform: translateY(-1px);
+}
+
+.side-announcement-button:active {
+    transform: translateY(0);
 }
 
 .lang-fab .language-settings-link {

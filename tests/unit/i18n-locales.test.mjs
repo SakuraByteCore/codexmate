@@ -98,6 +98,15 @@ test('Japanese orchestration template copy stays localized', () => {
 
 test('provider cache and local Web preference settings are localized in every locale', () => {
     const keys = [
+        'announcement.providerCache.open',
+        'announcement.providerCache.title',
+        'announcement.providerCache.subtitle',
+        'announcement.providerCache.summary.files',
+        'announcement.providerCache.summary.providers',
+        'announcement.providerCache.summary.groups',
+        'announcement.providerCache.groupList',
+        'announcement.providerCache.groupSummary',
+        'announcement.providerCache.details',
         'settings.sharePrefix.title',
         'settings.sharePrefix.meta',
         'settings.sharePrefix.label',

@@ -315,6 +315,15 @@ const vi = Object.freeze({
 
     // Settings panel
     'settings.language.sideLabel': 'Ngôn ngữ: {language}',
+    'announcement.providerCache.open': 'Thông báo bộ nhớ đệm',
+    'announcement.providerCache.title': 'Thông báo bộ nhớ đệm',
+    'announcement.providerCache.subtitle': 'Tóm tắt trạng thái bộ nhớ đệm provider trong ~/.codexmate. Bạn có thể đồng bộ bản ghi bộ nhớ đệm từ cấu hình hiện tại; trường nhạy cảm luôn được che.',
+    'announcement.providerCache.summary.files': 'Tệp bộ nhớ đệm',
+    'announcement.providerCache.summary.providers': 'Provider',
+    'announcement.providerCache.summary.groups': 'Nhóm',
+    'announcement.providerCache.groupList': 'Tóm tắt nhóm bộ nhớ đệm',
+    'announcement.providerCache.groupSummary': '{files} tệp · {providers} provider',
+    'announcement.providerCache.details': 'Xem chi tiết',
     'settings.language.title': 'Ngôn ngữ',
     'settings.language.meta': 'Chọn ngôn ngữ hiển thị cho Web UI',
     'settings.language.label': 'Ngôn ngữ giao diện',
