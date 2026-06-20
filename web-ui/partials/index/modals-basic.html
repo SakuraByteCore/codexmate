@@ -134,59 +134,105 @@
             </div>
         </div>
 
-        <!-- Provider 缓存公告模态框 -->
+        <!-- 项目功能公告模态框 -->
         <div v-if="showProviderCacheAnnouncementModal" class="modal-overlay" @click.self="closeProviderCacheAnnouncementModal">
             <div class="modal provider-cache-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="provider-cache-announcement-title">
-                <div class="modal-title" id="provider-cache-announcement-title">{{ t('announcement.providerCache.title') }}</div>
-                <div class="form-hint provider-cache-root">
-                    {{ t('modal.providerCache.root') }}: {{ (providerCacheRecords && providerCacheRecords.root) || '~/.codexmate' }}
+                <div class="modal-title" id="provider-cache-announcement-title">{{ t('announcement.project.title') }}</div>
+                <p class="provider-cache-announcement-copy provider-cache-announcement-lede">{{ t('announcement.project.subtitle') }}</p>
+
+                <div class="project-announcement-feature-grid" :aria-label="t('announcement.project.features.aria')">
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.config.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.config.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.sessions.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.sessions.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.usage.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.usage.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.tasks.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.tasks.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.skills.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.skills.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.data.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.data.meta') }}</div>
+                    </article>
                 </div>
 
-                <div v-if="providerCacheError" class="state-message error provider-cache-error">
-                    {{ providerCacheError }}
-                </div>
-                <div v-if="providerCacheSyncMessage" class="state-message provider-cache-sync-message">
-                    {{ providerCacheSyncMessage }}
-                </div>
-                <div v-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
-                    {{ t('modal.providerCache.loading') }}
-                </div>
-                <div v-else class="provider-cache-announcement-body">
-                    <p class="provider-cache-announcement-copy">{{ t('announcement.providerCache.subtitle') }}</p>
-                    <div class="provider-cache-summary-grid">
-                        <div class="provider-cache-summary-card">
-                            <span class="provider-cache-summary-label">{{ t('announcement.providerCache.summary.files') }}</span>
-                            <strong>{{ getProviderCacheAnnouncementSummary().fileCount }}</strong>
-                        </div>
-                        <div class="provider-cache-summary-card">
-                            <span class="provider-cache-summary-label">{{ t('announcement.providerCache.summary.providers') }}</span>
-                            <strong>{{ getProviderCacheAnnouncementSummary().providerCount }}</strong>
-                        </div>
-                        <div class="provider-cache-summary-card">
-                            <span class="provider-cache-summary-label">{{ t('announcement.providerCache.summary.groups') }}</span>
-                            <strong>{{ getProviderCacheAnnouncementSummary().groupCount }}</strong>
-                        </div>
+                <div class="project-announcement-status-grid" :aria-label="t('announcement.project.status.aria')">
+                    <div class="provider-cache-summary-card">
+                        <span class="provider-cache-summary-label">{{ t('announcement.project.status.provider') }}</span>
+                        <strong>{{ currentProvider || t('common.notSelected') }}</strong>
                     </div>
-                    <div v-if="getProviderCacheAnnouncementSummary().loadedAt" class="provider-cache-loaded-at">
-                        {{ t('modal.providerCache.loadedAt') }}: {{ getProviderCacheAnnouncementSummary().loadedAt }}
+                    <div class="provider-cache-summary-card">
+                        <span class="provider-cache-summary-label">{{ t('announcement.project.status.model') }}</span>
+                        <strong>{{ currentModel || t('common.notSelected') }}</strong>
                     </div>
-                    <div class="provider-cache-announcement-list" :aria-label="t('announcement.providerCache.groupList')">
-                        <div v-for="group in getProviderCacheAnnouncementGroups()" :key="group.key" class="provider-cache-announcement-row">
-                            <span>{{ group.label }}</span>
-                            <span>{{ t('announcement.providerCache.groupSummary', { files: group.existingCount, providers: group.providerCount }) }}</span>
-                        </div>
+                    <div class="provider-cache-summary-card">
+                        <span class="provider-cache-summary-label">{{ t('announcement.project.status.cacheFiles') }}</span>
+                        <strong>{{ getProviderCacheAnnouncementSummary().fileCount }}</strong>
                     </div>
                 </div>
+
+                <section class="project-announcement-cache-section" aria-labelledby="project-announcement-cache-title">
+                    <div class="project-announcement-section-head">
+                        <div>
+                            <div class="project-announcement-section-title" id="project-announcement-cache-title">{{ t('announcement.project.cache.title') }}</div>
+                            <div class="project-announcement-section-meta">{{ t('announcement.project.cache.meta') }}</div>
+                        </div>
+                        <span v-if="getProviderCacheAnnouncementSummary().loadedAt" class="provider-cache-loaded-at">{{ t('modal.providerCache.loadedAt') }}: {{ getProviderCacheAnnouncementSummary().loadedAt }}</span>
+                    </div>
+
+                    <div v-if="providerCacheError" class="state-message error provider-cache-error">
+                        {{ providerCacheError }}
+                    </div>
+                    <div v-if="providerCacheSyncMessage" class="state-message provider-cache-sync-message">
+                        {{ providerCacheSyncMessage }}
+                    </div>
+                    <div v-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
+                        {{ t('modal.providerCache.loading') }}
+                    </div>
+                    <div v-else class="provider-cache-announcement-body">
+                        <div class="provider-cache-summary-grid">
+                            <div class="provider-cache-summary-card">
+                                <span class="provider-cache-summary-label">{{ t('announcement.project.cache.files') }}</span>
+                                <strong>{{ getProviderCacheAnnouncementSummary().fileCount }}</strong>
+                            </div>
+                            <div class="provider-cache-summary-card">
+                                <span class="provider-cache-summary-label">{{ t('announcement.project.cache.providers') }}</span>
+                                <strong>{{ getProviderCacheAnnouncementSummary().providerCount }}</strong>
+                            </div>
+                            <div class="provider-cache-summary-card">
+                                <span class="provider-cache-summary-label">{{ t('announcement.project.cache.groups') }}</span>
+                                <strong>{{ getProviderCacheAnnouncementSummary().groupCount }}</strong>
+                            </div>
+                        </div>
+                        <div class="provider-cache-announcement-list" :aria-label="t('announcement.project.cache.groupList')">
+                            <div v-for="group in getProviderCacheAnnouncementGroups()" :key="group.key" class="provider-cache-announcement-row">
+                                <span>{{ group.label }}</span>
+                                <span>{{ t('announcement.project.cache.groupSummary', { files: group.existingCount, providers: group.providerCount }) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <div class="btn-group provider-cache-footer">
                     <button type="button" class="btn-tool btn-tool-compact" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
-                        {{ providerCacheSyncing ? t('modal.providerCache.syncing') : t('modal.providerCache.sync') }}
+                        {{ providerCacheSyncing ? t('modal.providerCache.syncing') : t('announcement.project.cache.sync') }}
                     </button>
                     <button type="button" class="btn-tool btn-tool-compact" @click="loadProviderCacheRecords" :disabled="providerCacheLoading">
-                        {{ providerCacheLoading ? t('modal.providerCache.refreshing') : t('modal.providerCache.refresh') }}
+                        {{ providerCacheLoading ? t('modal.providerCache.refreshing') : t('announcement.project.cache.refresh') }}
                     </button>
                     <button type="button" class="btn-tool btn-tool-compact" @click="openProviderCacheDetailsFromAnnouncement">
-                        {{ t('announcement.providerCache.details') }}
+                        {{ t('announcement.project.cache.details') }}
                     </button>
                     <button class="btn btn-confirm" @click="closeProviderCacheAnnouncementModal">{{ t('common.close') }}</button>
                 </div>

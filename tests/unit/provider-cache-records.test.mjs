@@ -234,7 +234,9 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
 
     assert.match(html, /provider-cache-provider-list/);
     assert.match(html, /showProviderCacheAnnouncementModal/);
-    assert.match(html, /announcement\.providerCache\.title/);
+    assert.match(html, /announcement\.project\.title/);
+    assert.match(html, /announcement\.project\.feature\.config\.title/);
+    assert.match(html, /announcement\.project\.cache\.title/);
     assert.match(html, /getProviderCacheAnnouncementSummary\(\)\.providerCount/);
     assert.match(html, /openProviderCacheDetailsFromAnnouncement/);
     assert.match(readProjectFile('web-ui/partials/index/layout-header.html'), /side-announcement-button/);
@@ -251,6 +253,7 @@ test('provider cache UI template renders provider cards and collapsible raw JSON
 
     assert.match(css, /\.side-announcement-button/);
     assert.match(css, /\.provider-cache-announcement-modal/);
+    assert.match(css, /\.project-announcement-feature-grid/);
     assert.match(css, /\.provider-cache-summary-grid/);
     assert.match(css, /\.provider-cache-body/);
     assert.match(css, /\.provider-cache-provider-list/);
