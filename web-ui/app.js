@@ -715,6 +715,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (typeof this.loadAppVersionStatus === 'function') {
                         void this.loadAppVersionStatus({ silent: true });
                     }
+                    if (typeof this.hydrateClaudeConfigsFromProviderCache === 'function') {
+                        await this.hydrateClaudeConfigsFromProviderCache({ silent: true });
+                    }
                     void this.refreshClaudeSelectionFromSettings({ silent: true });
                     void this.syncDefaultOpenclawConfigEntry({ silent: true });
                     if (typeof this.loadProviderCacheRecords === 'function') {

@@ -2877,6 +2877,35 @@ function normalizeProviderCacheProviderMap(rawProviders) {
     return providers;
 }
 
+function readClaudeProviderCacheProvider(name) {
+    const targetName = typeof name === 'string' ? name.trim() : '';
+    if (!targetName) return null;
+    const cached = normalizeProviderCacheProviderMap(readProviderCacheJsonObject('claude-providers.json').providers);
+    const entry = cached[targetName];
+    return isPlainObject(entry) ? { name: targetName, ...entry } : null;
+}
+
+function readClaudeProviderCacheConfigs() {
+    const cached = normalizeProviderCacheProviderMap(readProviderCacheJsonObject('claude-providers.json').providers);
+    const providers = [];
+    for (const [name, entry] of Object.entries(cached)) {
+        if (!name || !isPlainObject(entry)) continue;
+        const baseUrl = typeof entry.baseUrl === 'string' ? entry.baseUrl.trim() : '';
+        const model = typeof entry.model === 'string' ? entry.model.trim() : '';
+        if (!baseUrl || !model) continue;
+        providers.push({
+            name,
+            baseUrl,
+            model,
+            targetApi: normalizeClaudeTargetApi(entry.targetApi),
+            hasKey: typeof entry.apiKey === 'string' && entry.apiKey.trim().length > 0,
+            providerCacheRef: name,
+            source: 'provider-cache'
+        });
+    }
+    return { providers: providers.sort((a, b) => a.name.localeCompare(b.name)) };
+}
+
 function buildProviderCacheSyncProviders() {
     const configResult = readConfigOrVirtualDefault();
     if (hasConfigLoadError(configResult)) {
@@ -9982,21 +10011,35 @@ async function applyToClaudeSettings(config = {}) {
     let proxyStarted = false;
     try {
         assertToolConfigWriteAllowed('claude');
-        const apiKey = (config.apiKey || '').trim();
-        const targetApi = normalizeClaudeTargetApi(config.targetApi);
+        const providerCacheRef = typeof config.providerCacheRef === 'string' ? config.providerCacheRef.trim() : '';
+        const cachedProvider = providerCacheRef ? readClaudeProviderCacheProvider(providerCacheRef) : null;
+        if (providerCacheRef && !cachedProvider) {
+            return { success: false, mode: 'provider-cache', error: '缓存中的 Claude provider 不存在，请重新同步' };
+        }
+        const effectiveConfig = cachedProvider
+            ? {
+                ...config,
+                apiKey: cachedProvider.apiKey || config.apiKey || '',
+                baseUrl: cachedProvider.baseUrl || config.baseUrl || '',
+                model: cachedProvider.model || config.model || '',
+                targetApi: cachedProvider.targetApi || config.targetApi || 'responses'
+            }
+            : config;
+        const apiKey = (effectiveConfig.apiKey || '').trim();
+        const targetApi = normalizeClaudeTargetApi(effectiveConfig.targetApi);
         if (!apiKey && targetApi !== 'ollama') {
             return { success: false, mode: 'settings-file', error: '请先输入 API Key' };
         }
 
-        const configuredBaseUrl = typeof config.baseUrl === 'string' ? config.baseUrl.trim() : '';
+        const configuredBaseUrl = typeof effectiveConfig.baseUrl === 'string' ? effectiveConfig.baseUrl.trim() : '';
         const baseUrl = (configuredBaseUrl || (targetApi === 'ollama' ? 'http://127.0.0.1:11434' : 'https://open.bigmodel.cn/api/anthropic')).trim();
-        const model = (config.model || DEFAULT_CLAUDE_MODEL).trim();
+        const model = (effectiveConfig.model || DEFAULT_CLAUDE_MODEL).trim();
         let settingsBaseUrl = baseUrl;
         let settingsApiKey = apiKey;
         let proxyResult = null;
 
         if (targetApi === 'chat_completions' || targetApi === 'ollama') {
-            const upstreamProviderName = typeof config.name === 'string' ? config.name.trim() : '';
+            const upstreamProviderName = typeof effectiveConfig.name === 'string' ? effectiveConfig.name.trim() : '';
             if (targetApi === 'chat_completions' && !configuredBaseUrl && !upstreamProviderName) {
                 return {
                     success: false,
@@ -12337,6 +12380,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'get-provider-cache-records':
                             result = readProviderCacheRecords();
+                            break;
+                        case 'get-claude-provider-cache-configs':
+                            result = readClaudeProviderCacheConfigs();
                             break;
                         case 'sync-provider-cache-records':
                             result = syncProviderCacheRecords();

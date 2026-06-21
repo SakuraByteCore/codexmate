@@ -191,6 +191,14 @@ export function matchClaudeConfigFromSettings(claudeConfigs = {}, env = {}) {
         if (normalizedSettings.apiKey && normalizedConfig.apiKey === normalizedSettings.apiKey) {
             return name;
         }
+        if (normalizedSettings.apiKey
+            && normalizedConfig.apiKey === ''
+            && config
+            && typeof config.providerCacheRef === 'string'
+            && config.providerCacheRef.trim()
+            && config.hasKey === true) {
+            return name;
+        }
         if (!normalizedSettings.apiKey
             && normalizedConfig.apiKey === ''
             && normalizedConfig.externalCredentialType

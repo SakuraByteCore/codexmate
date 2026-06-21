@@ -20,6 +20,7 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
     const draft = mode === 'edit' ? vm.editingConfig : vm.newClaudeConfig;
     const name = normalizeClaudeText(draft && draft.name);
     const apiKey = normalizeClaudeText(draft && draft.apiKey);
+    const providerCacheRef = normalizeClaudeText(draft && draft.providerCacheRef);
     const externalCredentialType = normalizeClaudeText(draft && draft.externalCredentialType);
     const baseUrl = normalizeClaudeBaseUrl(draft && draft.baseUrl);
     const model = normalizeClaudeText(draft && draft.model);
@@ -40,7 +41,7 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
         errors.name = vm.t('validation.claude.nameExists');
     }
 
-    if (!apiKey && !externalCredentialType && targetApi !== 'ollama') {
+    if (!apiKey && !externalCredentialType && !providerCacheRef && targetApi !== 'ollama') {
         errors.apiKey = vm.t('validation.claude.apiKeyRequired');
     }
 
@@ -58,6 +59,7 @@ function getClaudeConfigValidationForContext(vm, mode = 'add') {
         mode,
         name,
         apiKey,
+        providerCacheRef,
         externalCredentialType,
         baseUrl,
         model,
@@ -112,6 +114,64 @@ export function createClaudeConfigMethods(options = {}) {
             this.syncClaudeBridgeProviders();
         },
 
+        async hydrateClaudeConfigsFromProviderCache(options = {}) {
+            const silent = options && options.silent === true;
+            try {
+                const res = await api('get-claude-provider-cache-configs');
+                if (!res || res.error) {
+                    if (!silent) this.showMessage((res && res.error) || this.t('toast.claude.loadSettingsFail'), 'error');
+                    return false;
+                }
+                const providers = Array.isArray(res.providers) ? res.providers : [];
+                if (providers.length === 0) return true;
+                const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' ? this.claudeConfigs : {};
+                let changed = false;
+                let firstCachedName = '';
+                for (const provider of providers) {
+                    if (!provider || typeof provider !== 'object') continue;
+                    const name = normalizeClaudeText(provider.name);
+                    const baseUrl = normalizeClaudeBaseUrl(provider.baseUrl);
+                    const model = normalizeClaudeText(provider.model);
+                    if (!name || !baseUrl || !model) continue;
+                    if (!firstCachedName) firstCachedName = name;
+                    const cachedConfig = {
+                        apiKey: '',
+                        baseUrl,
+                        model,
+                        hasKey: provider.hasKey === true,
+                        providerCacheRef: normalizeClaudeText(provider.providerCacheRef) || name,
+                        source: 'provider-cache',
+                        targetApi: normalizeClaudeText(provider.targetApi) || 'responses'
+                    };
+                    const existing = configs[name];
+                    if (existing && existing.source !== 'provider-cache' && existing.providerCacheRef !== cachedConfig.providerCacheRef) {
+                        continue;
+                    }
+                    if (JSON.stringify(existing || {}) !== JSON.stringify(cachedConfig)) {
+                        configs[name] = cachedConfig;
+                        changed = true;
+                    }
+                }
+                this.claudeConfigs = configs;
+                if (firstCachedName) {
+                    let savedCurrent = '';
+                    try { savedCurrent = localStorage.getItem('currentClaudeConfig') || ''; } catch (_) {}
+                    const current = normalizeClaudeText(this.currentClaudeConfig);
+                    const currentConfig = current && configs[current] ? configs[current] : null;
+                    if (!savedCurrent && (!current || (currentConfig && currentConfig.hasKey === false && !currentConfig.providerCacheRef))) {
+                        this.currentClaudeConfig = firstCachedName;
+                        try { localStorage.setItem('currentClaudeConfig', firstCachedName); } catch (_) {}
+                        changed = true;
+                    }
+                }
+                if (changed) this.saveClaudeConfigs();
+                return true;
+            } catch (e) {
+                if (!silent) this.showMessage(e && e.message ? e.message : this.t('toast.claude.loadSettingsFail'), 'error');
+                return false;
+            }
+        },
+
         async syncClaudeBridgeProviders() {
             try { await api('claude-local-bridge-sync-providers', { providers: this.claudeConfigs || {} }); } catch (_) {}
         },
@@ -154,6 +214,7 @@ export function createClaudeConfigMethods(options = {}) {
                 model: config.model || '',
                 targetApi: config.targetApi || 'responses'
             };
+            if (config.providerCacheRef) this.editingConfig.providerCacheRef = config.providerCacheRef;
             this.showEditClaudeConfigKey = false;
             this.showEditConfigModal = true;
         },
@@ -165,6 +226,8 @@ export function createClaudeConfigMethods(options = {}) {
             }
             const name = validation.name;
             this.editingConfig.apiKey = validation.apiKey;
+            if (validation.providerCacheRef) this.editingConfig.providerCacheRef = validation.providerCacheRef;
+            else delete this.editingConfig.providerCacheRef;
             this.editingConfig.externalCredentialType = validation.externalCredentialType;
             this.editingConfig.baseUrl = validation.baseUrl;
             this.editingConfig.model = validation.model;
@@ -195,6 +258,8 @@ export function createClaudeConfigMethods(options = {}) {
             }
             const name = validation.name;
             this.editingConfig.apiKey = validation.apiKey;
+            if (validation.providerCacheRef) this.editingConfig.providerCacheRef = validation.providerCacheRef;
+            else delete this.editingConfig.providerCacheRef;
             this.editingConfig.externalCredentialType = validation.externalCredentialType;
             this.editingConfig.baseUrl = validation.baseUrl;
             this.editingConfig.model = validation.model;
@@ -203,7 +268,7 @@ export function createClaudeConfigMethods(options = {}) {
             this.saveClaudeConfigs();
 
             const config = this.claudeConfigs[name];
-            if (!config.apiKey && config.targetApi !== 'ollama') {
+            if (!config.apiKey && !config.providerCacheRef && config.targetApi !== 'ollama') {
                 this.showMessage(this.t('toast.claude.savedWithoutKey'), 'info');
                 this.closeEditConfigModal();
                 if (name === this.currentClaudeConfig) {
@@ -212,7 +277,7 @@ export function createClaudeConfigMethods(options = {}) {
                 return;
             }
 
-            const _claudeKey = `${name}|${config.apiKey || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
+            const _claudeKey = `${name}|${config.apiKey || ""}|${config.providerCacheRef || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
             try {
                 const res = await api('apply-claude-config', { config: { ...config, name } });
                 if (res.error || res.success === false) {
@@ -238,6 +303,8 @@ export function createClaudeConfigMethods(options = {}) {
             }
             this.newClaudeConfig.name = validation.name;
             this.newClaudeConfig.apiKey = validation.apiKey;
+            if (validation.providerCacheRef) this.newClaudeConfig.providerCacheRef = validation.providerCacheRef;
+            else delete this.newClaudeConfig.providerCacheRef;
             this.newClaudeConfig.externalCredentialType = validation.externalCredentialType;
             this.newClaudeConfig.baseUrl = validation.baseUrl;
             this.newClaudeConfig.model = validation.model;
@@ -284,14 +351,14 @@ export function createClaudeConfigMethods(options = {}) {
             this.refreshClaudeModelContext();
             const config = this.claudeConfigs[name];
 
-            if (!config.apiKey && config.targetApi !== 'ollama') {
+            if (!config.apiKey && !config.providerCacheRef && config.targetApi !== 'ollama') {
                 if (config.externalCredentialType) {
                     return this.showMessage(this.t('toast.claude.externalAuth'), 'info');
                 }
                 return this.showMessage(this.t('toast.claude.apiKeyRequired'), 'error');
             }
 
-            const _claudeKey2 = `${name}|${config.apiKey || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
+            const _claudeKey2 = `${name}|${config.apiKey || ""}|${config.providerCacheRef || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
             try {
                 const res = await api('apply-claude-config', { config: { ...config, name } });
                 if (res.error || res.success === false) {

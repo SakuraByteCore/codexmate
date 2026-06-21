@@ -188,6 +188,21 @@ test('matchClaudeConfigFromSettings tolerates trailing slash differences', () =>
     assert.strictEqual(matchClaudeConfigFromSettings(configs, env), 'default');
 });
 
+test('matchClaudeConfigFromSettings matches provider-cache backed config without importing secrets', () => {
+    const configs = {
+        cached: {
+            apiKey: '',
+            baseUrl: 'https://example.com/anthropic',
+            model: 'm',
+            providerCacheRef: 'cached',
+            hasKey: true,
+            source: 'provider-cache'
+        }
+    };
+    const env = { ANTHROPIC_API_KEY: 'sk-secret-from-settings', ANTHROPIC_BASE_URL: 'https://example.com/anthropic', ANTHROPIC_MODEL: 'm' };
+    assert.strictEqual(matchClaudeConfigFromSettings(configs, env), 'cached');
+});
+
 test('matchClaudeConfigFromSettings matches external token-backed config by baseUrl and model', () => {
     const configs = { imported: { apiKey: '', baseUrl: 'https://example.com/anthropic/', model: 'm', externalCredentialType: 'auth-token' } };
     const env = { ANTHROPIC_AUTH_TOKEN: 'token', ANTHROPIC_BASE_URL: 'https://example.com/anthropic', ANTHROPIC_MODEL: 'm' };

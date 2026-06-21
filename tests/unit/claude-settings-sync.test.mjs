@@ -12,6 +12,9 @@ const { createI18nMethods } = await import(
 const { createCodexConfigMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.codex-config.mjs'))
 );
+const { createClaudeConfigMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.claude-config.mjs'))
+);
 const {
     isLikelyBuiltinClaudeProxySettingsEnv,
     matchBuiltinClaudeProxyConfigFromSettings
@@ -1404,16 +1407,151 @@ test('loadClaudeModels skips remote fetch for external-credential config without
     assert.deepStrictEqual(messages, []);
 });
 
+test('hydrateClaudeConfigsFromProviderCache restores Claude providers without storing secrets', async () => {
+    const previousLocalStorage = globalThis.localStorage;
+    const stored = new Map();
+    globalThis.localStorage = {
+        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
+        setItem(key, value) { stored.set(key, String(value)); },
+        removeItem(key) { stored.delete(key); }
+    };
+    try {
+        const apiCalls = [];
+        const methods = createClaudeConfigMethods({
+            api: async (action) => {
+                apiCalls.push(action);
+                if (action === 'get-claude-provider-cache-configs') {
+                    return {
+                        providers: [{
+                            name: 'alpha-sync',
+                            baseUrl: 'https://alpha.example.com/anthropic',
+                            model: 'claude-sonnet-4-6',
+                            targetApi: 'responses',
+                            hasKey: true,
+                            providerCacheRef: 'alpha-sync',
+                            source: 'provider-cache'
+                        }]
+                    };
+                }
+                return { success: true };
+            }
+        });
+        const context = {
+            ...methods,
+            claudeConfigs: {
+                '智谱GLM': {
+                    apiKey: '',
+                    baseUrl: 'https://open.bigmodel.cn/api/anthropic',
+                    model: 'glm-4.7',
+                    targetApi: 'responses',
+                    hasKey: false
+                }
+            },
+            currentClaudeConfig: '智谱GLM',
+            showMessage() { throw new Error('should stay silent'); },
+            t(key) { return key; }
+        };
+
+        const ok = await context.hydrateClaudeConfigsFromProviderCache({ silent: true });
+
+        assert.strictEqual(ok, true);
+        assert.strictEqual(context.currentClaudeConfig, 'alpha-sync');
+        assert.deepStrictEqual(context.claudeConfigs['alpha-sync'], {
+            apiKey: '',
+            baseUrl: 'https://alpha.example.com/anthropic',
+            model: 'claude-sonnet-4-6',
+            hasKey: true,
+            providerCacheRef: 'alpha-sync',
+            source: 'provider-cache',
+            targetApi: 'responses'
+        });
+        assert.doesNotMatch(stored.get('claudeConfigs') || '', /sk-secret/);
+        assert.match(stored.get('claudeConfigs') || '', /providerCacheRef/);
+        assert(apiCalls.includes('get-claude-provider-cache-configs'));
+    } finally {
+        globalThis.localStorage = previousLocalStorage;
+    }
+});
+
+test('applyClaudeConfig accepts provider-cache backed Claude providers without browser api key', async () => {
+    const previousLocalStorage = globalThis.localStorage;
+    const stored = new Map();
+    globalThis.localStorage = {
+        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
+        setItem(key, value) { stored.set(key, String(value)); },
+        removeItem(key) { stored.delete(key); }
+    };
+    try {
+        const apiCalls = [];
+        const messages = [];
+        const methods = createClaudeConfigMethods({
+            api: async (action, params) => {
+                apiCalls.push({ action, params });
+                return { success: true };
+            }
+        });
+        const context = {
+            ...methods,
+            claudeConfigs: {
+                cached: {
+                    apiKey: '',
+                    baseUrl: 'https://cached.example.com/anthropic',
+                    model: 'claude-sonnet-4-6',
+                    providerCacheRef: 'cached',
+                    source: 'provider-cache',
+                    hasKey: true,
+                    targetApi: 'responses'
+                }
+            },
+            currentClaudeConfig: '',
+            refreshClaudeModelContext() {},
+            showMessage: (msg, type) => messages.push({ msg, type }),
+            t(key) { return key; }
+        };
+
+        await context.applyClaudeConfig('cached');
+
+        const applyCall = apiCalls.find((call) => call.action === 'apply-claude-config');
+        assert(applyCall, 'apply-claude-config should be called');
+        assert.strictEqual(applyCall.params.config.providerCacheRef, 'cached');
+        assert.strictEqual(applyCall.params.config.apiKey, '');
+        assert.deepStrictEqual(messages, [{ msg: 'toast.apply.success', type: 'success' }]);
+    } finally {
+        globalThis.localStorage = previousLocalStorage;
+    }
+});
+
 test('applyToClaudeSettings does not proxy chat completions through default Anthropic URL', () => {
     const startIndex = cliSource.indexOf('async function applyToClaudeSettings');
     assert.notStrictEqual(startIndex, -1);
     const endIndex = cliSource.indexOf('async function cmdClaude', startIndex);
     assert.notStrictEqual(endIndex, -1);
     const source = cliSource.slice(startIndex, endIndex);
-    assert.match(source, /const configuredBaseUrl = typeof config\.baseUrl === 'string' \? config\.baseUrl\.trim\(\) : '';/);
+    assert.match(source, /const configuredBaseUrl = typeof effectiveConfig\.baseUrl === 'string' \? effectiveConfig\.baseUrl\.trim\(\) : '';/);
     assert.match(source, /targetApi === 'chat_completions' && !configuredBaseUrl && !upstreamProviderName/);
     assert.match(source, /chat_completions 模式需要显式的上游 Base URL 或可解析的 provider 名称/);
     assert.match(source, /\.\.\.\(configuredBaseUrl \? \{ upstreamBaseUrl: configuredBaseUrl \} : \{\}\)/);
+});
+
+test('applyToClaudeSettings resolves Claude provider-cache references server-side', () => {
+    const startIndex = cliSource.indexOf('async function applyToClaudeSettings');
+    assert.notStrictEqual(startIndex, -1);
+    const endIndex = cliSource.indexOf('function readClaudeSettingsRaw', startIndex);
+    assert.notStrictEqual(endIndex, -1);
+    const source = cliSource.slice(startIndex, endIndex);
+    assert.match(source, /const providerCacheRef = typeof config\.providerCacheRef === 'string'/);
+    assert.match(source, /readClaudeProviderCacheProvider\(providerCacheRef\)/);
+    assert.match(source, /apiKey: cachedProvider\.apiKey \|\| config\.apiKey \|\| ''/);
+    assert.match(source, /缓存中的 Claude provider 不存在，请重新同步/);
+});
+
+test('Claude provider cache catalog route exposes safe provider metadata only', () => {
+    const fn = extractFunctionDeclaration(cliSource, 'readClaudeProviderCacheConfigs');
+    assert.match(fn, /providerCacheRef: name/);
+    assert.match(fn, /source: 'provider-cache'/);
+    assert.match(fn, /hasKey: typeof entry\.apiKey === 'string'/);
+    assert.doesNotMatch(fn, /apiKey:/);
+    assert.match(cliSource, /case 'get-claude-provider-cache-configs':/);
 });
 
 test('MCP Claude config schema allows Ollama without API key only for ollama target', () => {

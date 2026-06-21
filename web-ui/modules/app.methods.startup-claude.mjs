@@ -260,17 +260,23 @@ export function createStartupClaudeMethods(options = {}) {
         mergeClaudeConfig(existing = {}, updates = {}) {
             const previous = this.normalizeClaudeConfig(existing);
             const next = this.normalizeClaudeConfig({ ...existing, ...updates });
+            const raw = { ...existing, ...updates };
+            const providerCacheRef = typeof raw.providerCacheRef === 'string' ? raw.providerCacheRef.trim() : '';
+            const source = raw.source === 'provider-cache' ? 'provider-cache' : (existing.source === 'provider-cache' && providerCacheRef ? 'provider-cache' : '');
             const externalCredentialType = next.apiKey
                 ? ''
                 : (next.externalCredentialType || previous.externalCredentialType || '');
-            return {
+            const merged = {
                 apiKey: next.apiKey,
                 baseUrl: next.baseUrl,
                 model: next.model || previous.model || 'glm-4.7',
-                hasKey: !!(next.apiKey || externalCredentialType),
+                hasKey: !!(next.apiKey || externalCredentialType || providerCacheRef || raw.hasKey === true),
                 externalCredentialType,
                 targetApi: next.targetApi || previous.targetApi || 'responses'
             };
+            if (providerCacheRef) merged.providerCacheRef = providerCacheRef;
+            if (source) merged.source = source;
+            return merged;
         },
 
         buildClaudeImportedConfigName(baseUrl) {
@@ -459,6 +465,9 @@ export function createStartupClaudeMethods(options = {}) {
             const currentConfigName = typeof this.currentClaudeConfig === 'string' ? this.currentClaudeConfig.trim() : '';
             const baseUrl = (config.baseUrl || '').trim();
             const apiKey = (config.apiKey || '').trim();
+            const providerCacheRef = typeof config.providerCacheRef === 'string'
+                ? config.providerCacheRef.trim()
+                : '';
             const externalCredentialType = typeof config.externalCredentialType === 'string'
                 ? config.externalCredentialType.trim()
                 : '';
@@ -468,7 +477,7 @@ export function createStartupClaudeMethods(options = {}) {
                 return;
             }
             const localCatalog = getClaudeModelCatalogForBaseUrl(baseUrl);
-            if (!apiKey && externalCredentialType) {
+            if (!apiKey && (externalCredentialType || providerCacheRef)) {
                 this.claudeModels = localCatalog;
                 this.claudeModelsSource = localCatalog.length ? 'catalog' : 'unlimited';
                 if (localCatalog.length) {
@@ -520,6 +529,7 @@ export function createStartupClaudeMethods(options = {}) {
                 }
                 return (latestConfig.baseUrl || '').trim() === baseUrl
                     && (latestConfig.apiKey || '').trim() === apiKey
+                    && (typeof latestConfig.providerCacheRef === 'string' ? latestConfig.providerCacheRef.trim() : '') === providerCacheRef
                     && (typeof latestConfig.externalCredentialType === 'string' ? latestConfig.externalCredentialType.trim() : '') === externalCredentialType;
             };
             if (cachedOk) {
