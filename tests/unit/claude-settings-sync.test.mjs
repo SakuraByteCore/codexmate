@@ -1100,6 +1100,42 @@ test('mergeClaudeConfig preserves externalCredentialType across edits without ap
     });
 });
 
+test('mergeClaudeConfig preserves providerCacheRef and marks cached providers as key-backed', () => {
+    const source = extractMethodAsFunction(appSource, 'mergeClaudeConfig');
+    const mergeClaudeConfig = instantiateFunction(source, 'mergeClaudeConfig');
+    const context = {
+        normalizeClaudeConfig: (config = {}) => ({
+            apiKey: typeof config.apiKey === 'string' ? config.apiKey.trim() : '',
+            baseUrl: typeof config.baseUrl === 'string' ? config.baseUrl.trim() : '',
+            model: typeof config.model === 'string' ? config.model.trim() : '',
+            authToken: typeof config.authToken === 'string' ? config.authToken.trim() : '',
+            useKey: typeof config.useKey === 'string' ? config.useKey.trim() : '',
+            externalCredentialType: typeof config.externalCredentialType === 'string' ? config.externalCredentialType.trim() : '',
+            targetApi: typeof config.targetApi === 'string' ? config.targetApi.trim() : 'responses'
+        })
+    };
+
+    const merged = mergeClaudeConfig.call(context, {}, {
+        apiKey: '',
+        baseUrl: 'https://cached.example.com/anthropic',
+        model: 'claude-sonnet-4-6',
+        providerCacheRef: 'cached-provider',
+        source: 'provider-cache',
+        targetApi: 'responses'
+    });
+
+    assert.deepStrictEqual(merged, {
+        apiKey: '',
+        baseUrl: 'https://cached.example.com/anthropic',
+        model: 'claude-sonnet-4-6',
+        hasKey: true,
+        externalCredentialType: '',
+        targetApi: 'responses',
+        providerCacheRef: 'cached-provider',
+        source: 'provider-cache'
+    });
+});
+
 test('refreshClaudeSelectionFromSettings forwards silent model-error flag', async () => {
     const source = extractMethodAsFunction(appSource, 'refreshClaudeSelectionFromSettings');
     const refreshClaudeSelectionFromSettings = instantiateFunction(source, 'refreshClaudeSelectionFromSettings', {
