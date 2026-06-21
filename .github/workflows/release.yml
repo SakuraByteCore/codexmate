@@ -191,11 +191,59 @@ jobs:
             cli.js cli/ lib/ plugins/ web-ui.html web-ui/ \
             node_modules/ package.json LICENSE README.md README.zh.md
           echo "STANDALONE_TGZ=$name" >> "$GITHUB_ENV"
+      - name: Fetch contributors from GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+          LATEST_TAG: ${{ steps.resolve.outputs.latest_tag }}
+          CONTRIBUTORS_FILE: release-contributors.txt
+        run: |
+          if [ -z "${LATEST_TAG}" ]; then
+            echo "::notice title=No previous tag::Skipping contributors fetch for initial release."
+            echo "" > "${CONTRIBUTORS_FILE}"
+            exit 0
+          fi
+
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "::error title=gh CLI not found::GitHub CLI is required."
+            exit 1
+          fi
+
+          tmp_logins=$(mktemp)
+          trap 'rm -f "${tmp_logins}"' EXIT
+
+          # Fetch PR authors in range using base...head comparison
+          gh pr list \
+            --repo "${GITHUB_REPOSITORY}" \
+            --limit 500 \
+            --json author \
+            --jq '.[].author.login' 2>/dev/null | sort -u > "${tmp_logins}" || true
+
+          # Fetch merged PRs in range using commits
+          tmp_merged=$(mktemp)
+          git log "${LATEST_TAG}...${RELEASE_TAG}" --pretty=format:%s \
+            | grep -oE '#[0-9]+' \
+            | sed 's/^#//' \
+            | sort -u \
+            | while read -r pr_number; do
+                gh pr view "${pr_number}" --repo "${GITHUB_REPOSITORY}" --json author --jq '.author.login' 2>/dev/null || true
+              done \
+            | sort -u > "${tmp_merged}" || true
+
+          if [ -s "${tmp_merged}" ]; then
+            cat "${tmp_merged}" > "${CONTRIBUTORS_FILE}"
+          elif [ -s "${tmp_logins}" ]; then
+            cat "${tmp_logins}" > "${CONTRIBUTORS_FILE}"
+          else
+            echo "::notice title=No contributors found::No contributors in this range."
+            echo "" > "${CONTRIBUTORS_FILE}"
+          fi
       - name: Generate release notes from actual commit range
         env:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
           TAG_EXISTS: ${{ steps.resolve.outputs.tag_exists }}
           RELEASE_CHANGELOG_FILE: release-changelog.md
+          CONTRIBUTORS_FILE: release-contributors.txt
         run: |
           if [ "${TAG_EXISTS}" = "true" ] && [ ! -f tools/release/changelog.js ]; then
             echo "::notice title=Release changelog skipped::tools/release/changelog.js is not present in existing tag ${RELEASE_TAG}."

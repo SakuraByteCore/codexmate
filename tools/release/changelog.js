@@ -117,8 +117,13 @@ function contributorProfile(author) {
     return { login: displayName, displayName };
 }
 
-function formatContributorCard(author) {
-    const { login, displayName } = contributorProfile(author);
+function formatContributorCard(authorOrObj) {
+    let login, displayName;
+    if (typeof authorOrObj === 'object' && authorOrObj !== null) {
+        ({ login, displayName } = authorOrObj);
+    } else {
+        ({ login, displayName } = contributorProfile(authorOrObj));
+    }
     const safeLogin = encodeURIComponent(login);
     const safeDisplayName = escapeHtml(displayName);
     const githubAvatarUrl = `https://github.com/${safeLogin}.png?size=96`;
@@ -130,16 +135,26 @@ function formatContributorCard(author) {
     ].join('\n');
 }
 
-function listContributors(commits) {
+function listContributors(commits, externalLogins = []) {
     const seen = new Set();
     const contributors = [];
-    for (const commit of commits) {
-        const contributor = formatContributorName(commit.author);
-        const key = contributor.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        contributors.push(contributor);
+
+    // Use external logins from GitHub API if available
+    for (const login of externalLogins) {
+        const safeLogin = String(login || '').trim();
+        if (!safeLogin || seen.has(safeLogin)) continue;
+        seen.add(safeLogin);
+        contributors.push({ login: safeLogin, displayName: safeLogin });
     }
+
+    // Fallback to commit authors for missing entries
+    for (const commit of commits) {
+        const { login, displayName } = contributorProfile(commit.author);
+        if (!login || seen.has(login)) continue;
+        seen.add(login);
+        contributors.push({ login, displayName });
+    }
+
     return contributors;
 }
 
@@ -179,7 +194,7 @@ function formatChangeSummary(commits) {
     return lines;
 }
 
-function formatChangelog({ repository = '', previousTag = '', currentTag = '', currentRef = 'HEAD', commits = [] }) {
+function formatChangelog({ repository = '', previousTag = '', currentTag = '', currentRef = 'HEAD', commits = [], externalLogins = [] }) {
     const lines = [];
 
     if (!previousTag) {
@@ -217,7 +232,7 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
     }
 
     lines.push('### Contributors');
-    const contributors = listContributors(commits);
+    const contributors = listContributors(commits, externalLogins);
     if (!contributors.length) {
         lines.push('- Unknown contributor');
     } else {
@@ -248,12 +263,26 @@ function main(env = process.env) {
     const previousTag = selectPreviousSemverTag(tags, currentTag);
     const currentRef = resolveCurrentRef(currentTag);
     const commits = previousTag ? readCommits(previousTag, currentRef) : [];
+
+    // Load external logins from GitHub API if available
+    let externalLogins = [];
+    const contributorsFile = env.CONTRIBUTORS_FILE;
+    if (contributorsFile && fs.existsSync(contributorsFile)) {
+        try {
+            const content = fs.readFileSync(contributorsFile, 'utf8');
+            externalLogins = content.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        } catch (e) {
+            console.warn(`Failed to read contributors file: ${e.message}`);
+        }
+    }
+
     const changelog = formatChangelog({
         repository: env.GITHUB_REPOSITORY || '',
         previousTag,
         currentTag,
         currentRef,
-        commits
+        commits,
+        externalLogins
     });
 
     console.log(changelog.trimEnd());
