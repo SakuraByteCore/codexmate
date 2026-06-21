@@ -37,7 +37,7 @@ test('release changelog groups PR commits and direct commits for action logs', (
     const grouped = groupCommits(commits);
 
     assert.deepStrictEqual(grouped.directCommits.map((commit) => commit.hash), ['f5700cf', 'abc1234']);
-    assert.deepStrictEqual(listContributors(commits), ['awsl233777']);
+    assert.deepStrictEqual(listContributors(commits), [{ login: 'awsl233777', displayName: 'Awsl' }]);
 
     const changelog = formatChangelog({
         repository: 'SakuraByteCore/codexmate',
