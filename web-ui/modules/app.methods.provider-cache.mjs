@@ -31,11 +31,14 @@ export function createProviderCacheMethods(options = {}) {
 
         async loadProviderCacheRecords(options = {}) {
             const forceRefresh = options && options.forceRefresh === true;
+            const background = options && options.background === true;
             if (this.providerCacheLoading && !forceRefresh) return;
             const requestSeq = (Number(this.providerCacheRequestSeq) || 0) + 1;
             this.providerCacheRequestSeq = requestSeq;
             const isLatestRequest = () => requestSeq === Number(this.providerCacheRequestSeq || 0);
-            this.providerCacheLoading = true;
+            if (!background) {
+                this.providerCacheLoading = true;
+            }
             this.providerCacheError = '';
             try {
                 const res = await api('get-provider-cache-records');
@@ -51,7 +54,7 @@ export function createProviderCacheMethods(options = {}) {
                 if (!isLatestRequest()) return;
                 this.providerCacheError = e && e.message ? e.message : this.t('modal.providerCache.loadFailed');
             } finally {
-                if (isLatestRequest()) {
+                if (isLatestRequest() && !background) {
                     this.providerCacheLoading = false;
                 }
             }

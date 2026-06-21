@@ -229,6 +229,28 @@ test('provider cache sync method localizes backend error keys', async () => {
     assert.strictEqual(context.providerCacheSyncing, false);
 });
 
+test('provider cache background load hydrates records without flipping loading state', async () => {
+    const methods = createProviderCacheMethods({
+        api: async () => ({ root: '~/.codexmate', generatedAt: 'background-time', groups: [] })
+    });
+    const context = {
+        providerCacheRecords: {},
+        providerCacheLoadedOnce: false,
+        providerCacheLoadedAt: '',
+        providerCacheLoading: false,
+        providerCacheRequestSeq: 0,
+        providerCacheError: '',
+        t(key) { return key; },
+        ...methods
+    };
+
+    await context.loadProviderCacheRecords({ background: true });
+
+    assert.strictEqual(context.providerCacheLoadedOnce, true);
+    assert.strictEqual(context.providerCacheLoadedAt, 'background-time');
+    assert.strictEqual(context.providerCacheLoading, false);
+});
+
 test('provider cache force refresh ignores stale in-flight loads', async () => {
     let resolveFirst;
     const firstLoad = new Promise((resolve) => {
