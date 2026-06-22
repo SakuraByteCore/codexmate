@@ -261,6 +261,12 @@ export function createSessionComputed() {
             const matched = nodes.find(node => node.key === this.sessionTimelineActiveKey);
             return matched ? matched.title : '';
         },
+        sessionTimelineProgressPercent() {
+            if (!this.sessionTimelineActiveKey || !this.sessionTimelineNodes.length) return 0;
+            const index = this.sessionTimelineNodes.findIndex(node => node.key === this.sessionTimelineActiveKey);
+            if (index < 0) return 0;
+            return Math.round(((index + 1) / this.sessionTimelineNodes.length) * 100);
+        },
         sessionQueryPlaceholder() {
             if (this.isSessionQueryEnabled) {
                 return typeof this.t === 'function'
@@ -777,7 +783,7 @@ export function createSessionComputed() {
                 ? this.sessionUsageDaily
                 : null;
             if (!daily || !Array.isArray(daily.rows) || daily.rows.length === 0) {
-                return { points: [], labels: [], linePath: '', areaPath: '', width: 800, maxTokens: 0 };
+                return { points: [], labels: [], linePath: '', areaPath: '', width: 800, maxTokens: 0, yTicks: [] };
             }
 
             const rows = daily.rows;
@@ -806,6 +812,27 @@ export function createSessionComputed() {
             const selectedKey = this.sessionsUsageSelectedDayKey;
             const selectedPoint = points.find(p => p.key === selectedKey) || points[points.length - 1] || null;
 
+            const yTicks = [];
+            if (maxTokens > 0) {
+                const rawStep = maxTokens / 4;
+                const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+                const residual = rawStep / magnitude;
+                const niceStep = residual <= 1.5 ? magnitude : (residual <= 3.5 ? 2 * magnitude : 5 * magnitude);
+                const tickCount = Math.min(Math.ceil(maxTokens / niceStep), 8);
+                for (let i = 0; i <= tickCount; i++) {
+                    const value = i * niceStep;
+                    if (value > maxTokens + niceStep * 0.5) break;
+                    const normalized = value / maxTokens;
+                    const y = padding.top + chartHeight - (normalized * chartHeight);
+                    yTicks.push({
+                        value,
+                        label: formatCompactUsageSummaryNumber(value),
+                        y,
+                        percent: (((height - y) / height) * 100).toFixed(1)
+                    });
+                }
+            }
+
             return {
                 points,
                 labels: rows.map((row, index) => ({
@@ -817,6 +844,7 @@ export function createSessionComputed() {
                 width,
                 height,
                 maxTokens,
+                yTicks,
                 hoverX: selectedPoint ? selectedPoint.x : 0,
                 hoverY: selectedPoint ? selectedPoint.y : 0
             };

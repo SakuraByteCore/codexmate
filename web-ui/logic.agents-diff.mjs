@@ -336,6 +336,12 @@ export function buildAgentsDiffPreviewRequest(options = {}) {
             params.fileName = fileName;
         }
     }
+    if (context === 'claude-project') {
+        const baseDir = typeof options.baseDir === 'string' ? options.baseDir.trim() : '';
+        if (baseDir) {
+            params.baseDir = baseDir;
+        }
+    }
 
     const maxRequestBytes = Number.isFinite(options.maxRequestBytes)
         ? Math.max(1024, Math.floor(options.maxRequestBytes))

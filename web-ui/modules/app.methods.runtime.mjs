@@ -3,6 +3,87 @@ import {
     formatLatency
 } from '../logic.mjs';
 
+const UI_MESSAGE_KEY_BY_TEXT = Object.freeze({
+    '操作成功': 'toast.operation.success',
+    '操作失败': 'toast.operation.fail',
+    '添加失败': 'toast.provider.addFail',
+    '更新失败': 'toast.provider.updateFail',
+    '删除失败': 'toast.delete.fail',
+    '已删除': 'toast.delete.ok',
+    '已复制': 'toast.copy.ok',
+    '复制失败': 'toast.copy.fail',
+    '剪贴板为空': 'toast.clipboardEmpty',
+    '无法读取剪贴板': 'toast.clipboardReadFailed',
+    '已粘贴': 'toast.pasted',
+    '未检测到改动': 'toast.noChanges',
+    '配置已应用': 'toast.apply.success',
+    '应用配置失败': 'toast.apply.fail',
+    '应用失败': 'toast.apply.fail',
+    '配置已加载': 'toast.configLoaded',
+    '配置就绪': 'toast.configReady',
+    '加载配置失败': 'toast.loadConfigFailed',
+    '读取配置失败': 'toast.readConfigFailed',
+    '读取配置超时': 'toast.readConfigTimeout',
+    '备份失败': 'toast.backupFailed',
+    '备份成功，开始下载': 'toast.backupReadyDownload',
+    '导入失败': 'toast.import.fail',
+    '导入成功': 'toast.import.ok',
+    '导入 skill 失败': 'toast.importSkillFailed',
+    '导出失败': 'toast.export.fail',
+    '保存失败': 'toast.save.fail',
+    '加载文件失败': 'toast.load.fail',
+    '请填写名称': 'toast.nameRequired',
+    '请输入名称': 'toast.nameRequired',
+    '名称已存在': 'toast.nameExists',
+    '至少保留一项': 'toast.keepOneItem',
+    '请输入模型': 'toast.modelRequired',
+    '请选择提供商和模型': 'toast.providerModelRequired',
+    '请先配置 API Key': 'toast.apiKeyRequired',
+    '配置已存在': 'toast.configExists',
+    '不支持此操作': 'toast.unsupportedOperation',
+    '参数无效': 'toast.invalidParams',
+    '不可分享': 'toast.notShareable',
+    '已移入回收站': 'toast.movedToTrash',
+    '生成命令失败': 'toast.commandGenerationFailed',
+    '没有可复制内容': 'toast.copy.empty',
+    '没有可导出内容': 'toast.export.empty',
+    '会话已恢复': 'toast.sessionRestored',
+    '恢复失败': 'toast.restoreFailed',
+    '已彻底删除': 'toast.purged',
+    '彻底删除失败': 'toast.purgeFailed',
+    '回收站已清空': 'toast.trashCleared',
+    '清空回收站失败': 'toast.trashClearFailed',
+    '加载回收站失败': 'toast.trashLoadFailed',
+    '加载回收站数量失败': 'toast.trashCountLoadFailed',
+    '任务计划已更新': 'toast.taskPlanUpdated',
+    '任务计划生成失败': 'toast.taskPlanFailed',
+    '计划存在问题，请先修复再执行': 'toast.taskPlanHasIssues',
+    '已发出取消请求': 'toast.cancelRequested',
+    '取消任务失败': 'toast.cancelTaskFailed'
+});
+
+const UI_MESSAGE_PREFIX_ENTRIES = Object.freeze(
+    Object.entries(UI_MESSAGE_KEY_BY_TEXT).sort((a, b) => b[0].length - a[0].length)
+);
+
+export function translateUiMessage(context, text) {
+    if (!context || typeof context.t !== 'function' || typeof text !== 'string') return text;
+    const translateKey = (key) => {
+        const translated = context.t(key);
+        return typeof translated === 'string' && translated && translated !== key ? translated : '';
+    };
+    const exactKey = UI_MESSAGE_KEY_BY_TEXT[text];
+    if (exactKey) return translateKey(exactKey) || text;
+    const prefixEntry = UI_MESSAGE_PREFIX_ENTRIES.find(([sourceText]) => {
+        return text.length > sourceText.length && text.startsWith(sourceText);
+    });
+    if (!prefixEntry) return text;
+    const [sourceText, key] = prefixEntry;
+    const translatedPrefix = translateKey(key);
+    if (!translatedPrefix) return text;
+    return `${translatedPrefix}${text.slice(sourceText.length)}`;
+}
+
 function clearProgressResetTimer(context, timerKey) {
     if (!context || !timerKey || !context[timerKey]) {
         return;
@@ -334,7 +415,7 @@ export function createRuntimeMethods(options = {}) {
             if (this._messageTimer) {
                 clearTimeout(this._messageTimer);
             }
-            this.message = text;
+            this.message = translateUiMessage(this, text);
             this.messageType = type || 'info';
             this._messageTimer = setTimeout(() => {
                 this.message = '';

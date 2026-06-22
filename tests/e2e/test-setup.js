@@ -230,6 +230,7 @@ module.exports = async function testSetup(ctx) {
         lateKeywordSessionId,
         lateKeywordSessionPath,
         lateKeywordMessage,
+        claudeProjectDir,
         claudeSessionId,
         claudeSessionPath,
         geminiSessionId,

@@ -1,4 +1,4 @@
-const DEFAULT_OPENCLAW_CONFIG_NAME = '默认配置';
+export const DEFAULT_OPENCLAW_CONFIG_NAME = '默认配置';
 
 function buildNormalizedOpenclawConfigs(configs, defaultContent = '') {
     const source = configs && typeof configs === 'object' && !Array.isArray(configs)
@@ -11,7 +11,8 @@ function buildNormalizedOpenclawConfigs(configs, defaultContent = '') {
             : { content: defaultContent };
     const normalized = {
         [DEFAULT_OPENCLAW_CONFIG_NAME]: {
-            content: typeof defaultEntry.content === 'string' ? defaultEntry.content : defaultContent
+            content: typeof defaultEntry.content === 'string' ? defaultEntry.content : defaultContent,
+            isDefault: true
         }
     };
     for (const [name, value] of Object.entries(source)) {
@@ -25,7 +26,8 @@ function syncDefaultOpenclawConfigState(vm, content, options = {}) {
     const nextContent = typeof content === 'string' ? content : '';
     vm.openclawConfigs = buildNormalizedOpenclawConfigs(vm.openclawConfigs, nextContent);
     vm.openclawConfigs[DEFAULT_OPENCLAW_CONFIG_NAME] = {
-        content: nextContent
+        content: nextContent,
+        isDefault: true
     };
     if (typeof options.path === 'string') {
         vm.openclawConfigPath = options.path;
@@ -51,6 +53,10 @@ export function createOpenclawPersistMethods(options = {}) {
     } = options;
 
     return {
+        isDefaultOpenclawConfig(name, config = null) {
+            return !!(config && config.isDefault === true) || name === DEFAULT_OPENCLAW_CONFIG_NAME;
+        },
+
         syncDefaultOpenclawConfigEntry(options = {}) {
             const silent = !!options.silent;
             return api('get-openclaw-config')
@@ -104,7 +110,7 @@ export function createOpenclawPersistMethods(options = {}) {
 
         openOpenclawEditModal(name) {
             const existing = this.openclawConfigs[name];
-            const isDefaultConfig = name === DEFAULT_OPENCLAW_CONFIG_NAME;
+            const isDefaultConfig = this.isDefaultOpenclawConfig(name, existing);
             const modalToken = (Number(this.openclawModalLoadToken || 0) + 1);
             this.openclawModalLoadToken = modalToken;
             this.openclawEditorTitle = `编辑 OpenClaw 配置: ${name}`;
@@ -146,7 +152,7 @@ export function createOpenclawPersistMethods(options = {}) {
             const force = !!options.force;
             const fallbackToTemplate = options.fallbackToTemplate !== false;
             const syncDefaultEntry = options.syncDefaultEntry === true
-                || (this.openclawEditing && this.openclawEditing.lockName && this.openclawEditing.name === DEFAULT_OPENCLAW_CONFIG_NAME);
+                || (this.openclawEditing && this.openclawEditing.lockName && this.isDefaultOpenclawConfig(this.openclawEditing.name));
             const modalToken = Number(options.modalToken || this.openclawModalLoadToken || 0);
             const expectedEditorContent = typeof options.expectedEditorContent === 'string'
                 ? options.expectedEditorContent
@@ -260,7 +266,7 @@ export function createOpenclawPersistMethods(options = {}) {
             if (this.openclawSaving || this.openclawApplying) {
                 return;
             }
-            if (this.openclawEditing && this.openclawEditing.lockName && this.openclawEditing.name === DEFAULT_OPENCLAW_CONFIG_NAME) {
+            if (this.openclawEditing && this.openclawEditing.lockName && this.isDefaultOpenclawConfig(this.openclawEditing.name)) {
                 this.showMessage('默认配置代表当前系统配置，请使用“保存并应用”', 'info');
                 return;
             }
@@ -268,7 +274,7 @@ export function createOpenclawPersistMethods(options = {}) {
             try {
                 const name = this.persistOpenclawConfig();
                 if (!name) return;
-                this.showMessage('操作成功', 'success');
+                this.showMessage(this.t('toast.operation.success'), 'success');
             } finally {
                 this.openclawSaving = false;
             }
@@ -312,7 +318,7 @@ export function createOpenclawPersistMethods(options = {}) {
         },
 
         async deleteOpenclawConfig(name) {
-            if (name === DEFAULT_OPENCLAW_CONFIG_NAME) {
+            if (this.isDefaultOpenclawConfig(name, this.openclawConfigs && this.openclawConfigs[name])) {
                 return this.showMessage('默认配置始终映射当前系统配置，不可删除', 'info');
             }
             if (Object.keys(this.openclawConfigs).length <= 1) {

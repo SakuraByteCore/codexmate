@@ -15,7 +15,8 @@
         'plugins',
         'docs',
         'settings',
-        'trash'
+        'trash',
+        'prompts'
     ]);
     const loadDoctorOverview = async (vm, options = {}) => {
         if (!vm || typeof vm !== 'object') return false;
@@ -107,6 +108,9 @@
         try {
             localStorage.setItem(NAV_STATE_STORAGE_KEY, JSON.stringify(snapshot));
         } catch (_) {}
+        if (typeof vm.persistWebUiPreferences === 'function') {
+            vm.persistWebUiPreferences({ navigation: snapshot });
+        }
     };
 
     return {

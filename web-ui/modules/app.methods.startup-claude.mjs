@@ -1,6 +1,8 @@
 import {
     findDuplicateClaudeConfigName,
     getClaudeModelCatalogForBaseUrl,
+    isLikelyBuiltinClaudeProxySettingsEnv,
+    matchBuiltinClaudeProxyConfigFromSettings,
     matchClaudeConfigFromSettings,
     normalizeClaudeConfig,
     normalizeClaudeSettingsEnv,
@@ -120,9 +122,20 @@ export function createStartupClaudeMethods(options = {}) {
                                 : String(defaultModelAutoCompactTokenLimit);
                         }
                     }
+                    if (statusRes.toolConfigPermissions && typeof statusRes.toolConfigPermissions === 'object') {
+                        this.toolConfigPermissions = {
+                            codex: statusRes.toolConfigPermissions.codex === true,
+                            claude: statusRes.toolConfigPermissions.claude === true,
+                            opencode: statusRes.toolConfigPermissions.opencode === true
+                        };
+                        try {
+                            localStorage.setItem('toolConfigPermissions', JSON.stringify(this.toolConfigPermissions));
+                        } catch (_) {}
+                    }
                     this.providersList = listRes.providers;
                     if (typeof this.loadLocalBridgeExcluded === 'function') { this.loadLocalBridgeExcluded(); }
                     if (typeof this.loadClaudeLocalBridgeStatus === 'function') { this.loadClaudeLocalBridgeStatus(); }
+                    if (typeof this.loadOpencodeConfig === 'function') { this.loadOpencodeConfig(); }
                     if (statusRes.configReady === false) {
                         this.showMessage('配置已加载', 'info');
                     }
@@ -132,9 +145,9 @@ export function createStartupClaudeMethods(options = {}) {
                     this.maybeShowStarPrompt();
                     return true;
                 } catch (e) {
-                    this.initError = e && e.message === 'timeout'
-                        ? '读取配置超时'
-                        : '连接失败: ' + (e && e.message ? e.message : '');
+                    if (e && e.message !== 'timeout') {
+                        this.initError = '连接失败: ' + (e.message || '');
+                    }
                     return false;
                 } finally {
                     if (!preserveLoading) {
@@ -232,6 +245,14 @@ export function createStartupClaudeMethods(options = {}) {
             return matchClaudeConfigFromSettings(this.claudeConfigs, env);
         },
 
+        matchBuiltinClaudeProxyConfigFromSettings(env) {
+            return matchBuiltinClaudeProxyConfigFromSettings(this.claudeConfigs, env, this.currentClaudeConfig);
+        },
+
+        shouldSuppressClaudeSettingsImport(env) {
+            return isLikelyBuiltinClaudeProxySettingsEnv(env);
+        },
+
         findDuplicateClaudeConfigName(config) {
             return findDuplicateClaudeConfigName(this.claudeConfigs, config);
         },
@@ -239,16 +260,23 @@ export function createStartupClaudeMethods(options = {}) {
         mergeClaudeConfig(existing = {}, updates = {}) {
             const previous = this.normalizeClaudeConfig(existing);
             const next = this.normalizeClaudeConfig({ ...existing, ...updates });
+            const raw = { ...existing, ...updates };
+            const providerCacheRef = typeof raw.providerCacheRef === 'string' ? raw.providerCacheRef.trim() : '';
+            const source = raw.source === 'provider-cache' ? 'provider-cache' : (existing.source === 'provider-cache' && providerCacheRef ? 'provider-cache' : '');
             const externalCredentialType = next.apiKey
                 ? ''
                 : (next.externalCredentialType || previous.externalCredentialType || '');
-            return {
+            const merged = {
                 apiKey: next.apiKey,
                 baseUrl: next.baseUrl,
                 model: next.model || previous.model || 'glm-4.7',
-                hasKey: !!(next.apiKey || externalCredentialType),
-                externalCredentialType
+                hasKey: !!(next.apiKey || externalCredentialType || providerCacheRef || raw.hasKey === true),
+                externalCredentialType,
+                targetApi: next.targetApi || previous.targetApi || 'responses'
             };
+            if (providerCacheRef) merged.providerCacheRef = providerCacheRef;
+            if (source) merged.source = source;
+            return merged;
         },
 
         buildClaudeImportedConfigName(baseUrl) {
@@ -323,7 +351,8 @@ export function createStartupClaudeMethods(options = {}) {
                         }
                         return;
                     }
-                    const matchName = this.matchClaudeConfigFromSettings((res && res.env) || {});
+                    const settingsEnv = (res && res.env) || {};
+                    const matchName = this.matchClaudeConfigFromSettings(settingsEnv);
                     if (matchName) {
                         if (this.currentClaudeConfig !== matchName) {
                             this.currentClaudeConfig = matchName;
@@ -332,7 +361,18 @@ export function createStartupClaudeMethods(options = {}) {
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         return;
                     }
-                    const importedName = this.ensureClaudeConfigFromSettings((res && res.env) || {});
+                    const builtinProxyMatch = this.matchBuiltinClaudeProxyConfigFromSettings(settingsEnv);
+                    if (builtinProxyMatch) {
+                        if (this.currentClaudeConfig !== builtinProxyMatch) {
+                            this.currentClaudeConfig = builtinProxyMatch;
+                            try { localStorage.setItem('currentClaudeConfig', builtinProxyMatch); } catch (_) {}
+                        }
+                        this.refreshClaudeModelContext({ silentError: silentModelError });
+                        return;
+                    }
+                    const importedName = this.shouldSuppressClaudeSettingsImport(settingsEnv)
+                        ? ''
+                        : this.ensureClaudeConfigFromSettings(settingsEnv);
                     if (importedName) {
                         if (this.currentClaudeConfig !== importedName) {
                             this.currentClaudeConfig = importedName;
@@ -425,6 +465,9 @@ export function createStartupClaudeMethods(options = {}) {
             const currentConfigName = typeof this.currentClaudeConfig === 'string' ? this.currentClaudeConfig.trim() : '';
             const baseUrl = (config.baseUrl || '').trim();
             const apiKey = (config.apiKey || '').trim();
+            const providerCacheRef = typeof config.providerCacheRef === 'string'
+                ? config.providerCacheRef.trim()
+                : '';
             const externalCredentialType = typeof config.externalCredentialType === 'string'
                 ? config.externalCredentialType.trim()
                 : '';
@@ -434,7 +477,7 @@ export function createStartupClaudeMethods(options = {}) {
                 return;
             }
             const localCatalog = getClaudeModelCatalogForBaseUrl(baseUrl);
-            if (!apiKey && externalCredentialType) {
+            if (!apiKey && (externalCredentialType || providerCacheRef)) {
                 this.claudeModels = localCatalog;
                 this.claudeModelsSource = localCatalog.length ? 'catalog' : 'unlimited';
                 if (localCatalog.length) {
@@ -486,6 +529,7 @@ export function createStartupClaudeMethods(options = {}) {
                 }
                 return (latestConfig.baseUrl || '').trim() === baseUrl
                     && (latestConfig.apiKey || '').trim() === apiKey
+                    && (typeof latestConfig.providerCacheRef === 'string' ? latestConfig.providerCacheRef.trim() : '') === providerCacheRef
                     && (typeof latestConfig.externalCredentialType === 'string' ? latestConfig.externalCredentialType.trim() : '') === externalCredentialType;
             };
             if (cachedOk) {
@@ -529,6 +573,7 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         openClaudeConfigModal() {
+            this.showAddClaudeConfigKey = false;
             this.showClaudeConfigModal = true;
         },
 

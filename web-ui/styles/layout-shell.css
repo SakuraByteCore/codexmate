@@ -284,6 +284,21 @@ body::after {
     transform: translateY(0);
 }
 
+.lang-switch-track[data-lang="vi"] .lang-switch-vi {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.lang-switch-track[data-lang="vi"] .lang-switch-en,
+.lang-switch-track[data-lang="vi"] .lang-switch-zh {
+    opacity: 0;
+}
+
+.lang-switch-track[data-lang="zh"] .lang-switch-vi,
+.lang-switch-track[data-lang="en"] .lang-switch-vi {
+    opacity: 0;
+}
+
 .lang-switch-track[data-lang="zh"] .lang-switch-en {
     opacity: 0;
 }
@@ -507,6 +522,151 @@ body::after {
     -webkit-text-fill-color: #8e8e93;
 }
 
+.mobile-brand-bar {
+    display: none;
+}
+
+.mobile-brand-title {
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 760;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-update-chip {
+    min-width: 0;
+    max-width: 58vw;
+    height: 30px;
+    padding: 0 9px;
+    border: 1px solid rgba(200, 121, 99, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.58);
+    color: var(--color-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+.mobile-update-chip--current {
+    border-color: rgba(72, 138, 102, 0.14);
+}
+
+.mobile-update-chip--current .side-update-dot {
+    background: rgba(72, 138, 102, 0.70);
+    box-shadow: 0 0 0 4px rgba(72, 138, 102, 0.08);
+}
+
+.mobile-update-chip--loading .side-update-dot {
+    animation: side-update-pulse 1.2s ease-in-out infinite;
+}
+
+.mobile-update-chip--error {
+    border-color: rgba(203, 75, 75, 0.18);
+}
+
+.mobile-update-chip--error .side-update-dot {
+    background: rgba(203, 75, 75, 0.78);
+    box-shadow: 0 0 0 4px rgba(203, 75, 75, 0.08);
+}
+
+.mobile-update-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    font-weight: 680;
+}
+
+.side-update-notice {
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px 9px;
+    border: 1px solid rgba(200, 121, 99, 0.16);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.52);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: none;
+    transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.side-update-notice:hover {
+    border-color: rgba(200, 121, 99, 0.30);
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--color-text-primary);
+}
+
+.side-update-notice--current {
+    border-color: rgba(72, 138, 102, 0.14);
+}
+
+.side-update-notice--current .side-update-dot {
+    background: rgba(72, 138, 102, 0.70);
+    box-shadow: 0 0 0 4px rgba(72, 138, 102, 0.08);
+}
+
+.side-update-notice--loading .side-update-dot {
+    animation: side-update-pulse 1.2s ease-in-out infinite;
+}
+
+.side-update-notice--error {
+    border-color: rgba(203, 75, 75, 0.18);
+}
+
+.side-update-notice--error .side-update-dot {
+    background: rgba(203, 75, 75, 0.78);
+    box-shadow: 0 0 0 4px rgba(203, 75, 75, 0.08);
+}
+
+@keyframes side-update-pulse {
+    0%, 100% { opacity: 0.48; transform: scale(0.94); }
+    50% { opacity: 1; transform: scale(1.08); }
+}
+
+.side-update-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(200, 121, 99, 0.72);
+    box-shadow: 0 0 0 4px rgba(200, 121, 99, 0.08);
+    flex-shrink: 0;
+}
+
+.side-update-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.side-update-title {
+    font-size: 11px;
+    line-height: 1.25;
+    font-weight: 650;
+    color: inherit;
+}
+
+.side-update-meta {
+    font-size: 10px;
+    line-height: 1.2;
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .brand-version-fade-enter-active,
 .brand-version-fade-leave-active {
     transition: opacity 0.2s var(--ease-smooth);
@@ -663,4 +823,84 @@ body::after {
     font-weight: 700;
     line-height: 1;
     box-shadow: 0 2px 6px rgba(200, 121, 99, 0.28);
+}
+
+.language-settings-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 36px;
+    max-width: calc(100% - 16px);
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(163, 146, 134, 0.28);
+    background: rgba(255, 253, 252, 0.92);
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 10px 28px rgba(27, 23, 20, 0.12);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-smooth), border-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth), transform var(--transition-fast) var(--ease-smooth);
+}
+
+.language-settings-link:hover {
+    border-color: rgba(200, 121, 99, 0.58);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--color-text-primary);
+    transform: translateY(-1px);
+}
+
+.language-settings-link:active {
+    transform: translateY(0);
+}
+
+.side-rail-lang-actions {
+    width: calc(100% - 20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.side-rail-lang .language-settings-link {
+    min-width: 0;
+    flex: 1 1 auto;
+    box-shadow: none;
+}
+
+.side-announcement-button {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(163, 146, 134, 0.28);
+    background: rgba(255, 253, 252, 0.92);
+    color: var(--color-text-secondary);
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-smooth), border-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth), transform var(--transition-fast) var(--ease-smooth);
+}
+
+.side-announcement-button:hover {
+    border-color: rgba(200, 121, 99, 0.58);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--color-text-primary);
+    transform: translateY(-1px);
+}
+
+.side-announcement-button:active {
+    transform: translateY(0);
+}
+
+.lang-fab .language-settings-link {
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
 }

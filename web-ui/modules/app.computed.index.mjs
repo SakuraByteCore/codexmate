@@ -4,6 +4,7 @@ import { createSessionComputed } from './app.computed.session.mjs';
 import { createConfigModeComputed } from './config-mode.computed.mjs';
 import { createSkillsComputed } from './skills.computed.mjs';
 import { createPluginsComputed } from './plugins.computed.mjs';
+import { createPromptsComputed } from './app.computed.prompts.mjs';
 
 export function createAppComputed() {
     return {
@@ -12,6 +13,7 @@ export function createAppComputed() {
         ...createMainTabsComputed(),
         ...createSkillsComputed(),
         ...createPluginsComputed(),
-        ...createConfigModeComputed()
+        ...createConfigModeComputed(),
+        ...createPromptsComputed()
     };
 }

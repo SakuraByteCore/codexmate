@@ -354,7 +354,6 @@ export function createSessionTimelineMethods() {
                 shortEdge,
                 maxTouchPoints: touchPoints,
                 userAgent,
-                isMobileUa,
                 coarsePointer,
                 noHover
             });

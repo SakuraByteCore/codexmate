@@ -1,9 +1,18 @@
 ﻿import assert from 'assert';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
     captureBehaviorParityBaselineAppOptions,
     captureCurrentBundledAppOptions,
     withGlobalOverrides
 } from './helpers/web-ui-app-options.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 const currentAppOptions = await captureCurrentBundledAppOptions();
 const parityBaseline = await captureBehaviorParityBaselineAppOptions();
@@ -289,6 +298,8 @@ function createDownloadEnvironment() {
 function createCopyActionContext(methods) {
     const messages = createMessagesRecorder();
     return {
+        ...createI18nMethods(),
+        lang: 'zh',
         ...messages,
         sessionResumeWithYolo: true,
         shareCommandPrefix: 'npm start',
@@ -325,6 +336,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const missingCurrentKeys = headDataKeys.filter((key) => !currentDataKeys.includes(key)).sort();
     const allowedExtraCurrentKeys = parityAgainstHead ? [
         'appVersion',
+        'appLatestVersion',
+        'appVersionStatusError',
+        'appVersionStatusLoading',
+        'appVersionStatusChecked',
+        'appVersionStatusCheckedAt',
+        'appVersionStatusSource',
         'sessionListInitialBatchSize',
         'sessionListLoadStep',
         'sessionListVisibleCount',
@@ -350,10 +367,25 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeExcluded',
         'providersHealthLoading',
         'providersHealthResult',
+        'showAddClaudeConfigKey',
+        'showAddProviderKey',
         'showEditClaudeConfigKey',
-        'showEditProviderKey'
+        'showEditProviderKey',
+        'toolConfigPermissionSaving',
+        'toolConfigPermissions',
+        'promptsHint',
+        'promptsSubTab',
+        'projectClaudeMdPath',
+        'projectPathOptions',
+        'projectPathOptionsLoading'
     ] : [
         'appVersion',
+        'appLatestVersion',
+        'appVersionStatusError',
+        'appVersionStatusLoading',
+        'appVersionStatusChecked',
+        'appVersionStatusCheckedAt',
+        'appVersionStatusSource',
         '__mainTabSwitchState',
         'openclawAuthProfilesByProvider',
         'openclawPendingAuthProfileUpdates',
@@ -383,8 +415,15 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeExcluded',
         'providersHealthLoading',
         'providersHealthResult',
+        'showAddClaudeConfigKey',
+        'showAddProviderKey',
         'showEditClaudeConfigKey',
-        'showEditProviderKey'
+        'showEditProviderKey',
+        'promptsHint',
+        'promptsSubTab',
+        'projectClaudeMdPath',
+        'projectPathOptions',
+        'projectPathOptionsLoading'
     ];
     const allowedMissingCurrentKeys = [
         'localProxyRunning',
@@ -409,6 +448,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptTemplateVarDraftName',
         'showPromptTemplateVarModal',
         'brandHovered',
+        'promptsHint',
     ];
     allowedExtraCurrentKeys.push(
         'lang',
@@ -449,7 +489,44 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
         'sessionsUsageSelectedDayKey',
-        'currentModels'
+        'currentModels',
+        'openclawAccordionStep',
+        'openclawValidation',
+        'toolConfigPermissionSaving',
+        'toolConfigPermissions',
+        'opencodeConfigPath',
+        'opencodeProviderStorePath',
+        'opencodeConfigExists',
+        'opencodeContent',
+        'opencodeLoading',
+        'opencodeSaving',
+        'opencodeApplying',
+        'opencodeError',
+        'opencodeImportError',
+        'opencodeImportFileName',
+        'opencodeProviders',
+        'opencodeAgents',
+        'opencodeProvider',
+        'opencodeModel',
+        'opencodeApiKey',
+        'opencodeShowKey',
+        'opencodeProviderDisabled',
+        'opencodeAgent',
+        'opencodeApplyToCoreAgents',
+        'opencodeAutoCompact',
+        'opencodeMaxTokens',
+        'opencodeReasoningEffort',
+        'sessionTimelineStyle',
+        'providerCacheError',
+        'providerCacheLoadedAt',
+        'providerCacheLoadedOnce',
+        'providerCacheLoading',
+        'providerCacheRecords',
+        'providerCacheRequestSeq',
+        'providerCacheSyncing',
+        'providerCacheSyncMessage',
+        'showProviderCacheModal',
+        'showProviderCacheAnnouncementModal'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -517,6 +594,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectSessionsUsageDay',
         'clearSessionsUsageDay',
         'setSessionTrashEnabled',
+        'setSessionTimelineStyle',
+        'normalizeSessionTimelineStyle',
         'onSettingsTabKeydown',
         'setShareCommandPrefix',
         'setSessionListRef',
@@ -546,6 +625,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'resetTaskOrchestrationDraft',
         'appendTaskWorkflowId',
         'openClaudeMdEditor',
+        'switchPromptsSubTab',
+        'loadPromptsContent',
+        'openSessionLink',
         'saveNavState',
         'isLocalBridgeExcluded',
         'loadLocalBridgeExcluded',
@@ -558,10 +640,39 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeCandidateProviders',
         'claudeLocalBridgeConfigured',
         'syncClaudeBridgeProviders',
+        'syncProviderCacheRecords',
+        'toggleAddClaudeConfigKey',
+        'toggleAddProviderKey',
         'toggleEditClaudeConfigKey',
-        'toggleEditProviderKey'
+        'toggleEditProviderKey',
+        'isToolConfigWriteAllowed',
+        'toolConfigPermissionStatusLabel',
+        'setToolConfigPermission',
+        'opencodeProviderCatalog',
+        'opencodeModelCatalogForProvider',
+        'fillOpencodeProvider',
+        'refreshOpencodeSelectionFromSummary',
+        'loadOpencodeConfig',
+        'parseOpencodeImportContent',
+        'handleOpencodeImportChange',
+        'saveOpencodeConfig',
+        'applyOpencodeSelection',
+        'selectProjectClaudeMdPath',
+        'setProjectClaudeMdPathManual',
+        'loadProjectPathOptions'
     ];
     allowedExtraCurrentMethodKeys.push(
+        'normalizePackageVersion',
+        'comparePackageVersions',
+        'isAppUpdateAvailable',
+        'isAppVersionStatusVisible',
+        'appVersionStatusKind',
+        'appUpdateNoticeText',
+        'appUpdateNoticeMeta',
+        'appVersionStatusTitle',
+        'handleAppVersionStatusClick',
+        'loadAppVersionStatus',
+        'openAppUpdateDocs',
         'hasActiveSessionFilters',
         'getSessionFilterChips',
         'clearSessionFilterChip',
@@ -617,7 +728,50 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'pasteAgentsContent',
         'importSingleSkill',
         'openSkillsMenu',
-        'isClaudeLocalBridgeDisabled'
+        'isClaudeLocalBridgeDisabled',
+        'languageOptions',
+        'currentLanguageLabel',
+        'openLanguageSettings',
+        'isDefaultOpenclawConfig',
+        'getClaudeConfigValidation',
+        'claudeConfigFieldError',
+        'canSubmitClaudeConfig',
+        'matchBuiltinClaudeProxyConfigFromSettings',
+        'shouldSuppressClaudeSettingsImport',
+        'toggleAccordionStep',
+        'nextAccordionStep',
+        'prevAccordionStep',
+        'finishAccordionStep',
+        'validateProviderName',
+        'validateModelId',
+        'getSessionFilePath',
+        'copySessionPath',
+        'canBuildStandaloneUrl',
+        'openProviderCacheModal',
+        'closeProviderCacheModal',
+        'openProviderCacheAnnouncementModal',
+        'closeProviderCacheAnnouncementModal',
+        'openProviderCacheDetailsFromAnnouncement',
+        'loadProviderCacheRecords',
+        'getProviderCacheGroups',
+        'getProviderCacheAnnouncementSummary',
+        'getProviderCacheAnnouncementGroups',
+        'hasProviderCacheExistingFiles',
+        'getProviderCacheExistingFiles',
+        'getProviderCacheFileKey',
+        'getProviderCacheFilePath',
+        'getProviderCacheFileSummary',
+        'formatProviderCacheFileSize',
+        'hasProviderCacheProviders',
+        'getProviderCacheFileProviders',
+        'getProviderCacheProviderMeta',
+        'getProviderCacheProviderText',
+        'getProviderCacheRecordText',
+        'buildWebUiPreferencesSnapshot',
+        'hydrateClaudeConfigsFromProviderCache',
+        'applyWebUiPreferences',
+        'loadWebUiPreferences',
+        'persistWebUiPreferences'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',
@@ -699,6 +853,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptComposerRendered',
         'promptComposerPickerList',
         'promptComposerMissingVars',
+        'promptsContextHint',
         'sessionUsageDaily',
         'sessionUsageHeatmap',
         'sessionUsageHourlyHeatmap',
@@ -726,14 +881,18 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providersHealthSummary',
         'providersHealthTone',
         'sessionContextUtilization',
-        'isLocalProviderDisabled'
+        'isLocalProviderDisabled',
+        'sessionTimelineProgressPercent'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',
         'isCurrentLocalProvider',
         'localProviderEntry',
         'localProxyListenUrl',
-        'localProxyUpstreamOptions'
+        'localProxyUpstreamOptions',
+        'currentClaudeHaikuModel',
+        'currentClaudeSonnetModel',
+        'currentClaudeOpusModel'
     ];
     if (parityAgainstHead) {
         const allowedExtraComputedKeySet = new Set(allowedExtraCurrentComputedKeys);

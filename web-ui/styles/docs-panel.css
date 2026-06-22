@@ -104,10 +104,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 10px 10px 14px;
+    padding: 10px 14px;
     border: 1px solid var(--color-border-soft);
     border-radius: var(--radius-sm);
     background: var(--color-surface-alt);
+    overflow: hidden;
+    max-width: 100%;
 }
 
 .docs-command-box .install-command {
@@ -117,8 +119,9 @@
     border-radius: var(--radius-sm);
     background: var(--color-surface);
     border: 1px solid var(--color-border-soft);
-    overflow-x: auto;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-all;
+    overflow-wrap: break-word;
     font-size: 13px;
     line-height: 1.5;
     font-family: var(--font-family-mono);
@@ -234,12 +237,8 @@
         grid-column: span 1;
     }
 
-    .docs-command-box {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .docs-copy-btn {
-        width: 100%;
+    .docs-install-row,
+    .docs-command-row {
+        overflow: hidden;
     }
 }

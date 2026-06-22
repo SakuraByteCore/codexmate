@@ -1,4 +1,4 @@
-                <!-- 回收站面板 -->
+                <!-- Trash panel -->
                 <div
                     v-show="mainTab === 'trash'"
                     class="mode-content"
@@ -6,7 +6,7 @@
                     role="tabpanel"
                     aria-labelledby="tab-trash">
                     <div v-if="!loading" class="trash-panel-shell">
-                        <!-- 空态 -->
+                        <!-- Empty state -->
                         <div v-if="getSessionTrashViewState() === 'empty'" class="trash-empty-state">
                             <svg class="trash-empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.2">
                                 <path d="M20 22l4 32h16l4-32"/>
@@ -15,38 +15,38 @@
                                 <path d="M28 30v16M36 30v16" stroke-width="1.6" stroke-linecap="round"/>
                             </svg>
                             <div class="trash-empty-title">{{ t('settings.trash.empty') }}</div>
-                            <div class="trash-empty-hint">删除的会话保留 {{ sessionTrashRetentionDays }} 天后自动清理</div>
+                            <div class="trash-empty-hint">{{ t('settings.trash.emptyHint', { days: sessionTrashRetentionDays }) }}</div>
                         </div>
 
-                        <!-- 加载态 -->
+                        <!-- Loading state -->
                         <div v-else-if="getSessionTrashViewState() === 'loading'" class="trash-empty-state">
                             <div class="trash-spinner"></div>
                             <div class="trash-empty-title">{{ t('settings.trash.loading') }}</div>
                         </div>
 
-                        <!-- 错误态 -->
+                        <!-- Error state -->
                         <div v-else-if="getSessionTrashViewState() === 'retry'" class="trash-empty-state">
                             <svg class="trash-empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.2">
                                 <circle cx="32" cy="32" r="22"/>
                                 <path d="M32 20v16M32 44v2" stroke-width="2" stroke-linecap="round"/>
                             </svg>
                             <div class="trash-empty-title">{{ t('settings.trash.retry') }}</div>
-                            <button class="btn-tool" @click="loadSessionTrash({ forceRefresh: true })">重试</button>
+                            <button class="btn-tool" @click="loadSessionTrash({ forceRefresh: true })">{{ t('common.retry') }}</button>
                         </div>
 
-                        <!-- 列表态 -->
+                        <!-- List state -->
                         <template v-else>
                             <div class="trash-toolbar">
                                 <div class="trash-toolbar-left">
-                                    <span class="trash-toolbar-count">{{ sessionTrashCount }} 个已删除会话</span>
-                                    <span class="trash-toolbar-retention">{{ sessionTrashRetentionDays }} 天后自动清理</span>
+                                    <span class="trash-toolbar-count">{{ t('settings.trash.count', { count: sessionTrashCount }) }}</span>
+                                    <span class="trash-toolbar-retention">{{ t('settings.trash.retentionShort', { days: sessionTrashRetentionDays }) }}</span>
                                 </div>
                                 <div class="trash-toolbar-right">
-                                    <button class="btn-mini" @click="loadSessionTrash({ forceRefresh: true })" :disabled="sessionTrashLoading" :title="t('sessions.refresh')">
+                                    <button class="btn-mini" @click="loadSessionTrash({ forceRefresh: true })" :disabled="sessionTrashLoading" :aria-label="t('sessions.refresh')" :title="t('sessions.refresh')">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
                                     </button>
                                     <button class="btn-mini delete" @click="clearSessionTrash" :disabled="sessionTrashClearing || sessionTrashLoading || !(Number(sessionTrashCount) > 0)">
-                                        {{ sessionTrashClearing ? '清空中…' : '清空' }}
+                                        {{ sessionTrashClearing ? t('settings.trash.clearing') : t('settings.trash.clearShort') }}
                                     </button>
                                 </div>
                             </div>
@@ -63,10 +63,10 @@
                                             </div>
                                         </div>
                                         <div class="trash-item-actions">
-                                            <button class="trash-action-btn restore" @click="restoreSessionTrash(item)" :disabled="sessionTrashLoading || sessionTrashClearing || isSessionTrashActionBusy(item)" :title="sessionTrashRestoring[getSessionTrashActionKey(item)] ? '恢复中…' : '恢复'">
+                                            <button class="trash-action-btn restore" @click="restoreSessionTrash(item)" :disabled="sessionTrashLoading || sessionTrashClearing || isSessionTrashActionBusy(item)" :aria-label="sessionTrashRestoring[getSessionTrashActionKey(item)] ? t('settings.trash.restoring') : t('settings.trash.restore')" :title="sessionTrashRestoring[getSessionTrashActionKey(item)] ? t('settings.trash.restoring') : t('settings.trash.restore')">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 119 9"/><path d="M3 4v6h6"/></svg>
                                             </button>
-                                            <button class="trash-action-btn delete" @click="purgeSessionTrash(item)" :disabled="sessionTrashLoading || sessionTrashClearing || isSessionTrashActionBusy(item)" :title="sessionTrashPurging[getSessionTrashActionKey(item)] ? '删除中…' : '彻底删除'">
+                                            <button class="trash-action-btn delete" @click="purgeSessionTrash(item)" :disabled="sessionTrashLoading || sessionTrashClearing || isSessionTrashActionBusy(item)" :aria-label="sessionTrashPurging[getSessionTrashActionKey(item)] ? t('settings.trash.purging') : t('settings.trash.purge')" :title="sessionTrashPurging[getSessionTrashActionKey(item)] ? t('settings.trash.purging') : t('settings.trash.purge')">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg>
                                             </button>
                                         </div>
@@ -74,7 +74,7 @@
                                 </div>
                                 <div v-if="sessionTrashHasMoreItems" class="trash-list-footer">
                                     <button class="btn-tool btn-tool-compact" @click="loadMoreSessionTrashItems" :disabled="sessionTrashLoading || sessionTrashClearing">
-                                        加载更多（{{ sessionTrashHiddenCount }} 条）
+                                        {{ t('settings.trash.loadMoreItems', { count: sessionTrashHiddenCount }) }}
                                     </button>
                                 </div>
                             </div>

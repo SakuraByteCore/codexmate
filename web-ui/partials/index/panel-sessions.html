@@ -119,11 +119,11 @@
                     </div>
                 </div>
 
-                <div v-if="sessionsLoading" class="state-message">
+                <div v-if="sessionsLoading && sessionsList.length === 0" class="state-message">
                     {{ t('sessions.loadingList') }}
                 </div>
 
-                <div v-else-if="sessionsList.length === 0" class="session-empty">
+                <div v-else-if="!sessionsLoading && sessionsList.length === 0" class="session-empty">
                     {{ t('sessions.empty') }}
                 </div>
 
@@ -219,27 +219,53 @@
                                         </div>
                                     </div>
                                     <div class="session-actions">
-                                        <button class="btn-session-refresh" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession">
-                                            {{ sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh') }}
+                                        <button class="btn-session-refresh" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
+                                            :title="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')"
+                                            :aria-label="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.8"/><path d="M13.5 8a5.5 5.5 0 0 1-9.4 3.8"/><polyline points="2.5 2 2.5 5 5.5 5"/><polyline points="13.5 14 13.5 11 10.5 11"/></svg>
                                         </button>
                                         <button
                                             v-if="isDeleteAvailable(activeSession)"
                                             class="btn-session-delete"
                                             @click="deleteSession(activeSession)"
-                                            :disabled="!activeSession || sessionsLoading || sessionDeleting[getSessionExportKey(activeSession)]">
-                                            {{ (activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash')) }}
+                                            :disabled="!activeSession || sessionsLoading || sessionDeleting[getSessionExportKey(activeSession)]"
+                                            :title="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))"
+                                            :aria-label="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 4 4 4 13 4"/><path d="M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4"/><path d="M12 4v9.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 13.5V4"/></svg>
                                         </button>
                                         <button
                                             class="btn-session-export"
                                             @click="exportSession(activeSession)"
-                                            :disabled="!activeSession || sessionExporting[getSessionExportKey(activeSession)]">
-                                            {{ (activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export') }}
+                                            :disabled="!activeSession || sessionExporting[getSessionExportKey(activeSession)]"
+                                            :title="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')"
+                                            :aria-label="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"/><polyline points="4 7 8 10.5 12 7"/><path d="M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12"/></svg>
                                         </button>
+                                        <div class="session-link-group">
                                         <button
                                             class="btn-session-open"
                                             @click="copySessionLink(activeSession)"
-                                            :disabled="!activeSession">
-                                            {{ t('sessions.preview.copyLink') }}
+                                            :disabled="!activeSession || !canBuildStandaloneUrl(activeSession)"
+                                            :title="t('sessions.preview.copyLink')"
+                                            :aria-label="t('sessions.preview.copyLink')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1"/></svg>
+                                        </button>
+                                        <button
+                                            class="btn-session-open"
+                                            @click="openSessionLink(activeSession)"
+                                            :disabled="!activeSession || !canBuildStandaloneUrl(activeSession)"
+                                            :title="t('sessions.preview.openLink')"
+                                            :aria-label="t('sessions.preview.openLink')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2h-8.5A1.5 1.5 0 0 0 2 3.5v8A1.5 1.5 0 0 0 3.5 13h8a1.5 1.5 0 0 0 1.5-1.5v-3"/><path d="M13 2v4h-4"/><path d="M13 2L7 8"/></svg>
+                                        </button>
+                                        </div>
+                                        <button
+                                            class="btn-session-open"
+                                            @click="copySessionPath(activeSession)"
+                                            :disabled="!activeSession || !getSessionFilePath(activeSession)"
+                                            :title="t('sessions.preview.copyPath')"
+                                            :aria-label="t('sessions.preview.copyPath')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z"/></svg>
                                         </button>
                                     </div>
                                 </div>
@@ -290,23 +316,50 @@
                                     </div>
                                 </div>
                             </div>
-                            <aside v-if="sessionPreviewRenderEnabled && sessionTimelineNodes.length" class="session-timeline" :aria-label="t('sessions.timeline.aria')">
-                                <div class="session-timeline-track"></div>
-                                <button
-                                    v-for="node in sessionTimelineNodes"
-                                    :key="'timeline-' + node.key"
-                                    v-memo="[sessionTimelineActiveKey === node.key, node.safePercent, node.title]"
-                                    type="button"
-                                    :class="['session-timeline-node', { active: sessionTimelineActiveKey === node.key }]"
-                                    :aria-current="sessionTimelineActiveKey === node.key ? 'true' : null"
-                                    :style="{ top: `${node.safePercent}%` }"
-                                    :title="node.title"
-                                    @click="jumpToSessionTimelineNode(node.key)">
-                                    <span class="sr-only">{{ node.title }}</span>
-                                </button>
-                                <div class="session-timeline-current" v-if="sessionTimelineActiveTitle">
-                                    {{ sessionTimelineActiveTitle }}
-                                </div>
+                            <aside v-if="sessionPreviewRenderEnabled && sessionTimelineNodes.length" :class="['session-timeline', 'session-timeline-' + sessionTimelineStyle]" :aria-label="t('sessions.timeline.aria')">
+                                <!-- 点状模式 -->
+                                <template v-if="sessionTimelineStyle === 'dots'">
+                                    <div class="session-timeline-track"></div>
+                                    <button
+                                        v-for="node in sessionTimelineNodes"
+                                        :key="'timeline-' + node.key"
+                                        v-memo="[sessionTimelineActiveKey === node.key, node.safePercent, node.title]"
+                                        type="button"
+                                        :class="['session-timeline-node', { active: sessionTimelineActiveKey === node.key }]"
+                                        :aria-current="sessionTimelineActiveKey === node.key ? 'true' : null"
+                                        :style="{ top: `${node.safePercent}%` }"
+                                        :title="node.title"
+                                        @click="jumpToSessionTimelineNode(node.key)">
+                                        <span class="sr-only">{{ node.title }}</span>
+                                    </button>
+                                    <div class="session-timeline-current" v-if="sessionTimelineActiveTitle">
+                                        {{ sessionTimelineActiveTitle }}
+                                    </div>
+                                </template>
+
+                                <!-- 条状模式 -->
+                                <template v-else>
+                                    <div class="session-timeline-bar-track">
+                                        <div class="session-timeline-bar-progress"
+                                             :style="{ height: sessionTimelineProgressPercent + '%' }">
+                                        </div>
+                                    </div>
+                                    <button
+                                        v-for="node in sessionTimelineNodes"
+                                        :key="'timeline-bar-' + node.key"
+                                        v-memo="[sessionTimelineActiveKey === node.key, node.safePercent, node.title]"
+                                        type="button"
+                                        :class="['session-timeline-bar-node', { active: sessionTimelineActiveKey === node.key }]"
+                                        :aria-current="sessionTimelineActiveKey === node.key ? 'true' : null"
+                                        :style="{ top: `${node.safePercent}%` }"
+                                        :title="node.title"
+                                        @click="jumpToSessionTimelineNode(node.key)">
+                                        <span class="sr-only">{{ node.title }}</span>
+                                    </button>
+                                    <div class="session-timeline-current" v-if="sessionTimelineActiveTitle">
+                                        {{ sessionTimelineActiveTitle }}
+                                    </div>
+                                </template>
                             </aside>
                         </template>
 

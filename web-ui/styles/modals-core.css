@@ -427,6 +427,7 @@
     line-height: 1.55;
     max-height: min(32vh, 280px);
     overflow: auto;
+    animation: diffSlideIn var(--transition-normal) var(--ease-spring);
 }
 
 
@@ -496,4 +497,199 @@
 .form-hint.form-error {
     color: var(--color-error);
     opacity: 1;
+}
+
+.btn-confirm-mini {
+    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(210, 107, 90, 0.2);
+}
+
+.btn-confirm-mini:hover {
+    box-shadow: 0 4px 8px rgba(210, 107, 90, 0.25);
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+}
+
+.prompts-editor {
+    margin-top: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.prompts-editor .form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.prompts-editor .editor-frame {
+    min-height: 75vh;
+}
+
+.prompts-editor .template-editor {
+    min-height: 75vh;
+    max-height: none;
+}
+
+.prompts-editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.prompts-editor-toolbar .form-hint {
+    margin-top: 0;
+    font-size: 9px;
+}
+
+.prompts-editor-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.prompts-editor-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.prompts-editor-group--secondary .btn-mini {
+    color: var(--color-text-tertiary);
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+.prompts-editor-group--secondary .btn-mini:hover {
+    color: var(--color-brand);
+    background: var(--color-brand-light);
+    transform: none;
+}
+
+.prompts-editor-group--workflow {
+    margin-left: 4px;
+    padding-left: 10px;
+    border-left: 1px solid var(--color-border-soft);
+}
+
+.project-path-selector {
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.project-path-label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.project-path-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.project-path-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.project-path-manual {
+    flex: 1;
+    min-width: 0;
+}
+
+.project-path-detected {
+    margin-top: 4px;
+    font-size: 0.82em;
+}
+
+.editor-frame {
+    position: relative;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border-soft);
+    transition: border-color var(--transition-fast) var(--ease-spring),
+                box-shadow var(--transition-normal) var(--ease-spring);
+    overflow: hidden;
+}
+
+.editor-frame:focus-within {
+    border-color: var(--color-brand);
+    box-shadow: var(--shadow-input-focus);
+}
+
+.editor-frame .form-input {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.editor-frame .form-input:focus {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.editor-frame--loading .form-input {
+    opacity: 0;
+}
+
+.editor-skeleton {
+    position: absolute;
+    inset: 13px var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.skeleton-line {
+    height: 13px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--color-border-soft) 25%, rgba(255, 255, 255, 0.6) 50%, var(--color-border-soft) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-line:nth-child(2) { width: 85%; }
+.skeleton-line:nth-child(3) { width: 92%; }
+.skeleton-line:nth-child(4) { width: 60%; }
+.skeleton-line:nth-child(5) { width: 78%; }
+.skeleton-line:nth-child(6) { width: 45%; }
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.prompts-context-hint {
+    margin-top: 6px;
+    font-size: var(--font-size-caption);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+    line-height: 1.4;
+}
+
+.prompts-context-hint:hover {
+    opacity: 1;
+}
+
+.prompts-context-hint--warn {
+    color: #8d5b31;
+    opacity: 0.85;
+}
+
+@keyframes diffSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }

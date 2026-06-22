@@ -84,6 +84,40 @@ function stringifyAnthropicToolResultContent(content) {
     return safeJsonStringify(content);
 }
 
+function buildOpenAIImageUrlFromAnthropicSource(source) {
+    if (!source || typeof source !== 'object') return '';
+    if (source.type === 'base64' && typeof source.data === 'string' && source.data.trim()) {
+        const mediaType = typeof source.media_type === 'string' && source.media_type.trim()
+            ? source.media_type.trim()
+            : 'image/png';
+        return `data:${mediaType};base64,${source.data.trim()}`;
+    }
+    if (source.type === 'url' && typeof source.url === 'string' && source.url.trim()) {
+        return source.url.trim();
+    }
+    return '';
+}
+
+function collectAnthropicImageBase64(source) {
+    if (!source || typeof source !== 'object') return '';
+    if (source.type === 'base64' && typeof source.data === 'string' && source.data.trim()) {
+        return source.data.trim();
+    }
+    const url = buildOpenAIImageUrlFromAnthropicSource(source);
+    const match = url ? url.match(/^data:[^;,]+;base64,(.+)$/i) : null;
+    return match && match[1] ? match[1] : '';
+}
+
+function isDroppableAnthropicBridgeBlock(block) {
+    const type = block && typeof block.type === 'string' ? block.type : '';
+    return type === 'thinking' || type === 'document';
+}
+
+function isDroppableAnthropicOllamaBlock(block) {
+    const type = block && typeof block.type === 'string' ? block.type : '';
+    return type === 'thinking' || type === 'document' || type === 'video';
+}
+
 function appendAnthropicMessageToResponsesInput(target, message) {
     if (!message || typeof message !== 'object') return;
     const roleRaw = typeof message.role === 'string' ? message.role.trim().toLowerCase() : '';
@@ -101,6 +135,13 @@ function appendAnthropicMessageToResponsesInput(target, message) {
         if (!block || typeof block !== 'object') continue;
         if (block.type === 'text' && typeof block.text === 'string' && block.text) {
             buffered.push({ type: textType, text: block.text });
+            continue;
+        }
+        if (block.type === 'image' && role === 'user') {
+            const imageUrl = buildOpenAIImageUrlFromAnthropicSource(block.source);
+            if (imageUrl) {
+                buffered.push({ type: 'input_image', image_url: imageUrl });
+            }
             continue;
         }
         if (block.type === 'tool_use' && typeof block.name === 'string' && block.name.trim()) {
@@ -124,6 +165,9 @@ function appendAnthropicMessageToResponsesInput(target, message) {
             });
             continue;
         }
+        if (isDroppableAnthropicBridgeBlock(block)) {
+            continue;
+        }
         buffered.push({
             type: textType,
             text: `[unsupported anthropic block: ${typeof block.type === 'string' ? block.type : 'unknown'}]`
@@ -131,6 +175,23 @@ function appendAnthropicMessageToResponsesInput(target, message) {
     }
 
     flushBuffered();
+}
+
+function mapAnthropicToolChoiceToChat(toolChoice) {
+    if (!toolChoice) return undefined;
+    if (typeof toolChoice === 'string') {
+        if (toolChoice === 'auto' || toolChoice === 'none') return toolChoice;
+        if (toolChoice === 'any') return 'required';
+        return undefined;
+    }
+    if (!toolChoice || typeof toolChoice !== 'object') return undefined;
+    const type = typeof toolChoice.type === 'string' ? toolChoice.type.trim().toLowerCase() : '';
+    if (type === 'auto' || type === 'none') return type;
+    if (type === 'any') return 'required';
+    if (type === 'tool' && typeof toolChoice.name === 'string' && toolChoice.name.trim()) {
+        return { type: 'function', function: { name: toolChoice.name.trim() } };
+    }
+    return undefined;
 }
 
 function mapAnthropicToolChoiceToResponses(toolChoice) {
@@ -218,6 +279,277 @@ function buildBuiltinClaudeResponsesRequest(payload = {}) {
     return requestBody;
 }
 
+function appendAnthropicMessageToChatMessages(target, message) {
+    if (!message || typeof message !== 'object') return;
+    const roleRaw = typeof message.role === 'string' ? message.role.trim().toLowerCase() : '';
+    const role = roleRaw === 'assistant' ? 'assistant' : 'user';
+    let textParts = [];
+    let contentParts = [];
+    const toolCalls = [];
+
+    const flushTextPartsToContentParts = () => {
+        const content = textParts.join('\n\n').trim();
+        textParts = [];
+        if (content) {
+            contentParts.push({ type: 'text', text: content });
+        }
+    };
+
+    const buildContent = () => {
+        if (contentParts.length) {
+            flushTextPartsToContentParts();
+            if (contentParts.length === 1 && contentParts[0].type === 'text') {
+                return contentParts[0].text;
+            }
+            return contentParts;
+        }
+        return textParts.join('\n\n').trim();
+    };
+
+    const flushText = () => {
+        const content = buildContent();
+        textParts = [];
+        contentParts = [];
+        if (!content || (Array.isArray(content) && !content.length)) return;
+        target.push({ role, content });
+    };
+
+    for (const block of normalizeAnthropicContentBlocks(message.content)) {
+        if (!block || typeof block !== 'object') continue;
+        if (block.type === 'text' && typeof block.text === 'string' && block.text) {
+            textParts.push(block.text);
+            continue;
+        }
+        if (block.type === 'image' && role === 'user') {
+            flushTextPartsToContentParts();
+            const imageUrl = buildOpenAIImageUrlFromAnthropicSource(block.source);
+            if (imageUrl) {
+                contentParts.push({ type: 'image_url', image_url: { url: imageUrl } });
+            }
+            continue;
+        }
+        if (isDroppableAnthropicBridgeBlock(block)) {
+            continue;
+        }
+        if (block.type === 'tool_use' && role === 'assistant' && typeof block.name === 'string' && block.name.trim()) {
+            toolCalls.push({
+                id: typeof block.id === 'string' && block.id.trim()
+                    ? block.id.trim()
+                    : `call_${crypto.randomBytes(8).toString('hex')}`,
+                type: 'function',
+                function: {
+                    name: block.name.trim(),
+                    arguments: safeJsonStringify(block.input && typeof block.input === 'object' ? block.input : {})
+                }
+            });
+            continue;
+        }
+        if (block.type === 'tool_result' && typeof block.tool_use_id === 'string' && block.tool_use_id.trim()) {
+            flushText();
+            target.push({
+                role: 'tool',
+                tool_call_id: block.tool_use_id.trim(),
+                content: stringifyAnthropicToolResultContent(block.content)
+            });
+            continue;
+        }
+        textParts.push(`[unsupported anthropic block: ${typeof block.type === 'string' ? block.type : 'unknown'}]`);
+    }
+
+    if (role === 'assistant' && toolCalls.length) {
+        const content = buildContent();
+        target.push({
+            role: 'assistant',
+            content: content || null,
+            tool_calls: toolCalls
+        });
+        return;
+    }
+    flushText();
+}
+
+function buildBuiltinClaudeChatCompletionsRequest(payload = {}) {
+    const model = typeof payload.model === 'string' ? payload.model.trim() : '';
+    if (!model) {
+        throw new Error('Anthropic messages 请求缺少 model');
+    }
+    const messages = Array.isArray(payload.messages) ? payload.messages : [];
+    if (!messages.length) {
+        throw new Error('Anthropic messages 请求缺少 messages');
+    }
+
+    const requestBody = { model, messages: [] };
+    const systemText = collectAnthropicTextContent(payload.system);
+    if (systemText) {
+        requestBody.messages.push({ role: 'system', content: systemText });
+    }
+    for (const message of messages) {
+        appendAnthropicMessageToChatMessages(requestBody.messages, message);
+    }
+
+    const maxTokens = parseInt(String(payload.max_tokens), 10);
+    if (Number.isFinite(maxTokens) && maxTokens > 0) {
+        requestBody.max_tokens = maxTokens;
+    }
+    if (Number.isFinite(payload.temperature)) {
+        requestBody.temperature = Number(payload.temperature);
+    }
+    if (Number.isFinite(payload.top_p)) {
+        requestBody.top_p = Number(payload.top_p);
+    }
+    if (Array.isArray(payload.stop_sequences) && payload.stop_sequences.length) {
+        const stop = payload.stop_sequences.filter((item) => typeof item === 'string' && item.trim());
+        if (stop.length) requestBody.stop = stop;
+    }
+    if (Array.isArray(payload.tools) && payload.tools.length) {
+        requestBody.tools = payload.tools
+            .map((tool) => {
+                if (!tool || typeof tool !== 'object') return null;
+                const name = typeof tool.name === 'string' ? tool.name.trim() : '';
+                if (!name) return null;
+                return {
+                    type: 'function',
+                    function: {
+                        name,
+                        description: typeof tool.description === 'string' ? tool.description : '',
+                        parameters: isPlainObject(tool.input_schema) ? tool.input_schema : { type: 'object', properties: {} }
+                    }
+                };
+            })
+            .filter(Boolean);
+        if (!requestBody.tools.length) delete requestBody.tools;
+    }
+    const toolChoice = mapAnthropicToolChoiceToChat(payload.tool_choice);
+    if (toolChoice !== undefined) {
+        requestBody.tool_choice = toolChoice;
+    }
+    requestBody.stream = false;
+    return requestBody;
+}
+
+
+
+function appendAnthropicMessageToOllamaMessages(target, message) {
+    if (!message || typeof message !== 'object') return;
+    const roleRaw = typeof message.role === 'string' ? message.role.trim().toLowerCase() : '';
+    const role = roleRaw === 'assistant' ? 'assistant' : 'user';
+    let textParts = [];
+    let images = [];
+    const toolCalls = [];
+
+    const flushText = () => {
+        const content = textParts.join('\n\n').trim();
+        textParts = [];
+        if (!content && !images.length) return;
+        const msg = { role, content };
+        if (images.length) msg.images = images;
+        target.push(msg);
+        images = [];
+    };
+
+    for (const block of normalizeAnthropicContentBlocks(message.content)) {
+        if (!block || typeof block !== 'object') continue;
+        if (block.type === 'text' && typeof block.text === 'string' && block.text) {
+            textParts.push(block.text);
+            continue;
+        }
+        if (block.type === 'image' && role === 'user') {
+            const image = collectAnthropicImageBase64(block.source);
+            if (image) images.push(image);
+            continue;
+        }
+        if (isDroppableAnthropicOllamaBlock(block)) {
+            continue;
+        }
+        if (block.type === 'tool_use' && role === 'assistant' && typeof block.name === 'string' && block.name.trim()) {
+            toolCalls.push({
+                function: {
+                    name: block.name.trim(),
+                    arguments: block.input && typeof block.input === 'object' ? block.input : {}
+                }
+            });
+            continue;
+        }
+        if (block.type === 'tool_result' && typeof block.tool_use_id === 'string' && block.tool_use_id.trim()) {
+            flushText();
+            target.push({
+                role: 'tool',
+                content: stringifyAnthropicToolResultContent(block.content),
+                tool_call_id: block.tool_use_id.trim()
+            });
+            continue;
+        }
+        textParts.push(`[unsupported anthropic block: ${typeof block.type === 'string' ? block.type : 'unknown'}]`);
+    }
+
+    if (role === 'assistant' && toolCalls.length) {
+        const content = textParts.join('\n\n').trim();
+        const msg = { role: 'assistant', content, tool_calls: toolCalls };
+        target.push(msg);
+        return;
+    }
+    flushText();
+}
+
+function buildBuiltinClaudeOllamaChatRequest(payload = {}) {
+    const model = typeof payload.model === 'string' ? payload.model.trim() : '';
+    if (!model) {
+        throw new Error('Anthropic messages 请求缺少 model');
+    }
+    const messages = Array.isArray(payload.messages) ? payload.messages : [];
+    if (!messages.length) {
+        throw new Error('Anthropic messages 请求缺少 messages');
+    }
+
+    const requestBody = { model, messages: [], stream: false };
+    const systemText = collectAnthropicTextContent(payload.system);
+    if (systemText) {
+        requestBody.messages.push({ role: 'system', content: systemText });
+    }
+    for (const message of messages) {
+        appendAnthropicMessageToOllamaMessages(requestBody.messages, message);
+    }
+
+    const options = {};
+    const maxTokens = parseInt(String(payload.max_tokens), 10);
+    if (Number.isFinite(maxTokens) && maxTokens > 0) options.num_predict = maxTokens;
+    if (Number.isFinite(payload.temperature)) options.temperature = Number(payload.temperature);
+    if (Number.isFinite(payload.top_p)) options.top_p = Number(payload.top_p);
+    if (Array.isArray(payload.stop_sequences) && payload.stop_sequences.length) {
+        const stop = payload.stop_sequences.filter((item) => typeof item === 'string' && item.trim());
+        if (stop.length) options.stop = stop;
+    }
+    if (Object.keys(options).length) requestBody.options = options;
+
+    if (isPlainObject(payload.thinking)) {
+        const thinkingType = typeof payload.thinking.type === 'string'
+            ? payload.thinking.type.trim().toLowerCase()
+            : '';
+        if (thinkingType === 'enabled') requestBody.think = true;
+        if (thinkingType === 'disabled') requestBody.think = false;
+    }
+
+    if (Array.isArray(payload.tools) && payload.tools.length) {
+        requestBody.tools = payload.tools
+            .map((tool) => {
+                if (!tool || typeof tool !== 'object') return null;
+                const name = typeof tool.name === 'string' ? tool.name.trim() : '';
+                if (!name) return null;
+                return {
+                    type: 'function',
+                    function: {
+                        name,
+                        description: typeof tool.description === 'string' ? tool.description : '',
+                        parameters: isPlainObject(tool.input_schema) ? tool.input_schema : { type: 'object', properties: {} }
+                    }
+                };
+            })
+            .filter(Boolean);
+        if (!requestBody.tools.length) delete requestBody.tools;
+    }
+    return requestBody;
+}
+
 function parseJsonObjectLoose(value) {
     if (value && typeof value === 'object' && !Array.isArray(value)) {
         return value;
@@ -296,6 +628,133 @@ function buildAnthropicStopReasonFromResponses(payload, content) {
     return 'end_turn';
 }
 
+function buildAnthropicUsageFromChatCompletion(payload) {
+    const usage = payload && payload.usage && typeof payload.usage === 'object' ? payload.usage : {};
+    return {
+        input_tokens: readResponsesUsageValue(usage.prompt_tokens),
+        output_tokens: readResponsesUsageValue(usage.completion_tokens)
+    };
+}
+
+function normalizeChatMessageContentText(content) {
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+        return content.map((item) => {
+            if (typeof item === 'string') return item;
+            if (item && typeof item === 'object' && typeof item.text === 'string') return item.text;
+            return '';
+        }).filter(Boolean).join('\n\n');
+    }
+    return '';
+}
+
+function buildAnthropicStopReasonFromChatChoice(choice, content) {
+    if (Array.isArray(content) && content.some((item) => item && item.type === 'tool_use')) {
+        return 'tool_use';
+    }
+    const finishReason = choice && typeof choice.finish_reason === 'string' ? choice.finish_reason : '';
+    if (finishReason === 'length') return 'max_tokens';
+    if (finishReason === 'tool_calls' || finishReason === 'function_call') return 'tool_use';
+    return 'end_turn';
+}
+
+function buildAnthropicMessageFromChatCompletion(payload, requestPayload = {}) {
+    const choices = Array.isArray(payload && payload.choices) ? payload.choices : [];
+    const choice = choices.find((item) => item && item.message) || choices[0] || {};
+    const chatMessage = choice && choice.message && typeof choice.message === 'object' ? choice.message : {};
+    const content = [];
+    const text = normalizeChatMessageContentText(chatMessage.content);
+    if (text) {
+        content.push({ type: 'text', text });
+    }
+    const toolCalls = Array.isArray(chatMessage.tool_calls) ? chatMessage.tool_calls : [];
+    for (const call of toolCalls) {
+        if (!call || typeof call !== 'object') continue;
+        const fn = call.function && typeof call.function === 'object' ? call.function : {};
+        const name = typeof fn.name === 'string' ? fn.name : '';
+        if (!name) continue;
+        content.push({
+            type: 'tool_use',
+            id: typeof call.id === 'string' && call.id.trim()
+                ? call.id.trim()
+                : `toolu_${crypto.randomBytes(8).toString('hex')}`,
+            name,
+            input: parseJsonObjectLoose(fn.arguments)
+        });
+    }
+    if (!content.length) {
+        const fallbackText = extractModelResponseText(payload);
+        if (fallbackText) content.push({ type: 'text', text: fallbackText });
+    }
+    const usage = buildAnthropicUsageFromChatCompletion(payload);
+    return {
+        id: typeof payload.id === 'string' && payload.id.trim()
+            ? payload.id.trim()
+            : `msg_${crypto.randomBytes(8).toString('hex')}`,
+        type: 'message',
+        role: 'assistant',
+        model: typeof payload.model === 'string' && payload.model.trim()
+            ? payload.model.trim()
+            : (typeof requestPayload.model === 'string' ? requestPayload.model : ''),
+        content,
+        stop_reason: buildAnthropicStopReasonFromChatChoice(choice, content),
+        stop_sequence: null,
+        usage
+    };
+}
+
+
+function buildAnthropicMessageFromOllamaChat(payload, requestPayload = {}) {
+    const ollamaMessage = payload && payload.message && typeof payload.message === 'object' ? payload.message : {};
+    const content = [];
+    if (typeof ollamaMessage.thinking === 'string' && ollamaMessage.thinking) {
+        content.push({ type: 'thinking', thinking: ollamaMessage.thinking });
+    }
+    if (typeof ollamaMessage.content === 'string' && ollamaMessage.content) {
+        content.push({ type: 'text', text: ollamaMessage.content });
+    }
+    const toolCalls = Array.isArray(ollamaMessage.tool_calls) ? ollamaMessage.tool_calls : [];
+    for (const call of toolCalls) {
+        if (!call || typeof call !== 'object') continue;
+        const fn = call.function && typeof call.function === 'object' ? call.function : {};
+        const name = typeof fn.name === 'string' ? fn.name : '';
+        if (!name) continue;
+        content.push({
+            type: 'tool_use',
+            id: typeof call.id === 'string' && call.id.trim()
+                ? call.id.trim()
+                : `toolu_${crypto.randomBytes(8).toString('hex')}`,
+            name,
+            input: parseJsonObjectLoose(fn.arguments)
+        });
+    }
+    if (!content.length) {
+        const fallbackText = extractModelResponseText(payload);
+        if (fallbackText) content.push({ type: 'text', text: fallbackText });
+    }
+    const usage = {
+        input_tokens: readResponsesUsageValue(payload && payload.prompt_eval_count),
+        output_tokens: readResponsesUsageValue(payload && payload.eval_count)
+    };
+    const doneReason = payload && typeof payload.done_reason === 'string' ? payload.done_reason : '';
+    return {
+        id: typeof payload.id === 'string' && payload.id.trim()
+            ? payload.id.trim()
+            : `msg_${crypto.randomBytes(8).toString('hex')}`,
+        type: 'message',
+        role: 'assistant',
+        model: typeof payload.model === 'string' && payload.model.trim()
+            ? payload.model.trim()
+            : (typeof requestPayload.model === 'string' ? requestPayload.model : ''),
+        content,
+        stop_reason: Array.isArray(content) && content.some((item) => item && item.type === 'tool_use')
+            ? 'tool_use'
+            : (doneReason === 'length' || doneReason === 'max_tokens' ? 'max_tokens' : 'end_turn'),
+        stop_sequence: null,
+        usage
+    };
+}
+
 function buildAnthropicMessageFromResponses(payload, requestPayload = {}) {
     const content = collectAnthropicContentFromResponsesOutput(payload);
     const usage = buildAnthropicUsageFromResponses(payload);
@@ -354,6 +813,28 @@ function buildAnthropicStreamEvents(message) {
                         type: 'content_block_delta',
                         index,
                         delta: { type: 'text_delta', text: block.text }
+                    }
+                });
+            }
+            events.push({ event: 'content_block_stop', data: { type: 'content_block_stop', index } });
+            return;
+        }
+        if (block.type === 'thinking') {
+            events.push({
+                event: 'content_block_start',
+                data: {
+                    type: 'content_block_start',
+                    index,
+                    content_block: { type: 'thinking', thinking: '' }
+                }
+            });
+            if (typeof block.thinking === 'string' && block.thinking) {
+                events.push({
+                    event: 'content_block_delta',
+                    data: {
+                        type: 'content_block_delta',
+                        index,
+                        delta: { type: 'thinking_delta', thinking: block.thinking }
                     }
                 });
             }
@@ -423,6 +904,15 @@ function buildAnthropicModelsPayload(upstreamPayload) {
     };
 }
 
+function joinBuiltinClaudeProxyUpstreamUrl(baseUrl, pathSuffix) {
+    const suffix = typeof pathSuffix === 'string' ? pathSuffix.replace(/^\/+/, '') : '';
+    if (suffix === 'api/tags' || suffix === 'api/chat') {
+        const normalized = normalizeBaseUrl(baseUrl);
+        return normalized ? `${normalized}/${suffix}` : '';
+    }
+    return joinApiUrl(baseUrl, suffix);
+}
+
 function createBuiltinClaudeProxyRuntimeController(deps = {}) {
     const {
         BUILTIN_CLAUDE_PROXY_SETTINGS_FILE,
@@ -433,7 +923,9 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
         HTTPS_KEEP_ALIVE_AGENT,
         readConfigOrVirtualDefault,
         resolveBuiltinProxyProviderName,
-        resolveAuthTokenFromCurrentProfile
+        resolveAuthTokenFromCurrentProfile,
+        OPENAI_BRIDGE_SETTINGS_FILE,
+        resolveOpenaiBridgeUpstream
     } = deps;
 
     if (!BUILTIN_CLAUDE_PROXY_SETTINGS_FILE) {
@@ -462,18 +954,32 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
         const host = typeof merged.host === 'string' ? merged.host.trim() : '';
         const port = parseInt(String(merged.port), 10);
         const provider = typeof merged.provider === 'string' ? merged.provider.trim() : '';
+        const upstreamProviderName = typeof merged.upstreamProviderName === 'string' ? merged.upstreamProviderName.trim() : '';
+        const upstreamBaseUrl = typeof merged.upstreamBaseUrl === 'string' ? merged.upstreamBaseUrl.trim() : '';
+        const upstreamApiKey = typeof merged.upstreamApiKey === 'string' ? merged.upstreamApiKey.trim() : '';
         const authSourceRaw = typeof merged.authSource === 'string' ? merged.authSource.trim().toLowerCase() : '';
+        const targetApiRaw = typeof merged.targetApi === 'string' ? merged.targetApi.trim().toLowerCase() : '';
         const timeoutMs = parseInt(String(merged.timeoutMs), 10);
         const authSource = authSourceRaw === 'profile' || authSourceRaw === 'none' || authSourceRaw === 'request'
             ? authSourceRaw
             : 'provider';
+        let targetApi = 'responses';
+        if (targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions') {
+            targetApi = 'chat_completions';
+        } else if (targetApiRaw === 'ollama') {
+            targetApi = 'ollama';
+        }
 
         return {
             enabled: merged.enabled !== false,
             host: host || DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS.host,
             port: Number.isFinite(port) && port > 0 && port <= 65535 ? port : DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS.port,
             provider,
+            upstreamProviderName,
+            upstreamBaseUrl,
+            upstreamApiKey,
             authSource,
+            targetApi,
             timeoutMs: Number.isFinite(timeoutMs) && timeoutMs >= 1000
                 ? timeoutMs
                 : DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS.timeoutMs
@@ -507,6 +1013,17 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
             ...merged,
             provider: finalProvider
         };
+        const payloadObject = isPlainObject(payload) ? payload : {};
+        const payloadHasDirectUpstream = Object.prototype.hasOwnProperty.call(payloadObject, 'upstreamBaseUrl');
+        const payloadSelectsProvider = Object.prototype.hasOwnProperty.call(payloadObject, 'provider')
+            || Object.prototype.hasOwnProperty.call(payloadObject, 'upstreamProviderName');
+        const payloadSelectsResponses = Object.prototype.hasOwnProperty.call(payloadObject, 'targetApi')
+            && normalized.targetApi === 'responses';
+        if (!payloadHasDirectUpstream && (payloadSelectsProvider || payloadSelectsResponses)) {
+            normalized.upstreamProviderName = '';
+            normalized.upstreamBaseUrl = '';
+            normalized.upstreamApiKey = '';
+        }
 
         if (!options.skipWrite) {
             writeJsonAtomic(BUILTIN_CLAUDE_PROXY_SETTINGS_FILE, normalized);
@@ -539,9 +1056,36 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
             return { error: `上游 provider 不存在: ${providerName}` };
         }
 
-        const wireApi = normalizeWireApi(provider.wire_api);
-        if (wireApi !== 'responses') {
-            return { error: `Claude 兼容代理仅支持上游 responses provider: ${providerName}` };
+        const targetApi = settings.targetApi === 'chat_completions'
+            ? 'chat_completions'
+            : (settings.targetApi === 'ollama' ? 'ollama' : 'responses');
+        if (targetApi === 'responses') {
+            const wireApi = normalizeWireApi(provider.wire_api);
+            if (wireApi !== 'responses') {
+                return { error: `Claude 兼容代理仅支持上游 responses provider: ${providerName}` };
+            }
+        }
+
+        if (targetApi === 'chat_completions'
+            && provider.codexmate_bridge === 'openai'
+            && typeof resolveOpenaiBridgeUpstream === 'function'
+            && OPENAI_BRIDGE_SETTINGS_FILE) {
+            const bridgeUpstream = resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, providerName);
+            if (!bridgeUpstream || bridgeUpstream.error) {
+                return { error: bridgeUpstream && bridgeUpstream.error ? bridgeUpstream.error : `OpenAI bridge 配置未找到: ${providerName}` };
+            }
+            const bridgeBaseUrl = typeof bridgeUpstream.baseUrl === 'string' ? bridgeUpstream.baseUrl.trim() : '';
+            if (!bridgeBaseUrl || !isValidHttpUrl(bridgeBaseUrl)) {
+                return { error: `OpenAI 转换上游 base_url 无效: ${providerName}` };
+            }
+            const bridgeToken = typeof bridgeUpstream.apiKey === 'string' ? bridgeUpstream.apiKey.trim() : '';
+            return {
+                providerName,
+                baseUrl: normalizeBaseUrl(bridgeBaseUrl),
+                authHeader: bridgeToken ? (/^bearer\s+/i.test(bridgeToken) ? bridgeToken : `Bearer ${bridgeToken}`) : '',
+                extraHeaders: isPlainObject(bridgeUpstream.headers) ? bridgeUpstream.headers : {},
+                targetApi
+            };
         }
 
         const baseUrl = typeof provider.base_url === 'string' ? provider.base_url.trim() : '';
@@ -567,7 +1111,43 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
         return {
             providerName,
             baseUrl: normalizeBaseUrl(baseUrl),
-            authHeader
+            authHeader,
+            extraHeaders: {},
+            targetApi
+        };
+    }
+
+    function resolveBuiltinClaudeProxyDirectUpstream(settings, payload = {}) {
+        const targetApi = settings.targetApi === 'chat_completions'
+            ? 'chat_completions'
+            : (settings.targetApi === 'ollama' ? 'ollama' : 'responses');
+        const baseUrl = typeof payload.upstreamBaseUrl === 'string' && payload.upstreamBaseUrl.trim()
+            ? payload.upstreamBaseUrl.trim()
+            : (typeof settings.upstreamBaseUrl === 'string' ? settings.upstreamBaseUrl.trim() : '');
+        if (!baseUrl) {
+            return null;
+        }
+        if (!isValidHttpUrl(baseUrl)) {
+            return { error: 'Claude 兼容代理上游 base_url 无效' };
+        }
+        const token = typeof payload.upstreamApiKey === 'string' && payload.upstreamApiKey.trim()
+            ? payload.upstreamApiKey.trim()
+            : (typeof settings.upstreamApiKey === 'string' ? settings.upstreamApiKey.trim() : '');
+        let authHeader = '';
+        if (token) {
+            authHeader = /^bearer\s+/i.test(token) ? token : `Bearer ${token}`;
+        }
+        const providerName = typeof payload.upstreamProviderName === 'string' && payload.upstreamProviderName.trim()
+            ? payload.upstreamProviderName.trim()
+            : (typeof settings.upstreamProviderName === 'string' && settings.upstreamProviderName.trim()
+                ? settings.upstreamProviderName.trim()
+                : 'claude-config');
+        return {
+            providerName,
+            baseUrl: normalizeBaseUrl(baseUrl),
+            authHeader,
+            extraHeaders: {},
+            targetApi
         };
     }
 
@@ -656,7 +1236,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
 
     function requestBuiltinClaudeProxyUpstream(upstream, requestOptions = {}) {
         const pathSuffix = typeof requestOptions.pathSuffix === 'string' ? requestOptions.pathSuffix : '';
-        const targetBase = joinApiUrl(upstream.baseUrl, pathSuffix);
+        const targetBase = joinBuiltinClaudeProxyUpstreamUrl(upstream.baseUrl, pathSuffix);
         if (!targetBase) {
             return Promise.reject(new Error('failed to build upstream URL'));
         }
@@ -770,7 +1350,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
                 ok: true,
                 upstreamProvider: upstream.providerName,
                 upstreamBaseUrl: upstream.baseUrl,
-                mode: 'anthropic-to-responses'
+                mode: upstream.targetApi === 'chat_completions' ? 'anthropic-to-chat-completions' : (upstream.targetApi === 'ollama' ? 'anthropic-to-ollama' : 'anthropic-to-responses')
             });
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -794,8 +1374,9 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
             }
             const upstreamResponse = await requestBuiltinClaudeProxyUpstream(upstream, {
                 method: 'GET',
-                pathSuffix: 'models',
+                pathSuffix: upstream.targetApi === 'ollama' ? 'api/tags' : 'models',
                 authHeader: authResult.authHeader,
+                headers: upstream.extraHeaders,
                 timeoutMs: settings.timeoutMs
             });
             if (upstreamResponse.statusCode < 200 || upstreamResponse.statusCode >= 300) {
@@ -828,12 +1409,20 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
         }
 
         const payload = await readJsonRequestBody(req);
-        const upstreamRequestBody = buildBuiltinClaudeResponsesRequest(payload);
+        const activeTargetApi = upstream.targetApi === 'ollama' || settings.targetApi === 'ollama'
+            ? 'ollama'
+            : (upstream.targetApi === 'chat_completions' || settings.targetApi === 'chat_completions' ? 'chat_completions' : 'responses');
+        const upstreamRequestBody = activeTargetApi === 'ollama'
+            ? buildBuiltinClaudeOllamaChatRequest(payload)
+            : (activeTargetApi === 'chat_completions'
+                ? buildBuiltinClaudeChatCompletionsRequest(payload)
+                : buildBuiltinClaudeResponsesRequest(payload));
         const upstreamResponse = await requestBuiltinClaudeProxyUpstream(upstream, {
             method: 'POST',
-            pathSuffix: 'responses',
+            pathSuffix: activeTargetApi === 'ollama' ? 'api/chat' : (activeTargetApi === 'chat_completions' ? 'chat/completions' : 'responses'),
             body: upstreamRequestBody,
             authHeader: authResult.authHeader,
+            headers: upstream.extraHeaders,
             timeoutMs: settings.timeoutMs
         });
 
@@ -847,7 +1436,11 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
             return;
         }
 
-        const anthropicMessage = buildAnthropicMessageFromResponses(upstreamResponse.payload || {}, payload);
+        const anthropicMessage = activeTargetApi === 'ollama'
+            ? buildAnthropicMessageFromOllamaChat(upstreamResponse.payload || {}, payload)
+            : (activeTargetApi === 'chat_completions'
+                ? buildAnthropicMessageFromChatCompletion(upstreamResponse.payload || {}, payload)
+                : buildAnthropicMessageFromResponses(upstreamResponse.payload || {}, payload));
         if (payload.stream === true) {
             writeAnthropicStreamEvents(res, anthropicMessage);
             return;
@@ -934,7 +1527,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
             return { error: saveResult.error };
         }
         const settings = saveResult.settings;
-        const upstream = resolveBuiltinClaudeProxyUpstream(settings);
+        const upstream = resolveBuiltinClaudeProxyDirectUpstream(settings, payload) || resolveBuiltinClaudeProxyUpstream(settings);
         if (upstream.error) {
             return { error: upstream.error };
         }
@@ -946,7 +1539,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
                 running: true,
                 listenUrl: runtime.listenUrl,
                 upstreamProvider: upstream.providerName,
-                mode: 'anthropic-to-responses',
+                mode: upstream.targetApi === 'chat_completions' ? 'anthropic-to-chat-completions' : (upstream.targetApi === 'ollama' ? 'anthropic-to-ollama' : 'anthropic-to-responses'),
                 settings
             };
         } catch (e) {
@@ -995,7 +1588,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
                     listenUrl: runtime.listenUrl,
                     upstreamProvider: runtime.upstream.providerName,
                     upstreamBaseUrl: runtime.upstream.baseUrl,
-                    mode: 'anthropic-to-responses'
+                    mode: runtime.upstream.targetApi === 'chat_completions' ? 'anthropic-to-chat-completions' : (runtime.upstream.targetApi === 'ollama' ? 'anthropic-to-ollama' : 'anthropic-to-responses')
                 }
                 : null
         };
@@ -1016,7 +1609,11 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
 module.exports = {
     createBuiltinClaudeProxyRuntimeController,
     buildBuiltinClaudeResponsesRequest,
+    buildBuiltinClaudeChatCompletionsRequest,
+    buildBuiltinClaudeOllamaChatRequest,
     buildAnthropicMessageFromResponses,
+    buildAnthropicMessageFromChatCompletion,
+    buildAnthropicMessageFromOllamaChat,
     buildAnthropicStreamEvents,
     buildAnthropicModelsPayload
 };

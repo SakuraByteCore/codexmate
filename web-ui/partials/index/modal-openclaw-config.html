@@ -33,86 +33,150 @@
                             <button class="btn-mini" @click="resetOpenclawQuick">{{ t('common.clear') }}</button>
                         </div>
                     </div>
-                    <div class="quick-steps">
-                        <div class="quick-step"><span class="step-badge">1</span><span>{{ t('modal.openclaw.quick.step1') }}</span></div>
-                        <div class="quick-step"><span class="step-badge">2</span><span>{{ t('modal.openclaw.quick.step2') }}</span></div>
-                        <div class="quick-step"><span class="step-badge">3</span><span>{{ t('modal.openclaw.quick.step3') }}</span></div>
-                    </div>
-                    <div class="quick-grid">
-                        <div class="quick-card">
-                            <div class="structured-card-title">Provider</div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('field.providerName') }}</label>
-                                <input v-model="openclawQuick.providerName" class="form-input" placeholder="例如: custom-myapi">
-                                <div class="form-hint">{{ t('modal.openclaw.quick.providerHint') }}</div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('field.baseUrl') }}</label>
-                                <input v-model="openclawQuick.baseUrl" class="form-input" placeholder="https://api.example.com/v1" :readonly="openclawQuick.baseUrlReadOnly">
-                                <div v-if="openclawQuick.baseUrlDisplayKind === 'builtin-default'" class="form-hint">{{ t('modal.openclaw.quick.baseUrlHintDefault') }}</div>
-                                <div v-else-if="openclawQuick.baseUrlReadOnly" class="form-hint">{{ t('modal.openclaw.quick.baseUrlHintReadonly') }}</div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">API Key</label>
-                                <div class="list-row">
-                                    <input v-model="openclawQuick.apiKey" class="form-input" :readonly="openclawQuick.apiKeyReadOnly" :type="(openclawQuick.apiKeyReadOnly || openclawQuick.showKey) ? 'text' : 'password'" placeholder="sk-...">
-                                    <button v-if="!openclawQuick.apiKeyReadOnly" class="btn-mini" @click="toggleOpenclawQuickKey">
-                                        {{ openclawQuick.showKey ? t('common.hide') : t('common.show') }}
+
+                    <!-- Accordion Stepper -->
+                    <div class="quick-accordion">
+                        <!-- Step 1: Provider -->
+                        <div :class="['accordion-panel', { active: openclawAccordionStep === 1, completed: openclawAccordionStep > 1 }]">
+                            <button class="accordion-trigger" @click="toggleAccordionStep(1)" type="button">
+                                <span class="accordion-step-badge">
+                                    <template v-if="openclawAccordionStep > 1">✓</template>
+                                    <template v-else>1</template>
+                                </span>
+                                <span class="accordion-title">Provider</span>
+                                <span class="accordion-status" v-if="openclawQuick.providerName">{{ openclawQuick.providerName }}</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content" v-show="openclawAccordionStep === 1">
+                                <div class="form-group">
+                                    <label class="form-label">{{ t('field.providerName') }}</label>
+                                    <input v-model="openclawQuick.providerName" class="form-input" placeholder="例如: custom-myapi" @input="validateProviderName">
+                                    <div class="form-hint" :class="{ 'hint-error': !openclawValidation.providerName.valid }">
+                                        {{ openclawValidation.providerName.message || t('modal.openclaw.quick.providerHint') }}
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ t('field.baseUrl') }}</label>
+                                    <input v-model="openclawQuick.baseUrl" class="form-input" placeholder="https://api.example.com/v1" :readonly="openclawQuick.baseUrlReadOnly">
+                                    <div v-if="openclawQuick.baseUrlDisplayKind === 'builtin-default'" class="form-hint">{{ t('modal.openclaw.quick.baseUrlHintDefault') }}</div>
+                                    <div v-else-if="openclawQuick.baseUrlReadOnly" class="form-hint">{{ t('modal.openclaw.quick.baseUrlHintReadonly') }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">API Key</label>
+                                    <div class="list-row">
+                                        <input v-model="openclawQuick.apiKey" class="form-input" :readonly="openclawQuick.apiKeyReadOnly" :type="(openclawQuick.apiKeyReadOnly || openclawQuick.showKey) ? 'text' : 'password'" placeholder="sk-...">
+                                        <button v-if="!openclawQuick.apiKeyReadOnly" class="btn-mini" @click="toggleOpenclawQuickKey">
+                                            {{ openclawQuick.showKey ? t('common.hide') : t('common.show') }}
+                                        </button>
+                                    </div>
+                                    <div v-if="openclawQuick.apiKeyDisplayKind === 'auth-profile-value'" class="form-hint">{{ t('modal.openclaw.quick.apiKeyHintFromAuth') }}</div>
+                                    <div v-else-if="openclawQuick.apiKeyReadOnly" class="form-hint">{{ t('modal.openclaw.quick.apiKeyHintReadonly') }}</div>
+                                    <div v-else class="form-hint">{{ t('modal.openclaw.quick.apiKeyHintKeep') }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ t('field.apiType') }}</label>
+                                    <input v-model="openclawQuick.apiType" class="form-input" list="openclawApiTypeList" :placeholder="t('placeholder.apiTypeExample')">
+                                    <datalist id="openclawApiTypeList">
+                                        <option value="openai-responses"></option>
+                                        <option value="openai-chat"></option>
+                                        <option value="anthropic"></option>
+                                        <option value="custom"></option>
+                                    </datalist>
+                                </div>
+                                <div class="accordion-actions">
+                                    <button class="btn btn-confirm btn-sm" @click="nextAccordionStep" :disabled="!openclawQuick.providerName">
+                                        下一步 →
                                     </button>
                                 </div>
-                                <div v-if="openclawQuick.apiKeyDisplayKind === 'auth-profile-value'" class="form-hint">{{ t('modal.openclaw.quick.apiKeyHintFromAuth') }}</div>
-                                <div v-else-if="openclawQuick.apiKeyReadOnly" class="form-hint">{{ t('modal.openclaw.quick.apiKeyHintReadonly') }}</div>
-                                <div v-else class="form-hint">{{ t('modal.openclaw.quick.apiKeyHintKeep') }}</div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('field.apiType') }}</label>
-                                <input v-model="openclawQuick.apiType" class="form-input" list="openclawApiTypeList" :placeholder="t('placeholder.apiTypeExample')">
-                                <datalist id="openclawApiTypeList">
-                                    <option value="openai-responses"></option>
-                                    <option value="openai-chat"></option>
-                                    <option value="anthropic"></option>
-                                    <option value="custom"></option>
-                                </datalist>
                             </div>
                         </div>
 
-                        <div class="quick-card">
-                            <div class="structured-card-title">{{ t('modal.openclaw.quick.modelTitle') }}</div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('field.modelId') }}</label>
-                                <input v-model="openclawQuick.modelId" class="form-input" :placeholder="t('placeholder.modelIdExample')">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('field.displayName') }}</label>
-                                <input v-model="openclawQuick.modelName" class="form-input" :placeholder="t('placeholder.modelNameOptional')">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('field.contextAndMaxOutput') }}</label>
-                                <div class="list-row">
-                                    <input v-model="openclawQuick.contextWindow" class="form-input" :placeholder="t('field.contextWindow')">
-                                    <input v-model="openclawQuick.maxTokens" class="form-input" :placeholder="t('field.maxOutput')">
+                        <!-- Step 2: Model -->
+                        <div :class="['accordion-panel', { active: openclawAccordionStep === 2, completed: openclawAccordionStep > 2 }]">
+                            <button class="accordion-trigger" @click="toggleAccordionStep(2)" type="button">
+                                <span class="accordion-step-badge">
+                                    <template v-if="openclawAccordionStep > 2">✓</template>
+                                    <template v-else>2</template>
+                                </span>
+                                <span class="accordion-title">{{ t('modal.openclaw.quick.modelTitle') }}</span>
+                                <span class="accordion-status" v-if="openclawQuick.modelId">{{ openclawQuick.modelName || openclawQuick.modelId }}</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content" v-show="openclawAccordionStep === 2">
+                                <div class="form-group">
+                                    <label class="form-label">{{ t('field.modelId') }}</label>
+                                    <input v-model="openclawQuick.modelId" class="form-input" :placeholder="t('placeholder.modelIdExample')" @input="validateModelId">
+                                    <div class="form-hint" :class="{ 'hint-error': !openclawValidation.modelId.valid }">
+                                        {{ openclawValidation.modelId.message || '必填，例如: gpt-4' }}
+                                    </div>
                                 </div>
-                                <div class="form-hint">{{ t('hint.emptyNoChange') }}</div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ t('field.displayName') }}</label>
+                                    <input v-model="openclawQuick.modelName" class="form-input" :placeholder="t('placeholder.modelNameOptional')">
+                                    <div class="form-hint">可选，用于显示</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ t('field.contextAndMaxOutput') }}</label>
+                                    <div class="list-row">
+                                        <input v-model="openclawQuick.contextWindow" class="form-input" :placeholder="t('field.contextWindow')">
+                                        <input v-model="openclawQuick.maxTokens" class="form-input" :placeholder="t('field.maxOutput')">
+                                    </div>
+                                    <div class="form-hint">{{ t('hint.emptyNoChange') }}</div>
+                                </div>
+                                <div class="accordion-actions">
+                                    <button class="btn btn-cancel btn-sm" @click="prevAccordionStep">
+                                        ← 上一步
+                                    </button>
+                                    <button class="btn btn-confirm btn-sm" @click="nextAccordionStep" :disabled="!openclawQuick.modelId">
+                                        下一步 →
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="quick-card">
-                            <div class="structured-card-title">{{ t('modal.openclaw.quick.optionsTitle') }}</div>
-                            <label class="quick-option">
-                                <input type="checkbox" v-model="openclawQuick.setPrimary">
-                                {{ t('modal.openclaw.quick.setPrimary') }}
-                            </label>
-                            <label class="quick-option">
-                                <input type="checkbox" v-model="openclawQuick.overrideProvider">
-                                {{ t('modal.openclaw.quick.overrideProvider') }}
-                            </label>
-                            <label class="quick-option">
-                                <input type="checkbox" v-model="openclawQuick.overrideModels">
-                                {{ t('modal.openclaw.quick.overrideModels') }}
-                            </label>
-                            <div class="form-hint">{{ t('modal.openclaw.quick.optionsHint') }}</div>
+                        <!-- Step 3: Options -->
+                        <div :class="['accordion-panel', { active: openclawAccordionStep === 3, completed: openclawAccordionStep > 3 }]">
+                            <button class="accordion-trigger" @click="toggleAccordionStep(3)" type="button">
+                                <span class="accordion-step-badge">
+                                    <template v-if="openclawAccordionStep > 3">✓</template>
+                                    <template v-else>3</template>
+                                </span>
+                                <span class="accordion-title">{{ t('modal.openclaw.quick.optionsTitle') }}</span>
+                                <span class="accordion-status">高级选项</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content" v-show="openclawAccordionStep === 3">
+                                <label class="quick-option">
+                                    <input type="checkbox" v-model="openclawQuick.setPrimary">
+                                    {{ t('modal.openclaw.quick.setPrimary') }}
+                                </label>
+                                <label class="quick-option">
+                                    <input type="checkbox" v-model="openclawQuick.overrideProvider">
+                                    {{ t('modal.openclaw.quick.overrideProvider') }}
+                                </label>
+                                <label class="quick-option">
+                                    <input type="checkbox" v-model="openclawQuick.overrideModels">
+                                    {{ t('modal.openclaw.quick.overrideModels') }}
+                                </label>
+                                <div class="form-hint">{{ t('modal.openclaw.quick.optionsHint') }}</div>
+                                <div class="accordion-actions">
+                                    <button class="btn btn-cancel btn-sm" @click="prevAccordionStep">
+                                        ← 上一步
+                                    </button>
+                                    <button class="btn btn-confirm btn-sm" @click="finishAccordionStep">
+                                        完成 ✓
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <div class="btn-group">
                         <button class="btn btn-confirm" @click="applyOpenclawQuickToText">{{ t('modal.openclaw.quick.writeToEditor') }}</button>
                     </div>
@@ -262,14 +326,14 @@
                         :readonly="openclawSaving || openclawApplying"
                         placeholder="在这里编辑 OpenClaw 配置（JSON5）"></textarea>
                     <div class="template-editor-warning">
-                        <span v-if="openclawEditing.lockName && openclawEditing.name === '默认配置'">默认配置始终映射当前 openclaw.json，请直接使用“保存并应用”。</span>
+                        <span v-if="openclawEditing.lockName && isDefaultOpenclawConfig(openclawEditing.name)">默认配置始终映射当前 openclaw.json，请直接使用“保存并应用”。</span>
                         <span v-else>保存仅写入本地配置库。点击“保存并应用”后会写入 openclaw.json。</span>
                     </div>
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closeOpenclawConfigModal" :disabled="openclawSaving || openclawApplying">取消</button>
-                    <button class="btn btn-confirm" @click="saveOpenclawConfig" :disabled="openclawSaving || openclawApplying || (openclawEditing.lockName && openclawEditing.name === '默认配置')">
+                    <button class="btn btn-confirm" @click="saveOpenclawConfig" :disabled="openclawSaving || openclawApplying || (openclawEditing.lockName && isDefaultOpenclawConfig(openclawEditing.name))">
                         {{ openclawSaving ? '保存中...' : '保存' }}
                     </button>
                     <button class="btn btn-confirm secondary" @click="saveAndApplyOpenclawConfig" :disabled="openclawSaving || openclawApplying">

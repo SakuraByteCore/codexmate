@@ -12,7 +12,7 @@
                     <div v-if="configTemplateDiffVisible" class="agents-diff-container">
                         <div class="agents-diff-header">
                             <div class="agents-diff-title">
-                                {{ t('diff.title.configTemplate') }}
+                                {{ configTemplateContext === 'claude' ? t('diff.title.claudeSettings') : t('diff.title.configTemplate') }}
                                 <span v-if="configTemplateDiffLoading" class="agents-diff-subtitle">{{ t('diff.generating') }}</span>
                                 <span v-else-if="configTemplateDiffError" class="agents-diff-subtitle">{{ t('diff.failed') }}</span>
                                 <span v-else-if="!configTemplateDiffHasChanges" class="agents-diff-subtitle">{{ t('diff.noChanges') }}</span>
@@ -102,6 +102,18 @@
                             :disabled="agentsLoading || agentsSaving || agentsDiffVisible">
                             {{ t('common.paste') }}
                         </button>
+                        <span class="prompts-editor-actions-sep"></span>
+                        <button class="btn-mini" @click="closeAgentsModal" :disabled="agentsSaving || agentsDiffLoading">{{ t('common.cancel') }}</button>
+                        <button
+                            v-if="agentsDiffVisible"
+                            class="btn-mini"
+                            @click="resetAgentsDiffState"
+                            :disabled="agentsSaving || agentsDiffLoading">
+                            {{ t('common.backToEdit') }}
+                        </button>
+                        <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (agentsDiffVisible && !agentsDiffHasChanges)">
+                            {{ agentsSaving ? (agentsDiffVisible ? t('common.saving') : t('common.previewing')) : (agentsDiffVisible ? t('common.save') : t('common.preview')) }}
+                        </button>
                     </div>
                 </div>
 
@@ -118,7 +130,7 @@
 
 
                     <div class="form-group">
-                        <label class="form-label">{{ t(agentsContext === 'claude-md' ? 'modal.agents.contentLabel.claudeMd' : 'modal.agents.contentLabel') }}</label>
+                        <label class="form-label">{{ t(agentsContext === 'claude-project' ? 'modal.agents.contentLabel.claudeProject' : 'modal.agents.contentLabel') }}</label>
                         <div
                             v-if="!agentsLoading && (hasAgentsContentChanged() || agentsDiffVisible)"
                             class="agents-diff-save-alert">
@@ -153,7 +165,7 @@
                             spellcheck="false"
                             :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
                             @input="onAgentsContentInput"
-                            :placeholder="t(agentsContext === 'claude-md' ? 'modal.agents.placeholder.claudeMd' : 'modal.agents.placeholder')"></textarea>
+                            :placeholder="t(agentsContext === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
                         <div class="template-editor-warning">
                             {{ agentsModalHint }}
                             <div class="agents-diff-hint">{{ t('modal.agents.hint.shortcuts') }}</div>
@@ -168,18 +180,5 @@
 
                 </div>
 
-                <div class="btn-group modal-editor-footer">
-                    <button class="btn btn-cancel" @click="closeAgentsModal" :disabled="agentsSaving || agentsDiffLoading">{{ t('common.cancel') }}</button>
-                    <button
-                        v-if="agentsDiffVisible"
-                        class="btn"
-                        @click="resetAgentsDiffState"
-                        :disabled="agentsSaving || agentsDiffLoading">
-                        {{ t('common.backToEdit') }}
-                    </button>
-                    <button class="btn btn-confirm" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (agentsDiffVisible && !agentsDiffHasChanges)">
-                        {{ agentsSaving ? (agentsDiffVisible ? t('common.applying') : t('common.confirming')) : (agentsDiffVisible ? t('common.apply') : t('common.confirm')) }}
-                    </button>
-                </div>
             </div>
         </div>

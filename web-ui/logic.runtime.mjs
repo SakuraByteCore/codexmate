@@ -101,10 +101,6 @@ export function shouldForceCompactLayoutMode(options = {}) {
     const screenHeight = Number(options.screenHeight || 0);
     const shortEdge = Number(options.shortEdge || (screenWidth > 0 && screenHeight > 0 ? Math.min(screenWidth, screenHeight) : 0));
     const maxTouchPoints = Number(options.maxTouchPoints || 0);
-    const userAgent = typeof options.userAgent === 'string' ? options.userAgent : '';
-    const isMobileUa = typeof options.isMobileUa === 'boolean'
-        ? options.isMobileUa
-        : /(Android|iPhone|iPad|iPod|Mobile)/i.test(userAgent);
     const coarsePointer = !!options.coarsePointer;
     const noHover = !!options.noHover;
     const isSmallPhysicalScreen = shortEdge > 0 && shortEdge <= 920;
@@ -114,9 +110,6 @@ export function shouldForceCompactLayoutMode(options = {}) {
     if (viewportWidth > 0) {
         if (!isNarrowViewport) {
             return false;
-        }
-        if (isMobileUa) {
-            return true;
         }
         return pointerSuggestsTouchOnly && maxTouchPoints > 0;
     }

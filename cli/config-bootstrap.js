@@ -273,7 +273,12 @@ stream_idle_timeout_ms = 300000
         fs.writeFileSync(INIT_MARK_FILE, JSON.stringify(payload, null, 2), 'utf-8');
     }
 
-    function ensureManagedConfigBootstrap() {
+    function ensureManagedConfigBootstrap(options = {}) {
+        const allowWrite = !(options && options.allowWrite === false);
+        if (!allowWrite) {
+            initNotice = '';
+            return { notice: '', readOnly: true };
+        }
         ensureConfigDir();
 
         const initializedAt = new Date().toISOString();

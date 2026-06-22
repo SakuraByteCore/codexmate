@@ -64,24 +64,90 @@ async function cmdToolUpdate(args = []) {
     }
 }
 
-async function fetchLatestVersion() {
+async function fetchLatestVersion(options = {}) {
     return new Promise((resolve, reject) => {
+        const timeoutMs = Number.isFinite(Number(options.timeoutMs))
+            ? Math.max(0, Number(options.timeoutMs))
+            : 5000;
         const url = 'https://registry.npmjs.org/codexmate/latest';
-        https.get(url, (res) => {
+        let settled = false;
+        const finish = (fn, value) => {
+            if (settled) return;
+            settled = true;
+            fn(value);
+        };
+        const req = https.get(url, (res) => {
             let data = '';
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () => {
                 try {
+                    if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+                        finish(reject, new Error(`NPM registry returned ${res.statusCode}`));
+                        return;
+                    }
                     const json = JSON.parse(data);
-                    resolve(json.version || '');
+                    finish(resolve, json.version || '');
                 } catch (e) {
-                    reject(new Error('解析 NPM 响应失败'));
+                    finish(reject, new Error('解析 NPM 响应失败'));
                 }
             });
-        }).on('error', (err) => {
-            reject(err);
+        });
+        if (timeoutMs > 0) {
+            req.setTimeout(timeoutMs, () => {
+                req.destroy(new Error('获取 NPM 最新版本超时'));
+            });
+        }
+        req.on('error', (err) => {
+            finish(reject, err);
         });
     });
+}
+
+function normalizePackageVersion(value) {
+    const normalized = typeof value === 'string' ? value.trim().replace(/^v/i, '') : '';
+    return /^\d+(?:\.\d+){0,2}(?:[-+][0-9A-Za-z.-]+)?$/.test(normalized) ? normalized : '';
+}
+
+function comparePackageVersions(left, right) {
+    const normalizeParts = (value) => {
+        const normalized = normalizePackageVersion(value);
+        if (!normalized) return null;
+        return normalized.split(/[+-]/)[0].split('.').map((part) => Number.parseInt(part, 10) || 0);
+    };
+    const a = normalizeParts(left);
+    const b = normalizeParts(right);
+    if (!a || !b) return 0;
+    for (let i = 0; i < 3; i += 1) {
+        const diff = (a[i] || 0) - (b[i] || 0);
+        if (diff < 0) return -1;
+        if (diff > 0) return 1;
+    }
+    return 0;
+}
+
+let latestVersionStatusCache = null;
+
+async function fetchLatestVersionStatus(options = {}) {
+    const currentVersion = normalizePackageVersion(options.currentVersion) || String(options.currentVersion || '');
+    const timeoutMs = Number.isFinite(Number(options.timeoutMs)) ? Number(options.timeoutMs) : 5000;
+    const cacheTtlMs = Number.isFinite(Number(options.cacheTtlMs)) ? Math.max(0, Number(options.cacheTtlMs)) : 10 * 60 * 1000;
+    const now = typeof options.now === 'function' ? options.now() : Date.now();
+    if (latestVersionStatusCache && cacheTtlMs > 0 && now - latestVersionStatusCache.checkedAtMs < cacheTtlMs) {
+        return { ...latestVersionStatusCache.payload, cached: true };
+    }
+
+    const latestVersionRaw = await fetchLatestVersion({ timeoutMs });
+    const latestVersion = normalizePackageVersion(latestVersionRaw) || String(latestVersionRaw || '');
+    const payload = {
+        currentVersion,
+        latestVersion,
+        updateAvailable: !!currentVersion && !!latestVersion && comparePackageVersions(currentVersion, latestVersion) < 0,
+        source: 'npm',
+        checkedAt: new Date(now).toISOString(),
+        cached: false
+    };
+    latestVersionStatusCache = { checkedAtMs: now, payload };
+    return payload;
 }
 
 function detectInstallMethod() {
@@ -167,5 +233,9 @@ function updateViaStandalone(version) {
 }
 
 module.exports = {
-    cmdToolUpdate
+    cmdToolUpdate,
+    fetchLatestVersion,
+    fetchLatestVersionStatus,
+    normalizePackageVersion,
+    comparePackageVersions
 };

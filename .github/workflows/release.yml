@@ -235,7 +235,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '18'
-          cache: 'npm'
       - name: Verify package.json matches release tag
         env:
           RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
@@ -267,6 +266,61 @@ jobs:
           pattern: codexmate-desktop-*
           path: desktop-release-assets
           merge-multiple: true
+      - name: Fetch contributors from GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          LATEST_TAG: ${{ needs.resolve.outputs.latest_tag }}
+          CONTRIBUTORS_FILE: release-contributors.txt
+        run: |
+          if [ -z "${LATEST_TAG}" ]; then
+            echo "::notice title=No previous tag::Skipping contributors fetch for initial release."
+            echo "" > "${CONTRIBUTORS_FILE}"
+            exit 0
+          fi
+
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "::error title=gh CLI not found::GitHub CLI is required."
+            exit 1
+          fi
+
+          tmp_logins=$(mktemp)
+          trap 'rm -f "${tmp_logins}"' EXIT
+
+          # Fetch PR authors in range using base...head comparison
+          gh pr list             --repo "${GITHUB_REPOSITORY}"             --limit 500             --json author             --jq '.[].author.login' 2>/dev/null | sort -u > "${tmp_logins}" || true
+
+          # Fetch merged PRs in range using commits
+          tmp_merged=$(mktemp)
+          git log "${LATEST_TAG}...${RELEASE_TAG}" --pretty=format:%s             | grep -oE '#[0-9]+'             | sed 's/^#//'             | sort -u             | while read -r pr_number; do
+                gh pr view "${pr_number}" --repo "${GITHUB_REPOSITORY}" --json author --jq '.author.login' 2>/dev/null || true
+              done             | sort -u > "${tmp_merged}" || true
+
+          if [ -s "${tmp_merged}" ]; then
+            cat "${tmp_merged}" > "${CONTRIBUTORS_FILE}"
+          elif [ -s "${tmp_logins}" ]; then
+            cat "${tmp_logins}" > "${CONTRIBUTORS_FILE}"
+          else
+            echo "::notice title=No contributors found::No contributors in this range."
+            echo "" > "${CONTRIBUTORS_FILE}"
+          fi
+      - name: Generate release notes from actual commit range
+        env:
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          TAG_EXISTS: ${{ needs.resolve.outputs.tag_exists }}
+          RELEASE_CHANGELOG_FILE: release-changelog.md
+          CONTRIBUTORS_FILE: release-contributors.txt
+        run: |
+          if [ "${TAG_EXISTS}" = "true" ] && [ ! -f tools/release/changelog.js ]; then
+            echo "::notice title=Release changelog skipped::tools/release/changelog.js is not present in existing tag ${RELEASE_TAG}."
+            exit 0
+          fi
+          if [ ! -f tools/release/changelog.js ]; then
+            echo "::notice title=Release changelog skipped::tools/release/changelog.js is not present in this ref."
+            exit 0
+          fi
+          node tools/release/changelog.js
+          test -s "${RELEASE_CHANGELOG_FILE}"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
         with:
@@ -275,10 +329,11 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           prerelease: false
           draft: false
+          body_path: ${{ env.RELEASE_CHANGELOG_FILE }}
           files: |
             ${{ env.PACKAGE_TGZ }}
             ${{ env.STANDALONE_TGZ }}
             desktop-release-assets/**/*.dmg
             desktop-release-assets/**/*.msi
             desktop-release-assets/**/*.exe
-          generate_release_notes: true
+          generate_release_notes: false

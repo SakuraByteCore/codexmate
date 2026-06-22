@@ -298,7 +298,7 @@ module.exports = async function testMessages(ctx) {
     assert(resetConfigResult.backup !== undefined || resetConfigResult.success !== undefined || resetConfigResult.error, 'reset-config should return backup/success or error');
 
     // ========== 添加提供商测试 ==========
-    const addProviderResult = await api('add-provider', { name: 'test-duplicate', url: 'http://test.com', key: 'test-key' });
+    const addProviderResult = await api('add-provider', { name: 'test-duplicate', url: 'http://test.com', key: 'test-key', model: 'gpt-test-duplicate' });
     assert(addProviderResult.success !== undefined || addProviderResult.error, 'add-provider should return success or error');
 
     const addProviderDupName = await api('add-provider', { name: '', url: 'http://test.com' });

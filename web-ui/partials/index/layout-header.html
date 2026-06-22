@@ -1,4 +1,16 @@
     <div id="app" class="container" v-cloak>
+        <div v-if="!sessionStandalone" class="mobile-brand-bar">
+            <div class="mobile-brand-title">Codex Mate<span v-if="appVersion" class="brand-version"> v{{ appVersion }}</span></div>
+            <button
+                v-if="isAppVersionStatusVisible()"
+                type="button"
+                :class="['mobile-update-chip', 'mobile-update-chip--' + appVersionStatusKind()]"
+                :title="appVersionStatusTitle()"
+                @click="handleAppVersionStatusClick">
+                <span class="side-update-dot"></span>
+                <span class="mobile-update-text">{{ appUpdateNoticeText() }}</span>
+            </button>
+        </div>
         <div v-if="!sessionStandalone" class="top-tabs" role="tablist" :aria-label="t('nav.topTabs.aria')">
             <button type="button" class="top-tab"
                 id="tab-dashboard"
@@ -27,7 +39,7 @@
                 :data-config-mode="configMode"
                 :tabindex="mainTab === 'config' ? 0 : -1"
                 :aria-selected="mainTab === 'config'"
-                :aria-controls="configMode === 'claude' ? 'panel-config-claude' : (configMode === 'openclaw' ? 'panel-config-openclaw' : 'panel-config-provider')"
+                :aria-controls="configMode === 'claude' ? 'panel-config-claude' : (configMode === 'openclaw' ? 'panel-config-openclaw' : (configMode === 'opencode' ? 'panel-config-opencode' : 'panel-config-provider'))"
                 :class="{ active: isMainTabNavActive('config') }"
                 @pointerdown="onMainTabPointerDown('config', $event)"
                 @click="onMainTabClick('config', $event)">{{ t('tab.config') }}</button>
@@ -82,6 +94,16 @@
                 @pointerdown="onMainTabPointerDown('plugins', $event)"
                 @click="onMainTabClick('plugins', $event)">{{ t('tab.plugins') }}</button>
             <button type="button" class="top-tab"
+                id="tab-prompts"
+                role="tab"
+                data-main-tab="prompts"
+                :tabindex="mainTab === 'prompts' ? 0 : -1"
+                :aria-selected="mainTab === 'prompts'"
+                aria-controls="panel-prompts"
+                :class="{ active: isMainTabNavActive('prompts') }"
+                @pointerdown="onMainTabPointerDown('prompts', $event)"
+                @click="onMainTabClick('prompts', $event)">{{ t('tab.prompts') }}</button>
+            <button type="button" class="top-tab"
                 id="tab-settings"
                 role="tab"
                 data-main-tab="settings"
@@ -93,27 +115,12 @@
                 @click="onMainTabClick('settings', $event)">{{ t('tab.settings') }}</button>
         </div>
 
-        <div v-if="!sessionStandalone" class="lang-fab" role="group" :aria-label="t('lang.label')">
-            <div class="lang-choice" role="group" :aria-label="t('lang.label')">
-                <button
-                    type="button"
-                    class="lang-choice-btn"
-                    :aria-pressed="(lang || 'zh') === 'zh'"
-                    :class="{ active: (lang || 'zh') === 'zh' }"
-                    @click="setLang('zh')">ZH</button>
-                <button
-                    type="button"
-                    class="lang-choice-btn"
-                    :aria-pressed="(lang || 'zh') === 'en'"
-                    :class="{ active: (lang || 'zh') === 'en' }"
-                    @click="setLang('en')">EN</button>
-                <button
-                    type="button"
-                    class="lang-choice-btn"
-                    :aria-pressed="(lang || 'zh') === 'ja'"
-                    :class="{ active: (lang || 'zh') === 'ja' }"
-                    @click="setLang('ja')">日本語</button>
-            </div>
+        <div v-if="!sessionStandalone" class="lang-fab">
+            <button
+                type="button"
+                class="language-settings-link"
+                :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
+                @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
         </div>
 
         <div :class="['app-shell', { standalone: sessionStandalone }]">
@@ -122,9 +129,21 @@
                     <div class="brand-head">
                         <img class="brand-logo" src="/res/logo-pack.webp" alt="Codex Mate logo">
                         <div class="brand-copy">
-                            <div class="brand-kicker">Codex Mate<span v-if="appVersion" class="brand-version"> v{{ appVersion }}</span></div>
+                            <div class="brand-kicker">Codex Mate</div>
                         </div>
                     </div>
+                    <button
+                        v-if="isAppVersionStatusVisible()"
+                        type="button"
+                        :class="['side-update-notice', 'side-update-notice--' + appVersionStatusKind()]"
+                        :title="appVersionStatusTitle()"
+                        @click="handleAppVersionStatusClick">
+                        <span class="side-update-dot"></span>
+                        <span class="side-update-copy">
+                            <span class="side-update-title">{{ appUpdateNoticeText() }}</span>
+                            <span class="side-update-meta">{{ appUpdateNoticeMeta() }}</span>
+                        </span>
+                    </button>
                 </div>
 
                 <div class="side-rail-nav">
@@ -202,6 +221,50 @@
                         <div class="side-item-meta">
                             <span>{{ t('side.config.openclaw.meta') }}</span>
                             <span v-if="currentOpenclawConfig">{{ t('common.current', { value: currentOpenclawConfig }) }}</span>
+                        </div>
+                    </button>
+                    <button
+                        id="side-tab-config-opencode"
+                        data-main-tab="config"
+                        data-config-mode="opencode"
+                        :aria-current="mainTab === 'config' && configMode === 'opencode' ? 'page' : null"
+                        :class="['side-item', { active: isConfigModeNavActive('opencode') }]"
+                        @pointerdown="onConfigTabPointerDown('opencode', $event)"
+                        @click="onConfigTabClick('opencode', $event)">
+                        <div class="side-item-title">{{ t('side.config.opencode') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.config.opencode.meta') }}</span>
+                            <span v-if="opencodeModel">{{ t('common.current', { value: opencodeModel }) }}</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="side-section" role="navigation" :aria-label="t('side.prompts')">
+                    <div class="side-section-title">{{ t('side.prompts') }}</div>
+                    <button
+                        id="side-tab-prompts-agents"
+                        data-main-tab="prompts"
+                        data-prompts-sub-tab="codex"
+                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'codex' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'codex' }]"
+                        @pointerdown="onMainTabPointerDown('prompts', $event)"
+                        @click="switchPromptsSubTab('codex'); onMainTabClick('prompts')">
+                        <div class="side-item-title">{{ t('side.prompts.agents') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.prompts.agents.meta') }}</span>
+                        </div>
+                    </button>
+                    <button
+                        id="side-tab-prompts-project"
+                        data-main-tab="prompts"
+                        data-prompts-sub-tab="claude-project"
+                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'claude-project' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'claude-project' }]"
+                        @pointerdown="onMainTabPointerDown('prompts', $event)"
+                        @click="switchPromptsSubTab('claude-project'); onMainTabClick('prompts')">
+                        <div class="side-item-title">{{ t('side.prompts.claude') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.prompts.claude.meta') }}</span>
                         </div>
                     </button>
                 </div>
@@ -282,7 +345,7 @@
                         <div class="side-item-title">{{ t('side.plugins.tools') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.plugins.tools.meta') }}</span>
-                            <span>{{ promptTemplatesList.length }} templates</span>
+                            <span>{{ t('side.plugins.templatesCount', { count: promptTemplatesList.length }) }}</span>
                         </div>
                     </button>
                 </div>
@@ -308,39 +371,37 @@
                         :class="['side-item', { active: isMainTabNavActive('trash') }]"
                         @pointerdown="onMainTabPointerDown('trash', $event)"
                         @click="onMainTabClick('trash', $event)">
-                        <div class="side-item-title">回收站</div>
+                        <div class="side-item-title">{{ t('settings.trash.title') }}</div>
                         <div class="side-item-meta">
-                            <span>已删除会话</span>
+                            <span>{{ t('settings.trash.meta') }}</span>
                             <span v-if="sessionTrashCount > 0" class="side-item-badge">{{ sessionTrashCount }}</span>
                         </div>
                     </button>
                 </div>
                 <div id="side-tab-new" class="side-item side-item-ghost" tabindex="-1" aria-hidden="true">
-                    <div class="side-item-title">New Tab</div>
+                    <div class="side-item-title">{{ t('side.newTab') }}</div>
                     <div class="side-item-meta"><span>&nbsp;</span></div>
                 </div>
                 </div>
 
-                <div class="side-rail-lang" role="group" :aria-label="t('lang.label')">
-                    <div class="lang-choice" role="group" :aria-label="t('lang.label')">
+                <div class="side-rail-lang">
+                    <div class="side-rail-lang-actions">
                         <button
                             type="button"
-                            class="lang-choice-btn"
-                            :aria-pressed="(lang || 'zh') === 'zh'"
-                            :class="{ active: (lang || 'zh') === 'zh' }"
-                            @click="setLang('zh')">ZH</button>
+                            class="language-settings-link"
+                            :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
+                            @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
                         <button
                             type="button"
-                            class="lang-choice-btn"
-                            :aria-pressed="(lang || 'zh') === 'en'"
-                            :class="{ active: (lang || 'zh') === 'en' }"
-                            @click="setLang('en')">EN</button>
-                        <button
-                            type="button"
-                            class="lang-choice-btn"
-                            :aria-pressed="(lang || 'zh') === 'ja'"
-                            :class="{ active: (lang || 'zh') === 'ja' }"
-                            @click="setLang('ja')">日本語</button>
+                            class="side-announcement-button"
+                            :aria-label="t('announcement.providerCache.open')"
+                            :title="t('announcement.providerCache.open')"
+                            @click="openProviderCacheAnnouncementModal">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+                                <path d="M15 8.5a5 5 0 0 0-10 0c0 2.75-1 4.25-2 5.5h14c-1-1.25-2-2.75-2-5.5Z"/>
+                                <path d="M8 16a2 2 0 0 0 4 0"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </aside>
@@ -383,6 +444,20 @@
                             <div class="status-chip">
                                 <span class="label">{{ t('status.workspaceFile') }}</span>
                                 <span class="value">{{ openclawWorkspaceFileName || t('common.notSelected') }}</span>
+                            </div>
+                        </template>
+                        <template v-else-if="configMode === 'opencode'">
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.opencodeProvider') }}</span>
+                                <span class="value">{{ opencodeProvider || t('common.notSelected') }}</span>
+                            </div>
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.opencodeModel') }}</span>
+                                <span class="value">{{ opencodeModel || t('common.notSelected') }}</span>
+                            </div>
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.opencodeConfig') }}</span>
+                                <span class="value">{{ opencodeConfigPath || t('common.notSelected') }}</span>
                             </div>
                         </template>
                         <template v-else>
@@ -479,7 +554,7 @@
                         </div>
                         <div class="status-chip">
                             <span class="label">{{ t('status.registry') }}</span>
-                            <span class="value">{{ installRegistryPreview || t('common.defaultOfficial') }}</span>
+                            <span class="value">{{ installRegistryPreview || 'npmmirror' }}</span>
                         </div>
                     </div>
                     <div class="status-strip status-strip-placeholder" v-else-if="!sessionStandalone" aria-hidden="true">

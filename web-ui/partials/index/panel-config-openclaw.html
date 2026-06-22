@@ -10,74 +10,80 @@
                     <button type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
                     <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
-                <div class="config-template-hint">
-                    {{ t('openclaw.applyHint') }}
-                </div>
-
-                <div class="selector-section">
-                    <div class="selector-header">
-                        <span class="selector-title">AGENTS.md</span>
-                    </div>
-                    <div class="config-template-hint">
-                        {{ t('openclaw.agents.hint') }}
-                    </div>
-                    <button class="btn-tool" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
-                        {{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.open') }}
-                    </button>
-                </div>
-
-                <div class="selector-section">
-                    <div class="selector-header">
-                        <label class="selector-title" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
-                    </div>
-                    <input
-                        id="openclaw-workspace-file"
-                        class="form-input"
-                        v-model="openclawWorkspaceFileName"
-                        :placeholder="t('openclaw.workspace.placeholder')">
-                    <div class="config-template-hint">
-                        {{ t('openclaw.workspace.hint') }}
-                    </div>
-                    <button class="btn-tool" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
-                        {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
-                    </button>
-                </div>
-
-                <div class="card-list">
-                    <div v-for="(config, name) in openclawConfigs" :key="name"
-                         :class="['card', { active: currentOpenclawConfig === name }]"
-                         @click="applyOpenclawConfig(name)"
-                         @keydown.enter.self.prevent="applyOpenclawConfig(name)"
-                         @keydown.space.self.prevent="applyOpenclawConfig(name)"
-                         tabindex="0"
-                         role="button"
-                         :aria-current="currentOpenclawConfig === name ? 'true' : null">
-                        <div class="card-leading">
-                            <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
-                            <div class="card-content">
-                                <div class="card-title">{{ name }}</div>
-                                <div class="card-subtitle">{{ openclawSubtitle(config) }}</div>
-                            </div>
-                        </div>
-                        <div class="card-trailing">
-                            <span :class="['pill', openclawHasContent(config) ? 'configured' : 'empty']">
-                                {{ openclawHasContent(config) ? t('openclaw.configured') : t('openclaw.notConfigured') }}
-                            </span>
-                            <div class="card-actions" @click.stop>
-                                <button class="card-action-btn" @click="openOpenclawEditModal(name)" :aria-label="t('openclaw.action.editAria', { name })" :title="t('openclaw.action.edit')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                <div class="openclaw-layout">
+                    <section class="settings-card settings-card--wide openclaw-workspace-card">
+                        <div class="settings-card-body">
+                            <div class="openclaw-tools-grid">
+                                <button class="openclaw-tool-btn" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
+                                    <div class="tool-icon">📄</div>
+                                    <div class="tool-content">
+                                        <div class="tool-title">AGENTS.md</div>
+                                        <div class="tool-meta">{{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.hint') }}</div>
+                                    </div>
+                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
                                     </svg>
                                 </button>
-                                <button v-if="name !== '默认配置'" class="card-action-btn delete" @click="deleteOpenclawConfig(name)" :aria-label="t('openclaw.action.deleteAria', { name })" :title="t('openclaw.action.delete')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M3 6h18"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
+
+                                <div class="openclaw-workspace-card">
+                                    <label class="workspace-label" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
+                                    <div class="workspace-input-group">
+                                        <input
+                                            id="openclaw-workspace-file"
+                                            class="form-input"
+                                            v-model="openclawWorkspaceFileName"
+                                            :placeholder="t('openclaw.workspace.placeholder')">
+                                        <button class="btn-tool" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
+                                            {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
+                                        </button>
+                                    </div>
+                                    <div class="workspace-meta">{{ t('openclaw.workspace.hint') }}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
+
+                    <section class="settings-card settings-card--wide openclaw-configs-card" aria-labelledby="openclaw-configs-title">
+                        <div class="settings-card-body">
+                            <div class="card-list openclaw-card-list">
+                                <div v-for="(config, name) in openclawConfigs" :key="name"
+                                     :class="['card', { active: currentOpenclawConfig === name }]"
+                                     @click="applyOpenclawConfig(name)"
+                                     @keydown.enter.self.prevent="applyOpenclawConfig(name)"
+                                     @keydown.space.self.prevent="applyOpenclawConfig(name)"
+                                     tabindex="0"
+                                     role="button"
+                                     :aria-label="t('openclaw.action.applyAria', { name })"
+                                     :aria-current="currentOpenclawConfig === name ? 'true' : null">
+                                    <div class="card-leading">
+                                        <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
+                                        <div class="card-content">
+                                            <div class="card-title">{{ name }}</div>
+                                            <div class="card-subtitle">{{ openclawSubtitle(config) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-trailing">
+                                        <span :class="['pill', openclawHasContent(config) ? 'configured' : 'empty']">
+                                            {{ openclawHasContent(config) ? t('openclaw.configured') : t('openclaw.notConfigured') }}
+                                        </span>
+                                        <div class="card-actions" @click.stop>
+                                            <button class="card-action-btn" @click="openOpenclawEditModal(name)" :aria-label="t('openclaw.action.editAria', { name })" :title="t('openclaw.action.edit')">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                </svg>
+                                            </button>
+                                            <button v-if="!isDefaultOpenclawConfig(name, config)" class="card-action-btn delete" @click="deleteOpenclawConfig(name)" :aria-label="t('openclaw.action.deleteAria', { name })" :title="t('openclaw.action.delete')">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>

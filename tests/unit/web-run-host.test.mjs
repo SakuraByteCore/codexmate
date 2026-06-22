@@ -122,18 +122,32 @@ const resolveWebHostSource = extractFunctionBySignature(
 );
 const cmdStartSource = extractFunctionBySignature(
     cliContent,
-    'function cmdStart(options = {}) {',
+    'async function cmdStart(options = {}) {',
     'cmdStart'
+);
+const resolveAvailableWebPortSource = extractFunctionBySignature(
+    cliContent,
+    'async function resolveAvailableWebPort(port, host, options = {}) {',
+    'resolveAvailableWebPort'
 );
 const releaseRunPortIfNeededSource = extractFunctionBySignature(
     cliContent,
     'function releaseRunPortIfNeeded(port, host, deps = {}) {',
     'releaseRunPortIfNeeded'
 );
+const isProtectedWebSurfacePathSource = extractFunctionBySignature(
+    cliContent,
+    'function isProtectedWebSurfacePath(requestPath) {',
+    'isProtectedWebSurfacePath'
+);
 const resolveWebHost = instantiateFunction(resolveWebHostSource, 'resolveWebHost', {
     DEFAULT_WEB_HOST: defaultHostMatch[1],
     process: { env: {} }
 });
+const isProtectedWebSurfacePath = instantiateFunction(
+    isProtectedWebSurfacePathSource,
+    'isProtectedWebSurfacePath'
+);
 
 test('resolveWebHost defaults to LAN host', () => {
     assert.strictEqual(resolveWebHost({}), '127.0.0.1');
@@ -156,6 +170,111 @@ test('resolveWebHost still prefers environment host over default host', () => {
     });
 
     assert.strictEqual(withEnv({}), '192.168.1.10');
+});
+
+function createPortProbeNetMock(outcomes = {}) {
+    const checkedPorts = [];
+    return {
+        checkedPorts,
+        createServer() {
+            const handlers = {};
+            return {
+                once(event, handler) {
+                    handlers[event] = handler;
+                    return this;
+                },
+                listen(port) {
+                    checkedPorts.push(port);
+                    const outcome = outcomes[port] || 'available';
+                    setImmediate(() => {
+                        if (outcome === 'available') {
+                            if (handlers.listening) handlers.listening();
+                            return;
+                        }
+                        if (handlers.error) {
+                            handlers.error({ code: outcome, message: `${outcome} ${port}` });
+                        }
+                    });
+                },
+                close(callback) {
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }
+            };
+        }
+    };
+}
+
+test('resolveAvailableWebPort auto-increments only for the implicit default port', async () => {
+    const netMock = createPortProbeNetMock({
+        3737: 'EADDRINUSE',
+        3738: 'EACCES',
+        3739: 'available'
+    });
+    const resolveAvailableWebPort = instantiateFunction(resolveAvailableWebPortSource, 'resolveAvailableWebPort', {
+        net: netMock
+    });
+
+    const result = await resolveAvailableWebPort(3737, '127.0.0.1', { net: netMock });
+
+    assert.strictEqual(result.port, 3739);
+    assert.strictEqual(result.requestedPort, 3737);
+    assert.strictEqual(result.changed, true);
+    assert.deepStrictEqual(netMock.checkedPorts, [3737, 3738, 3739]);
+    assert.deepStrictEqual(result.attempts, [
+        { port: 3737, available: false, code: 'EADDRINUSE' },
+        { port: 3738, available: false, code: 'EACCES' },
+        { port: 3739, available: true, code: '' }
+    ]);
+});
+
+test('resolveAvailableWebPort reports a bounded error when no candidate port is available', async () => {
+    const netMock = createPortProbeNetMock({
+        3737: 'EADDRINUSE',
+        3738: 'EACCES',
+        3739: 'EADDRINUSE'
+    });
+    const resolveAvailableWebPort = instantiateFunction(resolveAvailableWebPortSource, 'resolveAvailableWebPort', {
+        net: netMock
+    });
+
+    const result = await resolveAvailableWebPort(3737, '127.0.0.1', {
+        maxAttempts: 3,
+        net: netMock
+    });
+
+    assert.strictEqual(result.port, 3737);
+    assert.strictEqual(result.requestedPort, 3737);
+    assert.strictEqual(result.changed, false);
+    assert.strictEqual(result.error, 'no available port found from 3737 to 3739');
+    assert.deepStrictEqual(netMock.checkedPorts, [3737, 3738, 3739]);
+    assert.strictEqual(result.attempts.length, 3);
+    assert.deepStrictEqual(result.attempts, [
+        { port: 3737, available: false, code: 'EADDRINUSE' },
+        { port: 3738, available: false, code: 'EACCES' },
+        { port: 3739, available: false, code: 'EADDRINUSE' }
+    ]);
+});
+
+test('resolveAvailableWebPort does not probe or increment explicit ports', async () => {
+    const netMock = createPortProbeNetMock({
+        8080: 'EADDRINUSE'
+    });
+    const resolveAvailableWebPort = instantiateFunction(resolveAvailableWebPortSource, 'resolveAvailableWebPort', {
+        net: netMock
+    });
+
+    const result = await resolveAvailableWebPort(8080, '127.0.0.1', {
+        explicitPort: true,
+        net: netMock
+    });
+
+    assert.strictEqual(result.port, 8080);
+    assert.strictEqual(result.explicitPort, true);
+    assert.strictEqual(result.changed, false);
+    assert.deepStrictEqual(result.attempts, []);
+    assert.deepStrictEqual(netMock.checkedPorts, []);
 });
 
 test('web auto-open uses IPv6 loopback when binding to IPv6 any address', () => {
@@ -427,13 +546,16 @@ test('releaseRunPortIfNeeded only taskkills Windows listeners that match host an
 test('cmdStart releases the resolved port before creating the web server', () => {
     const resolveIndex = cmdStartSource.indexOf('resolveWebPort(');
     const releaseIndex = cmdStartSource.indexOf('releaseRunPortIfNeeded(port, host)');
+    const selectIndex = cmdStartSource.indexOf('resolveAvailableWebPort(port, host');
     const createIndex = cmdStartSource.indexOf('createWebServer(');
 
     assert(resolveIndex >= 0, 'cmdStart should resolve the web port');
     assert(releaseIndex >= 0, 'cmdStart should release the run port with host before startup');
+    assert(selectIndex >= 0, 'cmdStart should select an available port before startup');
     assert(createIndex >= 0, 'cmdStart should create the web server');
     assert(resolveIndex < releaseIndex, 'cmdStart should resolve the port before releasing it');
-    assert(releaseIndex < createIndex, 'cmdStart should release the port before creating the web server');
+    assert(releaseIndex < selectIndex, 'cmdStart should release the port before probing availability');
+    assert(selectIndex < createIndex, 'cmdStart should select the port before creating the web server');
 });
 
 const getCodexSkillsDirSource = extractFunctionBySignature(
@@ -607,6 +729,17 @@ const handleImportSkillsZipUploadSource = extractFunctionBySignature(
     'async function handleImportSkillsZipUpload(req, res, options = {}) {',
     'handleImportSkillsZipUpload'
 );
+const extractRequestTokenSource = extractFunctionBySignature(
+    cliContent,
+    'function extractRequestToken(req) {',
+    'extractRequestToken'
+);
+const extractRequestToken = instantiateFunction(extractRequestTokenSource, 'extractRequestToken', { Buffer });
+const assertRequestAuthorizedSource = extractFunctionBySignature(
+    cliContent,
+    'function assertRequestAuthorized(req, res) {',
+    'assertRequestAuthorized'
+);
 const createWebServerSource = extractFunctionBySignature(
     cliContent,
     'function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {',
@@ -637,7 +770,8 @@ function createMockResponse() {
 
 function createWebServerHarness({
     htmlReader = () => '<!doctype html>',
-    dynamicAssets = new Map()
+    dynamicAssets = new Map(),
+    authorizeRequest = () => ({ ok: true })
 } = {}) {
     let requestHandler = null;
     const errors = [];
@@ -690,6 +824,10 @@ function createWebServerHarness({
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: authorizeRequest,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {} },
         exec() {},
         console: {
@@ -698,6 +836,15 @@ function createWebServerHarness({
             error(...args) {
                 errors.push(args);
             }
+        },
+        getApiToolConfigWriteTarget() {
+            return '';
+        },
+        isToolConfigWriteAllowed() {
+            return false;
+        },
+        readToolConfigPermissions() {
+            return { codex: false, claude: false };
         },
         startWinTray() {}
     });
@@ -737,6 +884,68 @@ function assertNotFoundResponse(response) {
     assert.strictEqual(response.body, 'Not Found');
     assert.strictEqual(response.destroyedWith, null);
 }
+
+function mockIsLoopbackRemoteAddress(value) {
+    return value === '127.0.0.1' || value === '::1' || value === '::ffff:127.0.0.1';
+}
+
+function mockWriteJsonResponse(res, statusCode, payload, headers = {}) {
+    const body = JSON.stringify(payload || {}, null, 2);
+    res.writeHead(statusCode, {
+        'Content-Type': 'application/json; charset=utf-8',
+        ...headers
+    });
+    res.end(body);
+}
+
+function mockIsProtectedWebSurfacePath(requestPath) {
+    return requestPath === '/'
+        || requestPath === '/session'
+        || requestPath === '/web-ui/index.html'
+        || requestPath.startsWith('/web-ui/')
+        || requestPath.startsWith('/res/');
+}
+
+function mockAssertRequestAuthorized() {
+    return { ok: true };
+}
+
+test('extractRequestToken accepts bearer, custom header, and browser-friendly basic auth', () => {
+    assert.strictEqual(extractRequestToken({ headers: { authorization: 'Bearer web-token' } }), 'web-token');
+    assert.strictEqual(extractRequestToken({ headers: { 'x-codexmate-token': ' header-token ' } }), 'header-token');
+    assert.strictEqual(extractRequestToken({ headers: { authorization: `Basic ${Buffer.from(':basic-token').toString('base64')}` } }), 'basic-token');
+    assert.strictEqual(extractRequestToken({ headers: { authorization: `Basic ${Buffer.from('codexmate:basic-token').toString('base64')}` } }), 'basic-token');
+});
+
+test('assertRequestAuthorized returns a basic auth challenge for unauthorized remote clients', () => {
+    const assertRequestAuthorized = instantiateFunction(assertRequestAuthorizedSource, 'assertRequestAuthorized', {
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        readServerToken() {
+            return 'expected-token';
+        },
+        extractRequestToken,
+        safeTimingEqual(actual, expected) {
+            return actual === expected;
+        },
+        writeJsonResponse: mockWriteJsonResponse
+    });
+    const response = createMockResponse();
+
+    const result = assertRequestAuthorized({
+        headers: {},
+        socket: { remoteAddress: '192.0.2.10' }
+    }, response);
+
+    assert.deepStrictEqual(result, { ok: false, mode: 'unauthorized' });
+    assert.strictEqual(response.statusCode, 401);
+    assert.strictEqual(response.headers['WWW-Authenticate'], 'Basic realm="codexmate"');
+    assert.strictEqual(response.body, '{\n  "error": "Unauthorized"\n}');
+});
+
+test('isProtectedWebSurfacePath protects standalone session links', () => {
+    assert.strictEqual(isProtectedWebSurfacePath('/session'), true);
+    assert.strictEqual(isProtectedWebSurfacePath('/session/extra'), false);
+});
 
 test('resolveSkillTarget still falls back to default target when target is omitted', () => {
     assert.deepStrictEqual(resolveSkillTarget({}), SKILL_TARGETS[0]);
@@ -790,6 +999,129 @@ test('createWebServer redirects bundled index URL to the canonical root URL', ()
     assert.deepStrictEqual(errors, []);
 });
 
+test('createWebServer serves the SPA shell for standalone session links', () => {
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            return '<!doctype html><title>standalone session</title>';
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/session?source=codex&sessionId=session-1' }, response);
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.strictEqual(response.body, '<!doctype html><title>standalone session</title>');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer requires auth before serving standalone session links to remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            throw new Error('html should not be read before auth');
+        },
+        authorizeRequest(req, res) {
+            calls.push(req.url);
+            res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end('{"error":"Unauthorized"}');
+            return { ok: false, mode: 'unauthorized' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/session?source=codex&sessionId=session-1', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.deepStrictEqual(calls, ['/session?source=codex&sessionId=session-1']);
+    assert.strictEqual(response.body, '{"error":"Unauthorized"}');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer requires auth before serving root page to remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            throw new Error('html should not be read before auth');
+        },
+        authorizeRequest(req, res) {
+            calls.push(req.url);
+            res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end('{"error":"Unauthorized"}');
+            return { ok: false, mode: 'unauthorized' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.deepStrictEqual(calls, ['/']);
+    assert.strictEqual(response.body, '{"error":"Unauthorized"}');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer requires auth before serving web-ui assets to remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        authorizeRequest(req, res) {
+            calls.push(req.url);
+            res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end('{"error":"Unauthorized"}');
+            return { ok: false, mode: 'unauthorized' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/web-ui/app.js', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.deepStrictEqual(calls, ['/web-ui/app.js']);
+    assert.strictEqual(response.body, '{"error":"Unauthorized"}');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer serves root page to authorized remote clients', () => {
+    const calls = [];
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            return '<!doctype html><title>authorized remote</title>';
+        },
+        authorizeRequest(req) {
+            calls.push(req.url);
+            return { ok: true, mode: 'token' };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/', socket: { remoteAddress: '192.0.2.10' } }, response);
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.deepStrictEqual(calls, ['/']);
+    assert.strictEqual(response.body, '<!doctype html><title>authorized remote</title>');
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer keeps loopback root page access unchanged', () => {
+    let authCalled = false;
+    const { requestHandler, errors } = createWebServerHarness({
+        htmlReader() {
+            return '<!doctype html><title>codexmate</title>';
+        },
+        authorizeRequest() {
+            authCalled = true;
+            return { ok: false };
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({ url: '/', socket: { remoteAddress: '127.0.0.1' } }, response);
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.strictEqual(response.body, '<!doctype html><title>codexmate</title>');
+    assert.strictEqual(authCalled, false);
+    assert.deepStrictEqual(errors, []);
+});
+
 test('createWebServer returns 500 when fallback bundled html generation throws', () => {
     const { requestHandler, errors } = createWebServerHarness({
         htmlReader() {
@@ -803,6 +1135,108 @@ test('createWebServer returns 500 when fallback bundled html generation throws',
     assertInternalServerErrorResponse(response);
     assert.deepStrictEqual(errors, [
         ['! Web UI 资源读取失败 [/]:', 'fallback html failed']
+    ]);
+});
+
+test('createWebServer prints port override guidance for EACCES listen errors', () => {
+    let errorHandler = null;
+    let exitCode = null;
+    const errors = [];
+    const createWebServer = instantiateFunction(createWebServerSource, 'createWebServer', {
+        http: {
+            createServer() {
+                return {
+                    listening: false,
+                    on() {},
+                    once(event, handler) {
+                        if (event === 'error') {
+                            errorHandler = handler;
+                        }
+                    },
+                    listen() {},
+                    close(callback) {
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+                    }
+                };
+            }
+        },
+        path,
+        __dirname: '/repo',
+        readBundledWebUiHtml() {
+            return '<!doctype html>';
+        },
+        PUBLIC_WEB_UI_DYNAMIC_ASSETS: new Map(),
+        PUBLIC_WEB_UI_STATIC_ASSETS: new Set(),
+        isPathInside() {
+            return true;
+        },
+        fs: {
+            existsSync() {
+                return false;
+            },
+            statSync() {
+                return {
+                    isFile() {
+                        return false;
+                    }
+                };
+            },
+            createReadStream() {
+                throw new Error('unexpected static asset read');
+            }
+        },
+        formatHostForUrl(value) {
+            return value;
+        },
+        DEFAULT_WEB_OPEN_HOST: '127.0.0.1',
+        isAnyAddressHost() {
+            return false;
+        },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
+        process: {
+            env: {},
+            platform: 'linux',
+            exit(code) {
+                exitCode = code;
+            }
+        },
+        exec() {},
+        console: {
+            log() {},
+            warn() {},
+            error(...args) {
+                errors.push(args);
+            }
+        },
+        setTimeout,
+        Buffer,
+        startWinTray() {}
+    });
+
+    createWebServer({
+        htmlPath: '/repo/web-ui/index.html',
+        assetsDir: '/repo/res',
+        webDir: '/repo/web-ui',
+        host: '127.0.0.1',
+        port: 3737,
+        openBrowser: false
+    });
+
+    assert.strictEqual(typeof errorHandler, 'function');
+    errorHandler({ code: 'EACCES', message: 'listen EACCES: permission denied 127.0.0.1:3737' });
+
+    assert.strictEqual(exitCode, 1);
+    assert.deepStrictEqual(errors, [
+        ['! 启动失败: 没有权限监听 127.0.0.1:3737。'],
+        ['  请检查系统/安全软件限制，或更换端口后重试。'],
+        ['  临时换端口（macOS/Linux）: CODEXMATE_PORT=8080 codexmate run'],
+        ['  临时换端口（Windows PowerShell）: $env:CODEXMATE_PORT=8080; codexmate run'],
+        ['  临时换端口（Windows CMD）: set CODEXMATE_PORT=8080 && codexmate run']
     ]);
 });
 
@@ -881,6 +1315,10 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {}, platform: 'win32' },
         spawn(command, args, options) {
             spawnCalls.push({ command, args, options, unrefCalled: false });
@@ -1015,6 +1453,10 @@ test('createWebServer health-check does not consume init notice before the first
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {}, platform: 'linux' },
         exec() {},
         console: {
@@ -1048,6 +1490,15 @@ test('createWebServer health-check does not consume init notice before the first
         consumeInitNotice() {
             consumed += 1;
             return 'startup notice';
+        },
+        getApiToolConfigWriteTarget() {
+            return '';
+        },
+        isToolConfigWriteAllowed() {
+            return false;
+        },
+        readToolConfigPermissions() {
+            return { codex: false, claude: false };
         },
         startWinTray() {}
     });
@@ -1184,6 +1635,10 @@ test('createWebServer retries readiness probe failures before auto-opening the b
         isAnyAddressHost() {
             return false;
         },
+        isLoopbackRemoteAddress: mockIsLoopbackRemoteAddress,
+        assertRequestAuthorized: mockAssertRequestAuthorized,
+        writeJsonResponse: mockWriteJsonResponse,
+        isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
         process: { env: {}, platform: 'linux' },
         spawn(command, args, options) {
             spawnCalls.push({ command, args, options, unrefCalled: false });

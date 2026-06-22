@@ -7,6 +7,7 @@ import {
     DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT,
     DEFAULT_MODEL_CONTEXT_WINDOW,
     DEFAULT_OPENCLAW_TEMPLATE,
+    OPENCODE_MODEL_CATALOG,
     SESSION_TRASH_LIST_LIMIT,
     SESSION_TRASH_PAGE_SIZE
 } from './app.constants.mjs';
@@ -18,8 +19,11 @@ import { createNavigationMethods } from './app.methods.navigation.mjs';
 import { createOpenclawCoreMethods } from './app.methods.openclaw-core.mjs';
 import { createOpenclawEditingMethods } from './app.methods.openclaw-editing.mjs';
 import { createOpenclawPersistMethods } from './app.methods.openclaw-persist.mjs';
+import { createOpencodeConfigMethods } from './app.methods.opencode-config.mjs';
 import { createProvidersMethods } from './app.methods.providers.mjs';
+import { createProviderCacheMethods } from './app.methods.provider-cache.mjs';
 import { createRuntimeMethods } from './app.methods.runtime.mjs';
+import { createToolConfigPermissionMethods } from './app.methods.tool-config-permissions.mjs';
 import { createTaskOrchestrationMethods } from './app.methods.task-orchestration.mjs';
 import { createSessionActionMethods } from './app.methods.session-actions.mjs';
 import { createSessionBrowserMethods } from './app.methods.session-browser.mjs';
@@ -30,6 +34,7 @@ import { createSkillsMethods } from './skills.methods.mjs';
 import { createPluginsMethods } from './plugins.methods.mjs';
 import { createI18nMethods } from './i18n.mjs';
 import { createWebhookMethods } from './app.methods.webhook.mjs';
+import { createWebUiPreferencesMethods } from './app.methods.web-ui-preferences.mjs';
 import {
     CONFIG_MODE_SET,
     getProviderConfigModeMeta
@@ -80,14 +85,21 @@ export function createAppMethods() {
         ...createPluginsMethods(),
         ...createAgentsMethods({ api, apiWithMeta }),
         ...createProvidersMethods({ api }),
+        ...createProviderCacheMethods({ api }),
+        ...createWebUiPreferencesMethods({ api }),
         ...createClaudeConfigMethods({ api }),
+        ...createToolConfigPermissionMethods({ api }),
         ...createOpenclawCoreMethods(),
         ...createOpenclawEditingMethods(),
         ...createOpenclawPersistMethods({
             api,
             defaultOpenclawTemplate: DEFAULT_OPENCLAW_TEMPLATE
         }),
-        ...createInstallMethods(),
+        ...createOpencodeConfigMethods({
+            api,
+            modelCatalog: OPENCODE_MODEL_CATALOG
+        }),
+        ...createInstallMethods({ api }),
         ...createRuntimeMethods({ api }),
         ...createTaskOrchestrationMethods({ api })
     };

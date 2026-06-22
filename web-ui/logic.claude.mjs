@@ -69,13 +69,21 @@ export function normalizeClaudeConfig(config) {
     const useKey = normalizeClaudeValue(safe.useKey);
     const externalCredentialType = normalizeClaudeValue(safe.externalCredentialType)
         || (apiKey ? '' : (authToken ? 'auth-token' : (useKey ? 'claude-code-use-key' : '')));
+    const targetApiRaw = normalizeClaudeValue(safe.targetApi).toLowerCase();
+    let targetApi = 'responses';
+    if (targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions') {
+        targetApi = 'chat_completions';
+    } else if (targetApiRaw === 'ollama') {
+        targetApi = 'ollama';
+    }
     return {
         apiKey,
         baseUrl: normalizeClaudeValue(safe.baseUrl),
         model: normalizeClaudeValue(safe.model),
         authToken,
         useKey,
-        externalCredentialType
+        externalCredentialType,
+        targetApi
     };
 }
 
@@ -100,6 +108,60 @@ function normalizeClaudeComparableUrl(value) {
     const trimmed = normalizeClaudeValue(value);
     if (!trimmed) return '';
     return trimmed.replace(/\/+$/g, '');
+}
+
+function isLoopbackClaudeProxyUrl(value) {
+    const raw = normalizeClaudeComparableUrl(value);
+    if (!raw) return false;
+    try {
+        const parsed = new URL(raw);
+        if (parsed.protocol !== 'http:') return false;
+        const host = normalizeClaudeValue(parsed.hostname).toLowerCase();
+        return host === '127.0.0.1' || host === 'localhost' || host === '[::1]' || host === '::1';
+    } catch (_) {
+        return false;
+    }
+}
+
+export function isLikelyBuiltinClaudeProxySettingsEnv(env = {}) {
+    const normalized = normalizeClaudeSettingsEnv(env);
+    return !!(
+        normalized.baseUrl
+        && normalized.model
+        && /^[a-f0-9]{48}$/i.test(normalized.apiKey)
+        && isLoopbackClaudeProxyUrl(normalized.baseUrl)
+    );
+}
+
+function isClaudeTransformConfig(config = {}) {
+    const targetApi = normalizeClaudeConfig(config).targetApi;
+    return targetApi === 'chat_completions' || targetApi === 'ollama';
+}
+
+export function matchBuiltinClaudeProxyConfigFromSettings(claudeConfigs = {}, env = {}, preferredName = '') {
+    if (!isLikelyBuiltinClaudeProxySettingsEnv(env)) {
+        return '';
+    }
+    const normalizedSettings = normalizeClaudeSettingsEnv(env);
+    const preferred = normalizeClaudeValue(preferredName);
+    if (preferred && claudeConfigs && claudeConfigs[preferred]) {
+        const config = normalizeClaudeConfig(claudeConfigs[preferred]);
+        if (isClaudeTransformConfig(config) && config.model === normalizedSettings.model) {
+            return preferred;
+        }
+    }
+
+    const matches = [];
+    for (const [name, config] of Object.entries(claudeConfigs || {})) {
+        const normalizedConfig = normalizeClaudeConfig(config);
+        if (!isClaudeTransformConfig(normalizedConfig)) {
+            continue;
+        }
+        if (normalizedConfig.model === normalizedSettings.model) {
+            matches.push(name);
+        }
+    }
+    return matches.length === 1 ? matches[0] : '';
 }
 
 function hasClaudeCredential(config = {}) {
@@ -129,6 +191,14 @@ export function matchClaudeConfigFromSettings(claudeConfigs = {}, env = {}) {
         if (normalizedSettings.apiKey && normalizedConfig.apiKey === normalizedSettings.apiKey) {
             return name;
         }
+        if (normalizedSettings.apiKey
+            && normalizedConfig.apiKey === ''
+            && config
+            && typeof config.providerCacheRef === 'string'
+            && config.providerCacheRef.trim()
+            && config.hasKey === true) {
+            return name;
+        }
         if (!normalizedSettings.apiKey
             && normalizedConfig.apiKey === ''
             && normalizedConfig.externalCredentialType
@@ -156,7 +226,8 @@ export function findDuplicateClaudeConfigName(claudeConfigs = {}, config) {
             continue;
         }
         if (normalizeClaudeComparableUrl(normalizedExisting.baseUrl) !== comparableUrl
-            || normalizedExisting.model !== normalized.model) {
+            || normalizedExisting.model !== normalized.model
+            || normalizedExisting.targetApi !== normalized.targetApi) {
             continue;
         }
         if (normalized.apiKey && normalizedExisting.apiKey === normalized.apiKey) {

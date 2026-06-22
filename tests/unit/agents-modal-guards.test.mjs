@@ -11,6 +11,9 @@ const { createAgentsMethods } = await import(
 const { createCodexConfigMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.codex-config.mjs'))
 );
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
 
 test('closeConfigTemplateModal ignores user close attempts while template apply is busy', () => {
     const methods = createCodexConfigMethods({
@@ -20,7 +23,9 @@ test('closeConfigTemplateModal ignores user close attempts while template apply 
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: true,
         configTemplateContent: 'draft-template'
@@ -52,7 +57,9 @@ test('applyConfigTemplate force closes the modal after a successful apply', asyn
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: false,
         configTemplateContent: 'draft-template',
@@ -103,7 +110,9 @@ test('applyConfigTemplate keeps the successful apply result when only the refres
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: false,
         configTemplateContent: 'draft-template',
@@ -161,7 +170,9 @@ test('applyConfigTemplate applies immediately when diff confirm is disabled', as
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         showConfigTemplateModal: true,
         configTemplateApplying: false,
         configTemplateContent: 'draft-template',
@@ -192,7 +203,9 @@ test('runHealthCheck treats backend error payloads as failures', async () => {
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         providersList: ['alpha'],
         speedResults: {},
         speedLoading: {},
@@ -227,7 +240,9 @@ test('runHealthCheck skips Claude speed tests when the primary health check alre
     });
     let claudeSpeedTestCalls = 0;
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         providersList: ['alpha'],
         speedResults: {},
         speedLoading: {},
@@ -276,7 +291,9 @@ test('runHealthCheck preserves backend remote health result while appending spee
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         providersList: ['alpha', 'beta'],
         speedResults: {},
         speedLoading: {},
@@ -324,7 +341,9 @@ test('applyCodexConfigDirect keeps the successful apply result when only the ref
         }
     });
     const context = {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         codexApplying: false,
         _pendingCodexApplyOptions: null,
         currentProvider: 'alpha',
@@ -561,6 +580,159 @@ test('applyAgentsContent rejects invalid workspace filenames before save api', a
     }]);
 });
 
+test('prepareAgentsDiff supports global CLAUDE.md from claude-project tab without baseDir', async () => {
+    const previewCalls = [];
+    const methods = createAgentsMethods({
+        api: async () => ({ success: true }),
+        apiWithMeta: async (action, params) => {
+            previewCalls.push({ action, params });
+            return {
+                diff: {
+                    lines: [{ type: 'add', value: 'after' }],
+                    stats: { added: 1, removed: 0, unchanged: 0 },
+                    hasChanges: true
+                }
+            };
+        }
+    });
+    const context = {
+        ...methods,
+        agentsContext: 'claude-project',
+        projectClaudeMdPath: '',
+        agentsContent: 'after',
+        agentsOriginalContent: 'before',
+        agentsLineEnding: '\n'
+    };
+
+    await methods.prepareAgentsDiff.call(context);
+
+    assert.deepStrictEqual(previewCalls, [{
+        action: 'preview-agents-diff',
+        params: {
+            content: 'after',
+            lineEnding: '\n',
+            context: 'claude-project',
+            baseContent: 'before'
+        }
+    }]);
+    assert.strictEqual(context.agentsDiffError, '');
+    assert.strictEqual(context.agentsDiffHasChangesValue, true);
+});
+
+test('loadPromptsContent auto-loads project path options for claude-project tab', async () => {
+    const apiCalls = [];
+    let pathLoadCalls = 0;
+    const methods = createAgentsMethods({
+        api: async (action, params) => {
+            apiCalls.push({ action, params });
+            return {
+                content: 'global claude',
+                path: '/home/user/.claude/CLAUDE.md',
+                exists: true,
+                lineEnding: '\n'
+            };
+        }
+    });
+    const context = {
+        ...methods,
+        promptsSubTab: 'claude-project',
+        mainTab: 'prompts',
+        projectClaudeMdPath: '',
+        projectPathOptions: [],
+        projectPathOptionsLoading: false,
+        resetAgentsDiffState() {},
+        showMessage() {},
+        loadProjectPathOptions() {
+            pathLoadCalls += 1;
+        }
+    };
+
+    await methods.loadPromptsContent.call(context);
+
+    assert.strictEqual(pathLoadCalls, 1);
+    assert.deepStrictEqual(apiCalls, [{
+        action: 'get-claude-md-file',
+        params: {}
+    }]);
+    assert.strictEqual(context.agentsContent, 'global claude');
+    assert.strictEqual(context.agentsContext, 'claude-project');
+});
+
+test('loadPromptsContent does not duplicate project path loading while already loading', async () => {
+    let pathLoadCalls = 0;
+    const methods = createAgentsMethods({
+        api: async () => ({ content: '', path: '', exists: false, lineEnding: '\n' })
+    });
+    const context = {
+        ...methods,
+        promptsSubTab: 'claude-project',
+        mainTab: 'prompts',
+        projectClaudeMdPath: '',
+        projectPathOptions: [],
+        projectPathOptionsLoading: true,
+        resetAgentsDiffState() {},
+        showMessage() {},
+        loadProjectPathOptions() {
+            pathLoadCalls += 1;
+        }
+    };
+
+    await methods.loadPromptsContent.call(context);
+
+    assert.strictEqual(pathLoadCalls, 0);
+});
+
+test('applyAgentsContent saves global CLAUDE.md from claude-project tab without baseDir', async () => {
+    const apiCalls = [];
+    const methods = createAgentsMethods({
+        api: async (action, params) => {
+            apiCalls.push({ action, params });
+            return { success: true };
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        agentsContext: 'claude-project',
+        projectClaudeMdPath: '',
+        agentsDiffVisible: true,
+        agentsDiffLoading: false,
+        agentsDiffError: '',
+        agentsDiffHasChanges: true,
+        agentsDiffHasChangesValue: true,
+        agentsDiffFingerprint: 'same',
+        agentsContent: 'after',
+        agentsOriginalContent: 'before',
+        agentsLineEnding: '\n',
+        mainTab: 'sessions',
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        buildAgentsDiffFingerprint() {
+            return 'same';
+        },
+        closeAgentsModal(options) {
+            this.closeOptions = options;
+        }
+    };
+
+    await methods.applyAgentsContent.call(context);
+
+    assert.deepStrictEqual(apiCalls, [{
+        action: 'apply-claude-md-file',
+        params: {
+            content: 'after',
+            lineEnding: '\n'
+        }
+    }]);
+    assert.deepStrictEqual(context.shownMessages, [{
+        message: '项目 CLAUDE.md 已保存',
+        type: 'success'
+    }]);
+    assert.deepStrictEqual(context.closeOptions, { force: true });
+});
+
 test('applyAgentsContent ignores duplicate save attempts while a save is already running', async () => {
     const resolvers = [];
     const apiCalls = [];
@@ -574,6 +746,7 @@ test('applyAgentsContent ignores duplicate save attempts while a save is already
     });
     const closeCalls = [];
     const context = {
+        ...createI18nMethods(),
         ...methods,
         agentsContext: 'codex',
         agentsDiffVisible: true,

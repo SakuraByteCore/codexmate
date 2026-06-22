@@ -66,13 +66,14 @@ $env:CODEXMATE_DESKTOP_LOG = "1"
 codexmate-desktop.exe
 ```
 
-启用后，桌面壳会尝试附着父控制台，打印 Rust/Tauri 启动日志，并让内置 Node backend 的 stdout/stderr 继承到当前终端。无论是否启用控制台，桌面壳都会写入本地文件日志；未启用控制台时，backend stdout/stderr 也会追加到同一个日志文件：
+启用后，桌面壳会尝试附着父控制台，打印 Rust/Tauri 启动日志，并让内置 Node backend 的 stdout/stderr 继承到当前终端。无论是否启用控制台，桌面壳都会写入本地文件日志；未启用控制台时，backend stdout/stderr 会写入 `startup.log`：
 
 ```text
 %LOCALAPPDATA%\CodexMate\logs\desktop.log
+%LOCALAPPDATA%\CodexMate\logs\startup.log
 ```
 
-如需指定日志位置：
+如需指定 `desktop.log` 位置：
 
 ```powershell
 $env:CODEXMATE_DESKTOP_LOG_FILE = "$env:TEMP\codexmate-desktop.log"

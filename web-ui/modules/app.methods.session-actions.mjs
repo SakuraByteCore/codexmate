@@ -90,6 +90,10 @@ export function createSessionActionMethods(options = {}) {
             this.loadSessionStandalonePlain();
         },
 
+        canBuildStandaloneUrl(session) {
+            return !!this.buildSessionStandaloneUrl(session);
+        },
+
         buildSessionStandaloneUrl(session) {
             if (!session) return '';
             const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';
@@ -126,7 +130,39 @@ export function createSessionActionMethods(options = {}) {
                     return;
                 }
             } catch (_) {}
-            this.showMessage('复制失败', 'error');
+            this.showMessage(this.t('toast.copy.fail'), 'error');
+        },
+
+        openSessionLink(session) {
+            const url = this.buildSessionStandaloneUrl(session);
+            if (!url) { this.showMessage(this.t('toast.link.fail'), 'error'); return; }
+            window.open(url, '_blank', 'noopener,noreferrer');
+        },
+
+        getSessionFilePath(session) {
+            const filePath = typeof session?.filePath === 'string' ? session.filePath.trim() : '';
+            return filePath;
+        },
+
+        async copySessionPath(session) {
+            const filePath = this.getSessionFilePath(session);
+            if (!filePath) {
+                this.showMessage('无本地文件路径', 'error');
+                return;
+            }
+            const ok = this.fallbackCopyText(filePath);
+            if (ok) {
+                this.showMessage('已复制路径', 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(filePath);
+                    this.showMessage('已复制路径', 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
         getSessionExportKey(session) {
@@ -229,6 +265,12 @@ export function createSessionActionMethods(options = {}) {
             return true;
         },
 
+        normalizeSessionTimelineStyle(value) {
+            const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+            if (normalized === 'bar') return 'bar';
+            return 'dots';
+        },
+
         normalizeConfigTemplateDiffConfirmEnabled(value) {
             return normalizeConfigTemplateDiffConfirmEnabled(value);
         },
@@ -239,12 +281,29 @@ export function createSessionActionMethods(options = {}) {
             try {
                 localStorage.setItem('codexmateSessionTrashEnabled', enabled ? 'true' : 'false');
             } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionTrashEnabled: enabled });
+            }
+        },
+
+        setSessionTimelineStyle(style) {
+            const normalized = style === 'bar' ? 'bar' : 'dots';
+            this.sessionTimelineStyle = normalized;
+            try {
+                localStorage.setItem('codexmateSessionTimelineStyle', normalized);
+            } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionTimelineStyle: normalized });
+            }
         },
 
         setConfigTemplateDiffConfirmEnabled(value) {
             const enabled = this.normalizeConfigTemplateDiffConfirmEnabled(value);
             this.configTemplateDiffConfirmEnabled = enabled;
             persistConfigTemplateDiffConfirmEnabledToStorage(enabled);
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ configTemplateDiffConfirmEnabled: enabled });
+            }
         },
 
         getShareCommandPrefixInvocation() {
@@ -258,6 +317,9 @@ export function createSessionActionMethods(options = {}) {
             try {
                 localStorage.setItem('codexmateShareCommandPrefix', normalized);
             } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ shareCommandPrefix: normalized });
+            }
         },
 
         fallbackCopyText(text) {
@@ -286,15 +348,15 @@ export function createSessionActionMethods(options = {}) {
         copyAgentsContent() {
             const text = typeof this.agentsContent === 'string' ? this.agentsContent : '';
             if (!text) {
-                this.showMessage('没有可复制内容', 'info');
+                this.showMessage(this.t('toast.copy.empty'), 'info');
                 return;
             }
             const ok = this.fallbackCopyText(text);
             if (ok) {
-                this.showMessage('已复制', 'success');
+                this.showMessage(this.t('toast.copy.ok'), 'success');
                 return;
             }
-            this.showMessage('复制失败', 'error');
+            this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
         exportAgentsContent() {
@@ -304,21 +366,25 @@ export function createSessionActionMethods(options = {}) {
                 return;
             }
             const now = new Date();
-            const year = String(now.getFullYear());
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hour = String(now.getHours()).padStart(2, '0');
-            const minute = String(now.getMinutes()).padStart(2, '0');
-            const second = String(now.getSeconds()).padStart(2, '0');
-            const fileName = `agent-${year}${month}${day}-${hour}${minute}${second}.txt`;
-            this.downloadTextFile(fileName, text, 'text/plain;charset=utf-8');
+            const ts = [
+                String(now.getFullYear()),
+                String(now.getMonth() + 1).padStart(2, '0'),
+                String(now.getDate()).padStart(2, '0'),
+                '-',
+                String(now.getHours()).padStart(2, '0'),
+                String(now.getMinutes()).padStart(2, '0'),
+                String(now.getSeconds()).padStart(2, '0')
+            ].join('');
+            const prefix = this.promptsSubTab === 'claude-project' ? 'claude' : 'agents';
+            const fileName = `${prefix}-${ts}.md`;
+            this.downloadTextFile(fileName, text, 'text/markdown;charset=utf-8');
             this.showMessage(`已导出 ${fileName}`, 'success');
         },
 
         async copyInstallCommand(cmd) {
             const text = typeof cmd === 'string' ? cmd.trim() : '';
             if (!text) {
-                this.showMessage('没有可复制内容', 'info');
+                this.showMessage(this.t('toast.copy.empty'), 'info');
                 return;
             }
             try {
@@ -333,7 +399,7 @@ export function createSessionActionMethods(options = {}) {
                 this.showMessage('已复制命令', 'success');
                 return;
             }
-            this.showMessage('复制失败', 'error');
+            this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
         async copyResumeCommand(session) {
@@ -344,17 +410,17 @@ export function createSessionActionMethods(options = {}) {
             const command = this.buildResumeCommand(session);
             const ok = this.fallbackCopyText(command);
             if (ok) {
-                this.showMessage('已复制', 'success');
+                this.showMessage(this.t('toast.copy.ok'), 'success');
                 return;
             }
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(command);
-                    this.showMessage('已复制', 'success');
+                    this.showMessage(this.t('toast.copy.ok'), 'success');
                     return;
                 }
             } catch (_) {}
-            this.showMessage('复制失败', 'error');
+            this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
         buildProviderShareCommand(payload) {
@@ -386,11 +452,16 @@ export function createSessionActionMethods(options = {}) {
             const model = typeof payload.model === 'string' && payload.model.trim()
                 ? payload.model.trim()
                 : 'glm-4.7';
-            if (!baseUrl || !apiKey) return '';
+            const targetApiRaw = typeof payload.targetApi === 'string' ? payload.targetApi.trim().toLowerCase() : '';
+            const targetApi = targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions'
+                ? 'chat_completions'
+                : (targetApiRaw === 'ollama' ? 'ollama' : 'responses');
+            if (!baseUrl || (!apiKey && targetApi !== 'ollama')) return '';
             const urlArg = this.quoteShellArg(baseUrl);
             const keyArg = this.quoteShellArg(apiKey);
             const modelArg = this.quoteShellArg(model);
-            return `${this.getShareCommandPrefixInvocation()} claude ${urlArg} ${keyArg} ${modelArg}`;
+            const targetArg = targetApi !== 'responses' ? ` --target-api ${this.quoteShellArg(targetApi)}` : '';
+            return `${this.getShareCommandPrefixInvocation()} claude ${urlArg} ${keyArg} ${modelArg}${targetArg}`;
         },
 
         async copyProviderShareCommand(provider) {
@@ -420,17 +491,17 @@ export function createSessionActionMethods(options = {}) {
                 }
                 const ok = this.fallbackCopyText(command);
                 if (ok) {
-                    this.showMessage('已复制', 'success');
+                    this.showMessage(this.t('toast.copy.ok'), 'success');
                     return;
                 }
                 try {
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(command);
-                        this.showMessage('已复制', 'success');
+                        this.showMessage(this.t('toast.copy.ok'), 'success');
                         return;
                     }
                 } catch (_) {}
-                this.showMessage('复制失败', 'error');
+                this.showMessage(this.t('toast.copy.fail'), 'error');
             } catch (_) {
                 this.showMessage('生成命令失败', 'error');
             } finally {
@@ -459,17 +530,17 @@ export function createSessionActionMethods(options = {}) {
                 }
                 const ok = this.fallbackCopyText(command);
                 if (ok) {
-                    this.showMessage('已复制', 'success');
+                    this.showMessage(this.t('toast.copy.ok'), 'success');
                     return;
                 }
                 try {
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(command);
-                        this.showMessage('已复制', 'success');
+                        this.showMessage(this.t('toast.copy.ok'), 'success');
                         return;
                     }
                 } catch (_) {}
-                this.showMessage('复制失败', 'error');
+                this.showMessage(this.t('toast.copy.fail'), 'error');
             } catch (_) {
                 this.showMessage('生成命令失败', 'error');
             } finally {
@@ -498,7 +569,7 @@ export function createSessionActionMethods(options = {}) {
                     return;
                 }
 
-                this.showMessage('操作成功', 'success');
+                this.showMessage(this.t('toast.operation.success'), 'success');
                 if (typeof this.invalidateSessionsUsageData === 'function') {
                     this.invalidateSessionsUsageData({ preserveList: true });
                 }
@@ -582,7 +653,7 @@ export function createSessionActionMethods(options = {}) {
                     // The delete already succeeded remotely; keep the success result.
                 }
             } catch (_) {
-                this.showMessage('删除失败', 'error');
+                this.showMessage(this.t('toast.delete.fail'), 'error');
             } finally {
                 this.sessionDeleting[key] = false;
             }

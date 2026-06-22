@@ -1,0 +1,166 @@
+                <!-- OpenCode 配置 -->
+                <div
+                    v-show="mainTab === 'config' && configMode === 'opencode'"
+                    class="mode-content mode-cards"
+                    id="panel-config-opencode"
+                    role="tabpanel"
+                    :aria-labelledby="forceCompactLayout ? 'tab-config' : 'side-tab-config-opencode'">
+                    <div v-if="forceCompactLayout && !sessionStandalone" class="segmented-control">
+                        <button type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
+                    </div>
+
+                    <section class="tool-config-write-card" :aria-label="t('opencode.writeAria')">
+                        <div class="tool-config-write-copy">
+                            <div class="tool-config-write-title">{{ t('toolConfig.opencode.title') }}</div>
+                            <p class="tool-config-write-desc">{{ t('toolConfig.opencode.desc') }}</p>
+                        </div>
+                        <label class="settings-toggle-row tool-config-write-toggle">
+                            <input
+                                type="checkbox"
+                                autocomplete="off"
+                                :checked="isToolConfigWriteAllowed('opencode')"
+                                :disabled="toolConfigPermissionSaving.opencode"
+                                @change="setToolConfigPermission('opencode', $event.target.checked)">
+                            <span class="toggle-track">
+                                <span class="toggle-thumb"></span>
+                            </span>
+                            <span>{{ toolConfigPermissionStatusLabel('opencode') }}</span>
+                        </label>
+                    </section>
+
+                    <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('opencode') }">
+                        <div class="tool-config-write-body">
+                            <section class="selector-section">
+                                <div class="selector-header">
+                                    <span class="selector-title">{{ t('opencode.providerModel.title') }}</span>
+                                    <div class="selector-actions opencode-provider-actions">
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="loadOpencodeConfig({ toast: true })" :disabled="opencodeLoading">{{ opencodeLoading ? t('common.refreshing') : t('common.refresh') }}</button>
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="applyOpencodeSelection" :disabled="opencodeApplying || opencodeLoading || !isToolConfigWriteAllowed('opencode')">{{ opencodeApplying ? t('common.applying') : t('opencode.applySelection') }}</button>
+                                    </div>
+                                </div>
+                                <div class="config-template-hint">{{ t('opencode.targetFile', { path: opencodeConfigPath || '~/.config/opencode/opencode.jsonc', status: opencodeConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }) }}</div>
+                                <div class="config-template-hint">{{ t('opencode.providerStoreFile', { path: opencodeProviderStorePath || '~/.codexmate/opencode/providers.json' }) }}</div>
+                                <div class="codex-config-grid">
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="opencode-provider">{{ t('field.provider') }}</label>
+                                        <input id="opencode-provider" class="form-input" v-model="opencodeProvider" list="opencode-provider-options" autocomplete="off" spellcheck="false" @change="fillOpencodeProvider(opencodeProvider)" @blur="fillOpencodeProvider(opencodeProvider)" placeholder="anthropic / openai / gemini">
+                                        <datalist id="opencode-provider-options">
+                                            <option v-for="provider in opencodeProviderCatalog()" :key="provider" :value="provider"></option>
+                                        </datalist>
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="opencode-model">{{ t('field.model') }}</label>
+                                        <input id="opencode-model" class="form-input" v-model="opencodeModel" list="opencode-model-options" autocomplete="off" spellcheck="false" placeholder="claude-3.7-sonnet / gpt-4.1">
+                                        <datalist id="opencode-model-options">
+                                            <option v-for="model in opencodeModelCatalogForProvider(opencodeProvider)" :key="model" :value="model"></option>
+                                        </datalist>
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="opencode-agent">{{ t('opencode.field.agent') }}</label>
+                                        <input id="opencode-agent" class="form-input" v-model="opencodeAgent" list="opencode-agent-options" autocomplete="off" spellcheck="false" placeholder="build">
+                                        <datalist id="opencode-agent-options">
+                                            <option value="build"></option>
+                                            <option value="plan"></option>
+                                            <option value="general"></option>
+                                            <option value="summary"></option>
+                                            <option value="compaction"></option>
+                                            <option value="title"></option>
+                                            <option v-for="agent in opencodeAgents" :key="agent.name" :value="agent.name"></option>
+                                        </datalist>
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="opencode-api-key">{{ t('opencode.field.apiKeyKeep') }}</label>
+                                        <div class="input-with-toggle">
+                                            <input id="opencode-api-key" class="form-input" v-model="opencodeApiKey" :type="opencodeShowKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" placeholder="sk-...">
+                                            <button type="button" class="input-toggle-btn" @click="opencodeShowKey = !opencodeShowKey" :title="opencodeShowKey ? t('common.hide') : t('common.show')">{{ opencodeShowKey ? t('common.hide') : t('common.show') }}</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="opencode-max-tokens">{{ t('opencode.field.maxTokens') }}</label>
+                                        <input id="opencode-max-tokens" class="form-input" v-model="opencodeMaxTokens" inputmode="numeric" autocomplete="off" placeholder="5000">
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="opencode-reasoning-effort">{{ t('opencode.field.reasoningEffort') }}</label>
+                                        <select id="opencode-reasoning-effort" class="model-select" v-model="opencodeReasoningEffort">
+                                            <option value="">{{ t('opencode.option.keepUnchanged') }}</option>
+                                            <option value="low">{{ t('opencode.option.reasoningLow') }}</option>
+                                            <option value="medium">{{ t('opencode.option.reasoningMedium') }}</option>
+                                            <option value="high">{{ t('opencode.option.reasoningHigh') }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <label class="settings-toggle-row" style="margin-top: 12px;">
+                                    <input type="checkbox" v-model="opencodeApplyToCoreAgents">
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                    <span>{{ t('opencode.applyToCoreAgents') }}</span>
+                                </label>
+                                <label class="settings-toggle-row" style="margin-top: 8px;">
+                                    <input type="checkbox" v-model="opencodeAutoCompact">
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                    <span>{{ t('opencode.enableAutoCompaction') }}</span>
+                                </label>
+                                <label class="settings-toggle-row" style="margin-top: 8px;">
+                                    <input type="checkbox" v-model="opencodeProviderDisabled">
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                    <span>{{ t('opencode.disableProvider') }}</span>
+                                </label>
+                            </section>
+
+                            <section class="selector-section">
+                                <div class="selector-header">
+                                    <span class="selector-title">{{ t('opencode.configFile.title') }}</span>
+                                    <div class="selector-actions">
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="$refs.opencodeImportInput && $refs.opencodeImportInput.click()">{{ t('opencode.importParse') }}</button>
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="saveOpencodeConfig" :disabled="opencodeSaving || opencodeLoading || !isToolConfigWriteAllowed('opencode')">{{ opencodeSaving ? t('common.saving') : t('opencode.saveConfig') }}</button>
+                                    </div>
+                                </div>
+                                <input ref="opencodeImportInput" class="sr-only" type="file" accept=".json,.jsonc,.opencode" @change="handleOpencodeImportChange">
+                                <div v-if="opencodeImportFileName" class="config-template-hint">{{ t('opencode.parsedFile', { file: opencodeImportFileName }) }}</div>
+                                <div v-if="opencodeError || opencodeImportError" class="config-template-hint error-text">{{ opencodeError || opencodeImportError }}</div>
+                                <textarea class="template-textarea" v-model="opencodeContent" spellcheck="false" :readonly="opencodeSaving || opencodeLoading" :placeholder="t('opencode.textarea.placeholder')"></textarea>
+                                <div class="config-template-hint">{{ t('opencode.configFile.hint') }}</div>
+                            </section>
+
+                            <section class="selector-section" v-if="opencodeProviders.length || opencodeAgents.length">
+                                <div class="selector-header"><span class="selector-title">{{ t('opencode.summary.title') }}</span></div>
+                                <div class="card-list">
+                                    <div v-for="provider in opencodeProviders" :key="provider.name" class="card">
+                                        <div class="card-leading">
+                                            <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}</div>
+                                            <div class="card-content">
+                                                <div class="card-title">{{ provider.name }}</div>
+                                                <div class="card-subtitle">{{ provider.hasKey ? provider.apiKey : t('opencode.summary.noApiKey') }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-trailing">
+                                            <span :class="['pill', provider.disabled ? 'empty' : 'configured']">{{ provider.disabled ? t('common.disabled') : t('common.enabled') }}</span>
+                                            <span class="pill empty">{{ provider.source === 'codexmate' ? t('opencode.summary.sourceCodexMate') : t('opencode.summary.sourceOpenCode') }}</span>
+                                        </div>
+                                    </div>
+                                    <div v-for="agent in opencodeAgents" :key="agent.name" class="card">
+                                        <div class="card-leading">
+                                            <div class="card-icon">A</div>
+                                            <div class="card-content">
+                                                <div class="card-title">{{ agent.name }}</div>
+                                                <div class="card-subtitle">{{ agent.model || t('opencode.summary.noModel') }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-trailing">
+                                            <span class="pill configured">{{ t('opencode.summary.agentType') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <div v-if="!isToolConfigWriteAllowed('opencode')" class="tool-config-write-overlay">
+                                <div class="tool-config-write-overlay-card">
+                                    <div class="tool-config-write-overlay-title">{{ t('toolConfig.opencode.lockedTitle') }}</div>
+                                    <p>{{ t('toolConfig.opencode.lockedDesc') }}</p>
+                                    <button type="button" class="btn-tool" @click="setToolConfigPermission('opencode', true)" :disabled="toolConfigPermissionSaving.opencode">{{ t('toolConfig.enableWrite') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

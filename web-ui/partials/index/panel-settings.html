@@ -40,6 +40,27 @@
                         role="tabpanel"
                         aria-labelledby="settings-tab-general">
                         <div class="settings-grid">
+                            <section id="settings-language" class="settings-card" :aria-label="t('settings.language.title')">
+                                <div class="settings-card-main">
+                                    <div class="settings-card-content">
+                                        <div class="settings-card-title">{{ t('settings.language.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.language.meta') }}</p>
+                                        <label class="selector-label" for="settings-language-select">{{ t('settings.language.label') }}</label>
+                                        <select
+                                            id="settings-language-select"
+                                            class="model-select settings-language-select"
+                                            :value="lang"
+                                            @change="setLang($event.target.value)">
+                                            <option
+                                                v-for="option in languageOptions()"
+                                                :key="option.code"
+                                                :value="option.code">{{ option.nativeName }} · {{ option.englishName }}</option>
+                                        </select>
+                                        <p class="settings-card-hint">{{ t('settings.language.hint') }}</p>
+                                    </div>
+                                </div>
+                            </section>
+
                             <section class="settings-card" :aria-label="t('settings.sharePrefix.title')">
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
@@ -76,22 +97,46 @@
                                 </div>
                             </section>
 
-                            <section class="settings-card" :aria-label="'Webhook'">
+                            <section class="settings-card" :aria-label="t('settings.webhook.title')">
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
-                                        <div class="settings-card-title">Webhook</div>
-                                        <p class="settings-card-desc">配置变更时外发通知</p>
+                                        <div class="settings-card-title">{{ t('settings.webhook.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.webhook.meta') }}</p>
                                         <div class="webhook-status">
                                             <span class="webhook-status-dot" :class="{ active: webhookConfig.enabled }"></span>
-                                            <span class="webhook-status-label">{{ webhookConfig.enabled ? '已启用' : '已禁用' }}</span>
+                                            <span class="webhook-status-label">{{ webhookConfig.enabled ? t('settings.webhook.enabled') : t('settings.webhook.disabled') }}</span>
                                             <code v-if="webhookConfig.url" class="webhook-url">{{ webhookConfig.url }}</code>
                                         </div>
                                     </div>
                                 </div>
                                 <button class="settings-card-action" @click="openWebhookModal" :class="{ 'settings-card-action--active': webhookConfig.enabled }">
-                                    <span v-if="webhookConfig.enabled">{{ webhookConfig.url ? '编辑' : '配置' }}</span>
-                                    <span v-else>启用</span>
+                                    <span v-if="webhookConfig.enabled">{{ webhookConfig.url ? t('settings.webhook.edit') : t('settings.webhook.configure') }}</span>
+                                    <span v-else>{{ t('settings.webhook.enable') }}</span>
                                 </button>
+                            </section>
+
+                            <section class="settings-card" :aria-label="t('settings.timeline.style.title')">
+                                <div class="settings-card-main">
+                                    <div class="settings-card-content">
+                                        <div class="settings-card-title">{{ t('settings.timeline.style.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.timeline.style.meta') }}</p>
+                                        <div class="settings-toggle-group">
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: sessionTimelineStyle === 'dots' }]"
+                                                @click="setSessionTimelineStyle('dots')">
+                                                {{ t('settings.timeline.style.dots') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: sessionTimelineStyle === 'bar' }]"
+                                                @click="setSessionTimelineStyle('bar')">
+                                                {{ t('settings.timeline.style.bar') }}
+                                            </button>
+                                        </div>
+                                        <p class="settings-card-hint">{{ t('settings.timeline.style.hint') }}</p>
+                                    </div>
+                                </div>
                             </section>
                         </div>
                     </div>
@@ -121,6 +166,26 @@
                                 <input ref="codexImportInput" class="sr-only" type="file" accept=".zip" @change="handleCodexImportChange">
                             </section>
 
+                            <section class="settings-card" :aria-label="t('settings.providerCache.title')">
+                                <div class="settings-card-main">
+                                    <div class="settings-card-content">
+                                        <div class="settings-card-title">{{ t('settings.providerCache.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.providerCache.meta') }}</p>
+                                        <p class="settings-card-hint">{{ t('settings.providerCache.hint') }}</p>
+                                        <p v-if="providerCacheSyncMessage" class="settings-card-hint provider-cache-sync-message">{{ providerCacheSyncMessage }}</p>
+                                        <p v-if="providerCacheError" class="settings-card-hint form-error">{{ providerCacheError }}</p>
+                                    </div>
+                                </div>
+                                <div class="settings-card-actions">
+                                    <button class="settings-card-action" @click="openProviderCacheModal({ forceRefresh: true })" :disabled="providerCacheLoading || providerCacheSyncing">
+                                        {{ providerCacheLoading ? t('settings.providerCache.loading') : t('settings.providerCache.open') }}
+                                    </button>
+                                    <button class="settings-card-action" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
+                                        {{ providerCacheSyncing ? t('settings.providerCache.syncing') : t('settings.providerCache.sync') }}
+                                    </button>
+                                </div>
+                            </section>
+
                             <section class="settings-card" :aria-label="t('settings.trashConfig.title')">
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
@@ -136,7 +201,7 @@
                                         <div class="settings-retention">
                                             <label for="settings-trash-retention-days">{{ t('settings.trash.retentionLabel') }}</label>
                                             <input id="settings-trash-retention-days" type="number" min="1" max="365" :value="sessionTrashRetentionDays" @change="setSessionTrashRetentionDays(Number($event.target.value))" class="settings-retention-input" />
-                                            <span>天</span>
+                                            <span>{{ t('settings.trash.retentionUnit') }}</span>
                                         </div>
                                         <p class="settings-card-hint">{{ t('settings.trash.retentionHint') }}</p>
                                     </div>

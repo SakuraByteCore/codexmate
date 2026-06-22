@@ -94,6 +94,18 @@ textarea:focus-visible {
         overflow: hidden;
     }
 
+    .mobile-brand-bar {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 12px 6px;
+        background: rgba(255, 248, 241, 0.96);
+        position: relative;
+        z-index: 32;
+    }
+
     .app-shell {
         grid-template-columns: 1fr;
         flex: 1 1 auto;
@@ -172,6 +184,32 @@ textarea:focus-visible {
         gap: 6px;
     }
 
+    .mode-cards > .segmented-control {
+        flex-direction: row;
+    }
+
+    .prompts-editor-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .prompts-editor-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .template-editor,
+    .agents-diff-editor {
+        min-height: min(50vh, 400px);
+        max-height: min(56vh, 480px);
+    }
+
+    .prompts-editor .template-editor {
+        min-height: 60vh;
+        max-height: none;
+    }
+
     .status-strip {
         gap: 12px;
     }
@@ -202,6 +240,15 @@ textarea:focus-visible {
 
     .market-action-grid {
         grid-template-columns: 1fr;
+    }
+
+    .usage-wave-container {
+        grid-template-columns: 28px 1fr;
+        padding: 16px 14px 16px 8px;
+    }
+
+    .usage-wave-ytick {
+        font-size: 9px;
     }
 
 }
@@ -256,16 +303,25 @@ textarea:focus-visible {
     .btn-add,
     .btn-tool,
     .card-action-btn,
-    .btn-session-export,
-    .btn-session-open,
-    .btn-session-clone,
-    .btn-session-refresh,
-    .btn-session-delete,
     .btn-icon,
     .session-item-copy {
         min-height: 44px;
         padding-top: 12px;
         padding-bottom: 12px;
+    }
+
+    .btn-session-export,
+    .btn-session-open,
+    .btn-session-clone,
+    .btn-session-refresh,
+    .btn-session-delete {
+        width: 44px;
+        height: 44px;
+    }
+
+    .session-link-group .btn-session-open {
+        width: 44px;
+        height: 44px;
     }
 
     .btn-icon,
@@ -382,6 +438,10 @@ textarea:focus-visible {
         display: none;
     }
 
+    .openclaw-card-list .card-trailing .pill {
+        display: block;
+    }
+
     .auth-profile-item {
         padding: 10px;
     }
@@ -429,5 +489,85 @@ textarea:focus-visible {
 
     .skills-root-box {
         font-size: 11px;
+    }
+
+    .prompts-editor-actions .btn-mini {
+        min-height: 40px;
+        padding: 6px 12px;
+    }
+
+    .prompts-editor-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .prompts-editor-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 820px) {
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .app-shell {
+        grid-template-columns: 1fr;
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        overflow: hidden;
+    }
+
+    .side-rail {
+        display: none !important;
+    }
+
+    .lang-fab {
+        display: none !important;
+    }
+
+    .top-tabs {
+        display: flex !important;
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 100%;
+        margin: 8px 0 10px;
+        padding: 0 max(18px, calc(env(safe-area-inset-right, 0px) + 14px)) 4px max(10px, calc(env(safe-area-inset-left, 0px) + 10px));
+        gap: 5px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-padding-inline: 10px 18px;
+        background: rgba(255, 248, 241, 0.96);
+        position: relative;
+        z-index: 30;
+    }
+
+    .top-tab:last-child {
+        margin-right: 8px;
+    }
+
+    .main-panel {
+        padding: 0 12px 16px;
+        height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .main-panel-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        margin: 0 0 10px;
+        padding: 0 0 8px;
+        background: rgba(255, 248, 241, 0.96);
+        backdrop-filter: blur(14px) saturate(130%);
     }
 }

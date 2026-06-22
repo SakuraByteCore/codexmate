@@ -135,10 +135,10 @@
 .usage-hero::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 400px;
-    height: 400px;
+    top: -72px;
+    right: 0;
+    width: min(320px, 62%);
+    height: min(320px, 62%);
     background: radial-gradient(circle, rgba(200, 121, 99, 0.06) 0%, transparent 70%);
     pointer-events: none;
 }
@@ -175,10 +175,14 @@
 .usage-hero-active-label {
     font-weight: 600;
     color: var(--color-text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .usage-hero-active-stat {
     color: var(--color-text-tertiary);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .usage-hero-active-stat::before {
@@ -221,6 +225,15 @@
     justify-content: center;
     gap: 14px;
     flex-wrap: wrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.usage-hero-sub > span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .usage-hero-delta {
@@ -251,13 +264,37 @@
 
 .usage-wave-container {
     margin-top: 16px;
-    position: relative;
-    padding: 20px;
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 8px;
+    align-items: stretch;
+    padding: 20px 20px 20px 12px;
     border-radius: 18px;
     background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(252,248,241,0.6));
     border: 1px solid rgba(137, 111, 94, 0.06);
     box-shadow: 0 4px 20px rgba(92, 68, 52, 0.05);
     backdrop-filter: blur(8px);
+}
+
+.usage-wave-yaxis {
+    position: relative;
+    height: 150px;
+}
+
+.usage-wave-ytick {
+    position: absolute;
+    right: 0;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    line-height: 1;
+    transform: translateY(50%);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.usage-wave-chart-area {
+    min-width: 0;
 }
 
 .usage-wave-chart {
@@ -319,6 +356,11 @@
     transition: all 180ms var(--ease-spring);
     -webkit-tap-highlight-color: transparent;
     font-weight: 500;
+    appearance: none;
+    background: none;
+    border: none;
+    font-family: inherit;
+    line-height: inherit;
 }
 
 .usage-wave-label:hover {
@@ -372,6 +414,7 @@
     border: none;
     background: transparent;
     padding: 0;
+    min-width: 0;
 }
 
 .hourly-heatmap-wrapper {
@@ -380,6 +423,8 @@
     gap: 3px;
     margin-top: 14px;
     min-width: 500px;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 16px;
     border-radius: 18px;
     background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(252,248,241,0.6));
@@ -656,8 +701,12 @@
 /* ---- 图表网格 (加大间距) ---- */
 .usage-chart-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
+}
+
+.usage-chart-grid > * {
+    min-width: 0;
 }
 
 /* 为非 paths 卡片添加容器 */
@@ -704,10 +753,13 @@
 }
 
 /* ---- 响应式 ---- */
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
     .usage-chart-grid {
         grid-template-columns: 1fr;
     }
+}
+
+@media (max-width: 960px) {
 
     .usage-hero-main {
         font-size: 44px;
@@ -726,12 +778,26 @@
     }
 
     .usage-hero {
-        padding: 24px 20px;
+        padding: 22px 16px;
         min-height: 140px;
+        gap: 16px;
+    }
+
+    .usage-hero::before {
+        top: -56px;
+        right: 0;
+        width: 220px;
+        height: 220px;
+    }
+
+    .usage-hero-active {
+        padding: 10px 12px;
+        gap: 8px 10px;
     }
 
     .usage-hero-main {
-        font-size: 38px;
+        font-size: clamp(32px, 10vw, 38px);
+        line-height: 1.08;
     }
 
     .usage-wave-chart {
@@ -743,11 +809,70 @@
     }
 
     .hourly-heatmap-wrapper {
+        width: 100%;
         min-width: 100%;
-        overflow-x: auto;
+        max-width: 100%;
+        overflow-x: visible;
+        padding: 12px;
+        gap: 2px;
+    }
+
+    .usage-card-hourly-heatmap {
+        overflow-x: visible;
+    }
+
+    .hourly-heatmap-header,
+    .hourly-heatmap-row {
+        gap: 2px;
+    }
+
+    .hourly-heatmap-corner,
+    .hourly-heatmap-weekday-label {
+        width: 28px;
+    }
+
+    .hourly-heatmap-weekday-label {
+        font-size: 10px;
+        padding-right: 4px;
+    }
+
+    .hourly-heatmap-hour-label {
+        font-size: 8px;
+        line-height: 12px;
+    }
+
+    .hourly-heatmap-cell {
+        height: 8px;
+        border-radius: 3px;
     }
 
     .usage-chart-grid {
         gap: 16px;
+    }
+}
+
+@media (max-width: 420px) {
+    .hourly-heatmap-wrapper {
+        padding: 10px;
+        gap: 1px;
+    }
+
+    .hourly-heatmap-header,
+    .hourly-heatmap-row {
+        gap: 1px;
+    }
+
+    .hourly-heatmap-corner,
+    .hourly-heatmap-weekday-label {
+        width: 24px;
+    }
+
+    .hourly-heatmap-weekday-label {
+        font-size: 9px;
+        padding-right: 3px;
+    }
+
+    .hourly-heatmap-hour-label {
+        font-size: 7px;
     }
 }

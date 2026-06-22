@@ -23,7 +23,7 @@
 
 .session-preview-header {
     padding: 14px var(--spacing-sm);
-    border-bottom: 1px solid var(--color-border-soft);
+    border-bottom: none;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -31,8 +31,8 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background: var(--color-surface-elevated);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 253, 252, 0.92);
+    backdrop-filter: blur(20px);
 }
 
 .session-preview-header > div:first-child {
@@ -179,13 +179,69 @@
     text-overflow: ellipsis;
 }
 
+/* 条状时间线 */
+.session-timeline-bar {
+    width: 8px;
+    padding: 0;
+}
+
+.session-timeline-bar-track {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    bottom: 32px;
+    width: 6px;
+    transform: translateX(-50%);
+    background: var(--color-border-soft);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.session-timeline-bar-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: var(--color-brand);
+    border-radius: 3px;
+    transition: height var(--transition-fast) var(--ease-spring);
+}
+
+.session-timeline-bar-node {
+    position: absolute;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-strong);
+    background: var(--color-surface);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    padding: 0;
+    transition: all var(--transition-fast) var(--ease-spring);
+    z-index: 2;
+}
+
+.session-timeline-bar-node:hover {
+    border-color: var(--color-brand);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgba(210, 107, 90, 0.15);
+}
+
+.session-timeline-bar-node.active {
+    border-color: var(--color-brand);
+    background: var(--color-brand);
+    box-shadow: 0 0 0 3px rgba(210, 107, 90, 0.2);
+}
+
 .session-msg {
     border-radius: var(--radius-md);
-    padding: 10px 14px 10px 20px;
-    border: 1px solid var(--color-border-soft);
+    padding: 12px 18px 12px 24px;
+    border: none;
     background: var(--color-surface);
     position: relative;
-    box-shadow: var(--shadow-subtle);
+    box-shadow: none;
     contain: layout style paint;
 }
 
@@ -197,10 +253,10 @@
 .session-msg::before {
     content: "";
     position: absolute;
-    left: 8px;
-    top: 10px;
-    bottom: 10px;
-    width: 3px;
+    left: 6px;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
     border-radius: 999px;
     background: var(--color-border-soft);
 }

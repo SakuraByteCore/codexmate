@@ -1,5 +1,5 @@
             <!-- 加载状态 -->
-            <div v-if="loading" class="state-message">
+            <div v-if="loading && mainTab !== 'usage'" class="state-message">
                 {{ t('app.loadingConfig') }}
             </div>
 

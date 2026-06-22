@@ -53,57 +53,119 @@ function createAgentsFileController(deps = {}) {
         return { ok: true, dirPath };
     }
 
-    function resolveClaudeMdFilePath() {
-        return path.join(CLAUDE_DIR, CLAUDE_MD_FILE_NAME);
+    function detectProjectClaudeMdDir(baseDir) {
+        if (typeof baseDir !== 'string' || !baseDir.trim()) {
+            return { error: 'project path is required' };
+        }
+        const root = baseDir.trim();
+        const rootPath = path.join(root, CLAUDE_MD_FILE_NAME);
+        const dotDirPath = path.join(root, '.claude', CLAUDE_MD_FILE_NAME);
+        try {
+            if (fs.statSync(rootPath).isFile()) {
+                return { path: rootPath, source: 'root', dir: root };
+            }
+        } catch (_) {}
+        try {
+            if (fs.statSync(dotDirPath).isFile()) {
+                return { path: dotDirPath, source: 'dotdir', dir: path.join(root, '.claude') };
+            }
+        } catch (_) {}
+        return { path: rootPath, source: 'root', dir: root };
+    }
+
+    function validateClaudeMdBaseDir(filePath) {
+        const dirPath = path.dirname(filePath);
+        try {
+            const stat = fs.statSync(dirPath);
+            if (!stat.isDirectory()) {
+                return { error: 'project directory is not a directory: ' + dirPath };
+            }
+        } catch (e) {
+            return { error: 'project directory does not exist: ' + dirPath };
+        }
+        return { ok: true, dirPath };
+    }
+
+    function resolveClaudeMdFilePath(params = {}) {
+        const baseDir = typeof params.baseDir === 'string' && params.baseDir.trim()
+            ? params.baseDir.trim()
+            : '';
+        if (!baseDir) {
+            return { filePath: path.join(CLAUDE_DIR, CLAUDE_MD_FILE_NAME), isProject: false };
+        }
+        var detected = detectProjectClaudeMdDir(baseDir);
+        if (detected.error) {
+            return { filePath: path.join(CLAUDE_DIR, CLAUDE_MD_FILE_NAME), isProject: false, detectionError: detected.error };
+        }
+        return { filePath: detected.path, isProject: true, detectionSource: detected.source, projectPath: baseDir };
     }
 
     function readClaudeMdFile(params = {}) {
-        const filePath = resolveClaudeMdFilePath();
-        const lineEndingFallback = os.EOL === '\r\n' ? '\r\n' : '\n';
+        var resolved = resolveClaudeMdFilePath(params);
+        var filePath = resolved.filePath;
+        var lineEndingFallback = os.EOL === '\r\n' ? '\r\n' : '\n';
+        var base = {
+            path: filePath,
+            lineEnding: lineEndingFallback
+        };
+        if (resolved.isProject) {
+            base.detectionSource = resolved.detectionSource;
+            base.projectPath = resolved.projectPath;
+        }
+        if (resolved.detectionError) {
+            base.detectionError = resolved.detectionError;
+        }
+        if (resolved.isProject) {
+            var dirCheck = validateClaudeMdBaseDir(filePath);
+            if (dirCheck.error) {
+                return { error: dirCheck.error };
+            }
+        }
         if (!fs.existsSync(filePath)) {
-            return {
-                exists: false,
-                path: filePath,
-                content: '',
-                lineEnding: lineEndingFallback
-            };
+            return Object.assign({ exists: false, content: '' }, base);
         }
         if (params.metaOnly) {
-            return {
-                exists: true,
-                path: filePath,
-                content: '',
-                lineEnding: lineEndingFallback
-            };
+            return Object.assign({ exists: true, content: '' }, base);
         }
         try {
-            const raw = fs.readFileSync(filePath, 'utf-8');
-            return {
+            var raw = fs.readFileSync(filePath, 'utf-8');
+            var result = {
                 exists: true,
                 path: filePath,
                 content: stripUtf8Bom(raw),
                 lineEnding: detectLineEnding(raw)
             };
+            if (resolved.isProject) {
+                result.detectionSource = resolved.detectionSource;
+                result.projectPath = resolved.projectPath;
+            }
+            return result;
         } catch (e) {
-            return { error: `读取 CLAUDE.md 失败: ${e.message}` };
+            return { error: 'read CLAUDE.md failed: ' + e.message };
         }
     }
 
     function applyClaudeMdFile(params = {}) {
-        const filePath = resolveClaudeMdFilePath();
-        const content = typeof params.content === 'string' ? params.content : '';
+        var resolved = resolveClaudeMdFilePath(params);
+        var filePath = resolved.filePath;
+        var content = typeof params.content === 'string' ? params.content : '';
         if (content.length > 2 * 1024 * 1024) {
-            return { error: '内容过大（最大 2MB）' };
+            return { error: 'content too large (max 2MB)' };
         }
-        const lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
-        const normalized = normalizeLineEnding(content, lineEnding);
-        const finalContent = ensureUtf8Bom(normalized);
+        var lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
+        var normalized = normalizeLineEnding(content, lineEnding);
+        var finalContent = ensureUtf8Bom(normalized);
         try {
-            ensureDir(CLAUDE_DIR);
+            ensureDir(path.dirname(filePath));
             fs.writeFileSync(filePath, finalContent, 'utf-8');
-            return { success: true, path: filePath };
+            var result = { success: true, path: filePath };
+            if (resolved.isProject) {
+                result.projectPath = resolved.projectPath;
+                result.detectionSource = resolved.detectionSource;
+            }
+            return result;
         } catch (e) {
-            return { error: `写入 CLAUDE.md 失败: ${e.message}` };
+            return { error: 'write CLAUDE.md failed: ' + e.message };
         }
     }
 
@@ -181,6 +243,8 @@ function createAgentsFileController(deps = {}) {
         let readResult;
         if (context === 'claude-md') {
             readResult = readClaudeMdFile({ metaOnly });
+        } else if (context === 'claude-project') {
+            readResult = readClaudeMdFile({ ...params, metaOnly });
         } else if (context === 'openclaw') {
             readResult = readOpenclawAgentsFile({ metaOnly });
         } else if (context === 'openclaw-workspace') {
@@ -215,6 +279,8 @@ function createAgentsFileController(deps = {}) {
     return {
         resolveAgentsFilePath,
         validateAgentsBaseDir,
+        detectProjectClaudeMdDir,
+        validateClaudeMdBaseDir,
         resolveClaudeMdFilePath,
         readClaudeMdFile,
         applyClaudeMdFile,

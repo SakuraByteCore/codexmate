@@ -102,18 +102,75 @@ function renderTemplate(templateText, values = {}) {
     });
 }
 
+function translate(t, key, fallback, params = null) {
+    if (typeof t !== 'function') return fallback;
+    const translated = t(key, params);
+    return translated === key ? fallback : translated;
+}
+
+function localizePluginMeta(meta, t) {
+    const safe = meta && typeof meta === 'object' ? meta : {};
+    const titleKey = typeof safe.titleKey === 'string' ? safe.titleKey : '';
+    const descriptionKey = typeof safe.descriptionKey === 'string' ? safe.descriptionKey : '';
+    const statusLabelKey = typeof safe.statusLabelKey === 'string' ? safe.statusLabelKey : '';
+    return {
+        ...safe,
+        title: titleKey ? translate(t, titleKey, safe.title || '') : (safe.title || ''),
+        description: descriptionKey ? translate(t, descriptionKey, safe.description || '') : (safe.description || ''),
+        statusLabel: statusLabelKey ? translate(t, statusLabelKey, safe.statusLabel || '') : (safe.statusLabel || '')
+    };
+}
+
+const BUILTIN_TEMPLATE_I18N = Object.freeze({
+    builtin_comment_polish: Object.freeze({
+        nameKey: 'plugins.builtin.commentPolish.name',
+        descKey: 'plugins.builtin.commentPolish.desc',
+        lineKey: 'plugins.builtin.commentPolish.line1',
+        fallbackName: '代码注释润色',
+        fallbackDesc: '轻微收敛以下代码注释 {{code}}',
+        fallbackLine: '轻微收敛以下代码注释',
+        vars: ['{{code}}']
+    }),
+    builtin_rule_ack: Object.freeze({
+        nameKey: 'plugins.builtin.ruleAck.name',
+        descKey: 'plugins.builtin.ruleAck.desc',
+        lineKey: 'plugins.builtin.ruleAck.line1',
+        fallbackName: '规则确认回复',
+        fallbackDesc: '请根据【{{rule}}】，收到请回复',
+        fallbackLine: '请根据【{{rule}}】，收到请回复',
+        vars: []
+    })
+});
+
+function localizeBuiltinPromptTemplate(item, t) {
+    const safe = item && typeof item === 'object' ? item : {};
+    if (safe.isBuiltin !== true) return safe;
+    const spec = BUILTIN_TEMPLATE_I18N[safe.id];
+    if (!spec) return safe;
+    const line = translate(t, spec.lineKey, spec.fallbackLine);
+    return {
+        ...safe,
+        name: translate(t, spec.nameKey, spec.fallbackName),
+        description: translate(t, spec.descKey, spec.fallbackDesc),
+        template: spec.vars && spec.vars.length ? [line, '', ...spec.vars].join('\n') : line
+    };
+}
+
 import { pluginsRegistry } from '../registry.mjs';
 
 export function createPluginsComputed() {
     return {
         pluginsCatalog() {
-            return pluginsRegistry.map((entry) => entry && entry.meta).filter(Boolean);
+            return pluginsRegistry
+                .map((entry) => entry && entry.meta)
+                .filter(Boolean)
+                .map((meta) => localizePluginMeta(meta, this.t));
         },
 
         pluginsActiveMeta() {
             const id = typeof this.pluginsActiveId === 'string' ? this.pluginsActiveId.trim() : '';
             const entry = pluginsRegistry.find((item) => item && item.id === id) || null;
-            return entry && entry.meta ? entry.meta : null;
+            return entry && entry.meta ? localizePluginMeta(entry.meta, this.t) : null;
         },
 
         pluginsActiveAttribution() {
@@ -138,6 +195,7 @@ export function createPluginsComputed() {
             const list = Array.isArray(this.promptTemplatesListRaw) ? this.promptTemplatesListRaw : [];
             return list
                 .map((item) => normalizePromptTemplateEntry(item))
+                .map((item) => localizeBuiltinPromptTemplate(item, this.t))
                 .filter((item) => item.id && item.name)
                 .map((item) => {
                     const vars = parseTemplateVariables(item.template);
@@ -178,7 +236,7 @@ export function createPluginsComputed() {
             const id = typeof draft.id === 'string' ? draft.id : '';
             const name = typeof draft.name === 'string' ? draft.name : '';
             if (!id && !name) return null;
-            return normalizePromptTemplateEntry(draft);
+            return localizeBuiltinPromptTemplate(normalizePromptTemplateEntry(draft), this.t);
         },
 
         promptTemplateVars() {

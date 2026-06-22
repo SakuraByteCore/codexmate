@@ -5,8 +5,11 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const { createOpenclawPersistMethods } = await import(
+const { createOpenclawPersistMethods, DEFAULT_OPENCLAW_CONFIG_NAME } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.openclaw-persist.mjs'))
+);
+const { createI18nMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
 );
 
 function deferred() {
@@ -21,7 +24,9 @@ function deferred() {
 
 function createContext(methods, overrides = {}) {
     return {
+        ...createI18nMethods(),
         ...methods,
+        lang: 'zh',
         openclawConfigs: {
             saved: {
                 content: 'saved-local'
@@ -565,4 +570,39 @@ test('persistOpenclawConfig restores the previous config content when saving an 
         message: '保存本地 OpenClaw 配置失败',
         type: 'error'
     }]);
+});
+
+
+test('OpenClaw default config predicate uses invariant marker and canonical key', async () => {
+    const methods = createOpenclawPersistMethods({
+        api: async () => ({
+            error: '',
+            exists: true,
+            path: '/tmp/openclaw.json',
+            lineEnding: '\n',
+            content: 'real-default-content'
+        })
+    });
+    const context = createContext(methods, {
+        openclawConfigs: {
+            [DEFAULT_OPENCLAW_CONFIG_NAME]: { content: 'old-default' },
+            displayDefault: { content: 'renamed-default', isDefault: true },
+            userConfig: { content: 'user-content' }
+        }
+    });
+
+    assert.strictEqual(methods.isDefaultOpenclawConfig.call(context, DEFAULT_OPENCLAW_CONFIG_NAME), true);
+    assert.strictEqual(methods.isDefaultOpenclawConfig.call(context, 'displayDefault', context.openclawConfigs.displayDefault), true);
+    assert.strictEqual(methods.isDefaultOpenclawConfig.call(context, 'userConfig', context.openclawConfigs.userConfig), false);
+
+    await methods.deleteOpenclawConfig.call(context, 'displayDefault');
+
+    assert.ok(context.openclawConfigs.displayDefault, 'marked default config should not be deleted');
+    assert.deepStrictEqual(context.shownMessages, [{
+        message: '默认配置始终映射当前系统配置，不可删除',
+        type: 'info'
+    }]);
+
+    await methods.syncDefaultOpenclawConfigEntry.call(context, { silent: true });
+    assert.strictEqual(context.openclawConfigs[DEFAULT_OPENCLAW_CONFIG_NAME].isDefault, true);
 });

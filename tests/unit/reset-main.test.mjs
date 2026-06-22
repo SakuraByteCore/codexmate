@@ -13,7 +13,10 @@ const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
 const {
     normalizePrNumberInput,
     buildResetPlan,
-    resolveArgPrNumber
+    resolveArgPrNumber,
+    hasResetTargetArg,
+    isInteractiveResetInput,
+    resolveResetTargetPrNumber
 } = require(path.join(__dirname, '..', '..', 'tools', 'dev', 'reset-main.js'));
 
 test('reset-main workflow plans preserve critical git steps without git pull merges', () => {
@@ -108,6 +111,80 @@ test('resolveArgPrNumber reads the first non-empty CLI arg', () => {
     assert.strictEqual(resolveArgPrNumber(['', '  ', '79']), '79');
     assert.strictEqual(resolveArgPrNumber(['0079']), '79');
     assert.throws(() => resolveArgPrNumber(['abc']), /Invalid PR number/);
+});
+
+test('hasResetTargetArg detects whether reset received an explicit target arg', () => {
+    assert.strictEqual(hasResetTargetArg([]), false);
+    assert.strictEqual(hasResetTargetArg(['', '  ']), false);
+    assert.strictEqual(hasResetTargetArg(['', '180']), true);
+});
+
+test('isInteractiveResetInput requires both stdin and stdout TTYs', () => {
+    assert.strictEqual(isInteractiveResetInput({ stdin: { isTTY: true }, stdout: { isTTY: true } }), true);
+    assert.strictEqual(isInteractiveResetInput({ stdin: { isTTY: false }, stdout: { isTTY: true } }), false);
+    assert.strictEqual(isInteractiveResetInput({ stdin: { isTTY: true }, stdout: { isTTY: false } }), false);
+});
+
+test('resolveResetTargetPrNumber keeps explicit PR number args non-interactive', async () => {
+    let prompted = false;
+    const result = await resolveResetTargetPrNumber({
+        argv: ['00180'],
+        stdin: { isTTY: false },
+        stdout: { isTTY: false },
+        promptTarget: async () => {
+            prompted = true;
+            return '';
+        }
+    });
+
+    assert.strictEqual(result, '180');
+    assert.strictEqual(prompted, false);
+});
+
+test('resolveResetTargetPrNumber prompts on interactive no-arg reset and treats Enter as main', async () => {
+    const result = await resolveResetTargetPrNumber({
+        argv: [],
+        stdin: { isTTY: true },
+        stdout: { isTTY: true },
+        promptTarget: async () => ''
+    });
+
+    assert.strictEqual(result, '');
+});
+
+test('resolveResetTargetPrNumber prompts on interactive no-arg reset and accepts PR number', async () => {
+    const result = await resolveResetTargetPrNumber({
+        argv: [],
+        stdin: { isTTY: true },
+        stdout: { isTTY: true },
+        promptTarget: async () => ' 00180 '
+    });
+
+    assert.strictEqual(result, '180');
+});
+
+test('resolveResetTargetPrNumber rejects invalid interactive target input', async () => {
+    await assert.rejects(
+        () => resolveResetTargetPrNumber({
+            argv: [],
+            stdin: { isTTY: true },
+            stdout: { isTTY: true },
+            promptTarget: async () => 'abc'
+        }),
+        /Invalid PR number/
+    );
+});
+
+test('resolveResetTargetPrNumber rejects no-arg reset without interactive confirmation', async () => {
+    await assert.rejects(
+        () => resolveResetTargetPrNumber({
+            argv: [],
+            stdin: { isTTY: false },
+            stdout: { isTTY: false },
+            promptTarget: async () => ''
+        }),
+        /Reset target required in non-interactive mode/
+    );
 });
 
 test('package.json exposes reset command for reset-main workflow', () => {

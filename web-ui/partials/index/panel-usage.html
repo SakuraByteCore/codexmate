@@ -75,25 +75,41 @@
                             <section v-if="sessionUsageWave.points && sessionUsageWave.points.length" class="usage-wave-section">
                                 <div class="usage-card-title">{{ t('usage.daily.title') }}</div>
                                 <div class="usage-wave-container">
-                                    <svg class="usage-wave-chart" viewBox="0 0 800 140" preserveAspectRatio="none">
-                                        <defs>
-                                            <linearGradient :id="'wave-gradient-' + sessionsUsageTimeRange" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" :stop-color="'var(--color-brand)'" stop-opacity="0.35"/>
-                                                <stop offset="100%" :stop-color="'var(--color-brand)'" stop-opacity="0"/>
-                                            </linearGradient>
-                                        </defs>
-                                        <path :d="sessionUsageWave.areaPath" :fill="'url(#wave-gradient-' + sessionsUsageTimeRange + ')'" class="usage-wave-area"/>
-                                        <path :d="sessionUsageWave.linePath" fill="none" :stroke="'var(--color-brand)'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="usage-wave-line"/>
-                                        <line v-if="sessionsUsageSelectedDay" x1="0" :x2="sessionUsageWave.width" :y1="sessionUsageWave.hoverY" :y2="sessionUsageWave.hoverY" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.5" class="usage-wave-hover-line"/>
-                                        <circle v-if="sessionsUsageSelectedDay" :cx="sessionUsageWave.hoverX" :cy="sessionUsageWave.hoverY" r="5" :fill="'var(--color-surface)'" :stroke="'var(--color-brand)'" stroke-width="2.5" class="usage-wave-hover-point"/>
-                                    </svg>
-                                    <div class="usage-wave-labels">
-                                        <span v-for="label in sessionUsageWave.labels" :key="label.key"
-                                              class="usage-wave-label"
-                                              :class="{ active: sessionsUsageSelectedDay === label.key }"
-                                              @click="selectSessionsUsageDay(label.key)">
-                                            {{ label.text }}
+                                    <div class="usage-wave-yaxis">
+                                        <span v-for="tick in sessionUsageWave.yTicks" :key="tick.value"
+                                              class="usage-wave-ytick"
+                                              :style="{ bottom: tick.percent + '%' }">
+                                            {{ tick.label }}
                                         </span>
+                                    </div>
+                                    <div class="usage-wave-chart-area">
+                                        <svg class="usage-wave-chart" viewBox="0 0 800 140" preserveAspectRatio="none">
+                                            <defs>
+                                                <linearGradient :id="'wave-gradient-' + sessionsUsageTimeRange" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" :stop-color="'var(--color-brand)'" stop-opacity="0.35"/>
+                                                    <stop offset="100%" :stop-color="'var(--color-brand)'" stop-opacity="0"/>
+                                                </linearGradient>
+                                            </defs>
+                                            <line v-for="tick in sessionUsageWave.yTicks" :key="'g-' + tick.value"
+                                                  x1="0" :x2="sessionUsageWave.width"
+                                                  :y1="tick.y" :y2="tick.y"
+                                                  stroke="currentColor" stroke-width="0.5" opacity="0.12"
+                                                  class="usage-wave-gridline"/>
+                                            <path :d="sessionUsageWave.areaPath" :fill="'url(#wave-gradient-' + sessionsUsageTimeRange + ')'" class="usage-wave-area"/>
+                                            <path :d="sessionUsageWave.linePath" fill="none" :stroke="'var(--color-brand)'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="usage-wave-line"/>
+                                            <line v-if="sessionsUsageSelectedDay" x1="0" :x2="sessionUsageWave.width" :y1="sessionUsageWave.hoverY" :y2="sessionUsageWave.hoverY" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.5" class="usage-wave-hover-line"/>
+                                            <circle v-if="sessionsUsageSelectedDay" :cx="sessionUsageWave.hoverX" :cy="sessionUsageWave.hoverY" r="5" :fill="'var(--color-surface)'" :stroke="'var(--color-brand)'" stroke-width="2.5" class="usage-wave-hover-point"/>
+                                        </svg>
+                                        <div class="usage-wave-labels">
+                                            <button v-for="label in sessionUsageWave.labels" :key="label.key"
+                                                  type="button"
+                                                  class="usage-wave-label"
+                                                  :class="{ active: sessionsUsageSelectedDay === label.key }"
+                                                  :aria-pressed="sessionsUsageSelectedDay === label.key"
+                                                  @click="selectSessionsUsageDay(label.key)">
+                                                {{ label.text }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div v-if="sessionsUsageSelectedDaySummary" class="usage-daydetail">

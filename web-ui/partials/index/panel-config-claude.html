@@ -26,7 +26,28 @@
                     </div>
                 </template>
                 <template v-else>
-                <button class="btn-add" @click="openClaudeConfigModal" v-if="!loading && !initError">
+                <section class="tool-config-write-card" :aria-label="t('toolConfig.claude.title')">
+                    <div class="tool-config-write-copy">
+                        <div class="tool-config-write-title">{{ t('toolConfig.claude.title') }}</div>
+                        <p class="tool-config-write-desc">{{ t('toolConfig.claude.desc') }}</p>
+                    </div>
+                    <label class="settings-toggle-row tool-config-write-toggle">
+                        <input
+                            type="checkbox"
+                            autocomplete="off"
+                            :checked="isToolConfigWriteAllowed('claude')"
+                            :disabled="toolConfigPermissionSaving.claude"
+                            @change="setToolConfigPermission('claude', $event.target.checked)">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <span>{{ toolConfigPermissionStatusLabel('claude') }}</span>
+                    </label>
+                </section>
+
+                <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('claude') }">
+                    <div class="tool-config-write-body">
+                <button class="btn-add" @click="openClaudeConfigModal" v-if="!loading && !initError" :disabled="!isToolConfigWriteAllowed('claude')">
                     <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('claude.addProvider') }}
                 </button>
@@ -35,26 +56,26 @@
                 <div class="selector-section">
                     <div class="selector-header"><span class="selector-title">{{ t('claude.presetProviders') }}</span></div>
                     <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Claude Official'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.anthropic.com'; newClaudeConfig.model = 'claude-sonnet-4'; showClaudeConfigModal = true">Claude Official</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DeepSeek'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.deepseek.com/anthropic'; newClaudeConfig.model = 'DeepSeek-V3.2'; showClaudeConfigModal = true">DeepSeek</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Zhipu GLM'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://open.bigmodel.cn/api/anthropic'; newClaudeConfig.model = 'glm-5'; showClaudeConfigModal = true">Zhipu GLM</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Z.ai GLM'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.z.ai/api/anthropic'; newClaudeConfig.model = 'glm-5'; showClaudeConfigModal = true">Z.ai GLM</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Qwen Coder'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://coding.dashscope.aliyuncs.com/apps/anthropic'; newClaudeConfig.model = 'qwen3-coder'; showClaudeConfigModal = true">Qwen Coder</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Kimi k2'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.moonshot.cn/anthropic'; newClaudeConfig.model = 'kimi-k2.5'; showClaudeConfigModal = true">Kimi k2</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Kimi For Coding'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.kimi.com/coding/'; newClaudeConfig.model = 'kimi-k2.5'; showClaudeConfigModal = true">Kimi For Coding</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'KAT-Coder'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints/${ENDPOINT_ID}/claude-code-proxy'; newClaudeConfig.model = 'KAT-Coder-Pro V1'; showClaudeConfigModal = true">KAT-Coder</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Longcat'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.longcat.chat/anthropic'; newClaudeConfig.model = 'LongCat-Flash-Chat'; showClaudeConfigModal = true">Longcat</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'MiniMax'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.minimaxi.com/anthropic'; newClaudeConfig.model = 'MiniMax-M2.7'; showClaudeConfigModal = true">MiniMax</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'MiniMax en'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.minimax.io/anthropic'; newClaudeConfig.model = 'MiniMax-M2.7'; showClaudeConfigModal = true">MiniMax en</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DouBaoSeed'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://ark.cn-beijing.volces.com/api/coding'; newClaudeConfig.model = 'doubao-seed-2-0-code-preview-latest'; showClaudeConfigModal = true">DouBaoSeed</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'BaiLing'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.tbox.cn/api/anthropic'; newClaudeConfig.model = 'Ling-2.5-1T'; showClaudeConfigModal = true">BaiLing</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'ModelScope'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api-inference.modelscope.cn'; newClaudeConfig.model = 'ZhipuAI/GLM-5'; showClaudeConfigModal = true">ModelScope</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'AiHubMix'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://aihubmix.com'; newClaudeConfig.model = 'glm-4.7'; showClaudeConfigModal = true">AiHubMix</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DMXAPI'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://www.dmxapi.cn'; newClaudeConfig.model = 'glm-4.7'; showClaudeConfigModal = true">DMXAPI</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'PackyCode'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://www.packyapi.com'; newClaudeConfig.model = 'glm-4.7'; showClaudeConfigModal = true">PackyCode</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'AnyRouter'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://anyrouter.top'; newClaudeConfig.model = 'claude-opus-4-7[1m]'; showClaudeConfigModal = true">AnyRouter</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Xiaomi MiMo'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.xiaomimimo.com/anthropic'; newClaudeConfig.model = 'mimo-v2.5-pro'; showClaudeConfigModal = true">Xiaomi MiMo</button>
-                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Xiaomi Token Plan'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://token-plan-cn.xiaomimimo.com/anthropic'; newClaudeConfig.model = 'mimo-v2.5-pro'; showClaudeConfigModal = true">Xiaomi Token Plan</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Claude Official'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.anthropic.com'; newClaudeConfig.model = 'claude-sonnet-4'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Claude Official</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DeepSeek'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.deepseek.com/anthropic'; newClaudeConfig.model = 'DeepSeek-V3.2'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">DeepSeek</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Zhipu GLM'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://open.bigmodel.cn/api/anthropic'; newClaudeConfig.model = 'glm-5'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Zhipu GLM</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Z.ai GLM'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.z.ai/api/anthropic'; newClaudeConfig.model = 'glm-5'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Z.ai GLM</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Qwen Coder'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://coding.dashscope.aliyuncs.com/apps/anthropic'; newClaudeConfig.model = 'qwen3-coder'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Qwen Coder</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Kimi k2'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.moonshot.cn/anthropic'; newClaudeConfig.model = 'kimi-k2.5'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Kimi k2</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Kimi For Coding'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.kimi.com/coding/'; newClaudeConfig.model = 'kimi-k2.5'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Kimi For Coding</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'KAT-Coder'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints/${ENDPOINT_ID}/claude-code-proxy'; newClaudeConfig.model = 'KAT-Coder-Pro V1'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">KAT-Coder</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Longcat'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.longcat.chat/anthropic'; newClaudeConfig.model = 'LongCat-Flash-Chat'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Longcat</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'MiniMax'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.minimaxi.com/anthropic'; newClaudeConfig.model = 'MiniMax-M2.7'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">MiniMax</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'MiniMax en'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.minimax.io/anthropic'; newClaudeConfig.model = 'MiniMax-M2.7'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">MiniMax en</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DouBaoSeed'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://ark.cn-beijing.volces.com/api/coding'; newClaudeConfig.model = 'doubao-seed-2-0-code-preview-latest'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">DouBaoSeed</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'BaiLing'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.tbox.cn/api/anthropic'; newClaudeConfig.model = 'Ling-2.5-1T'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">BaiLing</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'ModelScope'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api-inference.modelscope.cn'; newClaudeConfig.model = 'ZhipuAI/GLM-5'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">ModelScope</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'AiHubMix'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://aihubmix.com'; newClaudeConfig.model = 'glm-4.7'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">AiHubMix</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'DMXAPI'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://www.dmxapi.cn'; newClaudeConfig.model = 'glm-4.7'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">DMXAPI</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'PackyCode'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://www.packyapi.com'; newClaudeConfig.model = 'glm-4.7'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">PackyCode</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'AnyRouter'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://anyrouter.top'; newClaudeConfig.model = 'claude-opus-4-7[1m]'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">AnyRouter</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Xiaomi MiMo'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://api.xiaomimimo.com/anthropic'; newClaudeConfig.model = 'mimo-v2.5-pro'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Xiaomi MiMo</button>
+                        <button type="button" class="btn-mini" @click="newClaudeConfig.name = 'Xiaomi Token Plan'; newClaudeConfig.apiKey = ''; newClaudeConfig.baseUrl = 'https://token-plan-cn.xiaomimimo.com/anthropic'; newClaudeConfig.model = 'mimo-v2.5-pro'; showAddClaudeConfigKey = false; showClaudeConfigModal = true">Xiaomi Token Plan</button>
                     </div>
                 </div>
 
@@ -85,12 +106,6 @@
                     >
                     <div class="config-template-hint">{{ t('claude.model.hint') }}</div>
                     <button class="btn-tool btn-template-editor" @click="openClaudeConfigTemplateEditor" :disabled="loading || !!initError">{{ t('config.template.openEditor') }}</button>
-                </div>
-
-                <div class="selector-section">
-                    <div class="selector-header"><span class="selector-title">CLAUDE.md</span></div>
-                    <button class="btn-tool" @click="openClaudeMdEditor" :disabled="loading || !!initError || agentsLoading">{{ agentsLoading ? t('config.modelLoading') : t('claude.md.open') }}</button>
-                    <div class="config-template-hint">{{ t('claude.md.hint') }}</div>
                 </div>
 
                 <div class="selector-section">
@@ -125,16 +140,18 @@
                     </div>
                     <div v-for="(config, name) in claudeConfigs" :key="name" :class="['card', { active: currentClaudeConfig === name }]" @click="applyClaudeConfig(name)" @keydown.enter.self.prevent="applyClaudeConfig(name)" @keydown.space.self.prevent="applyClaudeConfig(name)" tabindex="0" role="button" :aria-current="currentClaudeConfig === name ? 'true' : null">
                         <div class="card-leading">
-                            <div class="card-icon">{{ name.charAt(0).toUpperCase() }}</div>
+                            <div class="card-icon">{{ name.charAt(0).toUpperCase() }}<span v-if="config.targetApi === 'chat_completions' || config.targetApi === 'ollama'" class="card-icon-dot" :title="t('config.transformProvider.title')"></span></div>
                             <div class="card-content">
                                 <div class="card-title">{{ name }}</div>
                                 <div class="card-subtitle card-subtitle-model">{{ config.model || t('claude.model.unset') }}</div>
+                                <div class="card-subtitle" v-if="config.targetApi === 'chat_completions'">{{ t('claude.targetApi.chatCompletionsBadge') }}</div>
+                                <div class="card-subtitle" v-else-if="config.targetApi === 'ollama'">{{ t('claude.targetApi.ollamaBadge') }}</div>
                                 <div class="card-subtitle card-subtitle-url" v-if="config.baseUrl">{{ config.baseUrl }}</div>
                             </div>
                         </div>
                         <div class="card-trailing">
                             <span v-if="claudeSpeedResults[name]" :class="['latency', claudeSpeedResults[name].ok ? 'ok' : 'error']">{{ formatLatency(claudeSpeedResults[name]) }}</span>
-                            <span :class="['pill', config.hasKey ? 'configured' : 'empty']">{{ config.hasKey ? t('claude.configured') : t('claude.notConfigured') }}</span>
+                            <span :class="['pill', config.hasKey ? 'configured' : 'empty']">{{ config.hasKey ? t('common.configured') : t('common.notConfigured') }}</span>
                             <div class="card-actions" @click.stop>
                                 <button class="card-action-btn" @click="openEditConfigModal(name)" :aria-label="t('claude.action.editAria', { name })" :title="t('claude.action.edit')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -148,6 +165,16 @@
                                 <button class="card-action-btn delete" @click="deleteClaudeConfig(name)" :aria-label="t('claude.action.deleteAria', { name })" :title="t('claude.action.delete')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                        <div v-if="!isToolConfigWriteAllowed('claude')" class="tool-config-write-overlay">
+                            <div class="tool-config-write-overlay-card">
+                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.claude.lockedTitle') }}</div>
+                                <p>{{ t('toolConfig.claude.lockedDesc') }}</p>
+                                <button type="button" class="btn-tool" @click="setToolConfigPermission('claude', true)" :disabled="toolConfigPermissionSaving.claude">{{ t('toolConfig.enableWrite') }}</button>
                             </div>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
-export function createInstallMethods() {
+export function createInstallMethods(options = {}) {
+    const { api } = options;
     return {
         normalizeInstallPackageManager(value) {
             const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
@@ -14,6 +15,133 @@ export function createInstallMethods() {
                 return normalized;
             }
             return 'install';
+        },
+
+        normalizePackageVersion(value) {
+            const normalized = typeof value === 'string' ? value.trim().replace(/^v/i, '') : '';
+            return /^\d+(?:\.\d+){0,2}(?:[-+][0-9A-Za-z.-]+)?$/.test(normalized) ? normalized : '';
+        },
+
+        comparePackageVersions(left, right) {
+            const normalizeParts = (value) => {
+                const normalized = this.normalizePackageVersion(value);
+                if (!normalized) return null;
+                return normalized.split(/[+-]/)[0].split('.').map((part) => Number.parseInt(part, 10) || 0);
+            };
+            const a = normalizeParts(left);
+            const b = normalizeParts(right);
+            if (!a || !b) return 0;
+            for (let i = 0; i < 3; i += 1) {
+                const diff = (a[i] || 0) - (b[i] || 0);
+                if (diff < 0) return -1;
+                if (diff > 0) return 1;
+            }
+            return 0;
+        },
+
+        isAppUpdateAvailable() {
+            const current = this.normalizePackageVersion(this.appVersion);
+            const latest = this.normalizePackageVersion(this.appLatestVersion);
+            if (!current || !latest) return false;
+            return this.comparePackageVersions(current, latest) < 0;
+        },
+
+        isAppVersionStatusVisible() {
+            return !!(this.appVersion || this.appLatestVersion || this.appVersionStatusLoading || this.appVersionStatusChecked || this.appVersionStatusError);
+        },
+
+        appVersionStatusKind() {
+            if (this.appVersionStatusLoading) return 'loading';
+            if (this.appVersionStatusError) return 'error';
+            if (this.isAppUpdateAvailable()) return 'available';
+            if (this.appVersionStatusChecked) return 'current';
+            return 'idle';
+        },
+
+        appUpdateNoticeText() {
+            if (this.appVersionStatusLoading) return this.t('side.update.checking');
+            if (this.appVersionStatusError) return this.t('side.update.retry');
+            const latest = this.normalizePackageVersion(this.appLatestVersion);
+            if (this.isAppUpdateAvailable()) return latest
+                ? this.t('side.update.availableWithVersion', { version: latest })
+                : this.t('side.update.available');
+            if (this.appVersionStatusChecked) return this.t('side.update.upToDate');
+            return this.t('side.update.check');
+        },
+
+        appUpdateNoticeMeta() {
+            if (this.appVersionStatusLoading) return this.t('side.update.checkingMeta');
+            if (this.appVersionStatusError) return this.appVersionStatusError;
+            const current = this.normalizePackageVersion(this.appVersion);
+            const latest = this.normalizePackageVersion(this.appLatestVersion);
+            if (current && latest) {
+                return this.t('side.update.metaVersions', { current, latest });
+            }
+            if (current) {
+                return this.t('side.update.currentOnly', { current });
+            }
+            return this.t('side.update.meta');
+        },
+
+        appVersionStatusTitle() {
+            const source = typeof this.appVersionStatusSource === 'string' ? this.appVersionStatusSource.trim() : '';
+            const checkedAt = typeof this.appVersionStatusCheckedAt === 'string' ? this.appVersionStatusCheckedAt.trim() : '';
+            const suffix = [source, checkedAt].filter(Boolean).join(' · ');
+            const meta = this.appUpdateNoticeMeta();
+            return suffix ? `${meta} · ${suffix}` : meta;
+        },
+
+        handleAppVersionStatusClick() {
+            if (this.isAppUpdateAvailable()) {
+                this.openAppUpdateDocs();
+                return;
+            }
+            void this.loadAppVersionStatus({ silent: false, force: true });
+        },
+
+        async loadAppVersionStatus(options = {}) {
+            if (typeof api !== 'function') return false;
+            if (this.appVersionStatusLoading) return false;
+            this.appVersionStatusLoading = true;
+            this.appVersionStatusError = '';
+            try {
+                const res = await api('version-status', options.force ? { force: true } : {});
+                if (res && res.currentVersion && !this.appVersion) {
+                    this.appVersion = this.normalizePackageVersion(res.currentVersion) || String(res.currentVersion || '');
+                }
+                if (res && res.latestVersion) {
+                    this.appLatestVersion = this.normalizePackageVersion(res.latestVersion) || String(res.latestVersion || '');
+                }
+                if (res && typeof res.source === 'string') {
+                    this.appVersionStatusSource = res.source;
+                }
+                if (res && typeof res.checkedAt === 'string') {
+                    this.appVersionStatusCheckedAt = res.checkedAt;
+                }
+                if (res && res.error) {
+                    this.appVersionStatusError = res.error;
+                    this.appVersionStatusChecked = true;
+                    if (!options.silent) this.showMessage(res.error, 'error');
+                    return false;
+                }
+                this.appVersionStatusChecked = true;
+                return true;
+            } catch (e) {
+                const message = e && e.message ? e.message : this.t('side.update.checkFailed');
+                this.appVersionStatusError = message;
+                this.appVersionStatusChecked = true;
+                if (!options.silent) this.showMessage(message, 'error');
+                return false;
+            } finally {
+                this.appVersionStatusLoading = false;
+            }
+        },
+
+        openAppUpdateDocs() {
+            this.installCommandAction = 'update';
+            if (typeof this.switchMainTab === 'function') {
+                this.switchMainTab('docs');
+            }
         },
 
         normalizeInstallRegistryPreset(value) {

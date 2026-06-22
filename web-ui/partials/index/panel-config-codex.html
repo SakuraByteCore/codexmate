@@ -26,7 +26,28 @@
                     </div>
                 </template>
                 <template v-else>
-                <button class="btn-add" @click="showAddModal = true" v-if="!loading && !initError">
+                <section class="tool-config-write-card" :aria-label="t('toolConfig.codex.title')">
+                    <div class="tool-config-write-copy">
+                        <div class="tool-config-write-title">{{ t('toolConfig.codex.title') }}</div>
+                        <p class="tool-config-write-desc">{{ t('toolConfig.codex.desc') }}</p>
+                    </div>
+                    <label class="settings-toggle-row tool-config-write-toggle">
+                        <input
+                            type="checkbox"
+                            autocomplete="off"
+                            :checked="isToolConfigWriteAllowed('codex')"
+                            :disabled="toolConfigPermissionSaving.codex"
+                            @change="setToolConfigPermission('codex', $event.target.checked)">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <span>{{ toolConfigPermissionStatusLabel('codex') }}</span>
+                    </label>
+                </section>
+
+                <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('codex') }">
+                    <div class="tool-config-write-body">
+                <button class="btn-add" @click="showAddProviderKey = false; showAddModal = true" v-if="!loading && !initError" :disabled="!isToolConfigWriteAllowed('codex')">
                     <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('config.addProvider') }}
                 </button>
@@ -36,13 +57,8 @@
                         <span class="selector-title">{{ t('config.providerTemplate.title') }}</span>
                     </div>
                     <div class="btn-group" style="flex-wrap: wrap; gap: 8px; margin-top: 0;">
-                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider._suggestedModel = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddModal = true">{{ tpl.label }}</button>
+                        <button v-for="tpl in codexProviderTemplates" :key="tpl.name" type="button" class="btn-mini" @click="newProvider.name = tpl.name; newProvider.url = tpl.url; newProvider.model = tpl.model || ''; newProvider.useTransform = !!tpl.useTransform; showAddProviderKey = false; showAddModal = true">{{ tpl.label }}</button>
                     </div>
-                </div>
-
-                <div class="selector-section">
-                    <div class="selector-header"><span class="selector-title">AGENTS.md</span></div>
-                    <button class="btn-tool" @click="openAgentsEditor" :disabled="loading || !!initError || agentsLoading">{{ agentsLoading ? t('config.modelLoading') : t('config.agents.open') }}</button>
                 </div>
 
                 <div class="selector-section">
@@ -122,11 +138,11 @@
                 <div v-if="!loading && !initError" class="card-list">
                     <div v-for="provider in displayProvidersList" :key="provider.name" :class="['card', { active: displayCurrentProvider === provider.name, disabled: provider.name === 'local' && isLocalProviderDisabled }]" @click="(provider.name === 'local' && isLocalProviderDisabled) ? null : switchProvider(provider.name)" @keydown.enter.self.prevent="(provider.name === 'local' && isLocalProviderDisabled) ? null : switchProvider(provider.name)" @keydown.space.self.prevent="(provider.name === 'local' && isLocalProviderDisabled) ? null : switchProvider(provider.name)" :tabindex="provider.name === 'local' && isLocalProviderDisabled ? -1 : 0" role="button" :aria-current="displayCurrentProvider === provider.name ? 'true' : null">
                         <div class="card-leading">
-                            <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}<span v-if="isTransformProvider(provider)" class="card-icon-dot" title="通过内建转换适配"></span></div>
+                            <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}<span v-if="isTransformProvider(provider)" class="card-icon-dot" :title="t('config.transformProvider.title')"></span></div>
                             <div class="card-content">
                                 <div v-if="provider.name === 'local'" class="bridge-pool-summary">
                                     <svg class="bridge-pool-summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
-                                    <span class="bridge-pool-summary-text">已启用 {{ localBridgeCandidateProviders().filter(cp => !isLocalBridgeExcluded(cp.name)).length }} / {{ localBridgeCandidateProviders().length }}</span>
+                                    <span class="bridge-pool-summary-text">{{ t('config.localBridge.enabledCount', { enabled: localBridgeCandidateProviders().filter(cp => !isLocalBridgeExcluded(cp.name)).length, total: localBridgeCandidateProviders().length }) }}</span>
                                 </div>
                                 <div class="card-title">
                                     <span>{{ provider.name }}</span>
@@ -140,7 +156,7 @@
                             <span v-if="speedResults[provider.name]" :class="['latency', speedResults[provider.name].ok ? 'ok' : 'error']">{{ formatLatency(speedResults[provider.name]) }}</span>
                             <span :class="['pill', providerPillConfigured(provider) ? 'configured' : 'empty']">{{ providerPillText(provider) }}</span>
                             <div class="card-actions" @click.stop>
-                                <button v-if="provider.name === 'local'" class="card-action-btn bridge-pool-trigger" @click="showCodexBridgePoolModal = true" :aria-label="'轮询池设置'" :title="'轮询池设置'">
+                                <button v-if="provider.name === 'local'" class="card-action-btn bridge-pool-trigger" @click="showCodexBridgePoolModal = true" :aria-label="t('config.localBridge.poolSettings')" :title="t('config.localBridge.poolSettings')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
                                 </button>
                                 <button class="card-action-btn" :class="{ loading: speedLoading[provider.name] }" :disabled="!!speedLoading[provider.name]" @click="runSpeedTest(provider.name, { silent: true })" :aria-label="t('config.availabilityTestAria', { name: provider.name })" :title="t('config.availabilityTest')">
@@ -169,6 +185,15 @@
                                 <button v-if="!provider.readOnly" class="card-action-btn delete" :class="{ disabled: !shouldShowProviderDelete(provider) }" :disabled="!shouldShowProviderDelete(provider)" @click="deleteProvider(provider.name)" :aria-label="t('config.provider.delete.aria', { name: provider.name })" :title="shouldShowProviderDelete(provider) ? t('common.delete') : t('common.notDeletable')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        <div v-if="!isToolConfigWriteAllowed('codex')" class="tool-config-write-overlay">
+                            <div class="tool-config-write-overlay-card">
+                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.codex.lockedTitle') }}</div>
+                                <p>{{ t('toolConfig.codex.lockedDesc') }}</p>
+                                <button type="button" class="btn-tool" @click="setToolConfigPermission('codex', true)" :disabled="toolConfigPermissionSaving.codex">{{ t('toolConfig.enableWrite') }}</button>
                             </div>
                         </div>
                     </div>

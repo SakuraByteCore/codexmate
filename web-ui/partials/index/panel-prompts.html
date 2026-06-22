@@ -1,0 +1,129 @@
+                <!-- Prompts editor -->
+                <div
+                    v-if="mainTab === 'prompts'"
+                    class="mode-content mode-cards"
+                    id="panel-prompts"
+                    role="tabpanel"
+                    aria-labelledby="tab-prompts">
+                <div class="segmented-control">
+                    <button type="button" :class="['segment', { active: promptsSubTab === 'codex' }]" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
+                    <button type="button" :class="['segment', { active: promptsSubTab === 'claude-project' }]" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                </div>
+
+                <div v-if="promptsSubTab === 'claude-project'" class="project-path-selector">
+                    <label class="project-path-label">{{ t('prompts.project.pathLabel') }}</label>
+                    <div class="project-path-row">
+                        <select
+                            class="form-input project-path-select"
+                            :value="projectClaudeMdPath"
+                            @change="selectProjectClaudeMdPath($event.target.value)">
+                            <option value="">{{ t('prompts.project.selectPlaceholder') }}</option>
+                            <option v-for="p in projectPathOptions" :key="p" :value="p">{{ p }}</option>
+                        </select>
+                        <input
+                            type="text"
+                            class="form-input project-path-manual"
+                            :placeholder="t('prompts.project.manualPlaceholder')"
+                            :value="projectClaudeMdPath"
+                            @change="setProjectClaudeMdPathManual($event.target.value)">
+                    </div>
+                    <div v-if="projectClaudeMdPath" class="form-hint project-path-detected">
+                        {{ t('prompts.project.detected', { path: projectClaudeMdPath }) }}
+                    </div>
+                </div>
+
+                <div class="prompts-editor">
+                    <div class="prompts-editor-toolbar">
+                        <div class="form-hint">
+                            {{ agentsPath || t('common.notLoaded') }}
+                            <span v-if="agentsPath">
+                                （{{ agentsExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
+                            </span>
+                        </div>
+                        <div class="prompts-editor-actions">
+                            <div class="prompts-editor-group prompts-editor-group--secondary">
+                                <button
+                                    class="btn-mini"
+                                    @click="exportAgentsContent"
+                                    :disabled="agentsLoading"
+                                    :title="t('modal.agents.export')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 17v2h16v-2"/></svg>
+                                </button>
+                                <button
+                                    class="btn-mini"
+                                    @click="copyAgentsContent"
+                                    :disabled="agentsLoading"
+                                    :title="t('modal.agents.copy')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                </button>
+                                <button
+                                    class="btn-mini"
+                                    @click="pasteAgentsContent"
+                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
+                                    :title="t('common.paste')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
+                                </button>
+                            </div>
+                            <div class="prompts-editor-group prompts-editor-group--workflow">
+                                <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                                <button
+                                    v-if="agentsDiffVisible"
+                                    class="btn-mini"
+                                    @click="resetAgentsDiffState"
+                                    :disabled="agentsSaving || agentsDiffLoading"
+                                    :title="t('common.backToEdit')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                </button>
+                                <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (!agentsDiffVisible && !hasAgentsContentChanged()) || (agentsDiffVisible && !agentsDiffHasChanges)" :title="agentsDiffVisible ? t('common.save') : t('common.preview')">
+                                    <svg v-if="agentsDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                    <svg v-else class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div v-if="agentsDiffVisible">
+                            <div
+                                v-if="!agentsDiffLoading && !agentsDiffError && !agentsDiffTruncated && (agentsDiffStats.added || agentsDiffStats.removed)"
+                                class="agents-diff-summary">
+                                <span class="agents-diff-stat add">+{{ agentsDiffStats.added }}</span>
+                                <span class="agents-diff-stat del">-{{ agentsDiffStats.removed }}</span>
+                            </div>
+                            <div v-if="agentsDiffLoading" class="state-message">{{ t('diff.generating') }}</div>
+                            <div v-else-if="agentsDiffError" class="state-message error">{{ agentsDiffError }}</div>
+                            <div v-else-if="agentsDiffTruncated" class="agents-diff-empty">{{ t('diff.tooLargeSkip') }}</div>
+                            <div v-else-if="!agentsDiffHasChanges" class="agents-diff-empty">{{ t('diff.noChanges') }}</div>
+                            <div v-else class="agents-diff-view agents-diff-editor">
+                                <div
+                                    v-for="(line, index) in agentsDiffLines"
+                                    :key="line.key || (line.type + '-' + index)"
+                                    :class="['agents-diff-line', line.type]">
+                                    <span class="agents-diff-line-sign">
+                                        {{ line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ') }}
+                                    </span>
+                                    <span class="agents-diff-line-text">{{ line.value }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div :class="['editor-frame', { 'editor-frame--loading': agentsLoading }]">
+                            <div v-if="agentsLoading" class="editor-skeleton">
+                                <div class="skeleton-line" v-for="i in 6" :key="i"></div>
+                            </div>
+                            <textarea
+                                v-model="agentsContent"
+                                class="form-input template-editor"
+                                spellcheck="false"
+                                :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
+                                @input="onAgentsContentInput"
+                                :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
+                        </div>
+                        <div v-if="promptsContextHint" :class="['prompts-context-hint', { 'prompts-context-hint--warn': promptsContextHint.warn }]">
+                            {{ promptsContextHint.text }}
+                        </div>
+                    </div>
+
+                </div>
+                </div>

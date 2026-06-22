@@ -4,7 +4,7 @@
 
 # Codex Mate
 
-**一站式本地 AI 编程智能体管理面板。统一管理 Codex、Claude Code 与 OpenClaw，支持 Provider 切换、会话管理与任务编排。纯本地优先，你的智能体控制中心。**
+**一站式本地 AI 编程智能体管理面板。统一管理 Codex、Claude Code、OpenCode 与 OpenClaw，支持 Provider 切换、会话管理与任务编排。纯本地优先，你的智能体控制中心。**
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[项目文档]</a>
@@ -24,7 +24,15 @@
 
 <br />
 
-<img src="site/.vitepress/public/images/readme-hero.png" alt="Codex Mate 界面预览" width="100%" />
+<p>
+  <img src="site/.vitepress/public/images/readme/config-codex.png" alt="Codex Mate Codex Provider 配置" width="100%" />
+</p>
+<p>
+  <img src="site/.vitepress/public/images/readme/config-opencode.png" alt="Codex Mate OpenCode Provider 配置" width="100%" />
+</p>
+<p>
+  <img src="site/.vitepress/public/images/readme/sessions.png" alt="Codex Mate 统一会话浏览器" width="100%" />
+</p>
 
 </div>
 
@@ -40,14 +48,17 @@
 
 你是否曾因管理多个本地 AI 智能体而感到疲惫？每个工具都有自己的配置格式、会话存储和 Skills 目录。
 
-**Codex Mate** 提供了一个统一的控制平面，让混乱重归有序。这是一个本地优先的 CLI + Web UI，旨在无缝管理 [Codex](https://github.com/openai/codex)、[Claude Code](https://github.com/anthropic-ai/claude-code) 和 [OpenClaw](https://github.com/moeru-ai/openclaw)。
+**Codex Mate** 提供了一个统一的控制平面，让混乱重归有序。这是一个本地优先的 CLI + Web UI，旨在无缝管理 [Codex](https://github.com/openai/codex)、[Claude Code](https://github.com/anthropic-ai/claude-code)、[OpenCode](https://opencode.ai/) 和 [OpenClaw](https://github.com/moeru-ai/openclaw)。
 
 ### 有什么独特之处？
 
 不同于简单的封装，Codex Mate 充当了 **本地智能体桥接器**：
-- **统一会话浏览器**：在一个地方搜索并导出所有工具的会话。
-- **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用。
+- **统一会话浏览器**：在一个地方检索、预览、筛选并导出 Codex、Claude Code、Gemini CLI 与 CodeBuddy Code 的本地会话。
+- **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用；内建 Codex 转换会补齐并规范化 `User-Agent`、`Version`、`OpenAI-Beta`、`Originator` 等 Codex 指纹，对上游伪装为官方 Codex CLI 请求。
+- **Claude Provider 桥接**：通过内建本地 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama。
+- **OpenCode Provider 控制**：在 `~/.codexmate` 下维护 CodexMate 自有的 OpenCode 多 provider 存储，只将当前选中的 provider 投影到 OpenCode 原生配置，避免污染或误删用户已有配置。
 - **Skills 市场**：本地优先的市场，支持在不同的智能体应用之间共享和导入 Skills。
+- **提示词文件编辑器**：统一编辑全局和项目级 `CLAUDE.md` 与 `AGENTS.md`，支持项目路径自动检测。
 - **任务编排器**：支持带有依赖跟踪的复杂任务规划与执行。
 
 ---
@@ -56,14 +67,17 @@
 
 | 特性 | 状态 | 描述 |
 | --- | --- | --- |
-| **Provider 管理** | ✅ | 切换 Codex、Claude 和 OpenClaw 的 provider/model |
+| **Provider 管理** | ✅ | 切换 Codex、Claude、OpenCode 和 OpenClaw 的 provider/model |
 | **状态实时同步** | ✅ | 实时感知 Codex/Claude 的配置与运行状态变更 |
-| **会话浏览器** | ✅ | 列表、筛选及导出会话 (Codex/Claude/Gemini) |
+| **会话浏览器** | ✅ | 跨 Codex、Claude Code、Gemini CLI 与 CodeBuddy Code 的本地会话进行检索、预览、筛选与导出 |
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
 | **本地 Skills 市场** | ✅ | 跨应用的智能体 Skills 导入与导出 |
 | **任务队列** | ✅ | 基于 DAG 的任务执行与日志查看 |
-| **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式 |
+| **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式，并在内建转换中附加/规范化 Codex 指纹 |
+| **Claude Provider 桥接** | ✅ | 通过内建 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama |
+| **OpenCode Provider 存储** | ✅ | 在 `~/.codexmate` 中保留多个 OpenCode provider，只将当前选中的 provider 投影到 OpenCode 原生配置 |
 | **提示词模板** | ✅ | 支持变量的可复用提示词插件 |
+| **提示词文件编辑器** | ✅ | 编辑全局和项目级 CLAUDE.md / AGENTS.md，支持自动检测与路径切换 |
 | **MCP 集成** | ✅ | 通过 MCP stdio 暴露本地工具与资源 |
 | **自动更新** | ✅ | 通过 `codexmate update` 快速更新 CLI |
 
@@ -87,6 +101,18 @@ npm install -g codexmate
 codexmate run
 ```
 
+如果默认 Web UI 端口 `3737` 不可用，Codex Mate 会自动尝试后续端口（`3738`、`3739` ...）。如需固定端口，可以指定 `CODEXMATE_PORT`：
+
+```bash
+CODEXMATE_PORT=8080 codexmate run
+```
+
+Windows PowerShell：
+
+```powershell
+$env:CODEXMATE_PORT=8080; codexmate run
+```
+
 ### 通过 curl 安装 (独立包)
 
 ```bash
@@ -99,6 +125,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **Claude Code**: `npm install -g @anthropic-ai/claude-code`
 - **Gemini CLI**: `npm install -g @google/gemini-cli`
 - **CodeBuddy**: `npm install -g @tencent-ai/codebuddy-code`
+- **OpenCode**: 参照 [OpenCode 官方文档](https://opencode.ai/) 安装
 
 ---
 
@@ -124,6 +151,8 @@ flowchart TD
         CodexDir[~/.codex]
         ClaudeDir[~/.claude]
         ClawDir[~/.openclaw]
+        OpenCodeDir[~/.config/opencode]
+        MateDir[~/.codexmate]
         State[会话/Usage/回收站]
     end
 
@@ -132,7 +161,7 @@ flowchart TD
 
     API --> Config & Session & Skills & Tasks
 
-    Config --> CodexDir & ClaudeDir & ClawDir
+    Config --> CodexDir & ClaudeDir & ClawDir & OpenCodeDir & MateDir
     Session --> State
     Skills --> Local
 ```

@@ -37,11 +37,16 @@ export function createAgentsMethods(options = {}) {
 
     return {
         async openClaudeMdEditor() {
-            this.setAgentsModalContext('claude-md');
+            this.setAgentsModalContext('claude-project');
             const requestToken = issueLatestRequestToken(this, '_agentsOpenRequestToken');
             this.agentsLoading = true;
             try {
-                const res = await api('get-claude-md-file');
+                const rpcParams = {};
+                var projectPath = (this.projectClaudeMdPath || '').trim();
+                if (projectPath) {
+                    rpcParams.baseDir = projectPath;
+                }
+                const res = await api('get-claude-md-file', rpcParams);
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
@@ -60,7 +65,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -92,7 +97,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -127,7 +132,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -171,7 +176,7 @@ export function createAgentsMethods(options = {}) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;
                 }
-                this.showMessage('加载文件失败', 'error');
+                this.showMessage(this.t('toast.load.fail'), 'error');
             } finally {
                 if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     this.agentsLoading = false;
@@ -182,11 +187,18 @@ export function createAgentsMethods(options = {}) {
         setAgentsModalContext(context, options = {}) {
             const t = typeof this.t === 'function' ? this.t : null;
             const tr = (key, fallback, params = null) => (t ? t(key, params) : fallback);
-            if (context === 'claude-md') {
-                this.agentsContext = 'claude-md';
+            if (context === 'claude-project') {
+                var projectPath = (options.projectPath || this.projectClaudeMdPath || '').trim();
+                this.agentsContext = 'claude-project';
                 this.agentsWorkspaceFileName = '';
-                this.agentsModalTitle = tr('modal.agents.title.claudeMd', 'CLAUDE.md 编辑器');
-                this.agentsModalHint = tr('modal.agents.hint.claudeMd', '保存后会写入 ~/.claude/CLAUDE.md。');
+                this.projectClaudeMdPath = projectPath;
+                if (projectPath) {
+                    this.agentsModalTitle = tr('modal.agents.title.claudeProject', 'Project CLAUDE.md: ' + projectPath, { path: projectPath });
+                    this.agentsModalHint = tr('modal.agents.hint.claudeProject', 'Saved content will be written to CLAUDE.md in: ' + projectPath, { path: projectPath });
+                } else {
+                    this.agentsModalTitle = tr('modal.agents.title.claudeProjectGlobal', 'Global CLAUDE.md');
+                    this.agentsModalHint = tr('modal.agents.hint.claudeProjectGlobal', 'Saved content will be written to ~/.claude/CLAUDE.md.');
+                }
                 return;
             }
             if (context === 'openclaw-workspace') {
@@ -420,6 +432,41 @@ export function createAgentsMethods(options = {}) {
                 this.resetAgentsDiffState();
             }
         },
+        selectProjectClaudeMdPath(pathValue) {
+            this.projectClaudeMdPath = (pathValue || '').trim();
+            if (this.promptsSubTab === 'claude-project' && this.mainTab === 'prompts') {
+                this.loadPromptsContent();
+            }
+        },
+        setProjectClaudeMdPathManual(pathValue) {
+            var trimmed = (pathValue || '').trim();
+            if (trimmed === (this.projectClaudeMdPath || '').trim()) {
+                return;
+            }
+            this.projectClaudeMdPath = trimmed;
+            if (this.promptsSubTab === 'claude-project' && this.mainTab === 'prompts') {
+                this.loadPromptsContent();
+            }
+        },
+        async loadProjectPathOptions() {
+            if (this.projectPathOptionsLoading) {
+                return;
+            }
+            this.projectPathOptionsLoading = true;
+            try {
+                const res = await api('list-session-paths', { source: 'claude', limit: 100 });
+                if (res && Array.isArray(res.paths)) {
+                    this.projectPathOptions = res.paths
+                        .map(function (p) { return (p && p.cwd) || p || ''; })
+                        .filter(Boolean)
+                        .filter(function (v, i, a) { return a.indexOf(v) === i; });
+                }
+            } catch (_) {
+                // silent
+            } finally {
+                this.projectPathOptionsLoading = false;
+            }
+        },
         async pasteAgentsContent() {
             if (this.agentsLoading || this.agentsSaving || this.agentsDiffVisible) {
                 return;
@@ -444,10 +491,11 @@ export function createAgentsMethods(options = {}) {
             const fileName = context === 'openclaw-workspace'
                 ? (this.agentsWorkspaceFileName || '')
                 : '';
+            const projectPath = context === 'claude-project' ? (this.projectClaudeMdPath || '') : '';
             const lineEnding = this.agentsLineEnding || '\n';
             const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
             const original = typeof this.agentsOriginalContent === 'string' ? this.agentsOriginalContent : '';
-            return `${context}::${fileName}::${lineEnding}::${content.length}::${content}::${original.length}::${original}`;
+            return `${context}::${fileName}::${projectPath}::${lineEnding}::${content.length}::${content}::${original.length}::${original}`;
         },
         async prepareAgentsDiff() {
             const requestFingerprint = this.buildAgentsDiffFingerprint();
@@ -504,7 +552,8 @@ export function createAgentsMethods(options = {}) {
                     content: this.agentsContent,
                     lineEnding: this.agentsLineEnding,
                     context: this.agentsContext,
-                    fileName: this.agentsWorkspaceFileName
+                    fileName: this.agentsWorkspaceFileName,
+                    baseDir: this.agentsContext === 'claude-project' ? this.projectClaudeMdPath : undefined
                 });
                 if (previewRequest.exceedsBodyLimit) {
                     applyPreviewState(buildAgentsDiffPreview({
@@ -588,7 +637,7 @@ export function createAgentsMethods(options = {}) {
             }
             if (!this.agentsDiffVisible) {
                 if (!this.hasAgentsContentChanged()) {
-                    this.showMessage('未检测到改动', 'info');
+                    this.showMessage(this.t('toast.noChanges'), 'info');
                     return;
                 }
                 await this.prepareAgentsDiff();
@@ -621,8 +670,12 @@ export function createAgentsMethods(options = {}) {
                     content: this.agentsContent,
                     lineEnding: this.agentsLineEnding
                 };
-                if (this.agentsContext === 'claude-md') {
+                if (this.agentsContext === 'claude-project') {
                     action = 'apply-claude-md-file';
+                    const projectPath = (this.projectClaudeMdPath || '').trim();
+                    if (projectPath) {
+                        params.baseDir = projectPath;
+                    }
                 } else if (this.agentsContext === 'openclaw') {
                     action = 'apply-openclaw-agents-file';
                 } else if (this.agentsContext === 'openclaw-workspace') {
@@ -635,16 +688,78 @@ export function createAgentsMethods(options = {}) {
                     return;
                 }
                 const successLabel = this.agentsContext === 'openclaw-workspace'
-                    ? `工作区文件已保存${this.agentsWorkspaceFileName ? `: ${this.agentsWorkspaceFileName}` : ''}`
-                    : (this.agentsContext === 'claude-md'
-                        ? 'CLAUDE.md 已保存'
-                        : (this.agentsContext === 'openclaw' ? 'OpenClaw AGENTS.md 已保存' : 'AGENTS.md 已保存'));
+                    ? this.t('toast.agents.saved.workspace', { name: this.agentsWorkspaceFileName || '' }).replace(/:\s*$/, '')
+                    : (this.agentsContext === 'claude-project'
+                        ? this.t('toast.agents.saved.claudeProject')
+                        : (this.agentsContext === 'openclaw' ? this.t('toast.agents.saved.openclaw') : this.t('toast.agents.saved.agents')));
                 this.showMessage(successLabel, 'success');
-                this.closeAgentsModal({ force: true });
+                if (this.mainTab === 'prompts') {
+                    this.loadPromptsContent();
+                } else {
+                    this.closeAgentsModal({ force: true });
+                }
             } catch (e) {
-                this.showMessage('保存失败', 'error');
+                this.showMessage(this.t('toast.save.fail'), 'error');
             } finally {
                 this.agentsSaving = false;
+            }
+        },
+
+        switchPromptsSubTab(subTab) {
+            const normalized = subTab === 'claude-project' ? 'claude-project' : 'codex';
+            if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
+                this.loadProjectPathOptions();
+            }
+            if (this.promptsSubTab === normalized) {
+                this.loadPromptsContent();
+                return;
+            }
+            this.promptsSubTab = normalized;
+        },
+
+        async loadPromptsContent() {
+            const requestToken = issueLatestRequestToken(this, '_agentsOpenRequestToken');
+            this.agentsLoading = true;
+            this.resetAgentsDiffState();
+            try {
+                const subTab = this.promptsSubTab;
+                let action;
+                const rpcParams = {};
+                if (subTab === 'claude-project') {
+                    action = 'get-claude-md-file';
+                    if (!this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
+                        this.loadProjectPathOptions();
+                    }
+                    const projectPath = (this.projectClaudeMdPath || '').trim();
+                    if (projectPath) {
+                        rpcParams.baseDir = projectPath;
+                    }
+                } else {
+                    action = 'get-agents-file';
+                }
+                const res = await api(action, rpcParams);
+                if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
+                    return;
+                }
+                if (res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                this.agentsContent = res.content || '';
+                this.agentsOriginalContent = this.agentsContent;
+                this.agentsPath = res.path || '';
+                this.agentsExists = !!res.exists;
+                this.agentsLineEnding = res.lineEnding === '\r\n' ? '\r\n' : '\n';
+                this.agentsContext = subTab === 'claude-project' ? 'claude-project' : 'codex';
+            } catch (e) {
+                if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
+                    return;
+                }
+                this.showMessage(this.t('toast.load.fail'), 'error');
+            } finally {
+                if (isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
+                    this.agentsLoading = false;
+                }
             }
         }
     };

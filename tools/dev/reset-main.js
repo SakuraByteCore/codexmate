@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
  * Reset workflow:
- * - no args => reset working tree to origin/main
- * - PR number arg => fetch PR snapshot and reset local branch to that PR head
+ * - no args => prompt for reset target; Enter resets to origin/main
+ * - PR number arg or prompt input => fetch PR snapshot and reset local branch to that PR head
  */
 
 const { execSync } = require('child_process');
+const readline = require('readline');
 
 const DEFAULT_REMOTE = 'origin';
 const DEFAULT_MAIN_BRANCH = 'main';
@@ -135,7 +136,44 @@ function resolveArgPrNumber(argv = process.argv.slice(2)) {
   return normalizePrNumberInput(first || '');
 }
 
-async function main({ argv = process.argv.slice(2) } = {}) {
+function hasResetTargetArg(argv = process.argv.slice(2)) {
+  return Array.isArray(argv) && argv.some((item) => String(item ?? '').trim());
+}
+
+function isInteractiveResetInput({ stdin = process.stdin, stdout = process.stdout } = {}) {
+  return Boolean(stdin && stdout && stdin.isTTY && stdout.isTTY);
+}
+
+function promptResetTargetPrNumber({ stdin = process.stdin, stdout = process.stdout } = {}) {
+  stdout.write('Reset will discard local changes and untracked files.\n');
+  stdout.write('Press Enter to reset to origin/main, or type a PR number to reset to that PR snapshot.\n');
+  const rl = readline.createInterface({ input: stdin, output: stdout });
+  return new Promise((resolve) => {
+    rl.question('Reset target: ', (answer) => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+}
+
+async function resolveResetTargetPrNumber({
+  argv = process.argv.slice(2),
+  stdin = process.stdin,
+  stdout = process.stdout,
+  promptTarget = promptResetTargetPrNumber
+} = {}) {
+  if (hasResetTargetArg(argv)) {
+    return resolveArgPrNumber(argv);
+  }
+
+  if (!isInteractiveResetInput({ stdin, stdout })) {
+    throw new Error('Reset target required in non-interactive mode. Run `npm run reset -- <PR number>` or use an interactive terminal and press Enter for origin/main.');
+  }
+
+  return normalizePrNumberInput(await promptTarget({ stdin, stdout }));
+}
+
+async function main({ argv = process.argv.slice(2), stdin = process.stdin, stdout = process.stdout } = {}) {
   try {
     run('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
   } catch (err) {
@@ -143,8 +181,8 @@ async function main({ argv = process.argv.slice(2) } = {}) {
     process.exit(1);
   }
 
-  const argPrNumber = resolveArgPrNumber(argv);
-  const plan = buildResetPlan({ prNumber: argPrNumber });
+  const targetPrNumber = await resolveResetTargetPrNumber({ argv, stdin, stdout });
+  const plan = buildResetPlan({ prNumber: targetPrNumber });
   executeResetPlan(plan);
 }
 
@@ -164,5 +202,9 @@ module.exports = {
   validateFinalState,
   executeResetPlan,
   resolveArgPrNumber,
+  hasResetTargetArg,
+  isInteractiveResetInput,
+  promptResetTargetPrNumber,
+  resolveResetTargetPrNumber,
   main
 };

@@ -6,6 +6,7 @@ import {
 } from './helpers/web-ui-source.mjs';
 
 const require = createRequire(import.meta.url);
+const { createConfigBootstrapController } = require('../../cli/config-bootstrap');
 const cliSource = readProjectFile('cli.js');
 const appSource = readBundledWebUiScript();
 
@@ -94,6 +95,136 @@ function createClaudeShareCommandBuilder(appSourceText, shareCommandPrefix = 'np
         shareCommandPrefix
     }, payload);
 }
+
+
+
+test('managed config bootstrap is a no-op when tool config writes are disabled', () => {
+    const calls = [];
+    const controller = createConfigBootstrapController({
+        fs: {
+            existsSync() {
+                calls.push('existsSync');
+                return false;
+            },
+            readFileSync() {
+                throw new Error('unexpected read');
+            },
+            writeFileSync() {
+                throw new Error('unexpected writeFileSync');
+            },
+            appendFileSync() {
+                throw new Error('unexpected appendFileSync');
+            },
+            copyFileSync() {
+                throw new Error('unexpected copyFileSync');
+            }
+        },
+        path: require('path'),
+        readJsonFile() {
+            throw new Error('unexpected readJsonFile');
+        },
+        readJsonArrayFile() {
+            throw new Error('unexpected readJsonArrayFile');
+        },
+        writeJsonAtomic() {
+            throw new Error('unexpected writeJsonAtomic');
+        },
+        formatTimestampForFileName: () => 'stamp',
+        isPlainObject: (value) => !!value && typeof value === 'object' && !Array.isArray(value),
+        ensureConfigDir() {
+            throw new Error('unexpected ensureConfigDir');
+        },
+        readConfig() {
+            throw new Error('unexpected readConfig');
+        },
+        removePersistedBuiltinProxyProviderFromConfig() {
+            throw new Error('unexpected remove proxy');
+        },
+        writeConfig() {
+            throw new Error('unexpected writeConfig');
+        },
+        readModels() {
+            throw new Error('unexpected readModels');
+        },
+        writeModels() {
+            throw new Error('unexpected writeModels');
+        },
+        readCurrentModels() {
+            throw new Error('unexpected readCurrentModels');
+        },
+        writeCurrentModels() {
+            throw new Error('unexpected writeCurrentModels');
+        },
+        updateAuthJson() {
+            throw new Error('unexpected updateAuthJson');
+        },
+        CONFIG_DIR: '/tmp/codex',
+        CONFIG_FILE: '/tmp/codex/config.toml',
+        AUTH_FILE: '/tmp/codex/auth.json',
+        MODELS_FILE: '/tmp/codex/models.json',
+        RECENT_CONFIGS_FILE: '/tmp/codex/recent.json',
+        INIT_MARK_FILE: '/tmp/codex/.init.json',
+        MAX_RECENT_CONFIGS: 5,
+        DEFAULT_MODELS: ['gpt-test'],
+        DEFAULT_MODEL_CONTEXT_WINDOW: 190000,
+        DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT: 185000,
+        CODEXMATE_MANAGED_MARKER: '# managed',
+        BUILTIN_PROXY_PROVIDER_NAME: 'codexmate-proxy',
+        BUILTIN_LOCAL_PROVIDER_NAME: 'local',
+        EMPTY_CONFIG_FALLBACK_TEMPLATE: 'model_provider = "local"\nmodel = "gpt-test"\n'
+    });
+
+    assert.deepStrictEqual(controller.ensureManagedConfigBootstrap({ allowWrite: false }), { notice: '', readOnly: true });
+    assert.deepStrictEqual(calls, []);
+});
+
+test('tool config write guard maps provider write actions to per-tab permission targets', () => {
+    const source = extractBlockBySignature(cliSource, 'function getApiToolConfigWriteTarget(action) {');
+    const getApiToolConfigWriteTarget = instantiateFunction(source, 'getApiToolConfigWriteTarget');
+
+    assert.strictEqual(getApiToolConfigWriteTarget('add-provider'), 'codex');
+    assert.strictEqual(getApiToolConfigWriteTarget('delete-provider'), 'codex');
+    assert.strictEqual(getApiToolConfigWriteTarget('local-bridge-set-excluded'), 'codex');
+    assert.strictEqual(getApiToolConfigWriteTarget('apply-claude-config'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('claude-local-bridge-set-excluded'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('claude-local-bridge-sync-providers'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('status'), '');
+    assert.strictEqual(getApiToolConfigWriteTarget('list-sessions'), '');
+});
+
+test('tool config write guard does not lock direct CLI write helpers', () => {
+    const source = extractBlockBySignature(cliSource, 'function assertToolConfigWriteAllowed(target) {');
+    const assertToolConfigWriteAllowed = instantiateFunction(source, 'assertToolConfigWriteAllowed', {
+        isToolConfigWriteGuardActive: () => false,
+        isToolConfigWriteAllowed: () => false,
+        buildToolConfigWriteDeniedPayload: () => ({
+            error: 'blocked',
+            errorCode: 'tool-config-write-disabled',
+            target: 'codex'
+        })
+    });
+
+    assert.doesNotThrow(() => assertToolConfigWriteAllowed('codex'));
+});
+
+test('tool config write guard still blocks Web API writes when disabled', () => {
+    const source = extractBlockBySignature(cliSource, 'function assertToolConfigWriteAllowed(target) {');
+    const assertToolConfigWriteAllowed = instantiateFunction(source, 'assertToolConfigWriteAllowed', {
+        isToolConfigWriteGuardActive: () => true,
+        isToolConfigWriteAllowed: () => false,
+        buildToolConfigWriteDeniedPayload: () => ({
+            error: 'blocked',
+            errorCode: 'tool-config-write-disabled',
+            target: 'codex'
+        })
+    });
+
+    assert.throws(() => assertToolConfigWriteAllowed('codex'), (err) => {
+        assert.strictEqual(err.code, 'tool-config-write-disabled');
+        assert.strictEqual(err.target, 'codex');
+        return true;
+    });
+});
 
 test('buildProviderSharePayload includes model for shared provider', () => {
     const source = extractBlockBySignature(cliSource, 'function buildProviderSharePayload(params = {}) {');
@@ -243,6 +374,44 @@ test('buildProviderShareCommand adds bridge flag when present', () => {
     );
 });
 
+test('buildClaudeSharePayload allows ollama share without api key and preserves target api', () => {
+    const normalizeClaudeTargetApiSource = extractBlockBySignature(cliSource, 'function normalizeClaudeTargetApi(value) {');
+    const normalizeClaudeTargetApi = instantiateFunction(normalizeClaudeTargetApiSource, 'normalizeClaudeTargetApi');
+    const buildClaudeSharePayloadSource = extractBlockBySignature(cliSource, 'function buildClaudeSharePayload(config = {}) {');
+    const buildClaudeSharePayload = instantiateFunction(buildClaudeSharePayloadSource, 'buildClaudeSharePayload', {
+        normalizeClaudeTargetApi,
+        DEFAULT_CLAUDE_MODEL: 'glm-4.7'
+    });
+
+    const result = buildClaudeSharePayload({
+        baseUrl: 'http://127.0.0.1:11434',
+        apiKey: '',
+        model: 'llama3.1:8b',
+        targetApi: 'ollama'
+    });
+
+    assert(result && result.payload, 'ollama share payload should exist without api key');
+    assert.strictEqual(result.payload.baseUrl, 'http://127.0.0.1:11434');
+    assert.strictEqual(result.payload.apiKey, '');
+    assert.strictEqual(result.payload.model, 'llama3.1:8b');
+    assert.strictEqual(result.payload.targetApi, 'ollama');
+});
+
+test('buildClaudeSharePayload still requires api key for non-ollama targets', () => {
+    const normalizeClaudeTargetApiSource = extractBlockBySignature(cliSource, 'function normalizeClaudeTargetApi(value) {');
+    const normalizeClaudeTargetApi = instantiateFunction(normalizeClaudeTargetApiSource, 'normalizeClaudeTargetApi');
+    const buildClaudeSharePayloadSource = extractBlockBySignature(cliSource, 'function buildClaudeSharePayload(config = {}) {');
+    const buildClaudeSharePayload = instantiateFunction(buildClaudeSharePayloadSource, 'buildClaudeSharePayload', {
+        normalizeClaudeTargetApi,
+        DEFAULT_CLAUDE_MODEL: 'glm-4.7'
+    });
+
+    assert.deepStrictEqual(
+        buildClaudeSharePayload({ baseUrl: 'https://claude.example.com', apiKey: '', targetApi: 'responses' }),
+        { error: 'Claude API 密钥未设置' }
+    );
+});
+
 test('buildClaudeShareCommand respects the configured share prefix', () => {
     const buildClaudeShareCommand = createClaudeShareCommandBuilder(appSource);
     const command = buildClaudeShareCommand({
@@ -254,6 +423,40 @@ test('buildClaudeShareCommand respects the configured share prefix', () => {
     assert.strictEqual(
         command,
         "npm start -- claude https://claude.example.com sk-claude claude-3-7-sonnet"
+    );
+});
+
+test('buildClaudeShareCommand keeps ollama target api and empty api key in import command', () => {
+    const buildClaudeShareCommand = createClaudeShareCommandBuilder(appSource, 'codexmate');
+    const command = buildClaudeShareCommand({
+        baseUrl: 'http://127.0.0.1:11434',
+        apiKey: '',
+        model: 'llama3.1:8b',
+        targetApi: 'ollama'
+    });
+
+    assert.strictEqual(
+        command,
+        "codexmate claude http://127.0.0.1:11434 '' llama3.1:8b --target-api ollama"
+    );
+});
+
+test('parseClaudeCommandArgs preserves ollama target api from shared import command', () => {
+    const normalizeClaudeTargetApiSource = extractBlockBySignature(cliSource, 'function normalizeClaudeTargetApi(value) {');
+    const normalizeClaudeTargetApi = instantiateFunction(normalizeClaudeTargetApiSource, 'normalizeClaudeTargetApi');
+    const parseClaudeCommandArgsSource = extractBlockBySignature(cliSource, 'function parseClaudeCommandArgs(argv = []) {');
+    const parseClaudeCommandArgs = instantiateFunction(parseClaudeCommandArgsSource, 'parseClaudeCommandArgs', {
+        normalizeClaudeTargetApi
+    });
+
+    assert.deepStrictEqual(
+        parseClaudeCommandArgs(['http://127.0.0.1:11434', '', 'llama3.1:8b', '--target-api', 'ollama']),
+        {
+            baseUrl: 'http://127.0.0.1:11434',
+            apiKey: '',
+            model: 'llama3.1:8b',
+            targetApi: 'ollama'
+        }
     );
 });
 
@@ -623,7 +826,8 @@ test('status api case does not synthesize budget defaults after config load erro
             hasConfigLoadError,
             readPositiveIntegerConfigValue,
             readCurrentModels: () => ({}),
-            consumeInitNotice: () => ''
+            consumeInitNotice: () => '',
+            readToolConfigPermissions: () => ({ codex: false, claude: false })
         }
     );
 

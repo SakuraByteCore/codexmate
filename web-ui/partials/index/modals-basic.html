@@ -26,8 +26,26 @@
                     <div v-if="providerFieldError('add', 'url')" class="form-hint form-error">{{ providerFieldError('add', 'url') }}</div>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">{{ t('field.modelName') }}</label>
+                    <input
+                        v-model="newProvider.model"
+                        :class="['form-input', { invalid: !!providerFieldError('add', 'model') }]"
+                        :placeholder="t('placeholder.modelExample')"
+                        autocomplete="off"
+                        spellcheck="false"
+                        @blur="normalizeProviderDraft('add')">
+                    <div v-if="providerFieldError('add', 'model')" class="form-hint form-error">{{ providerFieldError('add', 'model') }}</div>
+                </div>
+                <div class="form-group">
                     <label class="form-label">{{ t('field.apiKey') }}</label>
-                    <input v-model="newProvider.key" class="form-input" type="password" placeholder="sk-...">
+                    <div class="input-with-toggle">
+                        <input v-model="newProvider.key" :class="['form-input', { invalid: !!providerFieldError('add', 'key') }]" :type="showAddProviderKey ? 'text' : 'password'" placeholder="sk-..." autocomplete="off" spellcheck="false" @blur="normalizeProviderDraft('add')">
+                        <button type="button" class="input-toggle-btn" @click="toggleAddProviderKey" :title="showAddProviderKey ? t('common.hide') : t('common.show')" :aria-label="showAddProviderKey ? t('common.hide') : t('common.show')">
+                            <svg v-if="!showAddProviderKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+                            <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
+                        </button>
+                    </div>
+                    <div v-if="providerFieldError('add', 'key')" class="form-hint form-error">{{ providerFieldError('add', 'key') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">
@@ -67,7 +85,7 @@
                     <label class="form-label">{{ t('field.apiKey') }}</label>
                     <div class="input-with-toggle">
                         <input v-model="editingProvider.key" class="form-input" :type="showEditProviderKey ? 'text' : 'password'" placeholder="sk-..." autocomplete="off" spellcheck="false">
-                        <button type="button" class="input-toggle-btn" @click="toggleEditProviderKey" :title="showEditProviderKey ? t('common.hide') : t('common.show')">
+                        <button type="button" class="input-toggle-btn" @click="toggleEditProviderKey" :title="showEditProviderKey ? t('common.hide') : t('common.show')" :aria-label="showEditProviderKey ? t('common.hide') : t('common.show')">
                             <svg v-if="!showEditProviderKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
@@ -116,6 +134,188 @@
             </div>
         </div>
 
+        <!-- 项目功能公告模态框 -->
+        <div v-if="showProviderCacheAnnouncementModal" class="modal-overlay project-announcement-overlay" @click.self="closeProviderCacheAnnouncementModal">
+            <div class="modal provider-cache-announcement-modal project-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="provider-cache-announcement-title">
+                <button type="button" class="project-announcement-close" :aria-label="t('announcement.project.closeAria')" @click="closeProviderCacheAnnouncementModal">×</button>
+                <div class="project-announcement-header">
+                    <div class="project-announcement-eyebrow">{{ t('announcement.project.eyebrow') }}</div>
+                    <div class="modal-title project-announcement-title" id="provider-cache-announcement-title">{{ t('announcement.project.title') }}</div>
+                    <p class="provider-cache-announcement-copy provider-cache-announcement-lede">{{ t('announcement.project.subtitle') }}</p>
+                </div>
+
+                <div class="project-announcement-feature-grid" :aria-label="t('announcement.project.features.aria')">
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.config.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.config.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.sessions.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.sessions.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.usage.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.usage.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.tasks.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.tasks.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.skills.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.skills.meta') }}</div>
+                    </article>
+                    <article class="project-announcement-feature-card">
+                        <div class="project-announcement-feature-title">{{ t('announcement.project.feature.data.title') }}</div>
+                        <div class="project-announcement-feature-meta">{{ t('announcement.project.feature.data.meta') }}</div>
+                    </article>
+                </div>
+
+                <details class="project-announcement-cache-section" aria-labelledby="project-announcement-cache-title">
+                    <summary class="project-announcement-section-head">
+                        <span>
+                            <span class="project-announcement-section-title" id="project-announcement-cache-title">{{ t('announcement.project.cache.title') }}</span>
+                            <span class="project-announcement-section-meta">{{ t('announcement.project.cache.meta') }}</span>
+                        </span>
+                        <span v-if="getProviderCacheAnnouncementSummary().loadedAt" class="provider-cache-loaded-at">{{ t('modal.providerCache.loadedAt') }}: {{ getProviderCacheAnnouncementSummary().loadedAt }}</span>
+                    </summary>
+
+                    <div v-if="providerCacheError" class="state-message error provider-cache-error">
+                        {{ providerCacheError }}
+                    </div>
+                    <div v-if="providerCacheSyncMessage" class="state-message provider-cache-sync-message">
+                        {{ providerCacheSyncMessage }}
+                    </div>
+                    <div v-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
+                        {{ t('modal.providerCache.loading') }}
+                    </div>
+                    <div class="provider-cache-announcement-body">
+                        <div class="project-announcement-mini-status" :aria-label="t('announcement.project.status.aria')">
+                            <span>{{ t('announcement.project.status.provider') }}: <strong>{{ currentProvider || t('common.notSelected') }}</strong></span>
+                            <span>{{ t('announcement.project.status.model') }}: <strong>{{ currentModel || t('common.notSelected') }}</strong></span>
+                            <span>{{ t('announcement.project.status.cacheFiles') }}: <strong>{{ getProviderCacheAnnouncementSummary().fileCount }}</strong></span>
+                        </div>
+                        <div class="provider-cache-summary-grid">
+                            <div class="provider-cache-summary-card">
+                                <span class="provider-cache-summary-label">{{ t('announcement.project.cache.files') }}</span>
+                                <strong>{{ getProviderCacheAnnouncementSummary().fileCount }}</strong>
+                            </div>
+                            <div class="provider-cache-summary-card">
+                                <span class="provider-cache-summary-label">{{ t('announcement.project.cache.providers') }}</span>
+                                <strong>{{ getProviderCacheAnnouncementSummary().providerCount }}</strong>
+                            </div>
+                            <div class="provider-cache-summary-card">
+                                <span class="provider-cache-summary-label">{{ t('announcement.project.cache.groups') }}</span>
+                                <strong>{{ getProviderCacheAnnouncementSummary().groupCount }}</strong>
+                            </div>
+                        </div>
+                        <div class="provider-cache-announcement-list" :aria-label="t('announcement.project.cache.groupList')">
+                            <div v-for="group in getProviderCacheAnnouncementGroups()" :key="group.key" class="provider-cache-announcement-row">
+                                <span>{{ group.label }}</span>
+                                <span>{{ t('announcement.project.cache.groupSummary', { files: group.existingCount, providers: group.providerCount }) }}</span>
+                            </div>
+                        </div>
+                        <div class="project-announcement-cache-actions">
+                            <button type="button" class="btn-tool btn-tool-compact" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
+                                {{ providerCacheSyncing ? t('modal.providerCache.syncing') : t('announcement.project.cache.sync') }}
+                            </button>
+                            <button type="button" class="btn-tool btn-tool-compact" @click="loadProviderCacheRecords" :disabled="providerCacheLoading">
+                                {{ providerCacheLoading ? t('modal.providerCache.refreshing') : t('announcement.project.cache.refresh') }}
+                            </button>
+                            <button type="button" class="btn-tool btn-tool-compact" @click="openProviderCacheDetailsFromAnnouncement">
+                                {{ t('announcement.project.cache.details') }}
+                            </button>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="btn-group provider-cache-footer project-announcement-footer">
+                    <button class="btn btn-confirm" @click="closeProviderCacheAnnouncementModal">{{ t('announcement.project.primaryAction') }}</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Provider 缓存记录模态框 -->
+        <div v-if="showProviderCacheModal" class="modal-overlay" @click.self="closeProviderCacheModal">
+            <div class="modal modal-wide provider-cache-modal" role="dialog" aria-modal="true" aria-labelledby="provider-cache-modal-title">
+                <div class="modal-title" id="provider-cache-modal-title">{{ t('modal.providerCache.title') }}</div>
+                <div class="form-hint provider-cache-root">
+                    {{ t('modal.providerCache.root') }}: {{ (providerCacheRecords && providerCacheRecords.root) || '~/.codexmate' }}
+                </div>
+
+                <div class="provider-cache-toolbar">
+                    <button type="button" class="btn-tool btn-tool-compact" @click="loadProviderCacheRecords" :disabled="providerCacheLoading">
+                        {{ providerCacheLoading ? t('modal.providerCache.refreshing') : t('modal.providerCache.refresh') }}
+                    </button>
+                    <button type="button" class="btn-tool btn-tool-compact" @click="syncProviderCacheRecords" :disabled="providerCacheLoading || providerCacheSyncing">
+                        {{ providerCacheSyncing ? t('modal.providerCache.syncing') : t('modal.providerCache.sync') }}
+                    </button>
+                    <span v-if="providerCacheLoadedAt" class="provider-cache-loaded-at">{{ t('modal.providerCache.loadedAt') }}: {{ providerCacheLoadedAt }}</span>
+                </div>
+
+                <div v-if="providerCacheError" class="state-message error provider-cache-error">
+                    {{ providerCacheError }}
+                </div>
+                <div v-if="providerCacheSyncMessage" class="state-message provider-cache-sync-message">
+                    {{ providerCacheSyncMessage }}
+                </div>
+                <div v-if="providerCacheLoading && !providerCacheLoadedOnce" class="state-message">
+                    {{ t('modal.providerCache.loading') }}
+                </div>
+                <div v-else class="provider-cache-body">
+                    <div class="provider-cache-groups">
+                        <section v-for="group in getProviderCacheGroups()" :key="group.key" class="provider-cache-group">
+                            <div class="provider-cache-group-header">
+                                <div class="provider-cache-group-title">{{ group.label }}</div>
+                                <div class="provider-cache-group-meta">{{ t('modal.providerCache.groupMeta', { count: group.existingCount || 0 }) }}</div>
+                            </div>
+                            <div v-if="!hasProviderCacheExistingFiles(group)" class="provider-cache-empty">
+                                {{ t('modal.providerCache.empty') }}
+                            </div>
+                            <div v-else class="provider-cache-file-list">
+                                <article v-for="file in getProviderCacheExistingFiles(group)" :key="getProviderCacheFileKey(file)" class="provider-cache-file">
+                                    <div class="provider-cache-file-header">
+                                        <div>
+                                            <div class="provider-cache-file-name">{{ file.name }}</div>
+                                            <div class="provider-cache-file-summary">{{ getProviderCacheFileSummary(file) }}</div>
+                                        </div>
+                                        <div class="provider-cache-file-meta">
+                                            <span>{{ formatProviderCacheFileSize(file.size) }}</span>
+                                            <span v-if="file.mtime">{{ file.mtime }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="provider-cache-file-path">{{ getProviderCacheFilePath(file) }}</div>
+
+                                    <div v-if="hasProviderCacheProviders(file)" class="provider-cache-provider-list">
+                                        <details v-for="(provider, providerIndex) in getProviderCacheFileProviders(file)" :key="provider.name || (getProviderCacheFileKey(file) + ':' + providerIndex)" class="provider-cache-provider" open>
+                                            <summary class="provider-cache-provider-summary">
+                                                <span class="provider-cache-provider-name">{{ provider.name || 'provider' }}</span>
+                                                <span class="provider-cache-provider-badges">
+                                                    <span v-for="item in getProviderCacheProviderMeta(provider)" :key="item.label" class="provider-cache-provider-badge">
+                                                        {{ item.label }}: {{ item.value }}
+                                                    </span>
+                                                </span>
+                                            </summary>
+                                            <pre class="provider-cache-json provider-cache-json-compact">{{ getProviderCacheProviderText(provider) }}</pre>
+                                        </details>
+                                    </div>
+
+                                    <details class="provider-cache-raw" :open="!hasProviderCacheProviders(file) || file.ok === false">
+                                        <summary>{{ file.ok === false ? t('modal.providerCache.errorDetails') : t('modal.providerCache.rawJson') }}</summary>
+                                        <pre :class="['provider-cache-json', { error: file.ok === false }]">{{ getProviderCacheRecordText(file) }}</pre>
+                                    </details>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <div class="btn-group provider-cache-footer">
+                    <button class="btn btn-confirm" @click="closeProviderCacheModal">{{ t('common.close') }}</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 添加Claude配置模态框 -->
         <div v-if="showClaudeConfigModal" class="modal-overlay" @click.self="closeClaudeConfigModal">
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-claude-config-modal-title">
@@ -123,20 +323,43 @@
 
                 <div class="form-group">
                     <label class="form-label">{{ t('field.configName') }}</label>
-                    <input v-model="newClaudeConfig.name" class="form-input" :placeholder="t('placeholder.configNameExample')">
+                    <input v-model="newClaudeConfig.name" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'name') }]" :placeholder="t('placeholder.configNameExample')">
+                    <div v-if="claudeConfigFieldError('add', 'name')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'name') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">API Key</label>
-                    <input v-model="newClaudeConfig.apiKey" class="form-input" type="password" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                    <div class="input-with-toggle">
+                        <input v-model="newClaudeConfig.apiKey" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'apiKey') }]" :type="showAddClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                        <button type="button" class="input-toggle-btn" @click="toggleAddClaudeConfigKey" :title="showAddClaudeConfigKey ? t('common.hide') : t('common.show')" :aria-label="showAddClaudeConfigKey ? t('common.hide') : t('common.show')">
+                            <svg v-if="!showAddClaudeConfigKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+                            <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
+                        </button>
+                    </div>
+                    <div v-if="claudeConfigFieldError('add', 'apiKey')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'apiKey') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.baseUrl') }}</label>
-                    <input v-model="newClaudeConfig.baseUrl" class="form-input" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <input v-model="newClaudeConfig.baseUrl" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'baseUrl') }]" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <div v-if="claudeConfigFieldError('add', 'baseUrl')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'baseUrl') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ t('field.modelName') }}</label>
+                    <input v-model="newClaudeConfig.model" :class="['form-input', { invalid: !!claudeConfigFieldError('add', 'model') }]" :placeholder="t('placeholder.modelExample')" autocomplete="off" spellcheck="false">
+                    <div v-if="claudeConfigFieldError('add', 'model')" class="form-hint form-error">{{ claudeConfigFieldError('add', 'model') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ t('claude.targetApi.label') }}</label>
+                    <select v-model="newClaudeConfig.targetApi" class="form-input">
+                        <option value="responses">{{ t('claude.targetApi.responses') }}</option>
+                        <option value="chat_completions">{{ t('claude.targetApi.chatCompletions') }}</option>
+                        <option value="ollama">{{ t('claude.targetApi.ollama') }}</option>
+                    </select>
+                    <div class="form-hint">{{ t('claude.targetApi.hint') }}</div>
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closeClaudeConfigModal">{{ t('common.cancel') }}</button>
-                    <button class="btn btn-confirm" @click="addClaudeConfig">{{ t('common.add') }}</button>
+                    <button class="btn btn-confirm" @click="addClaudeConfig" :disabled="!canSubmitClaudeConfig('add')">{{ t('common.add') }}</button>
                 </div>
             </div>
         </div>
@@ -148,46 +371,63 @@
 
                 <div class="form-group">
                     <label class="form-label">{{ t('field.configName') }}</label>
-                    <input v-model="editingConfig.name" class="form-input" :placeholder="t('field.configName')" readonly>
+                    <input v-model="editingConfig.name" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'name') }]" :placeholder="t('field.configName')" readonly>
+                    <div v-if="claudeConfigFieldError('edit', 'name')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'name') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">API Key</label>
                     <div class="input-with-toggle">
-                        <input v-model="editingConfig.apiKey" class="form-input" :type="showEditClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
-                        <button type="button" class="input-toggle-btn" @click="toggleEditClaudeConfigKey" :title="showEditClaudeConfigKey ? t('common.hide') : t('common.show')">
+                        <input v-model="editingConfig.apiKey" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'apiKey') }]" :type="showEditClaudeConfigKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" :placeholder="t('placeholder.apiKeyExampleClaude')">
+                        <button type="button" class="input-toggle-btn" @click="toggleEditClaudeConfigKey" :title="showEditClaudeConfigKey ? t('common.hide') : t('common.show')" :aria-label="showEditClaudeConfigKey ? t('common.hide') : t('common.show')">
                             <svg v-if="!showEditClaudeConfigKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
                     </div>
+                    <div v-if="claudeConfigFieldError('edit', 'apiKey')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'apiKey') }}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ t('field.baseUrl') }}</label>
-                    <input v-model="editingConfig.baseUrl" class="form-input" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <input v-model="editingConfig.baseUrl" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'baseUrl') }]" :placeholder="t('placeholder.baseUrlExampleClaude')">
+                    <div v-if="claudeConfigFieldError('edit', 'baseUrl')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'baseUrl') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ t('field.modelName') }}</label>
+                    <input v-model="editingConfig.model" :class="['form-input', { invalid: !!claudeConfigFieldError('edit', 'model') }]" :placeholder="t('placeholder.modelExample')" autocomplete="off" spellcheck="false">
+                    <div v-if="claudeConfigFieldError('edit', 'model')" class="form-hint form-error">{{ claudeConfigFieldError('edit', 'model') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ t('claude.targetApi.label') }}</label>
+                    <select v-model="editingConfig.targetApi" class="form-input">
+                        <option value="responses">{{ t('claude.targetApi.responses') }}</option>
+                        <option value="chat_completions">{{ t('claude.targetApi.chatCompletions') }}</option>
+                        <option value="ollama">{{ t('claude.targetApi.ollama') }}</option>
+                    </select>
+                    <div class="form-hint">{{ t('claude.targetApi.hint') }}</div>
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closeEditConfigModal">{{ t('common.cancel') }}</button>
-                    <button class="btn btn-confirm" @click="saveAndApplyConfig">{{ t('common.saveApply') }}</button>
+                    <button class="btn btn-confirm" @click="saveAndApplyConfig" :disabled="!canSubmitClaudeConfig('edit')">{{ t('common.saveApply') }}</button>
                 </div>
             </div>
         </div>
 
-        <!-- Codex 轮询池控制模态框 -->
+        <!-- Codex bridge pool modal -->
         <div v-if="showCodexBridgePoolModal" class="modal-overlay" @click.self="showCodexBridgePoolModal = false">
             <div class="modal modal-bridge-pool" role="dialog" aria-modal="true" aria-labelledby="codex-bridge-pool-modal-title">
                 <div class="modal-title" id="codex-bridge-pool-modal-title">
                     <svg class="modal-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4h6v4"/><path d="M18 8v4h-6v4"/></svg>
-                    轮询池设置
+                    {{ t('config.localBridge.poolSettings') }}
                 </div>
-                <div class="bridge-pool-modal-hint">勾选参与负载均衡的提供商</div>
+                <div class="bridge-pool-modal-hint">{{ t('config.localBridge.poolHint') }}</div>
                 <div v-if="localBridgeCandidateProviders().length === 0" class="bridge-pool-empty">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-                    <span>暂无可用上游 provider，请先添加直连 provider</span>
+                    <span>{{ t('config.localBridge.noProviders') }}</span>
                 </div>
                 <div v-else class="bridge-pool-list">
                     <label v-for="cp in localBridgeCandidateProviders()" :key="cp.name" class="bridge-pool-item">
                         <span class="bridge-pool-item-name">{{ cp.name }}</span>
-                        <span class="bridge-pool-item-status" :class="{ active: !isLocalBridgeExcluded(cp.name) }">{{ isLocalBridgeExcluded(cp.name) ? '未启用' : '已启用' }}</span>
+                        <span class="bridge-pool-item-status" :class="{ active: !isLocalBridgeExcluded(cp.name) }">{{ isLocalBridgeExcluded(cp.name) ? t('common.disabled') : t('common.enabled') }}</span>
                         <input type="checkbox" :checked="!isLocalBridgeExcluded(cp.name)" @change="toggleLocalBridgeExcluded(cp.name)" />
                     </label>
                 </div>
@@ -220,4 +460,3 @@
                 </div>
             </div>
         </div>
-
