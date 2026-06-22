@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Codex Mate",
-  "version": "0.0.37",
+  "version": "0.0.55",
   "identifier": "ai.codexmate.desktop",
   "build": {
     "frontendDist": "../web-ui",
