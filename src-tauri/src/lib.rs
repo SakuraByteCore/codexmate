@@ -530,7 +530,17 @@ fn spawn_backend(app: &tauri::App) -> Result<Option<Child>, Box<dyn std::error::
     return Ok(None);
   }
 
+  if health_check_ready() {
+    desktop_log("existing backend already ready; reusing 127.0.0.1:3737 listener");
+    return Ok(None);
+  }
+
   release_stale_backend_port();
+
+  if health_check_ready() {
+    desktop_log("backend became ready after stale port cleanup; reusing 127.0.0.1:3737 listener");
+    return Ok(None);
+  }
 
   if backend_port_occupied() {
     let message = backend_port_occupied_message();

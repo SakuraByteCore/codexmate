@@ -60,13 +60,13 @@ test('desktop release backend uses bundled Node runtime instead of requiring sys
     assert.doesNotMatch(libSource, /unwrap_or_else\(\|_\| "node"\.to_string\(\)\)/);
 });
 
-test('desktop startup force-cleans managed backend port listeners before spawning', () => {
+test('desktop startup reuses healthy backend before clearing stale port listeners', () => {
     const libSource = readSource('src-tauri/src/lib.rs');
 
     assert.match(libSource, /fn release_stale_backend_port\(\) -> usize/);
+    assert.match(libSource, /if health_check_ready\(\)[\s\S]*existing backend already ready[\s\S]*return Ok\(None\)/);
+    assert.match(libSource, /release_stale_backend_port\(\);[\s\S]*if health_check_ready\(\)[\s\S]*backend became ready after stale port cleanup[\s\S]*return Ok\(None\)/);
     assert.match(libSource, /release_stale_backend_port\(\);[\s\S]*if backend_port_occupied\(\)/);
-    assert.doesNotMatch(libSource, /existing backend already ready/);
-    assert.doesNotMatch(libSource, /backend became ready after stale port cleanup/);
     assert.match(libSource, /local_address\.starts_with\("127\.0\.0\.1:"\)/);
     assert.match(libSource, /local_address\.starts_with\("\[::1\]:"\)/);
     assert.match(libSource, /non-local listener/);
