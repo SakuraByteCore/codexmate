@@ -478,7 +478,10 @@ export async function loadActiveSessionDetail(api, options = {}) {
                 const nextLimit = Math.min(currentLimit + fetchStep, limitCap);
                 if (nextLimit <= currentLimit) return;
                 this.sessionDetailMessageLimit = nextLimit;
-                this.sessionPreviewPendingVisibleCount = nextLimit;
+                const currentVisible = Number(this.sessionPreviewVisibleCount);
+                this.sessionPreviewPendingVisibleCount = Number.isFinite(currentVisible)
+                    ? Math.max(0, Math.floor(currentVisible))
+                    : 0;
                 void this.loadActiveSessionDetail({ preserveVisibleCount: true });
             });
         }

@@ -274,6 +274,8 @@ textarea:focus-visible {
     }
     .main-panel {
         padding: 0 10px 12px;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .main-panel-topbar {
@@ -286,6 +288,35 @@ textarea:focus-visible {
         grid-template-columns: 1fr;
         height: auto;
         min-height: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .session-toolbar,
+    .session-toolbar-group,
+    .session-toolbar-primary,
+    .session-toolbar-secondary,
+    .session-toolbar-grow,
+    .session-list,
+    .session-preview,
+    .session-preview-scroll,
+    .session-preview-body,
+    .session-workspace,
+    .session-workspace-card,
+    .session-item,
+    .session-item-main {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .session-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+        overflow-x: hidden;
+    }
+
+    .session-toolbar-group {
+        width: 100%;
     }
 
     .status-strip {
@@ -477,6 +508,67 @@ textarea:focus-visible {
 
     .session-preview {
         border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .session-preview-header {
+        padding: 12px;
+        gap: 10px;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .session-preview-header > div:first-child {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .session-preview-meta {
+        min-width: 0;
+    }
+
+    .session-preview-meta-item {
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .session-preview-title {
+        -webkit-line-clamp: 3;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .session-actions {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: 100%;
+        gap: 6px;
+        justify-content: stretch;
+    }
+
+    .session-link-group {
+        display: contents;
+    }
+
+    .session-actions .btn-session-export,
+    .session-actions .btn-session-open,
+    .session-actions .btn-session-refresh,
+    .session-actions .btn-session-delete,
+    .session-link-group .btn-session-open {
+        width: 100%;
+        min-width: 0;
+        height: 40px;
+    }
+
+    .session-preview-body {
+        padding: 12px;
+    }
+
+    .session-workspace {
+        border-radius: 14px;
     }
 
     .skills-summary-strip {

@@ -771,7 +771,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'hydrateClaudeConfigsFromProviderCache',
         'applyWebUiPreferences',
         'loadWebUiPreferences',
-        'persistWebUiPreferences'
+        'persistWebUiPreferences',
+        'copySessionWorkspaceBrief'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',
@@ -882,7 +883,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providersHealthTone',
         'sessionContextUtilization',
         'isLocalProviderDisabled',
-        'sessionTimelineProgressPercent'
+        'sessionTimelineProgressPercent',
+        'activeSessionWorkspaceSummary'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

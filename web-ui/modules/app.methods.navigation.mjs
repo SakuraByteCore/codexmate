@@ -724,7 +724,10 @@
                 ? this.activeSessionMessages.length
                 : 0;
             if (total <= 0) return;
-            this.sessionPreviewVisibleCount = total;
+            const initialBatchSize = Number.isFinite(this.sessionPreviewInitialBatchSize)
+                ? Math.max(1, Math.floor(this.sessionPreviewInitialBatchSize))
+                : 12;
+            this.sessionPreviewVisibleCount = Math.min(total, initialBatchSize);
             this.invalidateSessionTimelineMeasurementCache();
         },
 

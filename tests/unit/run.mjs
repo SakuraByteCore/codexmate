@@ -43,6 +43,7 @@ await import(pathToFileURL(path.join(__dirname, 'session-actions-standalone.test
 await import(pathToFileURL(path.join(__dirname, 'session-resume-command.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-header-actions-layout.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-browser-timeline-regression.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'session-workspace-summary.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-detail-preview-fast.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage-backend.test.mjs')));

@@ -165,6 +165,30 @@ export function createSessionActionMethods(options = {}) {
             this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
+        async copySessionWorkspaceBrief() {
+            const summary = this.activeSessionWorkspaceSummary;
+            const text = summary && typeof summary.briefText === 'string'
+                ? summary.briefText.trim()
+                : '';
+            if (!text) {
+                this.showMessage(this.t('sessions.workspace.copy.empty'), 'error');
+                return;
+            }
+            const ok = this.fallbackCopyText(text);
+            if (ok) {
+                this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage(this.t('toast.copy.fail'), 'error');
+        },
+
         getSessionExportKey(session) {
             return `${session.source || 'unknown'}:${session.sessionId || ''}:${session.filePath || ''}`;
         },

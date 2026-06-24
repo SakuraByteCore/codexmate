@@ -334,7 +334,7 @@ module.exports = async function testWebUiSessionBrowser(ctx) {
     assert(vm.activeSessionMessages.length <= 2, 'session browser should not duplicate the initial huge-line preview messages');
     assert(vm.activeSessionMessages.every((message) => typeof message.text === 'string' && message.text.length <= 4000), 'session browser should cap huge-line preview text on initial tab entry');
     assert(vm.activeSessionDetailClipped === false, 'session browser should fully recover small huge-line sessions on initial tab entry');
-    assert(vm.activeSessionVisibleMessages.length === vm.activeSessionMessages.length, 'session browser should render all truncated huge-line preview messages on initial tab entry');
+    assert(vm.activeSessionVisibleMessages.length === Math.min(vm.activeSessionMessages.length, vm.sessionPreviewInitialBatchSize), 'session browser should batch initial huge-line preview rendering');
 
     const sampleListSessionId = hydrateZeroSessionId;
     const sampleListSession = vm.sessionsList.find((item) => item && item.sessionId === sampleListSessionId);
@@ -372,7 +372,8 @@ module.exports = async function testWebUiSessionBrowser(ctx) {
 
     assert(vm.activeSessionMessages.length >= vm.sessionDetailInitialMessageLimit, 'session browser preview should hydrate at least the initial detail window for huge sessions');
     assert(vm.activeSessionDetailClipped === true, 'session browser preview should stay clipped for huge sessions');
-    assert(vm.activeSessionVisibleMessages.length === vm.activeSessionMessages.length, 'session browser should render all loaded messages immediately without batching');
+    assert(vm.activeSessionVisibleMessages.length <= vm.sessionPreviewInitialBatchSize, 'session browser should batch large detail rendering to avoid DOM jank');
+    assert(vm.activeSessionVisibleMessages.length < vm.activeSessionMessages.length, 'session browser should not render the whole large detail window at once');
 
     assert(vm.sessionDetailMessageLimit >= vm.sessionDetailInitialMessageLimit, 'session browser detail limit should be at least the initial window');
     assert(vm.activeSessionMessages.length < hotSessionMessageCount, 'session browser should not pull the whole huge session into memory');
@@ -394,5 +395,5 @@ module.exports = async function testWebUiSessionBrowser(ctx) {
     assert(vm.activeSessionMessages.length > 0, 'session browser should recover huge-line previews through the real UI->API data flow');
     assert(vm.activeSessionMessages.length <= 3, 'session browser should not duplicate huge-line fallback preview messages');
     assert(vm.activeSessionDetailClipped === false, 'session browser should mark the huge-line fallback preview as fully recovered');
-    assert(vm.activeSessionVisibleMessages.length === vm.activeSessionMessages.length, 'session browser should render all recovered huge-line messages without overfetching');
+    assert(vm.activeSessionVisibleMessages.length === Math.min(vm.activeSessionMessages.length, vm.sessionPreviewInitialBatchSize), 'session browser should keep recovered huge-line rendering batched');
 };

@@ -51,6 +51,190 @@ function formatUsageRangeLabel(range, t) {
     return '近 7 天';
 }
 
+function normalizeWorkspaceText(value) {
+    if (value == null) {
+        return '';
+    }
+    return String(value)
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&amp;/gi, '&')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function trimWorkspaceLine(value, maxLength = 160) {
+    const text = normalizeWorkspaceText(value);
+    if (!text) return '';
+    const limit = Number.isFinite(Number(maxLength)) ? Math.max(20, Math.floor(Number(maxLength))) : 160;
+    return text.length > limit ? `${text.slice(0, Math.max(0, limit - 1)).trimEnd()}…` : text;
+}
+
+function pushUniqueWorkspaceItem(items, value, limit = 6, maxLength = 160) {
+    if (!Array.isArray(items) || items.length >= limit) return;
+    const text = trimWorkspaceLine(value, maxLength);
+    if (!text) return;
+    const key = text.toLowerCase();
+    if (items.some(item => String(item || '').toLowerCase() === key)) return;
+    items.push(text);
+}
+
+function extractWorkspaceLines(text) {
+    return String(text || '')
+        .split(/\r?\n|(?:^|\s)(?:[-*•]|\d+[.)])\s+|[。；;]\s*/g)
+        .map(line => normalizeWorkspaceText(line))
+        .filter(Boolean);
+}
+
+function isWorkspaceCommandLine(line) {
+    return /^\$\s+/.test(line)
+        || /^(?:npm|pnpm|yarn|bun|node|npx|git|gh|codex|claude|gemini|codebuddy|openclaw|pytest|go test|cargo test|make|docker)\b/i.test(line);
+}
+
+function extractInlineWorkspaceCommands(text) {
+    const source = normalizeWorkspaceText(text);
+    if (!source) return [];
+    const matches = source.match(/(?:^|[^A-Za-z0-9_])(?:\$\s*)?(?:(?:npm|pnpm|yarn|bun|node|npx|git|gh|codex|claude|gemini|codebuddy|openclaw|pytest|make|docker)\s+(?:run\s+)?[A-Za-z0-9:_./@-]+(?:\s+&&\s+(?:npm|pnpm|yarn|bun|node|npx|git|gh|codex|claude|gemini|codebuddy|openclaw|pytest|make|docker)\s+(?:run\s+)?[A-Za-z0-9:_./@-]+)?|go\s+test(?:\s+[A-Za-z0-9:_./@-]+)?|cargo\s+test(?:\s+[A-Za-z0-9:_./@-]+)?)(?=$|\s|[，。；,;])/gi) || [];
+    return matches.map(match => match.replace(/^[^A-Za-z0-9_$]*\$?\s*/, '').trim());
+}
+
+function extractWorkspaceArtifacts(line, target) {
+    if (!target || typeof line !== 'string') return;
+    const urlMatches = line.match(/https?:\/\/[^\s)\]"'<>，。；、]+/gi) || [];
+    for (const url of urlMatches) {
+        pushUniqueWorkspaceItem(target.links, url.replace(/[，。；、]+$/g, ''), 5, 140);
+    }
+    const fileMatches = line.match(/(?:[A-Za-z0-9_.@+-]+\/)+[A-Za-z0-9_.@+-]+\.(?:mjs|js|cjs|ts|tsx|jsx|vue|css|scss|html|json|jsonl|md|yml|yaml|toml|lock|py|go|rs|sh|txt)/g) || [];
+    for (const filePath of fileMatches) {
+        pushUniqueWorkspaceItem(target.files, filePath, 8, 120);
+    }
+}
+
+function buildWorkspaceBriefText(summary, labels = {}) {
+    if (!summary || !summary.available) return '';
+    const label = (key, fallback) => (labels && labels[key]) || fallback;
+    const lines = [
+        `# ${label('title', 'Session workspace brief')}`,
+        '',
+        `${label('source', 'Source')}: ${summary.sourceLabel || summary.source || '-'}`,
+        `${label('messages', 'Messages')}: ${summary.messageCount}`,
+        `${label('path', 'Path')}: ${summary.cwd || '-'}`,
+        ''
+    ];
+    const sections = [
+        ['signals', label('signals', 'Signals'), summary.signals],
+        ['commands', label('commands', 'Reusable commands'), summary.commands],
+        ['files', label('files', 'Files'), summary.files],
+        ['links', label('links', 'Links'), summary.links],
+        ['risks', label('risks', 'Risks / blockers'), summary.risks],
+        ['nextSteps', label('nextSteps', 'Next steps'), summary.nextSteps]
+    ];
+    for (const [, sectionTitle, items] of sections) {
+        if (!Array.isArray(items) || !items.length) continue;
+        lines.push(`## ${sectionTitle}`);
+        for (const item of items) {
+            lines.push(`- ${item}`);
+        }
+        lines.push('');
+    }
+    return lines.join('\n').trimEnd();
+}
+
+export function buildSessionWorkspaceSummary(session, messages, options = {}) {
+    const safeMessages = Array.isArray(messages) ? messages : [];
+    const roleCounts = { user: 0, assistant: 0, system: 0, other: 0 };
+    const signals = [];
+    const commands = [];
+    const files = [];
+    const links = [];
+    const risks = [];
+    const nextSteps = [];
+    const target = { files, links };
+    let firstUser = '';
+    let lastUser = '';
+    let lastAssistant = '';
+    let firstTimestamp = '';
+    let lastTimestamp = '';
+
+    safeMessages.forEach((message) => {
+        if (!message || typeof message !== 'object') return;
+        const normalizedRole = String(message.normalizedRole || message.role || '').trim().toLowerCase();
+        const role = normalizedRole === 'user' || normalizedRole === 'assistant' || normalizedRole === 'system'
+            ? normalizedRole
+            : 'other';
+        roleCounts[role] += 1;
+        const timestamp = normalizeWorkspaceText(message.timestamp || '');
+        if (timestamp && !firstTimestamp) firstTimestamp = timestamp;
+        if (timestamp) lastTimestamp = timestamp;
+        const text = normalizeWorkspaceText(message.text || message.content || '');
+        if (!text) return;
+        if (role === 'user') {
+            if (!firstUser) firstUser = text;
+            lastUser = text;
+        } else if (role === 'assistant') {
+            lastAssistant = text;
+        }
+        const lines = extractWorkspaceLines(message.text || message.content || text);
+        for (const command of extractInlineWorkspaceCommands(message.text || message.content || text)) {
+            pushUniqueWorkspaceItem(commands, command, 6, 140);
+        }
+        for (const line of lines) {
+            extractWorkspaceArtifacts(line, target);
+            if (isWorkspaceCommandLine(line)) {
+                pushUniqueWorkspaceItem(commands, line.replace(/^\$\s+/, ''), 6, 140);
+            }
+            if (/(?:blocker|blocked|risk|failed|failure|error|timeout|regression|冲突|失败|错误|阻塞|风险|不可合|超时|回归)/i.test(line)) {
+                pushUniqueWorkspaceItem(risks, line, 5, 150);
+            }
+            if (/(?:todo|next|follow[- ]?up|remaining|后续|下一步|待办|继续|剩余)/i.test(line)) {
+                pushUniqueWorkspaceItem(nextSteps, line, 5, 150);
+            }
+        }
+    });
+
+    pushUniqueWorkspaceItem(signals, firstUser, 3, 150);
+    if (lastUser && lastUser !== firstUser) {
+        pushUniqueWorkspaceItem(signals, lastUser, 3, 150);
+    }
+    pushUniqueWorkspaceItem(signals, lastAssistant, 3, 150);
+
+    const source = session && typeof session.source === 'string' ? session.source : '';
+    const sourceLabel = session && typeof session.sourceLabel === 'string' ? session.sourceLabel : source;
+    const cwd = session && typeof session.cwd === 'string' ? session.cwd : '';
+    const messageCount = safeMessages.length;
+    const available = messageCount > 0;
+    const metrics = [
+        { key: 'messages', value: String(messageCount), label: options.messagesLabel || 'Messages' },
+        { key: 'user', value: String(roleCounts.user), label: options.userLabel || 'User' },
+        { key: 'assistant', value: String(roleCounts.assistant), label: options.assistantLabel || 'Assistant' },
+        { key: 'commands', value: String(commands.length), label: options.commandsLabel || 'Commands' },
+        { key: 'artifacts', value: String(files.length + links.length), label: options.artifactsLabel || 'Artifacts' },
+        { key: 'risks', value: String(risks.length + nextSteps.length), label: options.risksLabel || 'Risks' }
+    ];
+
+    const summary = {
+        available,
+        source,
+        sourceLabel,
+        cwd,
+        firstTimestamp,
+        lastTimestamp,
+        messageCount,
+        roleCounts,
+        metrics,
+        signals,
+        commands,
+        files,
+        links,
+        risks,
+        nextSteps
+    };
+    summary.briefText = buildWorkspaceBriefText(summary, options.briefLabels || {});
+    return summary;
+}
+
 function formatUsageDuration(value, options = {}) {
     const normalizedLang = typeof options.lang === 'string' ? options.lang.trim().toLowerCase() : '';
     const isEn = normalizedLang === 'en';
@@ -266,6 +450,32 @@ export function createSessionComputed() {
             const index = this.sessionTimelineNodes.findIndex(node => node.key === this.sessionTimelineActiveKey);
             if (index < 0) return 0;
             return Math.round(((index + 1) / this.sessionTimelineNodes.length) * 100);
+        },
+        activeSessionWorkspaceSummary() {
+            if (this.mainTab !== 'sessions' || !this.activeSession) {
+                return buildSessionWorkspaceSummary(null, []);
+            }
+            const t = typeof this.t === 'function' ? this.t : null;
+            return buildSessionWorkspaceSummary(this.activeSession, this.activeSessionMessages, {
+                messagesLabel: t ? t('sessions.workspace.metric.messages') : 'Messages',
+                userLabel: t ? t('sessions.workspace.metric.user') : 'User',
+                assistantLabel: t ? t('sessions.workspace.metric.assistant') : 'Assistant',
+                commandsLabel: t ? t('sessions.workspace.metric.commands') : 'Commands',
+                artifactsLabel: t ? t('sessions.workspace.metric.artifacts') : 'Artifacts',
+                risksLabel: t ? t('sessions.workspace.metric.risks') : 'Risks',
+                briefLabels: {
+                    title: t ? t('sessions.workspace.copy.title') : 'Session workspace brief',
+                    source: t ? t('sessions.workspace.copy.source') : 'Source',
+                    messages: t ? t('sessions.workspace.metric.messages') : 'Messages',
+                    path: t ? t('sessions.workspace.copy.path') : 'Path',
+                    signals: t ? t('sessions.workspace.signals') : 'Signals',
+                    commands: t ? t('sessions.workspace.commands') : 'Reusable commands',
+                    files: t ? t('sessions.workspace.files') : 'Files',
+                    links: t ? t('sessions.workspace.links') : 'Links',
+                    risks: t ? t('sessions.workspace.risks') : 'Risks / blockers',
+                    nextSteps: t ? t('sessions.workspace.nextSteps') : 'Next steps'
+                }
+            });
         },
         sessionQueryPlaceholder() {
             if (this.isSessionQueryEnabled) {

@@ -352,7 +352,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<div[\s\S]*v-if="sessionListRenderEnabled"[\s\S]*class="session-list"/);
     assert.match(html, /:ref="setSessionListRef"/);
     assert.match(html, /@scroll\.passive="onSessionListScroll"/);
+    assert.match(html, /class="selector-section session-selector-section"/);
+    assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-toolbar"/);
+    assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-source-pills"/);
+    assert.doesNotMatch(html, /class="session-toolbar-group session-toolbar-primary"[\s\S]*class="session-source-pills"[\s\S]*class="session-path-select"/);
     assert.match(html, /v-memo="\[activeSessionExportKey === getSessionExportKey\(session\)/);
+    assert.match(html, /v-for="\(msg, idx\) in activeSessionVisibleMessages"/);
+    assert.match(html, /canLoadMoreSessionMessages/);
     assert.match(html, /v-memo="\[msg\.text,\s*msg\.timestamp,\s*msg\.roleLabel,\s*msg\.normalizedRole\]"/);
     assert.match(html, /v-memo="\[sessionTimelineActiveKey === node\.key,\s*node\.safePercent,\s*node\.title\]"/);
     const providerShareButton = html.match(

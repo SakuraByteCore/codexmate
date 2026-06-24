@@ -1,9 +1,15 @@
+.session-selector-section {
+    padding: 8px 10px;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
 .session-toolbar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-xs);
-    align-items: end;
+    grid-template-columns: minmax(300px, auto) minmax(260px, 1fr) auto;
+    gap: 8px;
+    margin-bottom: 0;
+    align-items: center;
 }
 
 .session-toolbar-group {
@@ -16,10 +22,35 @@
 
 .session-toolbar-secondary {
     justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.session-toolbar-secondary .session-role-select,
+.session-toolbar-secondary .session-time-select {
+    flex: 0 1 112px;
+    min-width: 104px;
+}
+
+.session-toolbar-primary .session-path-select {
+    min-width: 180px;
 }
 
 .session-toolbar-grow {
-    grid-column: 1 / -1;
+    grid-column: auto;
+}
+
+.session-toolbar .btn-tool,
+.session-toolbar .btn-tool-compact {
+    width: auto;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.selector-section .session-toolbar .btn-tool + .btn-tool,
+.selector-section .session-toolbar .btn-tool-compact + .btn-tool,
+.selector-section .session-toolbar .btn-tool + .btn-tool-compact,
+.selector-section .session-toolbar .btn-tool-compact + .btn-tool-compact {
+    margin-top: 0;
 }
 
 .session-toolbar-actions {
@@ -121,10 +152,17 @@
 }
 
 /* ===== Session source pill bar ===== */
+.session-source-tabs-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+    min-width: 0;
+}
+
 .session-source-pills {
     display: flex;
-    gap: 4px;
-    padding: 3px;
+    gap: 3px;
+    padding: 2px;
     border-radius: var(--radius-md);
     background: var(--color-surface-alt);
     border: 1px solid var(--color-border-soft);
@@ -133,8 +171,8 @@
 .session-source-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
+    gap: 5px;
+    padding: 5px 10px;
     border-radius: var(--radius-sm);
     border: none;
     background: transparent;
@@ -257,7 +295,7 @@
 .session-time-select {
     flex: 1;
     min-width: 160px;
-    padding: 9px 12px;
+    padding: 7px 10px;
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border-soft);
     background: var(--color-surface);
@@ -275,21 +313,22 @@
 
 @media (min-width: 980px) {
     .session-toolbar {
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns: minmax(180px, 220px) minmax(240px, 1fr) minmax(560px, auto);
+        gap: 8px;
     }
 
     .session-toolbar-primary {
-        grid-column: span 7;
+        grid-column: 1;
     }
 
     .session-toolbar-secondary {
-        grid-column: span 5;
+        grid-column: 3;
         justify-content: flex-end;
+        flex-wrap: nowrap;
     }
 
     .session-toolbar-grow {
-        grid-column: 1 / -1;
+        grid-column: 2;
     }
 }
 

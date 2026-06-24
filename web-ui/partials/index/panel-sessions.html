@@ -21,28 +21,30 @@
                     </div>
                 </div>
                 <div v-else>
-                <div class="selector-section">
+                <div class="selector-section session-selector-section">
                     <div class="selector-header" style="display:none">
                         <span class="selector-title">{{ t('sessions.sourceTitle') }}</span>
                         <div class="selector-actions sessions-header-actions"></div>
                     </div>
+                    <div class="session-source-tabs-row">
+                        <div class="session-source-pills" role="radiogroup" aria-label="Session source">
+                            <button
+                                v-for="src in sessionSourceOptions"
+                                :key="src.value"
+                                :class="['session-source-pill', { active: sessionFilterSource === src.value }]"
+                                :data-source="src.value"
+                                @click="setSessionSource(src.value)"
+                                :disabled="sessionsLoading"
+                                :aria-pressed="sessionFilterSource === src.value"
+                                role="radio"
+                                type="button">
+                                <span class="session-source-pill-dot"></span>
+                                <span class="session-source-pill-label">{{ src.label }}</span>
+                            </button>
+                        </div>
+                    </div>
                     <div class="session-toolbar">
                         <div class="session-toolbar-group session-toolbar-primary">
-                            <div class="session-source-pills" role="radiogroup" aria-label="Session source">
-                                <button
-                                    v-for="src in sessionSourceOptions"
-                                    :key="src.value"
-                                    :class="['session-source-pill', { active: sessionFilterSource === src.value }]"
-                                    :data-source="src.value"
-                                    @click="setSessionSource(src.value)"
-                                    :disabled="sessionsLoading"
-                                    :aria-pressed="sessionFilterSource === src.value"
-                                    role="radio"
-                                    type="button">
-                                    <span class="session-source-pill-dot"></span>
-                                    <span class="session-source-pill-label">{{ src.label }}</span>
-                                </button>
-                            </div>
                             <select
                                 class="session-path-select"
                                 v-model="sessionPathFilter"
@@ -241,6 +243,14 @@
                                             :aria-label="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')">
                                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"/><polyline points="4 7 8 10.5 12 7"/><path d="M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12"/></svg>
                                         </button>
+                                        <button
+                                            class="btn-session-open session-brief-copy"
+                                            @click="copySessionWorkspaceBrief"
+                                            :disabled="!activeSessionWorkspaceSummary.available"
+                                            :title="t('sessions.workspace.copy')"
+                                            :aria-label="t('sessions.workspace.copy')">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h6.5L13 5v8.5H4z"/><path d="M10.5 2.5V5H13"/><path d="M6 8h5"/><path d="M6 10.5h5"/></svg>
+                                        </button>
                                         <div class="session-link-group">
                                         <button
                                             class="btn-session-open"
@@ -294,12 +304,77 @@
                                 </div>
 
                                 <div v-else class="session-preview-body">
+                                    <section v-if="activeSessionWorkspaceSummary.available" class="session-workspace" :aria-label="t('sessions.workspace.title')">
+                                        <div class="session-workspace-header">
+                                            <div>
+                                                <div class="session-workspace-kicker">{{ t('sessions.workspace.kicker') }}</div>
+                                                <h3 class="session-workspace-title">{{ t('sessions.workspace.title') }}</h3>
+                                                <p class="session-workspace-subtitle">
+                                                    {{ t('sessions.workspace.subtitle', { count: activeSessionWorkspaceSummary.messageCount }) }}
+                                                </p>
+                                            </div>
+                                            <button class="btn-mini" type="button" @click="copySessionWorkspaceBrief">
+                                                {{ t('sessions.workspace.copy') }}
+                                            </button>
+                                        </div>
+
+                                        <div class="session-workspace-metrics">
+                                            <div v-for="metric in activeSessionWorkspaceSummary.metrics" :key="metric.key" class="session-workspace-metric">
+                                                <span class="session-workspace-metric-value">{{ metric.value }}</span>
+                                                <span class="session-workspace-metric-label">{{ metric.label }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="session-workspace-grid">
+                                            <div class="session-workspace-card session-workspace-card-wide">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.signals') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.signals.length" class="session-workspace-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.signals" :key="'signal-' + index">{{ item }}</li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.empty') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.commands') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.commands.length" class="session-workspace-list session-workspace-code-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.commands" :key="'command-' + index"><code>{{ item }}</code></li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneCommands') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.files') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.files.length" class="session-workspace-list session-workspace-code-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.files" :key="'file-' + index"><code>{{ item }}</code></li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneFiles') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.links') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.links.length" class="session-workspace-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.links" :key="'link-' + index">{{ item }}</li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneLinks') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card" :class="{ 'session-workspace-card-alert': activeSessionWorkspaceSummary.risks.length || activeSessionWorkspaceSummary.nextSteps.length }">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.risks') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.risks.length || activeSessionWorkspaceSummary.nextSteps.length" class="session-workspace-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.risks" :key="'risk-' + index">{{ item }}</li>
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.nextSteps" :key="'next-' + index">{{ item }}</li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneRisks') }}</div>
+                                            </div>
+                                        </div>
+                                    </section>
+
                                     <div class="session-preview-messages">
                                         <div v-if="activeSessionDetailClipped" class="session-item-sub session-item-wrap">
                                             {{ t('sessions.preview.clipped', { count: activeSessionMessages.length }) }}
                                         </div>
                                         <div
-                                            v-for="(msg, idx) in activeSessionMessages"
+                                            v-for="(msg, idx) in activeSessionVisibleMessages"
                                             :key="getRecordRenderKey(msg, idx)"
                                             v-memo="[msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole]"
                                             :data-message-key="getRecordRenderKey(msg, idx)"
@@ -312,6 +387,12 @@
                                                 </div>
                                             </div>
                                             <div class="session-msg-content" v-html="highlightQueryText(msg.text) || ''"></div>
+                                        </div>
+                                        <div v-if="canLoadMoreSessionMessages" class="session-preview-load-more">
+                                            <span>{{ t('sessions.preview.shownCount', { shown: activeSessionVisibleMessages.length, total: activeSessionMessages.length }) }}</span>
+                                            <button class="btn-mini" type="button" @click="loadMoreSessionMessages" :disabled="sessionPreviewLoadingMore">
+                                                {{ sessionPreviewLoadingMore ? t('sessions.preview.loadingMore') : t('sessions.preview.loadMore', { remain: sessionPreviewRemainingCount }) }}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
