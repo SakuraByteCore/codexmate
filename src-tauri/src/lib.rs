@@ -213,12 +213,12 @@ fn health_check_ready() -> bool {
     Ok(value) => value,
     Err(_) => return false,
   };
-  let mut stream = match TcpStream::connect_timeout(&addr, Duration::from_millis(300)) {
+  let mut stream = match TcpStream::connect_timeout(&addr, Duration::from_millis(1000)) {
     Ok(value) => value,
     Err(_) => return false,
   };
-  let _ = stream.set_read_timeout(Some(Duration::from_millis(500)));
-  let _ = stream.set_write_timeout(Some(Duration::from_millis(500)));
+  let _ = stream.set_read_timeout(Some(Duration::from_millis(1500)));
+  let _ = stream.set_write_timeout(Some(Duration::from_millis(1000)));
 
   let body = r#"{"action":"health-check","params":{}}"#;
   let request = format!(
@@ -244,7 +244,7 @@ fn backend_port_occupied() -> bool {
     Ok(value) => value,
     Err(_) => return false,
   };
-  TcpStream::connect_timeout(&addr, Duration::from_millis(300)).is_ok()
+  TcpStream::connect_timeout(&addr, Duration::from_millis(1000)).is_ok()
 }
 
 fn backend_port_occupied_message() -> String {
@@ -535,6 +535,14 @@ fn spawn_backend(app: &tauri::App) -> Result<Option<Child>, Box<dyn std::error::
     return Ok(None);
   }
 
+  if backend_port_occupied() {
+    desktop_log("backend port is occupied but not ready yet; waiting before stale cleanup");
+    if wait_for_backend(Duration::from_secs(5)) {
+      desktop_log("existing backend became ready while waiting; reusing 127.0.0.1:3737 listener");
+      return Ok(None);
+    }
+  }
+
   release_stale_backend_port();
 
   if health_check_ready() {
@@ -543,8 +551,13 @@ fn spawn_backend(app: &tauri::App) -> Result<Option<Child>, Box<dyn std::error::
   }
 
   if backend_port_occupied() {
+    desktop_log("backend port remains occupied after cleanup; waiting once more before surfacing occupied-port error");
+    if wait_for_backend(Duration::from_secs(5)) {
+      desktop_log("backend became ready after occupied-port grace wait; reusing 127.0.0.1:3737 listener");
+      return Ok(None);
+    }
     let message = backend_port_occupied_message();
-    desktop_log(format!("backend port remains occupied after cleanup; {message}"));
+    desktop_log(format!("backend port remains occupied after cleanup and grace wait; {message}"));
     return startup_error(message);
   }
 

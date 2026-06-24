@@ -65,8 +65,11 @@ test('desktop startup reuses healthy backend before clearing stale port listener
 
     assert.match(libSource, /fn release_stale_backend_port\(\) -> usize/);
     assert.match(libSource, /if health_check_ready\(\)[\s\S]*existing backend already ready[\s\S]*return Ok\(None\)/);
+    assert.match(libSource, /backend port is occupied but not ready yet; waiting before stale cleanup/);
+    assert.match(libSource, /if backend_port_occupied\(\)[\s\S]*wait_for_backend\(Duration::from_secs\(5\)\)[\s\S]*existing backend became ready while waiting[\s\S]*return Ok\(None\)/);
     assert.match(libSource, /release_stale_backend_port\(\);[\s\S]*if health_check_ready\(\)[\s\S]*backend became ready after stale port cleanup[\s\S]*return Ok\(None\)/);
-    assert.match(libSource, /release_stale_backend_port\(\);[\s\S]*if backend_port_occupied\(\)/);
+    assert.match(libSource, /backend port remains occupied after cleanup; waiting once more before surfacing occupied-port error/);
+    assert.match(libSource, /backend became ready after occupied-port grace wait[\s\S]*return Ok\(None\)/);
     assert.match(libSource, /local_address\.starts_with\("127\.0\.0\.1:"\)/);
     assert.match(libSource, /local_address\.starts_with\("\[::1\]:"\)/);
     assert.match(libSource, /non-local listener/);
@@ -119,8 +122,8 @@ test('desktop startup surfaces occupied backend port guidance instead of waiting
     assert.match(libSource, /端口 3737 已被其他进程占用/);
     assert.match(libSource, /Windows 桌面版启动时会请求管理员权限/);
     assert.match(libSource, /详情见 startup\.log/);
-    assert.match(libSource, /if backend_port_occupied\(\)[\s\S]*return startup_error\(message\)/);
-    assert.match(libSource, /backend port remains occupied after cleanup/);
+    assert.match(libSource, /if backend_port_occupied\(\)[\s\S]*wait_for_backend\(Duration::from_secs\(5\)\)[\s\S]*return startup_error\(message\)/);
+    assert.match(libSource, /backend port remains occupied after cleanup and grace wait/);
 });
 
 test('desktop windows installer supports overwrite-style reinstall flow', () => {
