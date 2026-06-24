@@ -1,0 +1,97 @@
+name: desktop-build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src-tauri/**'
+      - 'tools/desktop/**'
+      - 'web-ui/**'
+      - 'cli.js'
+      - 'cli/**'
+      - 'lib/**'
+      - 'plugins/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/desktop-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tauri:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+          - name: Windows
+            os: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify npm package payload
+        run: npm pack --dry-run --json
+
+      - name: Stage desktop runtime resources
+        run: npm run desktop:stage
+
+      - name: Build desktop app
+        run: npm run desktop:build
+
+      - name: Verify Windows app UAC manifest
+        if: matrix.name == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'src-tauri/target/release/codexmate-desktop.exe'
+          if (!(Test-Path $exe)) {
+            throw "Built app exe not found: $exe"
+          }
+
+          $mt = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter mt.exe |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if (!$mt) {
+            throw 'Windows manifest tool mt.exe not found'
+          }
+
+          $manifest = Join-Path $env:RUNNER_TEMP 'codexmate-desktop.manifest.xml'
+          & $mt.FullName -nologo "-inputresource:$exe;#1" "-out:$manifest"
+          if ($LASTEXITCODE -ne 0) {
+            throw "mt.exe failed to extract manifest from $exe"
+          }
+
+          $text = Get-Content $manifest -Raw
+          Write-Host $text
+          if ($text -notmatch 'requestedExecutionLevel\s+level="requireAdministrator"\s+uiAccess="false"') {
+            throw 'Windows app manifest does not require administrator privileges'
+          }
+          Copy-Item $manifest (Join-Path (Split-Path $exe) 'codexmate-desktop.manifest.xml') -Force
+
+      - name: Upload desktop bundles
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: codexmate-desktop-${{ matrix.name }}
+          path: |
+            src-tauri/target/release/bundle/**
+            src-tauri/target/release/codexmate-desktop.exe
+            src-tauri/target/release/codexmate-desktop.manifest.xml
+          if-no-files-found: error

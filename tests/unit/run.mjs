@@ -62,8 +62,11 @@ await import(pathToFileURL(path.join(__dirname, 'coderabbit-workflows.test.mjs')
 await import(pathToFileURL(path.join(__dirname, 'release-changelog.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'update-version-status.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'ci-workflow-contract.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'release-workflow-contract.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'lint-contract.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'npm-package-files.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'desktop-stage.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'desktop-diagnostics-contract.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-tab-switch-performance.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-trash-state.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-ui-restart.test.mjs')));

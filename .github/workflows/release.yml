@@ -1,4 +1,4 @@
-﻿name: release
+name: release
 run-name: "${{ github.event.repository.name }} ${{ inputs.tag || 'auto' }}"
 on:
   workflow_dispatch:
@@ -11,17 +11,28 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  resolve:
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
+      release_version: ${{ steps.resolve.outputs.release_version }}
+      release_mode: ${{ steps.resolve.outputs.release_mode }}
+      latest_tag: ${{ steps.resolve.outputs.latest_tag }}
+      package_version: ${{ steps.resolve.outputs.package_version }}
+      base_version: ${{ steps.resolve.outputs.base_version }}
+      base_source: ${{ steps.resolve.outputs.base_source }}
+      tag_exists: ${{ steps.resolve.outputs.tag_exists }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
           fetch-tags: true
+          persist-credentials: false
       - name: Fetch tags
         run: git fetch --tags --force
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '18'
           cache: 'npm'
@@ -113,18 +124,6 @@ jobs:
             baseSource = tagExists ? 'package_tag' : 'package_version';
           }
 
-          const envLines = [
-            `RELEASE_TAG=${resolvedTag}`,
-            `RELEASE_VERSION=${expectedVersion}`,
-            `RELEASE_MODE=${mode}`,
-            `LATEST_TAG=${latestTag}`,
-            `PACKAGE_VERSION=${pkgVersion}`,
-            `BASE_VERSION=${baseVersion}`,
-            `BASE_SOURCE=${baseSource}`,
-            `TAG_EXISTS=${tagExists ? 'true' : 'false'}`
-          ].join('\n') + '\n';
-          fs.appendFileSync(process.env.GITHUB_ENV, envLines);
-
           const outputLines = [
             `release_tag=${resolvedTag}`,
             `release_version=${expectedVersion}`,
@@ -152,28 +151,98 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summaryLines + '\n');
           console.log(`::notice title=Resolved Tag::${resolvedTag}`);
           NODE
+
+  desktop:
+    needs: resolve
+    name: desktop-${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+          - name: Windows
+            os: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Fetch tags
+        run: git fetch --tags --force
       - name: Checkout target tag
-        if: ${{ steps.resolve.outputs.tag_exists == 'true' }}
+        if: ${{ needs.resolve.outputs.tag_exists == 'true' }}
         env:
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
         run: |
           git rev-parse "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1
           git checkout "${RELEASE_TAG}"
-      - name: Verify tag matches package.json version
-        if: ${{ steps.resolve.outputs.tag_exists == 'true' }}
-        env:
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
-        run: |
-          node -e "const pkg=require('./package.json'); const tag=process.env.RELEASE_TAG; const expected='v'+pkg.version; if(tag!==expected){ console.error('Tag '+tag+' does not match package.json version '+expected); process.exit(1);} console.log('Tag matches '+expected);"
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
       - name: Verify package.json matches release tag
-        if: ${{ steps.resolve.outputs.tag_exists != 'true' }}
         env:
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
         run: |
-          node -e "const pkg=require('./package.json'); const tag=process.env.RELEASE_TAG; const expected='v'+pkg.version; if(tag!==expected){ console.error('Current commit package.json '+expected+' does not match resolved release tag '+tag); process.exit(1);} console.log('Current package matches '+expected);"
+          node -e "const pkg=require('./package.json'); const tag=process.env.RELEASE_TAG; const expected='v'+pkg.version; if(tag!==expected){ console.error('package.json '+expected+' does not match resolved release tag '+tag); process.exit(1);} console.log('Package matches '+expected);"
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify npm package payload
+        run: npm pack --dry-run --json
+      - name: Stage desktop runtime resources
+        run: npm run desktop:stage
+      - name: Build desktop app
+        run: npm run desktop:build
+      - name: Upload desktop release assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: codexmate-desktop-${{ matrix.name }}
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+  release:
+    needs:
+      - resolve
+      - desktop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Fetch tags
+        run: git fetch --tags --force
+      - name: Checkout target tag
+        if: ${{ needs.resolve.outputs.tag_exists == 'true' }}
+        env:
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+        run: |
+          git rev-parse "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1
+          git checkout "${RELEASE_TAG}"
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '18'
+      - name: Verify package.json matches release tag
+        env:
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+        run: |
+          node -e "const pkg=require('./package.json'); const tag=process.env.RELEASE_TAG; const expected='v'+pkg.version; if(tag!==expected){ console.error('package.json '+expected+' does not match resolved release tag '+tag); process.exit(1);} console.log('Package matches '+expected);"
       - name: Compute release name
         env:
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
         run: |
           node -e "const p=require('./package.json'); const tag=process.env.RELEASE_TAG; const name=p.name.includes('/')? p.name.split('/')[1]: p.name; const value=name+' '+tag; console.log('RELEASE_NAME='+value);" >> "$GITHUB_ENV"
       - name: Pack npm artifact
@@ -191,11 +260,17 @@ jobs:
             cli.js cli/ lib/ plugins/ web-ui.html web-ui/ \
             node_modules/ package.json LICENSE README.md README.zh.md
           echo "STANDALONE_TGZ=$name" >> "$GITHUB_ENV"
+      - name: Download desktop release assets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: codexmate-desktop-*
+          path: desktop-release-assets
+          merge-multiple: true
       - name: Fetch contributors from GitHub API
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
-          LATEST_TAG: ${{ steps.resolve.outputs.latest_tag }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          LATEST_TAG: ${{ needs.resolve.outputs.latest_tag }}
           CONTRIBUTORS_FILE: release-contributors.txt
         run: |
           if [ -z "${LATEST_TAG}" ]; then
@@ -213,22 +288,13 @@ jobs:
           trap 'rm -f "${tmp_logins}"' EXIT
 
           # Fetch PR authors in range using base...head comparison
-          gh pr list \
-            --repo "${GITHUB_REPOSITORY}" \
-            --limit 500 \
-            --json author \
-            --jq '.[].author.login' 2>/dev/null | sort -u > "${tmp_logins}" || true
+          gh pr list             --repo "${GITHUB_REPOSITORY}"             --limit 500             --json author             --jq '.[].author.login' 2>/dev/null | sort -u > "${tmp_logins}" || true
 
           # Fetch merged PRs in range using commits
           tmp_merged=$(mktemp)
-          git log "${LATEST_TAG}...${RELEASE_TAG}" --pretty=format:%s \
-            | grep -oE '#[0-9]+' \
-            | sed 's/^#//' \
-            | sort -u \
-            | while read -r pr_number; do
+          git log "${LATEST_TAG}...${RELEASE_TAG}" --pretty=format:%s             | grep -oE '#[0-9]+'             | sed 's/^#//'             | sort -u             | while read -r pr_number; do
                 gh pr view "${pr_number}" --repo "${GITHUB_REPOSITORY}" --json author --jq '.author.login' 2>/dev/null || true
-              done \
-            | sort -u > "${tmp_merged}" || true
+              done             | sort -u > "${tmp_merged}" || true
 
           if [ -s "${tmp_merged}" ]; then
             cat "${tmp_merged}" > "${CONTRIBUTORS_FILE}"
@@ -240,8 +306,8 @@ jobs:
           fi
       - name: Generate release notes from actual commit range
         env:
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
-          TAG_EXISTS: ${{ steps.resolve.outputs.tag_exists }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          TAG_EXISTS: ${{ needs.resolve.outputs.tag_exists }}
           RELEASE_CHANGELOG_FILE: release-changelog.md
           CONTRIBUTORS_FILE: release-contributors.txt
         run: |
@@ -256,9 +322,9 @@ jobs:
           node tools/release/changelog.js
           test -s "${RELEASE_CHANGELOG_FILE}"
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
         with:
-          tag_name: ${{ steps.resolve.outputs.release_tag }}
+          tag_name: ${{ needs.resolve.outputs.release_tag }}
           target_commitish: ${{ github.sha }}
           name: ${{ env.RELEASE_NAME }}
           prerelease: false
@@ -267,4 +333,7 @@ jobs:
           files: |
             ${{ env.PACKAGE_TGZ }}
             ${{ env.STANDALONE_TGZ }}
+            desktop-release-assets/**/*.dmg
+            desktop-release-assets/**/*.msi
+            desktop-release-assets/**/*.exe
           generate_release_notes: false
