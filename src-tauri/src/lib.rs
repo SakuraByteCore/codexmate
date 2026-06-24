@@ -174,6 +174,33 @@ fn backend_startup_log_stdio() -> Stdio {
     .unwrap_or_else(|_| Stdio::null())
 }
 
+fn backend_startup_log_excerpt() -> String {
+  let log_path = backend_startup_log_file_path();
+  let Ok(bytes) = fs::read(&log_path) else {
+    return format!("startup.log not readable at {}", log_path.display());
+  };
+  if bytes.is_empty() {
+    return format!("startup.log is empty at {}", log_path.display());
+  }
+
+  let keep_from = bytes.len().saturating_sub(4096);
+  let text = String::from_utf8_lossy(&bytes[keep_from..]);
+  let excerpt = text
+    .lines()
+    .rev()
+    .take(30)
+    .collect::<Vec<_>>()
+    .into_iter()
+    .rev()
+    .collect::<Vec<_>>()
+    .join("\n");
+  if excerpt.trim().is_empty() {
+    format!("startup.log has no readable text at {}", log_path.display())
+  } else {
+    format!("startup.log tail ({}):\n{}", log_path.display(), excerpt)
+  }
+}
+
 fn configure_desktop_console_logging() -> bool {
   if !desktop_debug_requested() {
     DESKTOP_CONSOLE_LOGGING.store(false, Ordering::Relaxed);
@@ -282,6 +309,40 @@ fn wait_for_backend(timeout: Duration) -> bool {
   }
   desktop_log("backend health check timed out");
   false
+}
+
+fn wait_for_spawned_backend(child: &mut Child, timeout: Duration) -> Result<(), String> {
+  let started = Instant::now();
+  while started.elapsed() < timeout {
+    if health_check_ready() {
+      desktop_log("spawned backend health check passed");
+      return Ok(());
+    }
+
+    match child.try_wait() {
+      Ok(Some(status)) => {
+        let message = format!(
+          "Codex Mate 后端进程已退出，未能完成启动。退出状态：{status}。请查看 startup.log。详情：codexmate backend exited before becoming ready on 127.0.0.1:3737\n\n{}",
+          backend_startup_log_excerpt()
+        );
+        desktop_log(format!("backend exited before readiness; status={status}"));
+        return Err(message);
+      }
+      Ok(None) => {}
+      Err(err) => {
+        desktop_log(format!("backend readiness wait could not inspect child status: {err}"));
+      }
+    }
+
+    std::thread::sleep(Duration::from_millis(200));
+  }
+
+  let message = format!(
+    "Codex Mate 后端启动后没有及时就绪。请关闭旧的 Codex Mate / codexmate run 实例后重试；如果问题持续，请查看 startup.log。详情：codexmate backend did not become ready on 127.0.0.1:3737\n\n{}",
+    backend_startup_log_excerpt()
+  );
+  desktop_log("spawned backend health check timed out");
+  Err(message)
 }
 
 #[cfg(windows)]
@@ -604,11 +665,11 @@ fn spawn_backend(app: &tauri::App) -> Result<Option<Child>, Box<dyn std::error::
 
   desktop_log(format!("backend process spawned; pid={}", child.id()));
 
-  if !wait_for_backend(Duration::from_secs(15)) {
+  if let Err(message) = wait_for_spawned_backend(&mut child, Duration::from_secs(60)) {
     let _ = child.kill();
     let _ = child.wait();
-    desktop_log("backend killed after readiness timeout");
-    return startup_error("Codex Mate 后端启动后没有及时就绪。请关闭旧的 Codex Mate / codexmate run 实例后重试；如果问题持续，请查看 startup.log。详情：codexmate backend did not become ready on 127.0.0.1:3737");
+    desktop_log("backend killed after spawned readiness failure");
+    return startup_error(message);
   }
 
   Ok(Some(child))

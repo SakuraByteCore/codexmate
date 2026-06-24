@@ -37,6 +37,8 @@ test('desktop backend startup diagnostics use fixed startup log for child stdio'
     assert.match(libSource, /command\.stdout\(Stdio::inherit\(\)\)\.stderr\(Stdio::inherit\(\)\)/);
     assert.match(libSource, /fn backend_startup_log_file_path\(\) -> PathBuf/);
     assert.match(libSource, /fn backend_startup_log_stdio\(\) -> Stdio/);
+    assert.match(libSource, /fn backend_startup_log_excerpt\(\) -> String/);
+    assert.match(libSource, /startup\.log tail/);
     assert.match(libSource, /command\.stdout\(backend_startup_log_stdio\(\)\)\.stderr\(backend_startup_log_stdio\(\)\)/);
     assert.match(libSource, /append_log_line\(backend_startup_log_file_path\(\), &line\)/);
     assert.match(libSource, /if DESKTOP_CONSOLE_LOGGING\.load[\s\S]*return;[\s\S]*CREATE_NO_WINDOW/);
@@ -118,6 +120,10 @@ test('desktop startup surfaces occupied backend port guidance instead of waiting
     assert.match(libSource, /fn show_startup_error\(message: &str\)/);
     assert.match(libSource, /Codex Mate 启动失败/);
     assert.match(libSource, /fn backend_port_occupied\(\) -> bool/);
+    assert.match(libSource, /fn wait_for_spawned_backend\(child: &mut Child, timeout: Duration\) -> Result<\(\), String>/);
+    assert.match(libSource, /backend exited before readiness/);
+    assert.match(libSource, /Duration::from_secs\(60\)/);
+    assert.match(libSource, /backend_startup_log_excerpt\(\)/);
     assert.match(libSource, /fn backend_port_occupied_message\(\) -> String/);
     assert.match(libSource, /端口 3737 已被其他进程占用/);
     assert.match(libSource, /Windows 桌面版启动时会请求管理员权限/);
