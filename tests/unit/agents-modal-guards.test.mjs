@@ -14,6 +14,9 @@ const { createCodexConfigMethods } = await import(
 const { createI18nMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
 );
+const { createRuntimeMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.runtime.mjs'))
+);
 const { buildSpeedTestIssue } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'logic.runtime.mjs'))
 );
@@ -243,14 +246,25 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
             return null;
         }
     });
-    const calls = [];
+    const speedTestCalls = [];
+    const runtimeMethods = createRuntimeMethods({
+        api: async (action, payload) => {
+            assert.strictEqual(action, 'speed-test');
+            speedTestCalls.push(payload);
+            if (payload.targetApi === 'chat_completions') return { ok: false, error: 'timeout' };
+            return { ok: true, durationMs: payload.targetApi === 'responses' ? 11 : 22, status: 200 };
+        }
+    });
     const context = {
         ...createI18nMethods(),
         ...methods,
+        ...runtimeMethods,
         lang: 'zh',
         providersList: ['codex-provider-should-not-run'],
         speedResults: {},
         speedLoading: {},
+        claudeSpeedResults: {},
+        claudeSpeedLoading: {},
         healthCheckLoading: false,
         healthCheckResult: { ok: true },
         healthCheckBatchTotal: 99,
@@ -281,23 +295,22 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        buildSpeedTestIssue,
-        async runClaudeSpeedTest(name, config) {
-            calls.push({ name, config });
-            if (name === 'chat') return { ok: false, error: 'timeout' };
-            return { ok: true, durationMs: name === 'anthropic' ? 11 : 22, status: 200 };
-        }
+        buildSpeedTestIssue
     };
 
     await methods.runHealthCheck.call(context);
 
+    const callsByTarget = Object.fromEntries(speedTestCalls.map((payload) => [payload.targetApi, payload]));
     assert.strictEqual(context.healthCheckLoading, false);
     assert.strictEqual(context.healthCheckBatchTotal, 3);
     assert.strictEqual(context.healthCheckBatchDone, 3);
     assert.strictEqual(context.healthCheckBatchFailed, 1);
-    assert.deepStrictEqual(calls.map((item) => item.name).sort(), ['anthropic', 'chat', 'ollama']);
-    assert.strictEqual(calls.find((item) => item.name === 'chat').config.targetApi, 'chat_completions');
-    assert.strictEqual(calls.find((item) => item.name === 'ollama').config.apiKey, '');
+    assert.deepStrictEqual(speedTestCalls.map((payload) => payload.targetApi).sort(), ['chat_completions', 'ollama', 'responses']);
+    assert.strictEqual(callsByTarget.responses.apiKey, 'sk-anthropic');
+    assert.strictEqual(callsByTarget.chat_completions.apiKey, 'sk-chat');
+    assert.strictEqual(callsByTarget.ollama.apiKey, '');
+    assert.strictEqual(callsByTarget.ollama.model, 'llama3.1:8b');
+    assert.strictEqual(context.claudeSpeedResults.ollama.ok, true);
     assert.strictEqual(context.healthCheckResult.ok, false);
     assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
         anthropic: { ok: true, durationMs: 11, status: 200 },

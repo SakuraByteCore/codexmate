@@ -154,6 +154,10 @@ export function createRuntimeMethods(options = {}) {
             const baseUrl = config && typeof config.baseUrl === 'string' ? config.baseUrl.trim() : '';
             const apiKey = config && typeof config.apiKey === 'string' ? config.apiKey.trim() : '';
             const model = config && typeof config.model === 'string' ? config.model.trim() : '';
+            const targetApiRaw = config && typeof config.targetApi === 'string' ? config.targetApi.trim().toLowerCase() : '';
+            const targetApi = targetApiRaw === 'ollama'
+                ? 'ollama'
+                : (targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions' ? 'chat_completions' : 'responses');
             this.claudeSpeedLoading[name] = true;
             try {
                 if (!baseUrl) {
@@ -161,7 +165,7 @@ export function createRuntimeMethods(options = {}) {
                     this.claudeSpeedResults[name] = res;
                     return res;
                 }
-                if (!apiKey) {
+                if (!apiKey && targetApi !== 'ollama') {
                     const res = { ok: false, error: 'Missing API key' };
                     this.claudeSpeedResults[name] = res;
                     return res;
@@ -175,7 +179,8 @@ export function createRuntimeMethods(options = {}) {
                     kind: 'claude',
                     url: baseUrl,
                     apiKey,
-                    model
+                    model,
+                    targetApi
                 });
                 if (res.error) {
                     this.claudeSpeedResults[name] = { ok: false, error: res.error };
