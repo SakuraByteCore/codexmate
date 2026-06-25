@@ -408,6 +408,7 @@ export function createCodexConfigMethods(options = {}) {
                         .map((provider) => typeof provider === 'string'
                             ? provider.trim()
                             : String((provider && provider.name) || '').trim())
+                        .filter((name) => name !== 'local' && name !== 'codexmate-proxy')
                         .filter(Boolean)
                     : [];
                 const currentProvider = String(this.currentProvider || '').trim();
