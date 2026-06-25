@@ -325,6 +325,89 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
     assert.deepStrictEqual(context.shownMessages, []);
 });
 
+test('runHealthCheck batches Codex speed tests and records per-provider failures', async () => {
+    const apiCalls = [];
+    const methods = createCodexConfigMethods({
+        api: async (action, payload) => {
+            apiCalls.push({ action, payload });
+            assert.strictEqual(action, 'config-health-check');
+            assert.deepStrictEqual(payload, { remote: true });
+            return {
+                ok: true,
+                issues: [],
+                remote: {
+                    type: 'remote-health-check',
+                    provider: 'alpha',
+                    endpoint: 'https://example.com/v1',
+                    statusCode: 200,
+                    ok: true,
+                    message: 'ok'
+                }
+            };
+        },
+        getProviderConfigModeMeta() {
+            return null;
+        }
+    });
+    const speedTestCalls = [];
+    const providersHealthCalls = [];
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        providersList: ['alpha', { name: 'beta' }, 'gamma'],
+        currentProvider: 'beta',
+        speedResults: {},
+        speedLoading: {},
+        healthCheckLoading: false,
+        healthCheckResult: null,
+        healthCheckBatchTotal: 99,
+        healthCheckBatchDone: 99,
+        healthCheckBatchFailed: 99,
+        configMode: 'codex',
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        async runSpeedTest(name, options) {
+            speedTestCalls.push({ name, options });
+            if (name === 'beta') return { ok: false, error: 'timeout' };
+            return { ok: true, durationMs: name === 'alpha' ? 10 : 30, status: 200 };
+        },
+        buildSpeedTestIssue,
+        runProvidersHealthCheck(options) {
+            providersHealthCalls.push(options);
+        }
+    };
+
+    await methods.runHealthCheck.call(context);
+
+    assert.deepStrictEqual(apiCalls, [{ action: 'config-health-check', payload: { remote: true } }]);
+    assert.deepStrictEqual(speedTestCalls.map((call) => call.name), ['beta', 'alpha', 'gamma']);
+    assert.deepStrictEqual(speedTestCalls.map((call) => call.options), [
+        { silent: true, timeoutMs: 3500 },
+        { silent: true, timeoutMs: 3500 },
+        { silent: true, timeoutMs: 3500 }
+    ]);
+    assert.strictEqual(context.healthCheckLoading, false);
+    assert.strictEqual(context.healthCheckBatchTotal, 3);
+    assert.strictEqual(context.healthCheckBatchDone, 3);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.strictEqual(context.healthCheckResult.ok, false);
+    assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
+        beta: { ok: false, error: 'timeout' },
+        alpha: { ok: true, durationMs: 10, status: 200 },
+        gamma: { ok: true, durationMs: 30, status: 200 }
+    });
+    assert.deepStrictEqual(context.healthCheckResult.issues, [{
+        code: 'remote-speedtest-timeout',
+        message: '提供商 beta 远程测速超时',
+        suggestion: '检查网络或 base_url 是否可达'
+    }]);
+    assert.deepStrictEqual(context.shownMessages, []);
+    assert.deepStrictEqual(providersHealthCalls, [{ remote: true }]);
+});
+
 test('runHealthCheck preserves backend remote health result while appending speed test summaries', async () => {
     const methods = createCodexConfigMethods({
         api: async () => ({
