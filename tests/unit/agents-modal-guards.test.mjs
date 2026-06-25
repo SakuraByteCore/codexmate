@@ -14,6 +14,9 @@ const { createCodexConfigMethods } = await import(
 const { createI18nMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
 );
+const { buildSpeedTestIssue } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'logic.runtime.mjs'))
+);
 
 test('closeConfigTemplateModal ignores user close attempts while template apply is busy', () => {
     const methods = createCodexConfigMethods({
@@ -231,45 +234,82 @@ test('runHealthCheck treats backend error payloads as failures', async () => {
     }]);
 });
 
-test('runHealthCheck skips Claude speed tests when the primary health check already failed', async () => {
+test('runHealthCheck batches Claude speed tests and records per-config failures', async () => {
     const methods = createCodexConfigMethods({
-        api: async () => ({ error: 'health failed' }),
+        api: async (action) => {
+            throw new Error(`Claude batch health check should not call backend action: ${action}`);
+        },
         getProviderConfigModeMeta() {
             return null;
         }
     });
-    let claudeSpeedTestCalls = 0;
+    const calls = [];
     const context = {
         ...createI18nMethods(),
         ...methods,
         lang: 'zh',
-        providersList: ['alpha'],
+        providersList: ['codex-provider-should-not-run'],
         speedResults: {},
         speedLoading: {},
         healthCheckLoading: false,
         healthCheckResult: { ok: true },
+        healthCheckBatchTotal: 99,
+        healthCheckBatchDone: 99,
+        healthCheckBatchFailed: 99,
         configMode: 'claude',
         claudeConfigs: {
-            primary: {
-                baseUrl: 'https://example.com',
-                apiKey: 'secret'
+            anthropic: {
+                baseUrl: 'https://anthropic.example.com/v1',
+                apiKey: 'sk-anthropic',
+                model: 'claude-sonnet-4-6',
+                targetApi: 'responses'
+            },
+            chat: {
+                baseUrl: 'https://openai.example.com/v1',
+                apiKey: 'sk-chat',
+                model: 'gpt-4.1',
+                targetApi: 'chat_completions'
+            },
+            ollama: {
+                baseUrl: 'http://127.0.0.1:11434',
+                apiKey: '',
+                model: 'llama3.1:8b',
+                targetApi: 'ollama'
             }
         },
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        async runClaudeSpeedTest() {
-            claudeSpeedTestCalls += 1;
-            return { ok: false, error: 'timeout' };
+        buildSpeedTestIssue,
+        async runClaudeSpeedTest(name, config) {
+            calls.push({ name, config });
+            if (name === 'chat') return { ok: false, error: 'timeout' };
+            return { ok: true, durationMs: name === 'anthropic' ? 11 : 22, status: 200 };
         }
     };
 
     await methods.runHealthCheck.call(context);
 
     assert.strictEqual(context.healthCheckLoading, false);
-    assert.strictEqual(claudeSpeedTestCalls, 1);
+    assert.strictEqual(context.healthCheckBatchTotal, 3);
+    assert.strictEqual(context.healthCheckBatchDone, 3);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.deepStrictEqual(calls.map((item) => item.name).sort(), ['anthropic', 'chat', 'ollama']);
+    assert.strictEqual(calls.find((item) => item.name === 'chat').config.targetApi, 'chat_completions');
+    assert.strictEqual(calls.find((item) => item.name === 'ollama').config.apiKey, '');
     assert.strictEqual(context.healthCheckResult.ok, false);
+    assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
+        anthropic: { ok: true, durationMs: 11, status: 200 },
+        chat: { ok: false, error: 'timeout' },
+        ollama: { ok: true, durationMs: 22, status: 200 }
+    });
+    assert.deepStrictEqual(context.healthCheckResult.issues, [{
+        code: 'remote-speedtest-timeout',
+        message: '提供商 chat 远程测速超时',
+        suggestion: '检查网络或 base_url 是否可达'
+    }]);
+    assert.deepStrictEqual(context.shownMessages, []);
 });
 
 test('runHealthCheck preserves backend remote health result while appending speed test summaries', async () => {
