@@ -106,7 +106,7 @@ function extractWorkspaceArtifacts(line, target) {
     for (const url of urlMatches) {
         pushUniqueWorkspaceItem(target.links, url.replace(/[，。；、]+$/g, ''), 5, 140);
     }
-    const fileMatches = line.match(/(?:[A-Za-z0-9_.@+-]+\/)+[A-Za-z0-9_.@+-]+\.(?:mjs|js|cjs|ts|tsx|jsx|vue|css|scss|html|json|jsonl|md|yml|yaml|toml|lock|py|go|rs|sh|txt)/g) || [];
+    const fileMatches = line.match(/(?:[A-Za-z]:[\\/])?(?:[A-Za-z0-9_.@+-]+[\\/])+[A-Za-z0-9_.@+-]+\.(?:mjs|js|cjs|ts|tsx|jsx|vue|css|scss|html|json|jsonl|md|yml|yaml|toml|lock|py|go|rs|sh|txt)/g) || [];
     for (const filePath of fileMatches) {
         pushUniqueWorkspaceItem(target.files, filePath, 8, 120);
     }

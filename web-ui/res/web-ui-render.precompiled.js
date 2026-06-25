@@ -2760,8 +2760,8 @@ return function render(_ctx, _cache) {
                     _createElementVNode("div", { class: "session-source-tabs-row" }, [
                       _createElementVNode("div", {
                         class: "session-source-pills",
-                        role: "radiogroup",
-                        "aria-label": "Session source"
+                        role: "group",
+                        "aria-label": _ctx.t('sessions.sourceTitle')
                       }, [
                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionSourceOptions, (src) => {
                           return (_openBlock(), _createElementBlock("button", {
@@ -2771,14 +2771,13 @@ return function render(_ctx, _cache) {
                             onClick: $event => (_ctx.setSessionSource(src.value)),
                             disabled: _ctx.sessionsLoading,
                             "aria-pressed": _ctx.sessionFilterSource === src.value,
-                            role: "radio",
                             type: "button"
                           }, [
                             _createElementVNode("span", { class: "session-source-pill-dot" }),
                             _createElementVNode("span", { class: "session-source-pill-label" }, _toDisplayString(src.label), 1 /* TEXT */)
                           ], 10 /* CLASS, PROPS */, ["data-source", "onClick", "disabled", "aria-pressed"]))
                         }), 128 /* KEYED_FRAGMENT */))
-                      ])
+                      ], 8 /* PROPS */, ["aria-label"])
                     ]),
                     _createElementVNode("div", { class: "session-toolbar" }, [
                       _createElementVNode("div", { class: "session-toolbar-group session-toolbar-primary" }, [

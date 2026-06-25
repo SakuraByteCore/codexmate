@@ -22,7 +22,7 @@
 
 .session-toolbar-secondary {
     justify-content: flex-end;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
 .session-toolbar-secondary .session-role-select,

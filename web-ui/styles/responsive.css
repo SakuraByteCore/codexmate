@@ -537,7 +537,6 @@ textarea:focus-visible {
 
     .session-preview-title {
         -webkit-line-clamp: 3;
-        word-break: break-word;
         overflow-wrap: anywhere;
     }
 

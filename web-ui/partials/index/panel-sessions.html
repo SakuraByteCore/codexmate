@@ -27,7 +27,7 @@
                         <div class="selector-actions sessions-header-actions"></div>
                     </div>
                     <div class="session-source-tabs-row">
-                        <div class="session-source-pills" role="radiogroup" aria-label="Session source">
+                        <div class="session-source-pills" role="group" :aria-label="t('sessions.sourceTitle')">
                             <button
                                 v-for="src in sessionSourceOptions"
                                 :key="src.value"
@@ -36,7 +36,6 @@
                                 @click="setSessionSource(src.value)"
                                 :disabled="sessionsLoading"
                                 :aria-pressed="sessionFilterSource === src.value"
-                                role="radio"
                                 type="button">
                                 <span class="session-source-pill-dot"></span>
                                 <span class="session-source-pill-label">{{ src.label }}</span>

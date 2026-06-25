@@ -11,6 +11,8 @@ const { buildSessionWorkspaceSummary, createSessionComputed } = await import(
 const { createSessionActionMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.session-actions.mjs'))
 );
+const { ja } = await import(pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n', 'locales', 'ja.mjs')));
+const { vi } = await import(pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n', 'locales', 'vi.mjs')));
 
 test('buildSessionWorkspaceSummary extracts reusable project memory signals', () => {
     const summary = buildSessionWorkspaceSummary(
@@ -24,7 +26,7 @@ test('buildSessionWorkspaceSummary extracts reusable project memory signals', ()
             {
                 normalizedRole: 'assistant',
                 timestamp: '2026-06-24T10:01:00.000Z',
-                text: '已修改 web-ui/partials/index/panel-sessions.html 和 web-ui/styles/sessions-preview.css。npm run test:unit。https://github.com/SakuraByteCore/codexmate/pull/999。风险：如果摘要误把噪音当 blocker，需要继续收敛。'
+                text: '已修改 web-ui/partials/index/panel-sessions.html、web-ui/styles/sessions-preview.css、web-ui\\styles\\sessions-toolbar-trash.css 和 C:\\repo\\src\\session-summary.ts。npm run test:unit。https://github.com/SakuraByteCore/codexmate/pull/999。风险：如果摘要误把噪音当 blocker，需要继续收敛。'
             }
         ],
         {
@@ -44,10 +46,25 @@ test('buildSessionWorkspaceSummary extracts reusable project memory signals', ()
     assert(summary.commands.includes('npm run test:unit'));
     assert(summary.files.includes('web-ui/partials/index/panel-sessions.html'));
     assert(summary.files.includes('web-ui/styles/sessions-preview.css'));
+    assert(summary.files.includes('web-ui\\styles\\sessions-toolbar-trash.css'));
+    assert(summary.files.includes('C:\\repo\\src\\session-summary.ts'));
     assert(summary.links.includes('https://github.com/SakuraByteCore/codexmate/pull/999'));
     assert(summary.risks.some(item => item.includes('风险')));
     assert(summary.nextSteps.some(item => item.includes('后续')));
     assert.match(summary.briefText, /Session workspace brief|会话工作简报|Messages/);
+});
+
+test('session workspace locale labels are translated for Japanese and Vietnamese', () => {
+    assert.strictEqual(ja['sessions.workspace.kicker'], '作業メモリ');
+    assert.strictEqual(ja['sessions.workspace.metric.messages'], 'メッセージ');
+    assert.strictEqual(ja['sessions.workspace.metric.user'], 'ユーザー');
+    assert.strictEqual(ja['sessions.workspace.metric.assistant'], 'アシスタント');
+    assert.strictEqual(ja['sessions.workspace.metric.commands'], 'コマンド');
+    assert.strictEqual(ja['sessions.workspace.metric.artifacts'], '成果物');
+
+    assert.strictEqual(vi['sessions.workspace.kicker'], 'Bộ nhớ công việc');
+    assert.strictEqual(vi['sessions.workspace.metric.user'], 'Người dùng');
+    assert.strictEqual(vi['sessions.workspace.metric.assistant'], 'Trợ lý');
 });
 
 test('activeSessionWorkspaceSummary computed stays empty without an active session', () => {
