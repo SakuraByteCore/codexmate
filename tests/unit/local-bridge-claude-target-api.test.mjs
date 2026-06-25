@@ -171,6 +171,82 @@ test('claude local bridge keeps responses providers on Anthropic /v1/messages wi
     }
 });
 
+test('claude local bridge native passthrough does not synthesize a body for empty GET requests', async () => {
+    let captured = null;
+    const upstream = http.createServer((req, res) => {
+        const chunks = [];
+        req.on('data', (chunk) => chunks.push(chunk));
+        req.on('end', () => {
+            captured = {
+                method: req.method,
+                url: req.url,
+                headers: req.headers,
+                body: Buffer.concat(chunks).toString('utf-8')
+            };
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ data: [{ id: 'native-model' }] }));
+        });
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    const bridge = await createClaudeBridge({
+        provider: {
+            baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
+            apiKey: 'sk-native',
+            model: 'native-model',
+            targetApi: 'responses'
+        }
+    });
+
+    try {
+        const resp = await requestText(`${bridge.baseUrl}/bridge/claude-local/v1/models`, { method: 'GET' });
+
+        assert.equal(resp.status, 200);
+        assert.equal(captured.method, 'GET');
+        assert.equal(captured.url, '/v1/models');
+        assert.equal(captured.body, '');
+        assert.equal(captured.headers['content-length'], undefined);
+        assert.equal(captured.headers['x-api-key'], 'sk-native');
+    } finally {
+        await closeServer(bridge.bridge);
+        await closeServer(upstream);
+        await rm(bridge.tmpDir, { recursive: true, force: true });
+    }
+});
+
+test('claude local bridge native passthrough returns 400 for invalid JSON bodies', async () => {
+    let upstreamCalled = false;
+    const upstream = http.createServer((req, res) => {
+        upstreamCalled = true;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{}');
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    const bridge = await createClaudeBridge({
+        provider: {
+            baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
+            apiKey: 'sk-native',
+            model: 'native-model',
+            targetApi: 'responses'
+        }
+    });
+
+    try {
+        const resp = await requestText(`${bridge.baseUrl}/bridge/claude-local/v1/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{bad json'
+        });
+
+        assert.equal(resp.status, 400);
+        assert.equal(upstreamCalled, false);
+        assert.match(JSON.parse(resp.text).error, /JSON|Unexpected|invalid/i);
+    } finally {
+        await closeServer(bridge.bridge);
+        await closeServer(upstream);
+        await rm(bridge.tmpDir, { recursive: true, force: true });
+    }
+});
+
 test('claude local bridge converts chat_completions providers behind /v1/messages', async () => {
     let captured = null;
     const upstream = http.createServer((req, res) => {
@@ -220,6 +296,39 @@ test('claude local bridge converts chat_completions providers behind /v1/message
         assert.equal(body.content[0].text, 'chat ok');
         assert.equal(body.usage.input_tokens, 3);
         assert.equal(body.usage.output_tokens, 4);
+    } finally {
+        await closeServer(bridge.bridge);
+        await closeServer(upstream);
+        await rm(bridge.tmpDir, { recursive: true, force: true });
+    }
+});
+
+test('claude local bridge transform providers return 400 for empty message bodies', async () => {
+    let upstreamCalled = false;
+    const upstream = http.createServer((req, res) => {
+        upstreamCalled = true;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{}');
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    const bridge = await createClaudeBridge({
+        provider: {
+            baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
+            apiKey: 'sk-chat',
+            model: 'gpt-test',
+            targetApi: 'chat_completions'
+        }
+    });
+
+    try {
+        const resp = await requestText(`${bridge.baseUrl}/bridge/claude-local/v1/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        assert.equal(resp.status, 400);
+        assert.equal(upstreamCalled, false);
+        assert.match(JSON.parse(resp.text).error, /empty body/i);
     } finally {
         await closeServer(bridge.bridge);
         await closeServer(upstream);

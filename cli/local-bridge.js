@@ -405,7 +405,7 @@ function createLocalBridgeHttpHandler(options = {}) {
                     res.end(JSON.stringify({ error: bodyResult.error }));
                     return;
                 }
-                const parsed = parseJsonOrError(bodyResult.body || '{}');
+                const parsed = parseJsonOrError(bodyResult.body);
                 if (parsed.error) {
                     res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
                     res.end(JSON.stringify({ error: parsed.error }));
@@ -413,9 +413,16 @@ function createLocalBridgeHttpHandler(options = {}) {
                 }
                 const requestPayload = parsed.value && typeof parsed.value === 'object' ? parsed.value : {};
                 if (entry.model) requestPayload.model = entry.model;
-                const upstreamBody = targetApi === 'ollama'
-                    ? buildBuiltinClaudeOllamaChatRequest(requestPayload)
-                    : buildBuiltinClaudeChatCompletionsRequest(requestPayload);
+                let upstreamBody;
+                try {
+                    upstreamBody = targetApi === 'ollama'
+                        ? buildBuiltinClaudeOllamaChatRequest(requestPayload)
+                        : buildBuiltinClaudeChatCompletionsRequest(requestPayload);
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: e && e.message ? e.message : 'Invalid request payload' }));
+                    return;
+                }
                 const upstreamUrl = joinClaudeLocalUpstreamUrl(entry.baseUrl.replace(/\/+$/, ''), targetApi === 'ollama' ? 'api/chat' : 'chat/completions');
                 const upstreamResult = await retryTransientRequest(() => proxyRequestJson(upstreamUrl, {
                     method: 'POST',
@@ -476,13 +483,22 @@ function createLocalBridgeHttpHandler(options = {}) {
                 return;
             }
 
-            let parsedBody;
-            try { parsedBody = bodyResult.body ? JSON.parse(bodyResult.body) : {}; } catch (_) { parsedBody = {}; }
+            const hasRequestBody = typeof bodyResult.body === 'string' && bodyResult.body.trim().length > 0;
+            let parsedBody = null;
+            if (hasRequestBody) {
+                const parsed = parseJsonOrError(bodyResult.body);
+                if (parsed.error) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: parsed.error }));
+                    return;
+                }
+                parsedBody = parsed.value;
+            }
             if (entry.model && parsedBody && typeof parsedBody === 'object') {
                 parsedBody.model = entry.model;
             }
-            const wantsStream = !!(parsedBody && parsedBody.stream);
-            const bodyToForward = JSON.stringify(parsedBody);
+            const wantsStream = !!(parsedBody && typeof parsedBody === 'object' && parsedBody.stream);
+            const bodyToForward = hasRequestBody ? JSON.stringify(parsedBody) : null;
             const upstreamUrl = joinApiUrl(entry.baseUrl.replace(/\/+$/, ''), suffix);
             const headers = buildClaudeLocalAuthHeaders(entry, token, targetApi, expectedToken);
 
