@@ -6,7 +6,7 @@
 
 .session-toolbar {
     display: grid;
-    grid-template-columns: minmax(300px, auto) minmax(260px, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     margin-bottom: 0;
     align-items: center;
@@ -21,18 +21,8 @@
 }
 
 .session-toolbar-secondary {
-    justify-content: flex-end;
+    justify-content: flex-start;
     flex-wrap: wrap;
-}
-
-.session-toolbar-secondary .session-role-select,
-.session-toolbar-secondary .session-time-select {
-    flex: 0 1 112px;
-    min-width: 104px;
-}
-
-.session-toolbar-primary .session-path-select {
-    min-width: 180px;
 }
 
 .session-toolbar-grow {
@@ -54,7 +44,7 @@
 }
 
 .session-toolbar-actions {
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 .session-toolbar-footer {
@@ -311,7 +301,7 @@
     min-width: 220px;
 }
 
-@media (min-width: 980px) {
+@media (min-width: 1101px) {
     .session-toolbar {
         grid-template-columns: minmax(180px, 220px) minmax(240px, 1fr) minmax(560px, auto);
         gap: 8px;
@@ -325,6 +315,20 @@
         grid-column: 3;
         justify-content: flex-end;
         flex-wrap: nowrap;
+    }
+
+    .session-toolbar-secondary .session-role-select,
+    .session-toolbar-secondary .session-time-select {
+        flex: 0 1 112px;
+        min-width: 104px;
+    }
+
+    .session-toolbar-primary .session-path-select {
+        min-width: 180px;
+    }
+
+    .session-toolbar-actions {
+        justify-content: flex-end;
     }
 
     .session-toolbar-grow {

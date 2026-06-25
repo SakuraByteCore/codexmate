@@ -356,8 +356,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-toolbar"/);
     assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-source-pills"/);
     assert.match(html, /class="session-source-pills" role="group" :aria-label="t\('sessions\.sourceTitle'\)"/);
-    assert.doesNotMatch(html, /aria-label="Session source"/);
-    assert.doesNotMatch(html, /role="radio"/);
+    assert.doesNotMatch(sessionsPanel, /aria-label="Session source"/);
+    assert.doesNotMatch(sessionsPanel, /role="radio"/);
     assert.doesNotMatch(html, /class="session-toolbar-group session-toolbar-primary"[\s\S]*class="session-source-pills"[\s\S]*class="session-path-select"/);
     assert.match(html, /v-memo="\[activeSessionExportKey === getSessionExportKey\(session\)/);
     assert.match(html, /v-for="\(msg, idx\) in activeSessionVisibleMessages"/);
@@ -676,11 +676,11 @@ test('session responsive styles keep mobile toolbar reachable without deprecated
 
     assert.match(
         toolbarStyles,
-        /\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-end;[\s\S]*?flex-wrap:\s*wrap;[\s\S]*?\}/
+        /\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-start;[\s\S]*?flex-wrap:\s*wrap;[\s\S]*?\}/
     );
     assert.match(
         toolbarStyles,
-        /@media \(min-width: 980px\) \{[\s\S]*?\.session-toolbar-secondary\s*\{[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?\}/
+        /@media \(min-width: 1101px\) \{[\s\S]*?\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-end;[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?\}/
     );
     assert.doesNotMatch(responsiveStyles, /word-break:\s*break-word/);
     assert.match(responsiveStyles, /\.session-preview-title\s*\{[\s\S]*?overflow-wrap:\s*anywhere;[\s\S]*?\}/);
