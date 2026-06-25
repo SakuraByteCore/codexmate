@@ -58,11 +58,16 @@ function joinClaudeLocalUpstreamUrl(baseUrl, pathSuffix) {
     return joinApiUrl(baseUrl, suffix);
 }
 
-function buildClaudeLocalAuthHeaders(entry, requestToken, targetApi) {
+function buildClaudeLocalAuthHeaders(entry, requestToken, targetApi, expectedToken = '') {
     const headers = { 'Content-Type': 'application/json' };
+    const trimmedRequestToken = typeof requestToken === 'string' ? requestToken.trim() : '';
+    const bridgeToken = typeof expectedToken === 'string' ? expectedToken.trim() : '';
+    const upstreamRequestToken = trimmedRequestToken && (!bridgeToken || trimmedRequestToken !== bridgeToken)
+        ? trimmedRequestToken
+        : '';
     const token = entry && typeof entry.apiKey === 'string' && entry.apiKey.trim()
         ? entry.apiKey.trim()
-        : (typeof requestToken === 'string' ? requestToken.trim() : '');
+        : upstreamRequestToken;
     if (!token) {
         if (targetApi === 'responses') headers['anthropic-version'] = '2023-06-01';
         return headers;
@@ -360,7 +365,7 @@ function createLocalBridgeHttpHandler(options = {}) {
                     const upstreamResult = await retryTransientRequest(() => proxyRequestJson(modelsUrl, {
                         method: 'GET',
                         body: null,
-                        headers: buildClaudeLocalAuthHeaders(entry, token, targetApi),
+                        headers: buildClaudeLocalAuthHeaders(entry, token, targetApi, expectedToken),
                         maxBytes: maxUpstreamBytes,
                         httpAgent,
                         httpsAgent
@@ -415,7 +420,7 @@ function createLocalBridgeHttpHandler(options = {}) {
                 const upstreamResult = await retryTransientRequest(() => proxyRequestJson(upstreamUrl, {
                     method: 'POST',
                     body: upstreamBody,
-                    headers: buildClaudeLocalAuthHeaders(entry, token, targetApi),
+                    headers: buildClaudeLocalAuthHeaders(entry, token, targetApi, expectedToken),
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
                     httpsAgent
@@ -479,7 +484,7 @@ function createLocalBridgeHttpHandler(options = {}) {
             const wantsStream = !!(parsedBody && parsedBody.stream);
             const bodyToForward = JSON.stringify(parsedBody);
             const upstreamUrl = joinApiUrl(entry.baseUrl.replace(/\/+$/, ''), suffix);
-            const headers = buildClaudeLocalAuthHeaders(entry, token, targetApi);
+            const headers = buildClaudeLocalAuthHeaders(entry, token, targetApi, expectedToken);
 
             if (wantsStream) {
                 const upstreamResult = await streamClaudeUpstream(upstreamUrl, {
