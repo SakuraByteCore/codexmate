@@ -59,6 +59,7 @@ await import(pathToFileURL(path.join(__dirname, 'provider-switch-regression.test
 await import(pathToFileURL(path.join(__dirname, 'codex-proxy-options.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'builtin-proxy-responses-shim.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'claude-proxy-adapter.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'local-bridge-claude-target-api.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'coderabbit-workflows.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'release-changelog.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'update-version-status.test.mjs')));

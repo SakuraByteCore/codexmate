@@ -20,6 +20,14 @@ const {
     isLoopbackAddress
 } = require('./openai-bridge');
 const { isValidHttpUrl, normalizeBaseUrl, joinApiUrl } = require('../lib/cli-utils');
+const {
+    buildBuiltinClaudeChatCompletionsRequest,
+    buildBuiltinClaudeOllamaChatRequest,
+    buildAnthropicMessageFromChatCompletion,
+    buildAnthropicMessageFromOllamaChat,
+    buildAnthropicModelsPayload,
+    buildAnthropicStreamEvents
+} = require('./claude-proxy');
 
 const BUILTIN_PROXY_PROVIDER_NAME = 'codexmate-proxy';
 const BUILTIN_LOCAL_PROVIDER_NAME = 'local';
@@ -27,6 +35,47 @@ const CLAUDE_LOCAL_PROVIDER_NAME = 'claude-local';
 const CLAUDE_LOCAL_EXCLUDED_KEY = 'claudeLocalExcluded';
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000;
+
+function normalizeClaudeLocalTargetApi(value) {
+    const raw = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (raw === 'chat_completions' || raw === 'chat-completions' || raw === 'chat/completions') return 'chat_completions';
+    if (raw === 'ollama') return 'ollama';
+    return 'responses';
+}
+
+function normalizeClaudeLocalSuffix(pathname) {
+    const suffix = String(pathname || '').replace(/^\/bridge\/claude-local\/?/, '').replace(/^\/+/, '');
+    if (!suffix || suffix === 'v1') return '';
+    return suffix.replace(/^v1\/?/, '');
+}
+
+function joinClaudeLocalUpstreamUrl(baseUrl, pathSuffix) {
+    const suffix = typeof pathSuffix === 'string' ? pathSuffix.replace(/^\/+/, '') : '';
+    if (suffix === 'api/tags' || suffix === 'api/chat') {
+        const normalized = normalizeBaseUrl(baseUrl);
+        return normalized ? `${normalized}/${suffix}` : '';
+    }
+    return joinApiUrl(baseUrl, suffix);
+}
+
+function buildClaudeLocalAuthHeaders(entry, requestToken, targetApi) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = entry && typeof entry.apiKey === 'string' && entry.apiKey.trim()
+        ? entry.apiKey.trim()
+        : (typeof requestToken === 'string' ? requestToken.trim() : '');
+    if (!token) {
+        if (targetApi === 'responses') headers['anthropic-version'] = '2023-06-01';
+        return headers;
+    }
+    const bareToken = token.replace(/^Bearer\s+/i, '');
+    if (targetApi === 'responses') {
+        headers['x-api-key'] = bareToken;
+        headers['anthropic-version'] = '2023-06-01';
+    } else {
+        headers.Authorization = /^Bearer\s+/i.test(token) ? token : `Bearer ${token}`;
+    }
+    return headers;
+}
 
 function buildUpstreamPool(readConfigFn, openaiBridgeFile, excludedProviders) {
     let config;
@@ -74,7 +123,13 @@ function buildClaudeUpstreamPool(claudeProvidersFile, excludedProviders) {
         if (excludedSet.has(name.toLowerCase())) continue;
         const baseUrl = typeof p.baseUrl === 'string' ? p.baseUrl.trim() : '';
         if (!baseUrl || !isValidHttpUrl(normalizeBaseUrl(baseUrl))) continue;
-        pool.push({ name, baseUrl: normalizeBaseUrl(baseUrl), apiKey: typeof p.apiKey === 'string' ? p.apiKey : '', model: typeof p.model === 'string' ? p.model.trim() : '' });
+        pool.push({
+            name,
+            baseUrl: normalizeBaseUrl(baseUrl),
+            apiKey: typeof p.apiKey === 'string' ? p.apiKey : '',
+            model: typeof p.model === 'string' ? p.model.trim() : '',
+            targetApi: normalizeClaudeLocalTargetApi(p.targetApi)
+        });
     }
     if (pool.length === 0) return { error: '请先添加可用的 Claude 上游提供商' };
     return { pool };
@@ -263,7 +318,7 @@ function createLocalBridgeHttpHandler(options = {}) {
             const pool = poolResult.pool;
             const { entry } = pickUpstream(pool);
 
-            const suffix = (parsedUrl.pathname || '').replace(/^\/bridge\/claude-local\/?/, '');
+            const suffix = normalizeClaudeLocalSuffix(parsedUrl.pathname || '');
             if (!suffix) {
                 if ((req.method || 'GET').toUpperCase() !== 'GET') {
                     res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -271,11 +326,144 @@ function createLocalBridgeHttpHandler(options = {}) {
                     return;
                 }
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ object: 'codexmate.claude_local_bridge', provider: entry.name, model: entry.model || '', status: 'ok', pool: pool.map(p => p.name) }));
+                res.end(JSON.stringify({
+                    object: 'codexmate.claude_local_bridge',
+                    provider: entry.name,
+                    model: entry.model || '',
+                    targetApi: entry.targetApi,
+                    status: 'ok',
+                    pool: pool.map(p => p.name),
+                    targetApis: Object.fromEntries(pool.map(p => [p.name, p.targetApi]))
+                }));
                 return;
             }
 
-            // Proxy Anthropic Messages API requests
+            const targetApi = normalizeClaudeLocalTargetApi(entry.targetApi);
+            const method = (req.method || 'GET').toUpperCase();
+            const isMessagesRequest = suffix === 'messages';
+            const isModelsRequest = suffix === 'models';
+
+            if ((targetApi === 'chat_completions' || targetApi === 'ollama') && !isMessagesRequest && !isModelsRequest) {
+                res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ error: 'Claude local bridge transform providers only support /v1/messages and /v1/models' }));
+                return;
+            }
+
+            if (targetApi === 'chat_completions' || targetApi === 'ollama') {
+                if (isModelsRequest) {
+                    if (method !== 'GET') {
+                        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8', Allow: 'GET' });
+                        res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+                        return;
+                    }
+                    const modelsUrl = joinClaudeLocalUpstreamUrl(entry.baseUrl.replace(/\/+$/, ''), targetApi === 'ollama' ? 'api/tags' : 'models');
+                    const upstreamResult = await retryTransientRequest(() => proxyRequestJson(modelsUrl, {
+                        method: 'GET',
+                        body: null,
+                        headers: buildClaudeLocalAuthHeaders(entry, token, targetApi),
+                        maxBytes: maxUpstreamBytes,
+                        httpAgent,
+                        httpsAgent
+                    }));
+                    if (!upstreamResult.ok) {
+                        recordFailure(entry.name);
+                        res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({ error: `Upstream request failed: ${upstreamResult.error}` }));
+                        return;
+                    }
+                    const parsedModels = parseJsonOrError(upstreamResult.bodyText || '{}');
+                    if (upstreamResult.status >= 400) {
+                        recordFailure(entry.name);
+                        res.writeHead(upstreamResult.status, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(upstreamResult.bodyText || JSON.stringify({ error: 'Upstream error' }));
+                        return;
+                    }
+                    if (parsedModels.error) {
+                        res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({ error: `Upstream parse failed: ${parsedModels.error}` }));
+                        return;
+                    }
+                    recordSuccess(entry.name);
+                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify(buildAnthropicModelsPayload(parsedModels.value)));
+                    return;
+                }
+
+                if (method !== 'POST') {
+                    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8', Allow: 'POST' });
+                    res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+                    return;
+                }
+                const bodyResult = await readRequestBody(req, maxBodySize);
+                if (bodyResult.error) {
+                    res.writeHead(413, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: bodyResult.error }));
+                    return;
+                }
+                const parsed = parseJsonOrError(bodyResult.body || '{}');
+                if (parsed.error) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: parsed.error }));
+                    return;
+                }
+                const requestPayload = parsed.value && typeof parsed.value === 'object' ? parsed.value : {};
+                if (entry.model) requestPayload.model = entry.model;
+                const upstreamBody = targetApi === 'ollama'
+                    ? buildBuiltinClaudeOllamaChatRequest(requestPayload)
+                    : buildBuiltinClaudeChatCompletionsRequest(requestPayload);
+                const upstreamUrl = joinClaudeLocalUpstreamUrl(entry.baseUrl.replace(/\/+$/, ''), targetApi === 'ollama' ? 'api/chat' : 'chat/completions');
+                const upstreamResult = await retryTransientRequest(() => proxyRequestJson(upstreamUrl, {
+                    method: 'POST',
+                    body: upstreamBody,
+                    headers: buildClaudeLocalAuthHeaders(entry, token, targetApi),
+                    maxBytes: maxUpstreamBytes,
+                    httpAgent,
+                    httpsAgent
+                }));
+
+                if (!upstreamResult.ok) {
+                    recordFailure(entry.name);
+                    res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: `Upstream request failed: ${upstreamResult.error}` }));
+                    return;
+                }
+                if (upstreamResult.status >= 400) {
+                    recordFailure(entry.name);
+                    res.writeHead(upstreamResult.status, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(upstreamResult.bodyText || JSON.stringify({ error: 'Upstream error' }));
+                    return;
+                }
+                const parsedUpstream = parseJsonOrError(upstreamResult.bodyText || '{}');
+                if (parsedUpstream.error) {
+                    res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: `Upstream parse failed: ${parsedUpstream.error}` }));
+                    return;
+                }
+                recordSuccess(entry.name);
+                const anthropicMessage = targetApi === 'ollama'
+                    ? buildAnthropicMessageFromOllamaChat(parsedUpstream.value || {}, requestPayload)
+                    : buildAnthropicMessageFromChatCompletion(parsedUpstream.value || {}, requestPayload);
+                if (requestPayload.stream === true) {
+                    const events = buildAnthropicStreamEvents(anthropicMessage);
+                    res.writeHead(200, {
+                        'Content-Type': 'text/event-stream; charset=utf-8',
+                        'Cache-Control': 'no-cache, no-transform',
+                        Connection: 'keep-alive',
+                        'X-Accel-Buffering': 'no'
+                    });
+                    for (const event of events) {
+                        if (event && event.event) res.write(`event: ${event.event}\n`);
+                        res.write(`data: ${JSON.stringify(event && event.data ? event.data : {})}\n\n`);
+                    }
+                    res.end();
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify(anthropicMessage));
+                return;
+            }
+
+            // Native Anthropic-compatible provider: keep /v1/messages passthrough.
             const bodyResult = await readRequestBody(req, maxBodySize);
             if (bodyResult.error) {
                 res.writeHead(413, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -285,24 +473,15 @@ function createLocalBridgeHttpHandler(options = {}) {
 
             let parsedBody;
             try { parsedBody = bodyResult.body ? JSON.parse(bodyResult.body) : {}; } catch (_) { parsedBody = {}; }
-            // Override model to match the selected upstream provider
             if (entry.model && parsedBody && typeof parsedBody === 'object') {
                 parsedBody.model = entry.model;
             }
             const wantsStream = !!(parsedBody && parsedBody.stream);
             const bodyToForward = JSON.stringify(parsedBody);
             const upstreamUrl = joinApiUrl(entry.baseUrl.replace(/\/+$/, ''), suffix);
-            const headers = { 'Content-Type': 'application/json' };
-            if (entry.apiKey) {
-                headers['x-api-key'] = entry.apiKey.startsWith('Bearer ') ? entry.apiKey.slice(7) : entry.apiKey;
-            }
-            if (token && !entry.apiKey) {
-                headers['x-api-key'] = token.startsWith('Bearer ') ? token.slice(7) : token;
-            }
-            headers['anthropic-version'] = '2023-06-01';
+            const headers = buildClaudeLocalAuthHeaders(entry, token, targetApi);
 
             if (wantsStream) {
-                // Streaming proxy: pipe upstream SSE directly to client
                 const upstreamResult = await streamClaudeUpstream(upstreamUrl, {
                     method: req.method || 'POST',
                     body: bodyToForward,
@@ -324,10 +503,9 @@ function createLocalBridgeHttpHandler(options = {}) {
                 return;
             }
 
-            // Non-streaming proxy
             const upstreamResult = await retryTransientRequest(() => proxyRequestJson(upstreamUrl, {
                 method: req.method || 'POST',
-                body: bodyToForward || null,
+                body: parsedBody || null,
                 headers,
                 maxBytes: maxUpstreamBytes,
                 httpAgent,
