@@ -116,6 +116,90 @@ async function createClaudeBridge({ provider }) {
     return { tmpDir, bridge, handler, baseUrl: `http://127.0.0.1:${port}` };
 }
 
+async function createCodexBridge({ provider }) {
+    const handler = createLocalBridgeHttpHandler({
+        readConfigFn: () => ({
+            model_providers: {
+                local: {
+                    name: 'local',
+                    base_url: 'http://127.0.0.1:3737/bridge/local/v1',
+                    wire_api: 'responses',
+                    requires_openai_auth: true,
+                    preferred_auth_method: 'codexmate',
+                    codexmate_bridge: 'local'
+                },
+                e2e: provider
+            }
+        }),
+        expectedToken: 'codexmate',
+        maxBodySize: 1024 * 1024,
+        maxUpstreamBytes: 1024 * 1024
+    });
+    const bridge = http.createServer((req, res) => {
+        if (!handler(req, res)) {
+            res.statusCode = 404;
+            res.end('not handled');
+        }
+    });
+    const { port } = await listen(bridge);
+    return { bridge, handler, baseUrl: `http://127.0.0.1:${port}` };
+}
+
+test('codex local bridge forwards responses probes as JSON objects instead of string bodies', async () => {
+    let captured = null;
+    const upstream = http.createServer((req, res) => {
+        const chunks = [];
+        req.on('data', (chunk) => chunks.push(chunk));
+        req.on('end', () => {
+            captured = {
+                method: req.method,
+                url: req.url,
+                headers: req.headers,
+                body: Buffer.concat(chunks).toString('utf-8')
+            };
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                id: 'resp_codex_local',
+                object: 'response',
+                model: 'e2e-model',
+                output_text: 'ok',
+                output: [{ type: 'message', content: [{ type: 'output_text', text: 'ok' }] }]
+            }));
+        });
+    });
+    const { port: upstreamPort } = await listen(upstream);
+    const bridge = await createCodexBridge({
+        provider: {
+            name: 'e2e',
+            base_url: `http://127.0.0.1:${upstreamPort}/v1`,
+            wire_api: 'responses',
+            requires_openai_auth: false,
+            preferred_auth_method: 'sk-e2e'
+        }
+    });
+
+    try {
+        const resp = await requestText(`${bridge.baseUrl}/bridge/local/v1/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer codexmate' },
+            body: { model: 'e2e-model', input: 'ping', max_output_tokens: 1 }
+        });
+
+        assert.equal(resp.status, 200);
+        assert.equal(captured.method, 'POST');
+        assert.equal(captured.url, '/v1/responses');
+        const parsed = JSON.parse(captured.body);
+        assert.equal(typeof parsed, 'object');
+        assert.equal(parsed.model, 'e2e-model');
+        assert.equal(parsed.input, 'ping');
+        assert.notEqual(typeof parsed, 'string');
+        assert.equal(JSON.parse(resp.text).id, 'resp_codex_local');
+    } finally {
+        await closeServer(bridge.bridge);
+        await closeServer(upstream);
+    }
+});
+
 test('claude local bridge keeps responses providers on Anthropic /v1/messages without double v1', async () => {
     let captured = null;
     const upstream = http.createServer((req, res) => {

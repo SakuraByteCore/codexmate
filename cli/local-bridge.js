@@ -631,7 +631,7 @@ function createLocalBridgeHttpHandler(options = {}) {
                 const upstreamResponsesUrl = joinApiUrl(upstreamBase, 'responses');
                 const upstreamResponsesResult = await retryTransientRequest(() => proxyRequestJson(upstreamResponsesUrl, {
                     method: 'POST',
-                    body: bodyResult.body,
+                    body: responsesRequest,
                     headers: { ...(authHeader ? { Authorization: authHeader } : {}) },
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
@@ -683,7 +683,7 @@ function createLocalBridgeHttpHandler(options = {}) {
                 const chatUrl = joinApiUrl(upstreamBase, 'chat/completions');
                 const chatResult = await retryTransientRequest(() => proxyRequestJson(chatUrl, {
                     method: 'POST',
-                    body: JSON.stringify(converted.chat),
+                    body: converted.chat,
                     headers: { ...(authHeader ? { Authorization: authHeader } : {}), 'Content-Type': 'application/json' },
                     maxBytes: maxUpstreamBytes,
                     httpAgent,

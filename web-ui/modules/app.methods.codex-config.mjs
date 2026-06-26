@@ -395,52 +395,16 @@ export function createCodexConfigMethods(options = {}) {
                             speedTests: results
                         }
                     };
+                    if (!silent) {
+                        this.showHealthCheckModal = true;
+                    }
                     if (ok && !silent) {
                         this.showMessage('检查通过', 'success');
                     }
                     return;
                 }
 
-                const shouldRunSpeedTests = this.configMode === 'codex';
-                const speedTimeoutMs = shouldRunSpeedTests ? 3500 : 0;
-                const providers = shouldRunSpeedTests
-                    ? (this.providersList || [])
-                        .map((provider) => typeof provider === 'string'
-                            ? provider.trim()
-                            : String((provider && provider.name) || '').trim())
-                        .filter((name) => name !== 'local' && name !== 'codexmate-proxy')
-                        .filter(Boolean)
-                    : [];
-                const currentProvider = String(this.currentProvider || '').trim();
-                const orderedProviders = currentProvider && providers.includes(currentProvider)
-                    ? [currentProvider, ...providers.filter((name) => name !== currentProvider)]
-                    : providers;
-                this.healthCheckBatchTotal = orderedProviders.length;
-
-                const speedTasks = orderedProviders.map((provider) => this.runSpeedTest(provider, { silent: true, timeoutMs: speedTimeoutMs })
-                    .then((result) => {
-                        if (!result || result.ok !== true) {
-                            this.healthCheckBatchFailed += 1;
-                        }
-                        return { name: provider, result };
-                    })
-                    .catch((err) => {
-                        this.healthCheckBatchFailed += 1;
-                        return {
-                            name: provider,
-                            result: { ok: false, error: err && err.message ? err.message : 'Speed test failed' }
-                        };
-                    })
-                    .finally(() => {
-                        this.healthCheckBatchDone += 1;
-                    })
-                );
-
-                const configTask = api('config-health-check', { remote: this.configMode === 'codex' });
-                const [res, pairs] = await Promise.all([
-                    configTask,
-                    Promise.all(speedTasks)
-                ]);
+                const res = await api('config-health-check', { remote: this.configMode === 'codex' });
                 if (hasResponseError(res)) {
                     this.healthCheckResult = null;
                     if (!silent) {
@@ -448,26 +412,16 @@ export function createCodexConfigMethods(options = {}) {
                     }
                 } else if (res && typeof res === 'object') {
                     const issues = Array.isArray(res.issues) ? [...res.issues] : [];
-                    let remote = res.remote || null;
-                    if (shouldRunSpeedTests) {
-                        const results = {};
-                        for (const pair of pairs) {
-                            results[pair.name] = pair.result || null;
-                            const issue = this.buildSpeedTestIssue(pair.name, pair.result);
-                            if (issue) issues.push(issue);
-                        }
-                        remote = remote && typeof remote === 'object'
-                            ? { ...remote, speedTests: results }
-                            : { type: 'speed-test', speedTests: results };
-                    }
-
                     const ok = issues.length === 0;
                     this.healthCheckResult = {
                         ...res,
                         ok,
                         issues,
-                        remote
+                        remote: res.remote || null
                     };
+                    if (!silent) {
+                        this.showHealthCheckModal = true;
+                    }
                     if (ok && !silent) {
                         this.showMessage('检查通过', 'success');
                     }
@@ -486,9 +440,6 @@ export function createCodexConfigMethods(options = {}) {
                 this.healthCheckBatchTotal = this.healthCheckBatchTotal || 0;
                 this.healthCheckBatchDone = Math.min(this.healthCheckBatchDone || 0, this.healthCheckBatchTotal || 0);
                 this.healthCheckLoading = false;
-                if (typeof this.runProvidersHealthCheck === 'function' && this.configMode === 'codex') {
-                    void this.runProvidersHealthCheck({ remote: true });
-                }
             }
         },
 
