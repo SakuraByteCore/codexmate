@@ -431,6 +431,12 @@ textarea:focus-visible {
         padding: 8px;
     }
 
+    #panel-config-provider .card-list > .card,
+    #panel-config-claude .card-list > .card {
+        padding-top: 13px;
+        padding-bottom: 13px;
+    }
+
     .card-list {
         gap: 4px;
         margin-bottom: 4px;
