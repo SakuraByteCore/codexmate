@@ -591,6 +591,7 @@ export function createCodexConfigMethods(options = {}) {
                     const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' ? this.claudeConfigs : {};
                     const names = claudeItems.map((item) => item.name).filter((name) => configs[name]);
                     if (names.length) {
+                        const deletedCurrentClaude = names.includes(this.currentClaudeConfig);
                         const remainingNames = Object.keys(configs).filter((name) => !names.includes(name));
                         if (remainingNames.length === 0) {
                             throw new Error(this.t('toast.claude.keepOne'));
@@ -609,16 +610,23 @@ export function createCodexConfigMethods(options = {}) {
                                     if (res && res.error) throw new Error(res.error);
                                 }
                             }
+                            if (typeof this.rememberDeletedClaudeSettingsImport === 'function') {
+                                this.rememberDeletedClaudeSettingsImport(config);
+                            }
                             delete configs[name];
                             deleted.push(name);
                         }
-                        if (names.includes(this.currentClaudeConfig)) {
-                            this.currentClaudeConfig = remainingNames[0];
+                        if (deletedCurrentClaude) {
+                            this.currentClaudeConfig = typeof this.selectClaudeFallbackConfigName === 'function'
+                                ? this.selectClaudeFallbackConfigName(names)
+                                : remainingNames[0];
                         }
                         if (typeof this.saveClaudeConfigs === 'function') {
                             this.saveClaudeConfigs();
                         }
-                        if (typeof this.refreshClaudeModelContext === 'function') {
+                        if (deletedCurrentClaude && typeof this.applyCurrentClaudeConfigSilently === 'function') {
+                            await this.applyCurrentClaudeConfigSilently();
+                        } else if (typeof this.refreshClaudeModelContext === 'function') {
                             this.refreshClaudeModelContext();
                         }
                     }

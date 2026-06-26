@@ -15,6 +15,9 @@ const { createCodexConfigMethods } = await import(
 const { createClaudeConfigMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.claude-config.mjs'))
 );
+const { createStartupClaudeMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.startup-claude.mjs'))
+);
 const {
     isLikelyBuiltinClaudeProxySettingsEnv,
     matchBuiltinClaudeProxyConfigFromSettings
@@ -617,6 +620,69 @@ test('refreshClaudeSelectionFromSettings keeps builtin Claude proxy selection wi
     assert.strictEqual(saveCount, 0);
     assert.strictEqual(refreshCount, 1);
     assert.deepStrictEqual(messages, []);
+});
+
+test('refreshClaudeSelectionFromSettings suppresses re-import of deleted Claude settings fingerprints', async () => {
+    const previousLocalStorage = globalThis.localStorage;
+    const stored = new Map([[ 'deletedClaudeSettingsImports', JSON.stringify([{
+        baseUrl: 'https://zombie.example.com/anthropic',
+        model: 'claude-opus-4-6',
+        providerCacheRef: 'claude-cache-zombie',
+        deletedAt: Date.now()
+    }]) ]]);
+    globalThis.localStorage = {
+        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
+        setItem(key, value) { stored.set(key, String(value)); },
+        removeItem(key) { stored.delete(key); }
+    };
+    try {
+        const methods = createStartupClaudeMethods({
+            api: async (action) => {
+                if (action === 'get-claude-settings') {
+                    return {
+                        exists: true,
+                        env: {
+                            ANTHROPIC_API_KEY: 'sk-zombie',
+                            ANTHROPIC_BASE_URL: 'https://zombie.example.com/anthropic/',
+                            ANTHROPIC_MODEL: 'claude-opus-4-6'
+                        }
+                    };
+                }
+                return { success: true };
+            }
+        });
+        let ensureCount = 0;
+        const context = {
+            ...methods,
+            claudeConfigs: {
+                survivor: {
+                    apiKey: 'sk-survivor',
+                    baseUrl: 'https://survivor.example.com/anthropic',
+                    model: 'claude-sonnet-4-6',
+                    hasKey: true
+                }
+            },
+            currentClaudeConfig: 'survivor',
+            currentClaudeModel: '',
+            matchClaudeConfigFromSettings: () => '',
+            matchBuiltinClaudeProxyConfigFromSettings: () => '',
+            ensureClaudeConfigFromSettings() {
+                ensureCount += 1;
+                throw new Error('deleted Claude settings must not be imported again');
+            },
+            refreshClaudeModelContext() {},
+            resetClaudeModelsState() {},
+            showMessage() {}
+        };
+
+        await methods.refreshClaudeSelectionFromSettings.call(context, { silent: true });
+
+        assert.strictEqual(ensureCount, 0);
+        assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['survivor']);
+        assert.strictEqual(context.currentClaudeConfig, 'survivor');
+    } finally {
+        globalThis.localStorage = previousLocalStorage;
+    }
 });
 
 test('builtin Claude proxy settings detection requires loopback URL and generated proxy token shape', () => {
@@ -1575,6 +1641,31 @@ test('hydrateClaudeConfigsFromProviderCache prunes stale cache-backed Claude con
     } finally {
         globalThis.localStorage = previousLocalStorage;
     }
+});
+
+test('selectClaudeFallbackConfigName prefers applyable Claude configs over placeholder defaults', () => {
+    const methods = createClaudeConfigMethods({ api: async () => ({ success: true }) });
+    const context = {
+        claudeConfigs: {
+            '智谱GLM': {
+                apiKey: '',
+                baseUrl: 'https://open.bigmodel.cn/api/anthropic',
+                model: 'glm-4.7',
+                targetApi: 'responses',
+                hasKey: false
+            },
+            survivor: {
+                apiKey: '',
+                baseUrl: 'https://survivor.example.com/anthropic',
+                model: 'claude-sonnet-4-6',
+                providerCacheRef: 'survivor-cache',
+                source: 'provider-cache',
+                hasKey: true
+            }
+        }
+    };
+
+    assert.strictEqual(methods.selectClaudeFallbackConfigName.call(context, ['deleted']), 'survivor');
 });
 
 test('applyClaudeConfig accepts provider-cache backed Claude providers without browser api key', async () => {

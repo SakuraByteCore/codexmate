@@ -528,7 +528,7 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and p
         claudeConfigs: {
             bad: { name: 'bad', providerCacheRef: 'bad', source: 'provider-cache' },
             worse: { name: 'worse', providerCacheRef: 'worse-cache', source: 'provider-cache' },
-            ok: { name: 'ok' }
+            ok: { name: 'ok', providerCacheRef: 'ok-cache', source: 'provider-cache' }
         },
         currentClaudeConfig: 'bad',
         healthCheckFailedProviderSelections: {},
@@ -547,6 +547,8 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and p
         },
         saved: 0,
         refreshed: 0,
+        remembered: [],
+        applied: [],
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
@@ -559,6 +561,13 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and p
         },
         refreshClaudeModelContext() {
             this.refreshed += 1;
+        },
+        rememberDeletedClaudeSettingsImport(config) {
+            this.remembered.push(config && config.providerCacheRef);
+        },
+        async applyCurrentClaudeConfigSilently() {
+            this.applied.push(this.currentClaudeConfig);
+            return true;
         },
         async requestConfirmDialog() {
             throw new Error('bulk failed-provider cleanup must not request per-item confirmation');
@@ -580,7 +589,9 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and p
     assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
     assert.strictEqual(context.currentClaudeConfig, 'ok');
     assert.strictEqual(context.saved, 1);
-    assert.strictEqual(context.refreshed, 1);
+    assert.strictEqual(context.refreshed, 0);
+    assert.deepStrictEqual(context.remembered, ['bad', 'worse-cache']);
+    assert.deepStrictEqual(context.applied, ['ok']);
     assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
     assert.deepStrictEqual(context.healthCheckResult.issues, []);
     assert.strictEqual(context.healthCheckResult.ok, true);
@@ -610,6 +621,8 @@ test('deleteClaudeConfig prunes provider-cache source before local removal', asy
         currentClaudeConfig: 'bad',
         saved: 0,
         refreshed: 0,
+        remembered: [],
+        applied: [],
         synced: 0,
         shownMessages: [],
         async requestConfirmDialog() {
@@ -624,6 +637,13 @@ test('deleteClaudeConfig prunes provider-cache source before local removal', asy
         refreshClaudeModelContext() {
             this.refreshed += 1;
         },
+        rememberDeletedClaudeSettingsImport(config) {
+            this.remembered.push(config && config.providerCacheRef);
+        },
+        async applyCurrentClaudeConfigSilently() {
+            this.applied.push(this.currentClaudeConfig);
+            return true;
+        },
         syncClaudeBridgeProviders() {
             this.synced += 1;
         }
@@ -635,7 +655,9 @@ test('deleteClaudeConfig prunes provider-cache source before local removal', asy
     assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
     assert.strictEqual(context.currentClaudeConfig, 'ok');
     assert.strictEqual(context.saved, 1);
-    assert.strictEqual(context.refreshed, 1);
+    assert.strictEqual(context.refreshed, 0);
+    assert.deepStrictEqual(context.remembered, ['bad-cache']);
+    assert.deepStrictEqual(context.applied, ['ok']);
     assert.deepStrictEqual(context.shownMessages, [{ message: '操作成功', type: 'success' }]);
 });
 

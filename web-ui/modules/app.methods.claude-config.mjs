@@ -8,6 +8,21 @@ function normalizeClaudeBaseUrl(value) {
     return normalizeClaudeText(value).replace(/\/+$/g, '');
 }
 
+const DELETED_CLAUDE_SETTINGS_IMPORTS_KEY = 'deletedClaudeSettingsImports';
+
+function buildDeletedClaudeSettingsFingerprint(config = {}) {
+    const safe = config && typeof config === 'object' ? config : {};
+    const baseUrl = normalizeClaudeBaseUrl(safe.baseUrl);
+    const model = normalizeClaudeText(safe.model);
+    if (!baseUrl || !model) return null;
+    return {
+        baseUrl,
+        model,
+        providerCacheRef: normalizeClaudeText(safe.providerCacheRef),
+        deletedAt: Date.now()
+    };
+}
+
 function isValidClaudeHttpUrl(value) {
     if (!value) return false;
     try {
@@ -114,6 +129,46 @@ export function createClaudeConfigMethods(options = {}) {
                 try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
             }
             this.syncClaudeBridgeProviders();
+        },
+
+        rememberDeletedClaudeSettingsImport(config) {
+            const fingerprint = buildDeletedClaudeSettingsFingerprint(config);
+            if (!fingerprint) return;
+            try {
+                const raw = localStorage.getItem(DELETED_CLAUDE_SETTINGS_IMPORTS_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                const entries = Array.isArray(parsed) ? parsed : [];
+                const deduped = entries.filter((entry) => {
+                    if (!entry || typeof entry !== 'object') return false;
+                    return normalizeClaudeBaseUrl(entry.baseUrl) !== fingerprint.baseUrl
+                        || normalizeClaudeText(entry.model) !== fingerprint.model;
+                });
+                deduped.push(fingerprint);
+                localStorage.setItem(DELETED_CLAUDE_SETTINGS_IMPORTS_KEY, JSON.stringify(deduped.slice(-50)));
+            } catch (_) {}
+        },
+
+        async applyCurrentClaudeConfigSilently() {
+            const name = normalizeClaudeText(this.currentClaudeConfig);
+            if (!name || !this.claudeConfigs || !this.claudeConfigs[name]) return false;
+            if (typeof this.applyClaudeConfig !== 'function') return false;
+            return await this.applyClaudeConfig(name, { silent: true });
+        },
+
+        selectClaudeFallbackConfigName(excludedNames = []) {
+            const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' ? this.claudeConfigs : {};
+            const excluded = new Set((Array.isArray(excludedNames) ? excludedNames : [excludedNames])
+                .map((name) => normalizeClaudeText(name))
+                .filter(Boolean));
+            const names = Object.keys(configs).filter((name) => name && !excluded.has(name));
+            const applyable = names.find((name) => {
+                const config = configs[name] || {};
+                return !!(config.apiKey
+                    || config.providerCacheRef
+                    || config.externalCredentialType
+                    || config.targetApi === 'ollama');
+            });
+            return applyable || names[0] || '';
         },
 
         async hydrateClaudeConfigsFromProviderCache(options = {}) {
@@ -382,16 +437,26 @@ export function createClaudeConfigMethods(options = {}) {
             const cacheDeleted = await this.deleteClaudeProviderCacheRef(config || name);
             if (!cacheDeleted) return;
 
+            if (typeof this.rememberDeletedClaudeSettingsImport === 'function') {
+                this.rememberDeletedClaudeSettingsImport(config);
+            }
             delete this.claudeConfigs[name];
             if (this.currentClaudeConfig === name) {
-                this.currentClaudeConfig = Object.keys(this.claudeConfigs)[0];
+                this.currentClaudeConfig = this.selectClaudeFallbackConfigName();
             }
             this.saveClaudeConfigs();
             this.showMessage(this.t('toast.operation.success'), 'success');
-            this.refreshClaudeModelContext();
+            if (this.currentClaudeConfig) {
+                await this.applyCurrentClaudeConfigSilently();
+            } else {
+                this.refreshClaudeModelContext();
+            }
         },
 
-        async applyClaudeConfig(name) {
+        async applyClaudeConfig(name, options = {}) {
+            const silent = !!(options && options.silent);
+            const silentSuccess = silent || !!(options && options.silentSuccess);
+            const silentError = silent || !!(options && options.silentError);
             this.currentClaudeConfig = name;
             try { localStorage.setItem('currentClaudeConfig', name || ''); } catch (_) {}
             this.refreshClaudeModelContext();
@@ -399,8 +464,10 @@ export function createClaudeConfigMethods(options = {}) {
 
             if (!config.apiKey && !config.providerCacheRef && config.targetApi !== 'ollama') {
                 if (config.externalCredentialType) {
+                    if (silentError) return false;
                     return this.showMessage(this.t('toast.claude.externalAuth'), 'info');
                 }
+                if (silentError) return false;
                 return this.showMessage(this.t('toast.claude.apiKeyRequired'), 'error');
             }
 
@@ -408,15 +475,18 @@ export function createClaudeConfigMethods(options = {}) {
             try {
                 const res = await api('apply-claude-config', { config: { ...config, name } });
                 if (res.error || res.success === false) {
-                    this.showMessage(res.error || this.t('toast.apply.fail'), 'error');
+                    if (!silentError) this.showMessage(res.error || this.t('toast.apply.fail'), 'error');
+                    return false;
                 } else {
-                    if (this._lastAppliedClaudeKey !== _claudeKey2) {
+                    if (!silentSuccess && this._lastAppliedClaudeKey !== _claudeKey2) {
                         this.showMessage(this.t('toast.apply.success'), 'success');
-                        this._lastAppliedClaudeKey = _claudeKey2;
                     }
+                    this._lastAppliedClaudeKey = _claudeKey2;
+                    return true;
                 }
             } catch (_) {
-                this.showMessage(this.t('toast.apply.fail'), 'error');
+                if (!silentError) this.showMessage(this.t('toast.apply.fail'), 'error');
+                return false;
             }
         },
 

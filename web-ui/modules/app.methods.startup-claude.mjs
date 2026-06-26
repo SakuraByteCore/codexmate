@@ -10,6 +10,30 @@ import {
 } from '../logic.mjs';
 import { nextClaudeConfigName } from './provider-default-names.mjs';
 
+const DELETED_CLAUDE_SETTINGS_IMPORTS_STORAGE_KEY = 'deletedClaudeSettingsImports';
+
+function normalizeDeletedClaudeImportUrl(value) {
+    return typeof value === 'string' ? value.trim().replace(/\/+$/g, '') : '';
+}
+
+function shouldSuppressDeletedClaudeSettingsImport(env = {}) {
+    const normalized = normalizeClaudeSettingsEnv(env);
+    const baseUrl = normalizeDeletedClaudeImportUrl(normalized.baseUrl);
+    const model = normalizeClaudeValue(normalized.model);
+    if (!baseUrl || !model) return false;
+    try {
+        const raw = localStorage.getItem(DELETED_CLAUDE_SETTINGS_IMPORTS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        const entries = Array.isArray(parsed) ? parsed : [];
+        return entries.some((entry) => entry
+            && typeof entry === 'object'
+            && normalizeDeletedClaudeImportUrl(entry.baseUrl) === baseUrl
+            && normalizeClaudeValue(entry.model) === model);
+    } catch (_) {
+        return false;
+    }
+}
+
 export function createStartupClaudeMethods(options = {}) {
     const {
         api,
@@ -251,7 +275,7 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         shouldSuppressClaudeSettingsImport(env) {
-            return isLikelyBuiltinClaudeProxySettingsEnv(env);
+            return isLikelyBuiltinClaudeProxySettingsEnv(env) || shouldSuppressDeletedClaudeSettingsImport(env);
         },
 
         findDuplicateClaudeConfigName(config) {
