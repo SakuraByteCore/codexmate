@@ -656,7 +656,10 @@ export function createCodexConfigMethods(options = {}) {
                 const result = this.healthCheckResult;
                 const remote = result && result.remote;
                 const remainingIssues = Array.isArray(result && result.issues)
-                    ? result.issues.filter((issue) => !deletedSet.has(issue && issue.provider))
+                    ? result.issues.filter((issue) => {
+                        const name = normalizeProviderName(issue && (issue.provider || issue.providerName || issue.name));
+                        return !name || !deletedSet.has(name);
+                    })
                     : [];
                 if (result && typeof result === 'object') {
                     if (remote && remote.type === 'providers-health' && Array.isArray(remote.providers)) {
@@ -680,6 +683,24 @@ export function createCodexConfigMethods(options = {}) {
                         this.healthCheckBatchTotal = summary.total;
                         this.healthCheckBatchDone = summary.total;
                         this.healthCheckBatchFailed = summary.yellow + summary.red;
+                    } else if (remote && remote.type === 'speed-test' && remote.speedTests && typeof remote.speedTests === 'object') {
+                        const speedTests = Object.fromEntries(
+                            Object.entries(remote.speedTests).filter(([name]) => !deletedSet.has(normalizeProviderName(name)))
+                        );
+                        const total = Object.keys(speedTests).length;
+                        const failed = Object.values(speedTests).filter((entry) => !entry || entry.ok !== true).length;
+                        this.healthCheckResult = {
+                            ...result,
+                            ok: remainingIssues.length === 0 && failed === 0,
+                            remote: {
+                                ...remote,
+                                speedTests
+                            },
+                            issues: remainingIssues
+                        };
+                        this.healthCheckBatchTotal = total;
+                        this.healthCheckBatchDone = total;
+                        this.healthCheckBatchFailed = failed;
                     } else {
                         const removedRemote = remote && remote.type === 'remote-health-check' && deletedSet.has(remote.provider);
                         this.healthCheckResult = {

@@ -541,9 +541,16 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and p
             ok: false,
             issues: [
                 { provider: 'bad', message: 'bad failed' },
-                { provider: 'worse', message: 'worse failed' }
+                { providerName: 'worse', message: 'worse failed' }
             ],
-            remote: null
+            remote: {
+                type: 'speed-test',
+                speedTests: {
+                    bad: { ok: false, error: 'bad failed' },
+                    worse: { ok: false, error: 'worse failed' },
+                    ok: { ok: true, durationMs: 12, status: 200 }
+                }
+            }
         },
         saved: 0,
         refreshed: 0,
@@ -594,7 +601,13 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and p
     assert.deepStrictEqual(context.applied, ['ok']);
     assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
     assert.deepStrictEqual(context.healthCheckResult.issues, []);
+    assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
+        ok: { ok: true, durationMs: 12, status: 200 }
+    });
     assert.strictEqual(context.healthCheckResult.ok, true);
+    assert.strictEqual(context.healthCheckBatchTotal, 1);
+    assert.strictEqual(context.healthCheckBatchDone, 1);
+    assert.strictEqual(context.healthCheckBatchFailed, 0);
     assert.strictEqual(context.showHealthCheckModal, false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 2 个失败提供商', type: 'success' }]);
 });
