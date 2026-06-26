@@ -1501,8 +1501,24 @@ preferred_auth_method = "shadow-key"
     const deleteProviderEmpty = await api('delete-provider', { name: '' });
     assert(deleteProviderEmpty.error, 'delete-provider should fail for empty name');
 
+    const syncedProviderCacheBeforeDelete = await api('sync-provider-cache-records');
+    assert(syncedProviderCacheBeforeDelete.success === true, 'provider cache sync before delete should succeed');
+    const cacheContainsProvider = (records, providerName) => Array.isArray(records && records.groups)
+        && records.groups.some((group) => Array.isArray(group && group.files)
+            && group.files.some((file) => Array.isArray(file && file.providers)
+                && file.providers.some((provider) => provider && provider.name === providerName)));
+    assert(cacheContainsProvider(syncedProviderCacheBeforeDelete.records, 'e2e-api'), 'provider cache should contain e2e-api before delete');
+
     const deleteProviderResult = await api('delete-provider', { name: 'e2e-api' });
     assert(deleteProviderResult.success === true, 'delete-provider failed');
+
+    for (let i = 0; i < 3; i += 1) {
+        const refreshedAfterDelete = await api('get-provider-cache-records');
+        assert(!cacheContainsProvider(refreshedAfterDelete, 'e2e-api'), 'deleted provider should not reappear in provider cache refresh');
+    }
+    const syncedProviderCacheAfterDelete = await api('sync-provider-cache-records');
+    assert(syncedProviderCacheAfterDelete.success === true, 'provider cache sync after delete should succeed');
+    assert(!cacheContainsProvider(syncedProviderCacheAfterDelete.records, 'e2e-api'), 'provider cache sync should prune deleted provider instead of resurrecting it');
 
     const deleteLocalProviderResult = await api('delete-provider', { name: 'local' });
     assert(deleteLocalProviderResult.error, 'delete-provider should reject reserved local provider');
