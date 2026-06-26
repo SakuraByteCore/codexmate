@@ -1,3 +1,5 @@
+import { nextCodexProviderName } from './provider-default-names.mjs';
+
 const PROVIDER_NAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
 const RESERVED_PROXY_PROVIDER_NAME = 'codexmate-proxy';
 const RESERVED_LOCAL_PROVIDER_NAME = 'local';
@@ -327,6 +329,18 @@ export function createProvidersMethods(options = {}) {
             this.showAddModal = true;
         },
 
+        openAddProviderModal() {
+            this.newProvider = {
+                name: nextCodexProviderName(this.providersList),
+                url: '',
+                key: '',
+                model: '',
+                useTransform: false
+            };
+            this.showAddProviderKey = false;
+            this.showAddModal = true;
+        },
+
         async openEditModal(provider) {
             const requestId = Symbol('openEditModal');
             this._openEditModalRequestId = requestId;
@@ -536,7 +550,7 @@ export function createProvidersMethods(options = {}) {
         closeAddModal() {
             this.showAddModal = false;
             this.showAddProviderKey = false;
-            this.newProvider = { name: '', url: '', key: '', model: '', useTransform: false };
+            this.newProvider = { name: nextCodexProviderName(this.providersList), url: '', key: '', model: '', useTransform: false };
         },
 
         toggleAddProviderKey() {

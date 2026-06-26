@@ -94,7 +94,7 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
         }
     }]);
     assert.strictEqual(context.showAddModal, false);
-    assert.deepStrictEqual(context.newProvider, { name: '', url: '', key: '', model: '', useTransform: false });
+    assert.deepStrictEqual(context.newProvider, { name: '1', url: '', key: '', model: '', useTransform: false });
     // c3c9ee5：增删改不再触发 loadAll，改为本地 providersList 增量更新。
     assert.deepStrictEqual(loadAllCalls, []);
     assert.ok(

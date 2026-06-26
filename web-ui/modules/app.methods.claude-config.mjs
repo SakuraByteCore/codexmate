@@ -1,3 +1,5 @@
+import { nextClaudeConfigName } from './provider-default-names.mjs';
+
 function normalizeClaudeText(value) {
     return typeof value === 'string' ? value.trim() : '';
 }
@@ -378,7 +380,7 @@ export function createClaudeConfigMethods(options = {}) {
             this.showClaudeConfigModal = false;
             this.showAddClaudeConfigKey = false;
             this.newClaudeConfig = {
-                name: '',
+                name: nextClaudeConfigName(this.claudeConfigs),
                 apiKey: '',
                 externalCredentialType: '',
                 baseUrl: '',

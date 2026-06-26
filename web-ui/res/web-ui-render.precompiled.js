@@ -1115,7 +1115,7 @@ return function render(_ctx, _cache) {
                         ? (_openBlock(), _createElementBlock("button", {
                             key: 0,
                             class: "btn-add",
-                            onClick: $event => {_ctx.showAddProviderKey = false; _ctx.showAddModal = true},
+                            onClick: _ctx.openAddProviderModal,
                             disabled: !_ctx.isToolConfigWriteAllowed('codex')
                           }, [
                             (_openBlock(), _createElementBlock("svg", {

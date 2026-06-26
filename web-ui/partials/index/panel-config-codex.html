@@ -47,7 +47,7 @@
 
                 <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('codex') }">
                     <div class="tool-config-write-body">
-                <button class="btn-add" @click="showAddProviderKey = false; showAddModal = true" v-if="!loading && !initError" :disabled="!isToolConfigWriteAllowed('codex')">
+                <button class="btn-add" @click="openAddProviderModal" v-if="!loading && !initError" :disabled="!isToolConfigWriteAllowed('codex')">
                     <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
                     {{ t('config.addProvider') }}
                 </button>

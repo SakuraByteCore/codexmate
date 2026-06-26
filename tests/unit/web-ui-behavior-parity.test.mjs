@@ -576,6 +576,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'findProviderByName',
         'getProviderValidation',
         'getShareCommandPrefixInvocation',
+        'openAddProviderModal',
         'invalidateSessionsUsageData',
         'isReservedProviderCreationName',
         'isSessionLoadNativeDialogEnabled',

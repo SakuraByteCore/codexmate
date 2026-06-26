@@ -8,6 +8,7 @@ import {
     normalizeClaudeSettingsEnv,
     normalizeClaudeValue
 } from '../logic.mjs';
+import { nextClaudeConfigName } from './provider-default-names.mjs';
 
 export function createStartupClaudeMethods(options = {}) {
     const {
@@ -573,6 +574,14 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         openClaudeConfigModal() {
+            this.newClaudeConfig = {
+                name: nextClaudeConfigName(this.claudeConfigs),
+                apiKey: '',
+                externalCredentialType: '',
+                baseUrl: '',
+                model: '',
+                targetApi: 'responses'
+            };
             this.showAddClaudeConfigKey = false;
             this.showClaudeConfigModal = true;
         },
