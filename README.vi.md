@@ -48,6 +48,7 @@ Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent c�
 Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Agent Bridge cục bộ**:
 - **Trình duyệt phiên thống nhất**: Tìm kiếm và xuất phiên làm việc từ tất cả tool trong một nơi duy nhất.
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
+- **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
 - **Điều phối tác vụ**: Lập kế hoạch và thực thi tác vụ phức tạp với theo dõi phụ thuộc.
 
@@ -64,6 +65,7 @@ Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Ag
 | **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
 | **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |
 | **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
+| **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
 | **Mẫu Prompt** | ✅ | Plugin prompt tái sử dụng được với hỗ trợ biến |
 | **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
 | **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
