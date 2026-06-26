@@ -377,7 +377,13 @@ export function createCodexConfigMethods(options = {}) {
                 }
 
                 if (this.configMode === 'claude') {
-                    const entries = Object.entries(this.claudeConfigs || {});
+                    const configs = this.claudeConfigs || {};
+                    const currentName = typeof this.currentClaudeConfig === 'string' && configs[this.currentClaudeConfig]
+                        ? this.currentClaudeConfig
+                        : Object.keys(configs)[0];
+                    const entries = currentName && configs[currentName]
+                        ? [[currentName, configs[currentName]]]
+                        : [];
                     this.healthCheckBatchTotal = entries.length;
 
                     const speedTasks = entries.map(([name, config]) => this.runClaudeSpeedTest(name, config)
@@ -428,50 +434,29 @@ export function createCodexConfigMethods(options = {}) {
                 }
 
                 const [configRes, providersRes] = await Promise.all([
-                    api('config-health-check', { remote: false }),
-                    api('providers-health', { remote: true })
+                    api('config-health-check', { remote: true }),
+                    api('providers-health', { remote: false })
                 ]);
+                if (providersRes && typeof providersRes === 'object' && !hasResponseError(providersRes)) {
+                    this.providersHealthResult = providersRes;
+                }
                 if (hasResponseError(configRes)) {
                     this.healthCheckResult = null;
                     if (!silent) {
                         this.showMessage(getResponseMessage(configRes, this.t('toast.check.fail')), 'error');
                     }
-                } else if (hasResponseError(providersRes)) {
-                    this.healthCheckResult = null;
-                    if (!silent) {
-                        this.showMessage(getResponseMessage(providersRes, this.t('toast.check.fail')), 'error');
-                    }
-                } else if (configRes && typeof configRes === 'object' && providersRes && typeof providersRes === 'object') {
-                    const configIssues = Array.isArray(configRes.issues) ? [...configRes.issues] : [];
-                    const providerRows = Array.isArray(providersRes.providers) ? providersRes.providers : [];
-                    const providerIssues = providerRows
-                        .filter((provider) => provider && provider.status !== 'green')
-                        .flatMap((provider) => (Array.isArray(provider.issues) ? provider.issues : [])
-                            .map((issue) => ({
-                                ...(issue || {}),
-                                provider: provider.provider || ''
-                            })));
-                    const issues = [...configIssues, ...providerIssues];
-                    const configOk = typeof configRes.ok === 'boolean' ? configRes.ok : configIssues.length === 0;
-                    const providersOk = typeof providersRes.ok === 'boolean'
-                        ? providersRes.ok
-                        : providerRows.every((provider) => provider && provider.status === 'green');
-                    const ok = configOk && providersOk;
+                } else if (configRes && typeof configRes === 'object') {
+                    const issues = Array.isArray(configRes.issues) ? [...configRes.issues] : [];
+                    const ok = typeof configRes.ok === 'boolean' ? configRes.ok : issues.length === 0;
                     this.healthCheckResult = {
                         ...configRes,
                         ok,
                         issues,
-                        remote: {
-                            type: 'providers-health',
-                            currentProvider: providersRes.currentProvider || (configRes.summary && configRes.summary.currentProvider) || '',
-                            providers: providerRows,
-                            summary: providersRes.summary || null,
-                            config: configRes.summary || null
-                        }
+                        remote: configRes.remote || null
                     };
-                    this.healthCheckBatchTotal = providerRows.length;
-                    this.healthCheckBatchDone = providerRows.length;
-                    this.healthCheckBatchFailed = providerRows.filter((provider) => provider && provider.status !== 'green').length;
+                    this.healthCheckBatchTotal = 1;
+                    this.healthCheckBatchDone = 1;
+                    this.healthCheckBatchFailed = ok ? 0 : 1;
                     if (!silent) {
                         this.showHealthCheckModal = true;
                     }

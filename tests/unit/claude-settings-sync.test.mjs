@@ -1509,6 +1509,74 @@ test('hydrateClaudeConfigsFromProviderCache restores Claude providers without st
     }
 });
 
+test('hydrateClaudeConfigsFromProviderCache prunes stale cache-backed Claude configs', async () => {
+    const previousLocalStorage = globalThis.localStorage;
+    const stored = new Map([['currentClaudeConfig', 'cache-zombie']]);
+    globalThis.localStorage = {
+        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
+        setItem(key, value) { stored.set(key, String(value)); },
+        removeItem(key) { stored.delete(key); }
+    };
+    try {
+        const methods = createClaudeConfigMethods({
+            api: async (action) => {
+                if (action === 'get-claude-provider-cache-configs') {
+                    return {
+                        providers: [{
+                            name: 'cache-survivor',
+                            baseUrl: 'https://survivor.example.com/anthropic',
+                            model: 'claude-sonnet-4-6',
+                            targetApi: 'responses',
+                            hasKey: true,
+                            providerCacheRef: 'cache-survivor',
+                            source: 'provider-cache'
+                        }]
+                    };
+                }
+                return { success: true };
+            }
+        });
+        const context = {
+            ...methods,
+            claudeConfigs: {
+                'cache-zombie': {
+                    apiKey: '',
+                    baseUrl: 'https://zombie.example.com/anthropic',
+                    model: 'claude-opus-4-6',
+                    targetApi: 'responses',
+                    hasKey: true,
+                    providerCacheRef: 'cache-zombie',
+                    source: 'provider-cache'
+                },
+                'manual-provider': {
+                    apiKey: 'sk-manual',
+                    baseUrl: 'https://manual.example.com/anthropic',
+                    model: 'claude-haiku-4-5',
+                    targetApi: 'responses',
+                    hasKey: true
+                }
+            },
+            currentClaudeConfig: 'cache-zombie',
+            showMessage() { throw new Error('should stay silent'); },
+            syncClaudeBridgeProviders() {},
+            refreshClaudeModelContext() {},
+            t(key) { return key; }
+        };
+
+        const ok = await context.hydrateClaudeConfigsFromProviderCache({ silent: true });
+
+        assert.strictEqual(ok, true);
+        assert.strictEqual(context.claudeConfigs['cache-zombie'], undefined);
+        assert(context.claudeConfigs['cache-survivor'], 'live provider-cache config should remain hydrated');
+        assert(context.claudeConfigs['manual-provider'], 'manual Claude config should not be pruned');
+        assert.notStrictEqual(context.currentClaudeConfig, 'cache-zombie');
+        assert.doesNotMatch(stored.get('claudeConfigs') || '', /cache-zombie/);
+        assert.match(stored.get('claudeConfigs') || '', /cache-survivor/);
+    } finally {
+        globalThis.localStorage = previousLocalStorage;
+    }
+});
+
 test('applyClaudeConfig accepts provider-cache backed Claude providers without browser api key', async () => {
     const previousLocalStorage = globalThis.localStorage;
     const stored = new Map();

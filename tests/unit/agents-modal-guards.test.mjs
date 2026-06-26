@@ -240,7 +240,7 @@ test('runHealthCheck treats backend error payloads as failures', async () => {
     }]);
 });
 
-test('runHealthCheck batches Claude speed tests and records per-config failures', async () => {
+test('runHealthCheck checks only the selected Claude config', async () => {
     const methods = createCodexConfigMethods({
         api: async (action) => {
             throw new Error(`Claude batch health check should not call backend action: ${action}`);
@@ -274,6 +274,7 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
         healthCheckBatchDone: 99,
         healthCheckBatchFailed: 99,
         configMode: 'claude',
+        currentClaudeConfig: 'chat',
         claudeConfigs: {
             anthropic: {
                 baseUrl: 'https://anthropic.example.com/v1',
@@ -305,20 +306,15 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
 
     const callsByTarget = Object.fromEntries(speedTestCalls.map((payload) => [payload.targetApi, payload]));
     assert.strictEqual(context.healthCheckLoading, false);
-    assert.strictEqual(context.healthCheckBatchTotal, 3);
-    assert.strictEqual(context.healthCheckBatchDone, 3);
+    assert.strictEqual(context.healthCheckBatchTotal, 1);
+    assert.strictEqual(context.healthCheckBatchDone, 1);
     assert.strictEqual(context.healthCheckBatchFailed, 1);
-    assert.deepStrictEqual(speedTestCalls.map((payload) => payload.targetApi).sort(), ['chat_completions', 'ollama', 'responses']);
-    assert.strictEqual(callsByTarget.responses.apiKey, 'sk-anthropic');
+    assert.deepStrictEqual(speedTestCalls.map((payload) => payload.targetApi).sort(), ['chat_completions']);
     assert.strictEqual(callsByTarget.chat_completions.apiKey, 'sk-chat');
-    assert.strictEqual(callsByTarget.ollama.apiKey, '');
-    assert.strictEqual(callsByTarget.ollama.model, 'llama3.1:8b');
-    assert.strictEqual(context.claudeSpeedResults.ollama.ok, true);
+    assert.strictEqual(context.claudeSpeedResults.ollama, undefined);
     assert.strictEqual(context.healthCheckResult.ok, false);
     assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
-        anthropic: { ok: true, durationMs: 11, status: 200 },
-        chat: { ok: false, error: 'timeout' },
-        ollama: { ok: true, durationMs: 22, status: 200 }
+        chat: { ok: false, error: 'timeout' }
     });
     assert.deepStrictEqual(context.healthCheckResult.issues, [{
         code: 'remote-speedtest-timeout',
@@ -328,7 +324,7 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
     assert.deepStrictEqual(context.shownMessages, []);
 });
 
-test('runHealthCheck checks Codex providers concurrently and exposes failed providers for deletion', async () => {
+test('runHealthCheck checks only the current Codex route and ignores unselected provider probe failures', async () => {
     const apiCalls = [];
     let configResolve;
     let providersResolve;
@@ -385,8 +381,8 @@ test('runHealthCheck checks Codex providers concurrently and exposes failed prov
     const runPromise = methods.runHealthCheck.call(context);
     await Promise.resolve();
     assert.deepStrictEqual(apiCalls, [
-        { action: 'config-health-check', payload: { remote: false } },
-        { action: 'providers-health', payload: { remote: true } }
+        { action: 'config-health-check', payload: { remote: true } },
+        { action: 'providers-health', payload: { remote: false } }
     ]);
 
     providersResolve({
@@ -399,34 +395,39 @@ test('runHealthCheck checks Codex providers concurrently and exposes failed prov
             { provider: 'system', status: 'yellow', issues: [{ code: 'api-key-missing', message: 'system key missing' }], remote: null }
         ]
     });
-    configResolve({ ok: true, issues: [], summary: { currentProvider: 'local', currentModel: 'e2e-model' }, remote: null });
+    configResolve({
+        ok: false,
+        issues: [{ code: 'remote-model-probe-http-error', message: 'local HTTP 502' }],
+        summary: { currentProvider: 'local', currentModel: 'e2e-model' },
+        remote: { type: 'remote-health-check', provider: 'local', ok: false, statusCode: 502, message: 'local HTTP 502' }
+    });
     await runPromise;
 
     assert.strictEqual(context.healthCheckLoading, false);
     assert.strictEqual(context.showHealthCheckModal, true);
-    assert.strictEqual(context.healthCheckBatchTotal, 3);
-    assert.strictEqual(context.healthCheckBatchDone, 3);
-    assert.strictEqual(context.healthCheckBatchFailed, 2);
+    assert.deepStrictEqual(context.providersHealthResult.providers.map((provider) => provider.provider), ['local', 'bad', 'system']);
+    assert.strictEqual(context.healthCheckBatchTotal, 1);
+    assert.strictEqual(context.healthCheckBatchDone, 1);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
     assert.strictEqual(context.healthCheckResult.ok, false);
-    assert.strictEqual(context.healthCheckResult.remote.type, 'providers-health');
-    assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), ['bad', 'system']);
+    assert.strictEqual(context.healthCheckResult.remote.type, 'remote-health-check');
+    assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), [undefined]);
     assert.deepStrictEqual(context.getHealthCheckFailedProviderItems().map((item) => ({
         name: item.name,
         status: item.status,
         deletable: item.deletable,
         detail: item.detail
     })), [
-        { name: 'bad', status: 'red', deletable: true, detail: 'bad HTTP 502' },
-        { name: 'system', status: 'yellow', deletable: false, detail: 'system key missing' }
+        { name: 'local', status: 'red', deletable: true, detail: '502 · local HTTP 502' }
     ]);
-    assert.deepStrictEqual(context.getSelectableHealthCheckFailedProviderItems().map((item) => item.name), ['bad']);
+    assert.deepStrictEqual(context.getSelectableHealthCheckFailedProviderItems().map((item) => item.name), ['local']);
     assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), false);
     context.setAllHealthCheckFailedProviderSelections(true);
-    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:bad': true });
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:local': true });
     assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), true);
     assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), true);
     context.setAllHealthCheckFailedProviderSelections(false);
-    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:bad': false });
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:local': false });
     assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
 });

@@ -125,10 +125,10 @@ export function createClaudeConfigMethods(options = {}) {
                     return false;
                 }
                 const providers = Array.isArray(res.providers) ? res.providers : [];
-                if (providers.length === 0) return true;
                 const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' ? this.claudeConfigs : {};
                 let changed = false;
                 let firstCachedName = '';
+                const liveCacheRefs = new Set();
                 for (const provider of providers) {
                     if (!provider || typeof provider !== 'object') continue;
                     const name = normalizeClaudeText(provider.name);
@@ -136,12 +136,15 @@ export function createClaudeConfigMethods(options = {}) {
                     const model = normalizeClaudeText(provider.model);
                     if (!name || !baseUrl || !model) continue;
                     if (!firstCachedName) firstCachedName = name;
+                    const providerCacheRef = normalizeClaudeText(provider.providerCacheRef) || name;
+                    liveCacheRefs.add(name);
+                    liveCacheRefs.add(providerCacheRef);
                     const cachedConfig = {
                         apiKey: '',
                         baseUrl,
                         model,
                         hasKey: provider.hasKey === true,
-                        providerCacheRef: normalizeClaudeText(provider.providerCacheRef) || name,
+                        providerCacheRef,
                         source: 'provider-cache',
                         targetApi: normalizeClaudeText(provider.targetApi) || 'responses'
                     };
@@ -154,11 +157,26 @@ export function createClaudeConfigMethods(options = {}) {
                         changed = true;
                     }
                 }
+                for (const [name, existing] of Object.entries(configs)) {
+                    if (!existing || typeof existing !== 'object') continue;
+                    const providerCacheRef = normalizeClaudeText(existing.providerCacheRef);
+                    const source = normalizeClaudeText(existing.source);
+                    const cacheBacked = source === 'provider-cache' || !!providerCacheRef;
+                    if (!cacheBacked) continue;
+                    const ref = providerCacheRef || normalizeClaudeText(name);
+                    if (liveCacheRefs.has(ref) || liveCacheRefs.has(normalizeClaudeText(name))) continue;
+                    delete configs[name];
+                    changed = true;
+                }
                 this.claudeConfigs = configs;
-                if (firstCachedName) {
+                const current = normalizeClaudeText(this.currentClaudeConfig);
+                if (current && !configs[current]) {
+                    this.currentClaudeConfig = firstCachedName || Object.keys(configs)[0] || '';
+                    try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
+                    changed = true;
+                } else if (firstCachedName) {
                     let savedCurrent = '';
                     try { savedCurrent = localStorage.getItem('currentClaudeConfig') || ''; } catch (_) {}
-                    const current = normalizeClaudeText(this.currentClaudeConfig);
                     const currentConfig = current && configs[current] ? configs[current] : null;
                     if (!savedCurrent && (!current || (currentConfig && currentConfig.hasKey === false && !currentConfig.providerCacheRef))) {
                         this.currentClaudeConfig = firstCachedName;
