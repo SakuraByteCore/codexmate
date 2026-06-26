@@ -497,6 +497,77 @@ test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable f
     assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 1 个失败提供商', type: 'success' }]);
 });
 
+test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs without per-item confirmation', async () => {
+    const methods = createCodexConfigMethods({
+        api: async () => {
+            throw new Error('Codex delete-provider should not be called for Claude configs');
+        },
+        getProviderConfigModeMeta() {
+            return null;
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        configMode: 'claude',
+        claudeConfigs: {
+            bad: { name: 'bad' },
+            worse: { name: 'worse' },
+            ok: { name: 'ok' }
+        },
+        currentClaudeConfig: 'bad',
+        healthCheckFailedProviderSelections: {},
+        healthCheckFailedProviderDeleting: false,
+        healthCheckBatchTotal: 3,
+        healthCheckBatchDone: 3,
+        healthCheckBatchFailed: 2,
+        healthCheckResult: {
+            ok: false,
+            issues: [
+                { provider: 'bad', message: 'bad failed' },
+                { provider: 'worse', message: 'worse failed' }
+            ],
+            remote: null
+        },
+        saved: 0,
+        refreshed: 0,
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        isToolConfigWriteAllowed() {
+            return true;
+        },
+        saveClaudeConfigs() {
+            this.saved += 1;
+        },
+        refreshClaudeModelContext() {
+            this.refreshed += 1;
+        },
+        async requestConfirmDialog() {
+            throw new Error('bulk failed-provider cleanup must not request per-item confirmation');
+        },
+        async deleteClaudeConfig() {
+            throw new Error('bulk failed-provider cleanup must not call deleteClaudeConfig');
+        }
+    };
+
+    context.setAllHealthCheckFailedProviderSelections(true);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'claude:bad': true, 'claude:worse': true });
+
+    await methods.deleteSelectedHealthCheckFailedProviders.call(context);
+
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
+    assert.strictEqual(context.currentClaudeConfig, 'ok');
+    assert.strictEqual(context.saved, 1);
+    assert.strictEqual(context.refreshed, 1);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
+    assert.deepStrictEqual(context.healthCheckResult.issues, []);
+    assert.strictEqual(context.healthCheckResult.ok, true);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 2 个失败提供商', type: 'success' }]);
+});
+
 test('deleteSelectedHealthCheckFailedProviders requires an explicit selected provider', async () => {
     const methods = createCodexConfigMethods({
         api: async () => ({ ok: true, issues: [], summary: {}, remote: null }),

@@ -599,29 +599,49 @@ export function createCodexConfigMethods(options = {}) {
             this.healthCheckFailedProviderDeleting = true;
             const deleted = [];
             try {
-                for (const item of selectedItems) {
-                    if (item.mode === 'claude') {
-                        if (typeof this.deleteClaudeConfig !== 'function') {
-                            throw new Error('Claude delete unavailable');
+                const claudeItems = selectedItems.filter((item) => item.mode === 'claude');
+                const codexItems = selectedItems.filter((item) => item.mode !== 'claude');
+
+                if (claudeItems.length) {
+                    const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' ? this.claudeConfigs : {};
+                    const names = claudeItems.map((item) => item.name).filter((name) => configs[name]);
+                    if (names.length) {
+                        const remainingNames = Object.keys(configs).filter((name) => !names.includes(name));
+                        if (remainingNames.length === 0) {
+                            throw new Error(this.t('toast.claude.keepOne'));
                         }
-                        await this.deleteClaudeConfig(item.name);
-                    } else {
-                        const res = await api('delete-provider', { name: item.name });
-                        if (res && res.error) {
-                            throw new Error(res.error);
+                        for (const name of names) {
+                            delete configs[name];
+                            deleted.push(name);
                         }
-                        this.providersList = (this.providersList || []).filter((provider) => provider && provider.name !== item.name);
-                        if (this.currentModels && this.currentModels[item.name]) {
-                            delete this.currentModels[item.name];
+                        if (names.includes(this.currentClaudeConfig)) {
+                            this.currentClaudeConfig = remainingNames[0];
                         }
-                        if (res && res.switched && res.provider) {
-                            this.currentProvider = res.provider;
-                            if (res.model) this.currentModel = res.model;
-                            this.providersList = (this.providersList || []).map((provider) => ({
-                                ...provider,
-                                current: provider.name === res.provider
-                            }));
+                        if (typeof this.saveClaudeConfigs === 'function') {
+                            this.saveClaudeConfigs();
                         }
+                        if (typeof this.refreshClaudeModelContext === 'function') {
+                            this.refreshClaudeModelContext();
+                        }
+                    }
+                }
+
+                for (const item of codexItems) {
+                    const res = await api('delete-provider', { name: item.name });
+                    if (res && res.error) {
+                        throw new Error(res.error);
+                    }
+                    this.providersList = (this.providersList || []).filter((provider) => provider && provider.name !== item.name);
+                    if (this.currentModels && this.currentModels[item.name]) {
+                        delete this.currentModels[item.name];
+                    }
+                    if (res && res.switched && res.provider) {
+                        this.currentProvider = res.provider;
+                        if (res.model) this.currentModel = res.model;
+                        this.providersList = (this.providersList || []).map((provider) => ({
+                            ...provider,
+                            current: provider.name === res.provider
+                        }));
                     }
                     deleted.push(item.name);
                 }
@@ -629,30 +649,40 @@ export function createCodexConfigMethods(options = {}) {
                 this.healthCheckFailedProviderSelections = {};
                 const result = this.healthCheckResult;
                 const remote = result && result.remote;
-                if (remote && remote.type === 'providers-health' && Array.isArray(remote.providers)) {
-                    const providers = remote.providers.filter((provider) => !deletedSet.has(provider && provider.provider));
-                    const summary = {
-                        total: providers.length,
-                        green: providers.filter((p) => p && p.status === 'green').length,
-                        yellow: providers.filter((p) => p && p.status === 'yellow').length,
-                        red: providers.filter((p) => p && p.status === 'red').length
-                    };
-                    const remainingIssues = Array.isArray(result.issues)
-                        ? result.issues.filter((issue) => !deletedSet.has(issue && issue.provider))
-                        : [];
-                    this.healthCheckResult = {
-                        ...result,
-                        ok: remainingIssues.length === 0 && summary.yellow === 0 && summary.red === 0,
-                        remote: {
-                            ...remote,
-                            providers,
-                            summary
-                        },
-                        issues: remainingIssues
-                    };
-                    this.healthCheckBatchTotal = summary.total;
-                    this.healthCheckBatchDone = summary.total;
-                    this.healthCheckBatchFailed = summary.yellow + summary.red;
+                const remainingIssues = Array.isArray(result && result.issues)
+                    ? result.issues.filter((issue) => !deletedSet.has(issue && issue.provider))
+                    : [];
+                if (result && typeof result === 'object') {
+                    if (remote && remote.type === 'providers-health' && Array.isArray(remote.providers)) {
+                        const providers = remote.providers.filter((provider) => !deletedSet.has(provider && provider.provider));
+                        const summary = {
+                            total: providers.length,
+                            green: providers.filter((p) => p && p.status === 'green').length,
+                            yellow: providers.filter((p) => p && p.status === 'yellow').length,
+                            red: providers.filter((p) => p && p.status === 'red').length
+                        };
+                        this.healthCheckResult = {
+                            ...result,
+                            ok: remainingIssues.length === 0 && summary.yellow === 0 && summary.red === 0,
+                            remote: {
+                                ...remote,
+                                providers,
+                                summary
+                            },
+                            issues: remainingIssues
+                        };
+                        this.healthCheckBatchTotal = summary.total;
+                        this.healthCheckBatchDone = summary.total;
+                        this.healthCheckBatchFailed = summary.yellow + summary.red;
+                    } else {
+                        const removedRemote = remote && remote.type === 'remote-health-check' && deletedSet.has(remote.provider);
+                        this.healthCheckResult = {
+                            ...result,
+                            ok: remainingIssues.length === 0,
+                            remote: removedRemote ? null : remote,
+                            issues: remainingIssues
+                        };
+                    }
                 }
                 this.showMessage(this.t('toast.health.deleteFailedProvidersDone', { count: deleted.length }), 'success');
             } catch (e) {
