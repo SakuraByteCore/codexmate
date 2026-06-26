@@ -325,50 +325,34 @@ test('runHealthCheck batches Claude speed tests and records per-config failures'
     assert.deepStrictEqual(context.shownMessages, []);
 });
 
-test('runHealthCheck uses the Codex config remote probe without provider-card batch speed tests', async () => {
+test('runHealthCheck checks Codex providers concurrently and exposes failed providers for deletion', async () => {
     const apiCalls = [];
+    let configResolve;
+    let providersResolve;
+    const configPromise = new Promise((resolve) => { configResolve = resolve; });
+    const providersPromise = new Promise((resolve) => { providersResolve = resolve; });
     const methods = createCodexConfigMethods({
         api: async (action, payload) => {
             apiCalls.push({ action, payload });
-            assert.strictEqual(action, 'config-health-check');
-            assert.deepStrictEqual(payload, { remote: true });
-            return {
-                ok: true,
-                issues: [],
-                remote: {
-                    type: 'remote-health-check',
-                    provider: 'local',
-                    endpoint: 'http://127.0.0.1:3737/bridge/local/v1',
-                    statusCode: 200,
-                    ok: true,
-                    message: 'ok',
-                    checks: {
-                        modelProbe: {
-                            url: 'http://127.0.0.1:3737/bridge/local/v1/responses',
-                            ok: true,
-                            status: 200,
-                            durationMs: 12
-                        }
-                    }
-                }
-            };
+            if (action === 'config-health-check') return configPromise;
+            if (action === 'providers-health') return providersPromise;
+            throw new Error(`unexpected action: ${action}`);
         },
         getProviderConfigModeMeta() {
             return null;
         }
     });
-    const speedTestCalls = [];
-    const providersHealthCalls = [];
     const context = {
         ...createI18nMethods(),
         ...methods,
         lang: 'zh',
-        providersList: ['local', 'alpha', { name: 'beta' }, 'codexmate-proxy'],
+        providersList: [{ name: 'local' }, { name: 'bad' }, { name: 'system', nonDeletable: true }],
         currentProvider: 'local',
         speedResults: {},
         speedLoading: {},
         healthCheckLoading: false,
         healthCheckResult: null,
+        healthCheckFailedProviderSelections: {},
         showHealthCheckModal: false,
         healthCheckBatchTotal: 99,
         healthCheckBatchDone: 99,
@@ -378,55 +362,73 @@ test('runHealthCheck uses the Codex config remote probe without provider-card ba
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        async runSpeedTest(name, options) {
-            speedTestCalls.push({ name, options });
+        shouldShowProviderDelete(provider) {
+            return !(provider && provider.nonDeletable);
+        },
+        isToolConfigWriteAllowed() {
+            return true;
+        },
+        async runSpeedTest() {
             throw new Error('Codex settings health check must not run provider-card speed tests');
         },
-        buildSpeedTestIssue,
-        runProvidersHealthCheck(options) {
-            providersHealthCalls.push(options);
+        buildSpeedTestIssue() {
+            throw new Error('speed test issues should not be built');
+        },
+        runProvidersHealthCheck() {
+            throw new Error('runProvidersHealthCheck UI helper should not be used here');
         }
     };
 
-    await methods.runHealthCheck.call(context);
+    const runPromise = methods.runHealthCheck.call(context);
+    await Promise.resolve();
+    assert.deepStrictEqual(apiCalls, [
+        { action: 'config-health-check', payload: { remote: false } },
+        { action: 'providers-health', payload: { remote: true } }
+    ]);
 
-    assert.deepStrictEqual(apiCalls, [{ action: 'config-health-check', payload: { remote: true } }]);
-    assert.deepStrictEqual(speedTestCalls, []);
-    assert.deepStrictEqual(providersHealthCalls, []);
+    providersResolve({
+        ok: false,
+        currentProvider: 'local',
+        summary: { total: 3, green: 1, yellow: 1, red: 1 },
+        providers: [
+            { provider: 'local', status: 'green', issues: [], remote: { ok: true, statusCode: 200, message: 'ok' } },
+            { provider: 'bad', status: 'red', issues: [{ code: 'remote-model-probe-http-error', message: 'bad HTTP 502' }], remote: { ok: false, statusCode: 502, message: 'bad' } },
+            { provider: 'system', status: 'yellow', issues: [{ code: 'api-key-missing', message: 'system key missing' }], remote: null }
+        ]
+    });
+    configResolve({ ok: true, issues: [], summary: { currentProvider: 'local', currentModel: 'e2e-model' }, remote: null });
+    await runPromise;
+
     assert.strictEqual(context.healthCheckLoading, false);
     assert.strictEqual(context.showHealthCheckModal, true);
-    assert.strictEqual(context.healthCheckBatchTotal, 0);
-    assert.strictEqual(context.healthCheckBatchDone, 0);
-    assert.strictEqual(context.healthCheckBatchFailed, 0);
-    assert.strictEqual(context.healthCheckResult.ok, true);
-    assert.strictEqual(context.healthCheckResult.remote.type, 'remote-health-check');
-    assert.strictEqual(context.healthCheckResult.remote.provider, 'local');
-    assert.strictEqual(
-        context.healthCheckResult.remote.checks.modelProbe.url,
-        'http://127.0.0.1:3737/bridge/local/v1/responses'
-    );
-    assert.deepStrictEqual(context.healthCheckResult.issues, []);
-    assert.deepStrictEqual(context.shownMessages, [{ message: '检查通过', type: 'success' }]);
+    assert.strictEqual(context.healthCheckBatchTotal, 3);
+    assert.strictEqual(context.healthCheckBatchDone, 3);
+    assert.strictEqual(context.healthCheckBatchFailed, 2);
+    assert.strictEqual(context.healthCheckResult.ok, false);
+    assert.strictEqual(context.healthCheckResult.remote.type, 'providers-health');
+    assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), ['bad', 'system']);
+    assert.deepStrictEqual(context.getHealthCheckFailedProviderItems().map((item) => ({
+        name: item.name,
+        status: item.status,
+        deletable: item.deletable,
+        detail: item.detail
+    })), [
+        { name: 'bad', status: 'red', deletable: true, detail: 'bad HTTP 502' },
+        { name: 'system', status: 'yellow', deletable: false, detail: 'system key missing' }
+    ]);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
 });
 
-test('runHealthCheck preserves Codex backend remote health failures without appending speed summaries', async () => {
+test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable failed providers', async () => {
+    const deleted = [];
     const methods = createCodexConfigMethods({
-        api: async () => ({
-            ok: false,
-            issues: [{
-                code: 'remote-model-probe-http-error',
-                message: '模型可用性探测返回异常状态: 502',
-                suggestion: '检查 endpoint、模型名或服务状态'
-            }],
-            remote: {
-                type: 'remote-health-check',
-                provider: 'local',
-                endpoint: 'http://127.0.0.1:3737/bridge/local/v1',
-                statusCode: 502,
-                ok: false,
-                message: '远程模型探测返回 HTTP 502，请检查 endpoint 与模型'
+        api: async (action, payload) => {
+            if (action === 'delete-provider') {
+                deleted.push(payload.name);
+                return { success: true };
             }
-        }),
+            return { ok: true, issues: [], summary: {}, remote: null };
+        },
         getProviderConfigModeMeta() {
             return null;
         }
@@ -435,55 +437,59 @@ test('runHealthCheck preserves Codex backend remote health failures without appe
         ...createI18nMethods(),
         ...methods,
         lang: 'zh',
-        providersList: ['alpha', 'beta'],
-        speedResults: {},
-        speedLoading: {},
-        healthCheckLoading: false,
-        healthCheckResult: null,
-        showHealthCheckModal: false,
         configMode: 'codex',
+        providersList: [{ name: 'bad' }, { name: 'system', nonDeletable: true }, { name: 'ok' }],
+        healthCheckFailedProviderSelections: {
+            'codex:bad': true,
+            'codex:system': true
+        },
+        healthCheckFailedProviderDeleting: false,
+        healthCheckBatchTotal: 3,
+        healthCheckBatchDone: 3,
+        healthCheckBatchFailed: 2,
+        healthCheckResult: {
+            ok: false,
+            issues: [
+                { provider: 'bad', message: 'bad HTTP 502' },
+                { provider: 'system', message: 'system key missing' }
+            ],
+            remote: {
+                type: 'providers-health',
+                currentProvider: 'ok',
+                summary: { total: 3, green: 1, yellow: 1, red: 1 },
+                providers: [
+                    { provider: 'ok', status: 'green', issues: [] },
+                    { provider: 'bad', status: 'red', issues: [{ message: 'bad HTTP 502' }] },
+                    { provider: 'system', status: 'yellow', issues: [{ message: 'system key missing' }] }
+                ]
+            }
+        },
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        async runSpeedTest() {
-            throw new Error('speed test should not be called');
+        shouldShowProviderDelete(provider) {
+            return !(provider && provider.nonDeletable);
         },
-        buildSpeedTestIssue() {
-            throw new Error('speed test issues should not be built');
+        isToolConfigWriteAllowed() {
+            return true;
         }
     };
 
-    await methods.runHealthCheck.call(context);
+    await methods.deleteSelectedHealthCheckFailedProviders.call(context);
 
-    assert.strictEqual(context.healthCheckLoading, false);
-    assert.strictEqual(context.showHealthCheckModal, true);
-    assert.strictEqual(context.healthCheckResult.ok, false);
-    assert.strictEqual(context.healthCheckResult.remote.type, 'remote-health-check');
-    assert.strictEqual(context.healthCheckResult.remote.statusCode, 502);
-    assert.strictEqual(context.healthCheckResult.remote.speedTests, undefined);
-    assert.deepStrictEqual(context.healthCheckResult.issues, [{
-        code: 'remote-model-probe-http-error',
-        message: '模型可用性探测返回异常状态: 502',
-        suggestion: '检查 endpoint、模型名或服务状态'
-    }]);
-    assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
+    assert.deepStrictEqual(deleted, ['bad']);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
+    assert.deepStrictEqual(context.healthCheckResult.remote.providers.map((provider) => provider.provider), ['ok', 'system']);
+    assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), ['system']);
+    assert.strictEqual(context.healthCheckBatchTotal, 2);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 1 个失败提供商', type: 'success' }]);
 });
 
-test('runHealthCheck preserves a backend ok:false Codex result even when issues are empty', async () => {
+test('deleteSelectedHealthCheckFailedProviders requires an explicit selected provider', async () => {
     const methods = createCodexConfigMethods({
-        api: async () => ({
-            ok: false,
-            issues: [],
-            remote: {
-                type: 'remote-health-check',
-                provider: 'local',
-                endpoint: 'http://127.0.0.1:3737/bridge/local/v1',
-                statusCode: 500,
-                ok: false,
-                message: 'Remote probe failed before issue normalization'
-            }
-        }),
+        api: async () => ({ ok: true, issues: [], summary: {}, remote: null }),
         getProviderConfigModeMeta() {
             return null;
         }
@@ -492,30 +498,37 @@ test('runHealthCheck preserves a backend ok:false Codex result even when issues 
         ...createI18nMethods(),
         ...methods,
         lang: 'zh',
-        healthCheckLoading: false,
-        healthCheckResult: null,
-        showHealthCheckModal: false,
         configMode: 'codex',
+        providersList: [{ name: 'bad' }],
+        healthCheckFailedProviderSelections: {},
+        healthCheckResult: {
+            ok: false,
+            issues: [{ provider: 'bad', message: 'bad HTTP 502' }],
+            remote: {
+                type: 'providers-health',
+                providers: [
+                    { provider: 'bad', status: 'red', issues: [{ message: 'bad HTTP 502' }] }
+                ]
+            }
+        },
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        async runSpeedTest() {
-            throw new Error('speed test should not be called');
+        shouldShowProviderDelete() {
+            return true;
         },
-        buildSpeedTestIssue() {
-            throw new Error('speed test issues should not be built');
+        isToolConfigWriteAllowed() {
+            return true;
+        },
+        async deleteProvider() {
+            throw new Error('delete should require explicit selection');
         }
     };
 
-    await methods.runHealthCheck.call(context);
+    await methods.deleteSelectedHealthCheckFailedProviders.call(context);
 
-    assert.strictEqual(context.healthCheckLoading, false);
-    assert.strictEqual(context.showHealthCheckModal, true);
-    assert.strictEqual(context.healthCheckResult.ok, false);
-    assert.deepStrictEqual(context.healthCheckResult.issues, []);
-    assert.strictEqual(context.healthCheckResult.remote.statusCode, 500);
-    assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '请先选择至少一个失败提供商', type: 'info' }]);
 });
 
 test('applyCodexConfigDirect keeps the successful apply result when only the refresh fails', async () => {

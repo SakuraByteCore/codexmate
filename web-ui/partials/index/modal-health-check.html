@@ -15,6 +15,39 @@
                         <span v-if="healthCheckResult.remote.message"> · {{ healthCheckResult.remote.message }}</span>
                     </div>
 
+                    <div v-if="healthCheckResult.remote && healthCheckResult.remote.type === 'providers-health'" class="form-hint">
+                        {{ t('config.health.providersSummary', healthCheckResult.remote.summary || { total: 0, green: 0, yellow: 0, red: 0 }) }}
+                    </div>
+
+                    <div v-if="getHealthCheckFailedProviderItems().length" class="model-list health-failed-provider-list">
+                        <div class="model-item health-failed-provider-header">
+                            <span>{{ t('config.health.failedProviders.title') }}</span>
+                            <span class="latency error">{{ getHealthCheckFailedProviderItems().length }}</span>
+                        </div>
+                        <label
+                            v-for="item in getHealthCheckFailedProviderItems()"
+                            :key="item.key"
+                            class="model-item health-failed-provider-item"
+                            :class="{ disabled: !item.deletable }"
+                        >
+                            <span class="health-failed-provider-main">
+                                <input
+                                    type="checkbox"
+                                    :checked="item.selected"
+                                    :disabled="!item.deletable || healthCheckFailedProviderDeleting"
+                                    @change="toggleHealthCheckFailedProviderSelection(item, $event.target.checked)"
+                                    :aria-label="t('config.health.failedProviders.selectAria', { name: item.name })"
+                                >
+                                <span>
+                                    <strong>{{ item.name }}</strong>
+                                    <span class="form-hint" v-if="item.detail">{{ item.detail }}</span>
+                                    <span class="form-hint" v-if="!item.deletable">{{ item.blockedReason === 'readonly' ? t('config.health.failedProviders.writeRequired') : t('config.health.failedProviders.notDeletable') }}</span>
+                                </span>
+                            </span>
+                            <span class="latency error">{{ item.status }}</span>
+                        </label>
+                    </div>
+
                     <div v-if="healthCheckResult.remote && healthCheckResult.remote.speedTests" class="model-list">
                         <div
                             v-for="(result, name) in healthCheckResult.remote.speedTests"
@@ -39,6 +72,12 @@
                 </template>
 
                 <div class="btn-group">
+                    <button
+                        v-if="getHealthCheckFailedProviderItems().length"
+                        class="btn btn-danger"
+                        :disabled="healthCheckFailedProviderDeleting || !hasHealthCheckFailedProviderSelection()"
+                        @click="deleteSelectedHealthCheckFailedProviders()"
+                    >{{ healthCheckFailedProviderDeleting ? t('config.health.failedProviders.deleting') : t('config.health.failedProviders.deleteSelected') }}</button>
                     <button class="btn btn-confirm" @click="showHealthCheckModal = false">{{ t('common.close') }}</button>
                 </div>
             </div>

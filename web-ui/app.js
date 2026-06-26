@@ -272,6 +272,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 healthCheckBatchTotal: 0,
                 healthCheckBatchDone: 0,
                 healthCheckBatchFailed: 0,
+                healthCheckFailedProviderSelections: {},
+                healthCheckFailedProviderDeleting: false,
                 installPackageManager: 'npm',
                 installCommandAction: 'install',
                 installRegistryPreset: 'npmmirror',
