@@ -685,6 +685,7 @@ export function createCodexConfigMethods(options = {}) {
                     }
                 }
                 this.showMessage(this.t('toast.health.deleteFailedProvidersDone', { count: deleted.length }), 'success');
+                this.showHealthCheckModal = false;
             } catch (e) {
                 this.showMessage(e && e.message ? e.message : this.t('toast.delete.fail'), 'error');
             } finally {

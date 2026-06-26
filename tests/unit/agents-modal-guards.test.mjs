@@ -450,6 +450,7 @@ test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable f
         providersList: [{ name: 'bad' }, { name: 'system', nonDeletable: true }, { name: 'ok' }],
         healthCheckFailedProviderSelections: {},
         healthCheckFailedProviderDeleting: false,
+        showHealthCheckModal: true,
         healthCheckBatchTotal: 3,
         healthCheckBatchDone: 3,
         healthCheckBatchFailed: 2,
@@ -494,6 +495,7 @@ test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable f
     assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), ['system']);
     assert.strictEqual(context.healthCheckBatchTotal, 2);
     assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.strictEqual(context.showHealthCheckModal, false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 1 个失败提供商', type: 'success' }]);
 });
 
@@ -519,6 +521,7 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs witho
         currentClaudeConfig: 'bad',
         healthCheckFailedProviderSelections: {},
         healthCheckFailedProviderDeleting: false,
+        showHealthCheckModal: true,
         healthCheckBatchTotal: 3,
         healthCheckBatchDone: 3,
         healthCheckBatchFailed: 2,
@@ -565,6 +568,7 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs witho
     assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
     assert.deepStrictEqual(context.healthCheckResult.issues, []);
     assert.strictEqual(context.healthCheckResult.ok, true);
+    assert.strictEqual(context.showHealthCheckModal, false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 2 个失败提供商', type: 'success' }]);
 });
 
@@ -582,6 +586,7 @@ test('deleteSelectedHealthCheckFailedProviders requires an explicit selected pro
         configMode: 'codex',
         providersList: [{ name: 'bad' }],
         healthCheckFailedProviderSelections: {},
+        showHealthCheckModal: true,
         healthCheckResult: {
             ok: false,
             issues: [{ provider: 'bad', message: 'bad HTTP 502' }],
@@ -609,6 +614,7 @@ test('deleteSelectedHealthCheckFailedProviders requires an explicit selected pro
 
     await methods.deleteSelectedHealthCheckFailedProviders.call(context);
 
+    assert.strictEqual(context.showHealthCheckModal, true);
     assert.deepStrictEqual(context.shownMessages, [{ message: '请先选择至少一个失败提供商', type: 'info' }]);
 });
 
