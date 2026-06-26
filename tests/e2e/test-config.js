@@ -1514,7 +1514,7 @@ preferred_auth_method = "shadow-key"
 
     for (let i = 0; i < 3; i += 1) {
         const refreshedAfterDelete = await api('get-provider-cache-records');
-        assert(!cacheContainsProvider(refreshedAfterDelete, 'e2e-api'), 'deleted provider should not reappear in provider cache refresh');
+        assert(!cacheContainsProvider(refreshedAfterDelete.records, 'e2e-api'), 'deleted provider should not reappear in provider cache refresh');
     }
     const syncedProviderCacheAfterDelete = await api('sync-provider-cache-records');
     assert(syncedProviderCacheAfterDelete.success === true, 'provider cache sync after delete should succeed');
