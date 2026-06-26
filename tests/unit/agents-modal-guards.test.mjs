@@ -427,7 +427,10 @@ test('runHealthCheck checks only the current Codex route and ignores unselected 
     assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), true);
     assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), true);
     context.setAllHealthCheckFailedProviderSelections(false);
-    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:local': false });
+    assert.deepStrictEqual(
+        context.getSelectableHealthCheckFailedProviderItems().filter((item) => item.selected).map((item) => item.name),
+        []
+    );
     assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
 });
@@ -634,6 +637,50 @@ test('deleteClaudeConfig prunes provider-cache source before local removal', asy
     assert.strictEqual(context.saved, 1);
     assert.strictEqual(context.refreshed, 1);
     assert.deepStrictEqual(context.shownMessages, [{ message: '操作成功', type: 'success' }]);
+});
+
+test('deleteClaudeConfig reports provider-cache delete transport failures without local removal', async () => {
+    const methods = createClaudeConfigMethods({
+        api: async (action) => {
+            if (action === 'delete-provider-cache-record') {
+                throw new Error('network down');
+            }
+            return { success: true };
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        claudeConfigs: {
+            bad: { name: 'bad', providerCacheRef: 'bad-cache', source: 'provider-cache' },
+            ok: { name: 'ok' }
+        },
+        currentClaudeConfig: 'bad',
+        saved: 0,
+        refreshed: 0,
+        shownMessages: [],
+        async requestConfirmDialog() {
+            return true;
+        },
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        saveClaudeConfigs() {
+            this.saved += 1;
+        },
+        refreshClaudeModelContext() {
+            this.refreshed += 1;
+        }
+    };
+
+    await methods.deleteClaudeConfig.call(context, 'bad');
+
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['bad', 'ok']);
+    assert.strictEqual(context.currentClaudeConfig, 'bad');
+    assert.strictEqual(context.saved, 0);
+    assert.strictEqual(context.refreshed, 0);
+    assert.deepStrictEqual(context.shownMessages, [{ message: 'network down', type: 'error' }]);
 });
 
 test('deleteSelectedHealthCheckFailedProviders requires an explicit selected provider', async () => {
