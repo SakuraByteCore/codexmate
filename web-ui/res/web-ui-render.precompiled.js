@@ -9075,7 +9075,7 @@ return function render(_ctx, _cache) {
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
           _createElementVNode("div", {
-            class: "modal",
+            class: "modal modal-health-check",
             role: "dialog",
             "aria-modal": "true",
             "aria-labelledby": "health-check-modal-title"
@@ -9084,149 +9084,151 @@ return function render(_ctx, _cache) {
               class: "modal-title",
               id: "health-check-modal-title"
             }, _toDisplayString(_ctx.t('config.health.title')), 1 /* TEXT */),
-            (!_ctx.healthCheckResult)
-              ? (_openBlock(), _createElementBlock("div", {
-                  key: 0,
-                  class: "state-message"
-                }, _toDisplayString(_ctx.t('common.notLoaded')), 1 /* TEXT */))
-              : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
-                  _createElementVNode("div", { class: "form-hint" }, [
-                    _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('config.health.ok') : _ctx.t('config.health.fail')) + " ", 1 /* TEXT */),
-                    (_ctx.healthCheckResult.issues)
-                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('config.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
-                      : _createCommentVNode("v-if", true)
-                  ]),
-                  (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'remote-health-check')
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 0,
-                        class: "form-hint"
-                      }, [
-                        _createTextVNode(_toDisplayString(_ctx.healthCheckResult.remote.endpoint || '') + " ", 1 /* TEXT */),
-                        (_ctx.healthCheckResult.remote.statusCode)
-                          ? (_openBlock(), _createElementBlock("span", { key: 0 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.statusCode), 1 /* TEXT */))
-                          : _createCommentVNode("v-if", true),
-                        (_ctx.healthCheckResult.remote.message)
-                          ? (_openBlock(), _createElementBlock("span", { key: 1 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.message), 1 /* TEXT */))
-                          : _createCommentVNode("v-if", true)
-                      ]))
-                    : _createCommentVNode("v-if", true),
-                  (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'providers-health')
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 1,
-                        class: "form-hint"
-                      }, _toDisplayString(_ctx.t('config.health.providersSummary', _ctx.healthCheckResult.remote.summary || { total: 0, green: 0, yellow: 0, red: 0 })), 1 /* TEXT */))
-                    : _createCommentVNode("v-if", true),
-                  (_ctx.getHealthCheckFailedProviderItems().length)
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 2,
-                        class: "model-list health-failed-provider-list"
-                      }, [
-                        _createElementVNode("div", { class: "model-item health-failed-provider-header" }, [
-                          _createElementVNode("span", { class: "health-failed-provider-main" }, [
-                            _createElementVNode("input", {
-                              type: "checkbox",
-                              checked: _ctx.areAllHealthCheckFailedProvidersSelected(),
-                              disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
-                              onChange: $event => (_ctx.setAllHealthCheckFailedProviderSelections($event.target.checked)),
-                              "aria-label": _ctx.t('config.health.failedProviders.selectAllAria')
-                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "aria-label"]),
-                            _createElementVNode("span", null, _toDisplayString(_ctx.t('config.health.failedProviders.title')), 1 /* TEXT */)
-                          ]),
-                          _createElementVNode("span", { class: "health-failed-provider-actions" }, [
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-link",
-                              disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
-                              onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(true))
-                            }, _toDisplayString(_ctx.t('config.health.failedProviders.selectAll')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-link",
-                              disabled: !_ctx.hasHealthCheckFailedProviderSelection() || _ctx.healthCheckFailedProviderDeleting,
-                              onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(false))
-                            }, _toDisplayString(_ctx.t('config.health.failedProviders.clearSelection')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
-                            _createElementVNode("span", { class: "latency error" }, _toDisplayString(_ctx.getHealthCheckFailedProviderItems().length), 1 /* TEXT */)
-                          ])
-                        ]),
-                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getHealthCheckFailedProviderItems(), (item) => {
-                          return (_openBlock(), _createElementBlock("label", {
-                            key: item.key,
-                            class: _normalizeClass(["model-item health-failed-provider-item", { disabled: !item.deletable }])
-                          }, [
+            _createElementVNode("div", { class: "health-check-modal-body" }, [
+              (!_ctx.healthCheckResult)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "state-message"
+                  }, _toDisplayString(_ctx.t('common.notLoaded')), 1 /* TEXT */))
+                : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                    _createElementVNode("div", { class: "form-hint" }, [
+                      _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('config.health.ok') : _ctx.t('config.health.fail')) + " ", 1 /* TEXT */),
+                      (_ctx.healthCheckResult.issues)
+                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('config.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ]),
+                    (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'remote-health-check')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 0,
+                          class: "form-hint"
+                        }, [
+                          _createTextVNode(_toDisplayString(_ctx.healthCheckResult.remote.endpoint || '') + " ", 1 /* TEXT */),
+                          (_ctx.healthCheckResult.remote.statusCode)
+                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.statusCode), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.healthCheckResult.remote.message)
+                            ? (_openBlock(), _createElementBlock("span", { key: 1 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.message), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true)
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'providers-health')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 1,
+                          class: "form-hint"
+                        }, _toDisplayString(_ctx.t('config.health.providersSummary', _ctx.healthCheckResult.remote.summary || { total: 0, green: 0, yellow: 0, red: 0 })), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.getHealthCheckFailedProviderItems().length)
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 2,
+                          class: "model-list health-failed-provider-list"
+                        }, [
+                          _createElementVNode("div", { class: "model-item health-failed-provider-header" }, [
                             _createElementVNode("span", { class: "health-failed-provider-main" }, [
                               _createElementVNode("input", {
                                 type: "checkbox",
-                                checked: item.selected,
-                                disabled: !item.deletable || _ctx.healthCheckFailedProviderDeleting,
-                                onChange: $event => (_ctx.toggleHealthCheckFailedProviderSelection(item, $event.target.checked)),
-                                "aria-label": _ctx.t('config.health.failedProviders.selectAria', { name: item.name })
+                                checked: _ctx.areAllHealthCheckFailedProvidersSelected(),
+                                disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
+                                onChange: $event => (_ctx.setAllHealthCheckFailedProviderSelections($event.target.checked)),
+                                "aria-label": _ctx.t('config.health.failedProviders.selectAllAria')
                               }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "aria-label"]),
-                              _createElementVNode("span", null, [
-                                _createElementVNode("strong", null, _toDisplayString(item.name), 1 /* TEXT */),
-                                (item.detail)
-                                  ? (_openBlock(), _createElementBlock("span", {
-                                      key: 0,
-                                      class: "form-hint"
-                                    }, _toDisplayString(item.detail), 1 /* TEXT */))
-                                  : _createCommentVNode("v-if", true),
-                                (!item.deletable)
-                                  ? (_openBlock(), _createElementBlock("span", {
-                                      key: 1,
-                                      class: "form-hint"
-                                    }, _toDisplayString(item.blockedReason === 'readonly' ? _ctx.t('config.health.failedProviders.writeRequired') : _ctx.t('config.health.failedProviders.notDeletable')), 1 /* TEXT */))
-                                  : _createCommentVNode("v-if", true)
-                              ])
+                              _createElementVNode("span", null, _toDisplayString(_ctx.t('config.health.failedProviders.title')), 1 /* TEXT */)
                             ]),
-                            _createElementVNode("span", { class: "latency error" }, _toDisplayString(item.status), 1 /* TEXT */)
-                          ], 2 /* CLASS */))
-                        }), 128 /* KEYED_FRAGMENT */))
-                      ]))
-                    : _createCommentVNode("v-if", true),
-                  (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.speedTests)
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 3,
-                        class: "model-list"
-                      }, [
-                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.remote.speedTests, (result, name) => {
-                          return (_openBlock(), _createElementBlock("div", {
-                            key: 'health-speed-' + name,
-                            class: "model-item"
-                          }, [
-                            _createElementVNode("span", null, _toDisplayString(name), 1 /* TEXT */),
-                            (result && result.ok)
-                              ? (_openBlock(), _createElementBlock("span", {
-                                  key: 0,
-                                  class: "latency ok"
-                                }, _toDisplayString(_ctx.formatLatency(result)), 1 /* TEXT */))
-                              : (_openBlock(), _createElementBlock("span", {
-                                  key: 1,
-                                  class: "latency error"
-                                }, _toDisplayString((result && result.error) ? result.error : _ctx.t('config.health.fail')), 1 /* TEXT */))
-                          ]))
-                        }), 128 /* KEYED_FRAGMENT */))
-                      ]))
-                    : _createCommentVNode("v-if", true),
-                  (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 4,
-                        class: "model-list"
-                      }, [
-                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.issues, (issue, index) => {
-                          return (_openBlock(), _createElementBlock("div", {
-                            key: issue.code || ('health-issue-' + index),
-                            class: "model-item"
-                          }, [
-                            _createElementVNode("span", null, _toDisplayString(issue.message || issue.code || ''), 1 /* TEXT */)
-                          ]))
-                        }), 128 /* KEYED_FRAGMENT */))
-                      ]))
-                    : _createCommentVNode("v-if", true)
-                ], 64 /* STABLE_FRAGMENT */)),
-            _createElementVNode("div", { class: "btn-group" }, [
+                            _createElementVNode("span", { class: "health-failed-provider-actions" }, [
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-link",
+                                disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
+                                onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(true))
+                              }, _toDisplayString(_ctx.t('config.health.failedProviders.selectAll')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-link",
+                                disabled: !_ctx.hasHealthCheckFailedProviderSelection() || _ctx.healthCheckFailedProviderDeleting,
+                                onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(false))
+                              }, _toDisplayString(_ctx.t('config.health.failedProviders.clearSelection')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                              _createElementVNode("span", { class: "latency error" }, _toDisplayString(_ctx.getHealthCheckFailedProviderItems().length), 1 /* TEXT */)
+                            ])
+                          ]),
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getHealthCheckFailedProviderItems(), (item) => {
+                            return (_openBlock(), _createElementBlock("label", {
+                              key: item.key,
+                              class: _normalizeClass(["model-item health-failed-provider-item", { disabled: !item.deletable }])
+                            }, [
+                              _createElementVNode("span", { class: "health-failed-provider-main" }, [
+                                _createElementVNode("input", {
+                                  type: "checkbox",
+                                  checked: item.selected,
+                                  disabled: !item.deletable || _ctx.healthCheckFailedProviderDeleting,
+                                  onChange: $event => (_ctx.toggleHealthCheckFailedProviderSelection(item, $event.target.checked)),
+                                  "aria-label": _ctx.t('config.health.failedProviders.selectAria', { name: item.name })
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "aria-label"]),
+                                _createElementVNode("span", null, [
+                                  _createElementVNode("strong", null, _toDisplayString(item.name), 1 /* TEXT */),
+                                  (item.detail)
+                                    ? (_openBlock(), _createElementBlock("span", {
+                                        key: 0,
+                                        class: "form-hint"
+                                      }, _toDisplayString(item.detail), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true),
+                                  (!item.deletable)
+                                    ? (_openBlock(), _createElementBlock("span", {
+                                        key: 1,
+                                        class: "form-hint"
+                                      }, _toDisplayString(item.blockedReason === 'readonly' ? _ctx.t('config.health.failedProviders.writeRequired') : _ctx.t('config.health.failedProviders.notDeletable')), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true)
+                                ])
+                              ]),
+                              _createElementVNode("span", { class: "latency error" }, _toDisplayString(item.status), 1 /* TEXT */)
+                            ], 2 /* CLASS */))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.speedTests)
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 3,
+                          class: "model-list"
+                        }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.remote.speedTests, (result, name) => {
+                            return (_openBlock(), _createElementBlock("div", {
+                              key: 'health-speed-' + name,
+                              class: "model-item"
+                            }, [
+                              _createElementVNode("span", null, _toDisplayString(name), 1 /* TEXT */),
+                              (result && result.ok)
+                                ? (_openBlock(), _createElementBlock("span", {
+                                    key: 0,
+                                    class: "latency ok"
+                                  }, _toDisplayString(_ctx.formatLatency(result)), 1 /* TEXT */))
+                                : (_openBlock(), _createElementBlock("span", {
+                                    key: 1,
+                                    class: "latency error"
+                                  }, _toDisplayString((result && result.error) ? result.error : _ctx.t('config.health.fail')), 1 /* TEXT */))
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 4,
+                          class: "model-list"
+                        }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.issues, (issue, index) => {
+                            return (_openBlock(), _createElementBlock("div", {
+                              key: issue.code || ('health-issue-' + index),
+                              class: "model-item"
+                            }, [
+                              _createElementVNode("span", null, _toDisplayString(issue.message || issue.code || ''), 1 /* TEXT */)
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]))
+                      : _createCommentVNode("v-if", true)
+                  ], 64 /* STABLE_FRAGMENT */))
+            ]),
+            _createElementVNode("div", { class: "btn-group health-check-modal-actions" }, [
               (_ctx.getHealthCheckFailedProviderItems().length)
                 ? (_openBlock(), _createElementBlock("button", {
                     key: 0,
-                    class: "btn btn-danger",
+                    class: "btn btn-confirm btn-danger",
                     disabled: _ctx.healthCheckFailedProviderDeleting || !_ctx.hasHealthCheckFailedProviderSelection(),
                     onClick: $event => (_ctx.deleteSelectedHealthCheckFailedProviders())
                   }, _toDisplayString(_ctx.healthCheckFailedProviderDeleting ? _ctx.t('config.health.failedProviders.deleting') : _ctx.t('config.health.failedProviders.deleteSelected')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]))
