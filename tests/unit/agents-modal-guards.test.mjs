@@ -467,7 +467,55 @@ test('runHealthCheck preserves Codex backend remote health failures without appe
         message: '模型可用性探测返回异常状态: 502',
         suggestion: '检查 endpoint、模型名或服务状态'
     }]);
-    assert.deepStrictEqual(context.shownMessages, []);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
+});
+
+test('runHealthCheck preserves a backend ok:false Codex result even when issues are empty', async () => {
+    const methods = createCodexConfigMethods({
+        api: async () => ({
+            ok: false,
+            issues: [],
+            remote: {
+                type: 'remote-health-check',
+                provider: 'local',
+                endpoint: 'http://127.0.0.1:3737/bridge/local/v1',
+                statusCode: 500,
+                ok: false,
+                message: 'Remote probe failed before issue normalization'
+            }
+        }),
+        getProviderConfigModeMeta() {
+            return null;
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        healthCheckLoading: false,
+        healthCheckResult: null,
+        showHealthCheckModal: false,
+        configMode: 'codex',
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        async runSpeedTest() {
+            throw new Error('speed test should not be called');
+        },
+        buildSpeedTestIssue() {
+            throw new Error('speed test issues should not be built');
+        }
+    };
+
+    await methods.runHealthCheck.call(context);
+
+    assert.strictEqual(context.healthCheckLoading, false);
+    assert.strictEqual(context.showHealthCheckModal, true);
+    assert.strictEqual(context.healthCheckResult.ok, false);
+    assert.deepStrictEqual(context.healthCheckResult.issues, []);
+    assert.strictEqual(context.healthCheckResult.remote.statusCode, 500);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
 });
 
 test('applyCodexConfigDirect keeps the successful apply result when only the refresh fails', async () => {

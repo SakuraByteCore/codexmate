@@ -399,7 +399,7 @@ export function createCodexConfigMethods(options = {}) {
                         this.showHealthCheckModal = true;
                     }
                     if (ok && !silent) {
-                        this.showMessage('检查通过', 'success');
+                        this.showMessage(this.t('toast.check.success'), 'success');
                     }
                     return;
                 }
@@ -408,11 +408,11 @@ export function createCodexConfigMethods(options = {}) {
                 if (hasResponseError(res)) {
                     this.healthCheckResult = null;
                     if (!silent) {
-                        this.showMessage(getResponseMessage(res, '检查失败'), 'error');
+                        this.showMessage(getResponseMessage(res, this.t('toast.check.fail')), 'error');
                     }
                 } else if (res && typeof res === 'object') {
                     const issues = Array.isArray(res.issues) ? [...res.issues] : [];
-                    const ok = issues.length === 0;
+                    const ok = typeof res.ok === 'boolean' ? res.ok : issues.length === 0;
                     this.healthCheckResult = {
                         ...res,
                         ok,
@@ -422,8 +422,8 @@ export function createCodexConfigMethods(options = {}) {
                     if (!silent) {
                         this.showHealthCheckModal = true;
                     }
-                    if (ok && !silent) {
-                        this.showMessage('检查通过', 'success');
+                    if (!silent) {
+                        this.showMessage(this.t(ok ? 'toast.check.success' : 'toast.check.fail'), ok ? 'success' : 'error');
                     }
                 } else {
                     this.healthCheckResult = null;
@@ -434,7 +434,7 @@ export function createCodexConfigMethods(options = {}) {
             } catch (e) {
                 this.healthCheckResult = null;
                 if (!(options && options.silent)) {
-                    this.showMessage('检查失败', 'error');
+                    this.showMessage(this.t('toast.check.fail'), 'error');
                 }
             } finally {
                 this.healthCheckBatchTotal = this.healthCheckBatchTotal || 0;
