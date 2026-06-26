@@ -126,6 +126,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /\.task-action-row-right\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-runtime-item-actions\s*\{[\s\S]*flex-direction:\s*row;[\s\S]*align-items:\s*center;/);
     }
+    for (const styles of [bundledStyles]) {
+        assert.match(styles, /\.health-failed-provider-main input\s*\{[\s\S]*flex:\s*0 0 auto;[\s\S]*width:\s*13px;[\s\S]*height:\s*13px;[\s\S]*accent-color:\s*var\(--color-brand-dark\);/);
+        assert.match(styles, /\.health-failed-provider-main > span\s*\{[\s\S]*min-width:\s*0;/);
+    }
     const sideGhostTab = sideRail.match(/<div id="side-tab-new"[\s\S]*?<\/div>\s*<\/div>/)?.[0] || '';
     assert.match(sideGhostTab, /class="side-item side-item-ghost"/);
     assert.match(sideGhostTab, /tabindex="-1"/);

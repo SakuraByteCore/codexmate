@@ -321,7 +321,15 @@
 }
 
 .health-failed-provider-main input {
+    flex: 0 0 auto;
+    width: 13px;
+    height: 13px;
     margin-top: 2px;
+    accent-color: var(--color-brand-dark);
+}
+
+.health-failed-provider-main > span {
+    min-width: 0;
 }
 
 .health-failed-provider-main .form-hint {
