@@ -650,6 +650,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeCandidateProviders',
         'claudeLocalBridgeConfigured',
         'syncClaudeBridgeProviders',
+        'deleteClaudeProviderCacheRef',
         'syncProviderCacheRecords',
         'toggleAddClaudeConfigKey',
         'toggleAddProviderKey',

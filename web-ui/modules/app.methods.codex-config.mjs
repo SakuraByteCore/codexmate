@@ -611,6 +611,19 @@ export function createCodexConfigMethods(options = {}) {
                             throw new Error(this.t('toast.claude.keepOne'));
                         }
                         for (const name of names) {
+                            const config = configs[name];
+                            if (config && (config.providerCacheRef || config.source === 'provider-cache')) {
+                                if (typeof this.deleteClaudeProviderCacheRef === 'function') {
+                                    const ok = await this.deleteClaudeProviderCacheRef(config);
+                                    if (!ok) throw new Error(this.t('toast.delete.fail'));
+                                } else {
+                                    const cacheName = typeof config.providerCacheRef === 'string' && config.providerCacheRef.trim()
+                                        ? config.providerCacheRef.trim()
+                                        : name;
+                                    const res = await api('delete-provider-cache-record', { name: cacheName, group: 'claude' });
+                                    if (res && res.error) throw new Error(res.error);
+                                }
+                            }
                             delete configs[name];
                             deleted.push(name);
                         }

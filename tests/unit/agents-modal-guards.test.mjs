@@ -11,6 +11,9 @@ const { createAgentsMethods } = await import(
 const { createCodexConfigMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.codex-config.mjs'))
 );
+const { createClaudeConfigMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.claude-config.mjs'))
+);
 const { createI18nMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
 );
@@ -499,10 +502,15 @@ test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable f
     assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 1 个失败提供商', type: 'success' }]);
 });
 
-test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs without per-item confirmation', async () => {
+test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and provider-cache refs without per-item confirmation', async () => {
+    const cacheDeletes = [];
     const methods = createCodexConfigMethods({
-        api: async () => {
-            throw new Error('Codex delete-provider should not be called for Claude configs');
+        api: async (action, payload) => {
+            if (action === 'delete-provider-cache-record') {
+                cacheDeletes.push(payload);
+                return { success: true, removed: true };
+            }
+            throw new Error(`Unexpected backend action for Claude bulk cleanup: ${action}`);
         },
         getProviderConfigModeMeta() {
             return null;
@@ -514,8 +522,8 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs witho
         lang: 'zh',
         configMode: 'claude',
         claudeConfigs: {
-            bad: { name: 'bad' },
-            worse: { name: 'worse' },
+            bad: { name: 'bad', providerCacheRef: 'bad', source: 'provider-cache' },
+            worse: { name: 'worse', providerCacheRef: 'worse-cache', source: 'provider-cache' },
             ok: { name: 'ok' }
         },
         currentClaudeConfig: 'bad',
@@ -561,6 +569,10 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs witho
 
     await methods.deleteSelectedHealthCheckFailedProviders.call(context);
 
+    assert.deepStrictEqual(cacheDeletes, [
+        { name: 'bad', group: 'claude' },
+        { name: 'worse-cache', group: 'claude' }
+    ]);
     assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
     assert.strictEqual(context.currentClaudeConfig, 'ok');
     assert.strictEqual(context.saved, 1);
@@ -570,6 +582,57 @@ test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs witho
     assert.strictEqual(context.healthCheckResult.ok, true);
     assert.strictEqual(context.showHealthCheckModal, false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 2 个失败提供商', type: 'success' }]);
+});
+
+test('deleteClaudeConfig prunes provider-cache source before local removal', async () => {
+    const cacheDeletes = [];
+    const methods = createClaudeConfigMethods({
+        api: async (action, payload) => {
+            if (action === 'delete-provider-cache-record') {
+                cacheDeletes.push(payload);
+                return { success: true, removed: true };
+            }
+            return { success: true };
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        claudeConfigs: {
+            bad: { name: 'bad', providerCacheRef: 'bad-cache', source: 'provider-cache' },
+            ok: { name: 'ok' }
+        },
+        currentClaudeConfig: 'bad',
+        saved: 0,
+        refreshed: 0,
+        synced: 0,
+        shownMessages: [],
+        async requestConfirmDialog() {
+            return true;
+        },
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        saveClaudeConfigs() {
+            this.saved += 1;
+        },
+        refreshClaudeModelContext() {
+            this.refreshed += 1;
+        },
+        syncClaudeBridgeProviders() {
+            this.synced += 1;
+        }
+    };
+
+    await methods.deleteClaudeConfig.call(context, 'bad');
+
+    assert.deepStrictEqual(cacheDeletes, [{ name: 'bad-cache', group: 'claude' }]);
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
+    assert.strictEqual(context.currentClaudeConfig, 'ok');
+    assert.strictEqual(context.saved, 1);
+    assert.strictEqual(context.refreshed, 1);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '操作成功', type: 'success' }]);
 });
 
 test('deleteSelectedHealthCheckFailedProviders requires an explicit selected provider', async () => {

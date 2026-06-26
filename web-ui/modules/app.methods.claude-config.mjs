@@ -325,6 +325,23 @@ export function createClaudeConfigMethods(options = {}) {
             await this.applyClaudeConfig(name);
         },
 
+        async deleteClaudeProviderCacheRef(configOrName) {
+            const config = configOrName && typeof configOrName === 'object'
+                ? configOrName
+                : (this.claudeConfigs && this.claudeConfigs[configOrName] ? this.claudeConfigs[configOrName] : null);
+            const ref = normalizeClaudeText(config && config.providerCacheRef);
+            const source = normalizeClaudeText(config && config.source);
+            if (!ref && source !== 'provider-cache') return true;
+            const name = ref || normalizeClaudeText(config && config.name) || normalizeClaudeText(configOrName);
+            if (!name) return true;
+            const res = await api('delete-provider-cache-record', { name, group: 'claude' });
+            if (res && res.error) {
+                this.showMessage(res.error, 'error');
+                return false;
+            }
+            return true;
+        },
+
         async deleteClaudeConfig(name) {
             if (Object.keys(this.claudeConfigs).length <= 1) {
                 return this.showMessage(this.t('toast.claude.keepOne'), 'error');
@@ -337,6 +354,10 @@ export function createClaudeConfigMethods(options = {}) {
                 danger: true
             });
             if (!confirmed) return;
+
+            const config = this.claudeConfigs[name];
+            const cacheDeleted = await this.deleteClaudeProviderCacheRef(config || name);
+            if (!cacheDeleted) return;
 
             delete this.claudeConfigs[name];
             if (this.currentClaudeConfig === name) {

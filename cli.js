@@ -1092,7 +1092,8 @@ function getApiToolConfigWriteTarget(action) {
         'restore-claude-dir',
         'claude-local-bridge-toggle',
         'claude-local-bridge-set-excluded',
-        'claude-local-bridge-sync-providers'
+        'claude-local-bridge-sync-providers',
+        'delete-provider-cache-record'
     ]);
     const opencodeWriteActions = new Set([
         'apply-opencode-config',
@@ -2915,11 +2916,28 @@ function removeProviderFromProviderCacheContainer(rawProviders, providerName) {
     return { value: next, changed };
 }
 
-function removeProviderFromProviderCacheRecords(providerName) {
-    const targetName = typeof providerName === 'string' ? providerName.trim() : '';
-    if (!targetName) return;
+function resolveProviderCacheDeleteGroups(groups) {
+    const requested = Array.isArray(groups) ? groups : (groups ? [groups] : []);
+    const normalized = requested
+        .map((item) => String(item || '').trim().toLowerCase())
+        .filter((item) => Object.prototype.hasOwnProperty.call(PROVIDER_CACHE_FILE_GROUPS, item));
+    return normalized.length ? Array.from(new Set(normalized)) : Object.keys(PROVIDER_CACHE_FILE_GROUPS);
+}
 
-    for (const fileName of PROVIDER_CACHE_PROVIDER_FILES) {
+function removeProviderFromProviderCacheRecords(providerName, options = {}) {
+    const targetName = typeof providerName === 'string' ? providerName.trim() : '';
+    const summary = { removed: false, providerFiles: [], currentModelFiles: [] };
+    if (!targetName) return summary;
+
+    const groups = resolveProviderCacheDeleteGroups(options.groups || options.group);
+    const providerFiles = groups
+        .flatMap((group) => PROVIDER_CACHE_FILE_GROUPS[group] || [])
+        .filter((fileName) => PROVIDER_CACHE_PROVIDER_FILES.includes(fileName));
+    const currentModelFiles = groups
+        .flatMap((group) => PROVIDER_CACHE_FILE_GROUPS[group] || [])
+        .filter((fileName) => PROVIDER_CACHE_CURRENT_MODEL_FILES.includes(fileName));
+
+    for (const fileName of Array.from(new Set(providerFiles))) {
         const existing = readProviderCacheJsonObject(fileName);
         if (!isPlainObject(existing) || !Object.prototype.hasOwnProperty.call(existing, 'providers')) continue;
         const removed = removeProviderFromProviderCacheContainer(existing.providers, targetName);
@@ -2929,15 +2947,37 @@ function removeProviderFromProviderCacheRecords(providerName) {
             generatedAt: new Date().toISOString(),
             providers: removed.value
         });
+        summary.removed = true;
+        summary.providerFiles.push(fileName);
     }
 
-    for (const fileName of PROVIDER_CACHE_CURRENT_MODEL_FILES) {
+    for (const fileName of Array.from(new Set(currentModelFiles))) {
         const existing = readProviderCacheJsonObject(fileName);
         if (!isPlainObject(existing) || !Object.prototype.hasOwnProperty.call(existing, targetName)) continue;
         const next = { ...existing };
         delete next[targetName];
         writeProviderCacheJsonObject(fileName, next);
+        summary.removed = true;
+        summary.currentModelFiles.push(fileName);
     }
+    return summary;
+}
+
+function deleteProviderCacheRecord(params = {}) {
+    const name = typeof params.name === 'string' ? params.name.trim() : '';
+    if (!name) return { error: '名称不能为空' };
+    const group = typeof params.group === 'string' ? params.group.trim().toLowerCase() : '';
+    const groups = resolveProviderCacheDeleteGroups(group || params.groups);
+    const summary = removeProviderFromProviderCacheRecords(name, { groups });
+    return {
+        success: true,
+        name,
+        groups,
+        removed: summary.removed,
+        providerFiles: summary.providerFiles,
+        currentModelFiles: summary.currentModelFiles,
+        records: readProviderCacheRecords()
+    };
 }
 
 function readClaudeProviderCacheProvider(name) {
@@ -12455,6 +12495,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'sync-provider-cache-records':
                             result = syncProviderCacheRecords();
+                            break;
+                        case 'delete-provider-cache-record':
+                            result = deleteProviderCacheRecord(params || {});
                             break;
                         case 'delete-provider':
                             result = deleteProviderFromConfig(params || {});
