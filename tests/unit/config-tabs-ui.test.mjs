@@ -619,9 +619,12 @@ test('trash item styles stay aligned', () => {
     assert.match(styles, /\.codex-config-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(240px,\s*100%\),\s*1fr\)\);/);
     assert.match(styles, /\.codex-config-field\s*\{/);
     assert.match(styles, /\.codex-config-field\s*\{[\s\S]*min-width:\s*0;/);
-    assert.match(styles, /#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*padding-top:\s*17px;[\s\S]*padding-bottom:\s*17px;/);
-    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*padding-top:\s*13px;[\s\S]*padding-bottom:\s*13px;/);
-    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title,\s*#panel-config-provider \.card-list > \.card \.card-title > span:first-child,\s*#panel-config-claude \.card-list > \.card \.card-title,\s*#panel-config-claude \.card-list > \.card \.card-title > span:first-child\s*\{[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*88px;[\s\S]*padding-top:\s*22px;[\s\S]*padding-bottom:\s*22px;/);
+    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*84px;[\s\S]*padding-top:\s*18px;[\s\S]*padding-bottom:\s*18px;/);
+    assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)\s*\{[\s\S]*#panel-config-provider \.card-list,\s*#panel-config-claude \.card-list\s*\{[\s\S]*grid-template-columns:\s*1fr;/);
+    assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*96px;[\s\S]*padding-top:\s*24px;[\s\S]*padding-bottom:\s*24px;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title,\s*#panel-config-claude \.card-list > \.card \.card-title\s*\{[\s\S]*flex-wrap:\s*wrap;[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title > span:first-child,\s*#panel-config-claude \.card-list > \.card \.card-title > span:first-child\s*\{[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
 });
 
 test('settings tab header actions keep compact tool buttons inline on wider screens', () => {

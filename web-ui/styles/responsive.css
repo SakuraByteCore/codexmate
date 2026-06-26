@@ -433,8 +433,9 @@ textarea:focus-visible {
 
     #panel-config-provider .card-list > .card,
     #panel-config-claude .card-list > .card {
-        padding-top: 13px;
-        padding-bottom: 13px;
+        min-height: 84px;
+        padding-top: 18px;
+        padding-bottom: 18px;
     }
 
     .card-list {

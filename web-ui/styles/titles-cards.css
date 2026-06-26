@@ -114,19 +114,54 @@
 
 #panel-config-provider .card-list > .card,
 #panel-config-claude .card-list > .card {
-    padding-top: 17px;
-    padding-bottom: 17px;
+    align-items: flex-start;
+    min-height: 88px;
+    padding-top: 22px;
+    padding-bottom: 22px;
+}
+
+#panel-config-provider .card-list > .card .card-leading,
+#panel-config-claude .card-list > .card .card-leading {
+    align-items: flex-start;
+}
+
+#panel-config-provider .card-list > .card .card-content,
+#panel-config-claude .card-list > .card .card-content {
+    gap: 4px;
 }
 
 #panel-config-provider .card-list > .card .card-title,
+#panel-config-claude .card-list > .card .card-title {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+}
+
 #panel-config-provider .card-list > .card .card-title > span:first-child,
-#panel-config-claude .card-list > .card .card-title,
 #panel-config-claude .card-list > .card .card-title > span:first-child {
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
     overflow-wrap: anywhere;
-    line-height: 1.25;
+    line-height: 1.3;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    #panel-config-provider .card-list,
+    #panel-config-claude .card-list {
+        grid-template-columns: 1fr;
+    }
+
+    #panel-config-provider .card-list > .card,
+    #panel-config-claude .card-list > .card {
+        min-height: 96px;
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
 }
 
 .card:hover {
