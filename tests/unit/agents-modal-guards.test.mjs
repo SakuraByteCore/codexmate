@@ -416,6 +416,15 @@ test('runHealthCheck checks Codex providers concurrently and exposes failed prov
         { name: 'bad', status: 'red', deletable: true, detail: 'bad HTTP 502' },
         { name: 'system', status: 'yellow', deletable: false, detail: 'system key missing' }
     ]);
+    assert.deepStrictEqual(context.getSelectableHealthCheckFailedProviderItems().map((item) => item.name), ['bad']);
+    assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), false);
+    context.setAllHealthCheckFailedProviderSelections(true);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:bad': true });
+    assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), true);
+    assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), true);
+    context.setAllHealthCheckFailedProviderSelections(false);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:bad': false });
+    assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), false);
     assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
 });
 
@@ -439,10 +448,7 @@ test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable f
         lang: 'zh',
         configMode: 'codex',
         providersList: [{ name: 'bad' }, { name: 'system', nonDeletable: true }, { name: 'ok' }],
-        healthCheckFailedProviderSelections: {
-            'codex:bad': true,
-            'codex:system': true
-        },
+        healthCheckFailedProviderSelections: {},
         healthCheckFailedProviderDeleting: false,
         healthCheckBatchTotal: 3,
         healthCheckBatchDone: 3,
@@ -475,6 +481,10 @@ test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable f
             return true;
         }
     };
+
+    context.setAllHealthCheckFailedProviderSelections(true);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:bad': true });
+    assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), true);
 
     await methods.deleteSelectedHealthCheckFailedProviders.call(context);
 

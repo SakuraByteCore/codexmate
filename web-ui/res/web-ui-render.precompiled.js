@@ -9122,8 +9122,31 @@ return function render(_ctx, _cache) {
                         class: "model-list health-failed-provider-list"
                       }, [
                         _createElementVNode("div", { class: "model-item health-failed-provider-header" }, [
-                          _createElementVNode("span", null, _toDisplayString(_ctx.t('config.health.failedProviders.title')), 1 /* TEXT */),
-                          _createElementVNode("span", { class: "latency error" }, _toDisplayString(_ctx.getHealthCheckFailedProviderItems().length), 1 /* TEXT */)
+                          _createElementVNode("span", { class: "health-failed-provider-main" }, [
+                            _createElementVNode("input", {
+                              type: "checkbox",
+                              checked: _ctx.areAllHealthCheckFailedProvidersSelected(),
+                              disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
+                              onChange: $event => (_ctx.setAllHealthCheckFailedProviderSelections($event.target.checked)),
+                              "aria-label": _ctx.t('config.health.failedProviders.selectAllAria')
+                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "aria-label"]),
+                            _createElementVNode("span", null, _toDisplayString(_ctx.t('config.health.failedProviders.title')), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("span", { class: "health-failed-provider-actions" }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-link",
+                              disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
+                              onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(true))
+                            }, _toDisplayString(_ctx.t('config.health.failedProviders.selectAll')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-link",
+                              disabled: !_ctx.hasHealthCheckFailedProviderSelection() || _ctx.healthCheckFailedProviderDeleting,
+                              onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(false))
+                            }, _toDisplayString(_ctx.t('config.health.failedProviders.clearSelection')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                            _createElementVNode("span", { class: "latency error" }, _toDisplayString(_ctx.getHealthCheckFailedProviderItems().length), 1 /* TEXT */)
+                          ])
                         ]),
                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getHealthCheckFailedProviderItems(), (item) => {
                           return (_openBlock(), _createElementBlock("label", {

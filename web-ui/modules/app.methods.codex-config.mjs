@@ -559,8 +559,26 @@ export function createCodexConfigMethods(options = {}) {
             return Array.from(items.values());
         },
 
+        getSelectableHealthCheckFailedProviderItems() {
+            return this.getHealthCheckFailedProviderItems().filter((item) => item.deletable);
+        },
+
         hasHealthCheckFailedProviderSelection() {
-            return this.getHealthCheckFailedProviderItems().some((item) => item.selected && item.deletable);
+            return this.getSelectableHealthCheckFailedProviderItems().some((item) => item.selected);
+        },
+
+        areAllHealthCheckFailedProvidersSelected() {
+            const selectable = this.getSelectableHealthCheckFailedProviderItems();
+            return selectable.length > 0 && selectable.every((item) => item.selected);
+        },
+
+        setAllHealthCheckFailedProviderSelections(checked) {
+            const selectable = this.getSelectableHealthCheckFailedProviderItems();
+            const next = { ...(this.healthCheckFailedProviderSelections || {}) };
+            for (const item of selectable) {
+                next[item.key] = !!checked;
+            }
+            this.healthCheckFailedProviderSelections = next;
         },
 
         toggleHealthCheckFailedProviderSelection(item, checked) {

@@ -21,8 +21,31 @@
 
                     <div v-if="getHealthCheckFailedProviderItems().length" class="model-list health-failed-provider-list">
                         <div class="model-item health-failed-provider-header">
-                            <span>{{ t('config.health.failedProviders.title') }}</span>
-                            <span class="latency error">{{ getHealthCheckFailedProviderItems().length }}</span>
+                            <span class="health-failed-provider-main">
+                                <input
+                                    type="checkbox"
+                                    :checked="areAllHealthCheckFailedProvidersSelected()"
+                                    :disabled="!getSelectableHealthCheckFailedProviderItems().length || healthCheckFailedProviderDeleting"
+                                    @change="setAllHealthCheckFailedProviderSelections($event.target.checked)"
+                                    :aria-label="t('config.health.failedProviders.selectAllAria')"
+                                >
+                                <span>{{ t('config.health.failedProviders.title') }}</span>
+                            </span>
+                            <span class="health-failed-provider-actions">
+                                <button
+                                    type="button"
+                                    class="btn-link"
+                                    :disabled="!getSelectableHealthCheckFailedProviderItems().length || healthCheckFailedProviderDeleting"
+                                    @click="setAllHealthCheckFailedProviderSelections(true)"
+                                >{{ t('config.health.failedProviders.selectAll') }}</button>
+                                <button
+                                    type="button"
+                                    class="btn-link"
+                                    :disabled="!hasHealthCheckFailedProviderSelection() || healthCheckFailedProviderDeleting"
+                                    @click="setAllHealthCheckFailedProviderSelections(false)"
+                                >{{ t('config.health.failedProviders.clearSelection') }}</button>
+                                <span class="latency error">{{ getHealthCheckFailedProviderItems().length }}</span>
+                            </span>
                         </div>
                         <label
                             v-for="item in getHealthCheckFailedProviderItems()"
