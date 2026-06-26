@@ -922,6 +922,7 @@ const en = Object.freeze({
     'config.health.run': 'Run check',
     'config.health.running': 'Checking...',
     'config.health.hint': 'Runs availability probes across all providers and refreshes latency badges.',
+    'config.health.codexHint': 'Checks the current Codex route provider, endpoint, auth, and model through the local bridge.',
     'config.health.progress': '{done}/{total} done · {failed} failed',
     'config.health.ok': 'Passed',
     'config.health.fail': 'Failed',

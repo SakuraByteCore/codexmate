@@ -1373,7 +1373,7 @@ return function render(_ctx, _cache) {
                                 onClick: _ctx.runHealthCheck,
                                 disabled: _ctx.healthCheckLoading || _ctx.loading || !!_ctx.initError
                               }, _toDisplayString(_ctx.healthCheckLoading ? _ctx.t('config.health.running') : _ctx.t('config.health.run')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                              _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('config.health.hint')), 1 /* TEXT */)
+                              _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('config.health.codexHint')), 1 /* TEXT */)
                             ])
                           ], 64 /* STABLE_FRAGMENT */))
                         : _createCommentVNode("v-if", true),

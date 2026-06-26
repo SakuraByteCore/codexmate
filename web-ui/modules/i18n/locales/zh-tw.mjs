@@ -921,6 +921,7 @@ const zhTw = Object.freeze({
     'config.health.run': '運行檢查',
     'config.health.running': '檢查中...',
     'config.health.hint': '會批量探測所有提供商可用性，並重新整理延遲顯示。',
+    'config.health.codexHint': '透過本機橋接探測目前 Codex 路由 provider、endpoint、鑑權與模型。',
     'config.health.progress': '已完成 {done}/{total} · 失敗 {failed}',
     'config.health.ok': '檢查通過',
     'config.health.fail': '檢查未通過',

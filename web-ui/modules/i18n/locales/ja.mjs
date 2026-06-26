@@ -911,6 +911,7 @@ const ja = Object.freeze({
     'config.health.run': 'チェック実行',
     'config.health.running': 'チェック中...',
     'config.health.hint': 'すべてのプロバイダーの可用性を一括プローブし、遅延表示を更新します。',
+    'config.health.codexHint': '現在の Codex ルートプロバイダー、endpoint、認証、モデルをローカルブリッジ経由でチェックします。',
     'config.health.progress': '完了 {done}/{total} · 失敗 {failed}',
     'config.health.ok': 'チェック通過',
     'config.health.fail': 'チェック失敗',

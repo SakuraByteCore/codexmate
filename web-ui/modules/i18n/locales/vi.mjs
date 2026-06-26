@@ -1056,6 +1056,7 @@ const vi = Object.freeze({
     'config.health.run': 'Chạy kiểm tra',
     'config.health.running': 'Đang kiểm tra...',
     'config.health.hint': 'Chạy kiểm tra khả dụng cho tất cả nhà cung cấp và làm mới badge độ trễ.',
+    'config.health.codexHint': 'Kiểm tra provider route Codex hiện tại, endpoint, xác thực và model qua local bridge.',
     'config.health.progress': '{done}/{total} xong · {failed} thất bại',
     'config.health.ok': 'Đạt',
     'config.health.fail': 'Thất bại',
