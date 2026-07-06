@@ -119,6 +119,7 @@ body::after {
     flex-direction: column;
     flex: 1 1 auto;
     gap: 0;
+    padding-bottom: 64px;
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
