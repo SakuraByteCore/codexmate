@@ -360,13 +360,10 @@ export function createOpenclawEditingMethods() {
         },
 
         saveOpenclawConfigs() {
-            try {
-                localStorage.setItem('openclawConfigs', JSON.stringify(this.openclawConfigs));
-                return true;
-            } catch (_) {
-                this.showMessage('保存本地 OpenClaw 配置失败', 'error');
-                return false;
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ openclawConfigs: this.openclawConfigs });
             }
+            return true;
         },
 
         // Accordion stepper methods

@@ -7,104 +7,50 @@ const __dirname = path.dirname(__filename);
 
 const { createStartupClaudeMethods } = await import(pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.startup-claude.mjs')));
 
-function withLocalStorage(localStorage, fn) {
-    const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
-    Object.defineProperty(globalThis, 'localStorage', {
-        configurable: true,
-        writable: true,
-        value: localStorage
-    });
-    try {
-        return fn();
-    } finally {
-        if (previous) {
-            Object.defineProperty(globalThis, 'localStorage', previous);
-        } else {
-            delete globalThis.localStorage;
-        }
-    }
-}
-
 function createContext() {
     const messages = [];
+    const writes = [];
     return {
         messages,
+        writes,
+        starPrompted: false,
         showMessage(message, level) {
             messages.push({ message, level });
+        },
+        persistWebUiPreferences(overrides) {
+            writes.push(overrides);
         }
     };
 }
 
 const { maybeShowStarPrompt } = createStartupClaudeMethods();
 
-test('maybeShowStarPrompt skips prompting when storage already contains the marker', () => {
+test('maybeShowStarPrompt skips prompting when preference marker is already set', () => {
     const context = createContext();
-    let setItemCalls = 0;
+    context.starPrompted = true;
 
-    withLocalStorage({
-        getItem() {
-            return '1';
-        },
-        setItem() {
-            setItemCalls += 1;
-        }
-    }, () => {
-        maybeShowStarPrompt.call(context);
-    });
+    maybeShowStarPrompt.call(context);
 
     assert.deepStrictEqual(context.messages, []);
-    assert.strictEqual(setItemCalls, 0);
+    assert.deepStrictEqual(context.writes, []);
 });
 
-test('maybeShowStarPrompt silently persists the marker on first success', () => {
+test('maybeShowStarPrompt silently persists the marker through web UI preferences', () => {
     const context = createContext();
-    const writes = [];
 
-    withLocalStorage({
-        getItem() {
-            return null;
-        },
-        setItem(key, value) {
-            writes.push([key, value]);
-        }
-    }, () => {
-        maybeShowStarPrompt.call(context);
-    });
+    maybeShowStarPrompt.call(context);
 
     assert.deepStrictEqual(context.messages, []);
-    assert.deepStrictEqual(writes, [['codexmateStarPrompted', '1']]);
+    assert.strictEqual(context.starPrompted, true);
+    assert.deepStrictEqual(context.writes, [{ starPrompted: true }]);
 });
 
-test('maybeShowStarPrompt stays silent when persisting the marker fails', () => {
+test('maybeShowStarPrompt stays silent when the preference persistence hook is missing', () => {
     const context = createContext();
+    delete context.persistWebUiPreferences;
 
-    withLocalStorage({
-        getItem() {
-            return null;
-        },
-        setItem() {
-            throw new Error('quota exceeded');
-        }
-    }, () => {
-        maybeShowStarPrompt.call(context);
-    });
+    maybeShowStarPrompt.call(context);
 
     assert.deepStrictEqual(context.messages, []);
-});
-
-test('maybeShowStarPrompt stays silent when reading storage fails', () => {
-    const context = createContext();
-
-    withLocalStorage({
-        getItem() {
-            throw new Error('storage blocked');
-        },
-        setItem() {
-            throw new Error('should not be called');
-        }
-    }, () => {
-        maybeShowStarPrompt.call(context);
-    });
-
-    assert.deepStrictEqual(context.messages, []);
+    assert.strictEqual(context.starPrompted, true);
 });

@@ -103,16 +103,16 @@ return function render(_ctx, _cache) {
             ? (_openBlock(), _createElementBlock("button", {
                 key: 0,
                 type: "button",
-                class: _normalizeClass(["top-tab", { active: _ctx.isMainTabNavActive('orchestration') }]),
+                class: "top-tab top-tab-disabled",
                 id: "tab-orchestration",
                 role: "tab",
                 "data-main-tab": "orchestration",
-                tabindex: _ctx.mainTab === 'orchestration' ? 0 : -1,
-                "aria-selected": _ctx.mainTab === 'orchestration',
-                "aria-controls": "panel-orchestration",
-                onPointerdown: $event => (_ctx.onMainTabPointerDown('orchestration', $event)),
-                onClick: $event => (_ctx.onMainTabClick('orchestration', $event))
-              }, _toDisplayString(_ctx.t('tab.orchestration')), 43 /* TEXT, CLASS, PROPS, NEED_HYDRATION */, ["tabindex", "aria-selected", "onPointerdown", "onClick"]))
+                tabindex: "-1",
+                "aria-selected": "false",
+                "aria-disabled": "true",
+                disabled: "",
+                title: _ctx.t('orchestration.rebuilding.body')
+              }, _toDisplayString(_ctx.t('tab.orchestration')), 9 /* TEXT, PROPS */, ["title"]))
             : _createCommentVNode("v-if", true),
           _createElementVNode("button", {
             type: "button",
@@ -178,13 +178,23 @@ return function render(_ctx, _cache) {
         ]))
       : _createCommentVNode("v-if", true),
     _createElementVNode("div", {
-      class: _normalizeClass(['app-shell', { standalone: _ctx.sessionStandalone }])
+      class: _normalizeClass(['app-shell', { standalone: _ctx.sessionStandalone, 'sidebar-collapsed': _ctx.sidebarCollapsed }])
     }, [
       (!_ctx.sessionStandalone)
         ? (_openBlock(), _createElementBlock("aside", {
             key: 0,
             class: "side-rail"
           }, [
+            _createElementVNode("button", {
+              type: "button",
+              class: "side-rail-collapse-toggle",
+              "aria-pressed": _ctx.sidebarCollapsed ? 'true' : 'false',
+              "aria-label": _ctx.sidebarCollapsed ? _ctx.t('side.expand') : _ctx.t('side.collapse'),
+              title: _ctx.sidebarCollapsed ? _ctx.t('side.expand') : _ctx.t('side.collapse'),
+              onClick: _ctx.toggleSidebarCollapsed
+            }, [
+              _createElementVNode("span", { "aria-hidden": "true" }, _toDisplayString(_ctx.sidebarCollapsed ? '›' : '‹'), 1 /* TEXT */)
+            ], 8 /* PROPS */, ["aria-pressed", "aria-label", "title", "onClick"]),
             _createElementVNode("div", { class: "brand-block" }, [
               _createElementVNode("div", { class: "brand-head" }, [
                 _createElementVNode("img", {
@@ -227,6 +237,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('dashboard', $event)),
                   onClick: $event => (_ctx.onMainTabClick('dashboard', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "⌂"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.overview.doctor')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.overview.doctor.meta')), 1 /* TEXT */),
@@ -248,6 +262,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('docs', $event)),
                   onClick: $event => (_ctx.onMainTabClick('docs', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "?"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.docs.cliInstall')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.docs.cliInstall.meta')), 1 /* TEXT */),
@@ -270,6 +288,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('codex', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('codex', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "C"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.codex')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.codex.meta')), 1 /* TEXT */),
@@ -287,6 +309,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('claude', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('claude', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "A"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.claude')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.claude.meta')), 1 /* TEXT */),
@@ -304,6 +330,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('openclaw', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('openclaw', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "O"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.openclaw')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.openclaw.meta')), 1 /* TEXT */),
@@ -321,6 +351,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('opencode', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('opencode', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "N"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.opencode')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.opencode.meta')), 1 /* TEXT */),
@@ -345,6 +379,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
                   onClick: $event => {_ctx.switchPromptsSubTab('codex'); _ctx.onMainTabClick('prompts')}
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "P"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.agents')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.agents.meta')), 1 /* TEXT */)
@@ -359,6 +397,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
                   onClick: $event => {_ctx.switchPromptsSubTab('claude-project'); _ctx.onMainTabClick('prompts')}
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "M"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.claude')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.claude.meta')), 1 /* TEXT */)
@@ -379,6 +421,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('sessions', $event)),
                   onClick: $event => (_ctx.onMainTabClick('sessions', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "S"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.sessions.browser')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.sessions.browser.meta')), 1 /* TEXT */),
@@ -393,6 +439,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('usage', $event)),
                   onClick: $event => (_ctx.onMainTabClick('usage', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "↗"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('tab.usage')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.usage.meta')), 1 /* TEXT */),
@@ -411,17 +461,21 @@ return function render(_ctx, _cache) {
                     _createElementVNode("button", {
                       id: "side-tab-orchestration",
                       "data-main-tab": "orchestration",
-                      "aria-current": _ctx.mainTab === 'orchestration' ? 'page' : null,
-                      class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('orchestration') }]),
-                      onPointerdown: $event => (_ctx.onMainTabPointerDown('orchestration', $event)),
-                      onClick: $event => (_ctx.onMainTabClick('orchestration', $event))
+                      class: "side-item side-item-disabled",
+                      "aria-disabled": "true",
+                      disabled: "",
+                      title: _ctx.t('orchestration.rebuilding.body')
                     }, [
+                      _createElementVNode("span", {
+                        class: "side-item-icon",
+                        "aria-hidden": "true"
+                      }, "T"),
                       _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('tab.orchestration')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.orchestration.meta')), 1 /* TEXT */),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.queueStats', { running: _ctx.taskOrchestrationQueueStats.running, queued: _ctx.taskOrchestrationQueueStats.queued })), 1 /* TEXT */)
+                        _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.rebuilding.status')), 1 /* TEXT */),
+                        _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.rebuilding.title')), 1 /* TEXT */)
                       ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
+                    ], 8 /* PROPS */, ["title"])
                   ], 8 /* PROPS */, ["aria-label"]))
                 : _createCommentVNode("v-if", true),
               _createElementVNode("div", {
@@ -438,6 +492,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('market', $event)),
                   onClick: $event => (_ctx.onMainTabClick('market', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "★"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('tab.market')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('skills.localLabel', { target: _ctx.skillsTargetLabel })), 1 /* TEXT */),
@@ -459,6 +517,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('plugins', $event)),
                   onClick: $event => (_ctx.onMainTabClick('plugins', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "◇"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.plugins.tools')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.tools.meta')), 1 /* TEXT */),
@@ -480,6 +542,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('settings', $event)),
                   onClick: $event => (_ctx.onMainTabClick('settings', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "⚙"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.system.settings')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.system.settings.meta')), 1 /* TEXT */)
@@ -493,6 +559,10 @@ return function render(_ctx, _cache) {
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('trash', $event)),
                   onClick: $event => (_ctx.onMainTabClick('trash', $event))
                 }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "⌫"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('settings.trash.title')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('settings.trash.meta')), 1 /* TEXT */),

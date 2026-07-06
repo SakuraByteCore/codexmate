@@ -10,7 +10,7 @@ export function normalizeConfigTemplateDiffConfirmEnabled(value) {
 }
 
 export function loadConfigTemplateDiffConfirmEnabledFromStorage(storage = null) {
-    const target = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+    const target = storage || null;
     if (!target || typeof target.getItem !== 'function') {
         return true;
     }
@@ -22,7 +22,7 @@ export function loadConfigTemplateDiffConfirmEnabledFromStorage(storage = null) 
 }
 
 export function persistConfigTemplateDiffConfirmEnabledToStorage(enabled, storage = null) {
-    const target = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+    const target = storage || null;
     if (!target || typeof target.setItem !== 'function') {
         return;
     }
@@ -30,4 +30,3 @@ export function persistConfigTemplateDiffConfirmEnabledToStorage(enabled, storag
         target.setItem(CONFIG_TEMPLATE_DIFF_CONFIRM_STORAGE_KEY, enabled ? 'true' : 'false');
     } catch (_) {}
 }
-

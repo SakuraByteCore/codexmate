@@ -63,16 +63,15 @@
                 :class="{ active: isMainTabNavActive('usage') }"
                 @pointerdown="onMainTabPointerDown('usage', $event)"
                 @click="onMainTabClick('usage', $event)">{{ t('tab.usage') }}</button>
-            <button v-if="taskOrchestrationTabEnabled" type="button" class="top-tab"
+            <button v-if="taskOrchestrationTabEnabled" type="button" class="top-tab top-tab-disabled"
                 id="tab-orchestration"
                 role="tab"
                 data-main-tab="orchestration"
-                :tabindex="mainTab === 'orchestration' ? 0 : -1"
-                :aria-selected="mainTab === 'orchestration'"
-                aria-controls="panel-orchestration"
-                :class="{ active: isMainTabNavActive('orchestration') }"
-                @pointerdown="onMainTabPointerDown('orchestration', $event)"
-                @click="onMainTabClick('orchestration', $event)">{{ t('tab.orchestration') }}</button>
+                tabindex="-1"
+                aria-selected="false"
+                aria-disabled="true"
+                disabled
+                :title="t('orchestration.rebuilding.body')">{{ t('tab.orchestration') }}</button>
             <button type="button" class="top-tab"
                 id="tab-market"
                 role="tab"
@@ -123,8 +122,17 @@
                 @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
         </div>
 
-        <div :class="['app-shell', { standalone: sessionStandalone }]">
+        <div :class="['app-shell', { standalone: sessionStandalone, 'sidebar-collapsed': sidebarCollapsed }]">
             <aside class="side-rail" v-if="!sessionStandalone">
+                <button
+                    type="button"
+                    class="side-rail-collapse-toggle"
+                    :aria-pressed="sidebarCollapsed ? 'true' : 'false'"
+                    :aria-label="sidebarCollapsed ? t('side.expand') : t('side.collapse')"
+                    :title="sidebarCollapsed ? t('side.expand') : t('side.collapse')"
+                    @click="toggleSidebarCollapsed">
+                    <span aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
+                </button>
                 <div class="brand-block">
                     <div class="brand-head">
                         <img class="brand-logo" src="/res/logo-pack.webp" alt="Codex Mate logo">
@@ -156,6 +164,7 @@
                         :class="['side-item', { active: isMainTabNavActive('dashboard') }]"
                         @pointerdown="onMainTabPointerDown('dashboard', $event)"
                         @click="onMainTabClick('dashboard', $event)">
+                        <span class="side-item-icon" aria-hidden="true">⌂</span>
                         <div class="side-item-title">{{ t('side.overview.doctor') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.overview.doctor.meta') }}</span>
@@ -172,6 +181,7 @@
                         :class="['side-item', { active: isMainTabNavActive('docs') }]"
                         @pointerdown="onMainTabPointerDown('docs', $event)"
                         @click="onMainTabClick('docs', $event)">
+                        <span class="side-item-icon" aria-hidden="true">?</span>
                         <div class="side-item-title">{{ t('side.docs.cliInstall') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.docs.cliInstall.meta') }}</span>
@@ -189,6 +199,7 @@
                         :class="['side-item', { active: isConfigModeNavActive('codex') }]"
                         @pointerdown="onConfigTabPointerDown('codex', $event)"
                         @click="onConfigTabClick('codex', $event)">
+                        <span class="side-item-icon" aria-hidden="true">C</span>
                         <div class="side-item-title">{{ t('side.config.codex') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.codex.meta') }}</span>
@@ -203,6 +214,7 @@
                         :class="['side-item', { active: isConfigModeNavActive('claude') }]"
                         @pointerdown="onConfigTabPointerDown('claude', $event)"
                         @click="onConfigTabClick('claude', $event)">
+                        <span class="side-item-icon" aria-hidden="true">A</span>
                         <div class="side-item-title">{{ t('side.config.claude') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.claude.meta') }}</span>
@@ -217,6 +229,7 @@
                         :class="['side-item', { active: isConfigModeNavActive('openclaw') }]"
                         @pointerdown="onConfigTabPointerDown('openclaw', $event)"
                         @click="onConfigTabClick('openclaw', $event)">
+                        <span class="side-item-icon" aria-hidden="true">O</span>
                         <div class="side-item-title">{{ t('side.config.openclaw') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.openclaw.meta') }}</span>
@@ -231,6 +244,7 @@
                         :class="['side-item', { active: isConfigModeNavActive('opencode') }]"
                         @pointerdown="onConfigTabPointerDown('opencode', $event)"
                         @click="onConfigTabClick('opencode', $event)">
+                        <span class="side-item-icon" aria-hidden="true">N</span>
                         <div class="side-item-title">{{ t('side.config.opencode') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.opencode.meta') }}</span>
@@ -249,6 +263,7 @@
                         :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'codex' }]"
                         @pointerdown="onMainTabPointerDown('prompts', $event)"
                         @click="switchPromptsSubTab('codex'); onMainTabClick('prompts')">
+                        <span class="side-item-icon" aria-hidden="true">P</span>
                         <div class="side-item-title">{{ t('side.prompts.agents') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.prompts.agents.meta') }}</span>
@@ -262,6 +277,7 @@
                         :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'claude-project' }]"
                         @pointerdown="onMainTabPointerDown('prompts', $event)"
                         @click="switchPromptsSubTab('claude-project'); onMainTabClick('prompts')">
+                        <span class="side-item-icon" aria-hidden="true">M</span>
                         <div class="side-item-title">{{ t('side.prompts.claude') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.prompts.claude.meta') }}</span>
@@ -278,6 +294,7 @@
                         :class="['side-item', { active: isMainTabNavActive('sessions') }]"
                         @pointerdown="onMainTabPointerDown('sessions', $event)"
                         @click="onMainTabClick('sessions', $event)">
+                        <span class="side-item-icon" aria-hidden="true">S</span>
                         <div class="side-item-title">{{ t('side.sessions.browser') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.sessions.browser.meta') }}</span>
@@ -291,6 +308,7 @@
                         :class="['side-item', { active: isMainTabNavActive('usage') }]"
                         @pointerdown="onMainTabPointerDown('usage', $event)"
                         @click="onMainTabClick('usage', $event)">
+                        <span class="side-item-icon" aria-hidden="true">↗</span>
                         <div class="side-item-title">{{ t('tab.usage') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.usage.meta') }}</span>
@@ -304,14 +322,15 @@
                     <button
                         id="side-tab-orchestration"
                         data-main-tab="orchestration"
-                        :aria-current="mainTab === 'orchestration' ? 'page' : null"
-                        :class="['side-item', { active: isMainTabNavActive('orchestration') }]"
-                        @pointerdown="onMainTabPointerDown('orchestration', $event)"
-                        @click="onMainTabClick('orchestration', $event)">
+                        class="side-item side-item-disabled"
+                        aria-disabled="true"
+                        disabled
+                        :title="t('orchestration.rebuilding.body')">
+                        <span class="side-item-icon" aria-hidden="true">T</span>
                         <div class="side-item-title">{{ t('tab.orchestration') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.orchestration.meta') }}</span>
-                            <span>{{ t('orchestration.queueStats', { running: taskOrchestrationQueueStats.running, queued: taskOrchestrationQueueStats.queued }) }}</span>
+                            <span>{{ t('orchestration.rebuilding.status') }}</span>
+                            <span>{{ t('orchestration.rebuilding.title') }}</span>
                         </div>
                     </button>
                 </div>
@@ -325,6 +344,7 @@
                         :class="['side-item', { active: isMainTabNavActive('market') }]"
                         @pointerdown="onMainTabPointerDown('market', $event)"
                         @click="onMainTabClick('market', $event)">
+                        <span class="side-item-icon" aria-hidden="true">★</span>
                         <div class="side-item-title">{{ t('tab.market') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('skills.localLabel', { target: skillsTargetLabel }) }}</span>
@@ -342,6 +362,7 @@
                         :class="['side-item', { active: isMainTabNavActive('plugins') }]"
                         @pointerdown="onMainTabPointerDown('plugins', $event)"
                         @click="onMainTabClick('plugins', $event)">
+                        <span class="side-item-icon" aria-hidden="true">◇</span>
                         <div class="side-item-title">{{ t('side.plugins.tools') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.plugins.tools.meta') }}</span>
@@ -359,6 +380,7 @@
                         :class="['side-item', { active: isMainTabNavActive('settings') }]"
                         @pointerdown="onMainTabPointerDown('settings', $event)"
                         @click="onMainTabClick('settings', $event)">
+                        <span class="side-item-icon" aria-hidden="true">⚙</span>
                         <div class="side-item-title">{{ t('side.system.settings') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.system.settings.meta') }}</span>
@@ -371,6 +393,7 @@
                         :class="['side-item', { active: isMainTabNavActive('trash') }]"
                         @pointerdown="onMainTabPointerDown('trash', $event)"
                         @click="onMainTabClick('trash', $event)">
+                        <span class="side-item-icon" aria-hidden="true">⌫</span>
                         <div class="side-item-title">{{ t('settings.trash.title') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('settings.trash.meta') }}</span>

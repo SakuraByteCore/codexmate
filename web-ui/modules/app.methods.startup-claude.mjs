@@ -10,28 +10,20 @@ import {
 } from '../logic.mjs';
 import { nextClaudeConfigName } from './provider-default-names.mjs';
 
-const DELETED_CLAUDE_SETTINGS_IMPORTS_STORAGE_KEY = 'deletedClaudeSettingsImports';
-
 function normalizeDeletedClaudeImportUrl(value) {
     return typeof value === 'string' ? value.trim().replace(/\/+$/g, '') : '';
 }
 
-function shouldSuppressDeletedClaudeSettingsImport(env = {}) {
+function shouldSuppressDeletedClaudeSettingsImport(env = {}, deletedEntries = []) {
     const normalized = normalizeClaudeSettingsEnv(env);
     const baseUrl = normalizeDeletedClaudeImportUrl(normalized.baseUrl);
     const model = normalizeClaudeValue(normalized.model);
     if (!baseUrl || !model) return false;
-    try {
-        const raw = localStorage.getItem(DELETED_CLAUDE_SETTINGS_IMPORTS_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        const entries = Array.isArray(parsed) ? parsed : [];
-        return entries.some((entry) => entry
-            && typeof entry === 'object'
-            && normalizeDeletedClaudeImportUrl(entry.baseUrl) === baseUrl
-            && normalizeClaudeValue(entry.model) === model);
-    } catch (_) {
-        return false;
-    }
+    const entries = Array.isArray(deletedEntries) ? deletedEntries : [];
+    return entries.some((entry) => entry
+        && typeof entry === 'object'
+        && normalizeDeletedClaudeImportUrl(entry.baseUrl) === baseUrl
+        && normalizeClaudeValue(entry.model) === model);
 }
 
 export function createStartupClaudeMethods(options = {}) {
@@ -153,9 +145,6 @@ export function createStartupClaudeMethods(options = {}) {
                             claude: statusRes.toolConfigPermissions.claude === true,
                             opencode: statusRes.toolConfigPermissions.opencode === true
                         };
-                        try {
-                            localStorage.setItem('toolConfigPermissions', JSON.stringify(this.toolConfigPermissions));
-                        } catch (_) {}
                     }
                     this.providersList = listRes.providers;
                     if (typeof this.loadLocalBridgeExcluded === 'function') { this.loadLocalBridgeExcluded(); }
@@ -275,7 +264,7 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         shouldSuppressClaudeSettingsImport(env) {
-            return isLikelyBuiltinClaudeProxySettingsEnv(env) || shouldSuppressDeletedClaudeSettingsImport(env);
+            return isLikelyBuiltinClaudeProxySettingsEnv(env) || shouldSuppressDeletedClaudeSettingsImport(env, this.deletedClaudeSettingsImports);
         },
 
         findDuplicateClaudeConfigName(config) {
@@ -381,7 +370,7 @@ export function createStartupClaudeMethods(options = {}) {
                     if (matchName) {
                         if (this.currentClaudeConfig !== matchName) {
                             this.currentClaudeConfig = matchName;
-                            try { localStorage.setItem('currentClaudeConfig', matchName); } catch (_) {}
+                            if (typeof this.persistWebUiPreferences === 'function') this.persistWebUiPreferences({ currentClaudeConfig: matchName });
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         return;
@@ -390,7 +379,7 @@ export function createStartupClaudeMethods(options = {}) {
                     if (builtinProxyMatch) {
                         if (this.currentClaudeConfig !== builtinProxyMatch) {
                             this.currentClaudeConfig = builtinProxyMatch;
-                            try { localStorage.setItem('currentClaudeConfig', builtinProxyMatch); } catch (_) {}
+                            if (typeof this.persistWebUiPreferences === 'function') this.persistWebUiPreferences({ currentClaudeConfig: builtinProxyMatch });
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         return;
@@ -401,7 +390,7 @@ export function createStartupClaudeMethods(options = {}) {
                     if (importedName) {
                         if (this.currentClaudeConfig !== importedName) {
                             this.currentClaudeConfig = importedName;
-                            try { localStorage.setItem('currentClaudeConfig', importedName); } catch (_) {}
+                            if (typeof this.persistWebUiPreferences === 'function') this.persistWebUiPreferences({ currentClaudeConfig: importedName });
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                         if (!silent) {
@@ -417,14 +406,14 @@ export function createStartupClaudeMethods(options = {}) {
                             : (configNames[0] || '');
                         if (!fallback) {
                             this.currentClaudeConfig = '';
-                            try { localStorage.setItem('currentClaudeConfig', ''); } catch (_) {}
+                            if (typeof this.persistWebUiPreferences === 'function') this.persistWebUiPreferences({ currentClaudeConfig: '' });
                             this.currentClaudeModel = '';
                             this.resetClaudeModelsState();
                             return;
                         }
                         if (this.currentClaudeConfig !== fallback) {
                             this.currentClaudeConfig = fallback;
-                            try { localStorage.setItem('currentClaudeConfig', fallback); } catch (_) {}
+                            if (typeof this.persistWebUiPreferences === 'function') this.persistWebUiPreferences({ currentClaudeConfig: fallback });
                         }
                         this.refreshClaudeModelContext({ silentError: silentModelError });
                     }
@@ -611,14 +600,10 @@ export function createStartupClaudeMethods(options = {}) {
         },
 
         maybeShowStarPrompt() {
-            const storageKey = 'codexmateStarPrompted';
-            try {
-                if (!localStorage.getItem(storageKey)) {
-                    localStorage.setItem(storageKey, '1');
-                }
-            } catch (_) {
-                // Ignore storage failures silently. The startup UI should not show
-                // promotional prompts or block normal configuration work.
+            if (this.starPrompted === true) return;
+            this.starPrompted = true;
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ starPrompted: true });
             }
         }
     };

@@ -30,16 +30,7 @@ function isSessionLoadNativeDialogEnabled(vm) {
         // ignore global flag lookup failures
     }
 
-    try {
-        if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
-            const stored = String(localStorage.getItem('codexmateSessionLoadNativeDialog') || '').trim().toLowerCase();
-            if (stored === '1' || stored === 'true' || stored === 'yes' || stored === 'on') {
-                return true;
-            }
-        }
-    } catch (_) {
-        // ignore storage lookup failures
-    }
+    if (vm && vm.sessionLoadNativeDialog === true) return true;
 
     try {
         const search = typeof location !== 'undefined' && location && typeof location.search === 'string'
@@ -271,28 +262,17 @@ export function createSessionBrowserMethods(options = {}) {
                     url.hash = '';
                     window.history.replaceState(null, '', url.toString());
                 } catch (_) {}
-                try {
-                    const sortCache = localStorage.getItem('codexmateSessionSortMode');
-                    this.sessionSortMode = normalizeSortMode(sortCache);
-                } catch (_) {}
                 if (this.mainTab === 'sessions' && typeof this.loadSessions === 'function') {
                     void this.loadSessions();
                 }
                 return;
             }
-            const sourceCache = localStorage.getItem('codexmateSessionFilterSource');
-            const pathCache = localStorage.getItem('codexmateSessionPathFilter');
-            const cached = buildSessionFilterCacheState(sourceCache, pathCache);
+            const cached = buildSessionFilterCacheState(this.sessionFilterSource, this.sessionPathFilter);
             this.sessionFilterSource = cached.source;
             this.sessionPathFilter = cached.pathFilter;
-            const queryCache = localStorage.getItem('codexmateSessionQuery');
-            const roleCache = localStorage.getItem('codexmateSessionRoleFilter');
-            const timeCache = localStorage.getItem('codexmateSessionTimePreset');
-            const sortCache = localStorage.getItem('codexmateSessionSortMode');
-            this.sessionQuery = typeof queryCache === 'string' ? queryCache : '';
-            this.sessionRoleFilter = normalizeSessionRoleFilter(roleCache);
-            this.sessionTimePreset = normalizeSessionTimePreset(timeCache);
-            this.sessionSortMode = normalizeSortMode(sortCache);
+            this.sessionRoleFilter = normalizeSessionRoleFilter(this.sessionRoleFilter);
+            this.sessionTimePreset = normalizeSessionTimePreset(this.sessionTimePreset);
+            this.sessionSortMode = normalizeSortMode(this.sessionSortMode);
             this.refreshSessionPathOptions(this.sessionFilterSource);
             if (this.mainTab === 'sessions' && typeof this.loadSessions === 'function') {
                 const shouldReload = cached.source !== 'all'
@@ -308,27 +288,26 @@ export function createSessionBrowserMethods(options = {}) {
 
         persistSessionFilterCache() {
             const cached = buildSessionFilterCacheState(this.sessionFilterSource, this.sessionPathFilter);
-            localStorage.setItem('codexmateSessionFilterSource', cached.source);
-            if (cached.pathFilter) {
-                localStorage.setItem('codexmateSessionPathFilter', cached.pathFilter);
-            } else {
-                localStorage.removeItem('codexmateSessionPathFilter');
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({
+                    sessionFilters: {
+                        source: cached.source,
+                        pathFilter: cached.pathFilter,
+                        query: this.sessionQuery && isSessionQueryEnabled(this.sessionFilterSource) ? this.sessionQuery : '',
+                        roleFilter: normalizeSessionRoleFilter(this.sessionRoleFilter),
+                        timePreset: normalizeSessionTimePreset(this.sessionTimePreset),
+                        sortMode: this.normalizeSessionSortMode(this.sessionSortMode)
+                    }
+                });
             }
-            if (this.sessionQuery && isSessionQueryEnabled(this.sessionFilterSource)) {
-                localStorage.setItem('codexmateSessionQuery', this.sessionQuery);
-            } else {
-                localStorage.removeItem('codexmateSessionQuery');
-            }
-            localStorage.setItem('codexmateSessionRoleFilter', normalizeSessionRoleFilter(this.sessionRoleFilter));
-            localStorage.setItem('codexmateSessionTimePreset', normalizeSessionTimePreset(this.sessionTimePreset));
         },
 
         onSessionSortChange() {
             const normalized = this.normalizeSessionSortMode(this.sessionSortMode);
             this.sessionSortMode = normalized;
-            try {
-                localStorage.setItem('codexmateSessionSortMode', normalized);
-            } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionFilters: { sortMode: normalized } });
+            }
         },
 
         getSessionHotLabel(session) {
@@ -361,25 +340,16 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         restoreSessionPinnedMap() {
-            const cached = localStorage.getItem('codexmateSessionPinnedMap');
-            if (!cached) {
-                this.sessionPinnedMap = {};
-                return;
-            }
-            try {
-                const parsed = JSON.parse(cached);
-                this.sessionPinnedMap = this.normalizeSessionPinnedMap(parsed);
-            } catch (_) {
-                this.sessionPinnedMap = {};
-                localStorage.removeItem('codexmateSessionPinnedMap');
-            }
+            this.sessionPinnedMap = this.normalizeSessionPinnedMap(this.sessionPinnedMap);
         },
 
         persistSessionPinnedMap() {
             const payload = (this.sessionPinnedMap && typeof this.sessionPinnedMap === 'object')
                 ? this.sessionPinnedMap
                 : {};
-            localStorage.setItem('codexmateSessionPinnedMap', JSON.stringify(payload));
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sessionPinnedMap: payload });
+            }
         },
 
         shouldPruneSessionPinnedMap(sessions = this.sessionsList) {
@@ -802,7 +772,6 @@ export function createSessionBrowserMethods(options = {}) {
             const normalized = typeof nextRange === 'string' ? nextRange.trim().toLowerCase() : '';
             const range = normalized === 'all' ? 'all' : (normalized === '30d' ? '30d' : '7d');
             this.sessionsUsageTimeRange = range;
-            try { localStorage.setItem('sessionsUsageTimeRange', range); } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ sessionsUsageTimeRange: range });
             }

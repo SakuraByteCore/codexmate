@@ -1,6 +1,5 @@
 import {
-    normalizeConfigTemplateDiffConfirmEnabled,
-    persistConfigTemplateDiffConfirmEnabledToStorage
+    normalizeConfigTemplateDiffConfirmEnabled
 } from './config-template-confirm-pref.mjs';
 
 export function createSessionActionMethods(options = {}) {
@@ -302,9 +301,6 @@ export function createSessionActionMethods(options = {}) {
         setSessionTrashEnabled(value) {
             const enabled = this.normalizeSessionTrashEnabled(value);
             this.sessionTrashEnabled = enabled;
-            try {
-                localStorage.setItem('codexmateSessionTrashEnabled', enabled ? 'true' : 'false');
-            } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ sessionTrashEnabled: enabled });
             }
@@ -313,9 +309,6 @@ export function createSessionActionMethods(options = {}) {
         setSessionTimelineStyle(style) {
             const normalized = style === 'bar' ? 'bar' : 'dots';
             this.sessionTimelineStyle = normalized;
-            try {
-                localStorage.setItem('codexmateSessionTimelineStyle', normalized);
-            } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ sessionTimelineStyle: normalized });
             }
@@ -324,7 +317,6 @@ export function createSessionActionMethods(options = {}) {
         setConfigTemplateDiffConfirmEnabled(value) {
             const enabled = this.normalizeConfigTemplateDiffConfirmEnabled(value);
             this.configTemplateDiffConfirmEnabled = enabled;
-            persistConfigTemplateDiffConfirmEnabledToStorage(enabled);
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ configTemplateDiffConfirmEnabled: enabled });
             }
@@ -338,9 +330,6 @@ export function createSessionActionMethods(options = {}) {
         setShareCommandPrefix(value) {
             const normalized = this.normalizeShareCommandPrefix(value);
             this.shareCommandPrefix = normalized;
-            try {
-                localStorage.setItem('codexmateShareCommandPrefix', normalized);
-            } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ shareCommandPrefix: normalized });
             }

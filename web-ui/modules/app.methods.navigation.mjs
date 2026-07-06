@@ -4,8 +4,7 @@
         switchMainTabHelper,
         loadMoreSessionMessagesHelper
     } = options;
-    const NAV_STATE_STORAGE_KEY = 'codexmateNavState.v1';
-    const MAIN_TAB_SET = new Set([
+    const MAIN_TAB_ORDER = [
         'dashboard',
         'config',
         'sessions',
@@ -17,7 +16,39 @@
         'settings',
         'trash',
         'prompts'
-    ]);
+    ];
+    const MAIN_TAB_SET = new Set(MAIN_TAB_ORDER);
+    const DISABLED_MAIN_TAB_SET = new Set(['orchestration']);
+    const normalizeMainTab = (tab) => typeof tab === 'string'
+        ? tab.trim().toLowerCase()
+        : '';
+    const isMainTabSelectable = (tab) => {
+        const normalized = normalizeMainTab(tab);
+        return !!(normalized && MAIN_TAB_SET.has(normalized) && !DISABLED_MAIN_TAB_SET.has(normalized));
+    };
+    const getFirstSelectableMainTab = () => MAIN_TAB_ORDER.find((tab) => isMainTabSelectable(tab)) || 'dashboard';
+    const resolveSelectableMainTab = (tab) => {
+        const normalized = normalizeMainTab(tab);
+        if (isMainTabSelectable(normalized)) return normalized;
+        return getFirstSelectableMainTab();
+    };
+    const resolveSwitchMainTabTarget = (tab) => {
+        const normalized = normalizeMainTab(tab);
+        if (!normalized) return '';
+        if (isMainTabSelectable(normalized)) return normalized;
+        if (MAIN_TAB_SET.has(normalized) && DISABLED_MAIN_TAB_SET.has(normalized)) {
+            return getFirstSelectableMainTab();
+        }
+        return '';
+    };
+    const cancelDisabledMainTabEvent = (event) => {
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();
+        }
+        if (event && typeof event.stopPropagation === 'function') {
+            event.stopPropagation();
+        }
+    };
     const loadDoctorOverview = async (vm, options = {}) => {
         if (!vm || typeof vm !== 'object') return false;
         if (vm.__doctorLoading) return false;
@@ -41,23 +72,6 @@
             }
         }
     };
-    const readNavState = () => {
-        if (typeof localStorage === 'undefined') return null;
-        let raw = '';
-        try {
-            raw = localStorage.getItem(NAV_STATE_STORAGE_KEY) || '';
-        } catch (_) {
-            raw = '';
-        }
-        if (!raw) return null;
-        try {
-            const parsed = JSON.parse(raw);
-            return parsed && typeof parsed === 'object' ? parsed : null;
-        } catch (_) {
-            return null;
-        }
-    };
-
     const canonicalizeWebUiRuntimeUrl = () => {
         if (typeof window === 'undefined' || !window.location) return;
         try {
@@ -85,7 +99,6 @@
 
     const persistNavState = (vm, overrides = null) => {
         if (!vm || vm.__navStateRestoring) return;
-        if (typeof localStorage === 'undefined') return;
         const resolvedOverrides = overrides && typeof overrides === 'object' ? overrides : null;
         const mainTabSource = resolvedOverrides && typeof resolvedOverrides.mainTab === 'string'
             ? resolvedOverrides.mainTab
@@ -93,76 +106,36 @@
         const configModeSource = resolvedOverrides && typeof resolvedOverrides.configMode === 'string'
             ? resolvedOverrides.configMode
             : vm.configMode;
-        const mainTab = typeof mainTabSource === 'string' ? mainTabSource.trim().toLowerCase() : '';
+        const mainTab = normalizeMainTab(mainTabSource);
         const configMode = typeof configModeSource === 'string' ? configModeSource.trim().toLowerCase() : '';
         const settingsTab = typeof vm.settingsTab === 'string' ? vm.settingsTab.trim().toLowerCase() : 'general';
         const skillsTargetApp = typeof vm.skillsTargetApp === 'string' && (vm.skillsTargetApp === 'codex' || vm.skillsTargetApp === 'claude') ? vm.skillsTargetApp : 'codex';
         const promptTemplatesMode = typeof vm.promptTemplatesMode === 'string' && (vm.promptTemplatesMode === 'compose' || vm.promptTemplatesMode === 'manage') ? vm.promptTemplatesMode : 'compose';
         const snapshot = {
             settingsTab: settingsTab === 'data' ? 'data' : 'general',
-            mainTab: MAIN_TAB_SET.has(mainTab) ? mainTab : 'dashboard',
+            mainTab: resolveSelectableMainTab(mainTab),
             configMode: configModeSet && configModeSet.has(configMode) ? configMode : 'codex',
             skillsTargetApp,
             promptTemplatesMode
         };
-        try {
-            localStorage.setItem(NAV_STATE_STORAGE_KEY, JSON.stringify(snapshot));
-        } catch (_) {}
         if (typeof vm.persistWebUiPreferences === 'function') {
             vm.persistWebUiPreferences({ navigation: snapshot });
         }
     };
 
     return {
+        toggleSidebarCollapsed() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ sidebarCollapsed: this.sidebarCollapsed });
+            }
+        },
+
         saveNavState() {
             persistNavState(this);
         },
         restoreNavStateFromStorage() {
-            if (this.__navStateRestoring) return false;
-            const restored = readNavState();
-            if (!restored) return false;
-            const nextMainTab = restored && typeof restored.mainTab === 'string'
-                ? restored.mainTab.trim().toLowerCase()
-                : '';
-            const nextConfigMode = restored && typeof restored.configMode === 'string'
-                ? restored.configMode.trim().toLowerCase()
-                : '';
-            const shouldUpdateConfigMode = !!(nextConfigMode && configModeSet && configModeSet.has(nextConfigMode));
-            const shouldUpdateMainTab = !!(nextMainTab && MAIN_TAB_SET.has(nextMainTab) && nextMainTab !== this.mainTab);
-            const nextSettingsTab = restored && typeof restored.settingsTab === 'string'
-                ? restored.settingsTab.trim().toLowerCase()
-                : '';
-            const shouldUpdateSettingsTab = !!(nextSettingsTab && (nextSettingsTab === 'general' || nextSettingsTab === 'data') && nextSettingsTab !== this.settingsTab);
-            const nextSkillsTargetApp = restored && typeof restored.skillsTargetApp === 'string' && (restored.skillsTargetApp === 'codex' || restored.skillsTargetApp === 'claude')
-                ? restored.skillsTargetApp : '';
-            const shouldUpdateSkillsTargetApp = !!(nextSkillsTargetApp && nextSkillsTargetApp !== this.skillsTargetApp);
-            const nextPromptTemplatesMode = restored && typeof restored.promptTemplatesMode === 'string' && (restored.promptTemplatesMode === 'compose' || restored.promptTemplatesMode === 'manage')
-                ? restored.promptTemplatesMode : '';
-            const shouldUpdatePromptTemplatesMode = !!(nextPromptTemplatesMode && nextPromptTemplatesMode !== this.promptTemplatesMode);
-            if (!shouldUpdateConfigMode && !shouldUpdateMainTab && !shouldUpdateSettingsTab && !shouldUpdateSkillsTargetApp && !shouldUpdatePromptTemplatesMode) {
-                return false;
-            }
-            this.__navStateRestoring = true;
-            try {
-                if (shouldUpdateConfigMode) {
-                    this.configMode = nextConfigMode;
-                }
-                if (shouldUpdateSettingsTab) {
-                    this.settingsTab = nextSettingsTab;
-                }
-                if (shouldUpdateMainTab) {
-                    this.switchMainTab(nextMainTab);
-                }
-                if (shouldUpdateSkillsTargetApp) {
-                    this.skillsTargetApp = nextSkillsTargetApp;
-                }
-                if (shouldUpdatePromptTemplatesMode) {
-                    this.promptTemplatesMode = nextPromptTemplatesMode;
-                }
-            } finally {
-                this.__navStateRestoring = false;
-            }
-            return true;
+            return false;
         },
         switchConfigMode(mode) {
             const normalizedMode = typeof mode === 'string'
@@ -353,6 +326,10 @@
             }
             const normalizedTab = typeof tab === 'string' ? tab.trim().toLowerCase() : '';
             if (!normalizedTab) return;
+            if (!isMainTabSelectable(normalizedTab)) {
+                cancelDisabledMainTabEvent(event);
+                return;
+            }
             persistNavState(this, { mainTab: normalizedTab });
             this.setMainTabSwitchIntent(normalizedTab);
             this.applyImmediateNavIntent(normalizedTab);
@@ -394,8 +371,13 @@
             this.switchConfigMode(normalizedMode);
         },
         onMainTabClick(tab) {
+            const event = arguments.length > 1 ? arguments[1] : null;
             const normalizedTab = typeof tab === 'string' ? tab.trim().toLowerCase() : '';
             if (!normalizedTab) return;
+            if (!isMainTabSelectable(normalizedTab)) {
+                cancelDisabledMainTabEvent(event);
+                return;
+            }
             if (this.consumePointerNavCommit('main', normalizedTab)) return;
             this.switchMainTab(normalizedTab);
         },
@@ -437,16 +419,20 @@
             }
             return this.configMode === mode;
         },
+        isMainTabDisabled(tab) {
+            const normalizedTab = normalizeMainTab(tab);
+            return !!(normalizedTab && MAIN_TAB_SET.has(normalizedTab) && DISABLED_MAIN_TAB_SET.has(normalizedTab));
+        },
+        getFirstSelectableMainTab() {
+            return getFirstSelectableMainTab();
+        },
         switchMainTab(tab) {
             const normalizedTab = typeof tab === 'string'
                 ? tab.trim().toLowerCase()
                 : '';
-            const targetTab = normalizedTab || tab;
+            const targetTab = resolveSwitchMainTabTarget(normalizedTab || tab);
             if (!targetTab) return;
             canonicalizeWebUiRuntimeUrl();
-            if (targetTab === 'orchestration' && this.taskOrchestrationTabEnabled !== true) {
-                return this.switchMainTab('config');
-            }
             persistNavState(this, {
                 mainTab: targetTab,
                 configMode: targetTab === 'config' ? this.configMode : this.configMode
@@ -473,12 +459,10 @@
                 switchState.ticket += 1;
                 switchState.pendingTarget = '';
                 if (targetTab === 'dashboard' && !this.__doctorLoadedOnce) {
-                if (targetTab === 'trash' && !this.sessionTrashLoadedOnce) {
-                    if (typeof this.loadSessionTrash === 'function') {
-                        void this.loadSessionTrash({ forceRefresh: false });
-                    }
-                }
                     void loadDoctorOverview(this);
+                }
+                if (targetTab === 'trash' && !this.sessionTrashLoadedOnce && typeof this.loadSessionTrash === 'function') {
+                    void this.loadSessionTrash({ forceRefresh: false });
                 }
                 if (
                     targetTab === 'sessions'
@@ -488,7 +472,7 @@
                     this.prepareSessionTabRender();
                 }
                 this.scheduleAfterFrame(() => {
-                    this.clearMainTabSwitchIntent(normalizedTab);
+                    this.clearMainTabSwitchIntent(targetTab);
                 });
                 return;
             }
@@ -510,7 +494,7 @@
                     void loadDoctorOverview(this);
                 }
                 this.scheduleAfterFrame(() => {
-                    this.clearMainTabSwitchIntent(normalizedTab);
+                    this.clearMainTabSwitchIntent(targetTab);
                 });
                 return result;
             }
@@ -527,7 +511,7 @@
                 if (pendingTarget === 'dashboard') {
                     void loadDoctorOverview(this);
                 }
-                this.clearMainTabSwitchIntent(normalizedTab);
+                this.clearMainTabSwitchIntent(pendingTarget);
             });
         },
 

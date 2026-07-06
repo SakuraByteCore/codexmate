@@ -337,7 +337,7 @@ test('switchMainTab re-primes session render when a deferred leave is canceled b
     assert.strictEqual(context.fastHidden, false);
 });
 
-test('switchMainTab falls back to config when task orchestration tab is hidden', () => {
+test('switchMainTab falls back to the first selectable tab when task orchestration is disabled', () => {
     const methods = createNavigationMethods({
         configModeSet: new Set(['codex', 'claude', 'openclaw']),
         switchMainTabHelper(tab) {
@@ -355,7 +355,7 @@ test('switchMainTab falls back to config when task orchestration tab is hidden',
 
     context.switchMainTab('orchestration');
 
-    assert.strictEqual(context.mainTab, 'config');
+    assert.strictEqual(context.mainTab, 'dashboard');
 });
 
 test('prepareSessionTabRender re-enables list before preview and primes preview rendering', () => {

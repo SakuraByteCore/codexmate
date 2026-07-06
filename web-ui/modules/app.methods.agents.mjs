@@ -354,6 +354,9 @@ export function createAgentsMethods(options = {}) {
             return !!this.agentsSaving || this.hasAgentsContentChanged() || this.agentsDiffVisible;
         },
         handleBeforeUnload(event) {
+            if (typeof this.flushWebUiPreferences === 'function') {
+                this.flushWebUiPreferences();
+            }
             if (!this.hasPendingAgentsDraft()) {
                 return;
             }

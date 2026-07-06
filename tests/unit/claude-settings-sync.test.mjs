@@ -623,66 +623,56 @@ test('refreshClaudeSelectionFromSettings keeps builtin Claude proxy selection wi
 });
 
 test('refreshClaudeSelectionFromSettings suppresses re-import of deleted Claude settings fingerprints', async () => {
-    const previousLocalStorage = globalThis.localStorage;
-    const stored = new Map([[ 'deletedClaudeSettingsImports', JSON.stringify([{
-        baseUrl: 'https://zombie.example.com/anthropic',
-        model: 'claude-opus-4-6',
-        providerCacheRef: 'claude-cache-zombie',
-        deletedAt: Date.now()
-    }]) ]]);
-    globalThis.localStorage = {
-        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
-        setItem(key, value) { stored.set(key, String(value)); },
-        removeItem(key) { stored.delete(key); }
-    };
-    try {
-        const methods = createStartupClaudeMethods({
-            api: async (action) => {
-                if (action === 'get-claude-settings') {
-                    return {
-                        exists: true,
-                        env: {
-                            ANTHROPIC_API_KEY: 'sk-zombie',
-                            ANTHROPIC_BASE_URL: 'https://zombie.example.com/anthropic/',
-                            ANTHROPIC_MODEL: 'claude-opus-4-6'
-                        }
-                    };
-                }
-                return { success: true };
+    const methods = createStartupClaudeMethods({
+        api: async (action) => {
+            if (action === 'get-claude-settings') {
+                return {
+                    exists: true,
+                    env: {
+                        ANTHROPIC_API_KEY: '***',
+                        ANTHROPIC_BASE_URL: 'https://zombie.example.com/anthropic/',
+                        ANTHROPIC_MODEL: 'claude-opus-4-6'
+                    }
+                };
             }
-        });
-        let ensureCount = 0;
-        const context = {
-            ...methods,
-            claudeConfigs: {
-                survivor: {
-                    apiKey: 'sk-survivor',
-                    baseUrl: 'https://survivor.example.com/anthropic',
-                    model: 'claude-sonnet-4-6',
-                    hasKey: true
-                }
-            },
-            currentClaudeConfig: 'survivor',
-            currentClaudeModel: '',
-            matchClaudeConfigFromSettings: () => '',
-            matchBuiltinClaudeProxyConfigFromSettings: () => '',
-            ensureClaudeConfigFromSettings() {
-                ensureCount += 1;
-                throw new Error('deleted Claude settings must not be imported again');
-            },
-            refreshClaudeModelContext() {},
-            resetClaudeModelsState() {},
-            showMessage() {}
-        };
+            return { success: true };
+        }
+    });
+    let ensureCount = 0;
+    const context = {
+        ...methods,
+        claudeConfigs: {
+            survivor: {
+                apiKey: '***',
+                baseUrl: 'https://survivor.example.com/anthropic',
+                model: 'claude-sonnet-4-6',
+                hasKey: true
+            }
+        },
+        currentClaudeConfig: 'survivor',
+        currentClaudeModel: '',
+        deletedClaudeSettingsImports: [{
+            baseUrl: 'https://zombie.example.com/anthropic',
+            model: 'claude-opus-4-6',
+            providerCacheRef: 'claude-cache-zombie',
+            deletedAt: Date.now()
+        }],
+        matchClaudeConfigFromSettings: () => '',
+        matchBuiltinClaudeProxyConfigFromSettings: () => '',
+        ensureClaudeConfigFromSettings() {
+            ensureCount += 1;
+            throw new Error('deleted Claude settings must not be imported again');
+        },
+        refreshClaudeModelContext() {},
+        resetClaudeModelsState() {},
+        showMessage() {}
+    };
 
-        await methods.refreshClaudeSelectionFromSettings.call(context, { silent: true });
+    await methods.refreshClaudeSelectionFromSettings.call(context, { silent: true });
 
-        assert.strictEqual(ensureCount, 0);
-        assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['survivor']);
-        assert.strictEqual(context.currentClaudeConfig, 'survivor');
-    } finally {
-        globalThis.localStorage = previousLocalStorage;
-    }
+    assert.strictEqual(ensureCount, 0);
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['survivor']);
+    assert.strictEqual(context.currentClaudeConfig, 'survivor');
 });
 
 test('builtin Claude proxy settings detection requires loopback URL and generated proxy token shape', () => {
@@ -701,6 +691,28 @@ test('builtin Claude proxy settings detection requires loopback URL and generate
         ANTHROPIC_BASE_URL: 'https://api.example.com/anthropic',
         ANTHROPIC_MODEL: 'claude-opus-4-6'
     }), false);
+});
+
+test('normalizeStoredClaudeConfigs reports sanitized masked keys and target API aliases', () => {
+    const methods = createClaudeConfigMethods({ api: async () => ({ success: true }) });
+    const context = {
+        claudeConfigs: {
+            migrated: {
+                apiKey: 'sk-****',
+                hasKey: true,
+                baseUrl: 'https://example.com/anthropic',
+                model: 'claude-sonnet-4-6',
+                targetApi: 'chat-completions'
+            }
+        }
+    };
+
+    const changed = methods.normalizeStoredClaudeConfigs.call(context);
+
+    assert.strictEqual(changed, true);
+    assert.strictEqual(context.claudeConfigs.migrated.apiKey, '');
+    assert.strictEqual(context.claudeConfigs.migrated.hasKey, false);
+    assert.strictEqual(context.claudeConfigs.migrated.targetApi, 'chat_completions');
 });
 
 test('ensureClaudeConfigFromSettings imports external auth-token backed Claude settings', () => {
@@ -1510,137 +1522,121 @@ test('loadClaudeModels skips remote fetch for external-credential config without
 });
 
 test('hydrateClaudeConfigsFromProviderCache restores Claude providers without storing secrets', async () => {
-    const previousLocalStorage = globalThis.localStorage;
-    const stored = new Map();
-    globalThis.localStorage = {
-        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
-        setItem(key, value) { stored.set(key, String(value)); },
-        removeItem(key) { stored.delete(key); }
-    };
-    try {
-        const apiCalls = [];
-        const methods = createClaudeConfigMethods({
-            api: async (action) => {
-                apiCalls.push(action);
-                if (action === 'get-claude-provider-cache-configs') {
-                    return {
-                        providers: [{
-                            name: 'alpha-sync',
-                            baseUrl: 'https://alpha.example.com/anthropic',
-                            model: 'claude-sonnet-4-6',
-                            targetApi: 'responses',
-                            hasKey: true,
-                            providerCacheRef: 'alpha-sync',
-                            source: 'provider-cache'
-                        }]
-                    };
-                }
-                return { success: true };
+    const persisted = [];
+    const apiCalls = [];
+    const methods = createClaudeConfigMethods({
+        api: async (action) => {
+            apiCalls.push(action);
+            if (action === 'get-claude-provider-cache-configs') {
+                return {
+                    providers: [{
+                        name: 'alpha-sync',
+                        baseUrl: 'https://alpha.example.com/anthropic',
+                        model: 'claude-sonnet-4-6',
+                        targetApi: 'responses',
+                        hasKey: true,
+                        providerCacheRef: 'alpha-sync',
+                        source: 'provider-cache'
+                    }]
+                };
             }
-        });
-        const context = {
-            ...methods,
-            claudeConfigs: {
-                '智谱GLM': {
-                    apiKey: '',
-                    baseUrl: 'https://open.bigmodel.cn/api/anthropic',
-                    model: 'glm-4.7',
-                    targetApi: 'responses',
-                    hasKey: false
-                }
-            },
-            currentClaudeConfig: '智谱GLM',
-            showMessage() { throw new Error('should stay silent'); },
-            t(key) { return key; }
-        };
+            return { success: true };
+        }
+    });
+    const context = {
+        ...methods,
+        claudeConfigs: {
+            '智谱GLM': {
+                apiKey: '',
+                baseUrl: 'https://open.bigmodel.cn/api/anthropic',
+                model: 'glm-4.7',
+                targetApi: 'responses',
+                hasKey: false
+            }
+        },
+        currentClaudeConfig: '智谱GLM',
+        persistWebUiPreferences(overrides) { persisted.push(overrides); },
+        showMessage() { throw new Error('should stay silent'); },
+        t(key) { return key; }
+    };
 
-        const ok = await context.hydrateClaudeConfigsFromProviderCache({ silent: true });
+    const ok = await context.hydrateClaudeConfigsFromProviderCache({ silent: true });
 
-        assert.strictEqual(ok, true);
-        assert.strictEqual(context.currentClaudeConfig, 'alpha-sync');
-        assert.deepStrictEqual(context.claudeConfigs['alpha-sync'], {
-            apiKey: '',
-            baseUrl: 'https://alpha.example.com/anthropic',
-            model: 'claude-sonnet-4-6',
-            hasKey: true,
-            providerCacheRef: 'alpha-sync',
-            source: 'provider-cache',
-            targetApi: 'responses'
-        });
-        assert.doesNotMatch(stored.get('claudeConfigs') || '', /sk-secret/);
-        assert.match(stored.get('claudeConfigs') || '', /providerCacheRef/);
-        assert(apiCalls.includes('get-claude-provider-cache-configs'));
-    } finally {
-        globalThis.localStorage = previousLocalStorage;
-    }
+    assert.strictEqual(ok, true);
+    assert.strictEqual(context.currentClaudeConfig, 'alpha-sync');
+    assert.deepStrictEqual(context.claudeConfigs['alpha-sync'], {
+        apiKey: '',
+        baseUrl: 'https://alpha.example.com/anthropic',
+        model: 'claude-sonnet-4-6',
+        hasKey: true,
+        providerCacheRef: 'alpha-sync',
+        source: 'provider-cache',
+        targetApi: 'responses'
+    });
+    const persistedJson = JSON.stringify(persisted);
+    assert.doesNotMatch(persistedJson, /sk-secret/);
+    assert.match(persistedJson, /providerCacheRef/);
+    assert(apiCalls.includes('get-claude-provider-cache-configs'));
 });
 
 test('hydrateClaudeConfigsFromProviderCache prunes stale cache-backed Claude configs', async () => {
-    const previousLocalStorage = globalThis.localStorage;
-    const stored = new Map([['currentClaudeConfig', 'cache-zombie']]);
-    globalThis.localStorage = {
-        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
-        setItem(key, value) { stored.set(key, String(value)); },
-        removeItem(key) { stored.delete(key); }
-    };
-    try {
-        const methods = createClaudeConfigMethods({
-            api: async (action) => {
-                if (action === 'get-claude-provider-cache-configs') {
-                    return {
-                        providers: [{
-                            name: 'cache-survivor',
-                            baseUrl: 'https://survivor.example.com/anthropic',
-                            model: 'claude-sonnet-4-6',
-                            targetApi: 'responses',
-                            hasKey: true,
-                            providerCacheRef: 'cache-survivor',
-                            source: 'provider-cache'
-                        }]
-                    };
-                }
-                return { success: true };
+    const persisted = [];
+    const methods = createClaudeConfigMethods({
+        api: async (action) => {
+            if (action === 'get-claude-provider-cache-configs') {
+                return {
+                    providers: [{
+                        name: 'cache-survivor',
+                        baseUrl: 'https://survivor.example.com/anthropic',
+                        model: 'claude-sonnet-4-6',
+                        targetApi: 'responses',
+                        hasKey: true,
+                        providerCacheRef: 'cache-survivor',
+                        source: 'provider-cache'
+                    }]
+                };
             }
-        });
-        const context = {
-            ...methods,
-            claudeConfigs: {
-                'cache-zombie': {
-                    apiKey: '',
-                    baseUrl: 'https://zombie.example.com/anthropic',
-                    model: 'claude-opus-4-6',
-                    targetApi: 'responses',
-                    hasKey: true,
-                    providerCacheRef: 'cache-zombie',
-                    source: 'provider-cache'
-                },
-                'manual-provider': {
-                    apiKey: 'sk-manual',
-                    baseUrl: 'https://manual.example.com/anthropic',
-                    model: 'claude-haiku-4-5',
-                    targetApi: 'responses',
-                    hasKey: true
-                }
+            return { success: true };
+        }
+    });
+    const context = {
+        ...methods,
+        claudeConfigs: {
+            'cache-zombie': {
+                apiKey: '',
+                baseUrl: 'https://zombie.example.com/anthropic',
+                model: 'claude-opus-4-6',
+                targetApi: 'responses',
+                hasKey: true,
+                providerCacheRef: 'cache-zombie',
+                source: 'provider-cache'
             },
-            currentClaudeConfig: 'cache-zombie',
-            showMessage() { throw new Error('should stay silent'); },
-            syncClaudeBridgeProviders() {},
-            refreshClaudeModelContext() {},
-            t(key) { return key; }
-        };
+            'manual-provider': {
+                apiKey: 'sk-manual',
+                baseUrl: 'https://manual.example.com/anthropic',
+                model: 'claude-haiku-4-5',
+                targetApi: 'responses',
+                hasKey: true
+            }
+        },
+        currentClaudeConfig: 'cache-zombie',
+        persistWebUiPreferences(overrides) { persisted.push(overrides); },
+        showMessage() { throw new Error('should stay silent'); },
+        syncClaudeBridgeProviders() {},
+        refreshClaudeModelContext() {},
+        t(key) { return key; }
+    };
 
-        const ok = await context.hydrateClaudeConfigsFromProviderCache({ silent: true });
+    const ok = await context.hydrateClaudeConfigsFromProviderCache({ silent: true });
 
-        assert.strictEqual(ok, true);
-        assert.strictEqual(context.claudeConfigs['cache-zombie'], undefined);
-        assert(context.claudeConfigs['cache-survivor'], 'live provider-cache config should remain hydrated');
-        assert(context.claudeConfigs['manual-provider'], 'manual Claude config should not be pruned');
-        assert.notStrictEqual(context.currentClaudeConfig, 'cache-zombie');
-        assert.doesNotMatch(stored.get('claudeConfigs') || '', /cache-zombie/);
-        assert.match(stored.get('claudeConfigs') || '', /cache-survivor/);
-    } finally {
-        globalThis.localStorage = previousLocalStorage;
-    }
+    assert.strictEqual(ok, true);
+    assert.strictEqual(context.claudeConfigs['cache-zombie'], undefined);
+    assert(context.claudeConfigs['cache-survivor'], 'live provider-cache config should remain hydrated');
+    assert(context.claudeConfigs['manual-provider'], 'manual Claude config should not be pruned');
+    assert.notStrictEqual(context.currentClaudeConfig, 'cache-zombie');
+    const persistedJson = JSON.stringify(persisted);
+    assert.doesNotMatch(persistedJson, /cache-zombie/);
+    assert.match(persistedJson, /cache-survivor/);
 });
 
 test('selectClaudeFallbackConfigName prefers applyable Claude configs over placeholder defaults', () => {
@@ -1669,51 +1665,43 @@ test('selectClaudeFallbackConfigName prefers applyable Claude configs over place
 });
 
 test('applyClaudeConfig accepts provider-cache backed Claude providers without browser api key', async () => {
-    const previousLocalStorage = globalThis.localStorage;
-    const stored = new Map();
-    globalThis.localStorage = {
-        getItem(key) { return stored.has(key) ? stored.get(key) : null; },
-        setItem(key, value) { stored.set(key, String(value)); },
-        removeItem(key) { stored.delete(key); }
-    };
-    try {
-        const apiCalls = [];
-        const messages = [];
-        const methods = createClaudeConfigMethods({
-            api: async (action, params) => {
-                apiCalls.push({ action, params });
-                return { success: true };
+    const apiCalls = [];
+    const messages = [];
+    const persisted = [];
+    const methods = createClaudeConfigMethods({
+        api: async (action, params) => {
+            apiCalls.push({ action, params });
+            return { success: true };
+        }
+    });
+    const context = {
+        ...methods,
+        claudeConfigs: {
+            cached: {
+                apiKey: '',
+                baseUrl: 'https://cached.example.com/anthropic',
+                model: 'claude-sonnet-4-6',
+                providerCacheRef: 'cached',
+                source: 'provider-cache',
+                hasKey: true,
+                targetApi: 'responses'
             }
-        });
-        const context = {
-            ...methods,
-            claudeConfigs: {
-                cached: {
-                    apiKey: '',
-                    baseUrl: 'https://cached.example.com/anthropic',
-                    model: 'claude-sonnet-4-6',
-                    providerCacheRef: 'cached',
-                    source: 'provider-cache',
-                    hasKey: true,
-                    targetApi: 'responses'
-                }
-            },
-            currentClaudeConfig: '',
-            refreshClaudeModelContext() {},
-            showMessage: (msg, type) => messages.push({ msg, type }),
-            t(key) { return key; }
-        };
+        },
+        currentClaudeConfig: '',
+        persistWebUiPreferences(overrides) { persisted.push(overrides); },
+        refreshClaudeModelContext() {},
+        showMessage: (msg, type) => messages.push({ msg, type }),
+        t(key) { return key; }
+    };
 
-        await context.applyClaudeConfig('cached');
+    await context.applyClaudeConfig('cached');
 
-        const applyCall = apiCalls.find((call) => call.action === 'apply-claude-config');
-        assert(applyCall, 'apply-claude-config should be called');
-        assert.strictEqual(applyCall.params.config.providerCacheRef, 'cached');
-        assert.strictEqual(applyCall.params.config.apiKey, '');
-        assert.deepStrictEqual(messages, [{ msg: 'toast.apply.success', type: 'success' }]);
-    } finally {
-        globalThis.localStorage = previousLocalStorage;
-    }
+    const applyCall = apiCalls.find((call) => call.action === 'apply-claude-config');
+    assert(applyCall, 'apply-claude-config should be called');
+    assert.strictEqual(applyCall.params.config.providerCacheRef, 'cached');
+    assert.strictEqual(applyCall.params.config.apiKey, '');
+    assert.deepStrictEqual(persisted, [{ currentClaudeConfig: 'cached' }]);
+    assert.deepStrictEqual(messages, [{ msg: 'toast.apply.success', type: 'success' }]);
 });
 
 test('applyToClaudeSettings does not proxy chat completions through default Anthropic URL', () => {

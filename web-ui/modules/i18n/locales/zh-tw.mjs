@@ -147,6 +147,8 @@ const zhTw = Object.freeze({
     'side.system': '系統',
     'side.orchestration': '任務',
     'side.skills': 'Skills',
+    'side.collapse': '收合側邊欄',
+    'side.expand': '展開側邊欄',
 
     // Side rail items
     'side.overview.doctor': 'Doctor 面板',
@@ -957,6 +959,9 @@ const zhTw = Object.freeze({
     'usage.range.7d.short': '近 7 天',
     'usage.range.30d.short': '近 30 天',
     'orchestration.queueStats': '隊列 {running} 運行中 · {queued} 等待中',
+    'orchestration.rebuilding.status': '暫停開放',
+    'orchestration.rebuilding.title': '重建中',
+    'orchestration.rebuilding.body': '任務編排入口暫時保留展示，但目前不可點擊。',
     'orchestration.hero.kicker': '任務編排',
     'orchestration.hero.title': '任務編排',
     'orchestration.hero.subtitle': '規劃、執行並追蹤任務，保留工作區與執行緒上下文。',

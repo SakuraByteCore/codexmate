@@ -6,7 +6,6 @@ import {
 } from './modules/app.constants.mjs';
 import { createAppComputed } from './modules/app.computed.index.mjs';
 import { createAppMethods } from './modules/app.methods.index.mjs';
-import { loadConfigTemplateDiffConfirmEnabledFromStorage } from './modules/config-template-confirm-pref.mjs';
 import { installWebUiUrlCanonicalization } from './modules/sessions-filters-url.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ticket: 0
                 },
                 sessionsViewMode: 'browser',
-                sessionsUsageTimeRange: (function () { try { const saved = localStorage.getItem('sessionsUsageTimeRange'); if (saved === '7d' || saved === '30d' || saved === 'all') return saved; } catch (_) {} return '7d'; })(),
+                sessionsUsageTimeRange: '7d',
                 sessionsUsageList: [],
                 sessionsUsageCompareEnabled: false,
                 sessionsUsageSelectedDayKey: '',
@@ -391,22 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 providerCacheError: '',
                 providerCacheRequestSeq: 0,
                 settingsTab: 'general',
-                toolConfigPermissions: (function() {
-                    try {
-                        const cached = localStorage.getItem('toolConfigPermissions');
-                        if (cached) {
-                            const parsed = JSON.parse(cached);
-                            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                                return {
-                                    codex: parsed.codex === true,
-                                    claude: parsed.claude === true,
-                                    opencode: parsed.opencode === true
-                                };
-                            }
-                        }
-                    } catch (_) {}
-                    return { codex: false, claude: false, opencode: false };
-                })(),
+                toolConfigPermissions: { codex: false, claude: false, opencode: false },
                 toolConfigPermissionSaving: { codex: false, claude: false, opencode: false },
                 sessionTrashEnabled: true,
                 sessionTrashItems: [],
@@ -451,6 +435,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 opencodeMaxTokens: '',
                 opencodeReasoningEffort: '',
                 forceCompactLayout: false,
+                sidebarCollapsed: false,
+                sessionLoadNativeDialog: false,
+                starPrompted: false,
                 taskOrchestrationTabEnabled: true,
                 taskOrchestration: {
                     loading: false,
@@ -541,31 +528,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 const url = new URL(window.location.href);
-                const storedTaskOrchestrationFlag = localStorage.getItem('codexmateTaskOrchestrationTabEnabled');
                 const requestedTaskOrchestration = String(url.searchParams.get('taskOrchestration') || '').trim().toLowerCase();
-                if (storedTaskOrchestrationFlag === 'true' || requestedTaskOrchestration === '1' || requestedTaskOrchestration === 'true') {
+                if (requestedTaskOrchestration === '1' || requestedTaskOrchestration === 'true') {
                     this.taskOrchestrationTabEnabled = true;
                 }
             } catch (_) {}
             {
-                const NAV_STATE_STORAGE_KEY = 'codexmateNavState.v1';
                 const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
-                let restored = null;
-                try {
-                    const raw = localStorage.getItem(NAV_STATE_STORAGE_KEY) || '';
-                    restored = raw ? JSON.parse(raw) : null;
-                } catch (_) {
-                    restored = null;
-                }
-                const nextMainTab = restored && typeof restored.mainTab === 'string'
-                    ? restored.mainTab.trim().toLowerCase()
-                    : '';
-                const nextConfigMode = restored && typeof restored.configMode === 'string'
-                    ? restored.configMode.trim().toLowerCase()
-                    : '';
-                const nextSettingsTab = restored && typeof restored.settingsTab === 'string'
-                    ? restored.settingsTab.trim().toLowerCase()
-                    : '';
                 let urlMainTab = '';
                 try {
                     const url = new URL(window.location.href);
@@ -575,25 +544,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (_) {
                     urlMainTab = '';
                 }
-                const resolvedMainTab = urlMainTab && mainTabSet.has(urlMainTab)
-                    ? urlMainTab
-                    : nextMainTab;
-                if (nextSettingsTab && (nextSettingsTab === 'general' || nextSettingsTab === 'data')) {
-                    this.settingsTab = nextSettingsTab;
+                let resolvedMainTab = urlMainTab && mainTabSet.has(urlMainTab) ? urlMainTab : '';
+                if (typeof this.isMainTabDisabled === 'function' && this.isMainTabDisabled(resolvedMainTab)) {
+                    resolvedMainTab = typeof this.getFirstSelectableMainTab === 'function'
+                        ? this.getFirstSelectableMainTab()
+                        : 'dashboard';
                 }
-                if (nextConfigMode && typeof this.switchConfigMode === 'function') {
-                    this.__navStateRestoring = true;
-                    try {
-                        if (nextConfigMode === 'codex' || nextConfigMode === 'claude' || nextConfigMode === 'openclaw' || nextConfigMode === 'opencode') {
-                            this.configMode = nextConfigMode;
-                        }
-                        if (resolvedMainTab && mainTabSet.has(resolvedMainTab) && resolvedMainTab !== this.mainTab) {
-                            this.switchMainTab(resolvedMainTab);
-                        }
-                    } finally {
-                        this.__navStateRestoring = false;
-                    }
-                } else if (resolvedMainTab && mainTabSet.has(resolvedMainTab) && resolvedMainTab !== this.mainTab) {
+                if (resolvedMainTab && mainTabSet.has(resolvedMainTab) && resolvedMainTab !== this.mainTab) {
                     this.__navStateRestoring = true;
                     try {
                         this.switchMainTab(resolvedMainTab);
@@ -604,61 +561,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             this.initSessionStandalone();
             this.updateCompactLayoutMode();
-            if (!this.taskOrchestrationTabEnabled && this.mainTab === 'orchestration') {
-                this.mainTab = 'config';
+            if (typeof this.isMainTabDisabled === 'function' && this.isMainTabDisabled(this.mainTab)) {
+                const fallbackTab = typeof this.getFirstSelectableMainTab === 'function'
+                    ? this.getFirstSelectableMainTab()
+                    : 'dashboard';
+                this.switchMainTab(fallbackTab);
+            } else if (!this.taskOrchestrationTabEnabled && this.mainTab === 'orchestration') {
+                this.switchMainTab('dashboard');
             }
             this.restoreSessionFilterCache();
             this.restoreSessionPinnedMap();
-            this.shareCommandPrefix = this.normalizeShareCommandPrefix(localStorage.getItem('codexmateShareCommandPrefix'));
-            this.sessionTrashEnabled = this.normalizeSessionTrashEnabled(localStorage.getItem('codexmateSessionTrashEnabled'));
-            this.sessionTrashRetentionDays = this.normalizeSessionTrashRetentionDays(localStorage.getItem('codexmateSessionTrashRetentionDays'));
-            try {
-                var savedTimelineStyle = localStorage.getItem('codexmateSessionTimelineStyle');
-                this.sessionTimelineStyle = savedTimelineStyle === 'bar' ? 'bar' : 'dots';
-            } catch (_) {}
-            this.configTemplateDiffConfirmEnabled = loadConfigTemplateDiffConfirmEnabledFromStorage(localStorage);
-            try {
-                var savedProjectPath = localStorage.getItem('codexmate_project_claude_md_path');
-                if (savedProjectPath) {
-                    this.projectClaudeMdPath = savedProjectPath;
-                }
-            } catch (_) {}
-            try {
-                var savedSubTab = localStorage.getItem('codexmate_prompts_sub_tab');
-                if (savedSubTab === 'codex' || savedSubTab === 'claude-project') {
-                    this.promptsSubTab = savedSubTab;
-                }
-            } catch (_) {}
             window.addEventListener('resize', this.onWindowResize);
             window.addEventListener('keydown', this.handleGlobalKeydown);
             window.addEventListener('beforeunload', this.handleBeforeUnload);
-            const savedConfigs = localStorage.getItem('claudeConfigs');
-            if (savedConfigs) {
-                try {
-                    this.claudeConfigs = JSON.parse(savedConfigs);
-                    for (const [name, config] of Object.entries(this.claudeConfigs)) {
-                        if (config.apiKey && config.apiKey.includes('****')) {
-                            config.apiKey = '';
-                            config.hasKey = false;
-                        }
-                        const targetApiRaw = typeof config.targetApi === 'string' ? config.targetApi.trim().toLowerCase() : '';
-                        if (targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions') {
-                            config.targetApi = 'chat_completions';
-                        } else if (targetApiRaw === 'ollama') {
-                            config.targetApi = 'ollama';
-                        } else {
-                            config.targetApi = 'responses';
-                        }
-                    }
-                    localStorage.setItem('claudeConfigs', JSON.stringify(this.claudeConfigs));
-                } catch (e) {
-                    console.error('加载 Claude 配置失败:', e);
-                }
-            }
-            {
-                const savedCurrentClaudeConfig = localStorage.getItem('currentClaudeConfig');
-                if (savedCurrentClaudeConfig && this.claudeConfigs[savedCurrentClaudeConfig]) {
-                    this.currentClaudeConfig = savedCurrentClaudeConfig;
+            if (typeof this.normalizeStoredClaudeConfigs === 'function') {
+                const claudeConfigsChanged = this.normalizeStoredClaudeConfigs();
+                if (claudeConfigsChanged && typeof this.persistWebUiPreferences === 'function') {
+                    this.persistWebUiPreferences({
+                        claudeConfigs: this.claudeConfigs,
+                        currentClaudeConfig: this.currentClaudeConfig || ''
+                    });
                 }
             }
             if (!this.currentClaudeConfig) {
@@ -692,17 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return normalized;
             };
-            const savedOpenclawConfigs = localStorage.getItem('openclawConfigs');
-            if (savedOpenclawConfigs) {
-                try {
-                    this.openclawConfigs = normalizeOpenclawConfigs(JSON.parse(savedOpenclawConfigs));
-                } catch (e) {
-                    console.error('加载 OpenClaw 配置失败:', e);
-                    this.openclawConfigs = normalizeOpenclawConfigs(this.openclawConfigs);
-                }
-            } else {
-                this.openclawConfigs = normalizeOpenclawConfigs(this.openclawConfigs);
-            }
+            this.openclawConfigs = normalizeOpenclawConfigs(this.openclawConfigs);
             const configNames = Object.keys(this.openclawConfigs);
             if (configNames.length > 0) {
                 this.currentOpenclawConfig = this.openclawConfigs['默认配置'] ? '默认配置' : configNames[0];
@@ -785,8 +697,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this._initialLoadTimer = 0;
             }
             if (this.__webUiPreferencesPersistTimer) {
-                clearTimeout(this.__webUiPreferencesPersistTimer);
-                this.__webUiPreferencesPersistTimer = 0;
+                if (typeof this.flushWebUiPreferences === 'function') {
+                    this.flushWebUiPreferences();
+                } else {
+                    clearTimeout(this.__webUiPreferencesPersistTimer);
+                    this.__webUiPreferencesPersistTimer = 0;
+                }
             }
             window.removeEventListener('resize', this.onWindowResize);
             window.removeEventListener('keydown', this.handleGlobalKeydown);
@@ -801,6 +717,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         watch: {
             mainTab(newTab) {
+                if (typeof this.isMainTabDisabled === 'function' && this.isMainTabDisabled(newTab)) {
+                    const fallbackTab = typeof this.getFirstSelectableMainTab === 'function'
+                        ? this.getFirstSelectableMainTab()
+                        : 'dashboard';
+                    if (fallbackTab && fallbackTab !== newTab && typeof this.switchMainTab === 'function') {
+                        this.switchMainTab(fallbackTab);
+                    }
+                    return;
+                }
                 if (newTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
                     if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
                         this.loadProjectPathOptions();
@@ -809,9 +734,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             promptsSubTab(newVal) {
-                try {
-                    localStorage.setItem('codexmate_prompts_sub_tab', newVal);
-                } catch (_) {}
                 if (typeof this.persistWebUiPreferences === 'function') {
                     this.persistWebUiPreferences({ promptsSubTab: newVal });
                 }
@@ -820,13 +742,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             projectClaudeMdPath(newPath) {
-                try {
-                    if (newPath) {
-                        localStorage.setItem('codexmate_project_claude_md_path', newPath);
-                    } else {
-                        localStorage.removeItem('codexmate_project_claude_md_path');
-                    }
-                } catch (_) {}
                 if (typeof this.persistWebUiPreferences === 'function') {
                     this.persistWebUiPreferences({ projectClaudeMdPath: newPath || '' });
                 }

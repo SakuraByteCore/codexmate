@@ -148,6 +148,8 @@ const ja = Object.freeze({
     'side.system': 'システム',
     'side.orchestration': 'タスク',
     'side.skills': 'Skills',
+    'side.collapse': 'サイドバーを折りたたむ',
+    'side.expand': 'サイドバーを展開',
 
     // Side rail items
     'side.overview.doctor': 'Doctor パネル',
@@ -947,6 +949,9 @@ const ja = Object.freeze({
     'usage.range.7d.short': '直近 7 日',
     'usage.range.30d.short': '直近 30 日',
     'orchestration.queueStats': 'キュー {running} 実行中 · {queued} 待機中',
+    'orchestration.rebuilding.status': '一時停止',
+    'orchestration.rebuilding.title': '再構築中',
+    'orchestration.rebuilding.body': 'タスク編成入口は表示のみで、現在はクリックできません。',
     'orchestration.hero.kicker': 'タスクオーケストレーション',
     'orchestration.hero.title': 'タスクオーケストレーション',
     'orchestration.hero.subtitle': 'ワークスペースとスレッドの文脈を保持しながら、計画・実行・追跡します。',

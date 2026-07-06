@@ -147,6 +147,8 @@ const zh = Object.freeze({
     'side.system': '系统',
     'side.orchestration': '任务',
     'side.skills': 'Skills',
+    'side.collapse': '收起侧边栏',
+    'side.expand': '展开侧边栏',
 
     // Side rail items
     'side.overview.doctor': 'Doctor 面板',
@@ -957,6 +959,9 @@ const zh = Object.freeze({
     'usage.range.7d.short': '近 7 天',
     'usage.range.30d.short': '近 30 天',
     'orchestration.queueStats': '队列 {running} 运行中 · {queued} 等待中',
+    'orchestration.rebuilding.status': '暂停开放',
+    'orchestration.rebuilding.title': '重建中',
+    'orchestration.rebuilding.body': '任务编排入口暂时保留展示，但当前不可点击。',
     'orchestration.hero.kicker': '任务编排',
     'orchestration.hero.title': '任务编排',
     'orchestration.hero.subtitle': '规划、执行并追踪任务，保留工作区与线程上下文。',

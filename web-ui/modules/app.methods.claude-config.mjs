@@ -8,8 +8,6 @@ function normalizeClaudeBaseUrl(value) {
     return normalizeClaudeText(value).replace(/\/+$/g, '');
 }
 
-const DELETED_CLAUDE_SETTINGS_IMPORTS_KEY = 'deletedClaudeSettingsImports';
-
 function buildDeletedClaudeSettingsFingerprint(config = {}) {
     const safe = config && typeof config === 'object' ? config : {};
     const baseUrl = normalizeClaudeBaseUrl(safe.baseUrl);
@@ -92,8 +90,39 @@ export function createClaudeConfigMethods(options = {}) {
     return {
         switchClaudeConfig(name) {
             this.currentClaudeConfig = name;
-            try { localStorage.setItem('currentClaudeConfig', name || ''); } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ currentClaudeConfig: name || '' });
+            }
             this.refreshClaudeModelContext();
+        },
+
+        normalizeStoredClaudeConfigs() {
+            const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' && !Array.isArray(this.claudeConfigs)
+                ? this.claudeConfigs
+                : {};
+            let changed = configs !== this.claudeConfigs;
+            for (const config of Object.values(configs)) {
+                if (!config || typeof config !== 'object') continue;
+                if (config.apiKey && config.apiKey.includes('****')) {
+                    config.apiKey = '';
+                    config.hasKey = false;
+                    changed = true;
+                }
+                const targetApiRaw = typeof config.targetApi === 'string' ? config.targetApi.trim().toLowerCase() : '';
+                const previousTargetApi = config.targetApi;
+                if (targetApiRaw === 'chat_completions' || targetApiRaw === 'chat-completions' || targetApiRaw === 'chat/completions') {
+                    config.targetApi = 'chat_completions';
+                } else if (targetApiRaw === 'ollama') {
+                    config.targetApi = 'ollama';
+                } else {
+                    config.targetApi = 'responses';
+                }
+                if (config.targetApi !== previousTargetApi) {
+                    changed = true;
+                }
+            }
+            this.claudeConfigs = configs;
+            return changed;
         },
 
         onClaudeModelChange() {
@@ -124,9 +153,14 @@ export function createClaudeConfigMethods(options = {}) {
         },
 
         saveClaudeConfigs() {
-            try { localStorage.setItem('claudeConfigs', JSON.stringify(this.claudeConfigs)); } catch (_) {}
-            if (this.currentClaudeConfig) {
-                try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
+            if (typeof this.normalizeStoredClaudeConfigs === 'function') {
+                this.normalizeStoredClaudeConfigs();
+            }
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({
+                    claudeConfigs: this.claudeConfigs,
+                    currentClaudeConfig: this.currentClaudeConfig || ''
+                });
             }
             this.syncClaudeBridgeProviders();
         },
@@ -134,18 +168,17 @@ export function createClaudeConfigMethods(options = {}) {
         rememberDeletedClaudeSettingsImport(config) {
             const fingerprint = buildDeletedClaudeSettingsFingerprint(config);
             if (!fingerprint) return;
-            try {
-                const raw = localStorage.getItem(DELETED_CLAUDE_SETTINGS_IMPORTS_KEY);
-                const parsed = raw ? JSON.parse(raw) : [];
-                const entries = Array.isArray(parsed) ? parsed : [];
-                const deduped = entries.filter((entry) => {
-                    if (!entry || typeof entry !== 'object') return false;
-                    return normalizeClaudeBaseUrl(entry.baseUrl) !== fingerprint.baseUrl
-                        || normalizeClaudeText(entry.model) !== fingerprint.model;
-                });
-                deduped.push(fingerprint);
-                localStorage.setItem(DELETED_CLAUDE_SETTINGS_IMPORTS_KEY, JSON.stringify(deduped.slice(-50)));
-            } catch (_) {}
+            const entries = Array.isArray(this.deletedClaudeSettingsImports) ? this.deletedClaudeSettingsImports : [];
+            const deduped = entries.filter((entry) => {
+                if (!entry || typeof entry !== 'object') return false;
+                return normalizeClaudeBaseUrl(entry.baseUrl) !== fingerprint.baseUrl
+                    || normalizeClaudeText(entry.model) !== fingerprint.model;
+            });
+            deduped.push(fingerprint);
+            this.deletedClaudeSettingsImports = deduped.slice(-50);
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ deletedClaudeSettingsImports: this.deletedClaudeSettingsImports });
+            }
         },
 
         async applyCurrentClaudeConfigSilently() {
@@ -227,15 +260,18 @@ export function createClaudeConfigMethods(options = {}) {
                 const current = normalizeClaudeText(this.currentClaudeConfig);
                 if (current && !configs[current]) {
                     this.currentClaudeConfig = firstCachedName || Object.keys(configs)[0] || '';
-                    try { localStorage.setItem('currentClaudeConfig', this.currentClaudeConfig); } catch (_) {}
                     changed = true;
                 } else if (firstCachedName) {
-                    let savedCurrent = '';
-                    try { savedCurrent = localStorage.getItem('currentClaudeConfig') || ''; } catch (_) {}
                     const currentConfig = current && configs[current] ? configs[current] : null;
-                    if (!savedCurrent && (!current || (currentConfig && currentConfig.hasKey === false && !currentConfig.providerCacheRef))) {
+                    const currentApplyable = currentConfig && (
+                        currentConfig.hasKey === true
+                        || !!normalizeClaudeText(currentConfig.apiKey)
+                        || !!normalizeClaudeText(currentConfig.providerCacheRef)
+                        || !!normalizeClaudeText(currentConfig.externalCredentialType)
+                        || normalizeClaudeText(currentConfig.targetApi) === 'ollama'
+                    );
+                    if (!currentApplyable) {
                         this.currentClaudeConfig = firstCachedName;
-                        try { localStorage.setItem('currentClaudeConfig', firstCachedName); } catch (_) {}
                         changed = true;
                     }
                 }
@@ -458,7 +494,9 @@ export function createClaudeConfigMethods(options = {}) {
             const silentSuccess = silent || !!(options && options.silentSuccess);
             const silentError = silent || !!(options && options.silentError);
             this.currentClaudeConfig = name;
-            try { localStorage.setItem('currentClaudeConfig', name || ''); } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ currentClaudeConfig: name || '' });
+            }
             this.refreshClaudeModelContext();
             const config = this.claudeConfigs[name];
 
@@ -572,7 +610,9 @@ export function createClaudeConfigMethods(options = {}) {
 
         async applyClaudeLocalBridge() {
             this.currentClaudeConfig = 'claude-local';
-            try { localStorage.setItem('currentClaudeConfig', 'claude-local'); } catch (_) {}
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ currentClaudeConfig: 'claude-local' });
+            }
             this.refreshClaudeModelContext();
 
             const candidates = this.claudeLocalBridgeCandidateProviders();

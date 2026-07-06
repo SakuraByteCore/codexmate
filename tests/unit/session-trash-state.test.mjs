@@ -2104,26 +2104,15 @@ test('pruneSessionPinnedMap skips pruning when the visible session list is filte
 test('restoreSessionPinnedMap normalizes cache without pruning stale entries before sessions load', () => {
     const restoreSessionPinnedMap = instantiateFunction(
         extractMethodAsFunction(appSource, 'restoreSessionPinnedMap'),
-        'restoreSessionPinnedMap',
-        {
-            localStorage: {
-                getItem(key) {
-                    assert.strictEqual(key, 'codexmateSessionPinnedMap');
-                    return JSON.stringify({
-                        'codex:keep': 123,
-                        'codex:stale': 456,
-                        'codex:bad': -1
-                    });
-                },
-                removeItem() {
-                    throw new Error('removeItem should not be called for valid cached JSON');
-                }
-            }
-        }
+        'restoreSessionPinnedMap'
     );
 
     const context = {
-        sessionPinnedMap: {},
+        sessionPinnedMap: {
+            'codex:keep': 123,
+            'codex:stale': 456,
+            'codex:bad': -1
+        },
         sessionsList: [{ key: 'codex:keep' }],
         normalizeSessionPinnedMap(raw) {
             const next = {};
@@ -2404,20 +2393,11 @@ test('normalizeSessionTrashRetentionDays clamps to 1-365 range', () => {
     assert.strictEqual(normalize(15.7), 15);
 });
 
-test('setSessionTrashRetentionDays persists normalized value to localStorage', () => {
-    let storedKey = null;
-    let storedValue = null;
+test('setSessionTrashRetentionDays persists normalized value to web UI preferences', () => {
+    let persisted = null;
     const setSessionTrashRetentionDaysFn = instantiateFunction(
         extractMethodAsFunction(appSource, 'setSessionTrashRetentionDays'),
-        'setSessionTrashRetentionDays',
-        {
-            localStorage: {
-                setItem(key, value) {
-                    storedKey = key;
-                    storedValue = value;
-                }
-            }
-        }
+        'setSessionTrashRetentionDays'
     );
     const context = {
         sessionTrashRetentionDays: 30,
@@ -2425,14 +2405,16 @@ test('setSessionTrashRetentionDays persists normalized value to localStorage', (
             const numeric = Number(value);
             if (!Number.isFinite(numeric) || numeric < 1) return 30;
             return Math.min(365, Math.max(1, Math.floor(numeric)));
+        },
+        persistWebUiPreferences(overrides) {
+            persisted = overrides;
         }
     };
 
     setSessionTrashRetentionDaysFn.call(context, 7);
 
     assert.strictEqual(context.sessionTrashRetentionDays, 7);
-    assert.strictEqual(storedKey, 'codexmateSessionTrashRetentionDays');
-    assert.strictEqual(storedValue, '7');
+    assert.deepStrictEqual(persisted, { sessionTrashRetentionDays: 7 });
 });
 
 test('listSessionTrashItems calls auto-purge before listing', async () => {

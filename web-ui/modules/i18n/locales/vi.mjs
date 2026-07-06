@@ -108,6 +108,8 @@ const vi = Object.freeze({
     'side.system': 'Hệ thống',
     'side.orchestration': 'Tác vụ',
     'side.skills': 'Skills',
+    'side.collapse': 'Thu gọn thanh bên',
+    'side.expand': 'Mở rộng thanh bên',
 
     // Side rail items
     'side.overview.doctor': 'Doctor',
@@ -1094,6 +1096,9 @@ const vi = Object.freeze({
     'usage.range.7d.short': '7 ngày qua',
     'usage.range.30d.short': '30 ngày qua',
     'orchestration.queueStats': 'Hàng đợi: {running} đang chạy · {queued} đang chờ',
+    'orchestration.rebuilding.status': 'Tạm dừng',
+    'orchestration.rebuilding.title': 'Đang xây lại',
+    'orchestration.rebuilding.body': 'Lối vào điều phối tác vụ chỉ hiển thị và hiện chưa thể bấm.',
     'orchestration.hero.kicker': 'Điều phối tác vụ',
     'orchestration.hero.title': 'Điều phối tác vụ',
     'orchestration.hero.subtitle': 'Lập kế hoạch, chạy và theo dõi tác vụ với ngữ cảnh workspace/thread.',

@@ -95,14 +95,14 @@ test('restoreSessionFilterCache triggers reload when url state sets source', asy
     assert.strictEqual(loadCalls, 1);
 });
 
-test('restoreSessionFilterCache triggers reload when stored source is not default', async () => {
+test('restoreSessionFilterCache triggers reload when preference-loaded source is not default', async () => {
     const methods = createSessionBrowserMethods({
         api: async () => ({ sessions: [] })
     });
     let loadCalls = 0;
     const context = {
         mainTab: 'sessions',
-        sessionFilterSource: 'all',
+        sessionFilterSource: 'gemini',
         sessionPathFilter: '',
         sessionQuery: '',
         sessionRoleFilter: 'all',
@@ -111,14 +111,6 @@ test('restoreSessionFilterCache triggers reload when stored source is not defaul
         loadSessions: async () => {
             loadCalls += 1;
         }
-    };
-    const localStorage = {
-        getItem(key) {
-            if (key === 'codexmateSessionFilterSource') return 'gemini';
-            return null;
-        },
-        setItem() {},
-        removeItem() {}
     };
     const window = {
         location: {
@@ -131,7 +123,7 @@ test('restoreSessionFilterCache triggers reload when stored source is not defaul
         }
     };
 
-    await withGlobalOverrides({ window, localStorage }, async () => {
+    await withGlobalOverrides({ window }, async () => {
         await methods.restoreSessionFilterCache.call(context);
     });
 

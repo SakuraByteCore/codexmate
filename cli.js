@@ -1000,6 +1000,65 @@ function normalizePromptsSubTabPreference(value) {
     return normalized === 'claude-project' ? 'claude-project' : 'codex';
 }
 
+function normalizeSidebarCollapsedPreference(value) {
+    return normalizeBooleanPreference(value, false);
+}
+
+function normalizeSessionFilterSourcePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === 'all' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy') return normalized;
+    return 'codex';
+}
+
+function normalizeSessionRoleFilterPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === 'user' || normalized === 'assistant' || normalized === 'system' || normalized === 'tool') return normalized;
+    return 'all';
+}
+
+function normalizeSessionTimePresetPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === '24h' || normalized === '7d' || normalized === '30d') return normalized;
+    return 'all';
+}
+
+function normalizeSessionSortModePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'hot' ? 'hot' : 'time';
+}
+
+function normalizeSessionFiltersPreference(value = {}) {
+    const source = isPlainObject(value) ? value : {};
+    return {
+        source: normalizeSessionFilterSourcePreference(source.source),
+        pathFilter: typeof source.pathFilter === 'string' ? source.pathFilter : '',
+        query: typeof source.query === 'string' ? source.query : '',
+        roleFilter: normalizeSessionRoleFilterPreference(source.roleFilter),
+        timePreset: normalizeSessionTimePresetPreference(source.timePreset),
+        sortMode: normalizeSessionSortModePreference(source.sortMode)
+    };
+}
+
+function normalizeSessionPinnedMapPreference(value = {}) {
+    const source = isPlainObject(value) ? value : {};
+    const next = {};
+    for (const [key, item] of Object.entries(source)) {
+        if (!key) continue;
+        const numeric = Number(item);
+        if (!Number.isFinite(numeric) || numeric <= 0) continue;
+        next[key] = Math.floor(numeric);
+    }
+    return next;
+}
+
+function normalizePlainObjectPreference(value = {}) {
+    return isPlainObject(value) ? value : {};
+}
+
+function normalizeArrayPreference(value = []) {
+    return Array.isArray(value) ? value : [];
+}
+
 function normalizeWebUiPreferences(value = {}) {
     const source = isPlainObject(value) ? value : {};
     const navigation = isPlainObject(source.navigation) ? source.navigation : {};
@@ -1012,6 +1071,18 @@ function normalizeWebUiPreferences(value = {}) {
         sessionsUsageTimeRange: normalizeUsageTimeRangePreference(source.sessionsUsageTimeRange),
         promptsSubTab: normalizePromptsSubTabPreference(source.promptsSubTab),
         projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',
+        sidebarCollapsed: normalizeSidebarCollapsedPreference(source.sidebarCollapsed),
+        starPrompted: normalizeBooleanPreference(source.starPrompted, false),
+        taskOrchestrationTabEnabled: normalizeBooleanPreference(source.taskOrchestrationTabEnabled, true),
+        sessionLoadNativeDialog: normalizeBooleanPreference(source.sessionLoadNativeDialog, false),
+        language: typeof source.language === 'string' ? source.language : '',
+        sessionFilters: normalizeSessionFiltersPreference(source.sessionFilters),
+        sessionPinnedMap: normalizeSessionPinnedMapPreference(source.sessionPinnedMap),
+        claudeConfigs: normalizePlainObjectPreference(source.claudeConfigs),
+        currentClaudeConfig: typeof source.currentClaudeConfig === 'string' ? source.currentClaudeConfig : '',
+        openclawConfigs: normalizePlainObjectPreference(source.openclawConfigs),
+        toolConfigPermissions: normalizeToolConfigPermissions(source.toolConfigPermissions || TOOL_CONFIG_PERMISSION_DEFAULTS),
+        deletedClaudeSettingsImports: normalizeArrayPreference(source.deletedClaudeSettingsImports),
         navigation: {
             mainTab: normalizeMainTabPreference(navigation.mainTab),
             configMode: normalizeConfigModePreference(navigation.configMode),
@@ -1040,6 +1111,9 @@ function setWebUiPreferences(params = {}) {
         }
     });
     preferences.webUi = next;
+    if (isPlainObject(incoming.toolConfigPermissions)) {
+        preferences.toolConfigPermissions = normalizeToolConfigPermissions(incoming.toolConfigPermissions);
+    }
     writeCodexmatePreferences(preferences);
     return { success: true, preferences: next };
 }

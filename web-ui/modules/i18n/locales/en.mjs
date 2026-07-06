@@ -147,6 +147,8 @@ const en = Object.freeze({
     'side.system': 'System',
     'side.orchestration': 'Tasks',
     'side.skills': 'Skills',
+    'side.collapse': 'Collapse sidebar',
+    'side.expand': 'Expand sidebar',
 
     // Side rail items
     'side.overview.doctor': 'Doctor',
@@ -958,6 +960,9 @@ const en = Object.freeze({
     'usage.range.7d.short': 'Last 7 days',
     'usage.range.30d.short': 'Last 30 days',
     'orchestration.queueStats': 'Queue: {running} running · {queued} queued',
+    'orchestration.rebuilding.status': 'Paused',
+    'orchestration.rebuilding.title': 'Rebuilding',
+    'orchestration.rebuilding.body': 'Task orchestration is visible but disabled for now.',
     'orchestration.hero.kicker': 'ORCHESTRATION',
     'orchestration.hero.title': 'Task orchestration',
     'orchestration.hero.subtitle': 'Plan, run, and trace tasks with workspace and thread context.',

@@ -71,7 +71,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /setConfigTemplateDiffConfirmEnabled/);
     assert.match(html, /configTemplateDiffConfirmEnabled/);
     assert.match(html, /sessionTrashCount/);
-    assert.match(html, /v-if="taskOrchestrationTabEnabled"[^>]*class="top-tab"[\s\S]*id="tab-orchestration"/);
+    assert.match(html, /v-if="taskOrchestrationTabEnabled"[^>]*class="top-tab top-tab-disabled"[\s\S]*id="tab-orchestration"/);
+    assert.match(html, /id="tab-orchestration"[\s\S]*aria-disabled="true"[\s\S]*disabled/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled" class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled"[\s\S]*id="panel-orchestration"/);
     assert.match(html, /taskOrchestrationTabEnabled && mainTab === 'orchestration'/);
@@ -85,10 +86,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /id="side-tab-orchestration"/);
     assert.match(html, /id="tab-orchestration"/);
     assert.match(html, /data-main-tab="orchestration"/);
-    assert.match(html, /onMainTabPointerDown\('orchestration', \$event\)/);
-    assert.match(html, /onMainTabClick\('orchestration', \$event\)/);
-    assert.match(html, /aria-controls="panel-orchestration"/);
-    assert.match(html, /:aria-selected="mainTab === 'orchestration'"/);
+    assert.doesNotMatch(html, /onMainTabPointerDown\('orchestration', \$event\)/);
+    assert.doesNotMatch(html, /onMainTabClick\('orchestration', \$event\)/);
+    assert.match(html, /aria-disabled="true"/);
+    assert.match(html, /aria-selected="false"/);
     assert.match(html, /id="panel-orchestration"/);
     assert.match(html, /v-show="mainTab === 'orchestration'"/);
     assert.match(orchestrationPanel, /t\('orchestration\.hero\.kicker'\)/);
