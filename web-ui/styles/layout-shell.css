@@ -21,7 +21,7 @@ body::after {
 
 :root {
     --side-rail-width: 248px;
-    --side-rail-collapsed-width: 64px;
+    --side-rail-collapsed-width: 136px;
 }
 
 /* ============================================
@@ -39,7 +39,7 @@ body::after {
 }
 
 .app-shell.sidebar-collapsed {
-    --side-rail-width: var(--side-rail-collapsed-width, 64px);
+    --side-rail-width: var(--side-rail-collapsed-width, 136px);
 }
 
 .app-shell.standalone {
@@ -516,7 +516,6 @@ body::after {
 
 .sidebar-collapsed .brand-copy,
 .sidebar-collapsed .side-section-title,
-.sidebar-collapsed .side-item-title,
 .sidebar-collapsed .side-item-meta,
 .sidebar-collapsed .side-update-copy,
 .sidebar-collapsed .side-rail-lang .language-settings-link {
@@ -533,9 +532,9 @@ body::after {
 }
 
 .sidebar-collapsed .side-item {
-    width: 44px;
-    height: 44px;
-    padding: 0;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 10px;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -544,7 +543,15 @@ body::after {
 }
 
 .sidebar-collapsed .side-item-icon {
-    display: inline-flex;
+    display: none;
+}
+
+.sidebar-collapsed .side-item-title {
+    display: block;
+    max-width: 100%;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 1.2;
 }
 
 .sidebar-collapsed .side-item::before {
