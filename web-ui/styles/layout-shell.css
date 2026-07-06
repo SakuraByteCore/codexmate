@@ -507,18 +507,32 @@ body::after {
 }
 
 .sidebar-collapsed .brand-block {
-    padding-inline: 0;
-    align-items: center;
+    padding: 14px 6px 16px;
+    align-items: stretch;
 }
 
 .sidebar-collapsed .brand-head {
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.sidebar-collapsed .side-item-meta {
+    display: none;
 }
 
 .sidebar-collapsed .brand-copy,
-.sidebar-collapsed .side-item-meta,
 .sidebar-collapsed .side-update-copy {
-    display: none;
+    display: flex;
+}
+
+.sidebar-collapsed .brand-kicker {
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.sidebar-collapsed .side-update-notice {
+    padding: 7px 8px;
+    gap: 6px;
 }
 
 .sidebar-collapsed .side-section {

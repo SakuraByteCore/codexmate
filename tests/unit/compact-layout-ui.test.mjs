@@ -63,6 +63,9 @@ test('styles keep desktop layout wide and session history readable on large scre
     assert.match(styles, /\.side-rail-collapse-toggle:hover\s*\{[\s\S]*transform:\s*translate\(-1px,\s*-50%\);/);
     assert.match(styles, /\.sidebar-collapsed\s+\.side-rail-collapse-toggle:hover\s*\{[\s\S]*transform:\s*translate\(1px,\s*-50%\);/);
     assert.doesNotMatch(styles, /\.sidebar-collapsed\s+\.side-item-title,\s*[\s\S]*\.sidebar-collapsed\s+\.side-item-meta,\s*[\s\S]*display:\s*none;/);
+    assert.doesNotMatch(styles, /\.sidebar-collapsed\s+\.brand-copy,\s*[^}]*display:\s*none;/);
+    assert.doesNotMatch(styles, /\.sidebar-collapsed\s+\.side-update-copy,\s*[^}]*display:\s*none;/);
+    assert.match(styles, /\.sidebar-collapsed\s+\.brand-copy,\s*\n\.sidebar-collapsed\s+\.side-update-copy\s*\{[\s\S]*display:\s*flex;/);
     assert.doesNotMatch(styles, /\.sidebar-collapsed\s+\.side-section-title,\s*[^}]*display:\s*none;/);
     const collapsedLanguageBlock = styles.match(/\.sidebar-collapsed\s+\.side-rail-lang\s+\.language-settings-link\s*\{[^}]*\}/);
     assert.ok(collapsedLanguageBlock, 'missing collapsed language link style block');
