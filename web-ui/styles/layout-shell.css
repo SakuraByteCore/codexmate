@@ -69,7 +69,7 @@ body::after {
 
 .side-rail-collapse-toggle {
     position: absolute;
-    top: 18px;
+    top: 50%;
     right: -13px;
     z-index: 5;
     width: 26px;
@@ -85,17 +85,18 @@ body::after {
     justify-content: center;
     font-size: 18px;
     line-height: 1;
+    transform: translateY(-50%);
     transition: color 160ms var(--ease-out-expo), border-color 160ms var(--ease-out-expo), transform 160ms var(--ease-out-expo);
 }
 
 .side-rail-collapse-toggle:hover {
     color: var(--color-brand-dark);
     border-color: rgba(200, 121, 99, 0.35);
-    transform: translateX(-1px);
+    transform: translate(-1px, -50%);
 }
 
 .sidebar-collapsed .side-rail-collapse-toggle:hover {
-    transform: translateX(1px);
+    transform: translate(1px, -50%);
 }
 
 .side-rail::-webkit-scrollbar {
