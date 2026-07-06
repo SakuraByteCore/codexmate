@@ -63,8 +63,14 @@ test('styles keep desktop layout wide and session history readable on large scre
     assert.match(styles, /\.side-rail-collapse-toggle:hover\s*\{[\s\S]*transform:\s*translate\(-1px,\s*-50%\);/);
     assert.match(styles, /\.sidebar-collapsed\s+\.side-rail-collapse-toggle:hover\s*\{[\s\S]*transform:\s*translate\(1px,\s*-50%\);/);
     assert.doesNotMatch(styles, /\.sidebar-collapsed\s+\.side-item-title,\s*[\s\S]*\.sidebar-collapsed\s+\.side-item-meta,\s*[\s\S]*display:\s*none;/);
+    assert.doesNotMatch(styles, /\.sidebar-collapsed\s+\.side-section-title,\s*[^}]*display:\s*none;/);
+    const collapsedLanguageBlock = styles.match(/\.sidebar-collapsed\s+\.side-rail-lang\s+\.language-settings-link\s*\{[^}]*\}/);
+    assert.ok(collapsedLanguageBlock, 'missing collapsed language link style block');
+    assert.doesNotMatch(collapsedLanguageBlock[0], /display:\s*none;/);
+    assert.match(styles, /\.sidebar-collapsed\s+\.side-section-title\s*\{[\s\S]*display:\s*block;[\s\S]*white-space:\s*nowrap;/);
     assert.match(styles, /\.sidebar-collapsed\s+\.side-item-title\s*\{[\s\S]*display:\s*block;[\s\S]*white-space:\s*nowrap;/);
     assert.match(styles, /\.sidebar-collapsed\s+\.side-item-icon\s*\{[\s\S]*display:\s*none;/);
+    assert.match(collapsedLanguageBlock[0], /display:\s*inline-flex;/);
     assert.match(styles, /\.main-panel\s*\{[\s\S]*overflow-y:\s*auto;[\s\S]*height:\s*100vh;[\s\S]*scrollbar-width:\s*none;/);
     assert.match(styles, /\.main-panel-topbar\s*\{[\s\S]*position:\s*sticky;[\s\S]*top:\s*0;/);
     assert.match(styles, /\.side-item-meta\s*\{[\s\S]*display:\s*flex;[\s\S]*opacity:\s*1;/);
