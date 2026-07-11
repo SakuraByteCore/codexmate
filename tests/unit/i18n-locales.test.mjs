@@ -98,6 +98,7 @@ test('Japanese orchestration template copy stays localized', () => {
 
 test('provider cache, prompt sidebar, and local Web preference settings are localized in every locale', () => {
     const keys = [
+        'side.prompts.meta',
         'side.prompts.presets',
         'side.prompts.presets.meta',
         'announcement.providerCache.open',

@@ -371,57 +371,20 @@ return function render(_ctx, _cache) {
               }, [
                 _createElementVNode("div", { class: "side-section-title" }, _toDisplayString(_ctx.t('side.prompts')), 1 /* TEXT */),
                 _createElementVNode("button", {
-                  id: "side-tab-prompts-agents",
+                  id: "side-tab-prompts",
                   "data-main-tab": "prompts",
-                  "data-prompts-sub-tab": "codex",
-                  "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'codex' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'codex' }]),
+                  "aria-current": _ctx.mainTab === 'prompts' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') }]),
                   onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
-                  onClick: $event => {_ctx.switchPromptsSubTab('codex'); _ctx.onMainTabClick('prompts')}
+                  onClick: $event => (_ctx.onMainTabClick('prompts', $event))
                 }, [
                   _createElementVNode("span", {
                     class: "side-item-icon",
                     "aria-hidden": "true"
                   }, "P"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.agents')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.agents.meta')), 1 /* TEXT */)
-                  ])
-                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
-                _createElementVNode("button", {
-                  id: "side-tab-prompts-project",
-                  "data-main-tab": "prompts",
-                  "data-prompts-sub-tab": "claude-project",
-                  "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'claude-project' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'claude-project' }]),
-                  onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
-                  onClick: $event => {_ctx.switchPromptsSubTab('claude-project'); _ctx.onMainTabClick('prompts')}
-                }, [
-                  _createElementVNode("span", {
-                    class: "side-item-icon",
-                    "aria-hidden": "true"
-                  }, "M"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.claude')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.claude.meta')), 1 /* TEXT */)
-                  ])
-                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
-                _createElementVNode("button", {
-                  id: "side-tab-prompts-presets",
-                  "data-main-tab": "prompts",
-                  "data-prompts-sub-tab": "presets",
-                  "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'presets' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'presets' }]),
-                  onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
-                  onClick: $event => {_ctx.switchPromptsSubTab('presets'); _ctx.onMainTabClick('prompts')}
-                }, [
-                  _createElementVNode("span", {
-                    class: "side-item-icon",
-                    "aria-hidden": "true"
-                  }, "★"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.presets')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.presets.meta')), 1 /* TEXT */)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.meta')), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),

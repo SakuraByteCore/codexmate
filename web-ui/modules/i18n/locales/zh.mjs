@@ -143,6 +143,7 @@ const zh = Object.freeze({
     'side.config': '配置',
     'side.sessions': '会话',
     'side.prompts': 'Prompts',
+    'side.prompts.meta': 'Prompt 文件与预设',
     'side.plugins': '插件',
     'side.system': '系统',
     'side.orchestration': '任务',

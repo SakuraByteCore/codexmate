@@ -104,6 +104,7 @@ const vi = Object.freeze({
     'side.config': 'Cấu hình',
     'side.sessions': 'Phiên',
     'side.prompts': 'Prompts',
+    'side.prompts.meta': 'Tệp prompt và preset',
     'side.plugins': 'Plugin',
     'side.system': 'Hệ thống',
     'side.orchestration': 'Tác vụ',

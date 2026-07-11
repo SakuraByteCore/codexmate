@@ -143,6 +143,7 @@ const zhTw = Object.freeze({
     'side.config': '設定',
     'side.sessions': '會話',
     'side.prompts': 'Prompts',
+    'side.prompts.meta': 'Prompt 文件與預設',
     'side.plugins': '插件',
     'side.system': '系統',
     'side.orchestration': '任務',

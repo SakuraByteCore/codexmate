@@ -144,6 +144,7 @@ const ja = Object.freeze({
     'side.config': '設定',
     'side.sessions': 'セッション',
     'side.prompts': 'Prompts',
+    'side.prompts.meta': 'プロンプトファイルとプリセット',
     'side.plugins': 'プラグイン',
     'side.system': 'システム',
     'side.orchestration': 'タスク',

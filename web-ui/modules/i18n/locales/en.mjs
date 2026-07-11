@@ -143,6 +143,7 @@ const en = Object.freeze({
     'side.config': 'Config',
     'side.sessions': 'Sessions',
     'side.prompts': 'Prompts',
+    'side.prompts.meta': 'Prompt files and presets',
     'side.plugins': 'Plugins',
     'side.system': 'System',
     'side.orchestration': 'Tasks',
