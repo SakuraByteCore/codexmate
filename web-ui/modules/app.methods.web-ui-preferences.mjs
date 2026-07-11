@@ -62,7 +62,27 @@ function normalizeUsageTimeRange(value) {
 
 function normalizePromptsSubTab(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'claude-project' ? 'claude-project' : 'codex';
+    if (normalized === 'claude-project' || normalized === 'presets') return normalized;
+    return 'codex';
+}
+
+function normalizePromptPresets(value) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set();
+    return value
+        .filter(item => item && typeof item === 'object')
+        .map((item, index) => {
+            const id = typeof item.id === 'string' && item.id.trim()
+                ? item.id.trim()
+                : `preset-${Date.now()}-${index}`;
+            const name = typeof item.name === 'string' ? item.name.trim() : '';
+            const content = typeof item.content === 'string' ? item.content : '';
+            const updatedAt = typeof item.updatedAt === 'string' && item.updatedAt.trim()
+                ? item.updatedAt.trim()
+                : new Date(0).toISOString();
+            return { id, name, content, updatedAt };
+        })
+        .filter(item => item.id && item.name && !seen.has(item.id) && (seen.add(item.id), true));
 }
 
 function normalizeSessionSortMode(value) {
@@ -313,6 +333,7 @@ export function createWebUiPreferencesMethods(options = {}) {
                     : this.configTemplateDiffConfirmEnabled !== false,
                 sessionsUsageTimeRange: normalizeUsageTimeRange(hasOwn(source, 'sessionsUsageTimeRange') ? source.sessionsUsageTimeRange : this.sessionsUsageTimeRange),
                 promptsSubTab: normalizePromptsSubTab(hasOwn(source, 'promptsSubTab') ? source.promptsSubTab : this.promptsSubTab),
+                promptPresets: normalizePromptPresets(hasOwn(source, 'promptPresets') ? source.promptPresets : this.promptPresets),
                 projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string'
                     ? source.projectClaudeMdPath
                     : (typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath : ''),
@@ -364,6 +385,12 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (typeof source.promptsSubTab === 'string') {
                     this.promptsSubTab = normalizePromptsSubTab(source.promptsSubTab);
+                }
+                if (Array.isArray(source.promptPresets)) {
+                    this.promptPresets = normalizePromptPresets(source.promptPresets);
+                    if (this.selectedPromptPresetId && !this.promptPresets.some(preset => preset.id === this.selectedPromptPresetId)) {
+                        this.selectedPromptPresetId = '';
+                    }
                 }
                 if (typeof source.projectClaudeMdPath === 'string') {
                     this.projectClaudeMdPath = source.projectClaudeMdPath;

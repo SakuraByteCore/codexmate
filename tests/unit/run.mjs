@@ -53,6 +53,7 @@ await import(pathToFileURL(path.join(__dirname, 'claude-settings-sync.test.mjs')
 await import(pathToFileURL(path.join(__dirname, 'unzip-ext.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-share-command.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-ui-preferences.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'prompt-presets.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-cache-records.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'providers-validation.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-default-names.test.mjs')));

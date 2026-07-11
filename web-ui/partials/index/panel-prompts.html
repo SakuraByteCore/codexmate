@@ -8,6 +8,7 @@
                 <div class="prompts-md-tabs" role="tablist" :aria-label="t('tab.prompts')">
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'codex' }]" role="tab" :aria-selected="promptsSubTab === 'codex'" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'claude-project' }]" role="tab" :aria-selected="promptsSubTab === 'claude-project'" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'presets' }]" role="tab" :aria-selected="promptsSubTab === 'presets'" @click="switchPromptsSubTab('presets')">{{ t('prompts.subTab.presets') }}</button>
                 </div>
 
                 <div v-if="promptsSubTab === 'claude-project'" class="project-path-selector">
@@ -32,7 +33,53 @@
                     </div>
                 </div>
 
-                <div class="prompts-editor">
+                <div v-if="promptsSubTab === 'presets'" class="prompt-presets-panel">
+                    <div class="prompt-presets-header">
+                        <div>
+                            <div class="prompt-presets-title">{{ t('prompts.presets.title') }}</div>
+                            <div class="form-hint">{{ t('prompts.presets.hint') }}</div>
+                        </div>
+                    </div>
+                    <div class="prompt-presets-save-row">
+                        <input
+                            type="text"
+                            class="form-input"
+                            v-model="promptPresetNameDraft"
+                            :placeholder="t('prompts.presets.namePlaceholder')"
+                            @keydown.enter.prevent="saveCurrentPromptAsPreset">
+                        <button
+                            type="button"
+                            class="btn-primary"
+                            @click="saveCurrentPromptAsPreset"
+                            :disabled="promptPresetSaving || agentsLoading">
+                            {{ t('prompts.presets.saveCurrent') }}
+                        </button>
+                    </div>
+                    <div v-if="!promptPresets.length" class="state-message">{{ t('prompts.presets.empty') }}</div>
+                    <div v-else class="prompt-presets-list">
+                        <article v-for="preset in promptPresets" :key="preset.id" class="prompt-preset-card">
+                            <div class="prompt-preset-main">
+                                <input
+                                    type="text"
+                                    class="form-input prompt-preset-name"
+                                    :value="getPromptPresetRenameDraft(preset)"
+                                    @input="setPromptPresetRenameDraft(preset.id, $event.target.value)"
+                                    @keydown.enter.prevent="renamePromptPreset(preset)"
+                                    :aria-label="t('prompts.presets.renameAria')">
+                                <div class="form-hint">{{ t('prompts.presets.updatedAt', { time: formatPromptPresetTime(preset.updatedAt) }) }}</div>
+                                <pre class="prompt-preset-preview">{{ preset.content }}</pre>
+                            </div>
+                            <div class="prompt-preset-actions">
+                                <button type="button" class="btn-mini" @click="renamePromptPreset(preset)">{{ t('common.save') }}</button>
+                                <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset, 'codex')">{{ t('prompts.presets.applyAgents') }}</button>
+                                <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset, 'claude-project')">{{ t('prompts.presets.applyClaude') }}</button>
+                                <button type="button" class="btn-mini btn-danger-mini" @click="deletePromptPreset(preset)">{{ t('common.delete') }}</button>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <div v-else class="prompts-editor">
                     <div class="prompts-editor-toolbar">
                         <div class="form-hint">
                             {{ agentsPath || t('common.notLoaded') }}
@@ -65,6 +112,7 @@
                                 </button>
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
+                                <button class="btn-mini" @click="switchPromptsSubTab('presets')" :disabled="agentsLoading || agentsSaving || agentsDiffLoading" :title="t('prompts.presets.open')">{{ t('prompts.subTab.presets') }}</button>
                                 <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                 </button>
