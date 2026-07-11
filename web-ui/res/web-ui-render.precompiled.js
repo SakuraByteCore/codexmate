@@ -6656,18 +6656,26 @@ return function render(_ctx, _cache) {
                 role: "tabpanel",
                 "aria-labelledby": "tab-prompts"
               }, [
-                _createElementVNode("div", { class: "segmented-control" }, [
+                _createElementVNode("div", {
+                  class: "prompts-md-tabs",
+                  role: "tablist",
+                  "aria-label": _ctx.t('tab.prompts')
+                }, [
                   _createElementVNode("button", {
                     type: "button",
-                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'codex' }]),
+                    class: _normalizeClass(['prompts-md-tab', { active: _ctx.promptsSubTab === 'codex' }]),
+                    role: "tab",
+                    "aria-selected": _ctx.promptsSubTab === 'codex',
                     onClick: $event => (_ctx.switchPromptsSubTab('codex'))
-                  }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]),
                   _createElementVNode("button", {
                     type: "button",
-                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'claude-project' }]),
+                    class: _normalizeClass(['prompts-md-tab', { active: _ctx.promptsSubTab === 'claude-project' }]),
+                    role: "tab",
+                    "aria-selected": _ctx.promptsSubTab === 'claude-project',
                     onClick: $event => (_ctx.switchPromptsSubTab('claude-project'))
-                  }, _toDisplayString(_ctx.t('prompts.subTab.project')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
-                ]),
+                  }, _toDisplayString(_ctx.t('prompts.subTab.project')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"])
+                ], 8 /* PROPS */, ["aria-label"]),
                 (_ctx.promptsSubTab === 'claude-project')
                   ? (_openBlock(), _createElementBlock("div", {
                       key: 0,

@@ -693,3 +693,35 @@
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+.prompts-md-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0 0 12px;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.prompts-md-tab {
+    padding: 7px 10px 8px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    box-shadow: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-secondary);
+}
+
+.prompts-md-tab:hover {
+    color: var(--color-text-primary);
+    background: transparent;
+}
+
+.prompts-md-tab.active {
+    color: var(--color-brand-dark);
+    border-bottom-color: var(--color-brand);
+    background: transparent;
+    box-shadow: none;
+}

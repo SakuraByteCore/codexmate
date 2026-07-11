@@ -5,9 +5,9 @@
                     id="panel-prompts"
                     role="tabpanel"
                     aria-labelledby="tab-prompts">
-                <div class="segmented-control">
-                    <button type="button" :class="['segment', { active: promptsSubTab === 'codex' }]" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
-                    <button type="button" :class="['segment', { active: promptsSubTab === 'claude-project' }]" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                <div class="prompts-md-tabs" role="tablist" :aria-label="t('tab.prompts')">
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'codex' }]" role="tab" :aria-selected="promptsSubTab === 'codex'" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'claude-project' }]" role="tab" :aria-selected="promptsSubTab === 'claude-project'" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
                 </div>
 
                 <div v-if="promptsSubTab === 'claude-project'" class="project-path-selector">
