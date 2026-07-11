@@ -59,6 +59,7 @@
                         v-model.number="newProvider.openaiBridgeMaxRetries"
                         type="number"
                         min="2"
+                        max="10"
                         step="1"
                         :class="['form-input', { invalid: !!providerFieldError('add', 'openaiBridgeMaxRetries') }]"
                         @blur="normalizeProviderDraft('add')">
@@ -109,6 +110,7 @@
                         v-model.number="editingProvider.openaiBridgeMaxRetries"
                         type="number"
                         min="2"
+                        max="10"
                         step="1"
                         :class="['form-input', { invalid: !!providerFieldError('edit', 'openaiBridgeMaxRetries') }]"
                         @blur="normalizeProviderDraft('edit')">

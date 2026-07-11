@@ -7105,6 +7105,7 @@ return function render(_ctx, _cache) {
                     "onUpdate:modelValue": $event => ((_ctx.newProvider.openaiBridgeMaxRetries) = $event),
                     type: "number",
                     min: "2",
+                    max: "10",
                     step: "1",
                     class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('add', 'openaiBridgeMaxRetries') }]),
                     onBlur: $event => (_ctx.normalizeProviderDraft('add'))
@@ -7247,6 +7248,7 @@ return function render(_ctx, _cache) {
                     "onUpdate:modelValue": $event => ((_ctx.editingProvider.openaiBridgeMaxRetries) = $event),
                     type: "number",
                     min: "2",
+                    max: "10",
                     step: "1",
                     class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('edit', 'openaiBridgeMaxRetries') }]),
                     onBlur: $event => (_ctx.normalizeProviderDraft('edit'))
