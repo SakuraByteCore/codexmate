@@ -90,6 +90,11 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /switchPromptsSubTab\('presets'\); onMainTabClick\('prompts'\)/);
     assert.match(html, /t\('side\.prompts\.presets'\)/);
     assert.match(html, /t\('side\.prompts\.presets\.meta'\)/);
+    assert.match(html, /v-if="promptsSubTab === 'presets'" class="prompts-editor prompt-presets-panel"/);
+    assert.match(html, /class="prompts-editor-toolbar prompt-presets-toolbar"/);
+    assert.match(html, /class="prompts-editor-actions prompt-presets-save-row"/);
+    assert.match(html, /class="form-group prompt-presets-body"/);
+    assert.match(html, /class="editor-frame prompt-presets-frame"/);
     assert.match(html, /id="side-tab-orchestration"/);
     assert.match(html, /id="tab-orchestration"/);
     assert.match(html, /data-main-tab="orchestration"/);

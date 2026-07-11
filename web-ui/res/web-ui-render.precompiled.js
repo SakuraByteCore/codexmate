@@ -6740,82 +6740,86 @@ return function render(_ctx, _cache) {
                 (_ctx.promptsSubTab === 'presets')
                   ? (_openBlock(), _createElementBlock("div", {
                       key: 1,
-                      class: "prompt-presets-panel"
+                      class: "prompts-editor prompt-presets-panel"
                     }, [
-                      _createElementVNode("div", { class: "prompt-presets-header" }, [
-                        _createElementVNode("div", null, [
-                          _createElementVNode("div", { class: "prompt-presets-title" }, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('prompts.presets.hint')), 1 /* TEXT */)
+                      _createElementVNode("div", { class: "prompts-editor-toolbar prompt-presets-toolbar" }, [
+                        _createElementVNode("div", { class: "form-hint" }, [
+                          _createElementVNode("strong", null, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('prompts.presets.hint')), 1 /* TEXT */)
+                        ]),
+                        _createElementVNode("div", { class: "prompts-editor-actions prompt-presets-save-row" }, [
+                          _withDirectives(_createElementVNode("input", {
+                            type: "text",
+                            class: "form-input prompt-presets-name-input",
+                            "onUpdate:modelValue": $event => ((_ctx.promptPresetNameDraft) = $event),
+                            placeholder: _ctx.t('prompts.presets.namePlaceholder'),
+                            onKeydown: _withKeys(_withModifiers(_ctx.saveCurrentPromptAsPreset, ["prevent"]), ["enter"])
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
+                            [_vModelText, _ctx.promptPresetNameDraft]
+                          ]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-mini btn-confirm-mini",
+                            onClick: _ctx.saveCurrentPromptAsPreset,
+                            disabled: _ctx.promptPresetSaving || _ctx.agentsLoading
+                          }, _toDisplayString(_ctx.t('prompts.presets.saveCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                         ])
                       ]),
-                      _createElementVNode("div", { class: "prompt-presets-save-row" }, [
-                        _withDirectives(_createElementVNode("input", {
-                          type: "text",
-                          class: "form-input",
-                          "onUpdate:modelValue": $event => ((_ctx.promptPresetNameDraft) = $event),
-                          placeholder: _ctx.t('prompts.presets.namePlaceholder'),
-                          onKeydown: _withKeys(_withModifiers(_ctx.saveCurrentPromptAsPreset, ["prevent"]), ["enter"])
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
-                          [_vModelText, _ctx.promptPresetNameDraft]
-                        ]),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-primary",
-                          onClick: _ctx.saveCurrentPromptAsPreset,
-                          disabled: _ctx.promptPresetSaving || _ctx.agentsLoading
-                        }, _toDisplayString(_ctx.t('prompts.presets.saveCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ]),
-                      (!_ctx.promptPresets.length)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 0,
-                            class: "state-message"
-                          }, _toDisplayString(_ctx.t('prompts.presets.empty')), 1 /* TEXT */))
-                        : (_openBlock(), _createElementBlock("div", {
-                            key: 1,
-                            class: "prompt-presets-list"
-                          }, [
-                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptPresets, (preset) => {
-                              return (_openBlock(), _createElementBlock("article", {
-                                key: preset.id,
-                                class: "prompt-preset-card"
+                      _createElementVNode("div", { class: "form-group prompt-presets-body" }, [
+                        _createElementVNode("div", { class: "editor-frame prompt-presets-frame" }, [
+                          (!_ctx.promptPresets.length)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 0,
+                                class: "state-message prompt-presets-empty"
+                              }, _toDisplayString(_ctx.t('prompts.presets.empty')), 1 /* TEXT */))
+                            : (_openBlock(), _createElementBlock("div", {
+                                key: 1,
+                                class: "prompt-presets-list"
                               }, [
-                                _createElementVNode("div", { class: "prompt-preset-main" }, [
-                                  _createElementVNode("input", {
-                                    type: "text",
-                                    class: "form-input prompt-preset-name",
-                                    value: _ctx.getPromptPresetRenameDraft(preset),
-                                    onInput: $event => (_ctx.setPromptPresetRenameDraft(preset.id, $event.target.value)),
-                                    onKeydown: _withKeys(_withModifiers($event => (_ctx.renamePromptPreset(preset)), ["prevent"]), ["enter"]),
-                                    "aria-label": _ctx.t('prompts.presets.renameAria')
-                                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onInput", "onKeydown", "aria-label"]),
-                                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('prompts.presets.updatedAt', { time: _ctx.formatPromptPresetTime(preset.updatedAt) })), 1 /* TEXT */),
-                                  _createElementVNode("pre", { class: "prompt-preset-preview" }, _toDisplayString(preset.content), 1 /* TEXT */)
-                                ]),
-                                _createElementVNode("div", { class: "prompt-preset-actions" }, [
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "btn-mini",
-                                    onClick: $event => (_ctx.renamePromptPreset(preset))
-                                  }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick"]),
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "btn-mini",
-                                    onClick: $event => (_ctx.applyPromptPresetToEditor(preset, 'codex'))
-                                  }, _toDisplayString(_ctx.t('prompts.presets.applyAgents')), 9 /* TEXT, PROPS */, ["onClick"]),
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "btn-mini",
-                                    onClick: $event => (_ctx.applyPromptPresetToEditor(preset, 'claude-project'))
-                                  }, _toDisplayString(_ctx.t('prompts.presets.applyClaude')), 9 /* TEXT, PROPS */, ["onClick"]),
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "btn-mini btn-danger-mini",
-                                    onClick: $event => (_ctx.deletePromptPreset(preset))
-                                  }, _toDisplayString(_ctx.t('common.delete')), 9 /* TEXT, PROPS */, ["onClick"])
-                                ])
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptPresets, (preset) => {
+                                  return (_openBlock(), _createElementBlock("article", {
+                                    key: preset.id,
+                                    class: "prompt-preset-row"
+                                  }, [
+                                    _createElementVNode("div", { class: "prompt-preset-main" }, [
+                                      _createElementVNode("input", {
+                                        type: "text",
+                                        class: "form-input prompt-preset-name",
+                                        value: _ctx.getPromptPresetRenameDraft(preset),
+                                        onInput: $event => (_ctx.setPromptPresetRenameDraft(preset.id, $event.target.value)),
+                                        onKeydown: _withKeys(_withModifiers($event => (_ctx.renamePromptPreset(preset)), ["prevent"]), ["enter"]),
+                                        "aria-label": _ctx.t('prompts.presets.renameAria')
+                                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onInput", "onKeydown", "aria-label"]),
+                                      _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('prompts.presets.updatedAt', { time: _ctx.formatPromptPresetTime(preset.updatedAt) })), 1 /* TEXT */),
+                                      _createElementVNode("pre", { class: "prompt-preset-preview" }, _toDisplayString(preset.content), 1 /* TEXT */)
+                                    ]),
+                                    _createElementVNode("div", { class: "prompts-editor-actions prompt-preset-actions" }, [
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini",
+                                        onClick: $event => (_ctx.renamePromptPreset(preset))
+                                      }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini",
+                                        onClick: $event => (_ctx.applyPromptPresetToEditor(preset, 'codex'))
+                                      }, _toDisplayString(_ctx.t('prompts.presets.applyAgents')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini",
+                                        onClick: $event => (_ctx.applyPromptPresetToEditor(preset, 'claude-project'))
+                                      }, _toDisplayString(_ctx.t('prompts.presets.applyClaude')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini btn-danger-mini",
+                                        onClick: $event => (_ctx.deletePromptPreset(preset))
+                                      }, _toDisplayString(_ctx.t('common.delete')), 9 /* TEXT, PROPS */, ["onClick"])
+                                    ])
+                                  ]))
+                                }), 128 /* KEYED_FRAGMENT */))
                               ]))
-                            }), 128 /* KEYED_FRAGMENT */))
-                          ]))
+                        ])
+                      ])
                     ]))
                   : (_openBlock(), _createElementBlock("div", {
                       key: 2,
