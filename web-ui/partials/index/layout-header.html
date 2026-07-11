@@ -251,10 +251,6 @@
                             <span v-if="opencodeModel">{{ t('common.current', { value: opencodeModel }) }}</span>
                         </div>
                     </button>
-                </div>
-
-                <div class="side-section" role="navigation" :aria-label="t('side.prompts')">
-                    <div class="side-section-title">{{ t('side.prompts') }}</div>
                     <button
                         id="side-tab-prompts"
                         data-main-tab="prompts"
@@ -268,7 +264,9 @@
                             <span>{{ t('side.prompts.meta') }}</span>
                         </div>
                     </button>
+
                 </div>
+
 
                 <div class="side-section" role="navigation" :aria-label="t('side.sessions')">
                     <div class="side-section-title">{{ t('side.sessions') }}</div>

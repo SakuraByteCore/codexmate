@@ -362,14 +362,7 @@ return function render(_ctx, _cache) {
                       ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('common.current', { value: _ctx.opencodeModel })), 1 /* TEXT */))
                       : _createCommentVNode("v-if", true)
                   ])
-                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
-              ], 8 /* PROPS */, ["aria-label"]),
-              _createElementVNode("div", {
-                class: "side-section",
-                role: "navigation",
-                "aria-label": _ctx.t('side.prompts')
-              }, [
-                _createElementVNode("div", { class: "side-section-title" }, _toDisplayString(_ctx.t('side.prompts')), 1 /* TEXT */),
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
                   id: "side-tab-prompts",
                   "data-main-tab": "prompts",

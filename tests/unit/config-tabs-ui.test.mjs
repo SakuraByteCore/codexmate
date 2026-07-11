@@ -84,6 +84,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(webUiRedirectBlock, /url\.search\s*=/);
     assert.doesNotMatch(webUiRedirectBlock, /url\.hash\s*=/);
     assert.match(html, /id="side-tab-prompts"/);
+    assert.doesNotMatch(html, /<div class="side-section-title">\{\{ t\('side\.prompts'\) \}\}<\/div>/);
+    assert.doesNotMatch(html, /<div class="side-section" role="navigation" :aria-label="t\('side\.prompts'\)">/);
     assert.doesNotMatch(html, /id="side-tab-prompts-agents"/);
     assert.doesNotMatch(html, /id="side-tab-prompts-project"/);
     assert.doesNotMatch(html, /id="side-tab-prompts-presets"/);
