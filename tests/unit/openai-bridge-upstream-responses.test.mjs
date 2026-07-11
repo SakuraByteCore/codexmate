@@ -140,22 +140,29 @@ test('openai-bridge honors provider maxRetries for transient upstream failures',
     await rm(tmpDir, { recursive: true, force: true });
 });
 
-test('openai-bridge keeps streaming Codex requests on upstream Responses before chat fallback', async () => {
+test('openai-bridge forces streaming Codex Responses requests through chat completions conversion', async () => {
     let responsesHit = false;
     let chatHit = false;
-    let capturedResponsesHeaders = null;
+    let capturedChatHeaders = null;
+    let capturedChatBody = null;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
             responsesHit = true;
-            capturedResponsesHeaders = req.headers;
-            // A hanging Responses endpoint is not proof that Responses is unsupported.
-            // Do not silently route Codex-only requests into chat/completions.
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.end('data: [DONE]\n\n');
             return;
         }
         if (req.url === '/v1/chat/completions' && req.method === 'POST') {
             chatHit = true;
-            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
-            res.end('data: [DONE]\n\n');
+            capturedChatHeaders = req.headers;
+            let body = '';
+            req.on('data', (c) => (body += c));
+            req.on('end', () => {
+                capturedChatBody = JSON.parse(body);
+                res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+                res.write('data: {"id":"chatcmpl_force_stream","model":"gpt-test","choices":[{"delta":{"content":"pong"}}]}\n\n');
+                res.end('data: [DONE]\n\n');
+            });
             return;
         }
         if (req.url === '/v1/models' && req.method === 'GET') {
@@ -201,39 +208,39 @@ test('openai-bridge keeps streaming Codex requests on upstream Responses before 
             stream: true
         }
     });
-    assert.equal(sse.status, 502);
-    assert.equal(responsesHit, true, 'streaming bridge should call upstream /responses first');
-    assert.equal(chatHit, false, 'hanging Responses should not fall back to chat/completions');
-    assert.match(capturedResponsesHeaders['user-agent'] || '', /^codex_cli_rs\//);
-    assert.equal(capturedResponsesHeaders.version, '0.98.0');
-    assert.equal(capturedResponsesHeaders['openai-beta'], 'responses=experimental');
-    assert.equal(capturedResponsesHeaders.originator, 'codex_cli_rs');
-    assert.match(sse.headers['content-type'], /application\/json/i);
-    assert.match(sse.text, /timeout/);
+    assert.equal(sse.status, 200);
+    assert.equal(responsesHit, false, 'builtin conversion must not probe upstream /responses');
+    assert.equal(chatHit, true, 'builtin conversion must call upstream /chat/completions');
+    assert.match(capturedChatHeaders['user-agent'] || '', /^codex_cli_rs\//);
+    assert.equal(capturedChatHeaders.version, '0.98.0');
+    assert.equal(capturedChatHeaders['openai-beta'], 'responses=experimental');
+    assert.equal(capturedChatHeaders.originator, 'codex_cli_rs');
+    assert.equal(capturedChatBody.stream, true);
+    assert.equal(capturedChatBody.model, 'gpt-test');
+    assert.match(sse.headers['content-type'], /text\/event-stream/i);
+    assert.match(sse.text, /response\.created/);
+    assert.match(sse.text, /pong/);
 
     await bridge.close();
     await upstream.close();
     await rm(tmpDir, { recursive: true, force: true });
 });
 
-test('openai-bridge streams upstream Responses SSE with Codex identity headers', async () => {
-    let capturedResponsesHeaders = null;
-    let chatHit = false;
+test('openai-bridge streams converted chat completions as Responses SSE with Codex identity headers', async () => {
+    let responsesHit = false;
+    let capturedChatHeaders = null;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
-            capturedResponsesHeaders = req.headers;
+            responsesHit = true;
             res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
-            res.write('event: response.created\n');
-            res.write('data: {"type":"response.created","response":{"id":"resp_test","model":"gpt-test"}}\n\n');
-            res.write('event: response.completed\n');
-            res.write('data: {"type":"response.completed","response":{"id":"resp_test","model":"gpt-test","output":[]}}\n\n');
             res.end('data: [DONE]\n\n');
             return;
         }
         if (req.url === '/v1/chat/completions' && req.method === 'POST') {
-            chatHit = true;
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ ok: true }));
+            capturedChatHeaders = req.headers;
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.write('data: {"id":"chatcmpl_stream","model":"gpt-test","choices":[{"delta":{"content":"hello"}}]}\n\n');
+            res.end('data: [DONE]\n\n');
             return;
         }
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -271,22 +278,22 @@ test('openai-bridge streams upstream Responses SSE with Codex identity headers',
     });
 
     assert.equal(sse.status, 200);
-    assert.equal(chatHit, false, 'successful upstream Responses stream should not call chat/completions');
-    assert.ok(capturedResponsesHeaders, 'upstream Responses request should be captured');
-    assert.match(capturedResponsesHeaders['user-agent'] || '', /^codex_cli_rs\//);
-    assert.equal(capturedResponsesHeaders.version, '0.98.0');
-    assert.equal(capturedResponsesHeaders['openai-beta'], 'responses=experimental');
-    assert.equal(capturedResponsesHeaders.originator, 'codex_cli_rs');
+    assert.equal(responsesHit, false, 'builtin conversion must not call upstream Responses SSE');
+    assert.ok(capturedChatHeaders, 'upstream chat/completions request should be captured');
+    assert.match(capturedChatHeaders['user-agent'] || '', /^codex_cli_rs\//);
+    assert.equal(capturedChatHeaders.version, '0.98.0');
+    assert.equal(capturedChatHeaders['openai-beta'], 'responses=experimental');
+    assert.equal(capturedChatHeaders.originator, 'codex_cli_rs');
     assert.match(sse.headers['content-type'], /text\/event-stream/i);
     assert.match(sse.text, /response\.created/);
-    assert.match(sse.text, /response\.completed/);
+    assert.match(sse.text, /hello/);
 
     await bridge.close();
     await upstream.close();
     await rm(tmpDir, { recursive: true, force: true });
 });
 
-test('openai-bridge fails accepted upstream Responses SSE when stream goes idle', async () => {
+test('openai-bridge does not hang on accepted but idle upstream Responses SSE because builtin conversion skips Responses', async () => {
     let responsesHit = false;
     let chatHit = false;
     const upstream = http.createServer((req, res) => {
@@ -294,12 +301,12 @@ test('openai-bridge fails accepted upstream Responses SSE when stream goes idle'
             responsesHit = true;
             res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
             if (typeof res.flushHeaders === 'function') res.flushHeaders();
-            // Keep the connection open without data; the bridge must not hang forever.
             return;
         }
         if (req.url === '/v1/chat/completions' && req.method === 'POST') {
             chatHit = true;
             res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.write('data: {"id":"chatcmpl_idle_skip","model":"gpt-test","choices":[{"delta":{"content":"ok"}}]}\n\n');
             res.end('data: [DONE]\n\n');
             return;
         }
@@ -337,12 +344,12 @@ test('openai-bridge fails accepted upstream Responses SSE when stream goes idle'
     });
 
     assert.equal(sse.status, 200);
-    assert.equal(responsesHit, true, 'upstream Responses SSE should be attempted');
-    assert.equal(chatHit, false, 'accepted but idle Responses SSE should not fall back to chat/completions');
+    assert.equal(responsesHit, false, 'builtin conversion must skip upstream Responses even when it exists');
+    assert.equal(chatHit, true, 'builtin conversion should stream through chat/completions');
     assert.match(sse.headers['content-type'], /text\/event-stream/i);
-    assert.match(sse.text, /response\.failed/);
-    assert.match(sse.text, /upstream stream idle timeout/);
-    assert.match(sse.text, /data: \[DONE\]/);
+    assert.match(sse.text, /response\.created/);
+    assert.match(sse.text, /ok/);
+    assert.doesNotMatch(sse.text, /upstream stream idle timeout/);
 
     await bridge.close();
     await upstream.close();
@@ -525,16 +532,12 @@ test('openai-bridge reports failed Responses SSE when upstream chat stream ends 
 
 test('openai-bridge returns JSON when stream requested but client does not accept event-stream', async () => {
     const upstream = http.createServer((req, res) => {
-        if (req.url === '/v1/responses' && req.method === 'POST') {
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-                id: 'resp_upstream',
+                id: 'chatcmpl_loopback',
                 model: 'gpt-test',
-                output: [{
-                    type: 'message',
-                    role: 'assistant',
-                    content: [{ type: 'output_text', text: 'hello-from-upstream' }]
-                }]
+                choices: [{ message: { role: 'assistant', content: 'hello-from-upstream' } }]
             }));
             return;
         }
@@ -592,17 +595,22 @@ test('openai-bridge returns JSON when stream requested but client does not accep
 });
 
 test('openai-bridge allows loopback clients to send arbitrary Authorization headers', async () => {
+    let responsesHit = false;
+    let chatHit = false;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/responses' && req.method === 'POST') {
+            responsesHit = true;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ id: 'resp_upstream', model: 'gpt-test', output: [] }));
+            return;
+        }
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            chatHit = true;
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-                id: 'resp_upstream',
+                id: 'chatcmpl_loopback',
                 model: 'gpt-test',
-                output: [{
-                    type: 'message',
-                    role: 'assistant',
-                    content: [{ type: 'output_text', text: 'hello-from-upstream' }]
-                }]
+                choices: [{ message: { role: 'assistant', content: 'hello-from-upstream' } }]
             }));
             return;
         }
@@ -645,6 +653,8 @@ test('openai-bridge allows loopback clients to send arbitrary Authorization head
         body: { model: 'gpt-test', input: 'ping', stream: false }
     });
     assert.equal(resp.status, 200);
+    assert.equal(responsesHit, false, 'builtin conversion should skip upstream /responses for loopback requests');
+    assert.equal(chatHit, true, 'loopback request should still reach upstream chat/completions');
     const parsed = JSON.parse(resp.text);
     assert.equal(parsed.object, 'response');
     assert.equal(parsed.model, 'gpt-test');
@@ -654,16 +664,16 @@ test('openai-bridge allows loopback clients to send arbitrary Authorization head
     await rm(tmpDir, { recursive: true, force: true });
 });
 
-test('openai-bridge normalizes mixed tool definitions before upstream /responses', async () => {
-    let capturedResponsesRequest = null;
+test('openai-bridge normalizes mixed tool definitions before upstream chat completions', async () => {
+    let capturedChatRequest = null;
     const upstream = http.createServer((req, res) => {
-        if (req.url === '/v1/responses' && req.method === 'POST') {
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
             let body = '';
             req.on('data', (c) => (body += c));
             req.on('end', () => {
-                capturedResponsesRequest = JSON.parse(body || '{}');
+                capturedChatRequest = JSON.parse(body || '{}');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ id: 'resp_tool_normalized', model: 'gpt-test', output: [] }));
+                res.end(JSON.stringify({ id: 'chatcmpl_tool_normalized', model: 'gpt-test', choices: [{ message: { role: 'assistant', content: '' } }] }));
             });
             return;
         }
@@ -713,11 +723,13 @@ test('openai-bridge normalizes mixed tool definitions before upstream /responses
         }
     });
     assert.equal(resp.status, 200);
-    assert.deepStrictEqual(capturedResponsesRequest.tools, [{
+    assert.deepStrictEqual(capturedChatRequest.tools, [{
         type: 'function',
-        name: 'lookup',
-        description: 'Look up data',
-        parameters: { type: 'object', properties: { query: { type: 'string' } } }
+        function: {
+            name: 'lookup',
+            description: 'Look up data',
+            parameters: { type: 'object', properties: { query: { type: 'string' } } }
+        }
     }]);
 
     await bridge.close();
@@ -1200,7 +1212,7 @@ test('openai-bridge SSE fast path also merges developer-role AGENTS.md into lead
     await rm(tmpDir, { recursive: true, force: true });
 });
 
-test('openai-bridge skips /v1/responses probe after upstream marks it unsupported', async () => {
+test('openai-bridge skips /v1/responses probe because builtin conversion always uses chat completions', async () => {
     let responsesHits = 0;
     let chatHits = 0;
     const upstream = http.createServer((req, res) => {
@@ -1253,12 +1265,12 @@ test('openai-bridge skips /v1/responses probe after upstream marks it unsupporte
 
     const first = await requestText(url, { method: 'POST', headers, body });
     assert.equal(first.status, 200);
-    assert.equal(responsesHits, 1, 'first call should probe /v1/responses');
-    assert.equal(chatHits, 1, 'first call should fall back to chat/completions');
+    assert.equal(responsesHits, 0, 'first call should not probe /v1/responses');
+    assert.equal(chatHits, 1, 'first call should use chat/completions');
 
     const second = await requestText(url, { method: 'POST', headers, body });
     assert.equal(second.status, 200);
-    assert.equal(responsesHits, 1, 'second call should skip /v1/responses probe (cache hit)');
+    assert.equal(responsesHits, 0, 'second call should also skip /v1/responses');
     assert.equal(chatHits, 2, 'second call should go directly to chat/completions');
 
     await bridge.close();
@@ -1538,16 +1550,16 @@ test('openai-bridge marks finish_reason length as incomplete Responses payload',
     assert.deepStrictEqual(payload.usage, { input_tokens: 3, output_tokens: 7, total_tokens: 10 });
 });
 
-test('openai-bridge adds encrypted reasoning include when proxying upstream Responses', async () => {
+test('openai-bridge maps reasoning effort when converting to upstream chat completions', async () => {
     let capturedRequest = null;
     const upstream = http.createServer((req, res) => {
-        if (req.url === '/v1/responses' && req.method === 'POST') {
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
             const chunks = [];
             req.on('data', (chunk) => chunks.push(chunk));
             req.on('end', () => {
                 capturedRequest = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ id: 'resp_reasoning', model: 'gpt-test', output: [] }));
+                res.end(JSON.stringify({ id: 'chatcmpl_reasoning', model: 'gpt-test', choices: [{ message: { role: 'assistant', content: '' } }] }));
             });
             return;
         }
@@ -1587,10 +1599,11 @@ test('openai-bridge adds encrypted reasoning include when proxying upstream Resp
     });
 
     assert.equal(resp.status, 200);
-    assert.ok(capturedRequest, 'upstream Responses request should be captured');
+    assert.ok(capturedRequest, 'upstream chat/completions request should be captured');
     assert.equal(capturedRequest.stream, false);
-    assert.deepStrictEqual(capturedRequest.reasoning, { effort: 'high' });
-    assert.deepStrictEqual(capturedRequest.include, ['file_search_call.results', 'reasoning.encrypted_content']);
+    assert.equal(capturedRequest.reasoning_effort, 'high');
+    assert.equal(Object.prototype.hasOwnProperty.call(capturedRequest, 'reasoning'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(capturedRequest, 'include'), false);
 
     await bridge.close();
     await upstream.close();

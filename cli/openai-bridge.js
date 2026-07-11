@@ -425,54 +425,14 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             const acceptHeader = req && req.headers ? (req.headers.accept || req.headers.Accept || '') : '';
             const wantsSse = /text\/event-stream/i.test(String(acceptHeader || ''));
 
+            const converted = convertResponsesRequestToChatCompletions(responsesRequest);
+            if (converted.error) {
+                res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ error: converted.error }));
+                return;
+            }
+
             if (streamRequested && wantsSse) {
-                const upstreamResponsesUrl = joinApiUrl(upstream.baseUrl, 'responses');
-                const skipResponsesProbe = isResponsesKnownUnsupported(upstream.baseUrl);
-                const streamedResponses = skipResponsesProbe
-                    ? { ok: false, status: 404, bodyText: '' }
-                    : await retryTransientRequest(() => streamResponsesSse(upstreamResponsesUrl, {
-                        method: 'POST',
-                        body: normalizeResponsesPayloadForUpstream(responsesRequest, true),
-                        headers: codexHeaders,
-                        timeoutMs: streamTimeoutMs,
-                        maxBytes: maxUpstreamBytes,
-                        httpAgent,
-                        httpsAgent,
-                        res
-                    }), { maxRetries: upstream.maxRetries });
-
-                if (streamedResponses.ok) {
-                    clearResponsesUnsupported(upstream.baseUrl);
-                    return;
-                }
-
-                const canFallbackToChat = streamedResponses.status
-                    ? shouldFallbackFromUpstreamResponses(streamedResponses.status, streamedResponses.bodyText)
-                    : false;
-                if (!canFallbackToChat) {
-                    if (res.writableEnded || res.destroyed) return;
-                    const status = streamedResponses.status && streamedResponses.status >= 400 ? streamedResponses.status : 502;
-                    if (!res.headersSent) {
-                        res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
-                        res.end(streamedResponses.bodyText || JSON.stringify({ error: streamedResponses.error || 'Upstream request failed' }));
-                    } else {
-                        writeSse(res, 'response.failed', { type: 'response.failed', error: streamedResponses.error || streamedResponses.bodyText || 'Upstream request failed' });
-                        writeSse(res, 'done', '[DONE]');
-                        res.end();
-                    }
-                    return;
-                }
-
-                if (!skipResponsesProbe && isResponsesEndpointUnsupported(streamedResponses.status, streamedResponses.bodyText)) {
-                    markResponsesUnsupported(upstream.baseUrl);
-                }
-
-                const converted = convertResponsesRequestToChatCompletions(responsesRequest);
-                if (converted.error) {
-                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(JSON.stringify({ error: converted.error }));
-                    return;
-                }
                 const upstreamUrl = joinApiUrl(upstream.baseUrl, 'chat/completions');
                 const chatBody = { ...converted.chat, stream: true };
                 const streamed = await retryTransientRequest(() => streamChatCompletionsAsResponsesSse(upstreamUrl, {
@@ -500,74 +460,6 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                         res.end();
                     }
                 }
-                return;
-            }
-
-            // Maxx-style behavior: prefer upstream /responses if supported.
-            // Fallback to /chat/completions conversion when upstream does not implement /responses (404/405).
-            // 已知不支持的上游：直接跳过探测，节省一次 round-trip。
-            const skipResponsesProbe = isResponsesKnownUnsupported(upstream.baseUrl);
-            const upstreamResponsesUrl = joinApiUrl(upstream.baseUrl, 'responses');
-            const upstreamResponsesResult = skipResponsesProbe
-                ? { ok: true, status: 404, bodyText: '' }
-                : await retryTransientRequest(() => proxyRequestJson(upstreamResponsesUrl, {
-                    method: 'POST',
-                    body: toUpstreamNonStreamingResponsesPayload(responsesRequest),
-                    headers: codexHeaders,
-                    maxBytes: maxUpstreamBytes,
-                    httpAgent,
-                    httpsAgent
-                }), { maxRetries: upstream.maxRetries });
-
-            if (upstreamResponsesResult.ok && upstreamResponsesResult.status >= 200 && upstreamResponsesResult.status < 300) {
-                clearResponsesUnsupported(upstream.baseUrl);
-                const upstreamJson = parseJsonOrError(upstreamResponsesResult.bodyText);
-                if (upstreamJson.error) {
-                    res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(JSON.stringify({ error: `Upstream JSON parse failed: ${upstreamJson.error}` }));
-                    return;
-                }
-                const upstreamPayload = upstreamJson.value;
-                if (streamRequested && wantsSse) {
-                    res.writeHead(200, {
-                        'Content-Type': 'text/event-stream; charset=utf-8',
-                        'Cache-Control': 'no-cache',
-                        'Connection': 'keep-alive',
-                        'X-Accel-Buffering': 'no'
-                    });
-                    if (typeof res.flushHeaders === 'function') res.flushHeaders();
-                    sendResponsesSse(res, upstreamPayload);
-                    res.end();
-                    return;
-                }
-
-                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify(ensureResponseMetadata(upstreamPayload)));
-                return;
-            }
-
-            if (upstreamResponsesResult.ok && upstreamResponsesResult.status >= 400) {
-                if (!shouldFallbackFromUpstreamResponses(upstreamResponsesResult.status, upstreamResponsesResult.bodyText)) {
-                    res.writeHead(upstreamResponsesResult.status, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(upstreamResponsesResult.bodyText || JSON.stringify({ error: 'Upstream error' }));
-                    return;
-                }
-                if (!skipResponsesProbe && isResponsesEndpointUnsupported(upstreamResponsesResult.status, upstreamResponsesResult.bodyText)) {
-                    markResponsesUnsupported(upstream.baseUrl);
-                }
-                // fallthrough to chat/completions conversion
-            }
-
-            if (!upstreamResponsesResult.ok) {
-                res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ error: `Upstream request failed: ${upstreamResponsesResult.error}` }));
-                return;
-            }
-
-            const converted = convertResponsesRequestToChatCompletions(responsesRequest);
-            if (converted.error) {
-                res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ error: converted.error }));
                 return;
             }
 
