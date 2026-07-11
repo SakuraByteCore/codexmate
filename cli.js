@@ -2561,6 +2561,28 @@ function buildClaudeSettingsDiff(params = {}) {
     };
 }
 
+
+function normalizeOpenaiBridgeMaxRetries(value, fallback = 2) {
+    const raw = Number(value);
+    const fallbackRaw = Number(fallback);
+    const base = Number.isFinite(raw) ? raw : (Number.isFinite(fallbackRaw) ? fallbackRaw : 2);
+    return Math.min(10, Math.max(2, Math.floor(base)));
+}
+
+function resolveProviderOpenaiBridgeMaxRetries(provider) {
+    if (!provider || typeof provider !== 'object') return 2;
+    if (provider.codexmate_bridge_max_retries !== undefined) {
+        return normalizeOpenaiBridgeMaxRetries(provider.codexmate_bridge_max_retries);
+    }
+    if (provider.openai_bridge_max_retries !== undefined) {
+        return normalizeOpenaiBridgeMaxRetries(provider.openai_bridge_max_retries);
+    }
+    if (provider.max_retries !== undefined) {
+        return normalizeOpenaiBridgeMaxRetries(provider.max_retries);
+    }
+    return 2;
+}
+
 function addProviderToConfig(params = {}) {
     const name = typeof params.name === 'string' ? params.name.trim() : '';
     const url = typeof params.url === 'string' ? params.url.trim() : '';
@@ -2575,6 +2597,8 @@ function addProviderToConfig(params = {}) {
         ? params.model.trim()
         : fallbackModel;
     const useTransform = !!params.useTransform;
+    const hasOpenaiBridgeMaxRetries = params.openaiBridgeMaxRetries !== undefined || params.maxRetries !== undefined;
+    const openaiBridgeMaxRetries = normalizeOpenaiBridgeMaxRetries(params.openaiBridgeMaxRetries ?? params.maxRetries);
     const allowManaged = !!params.allowManaged;
     const normalizedUrl = normalizeBaseUrl(url);
 
@@ -2634,7 +2658,7 @@ function addProviderToConfig(params = {}) {
     const requiresOpenaiAuth = useTransform;
 
     if (useTransform) {
-        const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, normalizedUrl, key);
+        const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, normalizedUrl, key, undefined, { maxRetries: openaiBridgeMaxRetries });
         if (saveRes && saveRes.error) {
             return { error: String(saveRes.error) };
         }
@@ -2646,6 +2670,7 @@ function addProviderToConfig(params = {}) {
         ).toString().replace(/\/+$/g, '');
         authKeyForConfig = 'codexmate';
         extraLines.push(`codexmate_bridge = "openai"`);
+        extraLines.push(`codexmate_bridge_max_retries = ${openaiBridgeMaxRetries}`);
     }
 
     const safeUrl = escapeTomlBasicString(baseUrlForConfig);
@@ -2689,6 +2714,8 @@ function updateProviderInConfig(params = {}) {
         ? String(params.key).trim()
         : undefined;
     const useTransform = !!params.useTransform;
+    const hasOpenaiBridgeMaxRetries = params.openaiBridgeMaxRetries !== undefined || params.maxRetries !== undefined;
+    const openaiBridgeMaxRetries = normalizeOpenaiBridgeMaxRetries(params.openaiBridgeMaxRetries ?? params.maxRetries);
     const allowManaged = !!params.allowManaged;
 
     if (!name) return { error: '名称不能为空' };
@@ -2703,7 +2730,7 @@ function updateProviderInConfig(params = {}) {
     }
 
     try {
-        cmdUpdate(name, url || undefined, key, true, { allowManaged, useTransform });
+        cmdUpdate(name, url || undefined, key, true, { allowManaged, useTransform, ...(hasOpenaiBridgeMaxRetries ? { openaiBridgeMaxRetries } : {}) });
         return { success: true };
     } catch (e) {
         return { error: e.message || '更新失败' };
@@ -9846,6 +9873,8 @@ function cmdDelete(name, silent = false) {
 function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
     const allowManaged = !!(options && options.allowManaged);
     const forceUseTransform = !!(options && options.useTransform);
+    const hasOpenaiBridgeMaxRetries = options && Object.prototype.hasOwnProperty.call(options, 'openaiBridgeMaxRetries');
+    const openaiBridgeMaxRetries = normalizeOpenaiBridgeMaxRetries(options && options.openaiBridgeMaxRetries);
     const normalizedBaseUrl = baseUrl === undefined ? undefined : normalizeBaseUrl(baseUrl);
     if (!name) {
         if (!silent) console.error('错误: 提供商名称必填');
@@ -10005,6 +10034,32 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
         return next;
     };
 
+    const replaceTomlNumberField = (block, fieldName, rawValue) => {
+        const numberValue = String(Math.floor(Number(rawValue)));
+        const escapedFieldName = escapeRegex(fieldName);
+        const multilineRanges = collectTomlMultilineStringRanges(block);
+        const withCommentRegex = new RegExp(`^(\\s*${escapedFieldName}\\s*=\\s*)([-+]?\\d+(?:\\.\\d+)?)(\\s+#.*)?$`, 'mg');
+        let replaced = false;
+        let next = block.replace(withCommentRegex, (full, prefix, _value, suffix = '', offset) => {
+            if (replaced || isIndexInRanges(offset, multilineRanges)) {
+                return full;
+            }
+            replaced = true;
+            return `${prefix}${numberValue}${suffix}`;
+        });
+        if (!replaced) {
+            const keyIndentMatch = block.match(/^(\s*)[A-Za-z0-9_.-]+\s*=/m);
+            const indent = keyIndentMatch ? keyIndentMatch[1] : '';
+            const lineEnding = block.includes('\r\n') ? '\r\n' : '\n';
+            const tailMatch = block.match(/(\s*)$/);
+            const tail = tailMatch ? tailMatch[1] : '';
+            const body = block.slice(0, block.length - tail.length);
+            const separator = body.endsWith('\n') || body.endsWith('\r') ? '' : lineEnding;
+            next = `${body}${separator}${indent}${fieldName} = ${numberValue}${tail}`;
+        }
+        return next;
+    };
+
     const replaceTomlBooleanField = (block, fieldName, rawValue) => {
         const boolValue = rawValue ? 'true' : 'false';
         const escapedFieldName = escapeRegex(fieldName);
@@ -10061,7 +10116,9 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
                 : existingApiKey;
 
             if (upstreamBaseUrl) {
-                const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, upstreamBaseUrl, upstreamApiKey);
+                const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, upstreamBaseUrl, upstreamApiKey, undefined, {
+                    maxRetries: hasOpenaiBridgeMaxRetries ? openaiBridgeMaxRetries : resolveProviderOpenaiBridgeMaxRetries(providerConfig)
+                });
                 if (saveRes && saveRes.error) {
                     throw new Error(String(saveRes.error));
                 }
@@ -10077,6 +10134,9 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
             updatedBlock = replaceTomlBooleanField(updatedBlock, 'requires_openai_auth', true);
             updatedBlock = replaceTomlStringField(updatedBlock, 'preferred_auth_method', 'codexmate');
             updatedBlock = replaceTomlStringField(updatedBlock, 'codexmate_bridge', 'openai');
+            if (hasOpenaiBridgeMaxRetries) {
+                updatedBlock = replaceTomlNumberField(updatedBlock, 'codexmate_bridge_max_retries', openaiBridgeMaxRetries);
+            }
         } else {
             if (normalizedBaseUrl) {
                 updatedBlock = replaceTomlStringField(updatedBlock, 'base_url', normalizedBaseUrl);
@@ -12819,7 +12879,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 break;
                             }
                             // 不返回 apiKey（敏感信息），仅返回用户填过的上游 URL
-                            result = { baseUrl: upstream.baseUrl, hasApiKey: !!(upstream.apiKey) };
+                            const config = readConfig();
+                            const provider = config.model_providers && config.model_providers[name];
+                            const providerMaxRetries = resolveProviderOpenaiBridgeMaxRetries(provider);
+                            result = { baseUrl: upstream.baseUrl, hasApiKey: !!(upstream.apiKey), maxRetries: providerMaxRetries };
                             break;
                         }
                         case 'list-sessions':
@@ -15059,11 +15122,13 @@ function buildMcpProviderListPayload() {
                     upstreamUrl = upstream.baseUrl.trim();
                 }
             }
+            const openaiBridgeMaxRetries = resolveProviderOpenaiBridgeMaxRetries(p);
             return {
                 name,
                 url: p.base_url || '',
                 upstreamUrl,
                 codexmate_bridge: bridge,
+                openaiBridgeMaxRetries,
                 key: maskKey(p.preferred_auth_method || ''),
                 hasKey: !!(p.preferred_auth_method && p.preferred_auth_method.trim()),
                 models: Array.isArray(p.models)

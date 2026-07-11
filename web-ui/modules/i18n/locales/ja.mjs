@@ -490,6 +490,8 @@ const ja = Object.freeze({
     'modal.claudeConfigEdit.title': 'Claude Code 設定編集',
     'field.useBuiltinTransform': '内蔵変換を使用（OpenAI 形式互換）',
     'hint.useBuiltinTransform': '有効時：書き込まれる base_url は codexmate 内蔵変換サービスを指します。Codex のトークンは codexmate に固定されます。',
+    'field.transformMaxRetries': '内蔵変換の再試行回数',
+    'hint.transformMaxRetries': '既定値は 2、最小値も 2。初回失敗後に再試行する最大回数です。',
 
     // Config template / agents modals
     'modal.configTemplate.label': 'config.toml テンプレート',

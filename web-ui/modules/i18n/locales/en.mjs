@@ -488,6 +488,8 @@ const en = Object.freeze({
     'modal.claudeConfigEdit.title': 'Edit Claude Code config',
     'field.useBuiltinTransform': 'Use built-in transform (OpenAI compatible)',
     'hint.useBuiltinTransform': 'When enabled, base_url points to codexmate built-in transform service; Codex token is fixed to codexmate.',
+    'field.transformMaxRetries': 'Built-in transform retries',
+    'hint.transformMaxRetries': 'Default 2, minimum 2; number of retries after the first failed attempt.',
 
     // Config template / agents modals
     'modal.configTemplate.label': 'config.toml template',

@@ -270,7 +270,7 @@ test('updateProvider keeps existing key when edit key input is blank', async () 
         }
     }]);
     assert.strictEqual(context.showEditModal, false);
-    assert.deepStrictEqual(context.editingProvider, { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false });
+    assert.deepStrictEqual(context.editingProvider, { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false, openaiBridgeMaxRetries: 2 });
     // c3c9ee5：不再 loadAll，断言本地 providersList url 已更新。
     assert.strictEqual(context.loadAllCalls, 0);
     assert.strictEqual(context.providersList[0].url, 'https://api.example.com/v1');

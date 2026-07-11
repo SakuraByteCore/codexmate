@@ -88,6 +88,19 @@ function normalizeOpenaiUpstreamBaseUrl(rawValue) {
     }
 }
 
+const DEFAULT_BRIDGE_MAX_RETRIES = 2;
+const MIN_BRIDGE_MAX_RETRIES = 2;
+const MAX_BRIDGE_MAX_RETRIES = 10;
+const BASE_TRANSIENT_RETRY_DELAY_MS = 200;
+const MAX_TRANSIENT_RETRY_DELAY_MS = 5000;
+
+function normalizeBridgeMaxRetries(value, fallback = DEFAULT_BRIDGE_MAX_RETRIES) {
+    const raw = Number(value);
+    const fallbackRaw = Number(fallback);
+    const base = Number.isFinite(raw) ? raw : (Number.isFinite(fallbackRaw) ? fallbackRaw : DEFAULT_BRIDGE_MAX_RETRIES);
+    return Math.min(MAX_BRIDGE_MAX_RETRIES, Math.max(MIN_BRIDGE_MAX_RETRIES, Math.floor(base)));
+}
+
 function normalizeUpstreamEntry(entry) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
         return null;
@@ -96,10 +109,11 @@ function normalizeUpstreamEntry(entry) {
     const apiKey = normalizeText(entry.apiKey || entry.api_key || entry.key || '');
     const headersRaw = entry.headers || entry.extraHeaders || entry.extra_headers || null;
     const headers = normalizeHeadersMap(headersRaw);
+    const maxRetries = normalizeBridgeMaxRetries(entry.maxRetries ?? entry.max_retries);
     if (!baseUrl || !isValidHttpUrl(baseUrl)) {
         return null;
     }
-    return { baseUrl, apiKey, headers };
+    return { baseUrl, apiKey, headers, maxRetries };
 }
 
 function normalizeHeadersMap(value) {
@@ -145,11 +159,12 @@ function readOpenaiBridgeSettings(filePath) {
     };
 }
 
-function upsertOpenaiBridgeProvider(filePath, providerName, upstreamBaseUrl, apiKey, headers) {
+function upsertOpenaiBridgeProvider(filePath, providerName, upstreamBaseUrl, apiKey, headers, options = {}) {
     const name = normalizeProviderName(providerName);
     const baseUrl = normalizeOpenaiUpstreamBaseUrl(upstreamBaseUrl);
     const key = normalizeText(apiKey);
     const nextHeaders = normalizeHeadersMap(headers);
+    const maxRetries = normalizeBridgeMaxRetries(options && options.maxRetries);
 
     if (!name) {
         return { error: 'Provider name is required' };
@@ -170,7 +185,8 @@ function upsertOpenaiBridgeProvider(filePath, providerName, upstreamBaseUrl, api
             [name]: {
                 baseUrl,
                 apiKey: key,
-                headers: Object.keys(nextHeaders).length ? nextHeaders : existingHeaders
+                headers: Object.keys(nextHeaders).length ? nextHeaders : existingHeaders,
+                maxRetries
             }
         }
     };
@@ -1240,13 +1256,17 @@ function isTransientNetworkError(error) {
     return false;
 }
 
-const TRANSIENT_RETRY_DELAYS_MS = [200, 600];
+function getTransientRetryDelayMs(attempt) {
+    const index = Math.max(0, Number(attempt) - 1);
+    return Math.min(MAX_TRANSIENT_RETRY_DELAY_MS, BASE_TRANSIENT_RETRY_DELAY_MS * Math.pow(3, index));
+}
 
-async function retryTransientRequest(executor) {
+async function retryTransientRequest(executor, options = {}) {
+    const maxRetries = normalizeBridgeMaxRetries(options && options.maxRetries);
     let lastResult = null;
-    for (let attempt = 0; attempt <= TRANSIENT_RETRY_DELAYS_MS.length; attempt += 1) {
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
         if (attempt > 0) {
-            const delay = TRANSIENT_RETRY_DELAYS_MS[attempt - 1];
+            const delay = getTransientRetryDelayMs(attempt);
             // eslint-disable-next-line no-await-in-loop
             await new Promise((r) => {
                 const t = setTimeout(r, delay);
@@ -2188,7 +2208,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
                     httpsAgent
-                }));
+                }), { maxRetries: upstream.maxRetries });
                 if (!result.ok) {
                     res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
                     res.end(JSON.stringify({ error: `Upstream request failed: ${result.error}` }));
@@ -2243,7 +2263,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                         httpAgent,
                         httpsAgent,
                         res
-                    }));
+                    }), { maxRetries: upstream.maxRetries });
 
                 if (streamedResponses.ok) {
                     clearResponsesUnsupported(upstream.baseUrl);
@@ -2290,7 +2310,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     res,
                     model: typeof chatBody.model === 'string' ? chatBody.model : '',
                     toolTypesByName: converted.toolTypesByName || {}
-                }));
+                }), { maxRetries: upstream.maxRetries });
                 if (!streamed.ok) {
                     if (res.writableEnded || res.destroyed) {
                         return;
@@ -2321,7 +2341,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
                     httpsAgent
-                }));
+                }), { maxRetries: upstream.maxRetries });
 
             if (upstreamResponsesResult.ok && upstreamResponsesResult.status >= 200 && upstreamResponsesResult.status < 300) {
                 clearResponsesUnsupported(upstream.baseUrl);
@@ -2383,7 +2403,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                 maxBytes: maxUpstreamBytes,
                 httpAgent,
                 httpsAgent
-            }));
+            }), { maxRetries: upstream.maxRetries });
             if (!upstreamResult.ok) {
                 res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({ error: `Upstream request failed: ${upstreamResult.error}` }));
@@ -2455,6 +2475,7 @@ module.exports = {
     extractChatCompletionResult,
     buildResponsesPayloadFromChatResult,
     retryTransientRequest,
+    normalizeBridgeMaxRetries,
     normalizeOpenaiUpstreamBaseUrl,
     extractResponsesOutputText,
     shouldFallbackFromUpstreamResponses,

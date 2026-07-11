@@ -1468,7 +1468,8 @@ test('buildMcpProviderListPayload keeps regular providers editable', () => {
             maskKey: (value) => value ? '***' : '',
             isBuiltinManagedProvider: () => false,
             isNonDeletableProvider: () => false,
-            isNonEditableProvider: () => false
+            isNonEditableProvider: () => false,
+            resolveProviderOpenaiBridgeMaxRetries: () => 2
         }
     );
 

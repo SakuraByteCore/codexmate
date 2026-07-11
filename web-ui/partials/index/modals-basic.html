@@ -53,6 +53,18 @@
                         {{ t('field.useBuiltinTransform') }}
                     </label>
                 </div>
+                <div class="form-group" v-if="newProvider.useTransform">
+                    <label class="form-label">{{ t('field.transformMaxRetries') }}</label>
+                    <input
+                        v-model.number="newProvider.openaiBridgeMaxRetries"
+                        type="number"
+                        min="2"
+                        step="1"
+                        :class="['form-input', { invalid: !!providerFieldError('add', 'openaiBridgeMaxRetries') }]"
+                        @blur="normalizeProviderDraft('add')">
+                    <div class="form-hint">{{ t('hint.transformMaxRetries') }}</div>
+                    <div v-if="providerFieldError('add', 'openaiBridgeMaxRetries')" class="form-hint form-error">{{ providerFieldError('add', 'openaiBridgeMaxRetries') }}</div>
+                </div>
 
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closeAddModal">{{ t('common.cancel') }}</button>
@@ -90,6 +102,18 @@
                             <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
                         </button>
                     </div>
+                </div>
+                <div class="form-group" v-if="editingProvider.useTransform">
+                    <label class="form-label">{{ t('field.transformMaxRetries') }}</label>
+                    <input
+                        v-model.number="editingProvider.openaiBridgeMaxRetries"
+                        type="number"
+                        min="2"
+                        step="1"
+                        :class="['form-input', { invalid: !!providerFieldError('edit', 'openaiBridgeMaxRetries') }]"
+                        @blur="normalizeProviderDraft('edit')">
+                    <div class="form-hint">{{ t('hint.transformMaxRetries') }}</div>
+                    <div v-if="providerFieldError('edit', 'openaiBridgeMaxRetries')" class="form-hint form-error">{{ providerFieldError('edit', 'openaiBridgeMaxRetries') }}</div>
                 </div>
 
                 <div class="btn-group">
