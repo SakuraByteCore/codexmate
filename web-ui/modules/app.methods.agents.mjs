@@ -718,6 +718,9 @@ export function createAgentsMethods(options = {}) {
                 return;
             }
             this.promptsSubTab = normalized;
+            this.$nextTick(() => {
+                document.querySelector('.main-panel')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            });
         },
 
         async loadPromptsContent() {
