@@ -43,7 +43,11 @@ function createVm(overrides = {}) {
         __skipNextPromptsSubTabLoad: false,
         $nextTick: async () => {},
         t(key, params = {}) {
-            return Object.entries(params || {}).reduce((text, [name, value]) => text.replace(`{${name}}`, String(value)), key);
+            const templates = {
+                'prompts.presets.confirm.addCurrentMessage': 'Add current editor content as {name}',
+                'prompts.presets.defaultName.project': 'Project CLAUDE.md - {path}'
+            };
+            return Object.entries(params || {}).reduce((text, [name, value]) => text.replace(`{${name}}`, String(value)), templates[key] || key);
         },
         showMessage(message, type) {
             messages.push({ message, type });
@@ -97,6 +101,46 @@ test('prompt presets save new item and overwrite duplicate only after confirmati
     assert.equal(confirms[0].title, 'prompts.presets.confirm.overwriteTitle');
     assert.equal(vm.promptPresets.length, 1);
     assert.equal(vm.promptPresets[0].content, 'second');
+});
+
+test('prompt presets save current editor with md-derived default name without writing file', async () => {
+    const { vm, apiCalls, persisted, confirms } = createVm({
+        agentsPath: '/tmp/work/AGENTS.md',
+        agentsContent: 'agents body'
+    });
+
+    await vm.saveEditorPromptAsPreset();
+
+    assert.equal(confirms.length, 1);
+    assert.equal(confirms[0].title, 'prompts.presets.confirm.addCurrentTitle');
+    assert.match(confirms[0].message, /AGENTS\.md/);
+    assert.equal(vm.promptPresets.length, 1);
+    assert.equal(vm.promptPresets[0].name, 'AGENTS.md');
+    assert.equal(vm.promptPresets[0].content, 'agents body');
+    assert.equal(vm.promptPresetNameDraft, '');
+    assert.deepEqual(apiCalls, []);
+    assert.equal(persisted.length, 1);
+
+    vm.promptsSubTab = 'claude-project';
+    vm.projectClaudeMdPath = '/repo/project';
+    vm.agentsPath = '/repo/project/CLAUDE.md';
+    vm.agentsContent = 'project claude body';
+    await vm.saveEditorPromptAsPreset();
+
+    assert.equal(vm.promptPresets[0].name, 'Project CLAUDE.md - /repo/project');
+    assert.equal(vm.promptPresets[0].content, 'project claude body');
+    assert.deepEqual(apiCalls, []);
+});
+
+test('prompt presets surface preference persistence failures before success', async () => {
+    const { vm, messages } = createVm({
+        promptPresetNameDraft: 'Broken persist',
+        agentsContent: 'body',
+        persistWebUiPreferences: async () => { throw new Error('persist failed'); }
+    });
+
+    await assert.rejects(() => vm.saveCurrentPromptAsPreset(), /persist failed/);
+    assert.notEqual(messages.at(-1)?.message, 'prompts.presets.toast.saved');
 });
 
 test('prompt presets apply to target editor without writing file', async () => {

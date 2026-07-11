@@ -6862,6 +6862,12 @@ return function render(_ctx, _cache) {
                             }, _toDisplayString(_ctx.t('prompts.subTab.presets')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
                             _createElementVNode("button", {
                               class: "btn-mini",
+                              onClick: _ctx.saveEditorPromptAsPreset,
+                              disabled: _ctx.promptPresetSaving || _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffLoading || _ctx.agentsDiffVisible || !_ctx.agentsContent.trim(),
+                              title: _ctx.t('prompts.presets.addCurrent')
+                            }, _toDisplayString(_ctx.t('prompts.presets.addCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
+                            _createElementVNode("button", {
+                              class: "btn-mini",
                               onClick: _ctx.loadPromptsContent,
                               disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading,
                               title: _ctx.t('common.cancel')

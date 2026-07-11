@@ -747,10 +747,41 @@ export function createAgentsMethods(options = {}) {
                 return this.normalizePromptPresetName(preset.name).toLowerCase() === normalizedName;
             }) || null;
         },
-        persistPromptPresets() {
+        async persistPromptPresets() {
             if (typeof this.persistWebUiPreferences === 'function') {
-                this.persistWebUiPreferences({ promptPresets: this.promptPresets });
+                await this.persistWebUiPreferences({ promptPresets: this.promptPresets });
             }
+        },
+        getCurrentPromptPresetDefaultName() {
+            if (this.promptsSubTab === 'claude-project') {
+                const projectPath = typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath.trim() : '';
+                return projectPath
+                    ? this.t('prompts.presets.defaultName.project', { path: projectPath })
+                    : this.t('prompts.subTab.project');
+            }
+            const fileName = typeof this.agentsPath === 'string' && this.agentsPath.trim()
+                ? (this.agentsPath.trim().split(/[\\/]/).filter(Boolean).pop() || '')
+                : '';
+            return fileName || this.t('prompts.subTab.codex');
+        },
+        async saveEditorPromptAsPreset() {
+            if (this.promptPresetSaving || this.agentsLoading || this.agentsDiffVisible) return;
+            const name = this.getCurrentPromptPresetDefaultName();
+            const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
+            if (!content.trim()) {
+                this.showMessage(this.t('prompts.presets.error.emptyContent'), 'error');
+                return;
+            }
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('prompts.presets.confirm.addCurrentTitle'),
+                message: this.t('prompts.presets.confirm.addCurrentMessage', { name }),
+                confirmText: this.t('prompts.presets.addCurrent'),
+                cancelText: this.t('common.cancel'),
+                danger: false
+            });
+            if (!confirmed) return;
+            this.promptPresetNameDraft = name;
+            await this.saveCurrentPromptAsPreset();
         },
         async saveCurrentPromptAsPreset() {
             if (this.promptPresetSaving || this.agentsLoading) return;
@@ -794,7 +825,7 @@ export function createAgentsMethods(options = {}) {
                     this.selectedPromptPresetId = preset.id;
                 }
                 this.promptPresetNameDraft = '';
-                this.persistPromptPresets();
+                await this.persistPromptPresets();
                 this.showMessage(this.t('prompts.presets.toast.saved'), 'success');
             } finally {
                 this.promptPresetSaving = false;
@@ -845,7 +876,7 @@ export function createAgentsMethods(options = {}) {
             const drafts = { ...(this.promptPresetRenameDraft || {}) };
             delete drafts[preset.id];
             this.promptPresetRenameDraft = drafts;
-            this.persistPromptPresets();
+            await this.persistPromptPresets();
             this.showMessage(this.t('prompts.presets.toast.renamed'), 'success');
         },
         async deletePromptPreset(preset) {
@@ -865,7 +896,7 @@ export function createAgentsMethods(options = {}) {
             const drafts = { ...(this.promptPresetRenameDraft || {}) };
             delete drafts[preset.id];
             this.promptPresetRenameDraft = drafts;
-            this.persistPromptPresets();
+            await this.persistPromptPresets();
             this.showMessage(this.t('prompts.presets.toast.deleted'), 'success');
         },
         switchPromptsSubTab(subTab) {
