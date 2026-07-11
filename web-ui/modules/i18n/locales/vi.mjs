@@ -141,6 +141,8 @@ const vi = Object.freeze({
     'side.prompts.agents.meta': 'Tệp lệnh Codex',
     'side.prompts.claude': 'CLAUDE.md',
     'side.prompts.claude.meta': 'Tệp lệnh Claude',
+    'side.prompts.presets': 'Kho preset',
+    'side.prompts.presets.meta': 'Preset prompt tái sử dụng',
     'side.plugins.tools': 'Công cụ prompt',
     'side.plugins.tools.meta': 'Mẫu / Biến',
     'side.plugins.templatesCount': '{count} mẫu',

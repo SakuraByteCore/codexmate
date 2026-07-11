@@ -283,6 +283,20 @@
                             <span>{{ t('side.prompts.claude.meta') }}</span>
                         </div>
                     </button>
+                    <button
+                        id="side-tab-prompts-presets"
+                        data-main-tab="prompts"
+                        data-prompts-sub-tab="presets"
+                        :aria-current="mainTab === 'prompts' && promptsSubTab === 'presets' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('prompts') && promptsSubTab === 'presets' }]"
+                        @pointerdown="onMainTabPointerDown('prompts', $event)"
+                        @click="switchPromptsSubTab('presets'); onMainTabClick('prompts')">
+                        <span class="side-item-icon" aria-hidden="true">★</span>
+                        <div class="side-item-title">{{ t('side.prompts.presets') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.prompts.presets.meta') }}</span>
+                        </div>
+                    </button>
                 </div>
 
                 <div class="side-section" role="navigation" :aria-label="t('side.sessions')">

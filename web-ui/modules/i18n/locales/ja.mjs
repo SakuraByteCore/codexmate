@@ -181,6 +181,8 @@ const ja = Object.freeze({
     'side.prompts.agents.meta': 'Codex プロンプトファイル',
     'side.prompts.claude': 'CLAUDE.md',
     'side.prompts.claude.meta': 'Claude プロンプトファイル',
+    'side.prompts.presets': 'プリセットプール',
+    'side.prompts.presets.meta': '再利用可能なプロンプトプリセット',
     'side.plugins.tools': 'プロンプトツール',
     'side.plugins.tools.meta': 'テンプレート / 変数',
     'side.plugins.templatesCount': '{count} 件のテンプレート',

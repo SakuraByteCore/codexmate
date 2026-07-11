@@ -180,6 +180,8 @@ const en = Object.freeze({
     'side.prompts.agents.meta': 'Codex prompt file',
     'side.prompts.claude': 'CLAUDE.md',
     'side.prompts.claude.meta': 'Claude prompt file',
+    'side.prompts.presets': 'Preset pool',
+    'side.prompts.presets.meta': 'Reusable prompt presets',
     'side.plugins.tools': 'Prompt Tools',
     'side.plugins.tools.meta': 'Templates / Variables',
     'side.plugins.templatesCount': '{count} templates',

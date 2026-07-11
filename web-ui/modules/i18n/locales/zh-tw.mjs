@@ -180,6 +180,8 @@ const zhTw = Object.freeze({
     'side.prompts.agents.meta': 'Codex 指令文件',
     'side.prompts.claude': 'CLAUDE.md',
     'side.prompts.claude.meta': 'Claude 指令文件',
+    'side.prompts.presets': '預設池',
+    'side.prompts.presets.meta': '複用 Prompt 預設',
     'side.plugins.tools': '提示詞工具',
     'side.plugins.tools.meta': '模板 / 變量',
     'side.plugins.templatesCount': '{count} 個模板',

@@ -405,6 +405,24 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.claude.meta')), 1 /* TEXT */)
                   ])
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
+                _createElementVNode("button", {
+                  id: "side-tab-prompts-presets",
+                  "data-main-tab": "prompts",
+                  "data-prompts-sub-tab": "presets",
+                  "aria-current": _ctx.mainTab === 'prompts' && _ctx.promptsSubTab === 'presets' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') && _ctx.promptsSubTab === 'presets' }]),
+                  onPointerdown: $event => (_ctx.onMainTabPointerDown('prompts', $event)),
+                  onClick: $event => {_ctx.switchPromptsSubTab('presets'); _ctx.onMainTabClick('prompts')}
+                }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "★"),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts.presets')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-meta" }, [
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.presets.meta')), 1 /* TEXT */)
+                  ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),
               _createElementVNode("div", {

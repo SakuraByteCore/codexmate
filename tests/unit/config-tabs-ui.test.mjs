@@ -83,6 +83,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(webUiRedirectBlock, /url\.pathname\s*=\s*'\/'/);
     assert.doesNotMatch(webUiRedirectBlock, /url\.search\s*=/);
     assert.doesNotMatch(webUiRedirectBlock, /url\.hash\s*=/);
+    assert.match(html, /id="side-tab-prompts-agents"/);
+    assert.match(html, /id="side-tab-prompts-project"/);
+    assert.match(html, /id="side-tab-prompts-presets"/);
+    assert.match(html, /data-prompts-sub-tab="presets"/);
+    assert.match(html, /switchPromptsSubTab\('presets'\); onMainTabClick\('prompts'\)/);
+    assert.match(html, /t\('side\.prompts\.presets'\)/);
+    assert.match(html, /t\('side\.prompts\.presets\.meta'\)/);
     assert.match(html, /id="side-tab-orchestration"/);
     assert.match(html, /id="tab-orchestration"/);
     assert.match(html, /data-main-tab="orchestration"/);
