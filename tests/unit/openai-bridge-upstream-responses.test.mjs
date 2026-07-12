@@ -195,6 +195,72 @@ test('openai-bridge retries transient upstream 524 responses', async () => {
     await rm(tmpDir, { recursive: true, force: true });
 });
 
+
+test('openai-bridge retries transient upstream 524 responses for streaming Responses conversion', async () => {
+    let chatHitCount = 0;
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            chatHitCount += 1;
+            if (chatHitCount < 3) {
+                res.writeHead(524, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'gateway timeout' }));
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.write('data: {"id":"chatcmpl_retry_524_stream","model":"gpt-test","choices":[{"delta":{"content":"ok"}}]}\n\n');
+            res.end('data: [DONE]\n\n');
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'codexmate-bridge-test-'));
+    const settingsFile = path.join(tmpDir, 'bridge.json');
+    await writeFile(settingsFile, JSON.stringify({
+        version: 1,
+        providers: {
+            test: {
+                baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
+                apiKey: 'sk-upstream',
+                maxRetries: 3
+            }
+        }
+    }), 'utf-8');
+
+    const handler = createOpenaiBridgeHttpHandler({ settingsFile, expectedToken: 'codexmate', streamTimeoutMs: 1000 });
+    const bridge = http.createServer((req, res) => {
+        if (!handler(req, res)) {
+            res.statusCode = 404;
+            res.end('not handled');
+        }
+    });
+    const { port: bridgePort } = await listen(bridge);
+
+    const sse = await requestText(`http://127.0.0.1:${bridgePort}/bridge/openai/test/v1/responses`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+            'Authorization': 'Bearer codexmate',
+            'Originator': 'codex-tui'
+        },
+        body: { model: 'gpt-test', input: 'ping', stream: true }
+    });
+
+    assert.equal(sse.status, 200);
+    assert.equal(chatHitCount, 3);
+    assert.match(sse.headers['content-type'], /text\/event-stream/i);
+    assert.match(sse.text, /response\.output_text\.delta/);
+    assert.match(sse.text, /ok/);
+    assert.doesNotMatch(sse.text, /gateway timeout/);
+
+    await bridge.close();
+    await upstream.close();
+    await rm(tmpDir, { recursive: true, force: true });
+});
+
 test('openai-bridge forces streaming Codex Responses requests through chat completions conversion', async () => {
     let responsesHit = false;
     let chatHit = false;
