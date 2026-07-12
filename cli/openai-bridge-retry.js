@@ -11,6 +11,11 @@ function normalizeBridgeMaxRetries(value, fallback = DEFAULT_BRIDGE_MAX_RETRIES)
     return Math.min(MAX_BRIDGE_MAX_RETRIES, Math.max(MIN_BRIDGE_MAX_RETRIES, Math.floor(base)));
 }
 
+function isTransientHttpStatus(status) {
+    const code = Number(status);
+    return code === 408 || code === 409 || code === 425 || code === 429 || code === 500 || code === 502 || code === 503 || code === 504 || code === 520 || code === 521 || code === 522 || code === 523 || code === 524;
+}
+
 function isTransientNetworkError(error) {
     const text = String(error || '').trim();
     if (!text) return false;
@@ -43,9 +48,12 @@ async function retryTransientRequest(executor, options = {}) {
         const result = await executor(attempt);
         lastResult = result;
         if (!result) return result;
+        if (result.status && result.status > 0) {
+            if (!isTransientHttpStatus(result.status)) return result;
+            continue;
+        }
         if (result.ok) return result;
         if (result.retry) return result;
-        if (result.status && result.status > 0) return result;
         if (!isTransientNetworkError(result.error)) return result;
     }
     return lastResult;
@@ -57,6 +65,7 @@ module.exports = {
     MAX_BRIDGE_MAX_RETRIES,
     normalizeBridgeMaxRetries,
     isTransientNetworkError,
+    isTransientHttpStatus,
     getTransientRetryDelayMs,
     retryTransientRequest
 };
