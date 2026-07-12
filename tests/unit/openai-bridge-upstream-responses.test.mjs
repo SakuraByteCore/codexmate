@@ -1683,3 +1683,72 @@ test('openai-bridge does not write 500 headers after response headers were alrea
     await upstream.close();
     await rm(tmpDir, { recursive: true, force: true });
 });
+
+test('openai-bridge destroys response when post-header end fails before completion', async () => {
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                id: 'chatcmpl_destroy_on_end_failure',
+                model: 'gpt-test',
+                choices: [{ message: { role: 'assistant', content: 'ok' } }]
+            }));
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'codexmate-bridge-test-'));
+    const settingsFile = path.join(tmpDir, 'bridge.json');
+    await writeFile(settingsFile, JSON.stringify({
+        version: 1,
+        providers: {
+            test: { baseUrl: `http://127.0.0.1:${upstreamPort}/v1`, apiKey: '***' }
+        }
+    }), 'utf-8');
+
+    const handler = createOpenaiBridgeHttpHandler({ settingsFile, expectedToken: 'codexmate' });
+    let destroyCalled = false;
+    const bridge = http.createServer((req, res) => {
+        const originalWriteHead = res.writeHead.bind(res);
+        let wroteSuccessHeader = false;
+        res.writeHead = function patchedWriteHead(statusCode, headers) {
+            if (statusCode === 200) wroteSuccessHeader = true;
+            return originalWriteHead(statusCode, headers);
+        };
+        res.end = function patchedEnd() {
+            if (wroteSuccessHeader) {
+                throw new Error('simulated end failure before completion');
+            }
+        };
+        const originalDestroy = res.destroy.bind(res);
+        res.destroy = function patchedDestroy(err) {
+            destroyCalled = Boolean(err);
+            return originalDestroy(err);
+        };
+        if (!handler(req, res)) {
+            res.statusCode = 404;
+            res.end('not handled');
+        }
+    });
+    const { port: bridgePort } = await listen(bridge);
+
+    await assert.rejects(
+        requestText(`http://127.0.0.1:${bridgePort}/bridge/openai/test/v1/responses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': '***'
+            },
+            body: { model: 'gpt-test', input: 'ping' }
+        })
+    );
+    assert.equal(destroyCalled, true);
+
+    await bridge.close();
+    await upstream.close();
+    await rm(tmpDir, { recursive: true, force: true });
+});

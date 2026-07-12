@@ -522,7 +522,10 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     try {
                         res.end();
                     } catch (_) {
-                        // Headers are already committed; avoid surfacing a secondary write failure.
+                        // Headers are already committed. Close the socket instead of leaving the client waiting forever.
+                        if (!res.destroyed && typeof res.destroy === 'function') {
+                            res.destroy(e);
+                        }
                     }
                     return;
                 }
