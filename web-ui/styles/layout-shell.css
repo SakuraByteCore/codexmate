@@ -40,6 +40,7 @@ body::after {
 
 .app-shell.sidebar-collapsed {
     --side-rail-width: var(--side-rail-collapsed-width, 136px);
+    grid-template-columns: var(--side-rail-collapsed-width, 136px) minmax(0, 1fr);
 }
 
 .app-shell.standalone {
