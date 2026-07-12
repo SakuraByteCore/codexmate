@@ -514,8 +514,20 @@ function createOpenaiBridgeHttpHandler(options = {}) {
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify(ensureResponseMetadata(responsesPayload)));
             } catch (e) {
+                if (res.writableEnded || res.destroyed) {
+                    return;
+                }
+                const message = e && e.message ? e.message : 'Internal Error';
+                if (res.headersSent) {
+                    try {
+                        res.end();
+                    } catch (_) {
+                        // Headers are already committed; avoid surfacing a secondary write failure.
+                    }
+                    return;
+                }
                 res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ error: e && e.message ? e.message : 'Internal Error' }));
+                res.end(JSON.stringify({ error: message }));
             }
         })();
 
