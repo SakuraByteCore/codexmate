@@ -65,21 +65,24 @@ function createVm(overrides = {}) {
     return { vm, apiCalls, persisted, messages, confirms };
 }
 
-test('prompt presets reject empty name and empty content', async () => {
+test('prompt presets use current md name by default and reject empty content', async () => {
     const { vm, messages, persisted } = createVm({
         promptPresetNameDraft: '   ',
+        agentsPath: '/tmp/work/AGENTS.md',
         agentsContent: 'usable content'
     });
 
     await vm.saveCurrentPromptAsPreset();
-    assert.equal(messages.at(-1).message, 'prompts.presets.error.emptyName');
-    assert.deepEqual(persisted, []);
+    assert.equal(vm.promptPresets.length, 1);
+    assert.equal(vm.promptPresets[0].name, 'AGENTS.md');
+    assert.equal(vm.promptPresets[0].content, 'usable content');
+    assert.equal(persisted.length, 1);
 
     vm.promptPresetNameDraft = 'Preset';
     vm.agentsContent = '   ';
     await vm.saveCurrentPromptAsPreset();
     assert.equal(messages.at(-1).message, 'prompts.presets.error.emptyContent');
-    assert.deepEqual(persisted, []);
+    assert.equal(persisted.length, 1);
 });
 
 test('prompt presets save new item and overwrite duplicate only after confirmation', async () => {
@@ -141,6 +144,35 @@ test('prompt presets surface preference persistence failures before success', as
 
     await assert.rejects(() => vm.saveCurrentPromptAsPreset(), /persist failed/);
     assert.notEqual(messages.at(-1)?.message, 'prompts.presets.toast.saved');
+});
+
+
+test('prompt presets keep user content as inert text for common security payloads', async () => {
+    const payloads = [
+        `'; DROP TABLE prompt_presets; --`,
+        `" OR "1"="1`,
+        `<img src=x onerror=alert(1)>`,
+        `<script>alert('xss')</script>`,
+        `../../../../etc/passwd`,
+        `..\\..\\windows\\win.ini`,
+        `file:///etc/passwd`,
+        `http://169.254.169.254/latest/meta-data/`,
+        `-----BEGIN PRIVATE KEY-----\nsecret`,
+        `Authorization: Bearer secret-token`
+    ];
+    const { vm, apiCalls } = createVm({
+        promptPresetNameDraft: `Security payloads`,
+        agentsContent: payloads.join('\n')
+    });
+
+    await vm.saveCurrentPromptAsPreset();
+    assert.equal(vm.promptPresets.length, 1);
+    assert.equal(vm.promptPresets[0].content, payloads.join('\n'));
+
+    vm.agentsContent = 'dirty';
+    await vm.applyPromptPresetToEditor(vm.promptPresets[0]);
+    assert.equal(vm.agentsContent, payloads.join('\n'));
+    assert.deepEqual(apiCalls, []);
 });
 
 test('prompt presets paste into current editor draft without target switch or file write', async () => {

@@ -785,7 +785,8 @@ export function createAgentsMethods(options = {}) {
         },
         async saveCurrentPromptAsPreset() {
             if (this.promptPresetSaving || this.agentsLoading) return;
-            const name = this.normalizePromptPresetName(this.promptPresetNameDraft);
+            const draftName = this.normalizePromptPresetName(this.promptPresetNameDraft);
+            const name = draftName || this.normalizePromptPresetName(this.getCurrentPromptPresetDefaultName());
             const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
             if (!name) {
                 this.showMessage(this.t('prompts.presets.error.emptyName'), 'error');

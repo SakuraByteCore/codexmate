@@ -98,12 +98,12 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /class="form-input prompt-presets-select"/);
     assert.match(html, /@change="applyPromptPresetSelection\(\$event\)"/);
     assert.match(html, /t\('prompts\.presets\.selectPlaceholder'\)/);
-    assert.match(html, /class="prompts-editor-toolbar prompt-presets-toolbar"/);
-    assert.match(html, /class="prompts-editor-actions prompt-presets-save-row"/);
+    assert.match(html, /v-model="promptPresetNameDraft"/);
+    assert.match(html, /@keydown.enter.prevent="saveCurrentPromptAsPreset"/);
+    assert.match(html, /@click="saveCurrentPromptAsPreset"/);
     assert.match(html, /@click="applyPromptPresetToEditor\(preset\)"/);
     assert.doesNotMatch(html, /@click="applyPromptPresetToEditor\(preset, 'codex'\)"/);
     assert.doesNotMatch(html, /@click="applyPromptPresetToEditor\(preset, 'claude-project'\)"/);
-    assert.doesNotMatch(html, /@click="saveEditorPromptAsPreset"/);
     assert.match(html, /class="form-group prompt-presets-body"/);
     assert.match(html, /class="editor-frame prompt-presets-frame"/);
     assert.match(html, /id="side-tab-orchestration"/);

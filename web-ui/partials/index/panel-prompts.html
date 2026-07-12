@@ -74,6 +74,21 @@
                                     <option value="">{{ t('prompts.presets.selectPlaceholder') }}</option>
                                     <option v-for="preset in promptPresets" :key="preset.id" :value="preset.id">{{ preset.name }}</option>
                                 </select>
+                                <input
+                                    type="text"
+                                    class="form-input prompt-presets-name-input"
+                                    v-model="promptPresetNameDraft"
+                                    :placeholder="t('prompts.presets.namePlaceholder')"
+                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
+                                    @keydown.enter.prevent="saveCurrentPromptAsPreset">
+                                <button
+                                    type="button"
+                                    class="btn-mini btn-confirm-mini"
+                                    @click="saveCurrentPromptAsPreset"
+                                    :disabled="promptPresetSaving || agentsLoading || agentsSaving || agentsDiffVisible"
+                                    :title="t('prompts.presets.saveCurrent')">
+                                    {{ t('prompts.presets.saveCurrent') }}
+                                </button>
                                 <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                 </button>
@@ -97,23 +112,6 @@
                                 <span>{{ t('prompts.presets.title') }}</span>
                                 <small>{{ t('prompts.presets.hint') }}</small>
                             </summary>
-                            <div class="prompts-editor-toolbar prompt-presets-toolbar">
-                                <div class="prompts-editor-actions prompt-presets-save-row">
-                                    <input
-                                        type="text"
-                                        class="form-input prompt-presets-name-input"
-                                        v-model="promptPresetNameDraft"
-                                        :placeholder="t('prompts.presets.namePlaceholder')"
-                                        @keydown.enter.prevent="saveCurrentPromptAsPreset">
-                                    <button
-                                        type="button"
-                                        class="btn-mini btn-confirm-mini"
-                                        @click="saveCurrentPromptAsPreset"
-                                        :disabled="promptPresetSaving || agentsLoading">
-                                        {{ t('prompts.presets.saveCurrent') }}
-                                    </button>
-                                </div>
-                            </div>
                             <div class="form-group prompt-presets-body">
                                 <div class="editor-frame prompt-presets-frame">
                                     <div v-if="!promptPresets.length" class="state-message prompt-presets-empty">{{ t('prompts.presets.empty') }}</div>

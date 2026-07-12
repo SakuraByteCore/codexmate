@@ -6774,6 +6774,23 @@ return function render(_ctx, _cache) {
                             }, _toDisplayString(preset.name), 9 /* TEXT, PROPS */, ["value"]))
                           }), 128 /* KEYED_FRAGMENT */))
                         ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onChange"]),
+                        _withDirectives(_createElementVNode("input", {
+                          type: "text",
+                          class: "form-input prompt-presets-name-input",
+                          "onUpdate:modelValue": $event => ((_ctx.promptPresetNameDraft) = $event),
+                          placeholder: _ctx.t('prompts.presets.namePlaceholder'),
+                          disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                          onKeydown: _withKeys(_withModifiers(_ctx.saveCurrentPromptAsPreset, ["prevent"]), ["enter"])
+                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "disabled", "onKeydown"]), [
+                          [_vModelText, _ctx.promptPresetNameDraft]
+                        ]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-mini btn-confirm-mini",
+                          onClick: _ctx.saveCurrentPromptAsPreset,
+                          disabled: _ctx.promptPresetSaving || _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                          title: _ctx.t('prompts.presets.saveCurrent')
+                        }, _toDisplayString(_ctx.t('prompts.presets.saveCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
                         _createElementVNode("button", {
                           class: "btn-mini",
                           onClick: _ctx.loadPromptsContent,
@@ -6849,25 +6866,6 @@ return function render(_ctx, _cache) {
                     _createElementVNode("summary", { class: "prompt-presets-summary" }, [
                       _createElementVNode("span", null, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */),
                       _createElementVNode("small", null, _toDisplayString(_ctx.t('prompts.presets.hint')), 1 /* TEXT */)
-                    ]),
-                    _createElementVNode("div", { class: "prompts-editor-toolbar prompt-presets-toolbar" }, [
-                      _createElementVNode("div", { class: "prompts-editor-actions prompt-presets-save-row" }, [
-                        _withDirectives(_createElementVNode("input", {
-                          type: "text",
-                          class: "form-input prompt-presets-name-input",
-                          "onUpdate:modelValue": $event => ((_ctx.promptPresetNameDraft) = $event),
-                          placeholder: _ctx.t('prompts.presets.namePlaceholder'),
-                          onKeydown: _withKeys(_withModifiers(_ctx.saveCurrentPromptAsPreset, ["prevent"]), ["enter"])
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
-                          [_vModelText, _ctx.promptPresetNameDraft]
-                        ]),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-mini btn-confirm-mini",
-                          onClick: _ctx.saveCurrentPromptAsPreset,
-                          disabled: _ctx.promptPresetSaving || _ctx.agentsLoading
-                        }, _toDisplayString(_ctx.t('prompts.presets.saveCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ])
                     ]),
                     _createElementVNode("div", { class: "form-group prompt-presets-body" }, [
                       _createElementVNode("div", { class: "editor-frame prompt-presets-frame" }, [
