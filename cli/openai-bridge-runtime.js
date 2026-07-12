@@ -1472,7 +1472,20 @@ function streamChatCompletionsAsResponsesSse(targetUrl, options = {}) {
                 response: {
                     id: state.responseId,
                     model: state.model,
-                    created_at: state.createdAt
+                    created_at: state.createdAt,
+                    status: 'in_progress',
+                    output: []
+                }
+            });
+            writeSse(res, 'response.in_progress', {
+                type: 'response.in_progress',
+                sequence_number: state.nextSeq(),
+                response: {
+                    id: state.responseId,
+                    model: state.model,
+                    created_at: state.createdAt,
+                    status: 'in_progress',
+                    output: []
                 }
             });
 

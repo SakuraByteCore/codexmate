@@ -145,6 +145,17 @@ test('openai-bridge keeps retrying transient upstream failures until success by 
     await rm(tmpDir, { recursive: true, force: true });
 });
 
+
+test('isTransientHttpStatus retries all 5xx statuses like maxx provider classification', async () => {
+    const { isTransientHttpStatus } = require('../../cli/openai-bridge-retry');
+    for (const status of [500, 501, 502, 503, 504, 520, 524, 599]) {
+        assert.equal(isTransientHttpStatus(status), true, `status ${status} should be transient`);
+    }
+    for (const status of [400, 401, 403, 404, 422]) {
+        assert.equal(isTransientHttpStatus(status), false, `status ${status} should not be transient`);
+    }
+});
+
 test('openai-bridge retries transient upstream 524 responses', async () => {
     let hitCount = 0;
     const upstream = http.createServer((req, res) => {
@@ -1870,6 +1881,61 @@ test('openai-bridge destroys response when post-header end fails before completi
         })
     );
     assert.equal(destroyCalled, true);
+
+    await bridge.close();
+    await upstream.close();
+    await rm(tmpDir, { recursive: true, force: true });
+});
+
+test('streaming Responses conversion emits in-progress lifecycle before completion', async () => {
+    const upstream = http.createServer((req, res) => {
+        if (req.url === '/v1/chat/completions' && req.method === 'POST') {
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8' });
+            res.write('data: {"choices":[{"delta":{"content":"hi"}}]}\n\n');
+            res.end('data: [DONE]\n\n');
+            return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+    });
+    const { port: upstreamPort } = await listen(upstream);
+
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'codexmate-bridge-test-'));
+    const settingsFile = path.join(tmpDir, 'bridge.json');
+    await writeFile(settingsFile, JSON.stringify({
+        version: 1,
+        providers: {
+            test: {
+                baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
+                apiKey: '***'
+            }
+        }
+    }), 'utf-8');
+
+    const handler = createOpenaiBridgeHttpHandler({ settingsFile, expectedToken: 'codexmate' });
+    const bridge = http.createServer((req, res) => {
+        if (!handler(req, res)) {
+            res.statusCode = 404;
+            res.end('not handled');
+        }
+    });
+    const { port: bridgePort } = await listen(bridge);
+
+    const resp = await requestText(`http://127.0.0.1:${bridgePort}/bridge/openai/test/v1/responses`, {
+        method: 'POST',
+        headers: {
+            Authorization: '***',
+            Accept: 'text/event-stream',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ model: 'gpt-test', input: 'hello', stream: true })
+    });
+
+    assert.equal(resp.status, 200);
+    assert.match(resp.text, /event: response\.created/);
+    assert.match(resp.text, /event: response\.in_progress/);
+    assert.match(resp.text, /event: response\.completed/);
+    assert.match(resp.text, /data: \[DONE\]/);
 
     await bridge.close();
     await upstream.close();
