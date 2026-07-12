@@ -6758,13 +6758,8 @@ return function render(_ctx, _cache) {
                                       _createElementVNode("button", {
                                         type: "button",
                                         class: "btn-mini",
-                                        onClick: $event => (_ctx.applyPromptPresetToEditor(preset, 'codex'))
-                                      }, _toDisplayString(_ctx.t('prompts.presets.applyAgents')), 9 /* TEXT, PROPS */, ["onClick"]),
-                                      _createElementVNode("button", {
-                                        type: "button",
-                                        class: "btn-mini",
-                                        onClick: $event => (_ctx.applyPromptPresetToEditor(preset, 'claude-project'))
-                                      }, _toDisplayString(_ctx.t('prompts.presets.applyClaude')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                        onClick: $event => (_ctx.applyPromptPresetToEditor(preset))
+                                      }, _toDisplayString(_ctx.t('common.paste')), 9 /* TEXT, PROPS */, ["onClick"]),
                                       _createElementVNode("button", {
                                         type: "button",
                                         class: "btn-mini btn-danger-mini",
@@ -6860,12 +6855,6 @@ return function render(_ctx, _cache) {
                               disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffLoading,
                               title: _ctx.t('prompts.presets.open')
                             }, _toDisplayString(_ctx.t('prompts.subTab.presets')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
-                            _createElementVNode("button", {
-                              class: "btn-mini",
-                              onClick: _ctx.saveEditorPromptAsPreset,
-                              disabled: _ctx.promptPresetSaving || _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffLoading || _ctx.agentsDiffVisible || !_ctx.agentsContent.trim(),
-                              title: _ctx.t('prompts.presets.addCurrent')
-                            }, _toDisplayString(_ctx.t('prompts.presets.addCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
                             _createElementVNode("button", {
                               class: "btn-mini",
                               onClick: _ctx.loadPromptsContent,

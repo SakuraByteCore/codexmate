@@ -143,23 +143,23 @@ test('prompt presets surface preference persistence failures before success', as
     assert.notEqual(messages.at(-1)?.message, 'prompts.presets.toast.saved');
 });
 
-test('prompt presets apply to target editor without writing file', async () => {
+test('prompt presets paste into current editor draft without target switch or file write', async () => {
     const { vm, apiCalls, confirms, messages } = createVm({
         promptPresets: [{ id: 'p1', name: 'Base', content: 'preset body', updatedAt: '2026-01-01T00:00:00.000Z' }],
+        promptsSubTab: 'claude-project',
         agentsOriginalContent: 'original',
         agentsContent: 'dirty'
     });
 
-    await vm.applyPromptPresetToEditor(vm.promptPresets[0], 'claude-project');
+    await vm.applyPromptPresetToEditor(vm.promptPresets[0]);
 
-    assert.equal(confirms.length, 1);
+    assert.equal(confirms.length, 0);
     assert.equal(vm.promptsSubTab, 'claude-project');
     assert.equal(vm.agentsContent, 'preset body');
-    assert.equal(vm.agentsOriginalContent, 'loaded claude');
+    assert.equal(vm.agentsOriginalContent, 'original');
     assert.equal(vm.selectedPromptPresetId, 'p1');
-    assert.equal(messages.at(-1).message, 'prompts.presets.toast.applied');
-    assert.deepEqual(apiCalls.map(call => call.action), ['get-claude-md-file']);
-    assert.ok(!apiCalls.some(call => call.action.startsWith('apply-')));
+    assert.equal(messages.at(-1).message, 'prompts.presets.toast.pasted');
+    assert.deepEqual(apiCalls, []);
 });
 
 test('prompt presets prevent rename conflicts and delete after confirmation', async () => {

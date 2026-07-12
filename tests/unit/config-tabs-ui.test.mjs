@@ -95,9 +95,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /v-if="promptsSubTab === 'presets'" class="prompts-editor prompt-presets-panel"/);
     assert.match(html, /class="prompts-editor-toolbar prompt-presets-toolbar"/);
     assert.match(html, /class="prompts-editor-actions prompt-presets-save-row"/);
-    assert.match(html, /@click="saveEditorPromptAsPreset"/);
-    assert.match(html, /t\('prompts\.presets\.addCurrent'\)/);
-    assert.match(html, /!agentsContent\.trim\(\)/);
+    assert.match(html, /@click="applyPromptPresetToEditor\(preset\)"/);
+    assert.doesNotMatch(html, /@click="applyPromptPresetToEditor\(preset, 'codex'\)"/);
+    assert.doesNotMatch(html, /@click="applyPromptPresetToEditor\(preset, 'claude-project'\)"/);
+    assert.doesNotMatch(html, /@click="saveEditorPromptAsPreset"/);
     assert.match(html, /class="form-group prompt-presets-body"/);
     assert.match(html, /class="editor-frame prompt-presets-frame"/);
     assert.match(html, /id="side-tab-orchestration"/);

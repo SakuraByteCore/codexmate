@@ -105,6 +105,7 @@ test('provider cache, prompt sidebar, and local Web preference settings are loca
         'prompts.presets.defaultName.project',
         'prompts.presets.confirm.addCurrentTitle',
         'prompts.presets.confirm.addCurrentMessage',
+        'prompts.presets.toast.pasted',
         'announcement.providerCache.open',
         'announcement.project.eyebrow',
         'announcement.project.title',

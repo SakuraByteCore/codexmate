@@ -73,8 +73,7 @@
                                     </div>
                                     <div class="prompts-editor-actions prompt-preset-actions">
                                         <button type="button" class="btn-mini" @click="renamePromptPreset(preset)">{{ t('common.save') }}</button>
-                                        <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset, 'codex')">{{ t('prompts.presets.applyAgents') }}</button>
-                                        <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset, 'claude-project')">{{ t('prompts.presets.applyClaude') }}</button>
+                                        <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset)">{{ t('common.paste') }}</button>
                                         <button type="button" class="btn-mini btn-danger-mini" @click="deletePromptPreset(preset)">{{ t('common.delete') }}</button>
                                     </div>
                                 </article>
@@ -117,7 +116,6 @@
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
                                 <button class="btn-mini" @click="switchPromptsSubTab('presets')" :disabled="agentsLoading || agentsSaving || agentsDiffLoading" :title="t('prompts.presets.open')">{{ t('prompts.subTab.presets') }}</button>
-                                <button class="btn-mini" @click="saveEditorPromptAsPreset" :disabled="promptPresetSaving || agentsLoading || agentsSaving || agentsDiffLoading || agentsDiffVisible || !agentsContent.trim()" :title="t('prompts.presets.addCurrent')">{{ t('prompts.presets.addCurrent') }}</button>
                                 <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                 </button>

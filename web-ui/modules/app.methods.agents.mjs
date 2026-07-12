@@ -831,27 +831,12 @@ export function createAgentsMethods(options = {}) {
                 this.promptPresetSaving = false;
             }
         },
-        async applyPromptPresetToEditor(preset, target) {
-            if (!preset || typeof preset.content !== 'string') return;
-            const normalizedTarget = target === 'claude-project' ? 'claude-project' : 'codex';
-            if (this.hasAgentsContentChanged()) {
-                const confirmed = await this.requestConfirmDialog({
-                    title: this.t('prompts.presets.confirm.applyTitle'),
-                    message: this.t('prompts.presets.confirm.applyMessage'),
-                    confirmText: this.t('prompts.presets.confirm.applyConfirm'),
-                    cancelText: this.t('common.cancel'),
-                    danger: true
-                });
-                if (!confirmed) return;
-            }
-            this.__skipNextPromptsSubTabLoad = true;
-            this.promptsSubTab = normalizedTarget;
-            await this.$nextTick();
-            await this.loadPromptsContent();
+        async applyPromptPresetToEditor(preset) {
+            if (!preset || typeof preset.content !== 'string' || !preset.content) return;
             this.agentsContent = preset.content;
             this.onAgentsContentInput();
             this.selectedPromptPresetId = preset.id;
-            this.showMessage(this.t('prompts.presets.toast.applied'), 'success');
+            this.showMessage(this.t('prompts.presets.toast.pasted'), 'success');
         },
         async renamePromptPreset(preset) {
             if (!preset || !preset.id) return;
