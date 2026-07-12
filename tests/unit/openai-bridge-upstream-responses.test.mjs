@@ -93,12 +93,17 @@ test('openai-bridge GET /v1 returns local bridge status without probing upstream
 });
 
 
-test('openai-bridge honors provider maxRetries for transient upstream failures', async () => {
+test('openai-bridge keeps retrying transient upstream failures until success by default', async () => {
     let hitCount = 0;
     const upstream = http.createServer((req, res) => {
         if (req.url === '/v1/models' && req.method === 'GET') {
             hitCount += 1;
-            req.socket.destroy();
+            if (hitCount < 5) {
+                req.socket.destroy();
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ object: 'list', data: [{ id: 'gpt-test' }] }));
             return;
         }
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -113,8 +118,7 @@ test('openai-bridge honors provider maxRetries for transient upstream failures',
         providers: {
             test: {
                 baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
-                apiKey: 'sk-upstream',
-                maxRetries: 3
+                apiKey: 'sk-upstream'
             }
         }
     }), 'utf-8');
@@ -132,14 +136,14 @@ test('openai-bridge honors provider maxRetries for transient upstream failures',
         headers: { Authorization: 'Bearer codexmate' }
     });
 
-    assert.equal(resp.status, 502);
-    assert.equal(hitCount, 4);
+    assert.equal(resp.status, 200);
+    assert.equal(hitCount, 5);
+    assert.deepEqual(JSON.parse(resp.text), { object: 'list', data: [{ id: 'gpt-test' }] });
 
     await bridge.close();
     await upstream.close();
     await rm(tmpDir, { recursive: true, force: true });
 });
-
 
 test('openai-bridge retries transient upstream 524 responses', async () => {
     let hitCount = 0;
@@ -167,8 +171,7 @@ test('openai-bridge retries transient upstream 524 responses', async () => {
         providers: {
             test: {
                 baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
-                apiKey: 'sk-upstream',
-                maxRetries: 3
+                apiKey: 'sk-upstream'
             }
         }
     }), 'utf-8');
@@ -223,8 +226,7 @@ test('openai-bridge retries transient upstream 524 responses for streaming Respo
         providers: {
             test: {
                 baseUrl: `http://127.0.0.1:${upstreamPort}/v1`,
-                apiKey: 'sk-upstream',
-                maxRetries: 3
+                apiKey: 'sk-upstream'
             }
         }
     }), 'utf-8');

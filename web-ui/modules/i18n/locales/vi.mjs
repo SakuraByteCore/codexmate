@@ -737,8 +737,6 @@ const vi = Object.freeze({
     'modal.claudeConfigEdit.title': 'Chỉnh sửa cấu hình Claude Code',
     'field.useBuiltinTransform': 'Dùng transform tích hợp (tương thích OpenAI)',
     'hint.useBuiltinTransform': 'Khi bật, base_url trỏ đến dịch vụ transform tích hợp của codexmate.',
-    'field.transformMaxRetries': 'Số lần thử lại transform tích hợp',
-    'hint.transformMaxRetries': 'Mặc định 2, tối thiểu 2; số lần thử lại sau lần gọi đầu thất bại.',
     'modal.configTemplate.title': 'Trình soạn thảo template cấu hình (xác nhận thủ công)',
     'modal.configTemplate.label': 'Template config.toml',
     'modal.configTemplate.placeholder': 'Chỉnh sửa template config.toml tại đây',

@@ -1,15 +1,15 @@
-const DEFAULT_BRIDGE_MAX_RETRIES = 2;
-const MIN_BRIDGE_MAX_RETRIES = 2;
-const MAX_BRIDGE_MAX_RETRIES = 10;
+const DEFAULT_BRIDGE_MAX_RETRIES = Infinity;
 const BASE_TRANSIENT_RETRY_DELAY_MS = 200;
 const MAX_TRANSIENT_RETRY_DELAY_MS = 5000;
 
 function normalizeBridgeMaxRetries(value, fallback = DEFAULT_BRIDGE_MAX_RETRIES) {
     const raw = Number(value);
     const fallbackRaw = Number(fallback);
-    const base = Number.isFinite(raw) ? raw : (Number.isFinite(fallbackRaw) ? fallbackRaw : DEFAULT_BRIDGE_MAX_RETRIES);
-    return Math.min(MAX_BRIDGE_MAX_RETRIES, Math.max(MIN_BRIDGE_MAX_RETRIES, Math.floor(base)));
+    if (Number.isFinite(raw) && raw >= 0) return Math.floor(raw);
+    if (Number.isFinite(fallbackRaw) && fallbackRaw >= 0) return Math.floor(fallbackRaw);
+    return DEFAULT_BRIDGE_MAX_RETRIES;
 }
+
 
 function isTransientHttpStatus(status) {
     const code = Number(status);
@@ -35,7 +35,7 @@ function getTransientRetryDelayMs(attempt) {
 async function retryTransientRequest(executor, options = {}) {
     const maxRetries = normalizeBridgeMaxRetries(options && options.maxRetries);
     let lastResult = null;
-    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    for (let attempt = 0; attempt === 0 || attempt <= maxRetries; attempt += 1) {
         if (attempt > 0) {
             const delay = getTransientRetryDelayMs(attempt);
             // eslint-disable-next-line no-await-in-loop
@@ -61,8 +61,6 @@ async function retryTransientRequest(executor, options = {}) {
 
 module.exports = {
     DEFAULT_BRIDGE_MAX_RETRIES,
-    MIN_BRIDGE_MAX_RETRIES,
-    MAX_BRIDGE_MAX_RETRIES,
     normalizeBridgeMaxRetries,
     isTransientNetworkError,
     isTransientHttpStatus,

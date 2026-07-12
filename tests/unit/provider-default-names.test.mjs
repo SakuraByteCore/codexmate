@@ -39,7 +39,6 @@ test('Codex add-provider modal defaults to an auto-increment numeric provider na
         key: '',
         model: '',
         useTransform: false,
-        openaiBridgeMaxRetries: 2
     });
 
     context.providersList.push({ name: '3' });

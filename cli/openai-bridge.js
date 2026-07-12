@@ -87,7 +87,6 @@ function normalizeOpenaiUpstreamBaseUrl(rawValue) {
 }
 
 const {
-    normalizeBridgeMaxRetries,
     parseJsonOrError,
     extractChatCompletionResult,
     convertResponsesRequestToChatCompletions,
@@ -114,11 +113,10 @@ function normalizeUpstreamEntry(entry) {
     const apiKey = normalizeText(entry.apiKey || entry.api_key || entry.key || '');
     const headersRaw = entry.headers || entry.extraHeaders || entry.extra_headers || null;
     const headers = normalizeHeadersMap(headersRaw);
-    const maxRetries = normalizeBridgeMaxRetries(entry.maxRetries ?? entry.max_retries);
     if (!baseUrl || !isValidHttpUrl(baseUrl)) {
         return null;
     }
-    return { baseUrl, apiKey, headers, maxRetries };
+    return { baseUrl, apiKey, headers };
 }
 
 function normalizeHeadersMap(value) {
@@ -169,7 +167,6 @@ function upsertOpenaiBridgeProvider(filePath, providerName, upstreamBaseUrl, api
     const baseUrl = normalizeOpenaiUpstreamBaseUrl(upstreamBaseUrl);
     const key = normalizeText(apiKey);
     const nextHeaders = normalizeHeadersMap(headers);
-    const maxRetries = normalizeBridgeMaxRetries(options && options.maxRetries);
 
     if (!name) {
         return { error: 'Provider name is required' };
@@ -191,7 +188,6 @@ function upsertOpenaiBridgeProvider(filePath, providerName, upstreamBaseUrl, api
                 baseUrl,
                 apiKey: key,
                 headers: Object.keys(nextHeaders).length ? nextHeaders : existingHeaders,
-                maxRetries
             }
         }
     };
@@ -384,7 +380,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     maxBytes: maxUpstreamBytes,
                     httpAgent,
                     httpsAgent
-                }), { maxRetries: upstream.maxRetries });
+                }));
                 if (!result.ok) {
                     res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
                     res.end(JSON.stringify({ error: `Upstream request failed: ${result.error}` }));
@@ -446,7 +442,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                     res,
                     model: typeof chatBody.model === 'string' ? chatBody.model : '',
                     toolTypesByName: converted.toolTypesByName || {}
-                }), { maxRetries: upstream.maxRetries });
+                }));
                 if (!streamed.ok) {
                     if (res.writableEnded || res.destroyed) {
                         return;
@@ -471,7 +467,7 @@ function createOpenaiBridgeHttpHandler(options = {}) {
                 maxBytes: maxUpstreamBytes,
                 httpAgent,
                 httpsAgent
-            }), { maxRetries: upstream.maxRetries });
+            }));
             if (!upstreamResult.ok) {
                 res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({ error: `Upstream request failed: ${upstreamResult.error}` }));
@@ -558,7 +554,6 @@ module.exports = {
     extractChatCompletionResult,
     buildResponsesPayloadFromChatResult,
     retryTransientRequest,
-    normalizeBridgeMaxRetries,
     normalizeOpenaiUpstreamBaseUrl,
     extractResponsesOutputText,
     shouldFallbackFromUpstreamResponses,

@@ -41,13 +41,6 @@ function findProviderByName(list, name) {
     return (Array.isArray(list) ? list : []).find((item) => item && normalizeText(item.name) === target) || null;
 }
 
-function normalizeBridgeMaxRetries(value, fallback = 2) {
-    const raw = Number(value);
-    const fallbackRaw = Number(fallback);
-    const base = Number.isFinite(raw) ? raw : (Number.isFinite(fallbackRaw) ? fallbackRaw : 2);
-    return Math.min(10, Math.max(2, Math.floor(base)));
-}
-
 function normalizeProviderDraftState(target) {
     if (!target || typeof target !== 'object') return;
     if (typeof target.name === 'string') {
@@ -61,9 +54,6 @@ function normalizeProviderDraftState(target) {
     }
     if (typeof target.key === 'string') {
         target.key = target.key.trim();
-    }
-    if (target.useTransform || target.openaiBridgeMaxRetries !== undefined) {
-        target.openaiBridgeMaxRetries = normalizeBridgeMaxRetries(target.openaiBridgeMaxRetries);
     }
 }
 
@@ -87,13 +77,11 @@ function getProviderValidationForContext(vm, mode = 'add') {
     const model = normalizeText(draft && draft.model);
     const key = normalizeText(draft && draft.key);
     const useTransform = !!(draft && draft.useTransform);
-    const openaiBridgeMaxRetries = normalizeBridgeMaxRetries(draft && draft.openaiBridgeMaxRetries);
     const errors = {
         name: '',
         url: '',
         key: '',
         model: '',
-        openaiBridgeMaxRetries: ''
     };
 
     if (mode === 'add') {
@@ -124,10 +112,6 @@ function getProviderValidationForContext(vm, mode = 'add') {
         errors.model = '模型名称必填';
     }
 
-    if (useTransform && openaiBridgeMaxRetries < 2) {
-        errors.openaiBridgeMaxRetries = '重试次数最小为 2';
-    }
-
     return {
         mode,
         name,
@@ -135,9 +119,8 @@ function getProviderValidationForContext(vm, mode = 'add') {
         key,
         model,
         useTransform,
-        openaiBridgeMaxRetries,
         errors,
-        ok: !errors.name && !errors.url && !errors.key && !errors.model && !errors.openaiBridgeMaxRetries
+        ok: !errors.name && !errors.url && !errors.key && !errors.model
     };
 }
 
@@ -191,7 +174,7 @@ export function createProvidersMethods(options = {}) {
             normalizeProviderDraftState(this.newProvider);
             const validation = getProviderValidationForContext(this, 'add');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.key || validation.errors.model || validation.errors.openaiBridgeMaxRetries || this.t('toast.provider.fieldsRequired'), 'error');
+                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.key || validation.errors.model || this.t('toast.provider.fieldsRequired'), 'error');
             }
 
             try {
@@ -203,7 +186,6 @@ export function createProvidersMethods(options = {}) {
                 };
                 if (this.newProvider && this.newProvider.useTransform) {
                     payload.useTransform = true;
-                    payload.openaiBridgeMaxRetries = validation.openaiBridgeMaxRetries;
                 }
                 const suggestedModel = validation.model;
                 const res = await api('add-provider', payload);
@@ -218,7 +200,6 @@ export function createProvidersMethods(options = {}) {
                     url: validation.url,
                     upstreamUrl: '',
                     codexmate_bridge: payload.useTransform ? 'openai' : '',
-                    openaiBridgeMaxRetries: payload.useTransform ? validation.openaiBridgeMaxRetries : undefined,
                     key: maskKeyLocal(payload.key),
                     hasKey: !!payload.key,
                     models: suggestedModel ? [{ id: suggestedModel, name: suggestedModel, cost: null, contextWindow: undefined, maxTokens: undefined }] : [],
@@ -345,7 +326,6 @@ export function createProvidersMethods(options = {}) {
                 key: '',
                 model: '',
                 useTransform: isTransform,
-                openaiBridgeMaxRetries: normalizeBridgeMaxRetries(provider.openaiBridgeMaxRetries)
             };
             this.showAddProviderKey = false;
             this.showAddModal = true;
@@ -358,7 +338,6 @@ export function createProvidersMethods(options = {}) {
                 key: '',
                 model: '',
                 useTransform: false,
-                openaiBridgeMaxRetries: 2
             };
             this.showAddProviderKey = false;
             this.showAddModal = true;
@@ -387,7 +366,6 @@ export function createProvidersMethods(options = {}) {
                     ? provider.nonEditable
                     : this.isNonDeletableProvider(provider),
                 useTransform: isTransformProvider,
-                openaiBridgeMaxRetries: normalizeBridgeMaxRetries(provider.openaiBridgeMaxRetries)
             };
             this._editProviderOriginalKey = '';
             this._editProviderRealKeyLoaded = false;
@@ -428,9 +406,6 @@ export function createProvidersMethods(options = {}) {
                         && res.baseUrl.trim()
                     ) {
                         this.editingProvider.url = normalizeProviderUrl(res.baseUrl);
-                        if (res.maxRetries !== undefined) {
-                            this.editingProvider.openaiBridgeMaxRetries = normalizeBridgeMaxRetries(res.maxRetries);
-                        }
                     }
                 } catch (_) {
                     // ignore
@@ -447,13 +422,12 @@ export function createProvidersMethods(options = {}) {
             normalizeProviderDraftState(this.editingProvider);
             const validation = getProviderValidationForContext(this, 'edit');
             if (!validation.ok) {
-                return this.showMessage(validation.errors.name || validation.errors.url || validation.errors.openaiBridgeMaxRetries || this.t('toast.provider.urlRequired'), 'error');
+                return this.showMessage(validation.errors.name || validation.errors.url || this.t('toast.provider.urlRequired'), 'error');
             }
 
             const params = { name: validation.name, url: validation.url };
             if (this.editingProvider && this.editingProvider.useTransform) {
                 params.useTransform = true;
-                params.openaiBridgeMaxRetries = validation.openaiBridgeMaxRetries;
             }
             if (this._editProviderRealKeyLoaded) {
                 const currentKey = typeof this.editingProvider.key === 'string' ? this.editingProvider.key : '';
@@ -479,7 +453,6 @@ export function createProvidersMethods(options = {}) {
                             key: keyUpdated ? maskKeyLocal(params.key) : p.key,
                             hasKey: keyUpdated ? !!params.key : p.hasKey,
                             codexmate_bridge: params.useTransform ? 'openai' : p.codexmate_bridge,
-                            openaiBridgeMaxRetries: params.useTransform ? validation.openaiBridgeMaxRetries : p.openaiBridgeMaxRetries
                         };
                     }
                     return p;
@@ -497,7 +470,7 @@ export function createProvidersMethods(options = {}) {
             this.showEditProviderKey = false;
             this._editProviderOriginalKey = '';
             this._editProviderRealKeyLoaded = false;
-            this.editingProvider = { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false, openaiBridgeMaxRetries: 2 };
+            this.editingProvider = { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false };
         },
 
         toggleEditProviderKey() {
@@ -580,7 +553,7 @@ export function createProvidersMethods(options = {}) {
         closeAddModal() {
             this.showAddModal = false;
             this.showAddProviderKey = false;
-            this.newProvider = { name: nextCodexProviderName(this.providersList), url: '', key: '', model: '', useTransform: false, openaiBridgeMaxRetries: 2 };
+            this.newProvider = { name: nextCodexProviderName(this.providersList), url: '', key: '', model: '', useTransform: false };
         },
 
         toggleAddProviderKey() {

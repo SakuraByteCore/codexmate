@@ -22,8 +22,8 @@ function createContext(overrides = {}, apiImpl = async () => ({ success: true })
         showAddModal: true,
         showEditModal: false,
         resetConfigLoading: false,
-        newProvider: { name: '', url: '', key: '', model: '', useTransform: false, openaiBridgeMaxRetries: 2 },
-        editingProvider: { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false, openaiBridgeMaxRetries: 2 },
+        newProvider: { name: '', url: '', key: '', model: '', useTransform: false },
+        editingProvider: { name: '', url: '', key: '', readOnly: false, nonEditable: false, useTransform: false },
         claudeConfigs: {},
         showMessage(text, type) {
             messages.push({ text: String(text), type: type || 'info' });
@@ -94,7 +94,7 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
         }
     }]);
     assert.strictEqual(context.showAddModal, false);
-    assert.deepStrictEqual(context.newProvider, { name: '1', url: '', key: '', model: '', useTransform: false, openaiBridgeMaxRetries: 2 });
+    assert.deepStrictEqual(context.newProvider, { name: '1', url: '', key: '', model: '', useTransform: false });
     // c3c9ee5：增删改不再触发 loadAll，改为本地 providersList 增量更新。
     assert.deepStrictEqual(loadAllCalls, []);
     assert.ok(
@@ -181,7 +181,7 @@ test('provider validation rejects reserved proxy name on add', () => {
     assert.strictEqual(context.canSubmitProvider('add'), false);
 });
 
-test('transform provider submits configurable retry count with minimum two', async () => {
+test('transform provider does not expose retry count in submitted payload', async () => {
     const apiCalls = [];
     const { context } = createContext({
         newProvider: {
@@ -189,8 +189,7 @@ test('transform provider submits configurable retry count with minimum two', asy
             url: 'https://api.example.com/v1',
             key: 'sk-live',
             model: 'gpt-e2e',
-            useTransform: true,
-            openaiBridgeMaxRetries: 1
+            useTransform: true
         }
     }, async (action, params) => {
         apiCalls.push({ action, params });
@@ -206,8 +205,7 @@ test('transform provider submits configurable retry count with minimum two', asy
             url: 'https://api.example.com/v1',
             key: 'sk-live',
             model: 'gpt-e2e',
-            useTransform: true,
-            openaiBridgeMaxRetries: 2
+            useTransform: true
         }
     }]);
 });

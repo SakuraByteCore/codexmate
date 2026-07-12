@@ -517,8 +517,6 @@ const zh = Object.freeze({
     'modal.claudeConfigEdit.title': '编辑 Claude Code 配置',
     'field.useBuiltinTransform': '使用内建转换（兼容 OpenAI 格式）',
     'hint.useBuiltinTransform': '开启后：写入的 base_url 会指向 codexmate 内建转换服务；Codex 使用的令牌固定为 codexmate。',
-    'field.transformMaxRetries': '内建转换重试次数',
-    'hint.transformMaxRetries': '默认 2，最小 2；表示失败后最多重试的次数。',
 
     // Config template / agents modals
     'modal.configTemplate.label': 'config.toml 模板',
