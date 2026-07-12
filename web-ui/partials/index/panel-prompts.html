@@ -66,29 +66,6 @@
                                 </button>
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
-                                <select
-                                    class="form-input prompt-presets-select"
-                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible || !promptPresets.length"
-                                    :title="t('prompts.presets.title')"
-                                    @change="applyPromptPresetSelection($event)">
-                                    <option value="">{{ t('prompts.presets.selectPlaceholder') }}</option>
-                                    <option v-for="preset in promptPresets" :key="preset.id" :value="preset.id">{{ preset.name }}</option>
-                                </select>
-                                <input
-                                    type="text"
-                                    class="form-input prompt-presets-name-input"
-                                    v-model="promptPresetNameDraft"
-                                    :placeholder="t('prompts.presets.namePlaceholder')"
-                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
-                                    @keydown.enter.prevent="saveCurrentPromptAsPreset">
-                                <button
-                                    type="button"
-                                    class="btn-mini btn-confirm-mini"
-                                    @click="saveCurrentPromptAsPreset"
-                                    :disabled="promptPresetSaving || agentsLoading || agentsSaving || agentsDiffVisible"
-                                    :title="t('prompts.presets.saveCurrent')">
-                                    {{ t('prompts.presets.saveCurrent') }}
-                                </button>
                                 <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                 </button>
@@ -105,6 +82,36 @@
                                     <svg v-else class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                    <div class="prompt-presets-inline-row">
+                        <div class="prompt-presets-inline-group">
+                            <label class="prompt-presets-inline-label">{{ t('prompts.presets.title') }}</label>
+                            <select
+                                class="form-input prompt-presets-select"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible || !promptPresets.length"
+                                :title="t('prompts.presets.title')"
+                                @change="applyPromptPresetSelection($event)">
+                                <option value="">{{ t('prompts.presets.selectPlaceholder') }}</option>
+                                <option v-for="preset in promptPresets" :key="preset.id" :value="preset.id">{{ preset.name }}</option>
+                            </select>
+                        </div>
+                        <div class="prompt-presets-inline-group prompt-presets-inline-group--save">
+                            <input
+                                type="text"
+                                class="form-input prompt-presets-name-input"
+                                v-model="promptPresetNameDraft"
+                                :placeholder="t('prompts.presets.namePlaceholder')"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
+                                @keydown.enter.prevent="saveCurrentPromptAsPreset">
+                            <button
+                                type="button"
+                                class="btn-mini btn-confirm-mini"
+                                @click="saveCurrentPromptAsPreset"
+                                :disabled="promptPresetSaving || agentsLoading || agentsSaving || agentsDiffVisible"
+                                :title="t('prompts.presets.saveCurrent')">
+                                {{ t('prompts.presets.saveCurrent') }}
+                            </button>
                         </div>
                     </div>
                         <details class="prompt-presets-panel">

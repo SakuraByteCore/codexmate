@@ -6760,37 +6760,6 @@ return function render(_ctx, _cache) {
                         ], 8 /* PROPS */, ["onClick", "disabled", "title"])
                       ]),
                       _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
-                        _createElementVNode("select", {
-                          class: "form-input prompt-presets-select",
-                          disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible || !_ctx.promptPresets.length,
-                          title: _ctx.t('prompts.presets.title'),
-                          onChange: $event => (_ctx.applyPromptPresetSelection($event))
-                        }, [
-                          _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('prompts.presets.selectPlaceholder')), 1 /* TEXT */),
-                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptPresets, (preset) => {
-                            return (_openBlock(), _createElementBlock("option", {
-                              key: preset.id,
-                              value: preset.id
-                            }, _toDisplayString(preset.name), 9 /* TEXT, PROPS */, ["value"]))
-                          }), 128 /* KEYED_FRAGMENT */))
-                        ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onChange"]),
-                        _withDirectives(_createElementVNode("input", {
-                          type: "text",
-                          class: "form-input prompt-presets-name-input",
-                          "onUpdate:modelValue": $event => ((_ctx.promptPresetNameDraft) = $event),
-                          placeholder: _ctx.t('prompts.presets.namePlaceholder'),
-                          disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
-                          onKeydown: _withKeys(_withModifiers(_ctx.saveCurrentPromptAsPreset, ["prevent"]), ["enter"])
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "disabled", "onKeydown"]), [
-                          [_vModelText, _ctx.promptPresetNameDraft]
-                        ]),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-mini btn-confirm-mini",
-                          onClick: _ctx.saveCurrentPromptAsPreset,
-                          disabled: _ctx.promptPresetSaving || _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
-                          title: _ctx.t('prompts.presets.saveCurrent')
-                        }, _toDisplayString(_ctx.t('prompts.presets.saveCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
                         _createElementVNode("button", {
                           class: "btn-mini",
                           onClick: _ctx.loadPromptsContent,
@@ -6860,6 +6829,44 @@ return function render(_ctx, _cache) {
                               ]))
                         ], 8 /* PROPS */, ["onClick", "disabled", "title"])
                       ])
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "prompt-presets-inline-row" }, [
+                    _createElementVNode("div", { class: "prompt-presets-inline-group" }, [
+                      _createElementVNode("label", { class: "prompt-presets-inline-label" }, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */),
+                      _createElementVNode("select", {
+                        class: "form-input prompt-presets-select",
+                        disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible || !_ctx.promptPresets.length,
+                        title: _ctx.t('prompts.presets.title'),
+                        onChange: $event => (_ctx.applyPromptPresetSelection($event))
+                      }, [
+                        _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('prompts.presets.selectPlaceholder')), 1 /* TEXT */),
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptPresets, (preset) => {
+                          return (_openBlock(), _createElementBlock("option", {
+                            key: preset.id,
+                            value: preset.id
+                          }, _toDisplayString(preset.name), 9 /* TEXT, PROPS */, ["value"]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onChange"])
+                    ]),
+                    _createElementVNode("div", { class: "prompt-presets-inline-group prompt-presets-inline-group--save" }, [
+                      _withDirectives(_createElementVNode("input", {
+                        type: "text",
+                        class: "form-input prompt-presets-name-input",
+                        "onUpdate:modelValue": $event => ((_ctx.promptPresetNameDraft) = $event),
+                        placeholder: _ctx.t('prompts.presets.namePlaceholder'),
+                        disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                        onKeydown: _withKeys(_withModifiers(_ctx.saveCurrentPromptAsPreset, ["prevent"]), ["enter"])
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "disabled", "onKeydown"]), [
+                        [_vModelText, _ctx.promptPresetNameDraft]
+                      ]),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-mini btn-confirm-mini",
+                        onClick: _ctx.saveCurrentPromptAsPreset,
+                        disabled: _ctx.promptPresetSaving || _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                        title: _ctx.t('prompts.presets.saveCurrent')
+                      }, _toDisplayString(_ctx.t('prompts.presets.saveCurrent')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"])
                     ])
                   ]),
                   _createElementVNode("details", { class: "prompt-presets-panel" }, [

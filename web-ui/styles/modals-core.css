@@ -726,6 +726,39 @@
     box-shadow: none;
 }
 
+.prompt-presets-inline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+}
+
+.prompt-presets-inline-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.prompt-presets-inline-group--save {
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.prompt-presets-inline-label {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.prompt-presets-select {
+    min-width: 180px;
+}
+
 .prompt-presets-panel {
     margin: 12px 0;
     border: 1px solid var(--color-border-soft);

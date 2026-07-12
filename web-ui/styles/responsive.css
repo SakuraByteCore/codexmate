@@ -199,6 +199,22 @@ textarea:focus-visible {
         flex-wrap: wrap;
     }
 
+    .prompt-presets-inline-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .prompt-presets-inline-group,
+    .prompt-presets-inline-group--save {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .prompt-presets-select,
+    .prompt-presets-name-input {
+        width: 100%;
+    }
+
     .template-editor,
     .agents-diff-editor {
         min-height: min(50vh, 400px);
@@ -603,6 +619,22 @@ textarea:focus-visible {
     .prompts-editor-actions {
         width: 100%;
         flex-wrap: wrap;
+    }
+
+    .prompt-presets-inline-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .prompt-presets-inline-group,
+    .prompt-presets-inline-group--save {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .prompt-presets-select,
+    .prompt-presets-name-input {
+        width: 100%;
     }
 }
 
