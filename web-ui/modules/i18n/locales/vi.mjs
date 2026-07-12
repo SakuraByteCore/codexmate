@@ -245,6 +245,7 @@ const vi = Object.freeze({
     'prompts.presets.title': 'Kho preset prompt dùng chung',
     'prompts.presets.hint': 'Lưu nội dung prompt tái sử dụng tại đây, rồi áp dụng vào AGENTS.md hoặc CLAUDE.md. Áp dụng preset chỉ cập nhật editor; cần bấm Lưu để ghi tệp.',
     'prompts.presets.namePlaceholder': 'Tên preset',
+    'prompts.presets.selectPlaceholder': 'Chọn preset để dán…',
     'prompts.presets.saveCurrent': 'Lưu nội dung hiện tại thành preset',
     'prompts.presets.empty': 'Chưa có preset. Mở AGENTS.md hoặc CLAUDE.md, nhập nội dung rồi lưu thành preset.',
     'prompts.presets.updatedAt': 'Cập nhật: {time}',

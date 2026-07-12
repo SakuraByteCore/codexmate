@@ -736,9 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
                         this.loadProjectPathOptions();
                     }
-                    if (this.promptsSubTab !== 'presets') {
-                        this.loadPromptsContent();
-                    }
+                    this.loadPromptsContent();
                 }
             },
             promptsSubTab(newVal) {
@@ -749,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.__skipNextPromptsSubTabLoad = false;
                     return;
                 }
-                if (this.mainTab === 'prompts' && newVal !== 'presets' && typeof this.loadPromptsContent === 'function') {
+                if (this.mainTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
                     this.loadPromptsContent();
                 }
             },

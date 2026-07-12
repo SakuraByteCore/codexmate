@@ -62,7 +62,7 @@ function normalizeUsageTimeRange(value) {
 
 function normalizePromptsSubTab(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    if (normalized === 'claude-project' || normalized === 'presets') return normalized;
+    if (normalized === 'claude-project') return normalized;
     return 'codex';
 }
 

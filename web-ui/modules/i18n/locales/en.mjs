@@ -230,6 +230,7 @@ const en = Object.freeze({
     'prompts.presets.title': 'Prompt preset pool',
     'prompts.presets.hint': 'Save reusable prompt content here, then apply it to AGENTS.md or CLAUDE.md. Applying a preset only updates the editor; click Save to write the file.',
     'prompts.presets.namePlaceholder': 'Preset name',
+    'prompts.presets.selectPlaceholder': 'Paste preset…',
     'prompts.presets.saveCurrent': 'Save current as preset',
     'prompts.presets.empty': 'No presets yet. Open AGENTS.md or CLAUDE.md, enter content, then save it as a preset.',
     'prompts.presets.updatedAt': 'Updated: {time}',

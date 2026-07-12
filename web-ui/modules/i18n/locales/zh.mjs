@@ -230,6 +230,7 @@ const zh = Object.freeze({
     'prompts.presets.title': 'Prompt 通用预设池',
     'prompts.presets.hint': '把可复用的 prompt 内容保存在这里，再应用到 AGENTS.md 或 CLAUDE.md。应用预设只更新编辑器，仍需点击保存才会写入文件。',
     'prompts.presets.namePlaceholder': '预设名称',
+    'prompts.presets.selectPlaceholder': '选择预设并粘贴…',
     'prompts.presets.saveCurrent': '保存当前内容为预设',
     'prompts.presets.empty': '暂无预设。先打开 AGENTS.md 或 CLAUDE.md 编辑内容，再保存为预设。',
     'prompts.presets.updatedAt': '更新时间：{time}',

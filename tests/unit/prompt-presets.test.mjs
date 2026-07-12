@@ -162,6 +162,27 @@ test('prompt presets paste into current editor draft without target switch or fi
     assert.deepEqual(apiCalls, []);
 });
 
+test('prompt preset selection pastes into current editor and resets selector', async () => {
+    const { vm, apiCalls, confirms, messages } = createVm({
+        promptPresets: [{ id: 'p1', name: 'Base', content: 'selected body', updatedAt: '2026-01-01T00:00:00.000Z' }],
+        promptsSubTab: 'codex',
+        agentsOriginalContent: 'original',
+        agentsContent: 'dirty'
+    });
+    const event = { target: { value: 'p1' } };
+
+    await vm.applyPromptPresetSelection(event);
+
+    assert.equal(confirms.length, 0);
+    assert.equal(vm.promptsSubTab, 'codex');
+    assert.equal(vm.agentsContent, 'selected body');
+    assert.equal(vm.agentsOriginalContent, 'original');
+    assert.equal(vm.selectedPromptPresetId, 'p1');
+    assert.equal(event.target.value, '');
+    assert.equal(messages.at(-1).message, 'prompts.presets.toast.pasted');
+    assert.deepEqual(apiCalls, []);
+});
+
 test('prompt presets prevent rename conflicts and delete after confirmation', async () => {
     const { vm, persisted, messages, confirms } = createVm({
         promptPresets: [

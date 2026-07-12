@@ -231,6 +231,7 @@ const ja = Object.freeze({
     'prompts.presets.title': 'Prompt 共通プリセット',
     'prompts.presets.hint': '再利用する prompt 内容を保存し、AGENTS.md または CLAUDE.md に適用できます。適用してもエディターだけが更新され、ファイルへ書き込むには保存が必要です。',
     'prompts.presets.namePlaceholder': 'プリセット名',
+    'prompts.presets.selectPlaceholder': 'プリセットを選んでペースト…',
     'prompts.presets.saveCurrent': '現在の内容をプリセット保存',
     'prompts.presets.empty': 'プリセットはまだありません。AGENTS.md または CLAUDE.md を開いて内容を編集し、プリセットとして保存してください。',
     'prompts.presets.updatedAt': '更新: {time}',

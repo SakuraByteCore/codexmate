@@ -838,6 +838,14 @@ export function createAgentsMethods(options = {}) {
             this.selectedPromptPresetId = preset.id;
             this.showMessage(this.t('prompts.presets.toast.pasted'), 'success');
         },
+        async applyPromptPresetSelection(event) {
+            const select = event && event.target;
+            const presetId = select && typeof select.value === 'string' ? select.value : '';
+            if (!presetId) return;
+            const preset = (Array.isArray(this.promptPresets) ? this.promptPresets : []).find((item) => item && item.id === presetId);
+            await this.applyPromptPresetToEditor(preset);
+            if (select) select.value = '';
+        },
         async renamePromptPreset(preset) {
             if (!preset || !preset.id) return;
             const name = this.normalizePromptPresetName(this.getPromptPresetRenameDraft(preset));
@@ -885,14 +893,7 @@ export function createAgentsMethods(options = {}) {
             this.showMessage(this.t('prompts.presets.toast.deleted'), 'success');
         },
         switchPromptsSubTab(subTab) {
-            const normalized = subTab === 'claude-project' || subTab === 'presets' ? subTab : 'codex';
-            if (normalized === 'presets') {
-                this.promptsSubTab = normalized;
-                this.$nextTick(() => {
-                    document.querySelector('.main-panel')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-                });
-                return;
-            }
+            const normalized = subTab === 'claude-project' ? subTab : 'codex';
             if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
                 this.loadProjectPathOptions();
             }
