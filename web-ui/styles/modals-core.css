@@ -61,6 +61,85 @@
     max-height: calc(100vh - 56px);
 }
 
+.agents-modal:has(.modal-editor-body--openclaw-workspace) {
+    width: min(94vw, 1040px);
+    max-height: calc(100vh - 40px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 246, 241, 0.96) 100%);
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .modal-editor-header {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid rgba(137, 111, 94, 0.10);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(249, 244, 239, 0.82));
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .modal-title {
+    margin-bottom: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .modal-header-actions {
+    gap: 6px;
+}
+
+.agents-modal .modal-editor-body--openclaw-workspace {
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px 20px 20px;
+    overflow: hidden;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-target-file-group {
+    align-self: start;
+    margin-bottom: 0;
+    padding: 14px;
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-target-file-group .form-hint {
+    margin-top: 8px;
+    font-family: var(--font-family-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-content-group {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-content-group > .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .template-editor,
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-diff-editor {
+    min-height: min(64vh, 620px);
+    max-height: min(68vh, 680px);
+    border-radius: var(--radius-lg);
+    border-color: rgba(137, 111, 94, 0.14);
+    background: rgba(255, 255, 255, 0.88);
+    font-size: 13px;
+    line-height: 1.62;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .template-editor-warning {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: rgba(137, 111, 94, 0.06);
+}
+
 .modal-editor-header {
     margin-bottom: 0;
     padding: var(--spacing-md) var(--spacing-md) 0;

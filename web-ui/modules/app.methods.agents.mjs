@@ -206,13 +206,13 @@ export function createAgentsMethods(options = {}) {
                 this.agentsContext = 'openclaw-workspace';
                 this.agentsWorkspaceFileName = fileName;
                 this.agentsModalTitle = tr('modal.agents.title.openclawWorkspaceFile', `OpenClaw 工作区文件: ${fileName}`, { fileName });
-                this.agentsModalHint = tr('modal.agents.hint.openclawWorkspaceFile', `保存后会写入 OpenClaw Workspace 下的 ${fileName}。`, { fileName });
+                this.agentsModalHint = tr('modal.agents.hint.openclawWorkspaceFile', `Workspace / ${fileName}`, { fileName });
                 return;
             }
             this.agentsContext = context === 'openclaw' ? 'openclaw' : 'codex';
             if (this.agentsContext === 'openclaw') {
                 this.agentsModalTitle = tr('modal.agents.title.openclaw', 'OpenClaw AGENTS.md 编辑器');
-                this.agentsModalHint = tr('modal.agents.hint.openclaw', '保存后会写入 OpenClaw Workspace 下的 AGENTS.md。');
+                this.agentsModalHint = tr('modal.agents.hint.openclaw', 'Workspace / AGENTS.md');
             } else {
                 this.agentsModalTitle = tr('modal.agents.title.default', 'AGENTS.md 编辑器');
                 this.agentsModalHint = tr('modal.agents.hint.default', '保存后会写入目标 AGENTS.md（与 config.toml 同级）。');

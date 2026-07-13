@@ -2253,7 +2253,7 @@ return function render(_ctx, _cache) {
                       _createElementVNode("div", { class: "summary-eyebrow" }, "OPENCLAW"),
                       _createElementVNode("div", { class: "summary-title" }, "配置与本地诊断")
                     ]),
-                    _createElementVNode("div", { class: "summary-note" }, "只读摘要，不读取 runtime 聊天消息")
+                    _createElementVNode("div", { class: "summary-note" }, "配置摘要")
                   ]),
                   _createElementVNode("div", { class: "openclaw-summary-grid" }, [
                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawStatusSummaryItems(), (item) => {
@@ -2266,7 +2266,7 @@ return function render(_ctx, _cache) {
                       ], 2 /* CLASS */))
                     }), 128 /* KEYED_FRAGMENT */))
                   ]),
-                  _createElementVNode("div", { class: "openclaw-diagnostic-note" }, " Browser 状态来自配置文件摘要；Headless 表示它不是用户可见浏览器窗口。此页不展示群聊/私聊运行会话。 ")
+                  _createElementVNode("div", { class: "openclaw-diagnostic-note" }, " 本页仅管理配置与工作区文件。 ")
                 ])
               ]),
               _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
@@ -9225,8 +9225,10 @@ return function render(_ctx, _cache) {
                 }, _toDisplayString(_ctx.agentsSaving ? (_ctx.agentsDiffVisible ? _ctx.t('common.saving') : _ctx.t('common.previewing')) : (_ctx.agentsDiffVisible ? _ctx.t('common.save') : _ctx.t('common.preview'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
               ])
             ]),
-            _createElementVNode("div", { class: "modal-editor-body" }, [
-              _createElementVNode("div", { class: "form-group" }, [
+            _createElementVNode("div", {
+              class: _normalizeClass(["modal-editor-body", { 'modal-editor-body--openclaw-workspace': _ctx.agentsContext === 'openclaw-workspace' }])
+            }, [
+              _createElementVNode("div", { class: "form-group agents-target-file-group" }, [
                 _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('modal.agents.targetFile')), 1 /* TEXT */),
                 _createElementVNode("div", { class: "form-hint" }, [
                   _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
@@ -9235,8 +9237,10 @@ return function render(_ctx, _cache) {
                     : _createCommentVNode("v-if", true)
                 ])
               ]),
-              _createElementVNode("div", { class: "form-group" }, [
-                _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t(_ctx.agentsContext === 'claude-project' ? 'modal.agents.contentLabel.claudeProject' : 'modal.agents.contentLabel')), 1 /* TEXT */),
+              _createElementVNode("div", { class: "form-group agents-content-group" }, [
+                _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.agentsContext === 'openclaw-workspace'
+                                ? `${_ctx.agentsWorkspaceFileName || '工作区文件'} 内容`
+                                : _ctx.t(_ctx.agentsContext === 'claude-project' ? 'modal.agents.contentLabel.claudeProject' : 'modal.agents.contentLabel')), 1 /* TEXT */),
                 (!_ctx.agentsLoading && (_ctx.hasAgentsContentChanged() || _ctx.agentsDiffVisible))
                   ? (_openBlock(), _createElementBlock("div", {
                       key: 0,
@@ -9334,7 +9338,7 @@ return function render(_ctx, _cache) {
                               }, _toDisplayString(_ctx.t('diff.viewHint.preview')), 1 /* TEXT */))
                 ])
               ])
-            ])
+            ], 2 /* CLASS */)
           ])
         ], 8 /* PROPS */, ["onClick"]))
       : _createCommentVNode("v-if", true),

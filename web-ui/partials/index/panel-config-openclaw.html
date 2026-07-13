@@ -18,7 +18,7 @@
                                     <div class="summary-eyebrow">OPENCLAW</div>
                                     <div class="summary-title">配置与本地诊断</div>
                                 </div>
-                                <div class="summary-note">只读摘要，不读取 runtime 聊天消息</div>
+                                <div class="summary-note">配置摘要</div>
                             </div>
                             <div class="openclaw-summary-grid">
                                 <div v-for="item in getOpenclawStatusSummaryItems()" :key="item.key" :class="['openclaw-summary-item', item.tone || '']">
@@ -27,7 +27,7 @@
                                 </div>
                             </div>
                             <div class="openclaw-diagnostic-note">
-                                Browser 状态来自配置文件摘要；Headless 表示它不是用户可见浏览器窗口。此页不展示群聊/私聊运行会话。
+                                本页仅管理配置与工作区文件。
                             </div>
                         </div>
                     </section>
