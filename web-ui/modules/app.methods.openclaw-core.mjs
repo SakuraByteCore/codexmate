@@ -549,7 +549,7 @@ export function createOpenclawCoreMethods() {
         },
 
         getOpenclawQuickWorkspaceFiles() {
-            return ['AGENTS.md', 'SOUL.md', 'USER.md', 'TOOLS.md', 'HEARTBEAT.md'];
+            return ['SOUL.md', 'USER.md', 'TOOLS.md', 'HEARTBEAT.md'];
         },
 
         openOpenclawQuickWorkspaceFile(fileName) {

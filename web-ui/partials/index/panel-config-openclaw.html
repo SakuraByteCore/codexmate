@@ -34,24 +34,29 @@
 
                     <section class="settings-card settings-card--wide openclaw-workspace-card">
                         <div class="settings-card-body">
-                            <div class="openclaw-section-title">工作区快捷文件</div>
-                            <div class="openclaw-quick-files" aria-label="OpenClaw workspace quick files">
-                                <button
-                                    v-for="fileName in getOpenclawQuickWorkspaceFiles()"
-                                    :key="fileName"
-                                    type="button"
-                                    class="openclaw-quick-file-btn"
-                                    @click="openOpenclawQuickWorkspaceFile(fileName)"
-                                    :disabled="loading || !!initError || agentsLoading">
-                                    {{ fileName }}
-                                </button>
-                            </div>
                             <div class="openclaw-tools-grid">
                                 <button class="openclaw-tool-btn" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
                                     <div class="tool-icon">📄</div>
                                     <div class="tool-content">
                                         <div class="tool-title">AGENTS.md</div>
                                         <div class="tool-meta">{{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.hint') }}</div>
+                                    </div>
+                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
+                                    </svg>
+                                </button>
+
+                                <button
+                                    v-for="fileName in getOpenclawQuickWorkspaceFiles()"
+                                    :key="fileName"
+                                    type="button"
+                                    class="openclaw-tool-btn"
+                                    @click="openOpenclawQuickWorkspaceFile(fileName)"
+                                    :disabled="loading || !!initError || agentsLoading">
+                                    <div class="tool-icon">📄</div>
+                                    <div class="tool-content">
+                                        <div class="tool-title">{{ fileName }}</div>
+                                        <div class="tool-meta">Workspace / {{ fileName }}</div>
                                     </div>
                                     <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M9 18l6-6-6-6"/>

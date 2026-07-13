@@ -2271,21 +2271,6 @@ return function render(_ctx, _cache) {
               ]),
               _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
                 _createElementVNode("div", { class: "settings-card-body" }, [
-                  _createElementVNode("div", { class: "openclaw-section-title" }, "工作区快捷文件"),
-                  _createElementVNode("div", {
-                    class: "openclaw-quick-files",
-                    "aria-label": "OpenClaw workspace quick files"
-                  }, [
-                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawQuickWorkspaceFiles(), (fileName) => {
-                      return (_openBlock(), _createElementBlock("button", {
-                        key: fileName,
-                        type: "button",
-                        class: "openclaw-quick-file-btn",
-                        onClick: $event => (_ctx.openOpenclawQuickWorkspaceFile(fileName)),
-                        disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                      }, _toDisplayString(fileName), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                    }), 128 /* KEYED_FRAGMENT */))
-                  ]),
                   _createElementVNode("div", { class: "openclaw-tools-grid" }, [
                     _createElementVNode("button", {
                       class: "openclaw-tool-btn",
@@ -2307,6 +2292,30 @@ return function render(_ctx, _cache) {
                         _createElementVNode("path", { d: "M9 18l6-6-6-6" })
                       ]))
                     ], 8 /* PROPS */, ["onClick", "disabled"]),
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawQuickWorkspaceFiles(), (fileName) => {
+                      return (_openBlock(), _createElementBlock("button", {
+                        key: fileName,
+                        type: "button",
+                        class: "openclaw-tool-btn",
+                        onClick: $event => (_ctx.openOpenclawQuickWorkspaceFile(fileName)),
+                        disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                      }, [
+                        _createElementVNode("div", { class: "tool-icon" }, "📄"),
+                        _createElementVNode("div", { class: "tool-content" }, [
+                          _createElementVNode("div", { class: "tool-title" }, _toDisplayString(fileName), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "tool-meta" }, "Workspace / " + _toDisplayString(fileName), 1 /* TEXT */)
+                        ]),
+                        (_openBlock(), _createElementBlock("svg", {
+                          class: "tool-chevron",
+                          viewBox: "0 0 24 24",
+                          fill: "none",
+                          stroke: "currentColor",
+                          "stroke-width": "2"
+                        }, [
+                          _createElementVNode("path", { d: "M9 18l6-6-6-6" })
+                        ]))
+                      ], 8 /* PROPS */, ["onClick", "disabled"]))
+                    }), 128 /* KEYED_FRAGMENT */)),
                     _createElementVNode("div", { class: "openclaw-workspace-card" }, [
                       _createElementVNode("label", {
                         class: "workspace-label",
