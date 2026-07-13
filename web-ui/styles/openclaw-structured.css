@@ -459,39 +459,76 @@
     overflow-wrap: anywhere;
 }
 
-.openclaw-section-title {
-    margin-bottom: 8px;
-    font-size: 13px;
+.openclaw-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.openclaw-tool-btn {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 74px;
+    padding: 14px 16px;
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--color-text-primary);
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.openclaw-tool-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: rgba(137, 111, 94, 0.22);
+    box-shadow: 0 8px 22px rgba(68, 52, 39, 0.08);
+}
+
+.openclaw-tool-btn:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+}
+
+.tool-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: rgba(137, 111, 94, 0.08);
+    font-size: 19px;
+}
+
+.tool-content {
+    min-width: 0;
+}
+
+.tool-title {
+    font-size: 14px;
     font-weight: 600;
     color: var(--color-text-primary);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
-.openclaw-quick-files {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
+.tool-meta {
+    margin-top: 4px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
 }
 
-.openclaw-quick-file-btn {
-    padding: 7px 10px;
-    border: 1px solid rgba(137, 111, 94, 0.14);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.78);
-    color: var(--color-text-secondary);
-    font-size: 12px;
-    cursor: pointer;
-}
-
-.openclaw-quick-file-btn:hover:not(:disabled) {
-    border-color: rgba(137, 111, 94, 0.24);
-    color: var(--color-text-primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.openclaw-quick-file-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+.tool-chevron {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-tertiary);
 }
 
 .openclaw-card-list {

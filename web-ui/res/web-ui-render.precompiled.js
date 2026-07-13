@@ -2280,7 +2280,7 @@ return function render(_ctx, _cache) {
                       _createElementVNode("div", { class: "tool-icon" }, "📄"),
                       _createElementVNode("div", { class: "tool-content" }, [
                         _createElementVNode("div", { class: "tool-title" }, "AGENTS.md"),
-                        _createElementVNode("div", { class: "tool-meta" }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.agents.hint')), 1 /* TEXT */)
+                        _createElementVNode("div", { class: "tool-meta" }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : 'Workspace file'), 1 /* TEXT */)
                       ]),
                       (_openBlock(), _createElementBlock("svg", {
                         class: "tool-chevron",
@@ -2303,7 +2303,7 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "tool-icon" }, "📄"),
                         _createElementVNode("div", { class: "tool-content" }, [
                           _createElementVNode("div", { class: "tool-title" }, _toDisplayString(fileName), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "tool-meta" }, "Workspace / " + _toDisplayString(fileName), 1 /* TEXT */)
+                          _createElementVNode("div", { class: "tool-meta" }, "Workspace file")
                         ]),
                         (_openBlock(), _createElementBlock("svg", {
                           class: "tool-chevron",
