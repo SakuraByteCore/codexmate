@@ -62,21 +62,6 @@
                                         <path d="M9 18l6-6-6-6"/>
                                     </svg>
                                 </button>
-
-                                <div class="openclaw-workspace-card">
-                                    <label class="workspace-label" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
-                                    <div class="workspace-input-group">
-                                        <input
-                                            id="openclaw-workspace-file"
-                                            class="form-input"
-                                            v-model="openclawWorkspaceFileName"
-                                            :placeholder="t('openclaw.workspace.placeholder')">
-                                        <button class="btn-tool" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
-                                            {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
-                                        </button>
-                                    </div>
-                                    <div class="workspace-meta">{{ t('openclaw.workspace.hint') }}</div>
-                                </div>
                             </div>
                         </div>
                     </section>

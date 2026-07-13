@@ -2315,29 +2315,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("path", { d: "M9 18l6-6-6-6" })
                         ]))
                       ], 8 /* PROPS */, ["onClick", "disabled"]))
-                    }), 128 /* KEYED_FRAGMENT */)),
-                    _createElementVNode("div", { class: "openclaw-workspace-card" }, [
-                      _createElementVNode("label", {
-                        class: "workspace-label",
-                        for: "openclaw-workspace-file"
-                      }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "workspace-input-group" }, [
-                        _withDirectives(_createElementVNode("input", {
-                          id: "openclaw-workspace-file",
-                          class: "form-input",
-                          "onUpdate:modelValue": $event => ((_ctx.openclawWorkspaceFileName) = $event),
-                          placeholder: _ctx.t('openclaw.workspace.placeholder')
-                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                          [_vModelText, _ctx.openclawWorkspaceFileName]
-                        ]),
-                        _createElementVNode("button", {
-                          class: "btn-tool",
-                          onClick: _ctx.openOpenclawWorkspaceEditor,
-                          disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                        }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : _ctx.t('openclaw.workspace.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ]),
-                      _createElementVNode("div", { class: "workspace-meta" }, _toDisplayString(_ctx.t('openclaw.workspace.hint')), 1 /* TEXT */)
-                    ])
+                    }), 128 /* KEYED_FRAGMENT */))
                   ])
                 ])
               ]),
