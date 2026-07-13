@@ -11,8 +11,41 @@
                     <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
                 <div class="openclaw-layout">
+                    <section class="settings-card settings-card--wide openclaw-summary-card" aria-label="OpenClaw 当前摘要">
+                        <div class="settings-card-body">
+                            <div class="openclaw-summary-header">
+                                <div>
+                                    <div class="summary-eyebrow">OPENCLAW</div>
+                                    <div class="summary-title">配置与本地诊断</div>
+                                </div>
+                                <div class="summary-note">只读摘要，不读取 runtime 聊天消息</div>
+                            </div>
+                            <div class="openclaw-summary-grid">
+                                <div v-for="item in getOpenclawStatusSummaryItems()" :key="item.key" :class="['openclaw-summary-item', item.tone || '']">
+                                    <div class="summary-item-label">{{ item.label }}</div>
+                                    <div class="summary-item-value">{{ item.value }}</div>
+                                </div>
+                            </div>
+                            <div class="openclaw-diagnostic-note">
+                                Browser 状态来自配置文件摘要；Headless 表示它不是用户可见浏览器窗口。此页不展示群聊/私聊运行会话。
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="settings-card settings-card--wide openclaw-workspace-card">
                         <div class="settings-card-body">
+                            <div class="openclaw-section-title">工作区快捷文件</div>
+                            <div class="openclaw-quick-files" aria-label="OpenClaw workspace quick files">
+                                <button
+                                    v-for="fileName in getOpenclawQuickWorkspaceFiles()"
+                                    :key="fileName"
+                                    type="button"
+                                    class="openclaw-quick-file-btn"
+                                    @click="openOpenclawQuickWorkspaceFile(fileName)"
+                                    :disabled="loading || !!initError || agentsLoading">
+                                    {{ fileName }}
+                                </button>
+                            </div>
                             <div class="openclaw-tools-grid">
                                 <button class="openclaw-tool-btn" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading">
                                     <div class="tool-icon">📄</div>
@@ -60,6 +93,11 @@
                                         <div class="card-content">
                                             <div class="card-title">{{ name }}</div>
                                             <div class="card-subtitle">{{ openclawSubtitle(config) }}</div>
+                                            <div v-if="openclawHasContent(config)" class="openclaw-config-summary-mini">
+                                                <span v-for="item in getOpenclawConfigSummary(config).slice(0, 3)" :key="item.key">
+                                                    {{ item.label }}: {{ item.value }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card-trailing">

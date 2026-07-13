@@ -2243,8 +2243,49 @@ return function render(_ctx, _cache) {
                 ]))
               : _createCommentVNode("v-if", true),
             _createElementVNode("div", { class: "openclaw-layout" }, [
+              _createElementVNode("section", {
+                class: "settings-card settings-card--wide openclaw-summary-card",
+                "aria-label": "OpenClaw 当前摘要"
+              }, [
+                _createElementVNode("div", { class: "settings-card-body" }, [
+                  _createElementVNode("div", { class: "openclaw-summary-header" }, [
+                    _createElementVNode("div", null, [
+                      _createElementVNode("div", { class: "summary-eyebrow" }, "OPENCLAW"),
+                      _createElementVNode("div", { class: "summary-title" }, "配置与本地诊断")
+                    ]),
+                    _createElementVNode("div", { class: "summary-note" }, "只读摘要，不读取 runtime 聊天消息")
+                  ]),
+                  _createElementVNode("div", { class: "openclaw-summary-grid" }, [
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawStatusSummaryItems(), (item) => {
+                      return (_openBlock(), _createElementBlock("div", {
+                        key: item.key,
+                        class: _normalizeClass(['openclaw-summary-item', item.tone || ''])
+                      }, [
+                        _createElementVNode("div", { class: "summary-item-label" }, _toDisplayString(item.label), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "summary-item-value" }, _toDisplayString(item.value), 1 /* TEXT */)
+                      ], 2 /* CLASS */))
+                    }), 128 /* KEYED_FRAGMENT */))
+                  ]),
+                  _createElementVNode("div", { class: "openclaw-diagnostic-note" }, " Browser 状态来自配置文件摘要；Headless 表示它不是用户可见浏览器窗口。此页不展示群聊/私聊运行会话。 ")
+                ])
+              ]),
               _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
                 _createElementVNode("div", { class: "settings-card-body" }, [
+                  _createElementVNode("div", { class: "openclaw-section-title" }, "工作区快捷文件"),
+                  _createElementVNode("div", {
+                    class: "openclaw-quick-files",
+                    "aria-label": "OpenClaw workspace quick files"
+                  }, [
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawQuickWorkspaceFiles(), (fileName) => {
+                      return (_openBlock(), _createElementBlock("button", {
+                        key: fileName,
+                        type: "button",
+                        class: "openclaw-quick-file-btn",
+                        onClick: $event => (_ctx.openOpenclawQuickWorkspaceFile(fileName)),
+                        disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
+                      }, _toDisplayString(fileName), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                    }), 128 /* KEYED_FRAGMENT */))
+                  ]),
                   _createElementVNode("div", { class: "openclaw-tools-grid" }, [
                     _createElementVNode("button", {
                       class: "openclaw-tool-btn",
@@ -2315,7 +2356,19 @@ return function render(_ctx, _cache) {
                           _createElementVNode("div", { class: "card-icon" }, _toDisplayString(name.charAt(0).toUpperCase()), 1 /* TEXT */),
                           _createElementVNode("div", { class: "card-content" }, [
                             _createElementVNode("div", { class: "card-title" }, _toDisplayString(name), 1 /* TEXT */),
-                            _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.openclawSubtitle(config)), 1 /* TEXT */)
+                            _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.openclawSubtitle(config)), 1 /* TEXT */),
+                            (_ctx.openclawHasContent(config))
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 0,
+                                  class: "openclaw-config-summary-mini"
+                                }, [
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawConfigSummary(config).slice(0, 3), (item) => {
+                                    return (_openBlock(), _createElementBlock("span", {
+                                      key: item.key
+                                    }, _toDisplayString(item.label) + ": " + _toDisplayString(item.value), 1 /* TEXT */))
+                                  }), 128 /* KEYED_FRAGMENT */))
+                                ]))
+                              : _createCommentVNode("v-if", true)
                           ])
                         ]),
                         _createElementVNode("div", { class: "card-trailing" }, [

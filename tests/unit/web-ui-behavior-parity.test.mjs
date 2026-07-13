@@ -832,7 +832,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'getCurrentPromptPresetDefaultName',
         'saveEditorPromptAsPreset',
         'previewTaskPlanFromChat',
-        'planAndRunTaskOrchestrationFromChat'
+        'planAndRunTaskOrchestrationFromChat',
+        'getOpenclawConfigSummary',
+        'getOpenclawQuickWorkspaceFiles',
+        'getOpenclawStatusSummaryItems',
+        'openOpenclawQuickWorkspaceFile'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

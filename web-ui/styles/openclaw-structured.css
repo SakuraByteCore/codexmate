@@ -363,6 +363,7 @@
 }
 
 .openclaw-workspace-card.settings-card,
+.openclaw-summary-card,
 .openclaw-configs-card {
     margin: 0;
     padding: 0;
@@ -375,15 +376,122 @@
 }
 
 .openclaw-workspace-card.settings-card:hover,
+.openclaw-summary-card:hover,
 .openclaw-configs-card:hover {
     border-color: transparent;
     box-shadow: none;
 }
 
 .openclaw-workspace-card.settings-card > .settings-card-body,
+.openclaw-summary-card > .settings-card-body,
 .openclaw-configs-card > .settings-card-body {
     width: 100%;
     min-width: 0;
+}
+
+.openclaw-summary-card > .settings-card-body {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(249, 244, 239, 0.72));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.openclaw-summary-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.summary-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--color-text-tertiary);
+    font-weight: 600;
+}
+
+.summary-title {
+    margin-top: 2px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.summary-note,
+.openclaw-diagnostic-note {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    line-height: 1.45;
+}
+
+.summary-note {
+    max-width: 260px;
+    text-align: right;
+}
+
+.openclaw-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.openclaw-summary-item {
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(137, 111, 94, 0.10);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.summary-item-label {
+    margin-bottom: 4px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+}
+
+.summary-item-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    overflow-wrap: anywhere;
+}
+
+.openclaw-section-title {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.openclaw-quick-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.openclaw-quick-file-btn {
+    padding: 7px 10px;
+    border: 1px solid rgba(137, 111, 94, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.openclaw-quick-file-btn:hover:not(:disabled) {
+    border-color: rgba(137, 111, 94, 0.24);
+    color: var(--color-text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.openclaw-quick-file-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 /* Nested workspace card - distinguish from outer section */
@@ -563,6 +671,23 @@
     overflow-wrap: anywhere;
 }
 
+.openclaw-config-summary-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.openclaw-config-summary-mini span {
+    max-width: 100%;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(137, 111, 94, 0.08);
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
 @media (min-width: 1200px) {
     .tool-icon {
         width: 42px;
@@ -582,6 +707,15 @@
 
     .workspace-input-group .btn-tool {
         width: 100%;
+    }
+
+    .openclaw-summary-header {
+        flex-direction: column;
+    }
+
+    .summary-note {
+        max-width: none;
+        text-align: left;
     }
 }
 

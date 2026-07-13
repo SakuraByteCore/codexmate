@@ -224,6 +224,31 @@ function readPreferredProviderModels(records) {
     return [];
 }
 
+function readNestedValue(record, path) {
+    if (!isPlainRecord(record)) return undefined;
+    let cursor = record;
+    for (const key of path) {
+        if (!isPlainRecord(cursor) || !Object.prototype.hasOwnProperty.call(cursor, key)) {
+            return undefined;
+        }
+        cursor = cursor[key];
+    }
+    return cursor;
+}
+
+function formatOpenclawSummaryValue(value, fallback = '未配置') {
+    if (Array.isArray(value)) {
+        const list = value
+            .map(item => (typeof item === 'string' ? item.trim() : String(item || '').trim()))
+            .filter(Boolean);
+        return list.length ? list.join(' / ') : fallback;
+    }
+    if (value === true) return '启用';
+    if (value === false) return '关闭';
+    const text = typeof value === 'string' ? value.trim() : String(value ?? '').trim();
+    return text || fallback;
+}
+
 export function createOpenclawCoreMethods() {
     return {
         getOpenclawParser() {
@@ -470,6 +495,68 @@ export function createOpenclawCoreMethods() {
                     ? String(modelEntry.maxTokens)
                     : (modelEntry && typeof modelEntry.max_tokens === 'number' ? String(modelEntry.max_tokens) : '')
             };
+        },
+
+        getOpenclawConfigSummary(config) {
+            const content = config && typeof config.content === 'string' ? config.content : '';
+            if (!content.trim()) {
+                return [];
+            }
+            const parsed = this.parseOpenclawContent(content, { allowEmpty: true });
+            if (!parsed.ok || !isPlainRecord(parsed.data)) {
+                return [
+                    { key: 'parse-error', label: '配置状态', value: '解析失败', tone: 'warning' }
+                ];
+            }
+            const data = parsed.data;
+            const agentDefaults = readNestedValue(data, ['agents', 'defaults']);
+            const modelConfig = isPlainRecord(agentDefaults) ? agentDefaults.model : undefined;
+            const primaryModel = isPlainRecord(modelConfig)
+                ? modelConfig.primary
+                : (typeof modelConfig === 'string' ? modelConfig : readNestedValue(data, ['agent', 'model']));
+            const fallbacks = isPlainRecord(modelConfig) && Array.isArray(modelConfig.fallbacks)
+                ? modelConfig.fallbacks
+                : [];
+            const workspace = isPlainRecord(agentDefaults) ? agentDefaults.workspace : '';
+            const browser = isPlainRecord(data.browser) ? data.browser : {};
+            const browserMode = browser.enabled === false
+                ? '关闭'
+                : (browser.headless === true ? 'Headless' : (browser.headless === false ? '可见窗口' : '未声明'));
+            const executablePath = typeof browser.executablePath === 'string' ? browser.executablePath.trim() : '';
+            const providerNames = collectDistinctProviderKeys(
+                readNestedValue(data, ['models', 'providers']),
+                data.providers
+            );
+            return [
+                { key: 'primary', label: '默认模型', value: formatOpenclawSummaryValue(primaryModel) },
+                { key: 'fallbacks', label: 'Fallback', value: formatOpenclawSummaryValue(fallbacks) },
+                { key: 'workspace', label: 'Workspace', value: formatOpenclawSummaryValue(workspace) },
+                { key: 'browser', label: 'Browser', value: browserMode },
+                { key: 'browser-path', label: 'Chrome', value: formatOpenclawSummaryValue(executablePath) },
+                { key: 'providers', label: 'Providers', value: providerNames.length ? providerNames.join(' / ') : '未配置' }
+            ];
+        },
+
+        getOpenclawStatusSummaryItems() {
+            const current = this.openclawConfigs && this.currentOpenclawConfig
+                ? this.openclawConfigs[this.currentOpenclawConfig]
+                : null;
+            const configPath = this.openclawConfigPath || '~/.openclaw/openclaw.json';
+            return [
+                { key: 'config-path', label: 'Config', value: configPath, tone: this.openclawConfigExists ? 'ok' : 'warning' },
+                ...this.getOpenclawConfigSummary(current || {}).slice(0, 4)
+            ];
+        },
+
+        getOpenclawQuickWorkspaceFiles() {
+            return ['AGENTS.md', 'SOUL.md', 'USER.md', 'TOOLS.md', 'HEARTBEAT.md'];
+        },
+
+        openOpenclawQuickWorkspaceFile(fileName) {
+            const normalized = typeof fileName === 'string' ? fileName.trim() : '';
+            if (!normalized) return;
+            this.openclawWorkspaceFileName = normalized;
+            this.openOpenclawWorkspaceEditor();
         },
 
         syncOpenclawQuickFromText(options = {}) {
