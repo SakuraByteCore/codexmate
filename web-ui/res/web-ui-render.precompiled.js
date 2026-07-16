@@ -2954,6 +2954,7 @@ return function render(_ctx, _cache) {
                         _createElementVNode("button", {
                           type: "button",
                           class: "input-toggle-btn",
+                          onMousedown: _withModifiers(() => {}, ["prevent"]),
                           onClick: $event => (_ctx.kilocodeShowKey = !_ctx.kilocodeShowKey),
                           title: _ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show'),
                           "aria-label": _ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
@@ -2986,7 +2987,7 @@ return function render(_ctx, _cache) {
                               }, [
                                 _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
                               ]))
-                        ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
+                        ], 40 /* PROPS, NEED_HYDRATION */, ["onMousedown", "onClick", "title", "aria-label"])
                       ])
                     ])
                   ]),
