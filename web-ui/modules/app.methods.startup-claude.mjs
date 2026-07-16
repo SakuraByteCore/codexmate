@@ -143,7 +143,8 @@ export function createStartupClaudeMethods(options = {}) {
                         this.toolConfigPermissions = {
                             codex: statusRes.toolConfigPermissions.codex === true,
                             claude: statusRes.toolConfigPermissions.claude === true,
-                            opencode: statusRes.toolConfigPermissions.opencode === true
+                            opencode: statusRes.toolConfigPermissions.opencode === true,
+                            kilocode: statusRes.toolConfigPermissions.kilocode === true
                         };
                     }
                     this.providersList = listRes.providers;

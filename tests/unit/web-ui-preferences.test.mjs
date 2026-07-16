@@ -76,7 +76,7 @@ function createContext(apiCalls = [], storage = null, backendPreferences = null)
         claudeConfigs: {},
         currentClaudeConfig: '',
         openclawConfigs: {},
-        toolConfigPermissions: { codex: false, claude: false, opencode: false },
+        toolConfigPermissions: { codex: false, claude: false, opencode: false, kilocode: false },
         deletedClaudeSettingsImports: [],
         mainTab: 'dashboard',
         configMode: 'codex',
@@ -215,6 +215,21 @@ test('web UI preference debounce preserves nested pending overrides', async () =
     assert.strictEqual(writeCall.params.preferences.sessionFilters.query, 'needle');
 });
 
+
+test('web UI preferences preserve KiloCode write permission on reload', () => {
+    const context = createContext([], createMemoryStorage());
+    context.applyWebUiPreferences({
+        toolConfigPermissions: { codex: false, claude: false, opencode: false, kilocode: true }
+    }, { applyNavigation: false });
+
+    assert.deepStrictEqual(context.toolConfigPermissions, {
+        codex: false,
+        claude: false,
+        opencode: false,
+        kilocode: true
+    });
+});
+
 test('web UI preference navigation restore can be disabled for explicit routes', () => {
     const apiCalls = [];
     const context = createContext(apiCalls, createMemoryStorage());
@@ -246,4 +261,6 @@ test('web UI preferences backend actions and startup hook are wired', () => {
     assert.match(app, /url\.pathname === '\/session'/);
     assert.match(app, /url\.searchParams\.get\('tab'\)/);
     assert.match(index, /createWebUiPreferencesMethods/);
+    assert.match(readProjectFile('web-ui/modules/app.methods.startup-claude.mjs'), /kilocode: statusRes\.toolConfigPermissions\.kilocode === true/);
+    assert.match(readProjectFile('web-ui/modules/app.methods.web-ui-preferences.mjs'), /kilocode: source\.toolConfigPermissions\.kilocode === true/);
 });

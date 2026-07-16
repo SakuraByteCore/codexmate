@@ -11,7 +11,8 @@ export const CONFIG_MODE_SET = new Set([
     ...Object.keys(PROVIDER_CONFIG_MODE_META),
     'claude',
     'openclaw',
-    'opencode'
+    'opencode',
+    'kilocode'
 ]);
 
 export function getProviderConfigModeMeta(mode) {
@@ -63,6 +64,7 @@ export function createConfigModeComputed() {
             if (this.configMode === 'claude') return 'Claude Code';
             if (this.configMode === 'openclaw') return 'OpenClaw';
             if (this.configMode === 'opencode') return 'OpenCode';
+            if (this.configMode === 'kilocode') return 'KiloCode';
             return '未选择';
         },
         inspectorCurrentConfigLabel() {
@@ -80,6 +82,10 @@ export function createConfigModeComputed() {
             }
             if (this.configMode === 'opencode') {
                 const provider = typeof this.opencodeProvider === 'string' ? this.opencodeProvider.trim() : '';
+                return provider || '未选择';
+            }
+            if (this.configMode === 'kilocode') {
+                const provider = typeof this.kilocodeProvider === 'string' ? this.kilocodeProvider.trim() : '';
                 return provider || '未选择';
             }
             return '未选择';
@@ -101,6 +107,10 @@ export function createConfigModeComputed() {
             }
             if (this.configMode === 'opencode') {
                 const model = typeof this.opencodeModel === 'string' ? this.opencodeModel.trim() : '';
+                return model || '未选择';
+            }
+            if (this.configMode === 'kilocode') {
+                const model = typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '';
                 return model || '未选择';
             }
             return '未选择';

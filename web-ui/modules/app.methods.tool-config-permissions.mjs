@@ -3,7 +3,7 @@ export function createToolConfigPermissionMethods(options = {}) {
 
     function normalizeTarget(value) {
         const target = typeof value === 'string' ? value.trim().toLowerCase() : '';
-        return target === 'codex' || target === 'claude' || target === 'opencode' ? target : '';
+        return target === 'codex' || target === 'claude' || target === 'opencode' || target === 'kilocode' ? target : '';
     }
 
     function normalizePermissions(value) {
@@ -11,7 +11,8 @@ export function createToolConfigPermissionMethods(options = {}) {
         return {
             codex: source.codex === true,
             claude: source.claude === true,
-            opencode: source.opencode === true
+            opencode: source.opencode === true,
+            kilocode: source.kilocode === true
         };
     }
 

@@ -190,6 +190,24 @@ test('provider cache, prompt sidebar, and local Web preference settings are loca
     }
 });
 
+
+test('config side navigation meta labels are localized instead of stale English copy', () => {
+    const keys = [
+        'side.config.codex.meta',
+        'side.config.claude.meta',
+        'side.config.openclaw.meta',
+        'side.config.opencode.meta',
+        'side.config.kilocode.meta'
+    ];
+    for (const code of ['zh', 'zh-tw', 'ja', 'vi']) {
+        for (const key of keys) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+            assert.notStrictEqual(DICT[code][key], DICT.en[key], `${code} ${key} should not reuse the English label`);
+        }
+    }
+});
+
 test('task orchestration chat composer copy is localized in every locale', () => {
     const keys = [
         'orchestration.chat.input.label',

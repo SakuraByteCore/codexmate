@@ -71,7 +71,7 @@ return function render(_ctx, _cache) {
             "data-config-mode": _ctx.configMode,
             tabindex: _ctx.mainTab === 'config' ? 0 : -1,
             "aria-selected": _ctx.mainTab === 'config',
-            "aria-controls": _ctx.configMode === 'claude' ? 'panel-config-claude' : (_ctx.configMode === 'openclaw' ? 'panel-config-openclaw' : (_ctx.configMode === 'opencode' ? 'panel-config-opencode' : 'panel-config-provider')),
+            "aria-controls": _ctx.configMode === 'claude' ? 'panel-config-claude' : (_ctx.configMode === 'openclaw' ? 'panel-config-openclaw' : (_ctx.configMode === 'opencode' ? 'panel-config-opencode' : (_ctx.configMode === 'kilocode' ? 'panel-config-kilocode' : 'panel-config-provider'))),
             onPointerdown: $event => (_ctx.onMainTabPointerDown('config', $event)),
             onClick: $event => (_ctx.onMainTabClick('config', $event))
           }, _toDisplayString(_ctx.t('tab.config')), 43 /* TEXT, CLASS, PROPS, NEED_HYDRATION */, ["data-config-mode", "tabindex", "aria-selected", "aria-controls", "onPointerdown", "onClick"]),
@@ -284,7 +284,7 @@ return function render(_ctx, _cache) {
                   "data-main-tab": "config",
                   "data-config-mode": "codex",
                   "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'codex' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isConfigModeNavActive('codex') }]),
+                  class: _normalizeClass(['side-item', 'side-item-compact', { active: _ctx.isConfigModeNavActive('codex') }]),
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('codex', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('codex', $event))
                 }, [
@@ -294,10 +294,7 @@ return function render(_ctx, _cache) {
                   }, "C"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.codex')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.codex.meta')), 1 /* TEXT */),
-                    (_ctx.currentProvider)
-                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('common.current', { value: _ctx.currentProvider })), 1 /* TEXT */))
-                      : _createCommentVNode("v-if", true)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.codex.meta')), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
@@ -305,7 +302,7 @@ return function render(_ctx, _cache) {
                   "data-main-tab": "config",
                   "data-config-mode": "claude",
                   "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'claude' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isConfigModeNavActive('claude') }]),
+                  class: _normalizeClass(['side-item', 'side-item-compact', { active: _ctx.isConfigModeNavActive('claude') }]),
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('claude', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('claude', $event))
                 }, [
@@ -315,10 +312,7 @@ return function render(_ctx, _cache) {
                   }, "A"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.claude')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.claude.meta')), 1 /* TEXT */),
-                    (_ctx.currentClaudeConfig)
-                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('common.current', { value: _ctx.currentClaudeConfig })), 1 /* TEXT */))
-                      : _createCommentVNode("v-if", true)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.claude.meta')), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
@@ -326,7 +320,7 @@ return function render(_ctx, _cache) {
                   "data-main-tab": "config",
                   "data-config-mode": "openclaw",
                   "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'openclaw' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isConfigModeNavActive('openclaw') }]),
+                  class: _normalizeClass(['side-item', 'side-item-compact', { active: _ctx.isConfigModeNavActive('openclaw') }]),
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('openclaw', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('openclaw', $event))
                 }, [
@@ -336,10 +330,7 @@ return function render(_ctx, _cache) {
                   }, "O"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.openclaw')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.openclaw.meta')), 1 /* TEXT */),
-                    (_ctx.currentOpenclawConfig)
-                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('common.current', { value: _ctx.currentOpenclawConfig })), 1 /* TEXT */))
-                      : _createCommentVNode("v-if", true)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.openclaw.meta')), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
@@ -347,7 +338,7 @@ return function render(_ctx, _cache) {
                   "data-main-tab": "config",
                   "data-config-mode": "opencode",
                   "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'opencode' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isConfigModeNavActive('opencode') }]),
+                  class: _normalizeClass(['side-item', 'side-item-compact', { active: _ctx.isConfigModeNavActive('opencode') }]),
                   onPointerdown: $event => (_ctx.onConfigTabPointerDown('opencode', $event)),
                   onClick: $event => (_ctx.onConfigTabClick('opencode', $event))
                 }, [
@@ -357,10 +348,50 @@ return function render(_ctx, _cache) {
                   }, "N"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.opencode')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.opencode.meta')), 1 /* TEXT */),
-                    (_ctx.opencodeModel)
-                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('common.current', { value: _ctx.opencodeModel })), 1 /* TEXT */))
-                      : _createCommentVNode("v-if", true)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.opencode.meta')), 1 /* TEXT */)
+                  ])
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
+                _createElementVNode("button", {
+                  id: "side-tab-config-kilocode",
+                  "data-main-tab": "config",
+                  "data-config-mode": "kilocode",
+                  "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'kilocode' ? 'page' : null,
+                  class: _normalizeClass(['side-item', 'side-item-compact', { active: _ctx.isConfigModeNavActive('kilocode') }]),
+                  onPointerdown: $event => (_ctx.onConfigTabPointerDown('kilocode', $event)),
+                  onClick: $event => (_ctx.onConfigTabClick('kilocode', $event))
+                }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "K"),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.kilocode')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-meta" }, [
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.kilocode.meta')), 1 /* TEXT */)
+                  ])
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
+              ], 8 /* PROPS */, ["aria-label"]),
+              _createElementVNode("div", {
+                class: "side-section",
+                role: "navigation",
+                "aria-label": _ctx.t('side.workspace')
+              }, [
+                _createElementVNode("div", { class: "side-section-title" }, _toDisplayString(_ctx.t('side.workspace')), 1 /* TEXT */),
+                _createElementVNode("button", {
+                  id: "side-tab-sessions",
+                  "data-main-tab": "sessions",
+                  "aria-current": _ctx.mainTab === 'sessions' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('sessions') }]),
+                  onPointerdown: $event => (_ctx.onMainTabPointerDown('sessions', $event)),
+                  onClick: $event => (_ctx.onMainTabClick('sessions', $event))
+                }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "S"),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.sessions.browser')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-meta" }, [
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.sessions.browser.meta')), 1 /* TEXT */),
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.sourceLabel', { value: (_ctx.sessionFilterSource === 'all' ? _ctx.t('sessions.source.all') : (_ctx.sessionFilterSource === 'claude' ? 'Claude Code' : (_ctx.sessionFilterSource === 'gemini' ? 'Gemini CLI' : (_ctx.sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))) })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
@@ -378,31 +409,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.meta')), 1 /* TEXT */)
-                  ])
-                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
-              ], 8 /* PROPS */, ["aria-label"]),
-              _createElementVNode("div", {
-                class: "side-section",
-                role: "navigation",
-                "aria-label": _ctx.t('side.sessions')
-              }, [
-                _createElementVNode("div", { class: "side-section-title" }, _toDisplayString(_ctx.t('side.sessions')), 1 /* TEXT */),
-                _createElementVNode("button", {
-                  id: "side-tab-sessions",
-                  "data-main-tab": "sessions",
-                  "aria-current": _ctx.mainTab === 'sessions' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('sessions') }]),
-                  onPointerdown: $event => (_ctx.onMainTabPointerDown('sessions', $event)),
-                  onClick: $event => (_ctx.onMainTabClick('sessions', $event))
-                }, [
-                  _createElementVNode("span", {
-                    class: "side-item-icon",
-                    "aria-hidden": "true"
-                  }, "S"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.sessions.browser')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.sessions.browser.meta')), 1 /* TEXT */),
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.sourceLabel', { value: (_ctx.sessionFilterSource === 'all' ? _ctx.t('sessions.source.all') : (_ctx.sessionFilterSource === 'claude' ? 'Claude Code' : (_ctx.sessionFilterSource === 'gemini' ? 'Gemini CLI' : (_ctx.sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))) })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
@@ -2443,7 +2449,12 @@ return function render(_ctx, _cache) {
                     type: "button",
                     class: _normalizeClass(['segment', { active: _ctx.configMode === 'opencode' }]),
                     onClick: $event => (_ctx.switchConfigMode('opencode'))
-                  }, _toDisplayString(_ctx.t('tab.config.opencode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
+                  }, _toDisplayString(_ctx.t('tab.config.opencode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.configMode === 'kilocode' }]),
+                    onClick: $event => (_ctx.switchConfigMode('kilocode'))
+                  }, _toDisplayString(_ctx.t('tab.config.kilocode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                 ]))
               : _createCommentVNode("v-if", true),
             _createElementVNode("section", {
@@ -2799,6 +2810,238 @@ return function render(_ctx, _cache) {
             ], 2 /* CLASS */)
           ], 8 /* PROPS */, ["aria-labelledby"]), [
             [_vShow, _ctx.mainTab === 'config' && _ctx.configMode === 'opencode']
+          ]),
+          _createCommentVNode(" KiloCode 配置 "),
+          _withDirectives(_createElementVNode("div", {
+            class: "mode-content mode-cards",
+            id: "panel-config-kilocode",
+            role: "tabpanel",
+            "aria-labelledby": _ctx.forceCompactLayout ? 'tab-config' : 'side-tab-config-kilocode'
+          }, [
+            (_ctx.forceCompactLayout && !_ctx.sessionStandalone)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 0,
+                  class: "segmented-control"
+                }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.configMode === 'codex' }]),
+                    onClick: $event => (_ctx.switchConfigMode('codex'))
+                  }, _toDisplayString(_ctx.t('tab.config.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.configMode === 'claude' }]),
+                    onClick: $event => (_ctx.switchConfigMode('claude'))
+                  }, _toDisplayString(_ctx.t('tab.config.claude')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.configMode === 'openclaw' }]),
+                    onClick: $event => (_ctx.switchConfigMode('openclaw'))
+                  }, _toDisplayString(_ctx.t('tab.config.openclaw')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.configMode === 'opencode' }]),
+                    onClick: $event => (_ctx.switchConfigMode('opencode'))
+                  }, _toDisplayString(_ctx.t('tab.config.opencode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.configMode === 'kilocode' }]),
+                    onClick: $event => (_ctx.switchConfigMode('kilocode'))
+                  }, _toDisplayString(_ctx.t('tab.config.kilocode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
+                ]))
+              : _createCommentVNode("v-if", true),
+            _createElementVNode("section", {
+              class: "tool-config-write-card",
+              "aria-label": _ctx.t('toolConfig.kilocode.title')
+            }, [
+              _createElementVNode("div", { class: "tool-config-write-copy" }, [
+                _createElementVNode("div", { class: "tool-config-write-title" }, _toDisplayString(_ctx.t('toolConfig.kilocode.title')), 1 /* TEXT */),
+                _createElementVNode("p", { class: "tool-config-write-desc" }, _toDisplayString(_ctx.t('toolConfig.kilocode.desc')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("label", { class: "settings-toggle-row tool-config-write-toggle" }, [
+                _createElementVNode("input", {
+                  type: "checkbox",
+                  autocomplete: "off",
+                  checked: _ctx.isToolConfigWriteAllowed('kilocode'),
+                  disabled: _ctx.toolConfigPermissionSaving.kilocode,
+                  onChange: $event => (_ctx.setToolConfigPermission('kilocode', $event.target.checked))
+                }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange"]),
+                _createElementVNode("span", { class: "toggle-track" }, [
+                  _createElementVNode("span", { class: "toggle-thumb" })
+                ]),
+                _createElementVNode("span", null, _toDisplayString(_ctx.toolConfigPermissionStatusLabel('kilocode')), 1 /* TEXT */)
+              ])
+            ], 8 /* PROPS */, ["aria-label"]),
+            _createElementVNode("div", {
+              class: _normalizeClass(["tool-config-write-scope", { locked: !_ctx.isToolConfigWriteAllowed('kilocode') }])
+            }, [
+              _createElementVNode("div", { class: "tool-config-write-body" }, [
+                _createElementVNode("section", { class: "selector-section" }, [
+                  _createElementVNode("div", { class: "selector-header" }, [
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.providerModel.title')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "selector-actions opencode-provider-actions" }, [
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: $event => (_ctx.startKilocode(false)),
+                        disabled: _ctx.kilocodeStarting || !_ctx.isToolConfigWriteAllowed('kilocode')
+                      }, _toDisplayString(_ctx.kilocodeStarting ? _ctx.t('kilocode.starting') : _ctx.t('kilocode.start')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('kilocode.targetFile', { path: _ctx.kilocodeConfigPath || '~/.config/kilo/kilo.jsonc', status: _ctx.kilocodeConfigExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave') })), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "codex-config-grid" }, [
+                    _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                      _createElementVNode("label", {
+                        class: "form-label",
+                        for: "kilocode-provider"
+                      }, _toDisplayString(_ctx.t('field.provider')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        id: "kilocode-provider",
+                        class: "form-input",
+                        "onUpdate:modelValue": $event => ((_ctx.kilocodeProvider) = $event),
+                        autocomplete: "off",
+                        spellcheck: "false",
+                        placeholder: "codexmate",
+                        onBlur: _ctx.autoSaveKilocodeConfig
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
+                        [_vModelText, _ctx.kilocodeProvider]
+                      ])
+                    ]),
+                    _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                      _createElementVNode("label", {
+                        class: "form-label",
+                        for: "kilocode-base-url"
+                      }, _toDisplayString(_ctx.t('field.url')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        id: "kilocode-base-url",
+                        class: "form-input",
+                        "onUpdate:modelValue": $event => ((_ctx.kilocodeBaseUrl) = $event),
+                        autocomplete: "off",
+                        spellcheck: "false",
+                        placeholder: "https://api.example.com/v1",
+                        onBlur: _ctx.autoSaveKilocodeConfig
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
+                        [_vModelText, _ctx.kilocodeBaseUrl]
+                      ])
+                    ]),
+                    _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                      _createElementVNode("label", {
+                        class: "form-label",
+                        for: "kilocode-model"
+                      }, _toDisplayString(_ctx.t('field.model')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        id: "kilocode-model",
+                        class: "form-input",
+                        "onUpdate:modelValue": $event => ((_ctx.kilocodeModel) = $event),
+                        autocomplete: "off",
+                        spellcheck: "false",
+                        placeholder: "gpt-5.3",
+                        onBlur: _ctx.autoSaveKilocodeConfig
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
+                        [_vModelText, _ctx.kilocodeModel]
+                      ])
+                    ]),
+                    _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                      _createElementVNode("label", {
+                        class: "form-label",
+                        for: "kilocode-api-key"
+                      }, _toDisplayString(_ctx.t('opencode.field.apiKeyKeep')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "input-with-toggle" }, [
+                        _withDirectives(_createElementVNode("input", {
+                          id: "kilocode-api-key",
+                          class: "form-input",
+                          "onUpdate:modelValue": $event => ((_ctx.kilocodeApiKey) = $event),
+                          type: _ctx.kilocodeShowKey ? 'text' : 'password',
+                          autocomplete: "off",
+                          spellcheck: "false",
+                          placeholder: "sk-...",
+                          onBlur: _ctx.autoSaveKilocodeConfig
+                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "type", "onBlur"]), [
+                          [_vModelDynamic, _ctx.kilocodeApiKey]
+                        ]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "input-toggle-btn",
+                          onClick: $event => (_ctx.kilocodeShowKey = !_ctx.kilocodeShowKey),
+                          title: _ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
+                        }, _toDisplayString(_ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')), 9 /* TEXT, PROPS */, ["onClick", "title"])
+                      ])
+                    ])
+                  ]),
+                  (_ctx.kilocodeError)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "config-template-hint error-text"
+                      }, _toDisplayString(_ctx.kilocodeError), 1 /* TEXT */))
+                    : _createCommentVNode("v-if", true)
+                ]),
+                (_ctx.kilocodeProviders.length)
+                  ? (_openBlock(), _createElementBlock("section", {
+                      key: 0,
+                      class: "selector-section"
+                    }, [
+                      _createElementVNode("div", { class: "selector-header" }, [
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.summary.title')), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "card-list" }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.kilocodeProviders, (provider) => {
+                          return (_openBlock(), _createElementBlock("div", {
+                            key: provider.name,
+                            class: "card"
+                          }, [
+                            _createElementVNode("div", { class: "card-leading" }, [
+                              _createElementVNode("div", { class: "card-icon" }, _toDisplayString(provider.name.charAt(0).toUpperCase()), 1 /* TEXT */),
+                              _createElementVNode("div", { class: "card-content" }, [
+                                _createElementVNode("div", { class: "card-title" }, _toDisplayString(provider.name), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(provider.baseURL || provider.api || _ctx.t('config.url.unset')), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString((provider.models || []).join(', ') || _ctx.t('opencode.summary.noModel')), 1 /* TEXT */)
+                              ])
+                            ]),
+                            _createElementVNode("div", { class: "card-trailing" }, [
+                              _createElementVNode("span", {
+                                class: _normalizeClass(['pill', provider.hasKey ? 'configured' : 'empty'])
+                              }, _toDisplayString(provider.hasKey ? _ctx.t('common.configured') : _ctx.t('common.notConfigured')), 3 /* TEXT, CLASS */)
+                            ])
+                          ]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ])
+                    ]))
+                  : _createCommentVNode("v-if", true),
+                _createElementVNode("section", { class: "selector-section" }, [
+                  _createElementVNode("div", { class: "selector-header" }, [
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.configPreview.title')), 1 /* TEXT */)
+                  ]),
+                  _withDirectives(_createElementVNode("textarea", {
+                    class: "template-textarea",
+                    "onUpdate:modelValue": $event => ((_ctx.kilocodeContent) = $event),
+                    spellcheck: "false",
+                    readonly: ""
+                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                    [_vModelText, _ctx.kilocodeContent]
+                  ]),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('kilocode.configPreview.hint')), 1 /* TEXT */)
+                ]),
+                (!_ctx.isToolConfigWriteAllowed('kilocode'))
+                  ? (_openBlock(), _createElementBlock("div", {
+                      key: 1,
+                      class: "tool-config-write-overlay"
+                    }, [
+                      _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                        _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.kilocode.lockedTitle')), 1 /* TEXT */),
+                        _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.kilocode.lockedDesc')), 1 /* TEXT */),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool",
+                          onClick: $event => (_ctx.setToolConfigPermission('kilocode', true)),
+                          disabled: _ctx.toolConfigPermissionSaving.kilocode
+                        }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ]))
+                  : _createCommentVNode("v-if", true)
+              ])
+            ], 2 /* CLASS */)
+          ], 8 /* PROPS */, ["aria-labelledby"]), [
+            [_vShow, _ctx.mainTab === 'config' && _ctx.configMode === 'kilocode']
           ]),
           _createCommentVNode(" 会话浏览模式 "),
           _withDirectives(_createElementVNode("div", {

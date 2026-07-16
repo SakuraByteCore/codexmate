@@ -397,6 +397,17 @@ body::after {
     position: relative;
 }
 
+.side-item-compact {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    gap: 2px;
+}
+
+.side-item-compact::before {
+    height: 14px;
+}
+
+
 .side-item-icon {
     display: none;
     width: 28px;

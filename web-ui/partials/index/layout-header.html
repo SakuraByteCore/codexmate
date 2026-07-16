@@ -39,7 +39,7 @@
                 :data-config-mode="configMode"
                 :tabindex="mainTab === 'config' ? 0 : -1"
                 :aria-selected="mainTab === 'config'"
-                :aria-controls="configMode === 'claude' ? 'panel-config-claude' : (configMode === 'openclaw' ? 'panel-config-openclaw' : (configMode === 'opencode' ? 'panel-config-opencode' : 'panel-config-provider'))"
+                :aria-controls="configMode === 'claude' ? 'panel-config-claude' : (configMode === 'openclaw' ? 'panel-config-openclaw' : (configMode === 'opencode' ? 'panel-config-opencode' : (configMode === 'kilocode' ? 'panel-config-kilocode' : 'panel-config-provider')))"
                 :class="{ active: isMainTabNavActive('config') }"
                 @pointerdown="onMainTabPointerDown('config', $event)"
                 @click="onMainTabClick('config', $event)">{{ t('tab.config') }}</button>
@@ -196,14 +196,13 @@
                         data-main-tab="config"
                         data-config-mode="codex"
                         :aria-current="mainTab === 'config' && configMode === 'codex' ? 'page' : null"
-                        :class="['side-item', { active: isConfigModeNavActive('codex') }]"
+                        :class="['side-item', 'side-item-compact', { active: isConfigModeNavActive('codex') }]"
                         @pointerdown="onConfigTabPointerDown('codex', $event)"
                         @click="onConfigTabClick('codex', $event)">
                         <span class="side-item-icon" aria-hidden="true">C</span>
                         <div class="side-item-title">{{ t('side.config.codex') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.codex.meta') }}</span>
-                            <span v-if="currentProvider">{{ t('common.current', { value: currentProvider }) }}</span>
                         </div>
                     </button>
                     <button
@@ -211,14 +210,13 @@
                         data-main-tab="config"
                         data-config-mode="claude"
                         :aria-current="mainTab === 'config' && configMode === 'claude' ? 'page' : null"
-                        :class="['side-item', { active: isConfigModeNavActive('claude') }]"
+                        :class="['side-item', 'side-item-compact', { active: isConfigModeNavActive('claude') }]"
                         @pointerdown="onConfigTabPointerDown('claude', $event)"
                         @click="onConfigTabClick('claude', $event)">
                         <span class="side-item-icon" aria-hidden="true">A</span>
                         <div class="side-item-title">{{ t('side.config.claude') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.claude.meta') }}</span>
-                            <span v-if="currentClaudeConfig">{{ t('common.current', { value: currentClaudeConfig }) }}</span>
                         </div>
                     </button>
                     <button
@@ -226,14 +224,13 @@
                         data-main-tab="config"
                         data-config-mode="openclaw"
                         :aria-current="mainTab === 'config' && configMode === 'openclaw' ? 'page' : null"
-                        :class="['side-item', { active: isConfigModeNavActive('openclaw') }]"
+                        :class="['side-item', 'side-item-compact', { active: isConfigModeNavActive('openclaw') }]"
                         @pointerdown="onConfigTabPointerDown('openclaw', $event)"
                         @click="onConfigTabClick('openclaw', $event)">
                         <span class="side-item-icon" aria-hidden="true">O</span>
                         <div class="side-item-title">{{ t('side.config.openclaw') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.openclaw.meta') }}</span>
-                            <span v-if="currentOpenclawConfig">{{ t('common.current', { value: currentOpenclawConfig }) }}</span>
                         </div>
                     </button>
                     <button
@@ -241,14 +238,47 @@
                         data-main-tab="config"
                         data-config-mode="opencode"
                         :aria-current="mainTab === 'config' && configMode === 'opencode' ? 'page' : null"
-                        :class="['side-item', { active: isConfigModeNavActive('opencode') }]"
+                        :class="['side-item', 'side-item-compact', { active: isConfigModeNavActive('opencode') }]"
                         @pointerdown="onConfigTabPointerDown('opencode', $event)"
                         @click="onConfigTabClick('opencode', $event)">
                         <span class="side-item-icon" aria-hidden="true">N</span>
                         <div class="side-item-title">{{ t('side.config.opencode') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.config.opencode.meta') }}</span>
-                            <span v-if="opencodeModel">{{ t('common.current', { value: opencodeModel }) }}</span>
+                        </div>
+                    </button>
+
+                    <button
+                        id="side-tab-config-kilocode"
+                        data-main-tab="config"
+                        data-config-mode="kilocode"
+                        :aria-current="mainTab === 'config' && configMode === 'kilocode' ? 'page' : null"
+                        :class="['side-item', 'side-item-compact', { active: isConfigModeNavActive('kilocode') }]"
+                        @pointerdown="onConfigTabPointerDown('kilocode', $event)"
+                        @click="onConfigTabClick('kilocode', $event)">
+                        <span class="side-item-icon" aria-hidden="true">K</span>
+                        <div class="side-item-title">{{ t('side.config.kilocode') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.config.kilocode.meta') }}</span>
+                        </div>
+                    </button>
+                </div>
+
+
+                <div class="side-section" role="navigation" :aria-label="t('side.workspace')">
+                    <div class="side-section-title">{{ t('side.workspace') }}</div>
+                    <button
+                        id="side-tab-sessions"
+                        data-main-tab="sessions"
+                        :aria-current="mainTab === 'sessions' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('sessions') }]"
+                        @pointerdown="onMainTabPointerDown('sessions', $event)"
+                        @click="onMainTabClick('sessions', $event)">
+                        <span class="side-item-icon" aria-hidden="true">S</span>
+                        <div class="side-item-title">{{ t('side.sessions.browser') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.sessions.browser.meta') }}</span>
+                            <span>{{ t('sessions.sourceLabel', { value: (sessionFilterSource === 'all' ? t('sessions.source.all') : (sessionFilterSource === 'claude' ? 'Claude Code' : (sessionFilterSource === 'gemini' ? 'Gemini CLI' : (sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))) }) }}</span>
                         </div>
                     </button>
                     <button
@@ -265,25 +295,6 @@
                         </div>
                     </button>
 
-                </div>
-
-
-                <div class="side-section" role="navigation" :aria-label="t('side.sessions')">
-                    <div class="side-section-title">{{ t('side.sessions') }}</div>
-                    <button
-                        id="side-tab-sessions"
-                        data-main-tab="sessions"
-                        :aria-current="mainTab === 'sessions' ? 'page' : null"
-                        :class="['side-item', { active: isMainTabNavActive('sessions') }]"
-                        @pointerdown="onMainTabPointerDown('sessions', $event)"
-                        @click="onMainTabClick('sessions', $event)">
-                        <span class="side-item-icon" aria-hidden="true">S</span>
-                        <div class="side-item-title">{{ t('side.sessions.browser') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.sessions.browser.meta') }}</span>
-                            <span>{{ t('sessions.sourceLabel', { value: (sessionFilterSource === 'all' ? t('sessions.source.all') : (sessionFilterSource === 'claude' ? 'Claude Code' : (sessionFilterSource === 'gemini' ? 'Gemini CLI' : (sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))) }) }}</span>
-                        </div>
-                    </button>
                     <button
                         id="side-tab-usage"
                         data-main-tab="usage"

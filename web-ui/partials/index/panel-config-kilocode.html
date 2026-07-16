@@ -1,0 +1,101 @@
+                <!-- KiloCode 配置 -->
+                <div
+                    v-show="mainTab === 'config' && configMode === 'kilocode'"
+                    class="mode-content mode-cards"
+                    id="panel-config-kilocode"
+                    role="tabpanel"
+                    :aria-labelledby="forceCompactLayout ? 'tab-config' : 'side-tab-config-kilocode'">
+                    <div v-if="forceCompactLayout && !sessionStandalone" class="segmented-control">
+                        <button type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
+                        <button type="button" :class="['segment', { active: configMode === 'kilocode' }]" @click="switchConfigMode('kilocode')">{{ t('tab.config.kilocode') }}</button>
+                    </div>
+
+                    <section class="tool-config-write-card" :aria-label="t('toolConfig.kilocode.title')">
+                        <div class="tool-config-write-copy">
+                            <div class="tool-config-write-title">{{ t('toolConfig.kilocode.title') }}</div>
+                            <p class="tool-config-write-desc">{{ t('toolConfig.kilocode.desc') }}</p>
+                        </div>
+                        <label class="settings-toggle-row tool-config-write-toggle">
+                            <input
+                                type="checkbox"
+                                autocomplete="off"
+                                :checked="isToolConfigWriteAllowed('kilocode')"
+                                :disabled="toolConfigPermissionSaving.kilocode"
+                                @change="setToolConfigPermission('kilocode', $event.target.checked)">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span>{{ toolConfigPermissionStatusLabel('kilocode') }}</span>
+                        </label>
+                    </section>
+
+                    <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('kilocode') }">
+                        <div class="tool-config-write-body">
+                            <section class="selector-section">
+                                <div class="selector-header">
+                                    <span class="selector-title">{{ t('kilocode.providerModel.title') }}</span>
+                                    <div class="selector-actions opencode-provider-actions">
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="startKilocode(false)" :disabled="kilocodeStarting || !isToolConfigWriteAllowed('kilocode')">{{ kilocodeStarting ? t('kilocode.starting') : t('kilocode.start') }}</button>
+                                    </div>
+                                </div>
+                                <div class="config-template-hint">{{ t('kilocode.targetFile', { path: kilocodeConfigPath || '~/.config/kilo/kilo.jsonc', status: kilocodeConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }) }}</div>
+                                <div class="codex-config-grid">
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="kilocode-provider">{{ t('field.provider') }}</label>
+                                        <input id="kilocode-provider" class="form-input" v-model="kilocodeProvider" autocomplete="off" spellcheck="false" placeholder="codexmate" @blur="autoSaveKilocodeConfig">
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="kilocode-base-url">{{ t('field.url') }}</label>
+                                        <input id="kilocode-base-url" class="form-input" v-model="kilocodeBaseUrl" autocomplete="off" spellcheck="false" placeholder="https://api.example.com/v1" @blur="autoSaveKilocodeConfig">
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="kilocode-model">{{ t('field.model') }}</label>
+                                        <input id="kilocode-model" class="form-input" v-model="kilocodeModel" autocomplete="off" spellcheck="false" placeholder="gpt-5.3" @blur="autoSaveKilocodeConfig">
+                                    </div>
+                                    <div class="form-group codex-config-field">
+                                        <label class="form-label" for="kilocode-api-key">{{ t('opencode.field.apiKeyKeep') }}</label>
+                                        <div class="input-with-toggle">
+                                            <input id="kilocode-api-key" class="form-input" v-model="kilocodeApiKey" :type="kilocodeShowKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" placeholder="sk-..." @blur="autoSaveKilocodeConfig">
+                                            <button type="button" class="input-toggle-btn" @click="kilocodeShowKey = !kilocodeShowKey" :title="kilocodeShowKey ? t('common.hide') : t('common.show')">{{ kilocodeShowKey ? t('common.hide') : t('common.show') }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="kilocodeError" class="config-template-hint error-text">{{ kilocodeError }}</div>
+                            </section>
+
+                            <section class="selector-section" v-if="kilocodeProviders.length">
+                                <div class="selector-header"><span class="selector-title">{{ t('kilocode.summary.title') }}</span></div>
+                                <div class="card-list">
+                                    <div v-for="provider in kilocodeProviders" :key="provider.name" class="card">
+                                        <div class="card-leading">
+                                            <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}</div>
+                                            <div class="card-content">
+                                                <div class="card-title">{{ provider.name }}</div>
+                                                <div class="card-subtitle">{{ provider.baseURL || provider.api || t('config.url.unset') }}</div>
+                                                <div class="card-subtitle">{{ (provider.models || []).join(', ') || t('opencode.summary.noModel') }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-trailing">
+                                            <span :class="['pill', provider.hasKey ? 'configured' : 'empty']">{{ provider.hasKey ? t('common.configured') : t('common.notConfigured') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="selector-section">
+                                <div class="selector-header"><span class="selector-title">{{ t('kilocode.configPreview.title') }}</span></div>
+                                <textarea class="template-textarea" v-model="kilocodeContent" spellcheck="false" readonly></textarea>
+                                <div class="config-template-hint">{{ t('kilocode.configPreview.hint') }}</div>
+                            </section>
+
+                            <div v-if="!isToolConfigWriteAllowed('kilocode')" class="tool-config-write-overlay">
+                                <div class="tool-config-write-overlay-card">
+                                    <div class="tool-config-write-overlay-title">{{ t('toolConfig.kilocode.lockedTitle') }}</div>
+                                    <p>{{ t('toolConfig.kilocode.lockedDesc') }}</p>
+                                    <button type="button" class="btn-tool" @click="setToolConfigPermission('kilocode', true)" :disabled="toolConfigPermissionSaving.kilocode">{{ t('toolConfig.enableWrite') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

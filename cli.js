@@ -193,6 +193,9 @@ const CONFIG_DIR = path.join(os.homedir(), '.codex');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.toml');
 const AUTH_FILE = path.join(CONFIG_DIR, 'auth.json');
 const OPENCODE_CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode');
+const KILOCODE_CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'kilo');
+const KILOCODE_GLOBAL_JSONC_CONFIG_FILE = path.join(KILOCODE_CONFIG_DIR, 'kilo.jsonc');
+const KILOCODE_GLOBAL_JSON_CONFIG_FILE = path.join(KILOCODE_CONFIG_DIR, 'kilo.json');
 const OPENCODE_CONFIG_ENV_FILE = process.env.OPENCODE_CONFIG ? path.resolve(process.env.OPENCODE_CONFIG) : '';
 const OPENCODE_GLOBAL_JSONC_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'opencode.jsonc');
 const OPENCODE_GLOBAL_JSON_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'opencode.json');
@@ -900,8 +903,8 @@ function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode']);
-const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false });
+const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode', 'kilocode']);
+const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false, kilocode: false });
 let toolConfigWriteGuardDepth = 0;
 
 function enterToolConfigWriteGuard() {
@@ -928,7 +931,8 @@ function normalizeToolConfigPermissions(value) {
     return {
         codex: source.codex === true,
         claude: source.claude === true,
-        opencode: source.opencode === true
+        opencode: source.opencode === true,
+        kilocode: source.kilocode === true
     };
 }
 
@@ -986,7 +990,7 @@ function normalizeMainTabPreference(value) {
 
 function normalizeConfigModePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return ['codex', 'claude', 'openclaw', 'opencode'].includes(normalized) ? normalized : 'codex';
+    return ['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].includes(normalized) ? normalized : 'codex';
 }
 
 function normalizeUsageTimeRangePreference(value) {
@@ -1183,9 +1187,14 @@ function getApiToolConfigWriteTarget(action) {
         'apply-opencode-config',
         'update-opencode-selection'
     ]);
+    const kilocodeWriteActions = new Set([
+        'apply-kilocode-config',
+        'start-kilocode'
+    ]);
     if (codexWriteActions.has(name)) return 'codex';
     if (claudeWriteActions.has(name)) return 'claude';
     if (opencodeWriteActions.has(name)) return 'opencode';
+    if (kilocodeWriteActions.has(name)) return 'kilocode';
     return '';
 }
 
@@ -10169,6 +10178,347 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
     }
 }
 
+function stripJsoncComments(input) {
+    const text = String(input || '');
+    let output = '';
+    let inString = false;
+    let quote = '';
+    let escaped = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+        if (inString) {
+            output += ch;
+            if (escaped) {
+                escaped = false;
+            } else if (ch === '\\') {
+                escaped = true;
+            } else if (ch === quote) {
+                inString = false;
+                quote = '';
+            }
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            inString = true;
+            quote = ch;
+            output += ch;
+            continue;
+        }
+        if (ch === '/' && next === '/') {
+            while (i < text.length && text[i] !== '\n') i++;
+            output += '\n';
+            continue;
+        }
+        if (ch === '/' && next === '*') {
+            i += 2;
+            while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i++;
+            i += 1;
+            continue;
+        }
+        output += ch;
+    }
+    return output.replace(/,\s*([}\]])/g, '$1');
+}
+
+function readKilocodeGlobalConfig() {
+    const candidates = [KILOCODE_GLOBAL_JSONC_CONFIG_FILE, KILOCODE_GLOBAL_JSON_CONFIG_FILE];
+    const filePath = candidates.find((candidate) => fs.existsSync(candidate)) || KILOCODE_GLOBAL_JSONC_CONFIG_FILE;
+    if (!fs.existsSync(filePath)) {
+        return { filePath, config: {} };
+    }
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    if (!raw.trim()) {
+        return { filePath, config: {} };
+    }
+    try {
+        const parsed = JSON.parse(stripJsoncComments(raw));
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('配置根节点必须是对象');
+        }
+        return { filePath, config: parsed };
+    } catch (e) {
+        throw new Error(`读取 KiloCode 配置失败: ${e.message}`);
+    }
+}
+
+function normalizeKilocodeProviderName(value) {
+    const name = typeof value === 'string' && value.trim() ? value.trim() : 'codexmate';
+    if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+        throw new Error('provider 仅支持字母/数字/._-');
+    }
+    return name;
+}
+
+function writeKilocodeProviderConfig(params = {}) {
+    const provider = normalizeKilocodeProviderName(params.provider);
+    const url = normalizeBaseUrl(params.url || '');
+    const incomingKey = typeof params.key === 'string' ? params.key.trim() : '';
+    const model = typeof params.model === 'string' ? params.model.trim() : '';
+    if (!url) throw new Error('URL 必填');
+    if (!model) throw new Error('模型名称必填');
+    if (!isValidHttpUrl(url)) throw new Error('URL 仅支持 http/https');
+
+    const { filePath, config } = readKilocodeGlobalConfig();
+    const existingProvider = config.provider
+        && typeof config.provider === 'object'
+        && !Array.isArray(config.provider)
+        && config.provider[provider]
+        && typeof config.provider[provider] === 'object'
+        && !Array.isArray(config.provider[provider])
+        ? config.provider[provider]
+        : {};
+    const existingOptions = existingProvider.options && typeof existingProvider.options === 'object' && !Array.isArray(existingProvider.options)
+        ? existingProvider.options
+        : {};
+    const existingKey = typeof existingOptions.apiKey === 'string' ? existingOptions.apiKey.trim() : '';
+    const key = incomingKey || existingKey;
+    if (!key) throw new Error('API Key 必填');
+
+    const next = { ...config };
+    if (!next.$schema) {
+        next.$schema = 'https://app.kilo.ai/config.json';
+    }
+    next.provider = next.provider && typeof next.provider === 'object' && !Array.isArray(next.provider)
+        ? { ...next.provider }
+        : {};
+    next.provider[provider] = {
+        ...(next.provider[provider] && typeof next.provider[provider] === 'object' && !Array.isArray(next.provider[provider])
+            ? next.provider[provider]
+            : {}),
+        name: provider,
+        npm: '@ai-sdk/openai-compatible',
+        api: url,
+        env: [],
+        models: {
+            [model]: {
+                name: model,
+                tool_call: true
+            }
+        },
+        options: {
+            ...(next.provider[provider]
+                && typeof next.provider[provider] === 'object'
+                && next.provider[provider].options
+                && typeof next.provider[provider].options === 'object'
+                && !Array.isArray(next.provider[provider].options)
+                ? next.provider[provider].options
+                : {}),
+            apiKey: key,
+            baseURL: url
+        }
+    };
+    next.model = `${provider}/${model}`;
+    const enabled = Array.isArray(next.enabled_providers) ? next.enabled_providers.filter((item) => typeof item === 'string' && item.trim()) : [];
+    next.enabled_providers = enabled.includes(provider) ? enabled : [...enabled, provider];
+
+    ensureDir(path.dirname(filePath));
+    fs.writeFileSync(filePath, JSON.stringify(next, null, 2) + '\n', 'utf-8');
+    return { filePath, provider, model, url };
+}
+
+function parseKilocodeCommandArgs(argv = []) {
+    const options = { provider: 'codexmate', command: '' };
+    const positional = [];
+    let passthrough = [];
+    for (let i = 0; i < argv.length; i++) {
+        const token = String(argv[i] || '');
+        if (token === '--') {
+            passthrough = argv.slice(i + 1).map(item => String(item));
+            break;
+        }
+        if (token === '--provider') {
+            const value = String(argv[i + 1] || '');
+            if (!value || value.startsWith('--')) throw new Error('错误: --provider 需要一个值');
+            options.provider = value;
+            i += 1;
+            continue;
+        }
+        if (token.startsWith('--provider=')) {
+            options.provider = token.slice('--provider='.length);
+            continue;
+        }
+        if (token === '--help' || token === '-h') {
+            options.help = true;
+            continue;
+        }
+        positional.push(token);
+    }
+    if (positional[0] === 'config' || positional[0] === 'setup') {
+        options.command = positional.shift();
+    }
+    return {
+        command: options.command,
+        url: positional[0],
+        key: positional[1],
+        model: positional[2],
+        provider: options.provider,
+        help: !!options.help,
+        passthrough: passthrough.length ? passthrough : positional.slice(options.command ? 3 : 0)
+    };
+}
+
+function printKilocodeUsage() {
+    console.log('\n用法:');
+    console.log('  codexmate kilo [KiloCode参数...]');
+    console.log('  codexmate kilo <URL> <API密钥> <模型> [--provider <id>] [-- KiloCode参数...]');
+    console.log('  codexmate kilo config <URL> <API密钥> <模型> [--provider <id>]');
+    console.log('\n说明:');
+    console.log('  codexmate kilo 默认启动 KiloCode；带 URL/API密钥/模型时会先写入 KiloCode provider 配置再启动。');
+    console.log('  纯配置请使用 codexmate kilo config ...');
+    console.log('  配置写入 ~/.config/kilo/kilo.jsonc（或已存在的 kilo.json）。');
+}
+
+function resolveKilocodeBinary() {
+    for (const bin of ['kilo', 'kilocode']) {
+        if (commandExists(bin, '--version')) return bin;
+    }
+    return '';
+}
+
+function runKilocodeCommand(args = [], options = {}) {
+    const bin = resolveKilocodeBinary();
+    if (!bin) {
+        throw new Error('无法启动 KiloCode，请确认已安装 KiloCode CLI，并且 kilo 或 kilocode 在 PATH 中。');
+    }
+    const finalArgs = Array.isArray(args) ? args.filter(item => item !== undefined).map(item => String(item)) : [];
+    if (options.detached === true) {
+        const child = spawn(bin, finalArgs, {
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true
+        });
+        child.unref();
+        return { success: true, bin, args: finalArgs, pid: child.pid };
+    }
+    return new Promise((resolve, reject) => {
+        const child = spawn(bin, finalArgs, {
+            stdio: 'inherit',
+            windowsHide: false
+        });
+        child.on('error', reject);
+        child.on('exit', (code, signal) => {
+            if (signal) {
+                reject(new Error(`KiloCode 已终止: ${signal}`));
+                return;
+            }
+            resolve(code || 0);
+        });
+    });
+}
+
+async function cmdKilocode(argv = []) {
+    const parsed = parseKilocodeCommandArgs(argv);
+    if (parsed.help) {
+        printKilocodeUsage();
+        return 0;
+    }
+    if (parsed.command === 'config') {
+        if (!parsed.url || !parsed.key || !parsed.model) {
+            printKilocodeUsage();
+            throw new Error('URL、API密钥和模型名称必填');
+        }
+        const result = writeKilocodeProviderConfig(parsed);
+        console.log('✓ 已写入 KiloCode 配置');
+        console.log('  文件:', result.filePath);
+        console.log('  provider:', result.provider);
+        console.log('  URL:', result.url);
+        console.log('  模型:', `${result.provider}/${result.model}`);
+        console.log();
+        return 0;
+    }
+    let passthrough = parsed.passthrough;
+    if (parsed.url && parsed.key && parsed.model) {
+        const result = writeKilocodeProviderConfig(parsed);
+        console.log('✓ 已写入 KiloCode 配置，正在启动 KiloCode');
+        console.log('  文件:', result.filePath);
+        console.log('  模型:', `${result.provider}/${result.model}`);
+        console.log();
+        passthrough = parsed.passthrough;
+    } else if (parsed.url || parsed.key || parsed.model) {
+        passthrough = [parsed.url, parsed.key, parsed.model, ...parsed.passthrough].filter(item => item !== undefined && item !== '');
+    }
+    return runKilocodeCommand(passthrough);
+}
+
+function summarizeKilocodeConfig(config = {}, targetPath = KILOCODE_GLOBAL_JSONC_CONFIG_FILE, exists = false) {
+    const providers = getRecord(config.provider);
+    const modelRef = typeof config.model === 'string' ? config.model.trim() : '';
+    const slash = modelRef.indexOf('/');
+    const currentProvider = slash > 0 ? modelRef.slice(0, slash) : '';
+    const currentModel = slash > 0 ? modelRef.slice(slash + 1) : modelRef;
+    const providerNames = [...new Set([...Object.keys(providers), currentProvider].filter(Boolean))];
+    const redactedConfig = JSON.parse(JSON.stringify(config && typeof config === 'object' ? config : {}));
+    const redactedProviders = getRecord(redactedConfig.provider);
+    for (const provider of Object.values(redactedProviders)) {
+        const options = getRecord(provider && provider.options);
+        if (typeof options.apiKey === 'string' && options.apiKey) {
+            options.apiKey = maskKey(options.apiKey);
+        }
+    }
+    return {
+        exists: !!exists,
+        targetPath,
+        currentProvider,
+        currentModel,
+        providers: providerNames.map((name) => {
+            const provider = getRecord(providers[name]);
+            const options = getRecord(provider.options);
+            const apiKey = typeof options.apiKey === 'string' ? options.apiKey : '';
+            const modelNames = Object.keys(getRecord(provider.models));
+            return {
+                name,
+                api: typeof provider.api === 'string' ? provider.api : '',
+                baseURL: typeof options.baseURL === 'string' ? options.baseURL : '',
+                hasKey: apiKey.trim().length > 0,
+                apiKey: maskKey(apiKey),
+                models: modelNames
+            };
+        }),
+        content: JSON.stringify(redactedConfig, null, 2) + '\n',
+        redacted: true
+    };
+}
+
+function readKilocodeConfigInfo() {
+    try {
+        const { filePath, config } = readKilocodeGlobalConfig();
+        return summarizeKilocodeConfig(config, filePath, fs.existsSync(filePath));
+    } catch (e) {
+        return { error: e.message || '读取 KiloCode 配置失败', targetPath: KILOCODE_GLOBAL_JSONC_CONFIG_FILE };
+    }
+}
+
+function applyKilocodeConfig(params = {}) {
+    assertToolConfigWriteAllowed('kilocode');
+    try {
+        const result = writeKilocodeProviderConfig({
+            provider: params.provider,
+            url: params.url,
+            key: params.apiKey,
+            model: params.model
+        });
+        const info = readKilocodeConfigInfo();
+        return { success: true, ...result, ...info };
+    } catch (e) {
+        return { error: e.message || '写入 KiloCode 配置失败' };
+    }
+}
+
+function startKilocodeFromWeb(params = {}) {
+    assertToolConfigWriteAllowed('kilocode');
+    try {
+        if (params && params.configure === true) {
+            const saved = applyKilocodeConfig(params);
+            if (saved && saved.error) return saved;
+        }
+        const args = Array.isArray(params.args) ? params.args.map(item => String(item)) : [];
+        return runKilocodeCommand(args, { detached: true });
+    } catch (e) {
+        return { error: e.message || '启动 KiloCode 失败' };
+    }
+}
+
 // 添加模型
 function cmdAddModel(modelName, silent = false) {
     if (!modelName) {
@@ -12776,11 +13126,20 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'get-opencode-config':
                             result = readOpencodeConfigInfo();
                             break;
+                        case 'get-kilocode-config':
+                            result = readKilocodeConfigInfo();
+                            break;
                         case 'apply-opencode-config':
                             result = applyOpencodeConfigRaw(params || {});
                             break;
                         case 'update-opencode-selection':
                             result = updateOpencodeSelection(params || {});
+                            break;
+                        case 'apply-kilocode-config':
+                            result = applyKilocodeConfig(params || {});
+                            break;
+                        case 'start-kilocode':
+                            result = startKilocodeFromWeb(params || {});
                             break;
                         case 'apply-claude-config':
                             result = await applyToClaudeSettings(params.config);
@@ -18322,6 +18681,7 @@ function printMainHelp() {
     console.log('  codexmate delete <名称>    删除提供商');
     console.log('  codexmate claude            等同于 claude --dangerously-skip-permissions');
     console.log('  codexmate claude <BaseURL> <API密钥> [模型] [--target-api responses|chat_completions|ollama]  写入 Claude Code 配置');
+    console.log('  codexmate kilo [URL API密钥 模型] [--provider <id>]  配置后启动 KiloCode');
     console.log('  codexmate auth <list|import|switch|delete|status>  认证管理');
     console.log('  codexmate add-model <模型> 添加模型');
     console.log('  codexmate delete-model <模型> 删除模型');
@@ -18416,6 +18776,11 @@ async function main() {
         case 'claude': {
             const exitCode = await cmdClaude(args.slice(1));
             process.exit(exitCode);
+        }
+        case 'kilo':
+        case 'kilocode': {
+            const exitCode = await cmdKilocode(args.slice(1));
+            process.exit(exitCode || 0);
         }
         case 'add-model': cmdAddModel(args[1]); break;
         case 'delete-model': cmdDeleteModel(args[1]); break;

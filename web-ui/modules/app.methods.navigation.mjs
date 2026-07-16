@@ -148,6 +148,9 @@
             }
             this.configMode = configModeSet.has(normalizedMode) ? normalizedMode : 'codex';
             if (this.mainTab === 'config') {
+                if (this.configMode === 'kilocode' && typeof this.loadKilocodeConfig === 'function') {
+                    this.loadKilocodeConfig();
+                }
                 if (this.configMode === 'claude') {
                     const expectedMainTab = 'config';
                     const expectedConfigMode = 'claude';

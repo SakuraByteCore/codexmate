@@ -1,4 +1,4 @@
-﻿import assert from 'assert';
+import assert from 'assert';
 import {
     readBundledWebUiCss,
     readBundledWebUiHtml,
@@ -24,7 +24,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     const sideTabModes = [...html.matchAll(/id="side-tab-config-([a-z]+)"/g)]
         .map((match) => match[1]);
 
-    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode']);
+    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']);
     assert.match(html, /id="tab-dashboard"/);
     assert.match(html, /v-if="healthCheckResult && healthCheckResult\.report" class="doctor-action-list"/);
     assert.match(html, /v-if="healthCheckResult\.report\.issues && healthCheckResult\.report\.issues\.length"/);
@@ -92,6 +92,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /@click="onMainTabClick\('prompts', \$event\)"/);
     assert.match(html, /t\('side\.prompts'\)/);
     assert.match(html, /t\('side\.prompts\.meta'\)/);
+    const configSectionIndex = sideRail.indexOf(':aria-label="t(\'side.config\')"');
+    const workspaceSectionIndex = sideRail.indexOf(':aria-label="t(\'side.workspace\')"');
+    const promptsSideTabIndex = sideRail.indexOf('id="side-tab-prompts"');
+    assert.ok(configSectionIndex >= 0, 'config side section should exist');
+    assert.ok(workspaceSectionIndex > configSectionIndex, 'workspace side section should follow config section');
+    assert.ok(promptsSideTabIndex > workspaceSectionIndex, 'Prompts should live inside the workspace section, not config');
+    assert.match(sideRail, /:aria-label="t\('side\.workspace'\)"[\s\S]*id="side-tab-sessions"[\s\S]*id="side-tab-prompts"[\s\S]*id="side-tab-usage"/);
     assert.doesNotMatch(html, /promptsSubTab === 'presets'/);
     assert.doesNotMatch(html, /switchPromptsSubTab\('presets'\)/);
     assert.match(html, /<details class="prompt-presets-panel">/);
@@ -368,7 +375,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<button type="button" class="btn-mini" @click="refreshSkillsList\(\{ silent: false \}\)"/);
     assert.match(html, /class="skills-target-switch" role="group" :aria-label="t\('market\.target\.aria'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.config'\)"/);
-    assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.sessions'\)"/);
+    assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.workspace'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.skills'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.docs'\)"/);
@@ -381,6 +388,14 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(sideRail, /role="tab"/);
     assert.match(sideRail, /id="side-tab-config-codex"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'codex' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-config-opencode"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'opencode' \? 'page' : null"/);
+    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']) {
+        assert.match(sideRail, new RegExp(`id=\"side-tab-config-${mode}\"[\\s\\S]*?side\\.config\\.${mode}\\.meta`));
+    }
+    assert.doesNotMatch(sideRail, /currentProvider|currentClaudeConfig|currentOpenclawConfig|opencodeModel|kilocodeModel/);
+    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']) {
+        assert.match(sideRail, new RegExp(`id=\"side-tab-config-${mode}\"[\\s\\S]*?:class=\"\\['side-item', 'side-item-compact'`));
+    }
+    assert.match(layoutShell, /\.side-item-compact\s*\{[\s\S]*padding-top:\s*7px;[\s\S]*padding-bottom:\s*7px;[\s\S]*gap:\s*2px;/);
     assert.match(sideRail, /id="side-tab-docs"[\s\S]*:aria-current="mainTab === 'docs' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-settings"[\s\S]*:aria-current="mainTab === 'settings' \? 'page' : null"/);
     assert.match(html, /skillsDefaultRootPath/);

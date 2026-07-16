@@ -20,6 +20,7 @@ import { createOpenclawCoreMethods } from './app.methods.openclaw-core.mjs';
 import { createOpenclawEditingMethods } from './app.methods.openclaw-editing.mjs';
 import { createOpenclawPersistMethods } from './app.methods.openclaw-persist.mjs';
 import { createOpencodeConfigMethods } from './app.methods.opencode-config.mjs';
+import { createKilocodeConfigMethods } from './app.methods.kilocode-config.mjs';
 import { createProvidersMethods } from './app.methods.providers.mjs';
 import { createProviderCacheMethods } from './app.methods.provider-cache.mjs';
 import { createRuntimeMethods } from './app.methods.runtime.mjs';
@@ -99,6 +100,7 @@ export function createAppMethods() {
             api,
             modelCatalog: OPENCODE_MODEL_CATALOG
         }),
+        ...createKilocodeConfigMethods({ api }),
         ...createInstallMethods({ api }),
         ...createRuntimeMethods({ api }),
         ...createTaskOrchestrationMethods({ api })
