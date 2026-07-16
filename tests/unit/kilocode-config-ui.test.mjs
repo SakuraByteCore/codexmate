@@ -28,7 +28,8 @@ function createVm(apiImpl = async () => ({})) {
 
 test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     const html = readBundledWebUiHtml();
-    assert.match(html, /id="kilocode-provider"[^>]*@blur="autoSaveKilocodeConfig"/);
+    assert.doesNotMatch(html, /id="kilocode-provider"/);
+    assert.doesNotMatch(html, /kilocode\.summary\.title/);
     assert.match(html, /id="kilocode-base-url"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-model"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-api-key"[^>]*@blur="autoSaveKilocodeConfig"/);
@@ -65,6 +66,37 @@ test('KiloCode auto-save reuses stored API key when the key field is blank', asy
     assert.strictEqual(vm.kilocodeConfigPath, '/tmp/kilo.jsonc');
     assert.strictEqual(vm.kilocodeAutoSaveSignature.includes('key:<stored>'), true);
     assert.deepStrictEqual(vm.messages.at(-1), { message: 'kilocode.autoSaved', type: 'success' });
+});
+
+test('KiloCode auto-save defaults provider and model when only URL and key are filled', async () => {
+    const calls = [];
+    const vm = createVm(async (action, params) => {
+        calls.push({ action, params });
+        assert.strictEqual(action, 'apply-kilocode-config');
+        return {
+            targetPath: '/tmp/kilo.jsonc',
+            exists: true,
+            content: '{}\n',
+            currentProvider: params.provider,
+            currentModel: params.model,
+            providers: [{ name: params.provider, hasKey: true, api: params.url, models: [params.model] }]
+        };
+    });
+    vm.kilocodeProvider = '';
+    vm.kilocodeModel = '';
+    vm.kilocodeApiKey = 'sk-test';
+
+    const saved = await vm.autoSaveKilocodeConfig();
+
+    assert.strictEqual(saved, true);
+    assert.deepStrictEqual(calls[0].params, {
+        provider: 'codexmate',
+        url: 'https://new.example.com/v1',
+        model: 'gpt-5.3',
+        apiKey: 'sk-test'
+    });
+    assert.strictEqual(vm.kilocodeProvider, 'codexmate');
+    assert.strictEqual(vm.kilocodeModel, 'gpt-5.3');
 });
 
 test('KiloCode backend source preserves existing API key for blank Web auto-sync', () => {

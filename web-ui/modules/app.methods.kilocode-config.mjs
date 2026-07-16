@@ -3,6 +3,9 @@ function normalizeKilocodeProviderName(value) {
     return /^[a-zA-Z0-9_.-]+$/.test(name) ? name : '';
 }
 
+const DEFAULT_KILOCODE_PROVIDER = 'codexmate';
+const DEFAULT_KILOCODE_MODEL = 'gpt-5.3';
+
 export function createKilocodeConfigMethods(options = {}) {
     const { api } = options;
     return {
@@ -15,14 +18,13 @@ export function createKilocodeConfigMethods(options = {}) {
             const firstProvider = providers.find(item => item && item.name);
             this.kilocodeProvider = normalizeKilocodeProviderName(res.currentProvider)
                 || normalizeKilocodeProviderName(firstProvider && firstProvider.name)
-                || normalizeKilocodeProviderName(this.kilocodeProvider)
-                || 'codexmate';
+                || DEFAULT_KILOCODE_PROVIDER;
             const selected = providers.find(item => normalizeKilocodeProviderName(item && item.name) === this.kilocodeProvider);
             this.kilocodeBaseUrl = typeof (selected && (selected.baseURL || selected.api)) === 'string'
                 ? (selected.baseURL || selected.api)
                 : this.kilocodeBaseUrl;
             const model = typeof res.currentModel === 'string' ? res.currentModel.trim() : '';
-            this.kilocodeModel = model || (selected && Array.isArray(selected.models) ? (selected.models[0] || '') : this.kilocodeModel);
+            this.kilocodeModel = model || (selected && Array.isArray(selected.models) ? (selected.models[0] || '') : this.kilocodeModel) || DEFAULT_KILOCODE_MODEL;
         },
 
         async loadKilocodeConfig(options = {}) {
@@ -56,11 +58,11 @@ export function createKilocodeConfigMethods(options = {}) {
 
         async autoSaveKilocodeConfig() {
             if (!this.isToolConfigWriteAllowed('kilocode') || this.kilocodeSaving || this.kilocodeLoading) return false;
-            const provider = normalizeKilocodeProviderName(this.kilocodeProvider);
+            const provider = DEFAULT_KILOCODE_PROVIDER;
             const url = typeof this.kilocodeBaseUrl === 'string' ? this.kilocodeBaseUrl.trim() : '';
-            const model = typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '';
+            const model = (typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '') || DEFAULT_KILOCODE_MODEL;
             const apiKey = typeof this.kilocodeApiKey === 'string' ? this.kilocodeApiKey.trim() : '';
-            if (!provider || !url || !model || (!apiKey && !this.hasKilocodeStoredKey(provider))) return false;
+            if (!url || (!apiKey && !this.hasKilocodeStoredKey(provider))) return false;
             const signature = this.kilocodeConfigSignature(provider, url, model, apiKey);
             if (signature === this.kilocodeAutoSaveSignature) return false;
             return this.saveKilocodeConfig({ auto: true, signature });
@@ -73,14 +75,16 @@ export function createKilocodeConfigMethods(options = {}) {
                 if (!auto) this.showMessage(this.t ? this.t('kilocode.writeRequired') : '请先打开 KiloCode 写入开关', 'error');
                 return false;
             }
-            const provider = normalizeKilocodeProviderName(this.kilocodeProvider);
+            const provider = DEFAULT_KILOCODE_PROVIDER;
             const url = typeof this.kilocodeBaseUrl === 'string' ? this.kilocodeBaseUrl.trim() : '';
-            const model = typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '';
+            const model = (typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '') || DEFAULT_KILOCODE_MODEL;
             const apiKey = typeof this.kilocodeApiKey === 'string' ? this.kilocodeApiKey.trim() : '';
-            if (!provider || !url || !model || (!apiKey && !this.hasKilocodeStoredKey(provider))) {
-                if (!auto) this.showMessage(this.t ? this.t('kilocode.fillRequired') : '请填写 KiloCode provider、URL、API Key 和模型', 'error');
+            if (!url || (!apiKey && !this.hasKilocodeStoredKey(provider))) {
+                if (!auto) this.showMessage(this.t ? this.t('kilocode.fillRequired') : '请填写 KiloCode URL 和 API Key', 'error');
                 return false;
             }
+            this.kilocodeProvider = provider;
+            this.kilocodeModel = model;
             this.kilocodeSaving = true;
             this.kilocodeError = '';
             try {

@@ -34,14 +34,10 @@
                         <div class="tool-config-write-body">
                             <section class="selector-section">
                                 <div class="selector-header">
-                                    <span class="selector-title">{{ t('kilocode.providerModel.title') }}</span>
+                                    <span class="selector-title">{{ t('kilocode.connection.title') }}</span>
                                 </div>
                                 <div class="config-template-hint">{{ t('kilocode.targetFile', { path: kilocodeConfigPath || '~/.config/kilo/kilo.jsonc', status: kilocodeConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }) }}</div>
                                 <div class="codex-config-grid">
-                                    <div class="form-group codex-config-field">
-                                        <label class="form-label" for="kilocode-provider">{{ t('field.provider') }}</label>
-                                        <input id="kilocode-provider" class="form-input" v-model="kilocodeProvider" autocomplete="off" spellcheck="false" placeholder="codexmate" @blur="autoSaveKilocodeConfig">
-                                    </div>
                                     <div class="form-group codex-config-field">
                                         <label class="form-label" for="kilocode-base-url">{{ t('field.url') }}</label>
                                         <input id="kilocode-base-url" class="form-input" v-model="kilocodeBaseUrl" autocomplete="off" spellcheck="false" placeholder="https://api.example.com/v1" @blur="autoSaveKilocodeConfig">
@@ -59,25 +55,6 @@
                                     </div>
                                 </div>
                                 <div v-if="kilocodeError" class="config-template-hint error-text">{{ kilocodeError }}</div>
-                            </section>
-
-                            <section class="selector-section" v-if="kilocodeProviders.length">
-                                <div class="selector-header"><span class="selector-title">{{ t('kilocode.summary.title') }}</span></div>
-                                <div class="card-list">
-                                    <div v-for="provider in kilocodeProviders" :key="provider.name" class="card">
-                                        <div class="card-leading">
-                                            <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}</div>
-                                            <div class="card-content">
-                                                <div class="card-title">{{ provider.name }}</div>
-                                                <div class="card-subtitle">{{ provider.baseURL || provider.api || t('config.url.unset') }}</div>
-                                                <div class="card-subtitle">{{ (provider.models || []).join(', ') || t('opencode.summary.noModel') }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="card-trailing">
-                                            <span :class="['pill', provider.hasKey ? 'configured' : 'empty']">{{ provider.hasKey ? t('common.configured') : t('common.notConfigured') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
                             </section>
 
                             <section class="selector-section">

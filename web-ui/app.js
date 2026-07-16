@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 kilocodeProviders: [],
                 kilocodeProvider: 'codexmate',
                 kilocodeBaseUrl: '',
-                kilocodeModel: '',
+                kilocodeModel: 'gpt-5.3',
                 kilocodeApiKey: '',
                 kilocodeShowKey: false,
                 kilocodeAutoSaveSignature: '',
