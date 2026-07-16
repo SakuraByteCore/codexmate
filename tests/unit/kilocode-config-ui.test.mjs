@@ -38,10 +38,46 @@ test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     assert.match(html, /<svg v-if="!kilocodeShowKey"/);
     assert.match(html, /<svg v-else viewBox="0 0 20 20"/);
     assert.doesNotMatch(html, /kilocodeShowKey \? t\('common\.hide'\) : t\('common\.show'\) \}\}<\/button>/);
+    assert.match(html, /@dblclick="selectKilocodeProvider\(provider\)"/);
+    assert.match(html, /role="button"/);
+    assert.match(html, /<textarea class="template-textarea" :value="kilocodeContent" spellcheck="false" readonly aria-readonly="true"><\/textarea>/);
+    assert.doesNotMatch(html, /<textarea class="template-textarea" v-model="kilocodeContent"/);
     assert.doesNotMatch(html, /@click="loadKilocodeConfig\(\{ toast: true \}\)"/);
     assert.doesNotMatch(html, /@click="saveKilocodeConfig"/);
     assert.doesNotMatch(html, /@click="startKilocode\(true\)"/);
     assert.doesNotMatch(html, /@click="startKilocode\(false\)"/);
+});
+
+test('KiloCode provider summary double-click selects and persists stored provider', async () => {
+    const calls = [];
+    const vm = createVm(async (action, params) => {
+        calls.push({ action, params });
+        return {
+            targetPath: '/tmp/kilo.jsonc',
+            exists: true,
+            content: '{}\n',
+            currentProvider: params.provider,
+            currentModel: params.model,
+            providers: [{ name: params.provider, hasKey: true, api: params.url, models: [params.model] }]
+        };
+    });
+    vm.kilocodeProviders = [
+        { name: 'codexmate', hasKey: true, api: 'https://old.example.com/v1', models: ['old-model'] },
+        { name: 'other', hasKey: true, baseURL: 'https://other.example.com/v1', models: ['other-model'] }
+    ];
+
+    const selected = await vm.selectKilocodeProvider(vm.kilocodeProviders[1]);
+
+    assert.strictEqual(selected, true);
+    assert.strictEqual(vm.kilocodeProvider, 'other');
+    assert.strictEqual(vm.kilocodeBaseUrl, 'https://other.example.com/v1');
+    assert.strictEqual(vm.kilocodeModel, 'other-model');
+    assert.deepStrictEqual(calls[0].params, {
+        provider: 'other',
+        url: 'https://other.example.com/v1',
+        model: 'other-model',
+        apiKey: ''
+    });
 });
 
 test('KiloCode config tab reloads stored config when the tab is restored or re-entered', () => {

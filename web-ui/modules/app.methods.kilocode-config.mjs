@@ -9,6 +9,10 @@ const DEFAULT_KILOCODE_MODEL = 'gpt-5.3';
 export function createKilocodeConfigMethods(options = {}) {
     const { api } = options;
     return {
+        normalizeKilocodeProviderNameForUi(value) {
+            return normalizeKilocodeProviderName(value);
+        },
+
         refreshKilocodeSelectionFromSummary(res = {}) {
             const providers = Array.isArray(res.providers) ? res.providers : [];
             this.kilocodeProviders = providers;
@@ -54,6 +58,22 @@ export function createKilocodeConfigMethods(options = {}) {
         kilocodeConfigSignature(provider, url, model, apiKey) {
             const keyMarker = apiKey ? `key:${apiKey}` : (this.hasKilocodeStoredKey(provider) ? 'key:<stored>' : 'key:<empty>');
             return [provider, url, model, keyMarker].join('\u0000');
+        },
+
+        async selectKilocodeProvider(provider = {}) {
+            const name = normalizeKilocodeProviderName(provider && provider.name);
+            if (!name) return false;
+            const url = typeof (provider.baseURL || provider.api) === 'string' ? (provider.baseURL || provider.api).trim() : '';
+            const model = Array.isArray(provider.models) && provider.models.length
+                ? String(provider.models[0] || '').trim()
+                : DEFAULT_KILOCODE_MODEL;
+            this.kilocodeProvider = name;
+            if (url) this.kilocodeBaseUrl = url;
+            this.kilocodeModel = model || DEFAULT_KILOCODE_MODEL;
+            this.kilocodeApiKey = '';
+            this.kilocodeAutoSaveSignature = '';
+            if (!this.isToolConfigWriteAllowed('kilocode') || !url || !this.hasKilocodeStoredKey(name)) return true;
+            return this.saveKilocodeConfig({ auto: true });
         },
 
         async autoSaveKilocodeConfig() {

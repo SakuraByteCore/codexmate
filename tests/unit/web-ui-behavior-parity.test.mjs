@@ -715,6 +715,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'saveKilocodeConfig',
         'hasKilocodeStoredKey',
         'kilocodeConfigSignature',
+        'normalizeKilocodeProviderNameForUi',
+        'selectKilocodeProvider',
         'autoSaveKilocodeConfig',
         'startKilocode',
         'fillOpencodeProvider',

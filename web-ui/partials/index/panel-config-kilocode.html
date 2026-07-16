@@ -67,7 +67,7 @@
                             <section class="selector-section" v-if="kilocodeProviders.length">
                                 <div class="selector-header"><span class="selector-title">{{ t('kilocode.summary.title') }}</span></div>
                                 <div class="card-list">
-                                    <div v-for="provider in kilocodeProviders" :key="provider.name" class="card">
+                                    <div v-for="provider in kilocodeProviders" :key="provider.name" :class="['card', { active: normalizeKilocodeProviderNameForUi(provider.name) === normalizeKilocodeProviderNameForUi(kilocodeProvider) }]" @dblclick="selectKilocodeProvider(provider)" @keydown.enter.self.prevent="selectKilocodeProvider(provider)" tabindex="0" role="button" :aria-current="normalizeKilocodeProviderNameForUi(provider.name) === normalizeKilocodeProviderNameForUi(kilocodeProvider) ? 'true' : null">
                                         <div class="card-leading">
                                             <div class="card-icon">{{ provider.name.charAt(0).toUpperCase() }}</div>
                                             <div class="card-content">
@@ -85,7 +85,7 @@
 
                             <section class="selector-section">
                                 <div class="selector-header"><span class="selector-title">{{ t('kilocode.configPreview.title') }}</span></div>
-                                <textarea class="template-textarea" v-model="kilocodeContent" spellcheck="false" readonly></textarea>
+                                <textarea class="template-textarea" :value="kilocodeContent" spellcheck="false" readonly aria-readonly="true"></textarea>
                                 <div class="config-template-hint">{{ t('kilocode.configPreview.hint') }}</div>
                             </section>
 

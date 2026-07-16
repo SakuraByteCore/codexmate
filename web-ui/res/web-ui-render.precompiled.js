@@ -3009,7 +3009,12 @@ return function render(_ctx, _cache) {
                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.kilocodeProviders, (provider) => {
                           return (_openBlock(), _createElementBlock("div", {
                             key: provider.name,
-                            class: "card"
+                            class: _normalizeClass(['card', { active: _ctx.normalizeKilocodeProviderNameForUi(provider.name) === _ctx.normalizeKilocodeProviderNameForUi(_ctx.kilocodeProvider) }]),
+                            onDblclick: $event => (_ctx.selectKilocodeProvider(provider)),
+                            onKeydown: _withKeys(_withModifiers($event => (_ctx.selectKilocodeProvider(provider)), ["self","prevent"]), ["enter"]),
+                            tabindex: "0",
+                            role: "button",
+                            "aria-current": _ctx.normalizeKilocodeProviderNameForUi(provider.name) === _ctx.normalizeKilocodeProviderNameForUi(_ctx.kilocodeProvider) ? 'true' : null
                           }, [
                             _createElementVNode("div", { class: "card-leading" }, [
                               _createElementVNode("div", { class: "card-icon" }, _toDisplayString(provider.name.charAt(0).toUpperCase()), 1 /* TEXT */),
@@ -3024,7 +3029,7 @@ return function render(_ctx, _cache) {
                                 class: _normalizeClass(['pill', provider.hasKey ? 'configured' : 'empty'])
                               }, _toDisplayString(provider.hasKey ? _ctx.t('common.configured') : _ctx.t('common.notConfigured')), 3 /* TEXT, CLASS */)
                             ])
-                          ]))
+                          ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onDblclick", "onKeydown", "aria-current"]))
                         }), 128 /* KEYED_FRAGMENT */))
                       ])
                     ]))
@@ -3033,14 +3038,13 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "selector-header" }, [
                     _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.configPreview.title')), 1 /* TEXT */)
                   ]),
-                  _withDirectives(_createElementVNode("textarea", {
+                  _createElementVNode("textarea", {
                     class: "template-textarea",
-                    "onUpdate:modelValue": $event => ((_ctx.kilocodeContent) = $event),
+                    value: _ctx.kilocodeContent,
                     spellcheck: "false",
-                    readonly: ""
-                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                    [_vModelText, _ctx.kilocodeContent]
-                  ]),
+                    readonly: "",
+                    "aria-readonly": "true"
+                  }, null, 8 /* PROPS */, ["value"]),
                   _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('kilocode.configPreview.hint')), 1 /* TEXT */)
                 ]),
                 (!_ctx.isToolConfigWriteAllowed('kilocode'))
