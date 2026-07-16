@@ -325,6 +325,16 @@
     box-shadow: var(--shadow-input-focus);
 }
 
+.template-textarea[readonly] {
+    cursor: default;
+}
+
+.template-textarea[readonly]:focus {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-subtle);
+}
+
 .codex-config-grid {
     display: grid;
     gap: 10px;

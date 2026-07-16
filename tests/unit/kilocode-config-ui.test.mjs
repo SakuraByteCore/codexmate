@@ -42,6 +42,9 @@ test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     assert.match(html, /role="button"/);
     assert.match(html, /<textarea class="template-textarea" :value="kilocodeContent" spellcheck="false" readonly aria-readonly="true"><\/textarea>/);
     assert.doesNotMatch(html, /<textarea class="template-textarea" v-model="kilocodeContent"/);
+    const styles = readProjectFile('web-ui/styles/controls-forms.css');
+    assert.match(styles, /\.template-textarea\[readonly\]\s*\{[\s\S]*cursor:\s*default;/);
+    assert.match(styles, /\.template-textarea\[readonly\]:focus\s*\{[\s\S]*border-color:\s*var\(--color-border\);/);
     assert.doesNotMatch(html, /@click="loadKilocodeConfig\(\{ toast: true \}\)"/);
     assert.doesNotMatch(html, /@click="saveKilocodeConfig"/);
     assert.doesNotMatch(html, /@click="startKilocode\(true\)"/);
