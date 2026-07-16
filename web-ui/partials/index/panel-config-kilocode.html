@@ -35,9 +35,6 @@
                             <section class="selector-section">
                                 <div class="selector-header">
                                     <span class="selector-title">{{ t('kilocode.providerModel.title') }}</span>
-                                    <div class="selector-actions opencode-provider-actions">
-                                        <button type="button" class="btn-tool btn-tool-compact" @click="startKilocode(false)" :disabled="kilocodeStarting || !isToolConfigWriteAllowed('kilocode')">{{ kilocodeStarting ? t('kilocode.starting') : t('kilocode.start') }}</button>
-                                    </div>
                                 </div>
                                 <div class="config-template-hint">{{ t('kilocode.targetFile', { path: kilocodeConfigPath || '~/.config/kilo/kilo.jsonc', status: kilocodeConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }) }}</div>
                                 <div class="codex-config-grid">

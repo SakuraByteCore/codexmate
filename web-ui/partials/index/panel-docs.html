@@ -54,6 +54,22 @@
                                 <strong class="docs-summary-value">{{ installRegistryPreview || 'npmmirror' }}</strong>
                             </div>
                         </div>
+
+                        <div class="docs-installed-card">
+                            <div class="docs-installed-head">
+                                <span class="docs-installed-title">{{ t('docs.installed.title') }}</span>
+                                <span class="docs-installed-count">{{ currentInstalledCommandCards.length ? t('docs.installed.count', { count: currentInstalledCommandCards.length }) : t('docs.installed.empty') }}</span>
+                            </div>
+                            <div v-if="currentInstalledCommandCards.length" class="docs-installed-list">
+                                <div v-for="target in currentInstalledCommandCards" :key="'docs-installed-' + target.id" class="docs-installed-item">
+                                    <div class="docs-installed-main">
+                                        <span class="docs-installed-name">{{ target.name }}</span>
+                                        <span class="docs-installed-version">{{ target.version || '—' }}</span>
+                                    </div>
+                                    <code class="docs-installed-command">{{ target.commandPath || target.bin }}</code>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="selector-section">

@@ -42,6 +42,40 @@ test('installTargetCards falls back when install-status is missing', () => {
     assert(codex.termuxCommand.includes('@mmmbuto/codex-cli-termux'));
 });
 
+test('currentInstalledCommandCards exposes detected installed commands only', () => {
+    const ctx = createContext({
+        installStatusTargets: [
+            {
+                id: 'codex',
+                name: 'Codex CLI',
+                packageName: '@openai/codex',
+                installed: true,
+                bin: 'codex',
+                version: '0.1.0',
+                commandPath: '/usr/local/bin/codex',
+                error: ''
+            },
+            {
+                id: 'gemini',
+                name: 'Gemini CLI',
+                packageName: '@google/gemini-cli',
+                installed: false,
+                bin: 'gemini',
+                version: '',
+                commandPath: '',
+                error: 'not found'
+            }
+        ]
+    });
+    ctx.installTargetCards = computed.installTargetCards.call(ctx);
+
+    const cards = computed.currentInstalledCommandCards.call(ctx);
+
+    assert.deepStrictEqual(cards.map((item) => item.id), ['codex']);
+    assert.strictEqual(cards[0].commandPath, '/usr/local/bin/codex');
+    assert.strictEqual(cards[0].version, '0.1.0');
+});
+
 test('app update notice only appears when latest package version is newer', () => {
     const ctx = createContext({
         appVersion: '0.0.40',

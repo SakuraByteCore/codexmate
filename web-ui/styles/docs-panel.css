@@ -69,6 +69,57 @@
     word-break: break-word;
 }
 
+.docs-installed-card {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-soft);
+}
+
+.docs-installed-head,
+.docs-installed-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.docs-installed-title,
+.docs-installed-name {
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.docs-installed-count,
+.docs-installed-version {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.docs-installed-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.docs-installed-item {
+    min-width: 0;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-card);
+}
+
+.docs-installed-command {
+    display: block;
+    margin-top: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
 /* ---- Install rows ---- */
 .docs-install-list {
     display: flex;

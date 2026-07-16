@@ -2878,15 +2878,7 @@ return function render(_ctx, _cache) {
               _createElementVNode("div", { class: "tool-config-write-body" }, [
                 _createElementVNode("section", { class: "selector-section" }, [
                   _createElementVNode("div", { class: "selector-header" }, [
-                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.providerModel.title')), 1 /* TEXT */),
-                    _createElementVNode("div", { class: "selector-actions opencode-provider-actions" }, [
-                      _createElementVNode("button", {
-                        type: "button",
-                        class: "btn-tool btn-tool-compact",
-                        onClick: $event => (_ctx.startKilocode(false)),
-                        disabled: _ctx.kilocodeStarting || !_ctx.isToolConfigWriteAllowed('kilocode')
-                      }, _toDisplayString(_ctx.kilocodeStarting ? _ctx.t('kilocode.starting') : _ctx.t('kilocode.start')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                    ])
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.providerModel.title')), 1 /* TEXT */)
                   ]),
                   _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('kilocode.targetFile', { path: _ctx.kilocodeConfigPath || '~/.config/kilo/kilo.jsonc', status: _ctx.kilocodeConfigExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave') })), 1 /* TEXT */),
                   _createElementVNode("div", { class: "codex-config-grid" }, [
@@ -5487,6 +5479,31 @@ return function render(_ctx, _cache) {
                   _createElementVNode("span", { class: "docs-summary-label" }, _toDisplayString(_ctx.t('common.registry')), 1 /* TEXT */),
                   _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(_ctx.installRegistryPreview || 'npmmirror'), 1 /* TEXT */)
                 ])
+              ]),
+              _createElementVNode("div", { class: "docs-installed-card" }, [
+                _createElementVNode("div", { class: "docs-installed-head" }, [
+                  _createElementVNode("span", { class: "docs-installed-title" }, _toDisplayString(_ctx.t('docs.installed.title')), 1 /* TEXT */),
+                  _createElementVNode("span", { class: "docs-installed-count" }, _toDisplayString(_ctx.currentInstalledCommandCards.length ? _ctx.t('docs.installed.count', { count: _ctx.currentInstalledCommandCards.length }) : _ctx.t('docs.installed.empty')), 1 /* TEXT */)
+                ]),
+                (_ctx.currentInstalledCommandCards.length)
+                  ? (_openBlock(), _createElementBlock("div", {
+                      key: 0,
+                      class: "docs-installed-list"
+                    }, [
+                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.currentInstalledCommandCards, (target) => {
+                        return (_openBlock(), _createElementBlock("div", {
+                          key: 'docs-installed-' + target.id,
+                          class: "docs-installed-item"
+                        }, [
+                          _createElementVNode("div", { class: "docs-installed-main" }, [
+                            _createElementVNode("span", { class: "docs-installed-name" }, _toDisplayString(target.name), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "docs-installed-version" }, _toDisplayString(target.version || '—'), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("code", { class: "docs-installed-command" }, _toDisplayString(target.commandPath || target.bin), 1 /* TEXT */)
+                        ]))
+                      }), 128 /* KEYED_FRAGMENT */))
+                    ]))
+                  : _createCommentVNode("v-if", true)
               ])
             ]),
             _createElementVNode("div", { class: "selector-section" }, [

@@ -978,7 +978,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionContextUtilization',
         'isLocalProviderDisabled',
         'sessionTimelineProgressPercent',
-        'activeSessionWorkspaceSummary'
+        'activeSessionWorkspaceSummary',
+        'currentInstalledCommandCards'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

@@ -26,7 +26,7 @@ function createVm(apiImpl = async () => ({})) {
     };
 }
 
-test('KiloCode panel auto-syncs on blur and keeps launch explicit', () => {
+test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     const html = readBundledWebUiHtml();
     assert.match(html, /id="kilocode-provider"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-base-url"[^>]*@blur="autoSaveKilocodeConfig"/);
@@ -35,7 +35,7 @@ test('KiloCode panel auto-syncs on blur and keeps launch explicit', () => {
     assert.doesNotMatch(html, /@click="loadKilocodeConfig\(\{ toast: true \}\)"/);
     assert.doesNotMatch(html, /@click="saveKilocodeConfig"/);
     assert.doesNotMatch(html, /@click="startKilocode\(true\)"/);
-    assert.match(html, /@click="startKilocode\(false\)"/);
+    assert.doesNotMatch(html, /@click="startKilocode\(false\)"/);
 });
 
 test('KiloCode auto-save reuses stored API key when the key field is blank', async () => {
