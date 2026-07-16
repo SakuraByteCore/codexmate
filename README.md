@@ -184,7 +184,13 @@ Special thanks to all contributors for their contributions to Codex Mate ❤️
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SakuraByteCore/codexmate&type=Date)](https://star-history.com/#SakuraByteCore/codexmate&Date)
+<a href="https://star-history.com/#SakuraByteCore/codexmate&type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=SakuraByteCore/codexmate&type=date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=SakuraByteCore/codexmate&type=date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=SakuraByteCore/codexmate&type=date" width="100%" />
+  </picture>
+</a>
 
 ## License
 
