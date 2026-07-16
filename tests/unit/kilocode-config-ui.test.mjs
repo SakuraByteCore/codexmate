@@ -39,6 +39,14 @@ test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     assert.doesNotMatch(html, /@click="startKilocode\(false\)"/);
 });
 
+test('KiloCode config tab reloads stored config when the tab is restored or re-entered', () => {
+    const navigation = readProjectFile('web-ui/modules/app.methods.navigation.mjs');
+    const loadCalls = navigation.match(/loadKilocodeConfig/g) || [];
+    assert(loadCalls.length >= 4);
+    assert.match(navigation, /targetTab === 'config' && this\.configMode === 'kilocode'/);
+    assert.match(navigation, /pendingTarget === 'config' && this\.configMode === 'kilocode'/);
+});
+
 test('KiloCode auto-save reuses stored API key when the key field is blank', async () => {
     const calls = [];
     const vm = createVm(async (action, params) => {
