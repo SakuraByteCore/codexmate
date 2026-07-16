@@ -2955,8 +2955,38 @@ return function render(_ctx, _cache) {
                           type: "button",
                           class: "input-toggle-btn",
                           onClick: $event => (_ctx.kilocodeShowKey = !_ctx.kilocodeShowKey),
-                          title: _ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
-                        }, _toDisplayString(_ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')), 9 /* TEXT, PROPS */, ["onClick", "title"])
+                          title: _ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show'),
+                          "aria-label": _ctx.kilocodeShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
+                        }, [
+                          (!_ctx.kilocodeShowKey)
+                            ? (_openBlock(), _createElementBlock("svg", {
+                                key: 0,
+                                viewBox: "0 0 20 20",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "1.5",
+                                width: "16",
+                                height: "16"
+                              }, [
+                                _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                                _createElementVNode("circle", {
+                                  cx: "10",
+                                  cy: "10",
+                                  r: "3"
+                                })
+                              ]))
+                            : (_openBlock(), _createElementBlock("svg", {
+                                key: 1,
+                                viewBox: "0 0 20 20",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "1.5",
+                                width: "16",
+                                height: "16"
+                              }, [
+                                _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                              ]))
+                        ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
                       ])
                     ])
                   ]),

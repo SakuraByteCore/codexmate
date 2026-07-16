@@ -33,6 +33,11 @@ test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     assert.match(html, /id="kilocode-base-url"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-model"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-api-key"[^>]*@blur="autoSaveKilocodeConfig"/);
+    assert.match(html, /@click="kilocodeShowKey = !kilocodeShowKey"/);
+    assert.match(html, /:aria-label="kilocodeShowKey \? t\('common\.hide'\) : t\('common\.show'\)"/);
+    assert.match(html, /<svg v-if="!kilocodeShowKey"/);
+    assert.match(html, /<svg v-else viewBox="0 0 20 20"/);
+    assert.doesNotMatch(html, /kilocodeShowKey \? t\('common\.hide'\) : t\('common\.show'\) \}\}<\/button>/);
     assert.doesNotMatch(html, /@click="loadKilocodeConfig\(\{ toast: true \}\)"/);
     assert.doesNotMatch(html, /@click="saveKilocodeConfig"/);
     assert.doesNotMatch(html, /@click="startKilocode\(true\)"/);
