@@ -621,7 +621,7 @@ const ja = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI インストールドキュメント',
-    'docs.subtitle': 'Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI コマンドを表示。',
+    'docs.subtitle': 'Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI コマンドを表示。',
     'docs.section.commands': 'インストールコマンド',
     'docs.section.commandsNote': 'コマンドは直接コピーできます。',
     'docs.installed.title': '現在インストール済みのコマンド',

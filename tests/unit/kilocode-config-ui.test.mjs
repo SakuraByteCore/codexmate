@@ -28,8 +28,8 @@ function createVm(apiImpl = async () => ({})) {
 
 test('KiloCode panel auto-syncs on blur without Web UI launch buttons', () => {
     const html = readBundledWebUiHtml();
-    assert.doesNotMatch(html, /id="kilocode-provider"/);
-    assert.doesNotMatch(html, /kilocode\.summary\.title/);
+    assert.match(html, /id="kilocode-provider"[^>]*@blur="autoSaveKilocodeConfig"/);
+    assert.match(html, /kilocode\.summary\.title/);
     assert.match(html, /id="kilocode-base-url"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-model"[^>]*@blur="autoSaveKilocodeConfig"/);
     assert.match(html, /id="kilocode-api-key"[^>]*@blur="autoSaveKilocodeConfig"/);

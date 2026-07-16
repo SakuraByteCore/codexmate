@@ -826,7 +826,7 @@ const vi = Object.freeze({
     'modal.openclaw.quick.optionsHint': 'Khi tắt ghi đè, chỉ điền các trường còn thiếu.',
     'modal.openclaw.quick.writeToEditor': 'Ghi vào editor',
     'docs.title': 'Cài CLI',
-    'docs.subtitle': 'Lệnh cài đặt cho Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI.',
+    'docs.subtitle': 'Lệnh cài đặt cho Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI.',
     'docs.section.commands': 'Lệnh',
     'docs.section.commandsNote': 'Sao chép và chạy trực tiếp.',
     'docs.installed.title': 'Lệnh hiện đã cài đặt',

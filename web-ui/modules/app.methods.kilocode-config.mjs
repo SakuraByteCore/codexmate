@@ -58,7 +58,7 @@ export function createKilocodeConfigMethods(options = {}) {
 
         async autoSaveKilocodeConfig() {
             if (!this.isToolConfigWriteAllowed('kilocode') || this.kilocodeSaving || this.kilocodeLoading) return false;
-            const provider = DEFAULT_KILOCODE_PROVIDER;
+            const provider = normalizeKilocodeProviderName(this.kilocodeProvider) || DEFAULT_KILOCODE_PROVIDER;
             const url = typeof this.kilocodeBaseUrl === 'string' ? this.kilocodeBaseUrl.trim() : '';
             const model = (typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '') || DEFAULT_KILOCODE_MODEL;
             const apiKey = typeof this.kilocodeApiKey === 'string' ? this.kilocodeApiKey.trim() : '';
@@ -75,7 +75,7 @@ export function createKilocodeConfigMethods(options = {}) {
                 if (!auto) this.showMessage(this.t ? this.t('kilocode.writeRequired') : '请先打开 KiloCode 写入开关', 'error');
                 return false;
             }
-            const provider = DEFAULT_KILOCODE_PROVIDER;
+            const provider = normalizeKilocodeProviderName(this.kilocodeProvider) || DEFAULT_KILOCODE_PROVIDER;
             const url = typeof this.kilocodeBaseUrl === 'string' ? this.kilocodeBaseUrl.trim() : '';
             const model = (typeof this.kilocodeModel === 'string' ? this.kilocodeModel.trim() : '') || DEFAULT_KILOCODE_MODEL;
             const apiKey = typeof this.kilocodeApiKey === 'string' ? this.kilocodeApiKey.trim() : '';

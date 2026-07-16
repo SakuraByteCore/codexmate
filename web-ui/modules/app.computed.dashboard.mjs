@@ -149,6 +149,16 @@ export function createDashboardComputed() {
                         version: '',
                         commandPath: '',
                         error: ''
+                    },
+                    {
+                        id: 'kilocode',
+                        name: 'KiloCode CLI',
+                        packageName: '@kilocode/cli',
+                        installed: false,
+                        bin: 'kilo',
+                        version: '',
+                        commandPath: '',
+                        error: ''
                     }
                 ];
             const action = this.normalizeInstallAction(this.installCommandAction);

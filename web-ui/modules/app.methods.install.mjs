@@ -246,6 +246,11 @@ export function createInstallMethods(options = {}) {
                     install: '',
                     update: '',
                     uninstall: ''
+                },
+                kilocode: {
+                    install: '',
+                    update: '',
+                    uninstall: ''
                 }
             };
             if (manager === 'pnpm') {
@@ -261,6 +266,9 @@ export function createInstallMethods(options = {}) {
                 matrix.codex.install = `pnpm add -g ${codexInstallPackage}`;
                 matrix.codex.update = `pnpm up -g ${codexPackage}`;
                 matrix.codex.uninstall = `pnpm remove -g ${codexPackage}`;
+                matrix.kilocode.install = 'pnpm add -g @kilocode/cli';
+                matrix.kilocode.update = 'pnpm up -g @kilocode/cli';
+                matrix.kilocode.uninstall = 'pnpm remove -g @kilocode/cli';
                 return matrix;
             }
             if (manager === 'bun') {
@@ -276,6 +284,9 @@ export function createInstallMethods(options = {}) {
                 matrix.codex.install = `bun add -g ${codexInstallPackage}`;
                 matrix.codex.update = `bun update -g ${codexPackage}`;
                 matrix.codex.uninstall = `bun remove -g ${codexPackage}`;
+                matrix.kilocode.install = 'bun add -g @kilocode/cli';
+                matrix.kilocode.update = 'bun update -g @kilocode/cli';
+                matrix.kilocode.uninstall = 'bun remove -g @kilocode/cli';
                 return matrix;
             }
             matrix.claude.install = 'npm install -g @anthropic-ai/claude-code';
@@ -292,6 +303,9 @@ export function createInstallMethods(options = {}) {
                 ? `npm install -g ${codexInstallPackage}`
                 : `npm update -g ${codexPackage}`;
             matrix.codex.uninstall = `npm uninstall -g ${codexPackage}`;
+            matrix.kilocode.install = 'npm install -g @kilocode/cli';
+            matrix.kilocode.update = 'npm update -g @kilocode/cli';
+            matrix.kilocode.uninstall = 'npm uninstall -g @kilocode/cli';
             return matrix;
         },
 

@@ -2878,10 +2878,27 @@ return function render(_ctx, _cache) {
               _createElementVNode("div", { class: "tool-config-write-body" }, [
                 _createElementVNode("section", { class: "selector-section" }, [
                   _createElementVNode("div", { class: "selector-header" }, [
-                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.connection.title')), 1 /* TEXT */)
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.providerModel.title')), 1 /* TEXT */)
                   ]),
                   _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('kilocode.targetFile', { path: _ctx.kilocodeConfigPath || '~/.config/kilo/kilo.jsonc', status: _ctx.kilocodeConfigExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave') })), 1 /* TEXT */),
                   _createElementVNode("div", { class: "codex-config-grid" }, [
+                    _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                      _createElementVNode("label", {
+                        class: "form-label",
+                        for: "kilocode-provider"
+                      }, _toDisplayString(_ctx.t('field.provider')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        id: "kilocode-provider",
+                        class: "form-input",
+                        "onUpdate:modelValue": $event => ((_ctx.kilocodeProvider) = $event),
+                        autocomplete: "off",
+                        spellcheck: "false",
+                        placeholder: "codexmate",
+                        onBlur: _ctx.autoSaveKilocodeConfig
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
+                        [_vModelText, _ctx.kilocodeProvider]
+                      ])
+                    ]),
                     _createElementVNode("div", { class: "form-group codex-config-field" }, [
                       _createElementVNode("label", {
                         class: "form-label",
@@ -2950,6 +2967,38 @@ return function render(_ctx, _cache) {
                       }, _toDisplayString(_ctx.kilocodeError), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true)
                 ]),
+                (_ctx.kilocodeProviders.length)
+                  ? (_openBlock(), _createElementBlock("section", {
+                      key: 0,
+                      class: "selector-section"
+                    }, [
+                      _createElementVNode("div", { class: "selector-header" }, [
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.summary.title')), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "card-list" }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.kilocodeProviders, (provider) => {
+                          return (_openBlock(), _createElementBlock("div", {
+                            key: provider.name,
+                            class: "card"
+                          }, [
+                            _createElementVNode("div", { class: "card-leading" }, [
+                              _createElementVNode("div", { class: "card-icon" }, _toDisplayString(provider.name.charAt(0).toUpperCase()), 1 /* TEXT */),
+                              _createElementVNode("div", { class: "card-content" }, [
+                                _createElementVNode("div", { class: "card-title" }, _toDisplayString(provider.name), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(provider.baseURL || provider.api || _ctx.t('config.url.unset')), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString((provider.models || []).join(', ') || _ctx.t('opencode.summary.noModel')), 1 /* TEXT */)
+                              ])
+                            ]),
+                            _createElementVNode("div", { class: "card-trailing" }, [
+                              _createElementVNode("span", {
+                                class: _normalizeClass(['pill', provider.hasKey ? 'configured' : 'empty'])
+                              }, _toDisplayString(provider.hasKey ? _ctx.t('common.configured') : _ctx.t('common.notConfigured')), 3 /* TEXT, CLASS */)
+                            ])
+                          ]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ])
+                    ]))
+                  : _createCommentVNode("v-if", true),
                 _createElementVNode("section", { class: "selector-section" }, [
                   _createElementVNode("div", { class: "selector-header" }, [
                     _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('kilocode.configPreview.title')), 1 /* TEXT */)
@@ -2966,7 +3015,7 @@ return function render(_ctx, _cache) {
                 ]),
                 (!_ctx.isToolConfigWriteAllowed('kilocode'))
                   ? (_openBlock(), _createElementBlock("div", {
-                      key: 0,
+                      key: 1,
                       class: "tool-config-write-overlay"
                     }, [
                       _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [

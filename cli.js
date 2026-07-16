@@ -365,6 +365,12 @@ const CLI_INSTALL_TARGETS = Object.freeze([
         name: 'Codex CLI',
         packageName: '@openai/codex',
         bins: ['codex']
+    },
+    {
+        id: 'kilocode',
+        name: 'KiloCode CLI',
+        packageName: '@kilocode/cli',
+        bins: ['kilo', 'kilocode']
     }
 ]);
 

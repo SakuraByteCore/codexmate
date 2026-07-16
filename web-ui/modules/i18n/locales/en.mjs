@@ -619,7 +619,7 @@ const en = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI Install',
-    'docs.subtitle': 'Install commands for Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI.',
+    'docs.subtitle': 'Install commands for Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI.',
     'docs.section.commands': 'Commands',
     'docs.section.commandsNote': 'Copy and run directly.',
     'docs.installed.title': 'Currently installed commands',

@@ -619,7 +619,7 @@ const zhTw = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI 安裝文檔',
-    'docs.subtitle': '查看 Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI 命令。',
+    'docs.subtitle': '查看 Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI 命令。',
     'docs.section.commands': '安裝命令',
     'docs.section.commandsNote': '命令可直接複製。',
     'docs.installed.title': '目前已安裝命令',
