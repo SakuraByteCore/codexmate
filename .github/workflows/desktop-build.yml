@@ -57,6 +57,10 @@ jobs:
       - name: Build desktop app
         run: npm run desktop:build
 
+      - name: Create Windows portable package
+        if: matrix.name == 'Windows'
+        run: node tools/desktop/create-portable-package.js
+
       - name: Upload desktop bundles
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -64,5 +68,5 @@ jobs:
           path: |
             src-tauri/target/release/bundle/**
             src-tauri/target/release/codexmate-desktop.exe
-            src-tauri/target/release/codexmate-desktop.manifest.xml
+            dist/desktop/portable/**
           if-no-files-found: error

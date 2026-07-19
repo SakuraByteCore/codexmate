@@ -159,3 +159,15 @@ test('desktop icons are sized correctly and referenced by Tauri bundle config', 
         's8mk'
     ]);
 });
+
+test('desktop workflow uploads a Windows portable package with runtime resources', () => {
+    const workflowSource = fs.readFileSync(path.join(projectRoot, '.github', 'workflows', 'desktop-build.yml'), 'utf8');
+    const portableScript = fs.readFileSync(path.join(projectRoot, 'tools', 'desktop', 'create-portable-package.js'), 'utf8');
+
+    assert.match(workflowSource, /Create Windows portable package/);
+    assert.match(workflowSource, /node tools\/desktop\/create-portable-package\.js/);
+    assert.match(workflowSource, /dist\/desktop\/portable\/\*\*/);
+    assert.match(portableScript, /codexmate-desktop\.exe/);
+    assert.match(portableScript, /path\.join\(portableDir, 'codexmate'\)/);
+    assert.match(portableScript, /No installer or administrator privileges are required\./);
+});
