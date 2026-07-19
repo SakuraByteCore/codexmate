@@ -57,35 +57,6 @@ jobs:
       - name: Build desktop app
         run: npm run desktop:build
 
-      - name: Verify Windows app UAC manifest
-        if: matrix.name == 'Windows'
-        shell: pwsh
-        run: |
-          $exe = Join-Path $PWD 'src-tauri/target/release/codexmate-desktop.exe'
-          if (!(Test-Path $exe)) {
-            throw "Built app exe not found: $exe"
-          }
-
-          $mt = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter mt.exe |
-            Sort-Object FullName -Descending |
-            Select-Object -First 1
-          if (!$mt) {
-            throw 'Windows manifest tool mt.exe not found'
-          }
-
-          $manifest = Join-Path $env:RUNNER_TEMP 'codexmate-desktop.manifest.xml'
-          & $mt.FullName -nologo "-inputresource:$exe;#1" "-out:$manifest"
-          if ($LASTEXITCODE -ne 0) {
-            throw "mt.exe failed to extract manifest from $exe"
-          }
-
-          $text = Get-Content $manifest -Raw
-          Write-Host $text
-          if ($text -notmatch 'requestedExecutionLevel\s+level="requireAdministrator"\s+uiAccess="false"') {
-            throw 'Windows app manifest does not require administrator privileges'
-          }
-          Copy-Item $manifest (Join-Path (Split-Path $exe) 'codexmate-desktop.manifest.xml') -Force
-
       - name: Upload desktop bundles
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

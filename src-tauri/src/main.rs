@@ -2,6 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  app_lib::init_desktop_diagnostics();
-  app_lib::run();
+    app_lib::init_desktop_diagnostics();
+    app_lib::run();
 }
