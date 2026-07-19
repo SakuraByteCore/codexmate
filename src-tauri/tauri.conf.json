@@ -49,7 +49,7 @@
         "upgradeCode": "e84da745-7b0b-5548-85ed-a4a0be7b55ae"
       },
       "nsis": {
-        "installMode": "both"
+        "installMode": "currentUser"
       }
     }
   }

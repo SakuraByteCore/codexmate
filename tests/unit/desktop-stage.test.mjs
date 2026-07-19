@@ -160,14 +160,13 @@ test('desktop icons are sized correctly and referenced by Tauri bundle config', 
     ]);
 });
 
-test('desktop workflow uploads a Windows portable package with runtime resources', () => {
+test('desktop workflow builds a current-user Windows installer instead of portable package', () => {
     const workflowSource = fs.readFileSync(path.join(projectRoot, '.github', 'workflows', 'desktop-build.yml'), 'utf8');
-    const portableScript = fs.readFileSync(path.join(projectRoot, 'tools', 'desktop', 'create-portable-package.js'), 'utf8');
+    const tauriConfig = readJson(path.join(projectRoot, 'src-tauri', 'tauri.conf.json'));
 
-    assert.match(workflowSource, /Create Windows portable package/);
-    assert.match(workflowSource, /node tools\/desktop\/create-portable-package\.js/);
-    assert.match(workflowSource, /dist\/desktop\/portable\/\*\*/);
-    assert.match(portableScript, /codexmate-desktop\.exe/);
-    assert.match(portableScript, /path\.join\(portableDir, 'codexmate'\)/);
-    assert.match(portableScript, /No installer or administrator privileges are required\./);
+    assert.match(workflowSource, /Build Windows installer/);
+    assert.match(workflowSource, /npm run desktop:build -- --bundles nsis/);
+    assert.match(workflowSource, /src-tauri\/target\/release\/bundle\/nsis\/\*\*/);
+    assert.doesNotMatch(workflowSource, /portable/i);
+    assert.strictEqual(tauriConfig.bundle.windows.nsis.installMode, 'currentUser');
 });

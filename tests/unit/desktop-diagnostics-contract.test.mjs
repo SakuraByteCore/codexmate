@@ -107,12 +107,12 @@ test('desktop startup surfaces occupied backend port guidance instead of killing
     assert.match(libSource, /backend port remains occupied after grace wait/);
 });
 
-test('desktop windows installer avoids force-closing running apps', () => {
+test('desktop windows installer uses current-user install without force-closing running apps', () => {
     const configSource = readSource('src-tauri/tauri.conf.json');
 
     assert.match(configSource, /"windows"\s*:/);
     assert.match(configSource, /"allowDowngrades"\s*:\s*true/);
     assert.match(configSource, /"upgradeCode"\s*:\s*"e84da745-7b0b-5548-85ed-a4a0be7b55ae"/);
-    assert.match(configSource, /"installMode"\s*:\s*"both"/);
+    assert.match(configSource, /"installMode"\s*:\s*"currentUser"/);
     assert.doesNotMatch(configSource, /installerHooks/);
 });
