@@ -909,8 +909,8 @@ function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode', 'kilocode']);
-const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false, kilocode: false });
+const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode', 'kilocode', 'openclaw']);
+const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false, kilocode: false, openclaw: false });
 let toolConfigWriteGuardDepth = 0;
 
 function enterToolConfigWriteGuard() {
@@ -938,7 +938,8 @@ function normalizeToolConfigPermissions(value) {
         codex: source.codex === true,
         claude: source.claude === true,
         opencode: source.opencode === true,
-        kilocode: source.kilocode === true
+        kilocode: source.kilocode === true,
+        openclaw: source.openclaw === true
     };
 }
 
@@ -1197,10 +1198,16 @@ function getApiToolConfigWriteTarget(action) {
         'apply-kilocode-config',
         'start-kilocode'
     ]);
+    const openclawWriteActions = new Set([
+        'apply-openclaw-config',
+        'apply-openclaw-agents-file',
+        'apply-openclaw-workspace-file'
+    ]);
     if (codexWriteActions.has(name)) return 'codex';
     if (claudeWriteActions.has(name)) return 'claude';
     if (opencodeWriteActions.has(name)) return 'opencode';
     if (kilocodeWriteActions.has(name)) return 'kilocode';
+    if (openclawWriteActions.has(name)) return 'openclaw';
     return '';
 }
 

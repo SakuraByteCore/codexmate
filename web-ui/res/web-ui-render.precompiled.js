@@ -2250,6 +2250,28 @@ return function render(_ctx, _cache) {
               : _createCommentVNode("v-if", true),
             _createElementVNode("div", { class: "openclaw-layout" }, [
               _createElementVNode("section", {
+                class: "tool-config-write-card",
+                "aria-label": _ctx.t('toolConfig.openclaw.title')
+              }, [
+                _createElementVNode("div", { class: "tool-config-write-copy" }, [
+                  _createElementVNode("div", { class: "tool-config-write-title" }, _toDisplayString(_ctx.t('toolConfig.openclaw.title')), 1 /* TEXT */),
+                  _createElementVNode("p", { class: "tool-config-write-desc" }, _toDisplayString(_ctx.t('toolConfig.openclaw.desc')), 1 /* TEXT */)
+                ]),
+                _createElementVNode("label", { class: "settings-toggle-row tool-config-write-toggle" }, [
+                  _createElementVNode("input", {
+                    type: "checkbox",
+                    autocomplete: "off",
+                    checked: _ctx.isToolConfigWriteAllowed('openclaw'),
+                    disabled: _ctx.toolConfigPermissionSaving.openclaw,
+                    onChange: $event => (_ctx.setToolConfigPermission('openclaw', $event.target.checked))
+                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange"]),
+                  _createElementVNode("span", { class: "toggle-track" }, [
+                    _createElementVNode("span", { class: "toggle-thumb" })
+                  ]),
+                  _createElementVNode("span", null, _toDisplayString(_ctx.toolConfigPermissionStatusLabel('openclaw')), 1 /* TEXT */)
+                ])
+              ], 8 /* PROPS */, ["aria-label"]),
+              _createElementVNode("section", {
                 class: "settings-card settings-card--wide openclaw-summary-card",
                 "aria-label": "OpenClaw 当前摘要"
               }, [
@@ -2275,126 +2297,114 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "openclaw-diagnostic-note" }, " 本页仅管理配置与工作区文件。 ")
                 ])
               ]),
-              _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
-                _createElementVNode("div", { class: "settings-card-body" }, [
-                  _createElementVNode("div", { class: "openclaw-tools-grid" }, [
-                    _createElementVNode("button", {
-                      class: "openclaw-tool-btn",
-                      onClick: _ctx.openOpenclawAgentsEditor,
-                      disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                    }, [
-                      _createElementVNode("div", { class: "tool-icon" }, "📄"),
-                      _createElementVNode("div", { class: "tool-content" }, [
-                        _createElementVNode("div", { class: "tool-title" }, "AGENTS.md"),
-                        _createElementVNode("div", { class: "tool-meta" }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : 'Workspace file'), 1 /* TEXT */)
-                      ]),
-                      (_openBlock(), _createElementBlock("svg", {
-                        class: "tool-chevron",
-                        viewBox: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        "stroke-width": "2"
-                      }, [
-                        _createElementVNode("path", { d: "M9 18l6-6-6-6" })
-                      ]))
-                    ], 8 /* PROPS */, ["onClick", "disabled"]),
-                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawQuickWorkspaceFiles(), (fileName) => {
-                      return (_openBlock(), _createElementBlock("button", {
-                        key: fileName,
-                        type: "button",
-                        class: "openclaw-tool-btn",
-                        onClick: $event => (_ctx.openOpenclawQuickWorkspaceFile(fileName)),
-                        disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading
-                      }, [
-                        _createElementVNode("div", { class: "tool-icon" }, "📄"),
-                        _createElementVNode("div", { class: "tool-content" }, [
-                          _createElementVNode("div", { class: "tool-title" }, _toDisplayString(fileName), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "tool-meta" }, "Workspace file")
-                        ]),
-                        (_openBlock(), _createElementBlock("svg", {
-                          class: "tool-chevron",
-                          viewBox: "0 0 24 24",
-                          fill: "none",
-                          stroke: "currentColor",
-                          "stroke-width": "2"
-                        }, [
-                          _createElementVNode("path", { d: "M9 18l6-6-6-6" })
-                        ]))
-                      ], 8 /* PROPS */, ["onClick", "disabled"]))
-                    }), 128 /* KEYED_FRAGMENT */))
-                  ])
-                ])
-              ]),
-              _createElementVNode("section", {
-                class: "settings-card settings-card--wide openclaw-configs-card",
-                "aria-labelledby": "openclaw-configs-title"
+              _createElementVNode("div", {
+                class: _normalizeClass(["tool-config-write-scope", { locked: !_ctx.isToolConfigWriteAllowed('openclaw') }])
               }, [
-                _createElementVNode("div", { class: "settings-card-body" }, [
-                  _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
-                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
-                      return (_openBlock(), _createElementBlock("div", {
-                        key: name,
-                        class: _normalizeClass(['card', { active: _ctx.currentOpenclawConfig === name }]),
-                        onClick: $event => (_ctx.applyOpenclawConfig(name)),
-                        onKeydown: [
-                          _withKeys(_withModifiers($event => (_ctx.applyOpenclawConfig(name)), ["self","prevent"]), ["enter"]),
-                          _withKeys(_withModifiers($event => (_ctx.applyOpenclawConfig(name)), ["self","prevent"]), ["space"])
-                        ],
-                        tabindex: "0",
-                        role: "button",
-                        "aria-label": _ctx.t('openclaw.action.applyAria', { name }),
-                        "aria-current": _ctx.currentOpenclawConfig === name ? 'true' : null
-                      }, [
-                        _createElementVNode("div", { class: "card-leading" }, [
-                          _createElementVNode("div", { class: "card-icon" }, _toDisplayString(name.charAt(0).toUpperCase()), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "card-content" }, [
-                            _createElementVNode("div", { class: "card-title" }, _toDisplayString(name), 1 /* TEXT */),
-                            _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.openclawSubtitle(config)), 1 /* TEXT */),
-                            (_ctx.openclawHasContent(config))
-                              ? (_openBlock(), _createElementBlock("div", {
-                                  key: 0,
-                                  class: "openclaw-config-summary-mini"
-                                }, [
-                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawConfigSummary(config).slice(0, 3), (item) => {
-                                    return (_openBlock(), _createElementBlock("span", {
-                                      key: item.key
-                                    }, _toDisplayString(item.label) + ": " + _toDisplayString(item.value), 1 /* TEXT */))
-                                  }), 128 /* KEYED_FRAGMENT */))
-                                ]))
-                              : _createCommentVNode("v-if", true)
-                          ])
-                        ]),
-                        _createElementVNode("div", { class: "card-trailing" }, [
-                          _createElementVNode("span", {
-                            class: _normalizeClass(['pill', _ctx.openclawHasContent(config) ? 'configured' : 'empty'])
-                          }, _toDisplayString(_ctx.openclawHasContent(config) ? _ctx.t('openclaw.configured') : _ctx.t('openclaw.notConfigured')), 3 /* TEXT, CLASS */),
-                          _createElementVNode("div", {
-                            class: "card-actions",
-                            onClick: _withModifiers(() => {}, ["stop"])
+                _createElementVNode("div", { class: "tool-config-write-body" }, [
+                  _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
+                    _createElementVNode("div", { class: "settings-card-body" }, [
+                      _createElementVNode("div", { class: "openclaw-tools-grid" }, [
+                        _createElementVNode("button", {
+                          class: "openclaw-tool-btn",
+                          onClick: _ctx.openOpenclawAgentsEditor,
+                          disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading || !_ctx.isToolConfigWriteAllowed('openclaw')
+                        }, [
+                          _createElementVNode("div", { class: "tool-icon" }, "📄"),
+                          _createElementVNode("div", { class: "tool-content" }, [
+                            _createElementVNode("div", { class: "tool-title" }, "AGENTS.md"),
+                            _createElementVNode("div", { class: "tool-meta" }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : 'Workspace file'), 1 /* TEXT */)
+                          ]),
+                          (_openBlock(), _createElementBlock("svg", {
+                            class: "tool-chevron",
+                            viewBox: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "2"
                           }, [
-                            _createElementVNode("button", {
-                              class: "card-action-btn",
-                              onClick: $event => (_ctx.openOpenclawEditModal(name)),
-                              "aria-label": _ctx.t('openclaw.action.editAria', { name }),
-                              title: _ctx.t('openclaw.action.edit')
+                            _createElementVNode("path", { d: "M9 18l6-6-6-6" })
+                          ]))
+                        ], 8 /* PROPS */, ["onClick", "disabled"]),
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawQuickWorkspaceFiles(), (fileName) => {
+                          return (_openBlock(), _createElementBlock("button", {
+                            key: fileName,
+                            type: "button",
+                            class: "openclaw-tool-btn",
+                            onClick: $event => (_ctx.openOpenclawQuickWorkspaceFile(fileName)),
+                            disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading || !_ctx.isToolConfigWriteAllowed('openclaw')
+                          }, [
+                            _createElementVNode("div", { class: "tool-icon" }, "📄"),
+                            _createElementVNode("div", { class: "tool-content" }, [
+                              _createElementVNode("div", { class: "tool-title" }, _toDisplayString(fileName), 1 /* TEXT */),
+                              _createElementVNode("div", { class: "tool-meta" }, "Workspace file")
+                            ]),
+                            (_openBlock(), _createElementBlock("svg", {
+                              class: "tool-chevron",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
                             }, [
-                              (_openBlock(), _createElementBlock("svg", {
-                                viewBox: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2"
+                              _createElementVNode("path", { d: "M9 18l6-6-6-6" })
+                            ]))
+                          ], 8 /* PROPS */, ["onClick", "disabled"]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ])
+                    ])
+                  ]),
+                  _createElementVNode("section", {
+                    class: "settings-card settings-card--wide openclaw-configs-card",
+                    "aria-labelledby": "openclaw-configs-title"
+                  }, [
+                    _createElementVNode("div", { class: "settings-card-body" }, [
+                      _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
+                          return (_openBlock(), _createElementBlock("div", {
+                            key: name,
+                            class: _normalizeClass(['card', { active: _ctx.currentOpenclawConfig === name, disabled: !_ctx.isToolConfigWriteAllowed('openclaw') }]),
+                            onClick: $event => (_ctx.isToolConfigWriteAllowed('openclaw') && _ctx.applyOpenclawConfig(name)),
+                            onKeydown: [
+                              _withKeys(_withModifiers($event => (_ctx.isToolConfigWriteAllowed('openclaw') && _ctx.applyOpenclawConfig(name)), ["self","prevent"]), ["enter"]),
+                              _withKeys(_withModifiers($event => (_ctx.isToolConfigWriteAllowed('openclaw') && _ctx.applyOpenclawConfig(name)), ["self","prevent"]), ["space"])
+                            ],
+                            tabindex: _ctx.isToolConfigWriteAllowed('openclaw') ? 0 : -1,
+                            role: "button",
+                            "aria-label": _ctx.t('openclaw.action.applyAria', { name }),
+                            "aria-disabled": !_ctx.isToolConfigWriteAllowed('openclaw') ? 'true' : null,
+                            "aria-current": _ctx.currentOpenclawConfig === name ? 'true' : null
+                          }, [
+                            _createElementVNode("div", { class: "card-leading" }, [
+                              _createElementVNode("div", { class: "card-icon" }, _toDisplayString(name.charAt(0).toUpperCase()), 1 /* TEXT */),
+                              _createElementVNode("div", { class: "card-content" }, [
+                                _createElementVNode("div", { class: "card-title" }, _toDisplayString(name), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.openclawSubtitle(config)), 1 /* TEXT */),
+                                (_ctx.openclawHasContent(config))
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 0,
+                                      class: "openclaw-config-summary-mini"
+                                    }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawConfigSummary(config).slice(0, 3), (item) => {
+                                        return (_openBlock(), _createElementBlock("span", {
+                                          key: item.key
+                                        }, _toDisplayString(item.label) + ": " + _toDisplayString(item.value), 1 /* TEXT */))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ]))
+                                  : _createCommentVNode("v-if", true)
+                              ])
+                            ]),
+                            _createElementVNode("div", { class: "card-trailing" }, [
+                              _createElementVNode("span", {
+                                class: _normalizeClass(['pill', _ctx.openclawHasContent(config) ? 'configured' : 'empty'])
+                              }, _toDisplayString(_ctx.openclawHasContent(config) ? _ctx.t('openclaw.configured') : _ctx.t('openclaw.notConfigured')), 3 /* TEXT, CLASS */),
+                              _createElementVNode("div", {
+                                class: "card-actions",
+                                onClick: _withModifiers(() => {}, ["stop"])
                               }, [
-                                _createElementVNode("path", { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }),
-                                _createElementVNode("path", { d: "M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" })
-                              ]))
-                            ], 8 /* PROPS */, ["onClick", "aria-label", "title"]),
-                            (!_ctx.isDefaultOpenclawConfig(name, config))
-                              ? (_openBlock(), _createElementBlock("button", {
-                                  key: 0,
-                                  class: "card-action-btn delete",
-                                  onClick: $event => (_ctx.deleteOpenclawConfig(name)),
-                                  "aria-label": _ctx.t('openclaw.action.deleteAria', { name }),
-                                  title: _ctx.t('openclaw.action.delete')
+                                _createElementVNode("button", {
+                                  class: "card-action-btn",
+                                  onClick: $event => (_ctx.openOpenclawEditModal(name)),
+                                  disabled: !_ctx.isToolConfigWriteAllowed('openclaw'),
+                                  "aria-label": _ctx.t('openclaw.action.editAria', { name }),
+                                  title: _ctx.t('openclaw.action.edit')
                                 }, [
                                   (_openBlock(), _createElementBlock("svg", {
                                     viewBox: "0 0 24 24",
@@ -2402,18 +2412,55 @@ return function render(_ctx, _cache) {
                                     stroke: "currentColor",
                                     "stroke-width": "2"
                                   }, [
-                                    _createElementVNode("path", { d: "M3 6h18" }),
-                                    _createElementVNode("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" })
+                                    _createElementVNode("path", { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }),
+                                    _createElementVNode("path", { d: "M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" })
                                   ]))
-                                ], 8 /* PROPS */, ["onClick", "aria-label", "title"]))
-                              : _createCommentVNode("v-if", true)
-                          ], 8 /* PROPS */, ["onClick"])
+                                ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                (!_ctx.isDefaultOpenclawConfig(name, config))
+                                  ? (_openBlock(), _createElementBlock("button", {
+                                      key: 0,
+                                      class: "card-action-btn delete",
+                                      onClick: $event => (_ctx.deleteOpenclawConfig(name)),
+                                      "aria-label": _ctx.t('openclaw.action.deleteAria', { name }),
+                                      title: _ctx.t('openclaw.action.delete')
+                                    }, [
+                                      (_openBlock(), _createElementBlock("svg", {
+                                        viewBox: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        "stroke-width": "2"
+                                      }, [
+                                        _createElementVNode("path", { d: "M3 6h18" }),
+                                        _createElementVNode("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" })
+                                      ]))
+                                    ], 8 /* PROPS */, ["onClick", "aria-label", "title"]))
+                                  : _createCommentVNode("v-if", true)
+                              ], 8 /* PROPS */, ["onClick"])
+                            ])
+                          ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onClick", "onKeydown", "tabindex", "aria-label", "aria-disabled", "aria-current"]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ])
+                    ])
+                  ]),
+                  (!_ctx.isToolConfigWriteAllowed('openclaw'))
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "tool-config-write-overlay"
+                      }, [
+                        _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                          _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.openclaw.lockedTitle')), 1 /* TEXT */),
+                          _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.openclaw.lockedDesc')), 1 /* TEXT */),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool",
+                            onClick: $event => (_ctx.setToolConfigPermission('openclaw', true)),
+                            disabled: _ctx.toolConfigPermissionSaving.openclaw
+                          }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                         ])
-                      ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onClick", "onKeydown", "aria-label", "aria-current"]))
-                    }), 128 /* KEYED_FRAGMENT */))
-                  ])
+                      ]))
+                    : _createCommentVNode("v-if", true)
                 ])
-              ])
+              ], 2 /* CLASS */)
             ])
           ], 8 /* PROPS */, ["aria-labelledby"]), [
             [_vShow, _ctx.mainTab === 'config' && _ctx.configMode === 'openclaw']
