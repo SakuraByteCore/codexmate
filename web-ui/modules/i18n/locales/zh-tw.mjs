@@ -619,14 +619,8 @@ const zhTw = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI 安裝文檔',
-    'docs.subtitle': '查看 Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI 命令。',
     'docs.section.commands': '安裝命令',
-    'docs.section.commandsNote': '命令可直接複製。',
-    'docs.installed.title': '目前已安裝命令',
-    'docs.installed.count': '已安裝 {count} 個',
-    'docs.installed.empty': '未偵測到已安裝命令',
     'docs.section.faq': '常見問題',
-    'docs.section.faqNote': '常見問題見下。',
     'docs.command.aria': '{name} 命令',
     'docs.registryHintPrefix': '命令將附加：',
     'docs.registryHintCustom': '請輸入完整 URL（含 http/https），將自動附加到命令。',
@@ -634,8 +628,6 @@ const zhTw = Object.freeze({
     'docs.meta.bin': 'bin: {bin}',
     'docs.termuxLabel': 'Termux',
     'docs.termuxAria': 'Termux Codex CLI command',
-    'docs.rule.1': '命令按目前包管理器、鏡像與操作生成。',
-    'docs.rule.2': '自訂鏡像僅用於安裝與升級。',
     'docs.tip.win.1': 'PowerShell 報權限不足（EACCES/EPERM）時，請以管理員身份執行安裝命令。',
     'docs.tip.win.2': '安裝後若仍提示找不到命令，重開終端並執行：where codex / where claude / where gemini / where codebuddy。',
     'docs.tip.win.3': '公司網路受限時，可先切換鏡像源快捷項（npmmirror / 騰訊雲 / 自訂）。',

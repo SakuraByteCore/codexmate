@@ -3293,7 +3293,7 @@ return function render(_ctx, _cache) {
                               }, [
                                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionsList, (session, __, ___, _cached) => {
                                   const _memo = ([_ctx.activeSessionExportKey === _ctx.getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, _ctx.isSessionPinned(session), _ctx.sessionsLoading, session.match && session.match.count])
-                                  if (_cached && _cached.el && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
+                                  if (_cached && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
                                   const _item = (_openBlock(), _createElementBlock("div", {
                                     key: session.source + '-' + session.sessionId + '-' + session.filePath,
                                     class: _normalizeClass([
@@ -3789,7 +3789,7 @@ return function render(_ctx, _cache) {
                                                       : _createCommentVNode("v-if", true),
                                                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionVisibleMessages, (msg, idx, ___, _cached) => {
                                                       const _memo = ([msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole])
-                                                      if (_cached && _cached.el && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
+                                                      if (_cached && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
                                                       const _item = (_openBlock(), _createElementBlock("div", {
                                                         key: _ctx.getRecordRenderKey(msg, idx),
                                                         "data-message-key": _ctx.getRecordRenderKey(msg, idx),
@@ -3840,7 +3840,7 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("div", { class: "session-timeline-track" }),
                                               (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
                                                 const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
-                                                if (_cached && _cached.el && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                                if (_cached && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
                                                 const _item = (_openBlock(), _createElementBlock("button", {
                                                   key: 'timeline-' + node.key,
                                                   type: "button",
@@ -3872,7 +3872,7 @@ return function render(_ctx, _cache) {
                                               ]),
                                               (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
                                                 const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
-                                                if (_cached && _cached.el && _cached.key === 'timeline-bar-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                                if (_cached && _cached.key === 'timeline-bar-' + node.key && _isMemoSame(_cached, _memo)) return _cached
                                                 const _item = (_openBlock(), _createElementBlock("button", {
                                                   key: 'timeline-bar-' + node.key,
                                                   type: "button",
@@ -5418,8 +5418,7 @@ return function render(_ctx, _cache) {
           }, [
             _createElementVNode("div", { class: "selector-section" }, [
               _createElementVNode("div", { class: "selector-header" }, [
-                _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('docs.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "skills-panel-note docs-section-note" }, _toDisplayString(_ctx.t('docs.subtitle')), 1 /* TEXT */)
+                _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('docs.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("div", { class: "docs-toolbar-grid" }, [
                 _createElementVNode("div", { class: "docs-toolbar-card" }, [
@@ -5514,37 +5513,11 @@ return function render(_ctx, _cache) {
                   _createElementVNode("span", { class: "docs-summary-label" }, _toDisplayString(_ctx.t('common.registry')), 1 /* TEXT */),
                   _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(_ctx.installRegistryPreview || 'npmmirror'), 1 /* TEXT */)
                 ])
-              ]),
-              _createElementVNode("div", { class: "docs-installed-card" }, [
-                _createElementVNode("div", { class: "docs-installed-head" }, [
-                  _createElementVNode("span", { class: "docs-installed-title" }, _toDisplayString(_ctx.t('docs.installed.title')), 1 /* TEXT */),
-                  _createElementVNode("span", { class: "docs-installed-count" }, _toDisplayString(_ctx.currentInstalledCommandCards.length ? _ctx.t('docs.installed.count', { count: _ctx.currentInstalledCommandCards.length }) : _ctx.t('docs.installed.empty')), 1 /* TEXT */)
-                ]),
-                (_ctx.currentInstalledCommandCards.length)
-                  ? (_openBlock(), _createElementBlock("div", {
-                      key: 0,
-                      class: "docs-installed-list"
-                    }, [
-                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.currentInstalledCommandCards, (target) => {
-                        return (_openBlock(), _createElementBlock("div", {
-                          key: 'docs-installed-' + target.id,
-                          class: "docs-installed-item"
-                        }, [
-                          _createElementVNode("div", { class: "docs-installed-main" }, [
-                            _createElementVNode("span", { class: "docs-installed-name" }, _toDisplayString(target.name), 1 /* TEXT */),
-                            _createElementVNode("span", { class: "docs-installed-version" }, _toDisplayString(target.version || '—'), 1 /* TEXT */)
-                          ]),
-                          _createElementVNode("code", { class: "docs-installed-command" }, _toDisplayString(target.commandPath || target.bin), 1 /* TEXT */)
-                        ]))
-                      }), 128 /* KEYED_FRAGMENT */))
-                    ]))
-                  : _createCommentVNode("v-if", true)
               ])
             ]),
             _createElementVNode("div", { class: "selector-section" }, [
               _createElementVNode("div", { class: "selector-header" }, [
-                _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('docs.section.commands')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "skills-panel-note docs-section-note" }, _toDisplayString(_ctx.t('docs.section.commandsNote')), 1 /* TEXT */)
+                _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('docs.section.commands')), 1 /* TEXT */)
               ]),
               _createElementVNode("div", { class: "install-list docs-install-list" }, [
                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.installTargetCards, (target) => {
@@ -5604,8 +5577,7 @@ return function render(_ctx, _cache) {
             ]),
             _createElementVNode("div", { class: "selector-section" }, [
               _createElementVNode("div", { class: "selector-header" }, [
-                _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('docs.section.faq')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "skills-panel-note docs-section-note" }, _toDisplayString(_ctx.t('docs.section.faqNote')), 1 /* TEXT */)
+                _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('docs.section.faq')), 1 /* TEXT */)
               ]),
               _createElementVNode("div", { class: "docs-help-grid" }, [
                 _createElementVNode("div", { class: "docs-note-card" }, [
@@ -5614,13 +5586,6 @@ return function render(_ctx, _cache) {
                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.installTroubleshootingTips, (tip) => {
                       return (_openBlock(), _createElementBlock("li", { key: tip }, _toDisplayString(tip), 1 /* TEXT */))
                     }), 128 /* KEYED_FRAGMENT */))
-                  ])
-                ]),
-                _createElementVNode("div", { class: "docs-note-card" }, [
-                  _createElementVNode("div", { class: "docs-note-title" }, _toDisplayString(_ctx.t('common.rules')), 1 /* TEXT */),
-                  _createElementVNode("ul", { class: "docs-static-list" }, [
-                    _createElementVNode("li", null, _toDisplayString(_ctx.t('docs.rule.1')), 1 /* TEXT */),
-                    _createElementVNode("li", null, _toDisplayString(_ctx.t('docs.rule.2')), 1 /* TEXT */)
                   ])
                 ])
               ])

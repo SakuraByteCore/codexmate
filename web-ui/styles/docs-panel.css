@@ -8,15 +8,16 @@
     gap: 16px;
 }
 
-/* ---- Toolbar grid ---- */
+/* ---- Toolbar grid ----
+   三张配置卡（PM / Mirror / Action）等列宽分占，避免
+   此前 span4×span8×span8 带来的重心右偏与左侧留白。 */
 .docs-toolbar-grid {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
 }
 
 .docs-toolbar-card {
-    grid-column: span 4;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -27,13 +28,48 @@
 }
 
 .docs-toolbar-card-wide {
-    grid-column: span 8;
+    /* 历史遗留的宽卡类，等宽网格下不再需要额外跨度，
+       保留类名以兼容模板中的引用。 */
+    grid-column: auto;
 }
 
-/* ---- Summary strip ---- */
+/* Segmented control：把 install/registry 的散落 btn-mini
+   收敛成带容器边框的成组按钮，弱化“一堆小按钮”观感。 */
+.docs-toolbar-card .install-action-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-soft);
+}
+
+.docs-toolbar-card .install-action-tabs .btn-mini {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    padding: 6px 12px;
+}
+
+.docs-toolbar-card .install-action-tabs .btn-mini:hover {
+    border-color: var(--color-border-soft);
+    background: var(--color-surface);
+    transform: none;
+}
+
+.docs-toolbar-card .install-action-tabs .btn-mini.active {
+    border-color: rgba(200, 121, 99, 0.22);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-subtle);
+}
+
+/* ---- Summary strip ----
+   原为 4 列网格但仅有 3 个 item，末列长期空置。改为
+   3 列等宽，composition 直接对齐内容数量。 */
 .docs-summary-strip {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin-top: 2px;
 }
@@ -48,8 +84,9 @@
     background: var(--color-surface);
 }
 
+/* 三列等宽后不再需要额外跨度，保留类名兼容模板引用。 */
 .docs-summary-item-wide {
-    grid-column: span 2;
+    grid-column: auto;
 }
 
 .docs-summary-label {
@@ -67,57 +104,6 @@
     line-height: 1.2;
     letter-spacing: -0.02em;
     word-break: break-word;
-}
-
-.docs-installed-card {
-    margin-top: 12px;
-    padding: 12px;
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-soft);
-}
-
-.docs-installed-head,
-.docs-installed-main {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.docs-installed-title,
-.docs-installed-name {
-    font-weight: 700;
-    color: var(--color-text-primary);
-}
-
-.docs-installed-count,
-.docs-installed-version {
-    font-size: 12px;
-    color: var(--color-text-muted);
-}
-
-.docs-installed-list {
-    display: grid;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.docs-installed-item {
-    min-width: 0;
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    background: var(--color-bg-card);
-}
-
-.docs-installed-command {
-    display: block;
-    margin-top: 6px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    color: var(--color-text-secondary);
 }
 
 /* ---- Install rows ---- */
@@ -155,7 +141,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 8px 8px 8px 14px;
     border: 1px solid var(--color-border-soft);
     border-radius: var(--radius-sm);
     background: var(--color-surface-alt);
@@ -163,18 +149,21 @@
     max-width: 100%;
 }
 
+/* 去框中框：box 本体已承担容器层，命令文本不再叠
+   二次背景/边框，降低视觉噪音、与终端观感对齐。 */
 .docs-command-box .install-command {
     flex: 1;
     min-width: 0;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border-soft);
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
     white-space: normal;
     word-break: break-all;
     overflow-wrap: break-word;
     font-size: 13px;
     line-height: 1.5;
+    color: var(--color-text-primary);
     font-family: var(--font-family-mono);
     user-select: all;
 }
@@ -226,9 +215,17 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+    align-items: stretch;
+}
+
+/* 仅剩 troubleshooting 卡时，单卡占满整行，避免右侧空置。 */
+.docs-help-grid > .docs-note-card:only-child {
+    grid-column: 1 / -1;
 }
 
 .docs-note-card {
+    display: flex;
+    flex-direction: column;
     padding: 16px;
     border: 1px solid var(--color-border-soft);
     border-radius: var(--radius-md);
@@ -246,46 +243,34 @@
     margin: 0;
 }
 
-.docs-static-list {
-    margin: 0;
-    padding-left: 18px;
-    color: var(--color-text-secondary);
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.docs-static-list li + li {
-    margin-top: 8px;
-}
-
-.docs-section-note {
-    margin-top: 4px;
-}
-
 /* ---- Responsive ---- */
 @media (max-width: 1100px) {
-    .docs-toolbar-card,
-    .docs-toolbar-card-wide {
-        grid-column: span 12;
-    }
-
-    .docs-summary-strip {
+    .docs-toolbar-grid {
+        /* PM 单占一行，mirror/action 并排占第二行，避免三卡齐挤窄列。 */
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .docs-summary-item-wide {
+    .docs-toolbar-grid > .docs-toolbar-card:first-child {
         grid-column: span 2;
+    }
+
+    .docs-summary-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 720px) {
-    .docs-summary-strip,
-    .docs-help-grid {
+    .docs-toolbar-grid {
         grid-template-columns: 1fr;
     }
 
-    .docs-summary-item-wide {
-        grid-column: span 1;
+    .docs-toolbar-grid > .docs-toolbar-card:first-child {
+        grid-column: auto;
+    }
+
+    .docs-summary-strip,
+    .docs-help-grid {
+        grid-template-columns: 1fr;
     }
 
     .docs-install-row,

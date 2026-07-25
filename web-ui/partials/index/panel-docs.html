@@ -7,7 +7,6 @@
                     <div class="selector-section">
                         <div class="selector-header">
                             <span class="selector-title">{{ t('docs.title') }}</span>
-                            <div class="skills-panel-note docs-section-note">{{ t('docs.subtitle') }}</div>
                         </div>
 
                         <div class="docs-toolbar-grid">
@@ -54,28 +53,11 @@
                                 <strong class="docs-summary-value">{{ installRegistryPreview || 'npmmirror' }}</strong>
                             </div>
                         </div>
-
-                        <div class="docs-installed-card">
-                            <div class="docs-installed-head">
-                                <span class="docs-installed-title">{{ t('docs.installed.title') }}</span>
-                                <span class="docs-installed-count">{{ currentInstalledCommandCards.length ? t('docs.installed.count', { count: currentInstalledCommandCards.length }) : t('docs.installed.empty') }}</span>
-                            </div>
-                            <div v-if="currentInstalledCommandCards.length" class="docs-installed-list">
-                                <div v-for="target in currentInstalledCommandCards" :key="'docs-installed-' + target.id" class="docs-installed-item">
-                                    <div class="docs-installed-main">
-                                        <span class="docs-installed-name">{{ target.name }}</span>
-                                        <span class="docs-installed-version">{{ target.version || '—' }}</span>
-                                    </div>
-                                    <code class="docs-installed-command">{{ target.commandPath || target.bin }}</code>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="selector-section">
                         <div class="selector-header">
                             <span class="selector-title">{{ t('docs.section.commands') }}</span>
-                            <div class="skills-panel-note docs-section-note">{{ t('docs.section.commandsNote') }}</div>
                         </div>
 
                         <div class="install-list docs-install-list">
@@ -108,7 +90,6 @@
                     <div class="selector-section">
                         <div class="selector-header">
                             <span class="selector-title">{{ t('docs.section.faq') }}</span>
-                            <div class="skills-panel-note docs-section-note">{{ t('docs.section.faqNote') }}</div>
                         </div>
 
                         <div class="docs-help-grid">
@@ -116,13 +97,6 @@
                                 <div class="docs-note-title">{{ t('common.troubleshooting') }}</div>
                                 <ul class="install-help-list docs-help-list">
                                     <li v-for="tip in installTroubleshootingTips" :key="tip">{{ tip }}</li>
-                                </ul>
-                            </div>
-                            <div class="docs-note-card">
-                                <div class="docs-note-title">{{ t('common.rules') }}</div>
-                                <ul class="docs-static-list">
-                                    <li>{{ t('docs.rule.1') }}</li>
-                                    <li>{{ t('docs.rule.2') }}</li>
                                 </ul>
                             </div>
                         </div>

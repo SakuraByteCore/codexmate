@@ -174,10 +174,6 @@ export function createDashboardComputed() {
                 };
             });
         },
-        currentInstalledCommandCards() {
-            const targets = Array.isArray(this.installTargetCards) ? this.installTargetCards : [];
-            return targets.filter((target) => target && target.installed === true);
-        },
         installRegistryPreview() {
             return this.resolveInstallRegistryUrl(this.installRegistryPreset, this.installRegistryCustom);
         },

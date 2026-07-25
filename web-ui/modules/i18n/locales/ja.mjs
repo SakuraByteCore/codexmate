@@ -621,14 +621,8 @@ const ja = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI インストールドキュメント',
-    'docs.subtitle': 'Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI コマンドを表示。',
     'docs.section.commands': 'インストールコマンド',
-    'docs.section.commandsNote': 'コマンドは直接コピーできます。',
-    'docs.installed.title': '現在インストール済みのコマンド',
-    'docs.installed.count': '{count} 個インストール済み',
-    'docs.installed.empty': 'インストール済みコマンドは検出されていません',
     'docs.section.faq': 'よくある質問',
-    'docs.section.faqNote': 'よくある質問は以下をご覧ください。',
     'docs.command.aria': '{name} コマンド',
     'docs.registryHintPrefix': 'コマンドに付加：',
     'docs.registryHintCustom': '完全な URL（http/https 含む）を入力してください。コマンドに自動付加されます。',
@@ -636,8 +630,6 @@ const ja = Object.freeze({
     'docs.meta.bin': 'bin: {bin}',
     'docs.termuxLabel': 'Termux',
     'docs.termuxAria': 'Termux Codex CLI command',
-    'docs.rule.1': 'コマンドは現在のパッケージマネージャー、ミラー、操作に基づいて生成されます。',
-    'docs.rule.2': 'カスタムミラーはインストールとアップグレードにのみ使用されます。',
     'docs.tip.win.1': 'PowerShell で権限不足（EACCES/EPERM）エラーが発生した場合は、管理者としてインストールコマンドを実行してください。',
     'docs.tip.win.2': 'インストール後にコマンドが見つからない場合は、ターミナルを再起動して実行：where codex / where claude / where gemini / where codebuddy。',
     'docs.tip.win.3': '企業ネットワークで制限がある場合は、ミラーソース（npmmirror / Tencent Cloud / カスタム）を切り替えてください。',

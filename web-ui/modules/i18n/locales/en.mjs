@@ -619,14 +619,8 @@ const en = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI Install',
-    'docs.subtitle': 'Install commands for Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI.',
     'docs.section.commands': 'Commands',
-    'docs.section.commandsNote': 'Copy and run directly.',
-    'docs.installed.title': 'Currently installed commands',
-    'docs.installed.count': '{count} installed',
-    'docs.installed.empty': 'No installed commands detected',
     'docs.section.faq': 'FAQ',
-    'docs.section.faqNote': 'Common issues and tips.',
     'docs.command.aria': '{name} command',
     'docs.registryHintPrefix': 'Command will append:',
     'docs.registryHintCustom': 'Enter a full URL (http/https) to append as registry.',
@@ -634,8 +628,6 @@ const en = Object.freeze({
     'docs.meta.bin': 'bin: {bin}',
     'docs.termuxLabel': 'Termux',
     'docs.termuxAria': 'Termux Codex CLI command',
-    'docs.rule.1': 'Commands depend on package manager, registry and action.',
-    'docs.rule.2': 'Custom registry is used for install/update only.',
     'docs.tip.win.1': 'If PowerShell reports permission errors (EACCES/EPERM), run the install command as Administrator.',
     'docs.tip.win.2': 'If the command is still not found after install, reopen the terminal and run: where codex / where claude / where gemini / where codebuddy.',
     'docs.tip.win.3': 'If your network blocks npm, try switching registry presets (npmmirror / Tencent / Custom).',

@@ -619,14 +619,8 @@ const zh = Object.freeze({
 
     // Docs panel
     'docs.title': 'CLI 安装文档',
-    'docs.subtitle': '查看 Claude Code / Gemini CLI / CodeBuddy Code / Codex CLI / KiloCode CLI 命令。',
     'docs.section.commands': '安装命令',
-    'docs.section.commandsNote': '命令可直接复制。',
-    'docs.installed.title': '当前已安装命令',
-    'docs.installed.count': '已安装 {count} 个',
-    'docs.installed.empty': '未检测到已安装命令',
     'docs.section.faq': '常见问题',
-    'docs.section.faqNote': '常见问题见下。',
     'docs.command.aria': '{name} 命令',
     'docs.registryHintPrefix': '命令将附加：',
     'docs.registryHintCustom': '请输入完整 URL（含 http/https），将自动附加到命令。',
@@ -634,8 +628,6 @@ const zh = Object.freeze({
     'docs.meta.bin': 'bin: {bin}',
     'docs.termuxLabel': 'Termux',
     'docs.termuxAria': 'Termux Codex CLI command',
-    'docs.rule.1': '命令按当前包管理器、镜像与操作生成。',
-    'docs.rule.2': '自定义镜像仅用于安装与升级。',
     'docs.tip.win.1': 'PowerShell 报权限不足（EACCES/EPERM）时，请以管理员身份执行安装命令。',
     'docs.tip.win.2': '安装后若仍提示找不到命令，重开终端并执行：where codex / where claude / where gemini / where codebuddy。',
     'docs.tip.win.3': '公司网络受限时，可先切换镜像源快捷项（npmmirror / 腾讯云 / 自定义）。',
