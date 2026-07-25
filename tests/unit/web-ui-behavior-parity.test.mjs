@@ -461,6 +461,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'showPromptTemplateVarModal',
         'brandHovered',
         'promptsHint',
+        'currentInstalledCommandCards',
     ];
     allowedExtraCurrentKeys.push(
         'lang',
@@ -991,7 +992,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'localProxyUpstreamOptions',
         'currentClaudeHaikuModel',
         'currentClaudeSonnetModel',
-        'currentClaudeOpusModel'
+        'currentClaudeOpusModel',
+        'currentInstalledCommandCards'
     ];
     if (parityAgainstHead) {
         const allowedExtraComputedKeySet = new Set(allowedExtraCurrentComputedKeys);

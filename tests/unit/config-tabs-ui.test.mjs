@@ -501,7 +501,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     );
     assert.match(
         html,
-        /:class="\['card', \{ active: currentOpenclawConfig === name \}\]"[\s\S]*@click="applyOpenclawConfig\(name\)"[\s\S]*@keydown\.enter\.self\.prevent="applyOpenclawConfig\(name\)"[\s\S]*@keydown\.space\.self\.prevent="applyOpenclawConfig\(name\)"[\s\S]*tabindex="0"[\s\S]*role="button"[\s\S]*:aria-current="currentOpenclawConfig === name \? 'true' : null"/
+        /:class="\['card', \{ active: currentOpenclawConfig === name, disabled: !isToolConfigWriteAllowed\('openclaw'\) \}\]"[\s\S]*@click="isToolConfigWriteAllowed\('openclaw'\) && applyOpenclawConfig\(name\)"[\s\S]*@keydown\.enter\.self\.prevent="isToolConfigWriteAllowed\('openclaw'\) && applyOpenclawConfig\(name\)"[\s\S]*@keydown\.space\.self\.prevent="isToolConfigWriteAllowed\('openclaw'\) && applyOpenclawConfig\(name\)"[\s\S]*:tabindex="isToolConfigWriteAllowed\('openclaw'\) \? 0 : -1"[\s\S]*role="button"[\s\S]*:aria-disabled="!isToolConfigWriteAllowed\('openclaw'\) \? 'true' : null"[\s\S]*:aria-current="currentOpenclawConfig === name \? 'true' : null"/
     );
     assert.match(html, /class="session-item-copy session-item-pin"/);
     assert.doesNotMatch(sessionsPanel, /sessionsViewMode/);

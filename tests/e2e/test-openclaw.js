@@ -30,6 +30,9 @@ module.exports = async function testOpenclaw(ctx) {
     assert(openclawReadEmpty.authProfilesByProvider['openai-codex'].editable === true, 'get-openclaw-config missing editable auth profile flag');
 
     // ========== Apply OpenClaw Config Tests ==========
+    const enableOpenclawWrites = await api('set-tool-config-permission', { target: 'openclaw', allowWrite: true });
+    assert(enableOpenclawWrites.success === true, 'set-tool-config-permission(openclaw) should succeed');
+
     const openclawInvalid = await api('apply-openclaw-config', { content: '', lineEnding: '\n' });
     assert(openclawInvalid.success === false, 'apply-openclaw-config should reject empty content');
 

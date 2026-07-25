@@ -219,14 +219,15 @@ test('web UI preference debounce preserves nested pending overrides', async () =
 test('web UI preferences preserve KiloCode write permission on reload', () => {
     const context = createContext([], createMemoryStorage());
     context.applyWebUiPreferences({
-        toolConfigPermissions: { codex: false, claude: false, opencode: false, kilocode: true }
+        toolConfigPermissions: { codex: false, claude: false, opencode: false, kilocode: true, openclaw: false }
     }, { applyNavigation: false });
 
     assert.deepStrictEqual(context.toolConfigPermissions, {
         codex: false,
         claude: false,
         opencode: false,
-        kilocode: true
+        kilocode: true,
+        openclaw: false
     });
 });
 
