@@ -892,17 +892,25 @@ function writeCurrentModels(data) {
     fs.writeFileSync(CURRENT_MODELS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+const _authKey = crypto.createHash('sha256').update(AUTH_FILE).digest();
+function encryptAuthValue(v) { const iv = crypto.randomBytes(16); const c = crypto.createCipheriv('aes-256-cbc', _authKey, iv); return 'enc:' + iv.toString('hex') + ':' + Buffer.concat([c.update(v, 'utf-8'), c.final()]).toString('hex'); }
+function decryptAuthValue(v) { if (!v || !v.startsWith('enc:')) return v; try { const [, h, d] = v.split(':'); const dc = crypto.createDecipheriv('aes-256-cbc', _authKey, Buffer.from(h, 'hex')); return Buffer.concat([dc.update(Buffer.from(d, 'hex')), dc.final()]).toString('utf-8'); } catch (e) { return v; } }
 function updateAuthJson(apiKey) {
     assertToolConfigWriteAllowed('codex');
     let authData = {};
     if (fs.existsSync(AUTH_FILE)) {
         try {
             const content = fs.readFileSync(AUTH_FILE, 'utf-8');
-            if (content.trim()) authData = JSON.parse(content);
+            if (content.trim()) {
+                const raw = JSON.parse(content);
+                for (const k of Object.keys(raw)) authData[k] = decryptAuthValue(raw[k]);
+            }
         } catch (e) { }
     }
     authData['OPENAI_API_KEY'] = apiKey;
-    fs.writeFileSync(AUTH_FILE, JSON.stringify(authData, null, 2), { encoding: 'utf-8', mode: 0o600 });
+    const out = {};
+    for (const k of Object.keys(authData)) out[k] = encryptAuthValue(authData[k]);
+    fs.writeFileSync(AUTH_FILE, JSON.stringify(out, null, 2), { encoding: 'utf-8', mode: 0o600 });
 }
 
 function isPlainObject(value) {
