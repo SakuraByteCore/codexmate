@@ -12066,7 +12066,7 @@ function resolveExportOutputPath(outputPath, defaultFileName) {
 }
 
 function printExportSessionUsage() {
-    console.log('\n用法: codexmate export-session --source <codex|claude|gemini|codebuddy> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
+    console.log('\n用法: codexmate export-session --source <codex|claude|gemini|codebuddy|pi> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('\n示例:');
     console.log('  codexmate export-session --source codex --session-id 123456');
     console.log('  codexmate export-session --source claude --file "~/.claude/projects/demo/session.jsonl"');
@@ -12138,8 +12138,8 @@ function parseExportSessionArgs(args = []) {
     }
 
     const normalizedSource = options.source.trim().toLowerCase();
-    if (normalizedSource && normalizedSource !== 'codex' && normalizedSource !== 'claude') {
-        errors.push('参数 --source 仅支持 codex 或 claude');
+    if (normalizedSource && normalizedSource !== 'codex' && normalizedSource !== 'claude' && normalizedSource !== 'pi') {
+        errors.push('参数 --source 仅支持 codex、claude 或 pi');
     }
     options.source = normalizedSource;
 
@@ -12212,7 +12212,7 @@ async function cmdExportSession(args = []) {
 
 function printAnalyticsUsage() {
     console.log('\n用法:');
-    console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--source <codex|claude|gemini|codebuddy|all>] [--output <PATH|->] [-o <PATH|->]');
+    console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--source <codex|claude|gemini|codebuddy|pi|all>] [--output <PATH|->] [-o <PATH|->]');
     console.log('');
 }
 
@@ -15934,7 +15934,7 @@ function buildMcpClaudeSettingsPayload() {
 function normalizeMcpSource(value) {
     const source = typeof value === 'string' ? value.trim().toLowerCase() : '';
     if (!source) return '';
-    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'all') {
+    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi' || source === 'all') {
         return source;
     }
     return null;
@@ -19077,7 +19077,7 @@ function printMainHelp() {
     console.log('    注: follow-up 自动排队仅支持 linux/android/netbsd/openbsd/darwin/freebsd 且 stdin 必须是 TTY，其他平台会报错');
     console.log('  codexmate qwen [参数...]   等同于 qwen --yolo');
     console.log('  codexmate mcp [serve] [--transport stdio] [--allow-write|--read-only]');
-    console.log('  codexmate export-session --source <codex|claude|gemini|codebuddy> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
+    console.log('  codexmate export-session --source <codex|claude|gemini|codebuddy|pi> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('  codexmate convert-session --from <codex|claude> --to <codex|claude> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('  codexmate zip <路径> [--max:级别]  压缩（系统 zip 优先，其次 zip-lib）');
     console.log('  codexmate unzip <zip文件> [输出目录]  解压（zip-lib）');
