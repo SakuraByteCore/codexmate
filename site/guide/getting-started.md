@@ -66,7 +66,7 @@ codexmate claude <BaseURL> <API_KEY> [model]
 codexmate auth <list|import|switch|delete|status>
 codexmate workflow <list|get|validate|run|runs>
 codexmate qwen [args...]
-codexmate export-session --source <codex|claude|gemini|codebuddy> --session-id <ID>
+codexmate export-session --source <codex|claude|gemini|codebuddy|pi> --session-id <ID>
 ```
 
 ## 校验建议
