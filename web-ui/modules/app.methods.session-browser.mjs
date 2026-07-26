@@ -120,7 +120,7 @@ export function createSessionBrowserMethods(options = {}) {
         syncSessionPathOptionsForSource(source, nextOptions, mergeWithExisting = false) {
             const targetSource = source === 'claude'
                 ? 'claude'
-                : (source === 'gemini' ? 'gemini' : (source === 'all' ? 'all' : 'codex'));
+                : (source === 'gemini' ? 'gemini' : (source === 'pi' ? 'pi' : (source === 'all' ? 'all' : 'codex')));
             const current = Array.isArray(this.sessionPathOptionsMap[targetSource])
                 ? this.sessionPathOptionsMap[targetSource]
                 : [];
@@ -137,7 +137,7 @@ export function createSessionBrowserMethods(options = {}) {
         refreshSessionPathOptions(source) {
             const targetSource = source === 'claude'
                 ? 'claude'
-                : (source === 'gemini' ? 'gemini' : (source === 'all' ? 'all' : 'codex'));
+                : (source === 'gemini' ? 'gemini' : (source === 'pi' ? 'pi' : (source === 'all' ? 'all' : 'codex')));
             const base = Array.isArray(this.sessionPathOptionsMap[targetSource])
                 ? [...this.sessionPathOptionsMap[targetSource]]
                 : [];
@@ -161,7 +161,7 @@ export function createSessionBrowserMethods(options = {}) {
         async loadSessionPathOptions(options = {}) {
             const source = options.source === 'claude'
                 ? 'claude'
-                : (options.source === 'gemini' ? 'gemini' : (options.source === 'all' ? 'all' : 'codex'));
+                : (options.source === 'gemini' ? 'gemini' : (options.source === 'pi' ? 'pi' : (options.source === 'all' ? 'all' : 'codex')));
             const forceRefresh = !!options.forceRefresh;
             const loaded = !!this.sessionPathOptionsLoadedMap[source];
             if (!forceRefresh && loaded) {
@@ -507,7 +507,11 @@ export function createSessionBrowserMethods(options = {}) {
                         ? this.t('sessions.source.claudeCode')
                         : (this.sessionFilterSource === 'gemini'
                             ? this.t('sessions.source.gemini')
-                            : (this.sessionFilterSource === 'codebuddy' ? this.t('sessions.source.codebuddy') : this.sessionFilterSource)));
+                            : (this.sessionFilterSource === 'codebuddy'
+                                ? this.t('sessions.source.codebuddy')
+                                : (this.sessionFilterSource === 'pi'
+                                    ? this.t('sessions.source.pi')
+                                    : this.sessionFilterSource))));
                 chips.push({ key: 'source', title: this.t('sessions.filters.source'), value: label });
             }
             if (this.sessionPathFilter) {

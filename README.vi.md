@@ -46,7 +46,7 @@ Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent c�
 ### Điểm nổi bật
 
 Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Agent Bridge cục bộ**:
-- **Trình duyệt phiên thống nhất**: Tìm kiếm và xuất phiên làm việc từ tất cả tool trong một nơi duy nhất.
+- **Trình duyệt phiên thống nhất**: Tìm kiếm, xem trước, lọc và xuất phiên làm việc từ Codex, Claude Code, Gemini CLI, CodeBuddy Code và Pi trong một nơi duy nhất.
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
 - **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
@@ -60,7 +60,7 @@ Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Ag
 | --- | --- | --- |
 | **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude và OpenClaw |
 | **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
-| **Trình duyệt phiên** | ✅ | Liệt kê, lọc và xuất phiên (Codex/Claude/Gemini) |
+| **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/Pi) |
 | **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
 | **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
 | **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |

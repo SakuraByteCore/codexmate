@@ -29,14 +29,14 @@ function shouldUseFastSessionBrowseLimit(options = {}) {
 
 export function isSessionQueryEnabled(source) {
     const normalized = normalizeSessionSource(source, '');
-    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'all';
+    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'all';
 }
 
 export function normalizeSessionSource(source, fallback = 'all') {
     const normalized = typeof source === 'string'
         ? source.trim().toLowerCase()
         : '';
-    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'all') {
+    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'all') {
         return normalized;
     }
     return fallback;
@@ -209,7 +209,7 @@ export function buildUsageHeatmap(sessions = [], options = {}) {
     for (const session of list) {
         if (!session || typeof session !== 'object') continue;
         const source = normalizeSessionSource(session.source, '');
-        if (source !== 'codex' && source !== 'claude') continue;
+        if (source !== 'codex' && source !== 'claude' && source !== 'pi') continue;
         const updatedAtMs = Date.parse(session.updatedAt || '');
         if (!Number.isFinite(updatedAtMs)) continue;
         normalized.push({
@@ -309,7 +309,7 @@ export function buildUsageHourlyHeatmap(sessions = [], options = {}) {
     for (const session of list) {
         if (!session || typeof session !== 'object') continue;
         const source = normalizeSessionSource(session.source, '');
-        if (source !== 'codex' && source !== 'claude') continue;
+        if (source !== 'codex' && source !== 'claude' && source !== 'pi') continue;
         const updatedAtMs = Date.parse(session.updatedAt || '');
         if (!Number.isFinite(updatedAtMs)) continue;
         const dayStart = toUtcDayStartMs(updatedAtMs);
@@ -402,7 +402,7 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
     for (const [sessionIndex, session] of list.entries()) {
         if (!session || typeof session !== 'object') continue;
         const source = normalizeSessionSource(session.source, '');
-        if (source !== 'codex' && source !== 'claude') continue;
+        if (source !== 'codex' && source !== 'claude' && source !== 'pi') continue;
         const updatedAtMs = Date.parse(session.updatedAt || '');
         if (!Number.isFinite(updatedAtMs)) continue;
         const createdAtMs = Date.parse(session.createdAt || '');
