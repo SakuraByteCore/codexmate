@@ -260,6 +260,8 @@ const CODEXMATE_DERIVED_CODEX_DIR = path.join(CODEXMATE_DERIVED_SESSIONS_DIR, 'c
 const CODEXMATE_DERIVED_CLAUDE_DIR = path.join(CODEXMATE_DERIVED_SESSIONS_DIR, 'claude');
 const GEMINI_DIR = path.join(os.homedir(), '.gemini');
 const GEMINI_TMP_DIR = path.join(GEMINI_DIR, 'tmp');
+const PI_DIR = path.join(os.homedir(), '.pi');
+const PI_SESSIONS_DIR = path.join(PI_DIR, 'agent', 'sessions');
 const RECENT_CONFIGS_FILE = path.join(CONFIG_DIR, 'recent-configs.json');
 const WORKFLOW_DEFINITIONS_FILE = path.join(CONFIG_DIR, 'codexmate-workflows.json');
 const WORKFLOW_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-workflow-runs.jsonl');
@@ -770,7 +772,8 @@ let g_sessionFileLookupCache = {
     codex: new Map(),
     claude: new Map(),
     gemini: new Map(),
-    codebuddy: new Map()
+    codebuddy: new Map(),
+    pi: new Map()
 };
 let g_exactMessageCountCache = new Map();
 let g_modelsCache = new Map();
@@ -1821,6 +1824,20 @@ function getCodeBuddyProjectsDir() {
     }
     candidates.push(CODEBUDDY_PROJECTS_DIR);
     return resolveExistingDir(candidates, CODEBUDDY_PROJECTS_DIR);
+}
+
+function getPiSessionsDir() {
+    const candidates = [];
+    const envPiHome = process.env.PI_HOME;
+    if (envPiHome) {
+        candidates.push(path.join(envPiHome, 'agent', 'sessions'));
+    }
+    const xdgConfig = process.env.XDG_CONFIG_HOME;
+    if (xdgConfig) {
+        candidates.push(path.join(xdgConfig, 'pi', 'agent', 'sessions'));
+    }
+    candidates.push(PI_SESSIONS_DIR);
+    return resolveExistingDir(candidates, PI_SESSIONS_DIR);
 }
 
 function getCodexmateDerivedSessionsRoot(target) {
@@ -3842,6 +3859,15 @@ async function countConversationMessagesInFile(filePath, source) {
                         role = '';
                     }
                 }
+            } else if (source === 'pi') {
+                if (record && record.type === 'message' && record.message && typeof record.message === 'object') {
+                    role = normalizeRole(record.message.role);
+                    if (role === 'assistant' || role === 'user' || role === 'system') {
+                        text = extractMessageText(record.message.content);
+                    } else {
+                        role = '';
+                    }
+                }
             } else {
                 role = normalizeRole(record.type);
                 if (role === 'assistant' || role === 'user' || role === 'system') {
@@ -4010,7 +4036,9 @@ async function hydrateSessionTrashEntries(entries, options = {}) {
             ? 'codex'
             : (options.source === 'gemini'
                 ? 'gemini'
-                : (options.source === 'codebuddy' ? 'codebuddy' : 'all')));
+                : (options.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (options.source === 'pi' ? 'pi' : 'all'))));
     const hydratedEntries = await mapWithConcurrency(Array.isArray(entries) ? entries : [], 8, async (entry) => {
         const normalizedEntry = normalizeSessionTrashEntry(entry);
         if (!normalizedEntry) {
@@ -4019,7 +4047,7 @@ async function hydrateSessionTrashEntries(entries, options = {}) {
         return await resolveSessionTrashEntryExactMessageCount(normalizedEntry);
     });
 
-    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy') {
+    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi') {
         return hydratedEntries.filter((entry) => entry.source === source);
     }
     return hydratedEntries;
@@ -4037,7 +4065,11 @@ async function hydrateSessionItemsExactMessageCount(items) {
             ? 'claude'
             : (item.source === 'codex'
                 ? 'codex'
-                : (item.source === 'gemini' ? 'gemini' : (item.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (item.source === 'gemini'
+                    ? 'gemini'
+                    : (item.source === 'codebuddy'
+                        ? 'codebuddy'
+                        : (item.source === 'pi' ? 'pi' : ''))));
         const filePath = typeof item.filePath === 'string' ? item.filePath : '';
         if (!source || !filePath || !fs.existsSync(filePath)) {
             return item;
@@ -4085,7 +4117,11 @@ async function readSessionMessageCounts(params = {}) {
             ? 'claude'
             : (item.source === 'codex'
                 ? 'codex'
-                : (item.source === 'gemini' ? 'gemini' : (item.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (item.source === 'gemini'
+                    ? 'gemini'
+                    : (item.source === 'codebuddy'
+                        ? 'codebuddy'
+                        : (item.source === 'pi' ? 'pi' : ''))));
         const filePath = typeof item.filePath === 'string' ? item.filePath : '';
         if (!source || !filePath || !fs.existsSync(filePath)) {
             return { key };
@@ -4599,7 +4635,13 @@ function setSessionListCache(cacheKey, value) {
 }
 
 function buildSessionInventoryCacheKey(source, limit, options = {}) {
-    const normalizedSource = source === 'claude' ? 'claude' : 'codex';
+    const normalizedSource = source === 'claude'
+        ? 'claude'
+        : (source === 'gemini'
+            ? 'gemini'
+            : (source === 'codebuddy'
+                ? 'codebuddy'
+                : (source === 'pi' ? 'pi' : 'codex')));
     const normalizedLimit = Number.isFinite(Number(limit))
         ? Math.max(1, Math.floor(Number(limit)))
         : 1;
@@ -4685,7 +4727,7 @@ function getSessionInventoryCache(cacheKey, forceRefresh = false) {
 }
 
 function registerSessionFileLookupEntries(source, sessions = []) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? source
         : 'codex';
     const store = g_sessionFileLookupCache[normalizedSource];
@@ -4726,7 +4768,7 @@ function setSessionInventoryCache(cacheKey, source, value) {
 }
 
 function listSessionInventoryBySource(source, limit, scanOptions = {}, options = {}) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? source
         : 'codex';
     const forceRefresh = !!options.forceRefresh;
@@ -4742,7 +4784,9 @@ function listSessionInventoryBySource(source, limit, scanOptions = {}, options =
             ? listGeminiSessions(limit, scanOptions)
             : (normalizedSource === 'codebuddy'
                 ? listCodeBuddySessions(limit, scanOptions)
-                : listCodexSessions(limit, scanOptions)));
+                : (normalizedSource === 'pi'
+                    ? listPiSessions(limit, scanOptions)
+                    : listCodexSessions(limit, scanOptions))));
     setSessionInventoryCache(cacheKey, normalizedSource, sessions);
     return sessions;
 }
@@ -4754,7 +4798,8 @@ function invalidateSessionListCache() {
         codex: new Map(),
         claude: new Map(),
         gemini: new Map(),
-        codebuddy: new Map()
+        codebuddy: new Map(),
+        pi: new Map()
     };
 }
 
@@ -4988,7 +5033,13 @@ function readSessionProviderFromRecord(record, source = '') {
     if (provider) {
         return provider;
     }
-    return source === 'claude' ? 'claude' : 'codex';
+    return source === 'claude'
+        ? 'claude'
+        : (source === 'gemini'
+            ? 'gemini'
+            : (source === 'codebuddy'
+                ? 'codebuddy'
+                : (source === 'pi' ? 'pi' : 'codex')));
 }
 
 function applySessionUsageSummaryFromRecord(state, record, source) {
@@ -5687,6 +5738,177 @@ function parseGeminiSessionSummary(filePath, options = {}) {
     };
 }
 
+function extractPiUsageFromMessage(message) {
+    if (!message || typeof message !== 'object' || Array.isArray(message)) {
+        return null;
+    }
+    const usage = message.usage;
+    if (!usage || typeof usage !== 'object' || Array.isArray(usage)) {
+        return null;
+    }
+    const inputTokens = readNonNegativeInteger(usage.input);
+    const outputTokens = readNonNegativeInteger(usage.output);
+    const cachedInputTokens = readNonNegativeInteger(usage.cacheRead);
+    const cacheCreationInputTokens = readNonNegativeInteger(usage.cacheWrite);
+    const reasoningOutputTokens = readNonNegativeInteger(usage.reasoning);
+    if (inputTokens === null && outputTokens === null && cachedInputTokens === null && cacheCreationInputTokens === null && reasoningOutputTokens === null) {
+        return null;
+    }
+    return {
+        inputTokens: inputTokens || 0,
+        cachedInputTokens: cachedInputTokens || 0,
+        cacheCreationInputTokens: cacheCreationInputTokens || 0,
+        outputTokens: outputTokens || 0,
+        reasoningOutputTokens: reasoningOutputTokens || 0
+    };
+}
+
+function parsePiSessionSummary(filePath, options = {}) {
+    const summaryReadBytes = Number.isFinite(Number(options.summaryReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.summaryReadBytes)))
+        : SESSION_SUMMARY_READ_BYTES;
+    const titleReadBytes = Number.isFinite(Number(options.titleReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.titleReadBytes)))
+        : SESSION_TITLE_READ_BYTES;
+    const records = parseJsonlHeadRecords(filePath, summaryReadBytes);
+    if (records.length === 0) {
+        return null;
+    }
+
+    let stat;
+    try {
+        stat = fs.statSync(filePath);
+    } catch (_) {
+        return null;
+    }
+
+    let sessionId = path.basename(filePath, '.jsonl');
+    let cwd = '';
+    let createdAt = '';
+    let updatedAt = stat.mtime.toISOString();
+    let firstPrompt = '';
+    let messageCount = 0;
+    let totalTokens = 0;
+    let contextWindow = 0;
+    let inputTokens = 0;
+    let cachedInputTokens = 0;
+    let cacheCreationInputTokens = 0;
+    let outputTokens = 0;
+    let reasoningOutputTokens = 0;
+    let provider = 'pi';
+    let model = '';
+    const models = [];
+    const previewMessages = [];
+
+    for (const record of records) {
+        if (!createdAt && record && record.type === 'session' && record.timestamp) {
+            createdAt = toIsoTime(record.timestamp, createdAt);
+        }
+        if (record && record.timestamp) {
+            updatedAt = updateLatestIso(updatedAt, record.timestamp);
+        }
+        if (record && record.type === 'session') {
+            sessionId = record.id || sessionId;
+            cwd = record.cwd || cwd;
+        }
+        if (record && record.type === 'model_change' && record.modelId) {
+            if (!models.includes(record.modelId)) {
+                models.push(record.modelId);
+            }
+            model = model || record.modelId;
+            if (record.provider) {
+                provider = record.provider;
+            }
+        }
+        if (record && record.type === 'message' && record.message && typeof record.message === 'object') {
+            const role = normalizeRole(record.message.role);
+            if (role === 'user' || role === 'assistant' || role === 'system') {
+                messageCount += 1;
+                const text = extractMessageText(record.message.content);
+                if (role === 'assistant' && record.message.model && !models.includes(record.message.model)) {
+                    models.push(record.message.model);
+                    model = model || record.message.model;
+                }
+                if (record.message.provider) {
+                    provider = record.message.provider;
+                }
+                const piUsage = extractPiUsageFromMessage(record.message);
+                if (piUsage) {
+                    inputTokens += piUsage.inputTokens;
+                    cachedInputTokens += piUsage.cachedInputTokens;
+                    cacheCreationInputTokens += piUsage.cacheCreationInputTokens;
+                    outputTokens += piUsage.outputTokens;
+                    reasoningOutputTokens += piUsage.reasoningOutputTokens;
+                }
+                if (text) {
+                    previewMessages.push({ role, text });
+                    if (!firstPrompt && role === 'user') {
+                        firstPrompt = text.split('\n')[0].slice(0, 80);
+                    }
+                }
+            }
+        }
+    }
+
+    totalTokens = inputTokens + cachedInputTokens + cacheCreationInputTokens + outputTokens + reasoningOutputTokens;
+
+    const tailRecords = parseJsonlTailRecords(filePath, summaryReadBytes);
+    let tailMessageCount = 0;
+    let tailHasMore = false;
+    for (const record of tailRecords) {
+        if (record && record.timestamp) {
+            updatedAt = updateLatestIso(updatedAt, record.timestamp);
+        }
+        if (record && record.type === 'message' && record.message && typeof record.message === 'object') {
+            const role = normalizeRole(record.message.role);
+            if (role === 'user' || role === 'assistant' || role === 'system') {
+                tailMessageCount += 1;
+                const piUsage = extractPiUsageFromMessage(record.message);
+                if (piUsage) {
+                    inputTokens += piUsage.inputTokens;
+                    cachedInputTokens += piUsage.cachedInputTokens;
+                    cacheCreationInputTokens += piUsage.cacheCreationInputTokens;
+                    outputTokens += piUsage.outputTokens;
+                    reasoningOutputTokens += piUsage.reasoningOutputTokens;
+                }
+                if (role === 'assistant' && record.message.model && !models.includes(record.message.model)) {
+                    models.push(record.message.model);
+                }
+                if (record.message.provider) {
+                    provider = record.message.provider;
+                }
+            }
+        }
+    }
+    totalTokens = inputTokens + cachedInputTokens + cacheCreationInputTokens + outputTokens + reasoningOutputTokens;
+
+    const fileName = path.basename(filePath, '.jsonl');
+    return {
+        source: 'pi',
+        sourceLabel: 'Pi',
+        provider,
+        model,
+        models,
+        sessionId,
+        title: firstPrompt || sessionId || fileName,
+        cwd,
+        createdAt,
+        updatedAt,
+        messageCount,
+        totalTokens,
+        contextWindow,
+        inputTokens,
+        cachedInputTokens,
+        cacheCreationInputTokens,
+        outputTokens,
+        reasoningOutputTokens,
+        __messageCountExact: false,
+        filePath,
+        keywords: [],
+        capabilities: { code: true }
+    };
+}
+
 function listCodexSessions(limit, options = {}) {
     const codexSessionsDir = getCodexSessionsDir();
     const scanFactor = Number.isFinite(Number(options.scanFactor))
@@ -6126,8 +6348,56 @@ function listCodeBuddySessions(limit, options = {}) {
     return mergeAndLimitSessions(sessions, limit);
 }
 
+function listPiSessions(limit, options = {}) {
+    const sessionsDir = getPiSessionsDir();
+    if (!fs.existsSync(sessionsDir)) {
+        return [];
+    }
+
+    const scanFactor = Number.isFinite(Number(options.scanFactor))
+        ? Math.max(1, Number(options.scanFactor))
+        : SESSION_SCAN_FACTOR;
+    const minFiles = Number.isFinite(Number(options.minFiles))
+        ? Math.max(1, Number(options.minFiles))
+        : Math.min(SESSION_SCAN_MIN_FILES, MAX_SESSION_LIST_SIZE * SESSION_SCAN_FACTOR);
+    const targetCount = Number.isFinite(Number(options.targetCount))
+        ? Math.max(1, Math.floor(Number(options.targetCount)))
+        : Math.max(1, Math.floor(limit * scanFactor));
+    const scanCount = Number.isFinite(Number(options.scanCount))
+        ? Math.max(targetCount, Math.floor(Number(options.scanCount)))
+        : Math.max(targetCount, minFiles);
+    const maxFilesScanned = Number.isFinite(Number(options.maxFilesScanned))
+        ? Math.max(scanCount, Math.floor(Number(options.maxFilesScanned)))
+        : Math.max(scanCount * 2, minFiles);
+    const summaryReadBytes = Number.isFinite(Number(options.summaryReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.summaryReadBytes)))
+        : SESSION_SUMMARY_READ_BYTES;
+    const titleReadBytes = Number.isFinite(Number(options.titleReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.titleReadBytes)))
+        : SESSION_TITLE_READ_BYTES;
+
+    const files = collectRecentJsonlFiles(sessionsDir, {
+        returnCount: scanCount,
+        maxFilesScanned
+    });
+    const sessions = [];
+    for (const filePath of files) {
+        const summary = parsePiSessionSummary(filePath, {
+            summaryReadBytes,
+            titleReadBytes
+        });
+        if (summary) {
+            sessions.push(summary);
+        }
+        if (sessions.length >= targetCount) {
+            break;
+        }
+    }
+    return mergeAndLimitSessions(sessions, limit);
+}
+
 async function listAllSessions(params = {}) {
-    const source = params.source === 'codex' || params.source === 'claude' || params.source === 'gemini' || params.source === 'codebuddy'
+    const source = params.source === 'codex' || params.source === 'claude' || params.source === 'gemini' || params.source === 'codebuddy' || params.source === 'pi'
         ? params.source
         : 'all';
     const rawLimit = Number(params.limit);
@@ -6176,6 +6446,9 @@ async function listAllSessions(params = {}) {
     }
     if (source === 'all' || source === 'codebuddy') {
         sessions = sessions.concat(listSessionInventoryBySource('codebuddy', limit, scanOptions, { forceRefresh }));
+    }
+    if (source === 'all' || source === 'pi') {
+        sessions = sessions.concat(listSessionInventoryBySource('pi', limit, scanOptions, { forceRefresh }));
     }
 
     if (hasPathFilter) {
@@ -6259,6 +6532,7 @@ async function listSessionUsage(params = {}) {
         parseClaudeSessionSummary,
         parseCodeBuddySessionSummary,
         parseGeminiSessionSummary,
+        parsePiSessionSummary,
         MAX_SESSION_USAGE_LIST_SIZE,
         SESSION_BROWSE_SUMMARY_READ_BYTES
     });
@@ -6272,10 +6546,10 @@ async function exportSessionUsage(params = {}) {
 
 function listSessionPaths(params = {}) {
     const source = typeof params.source === 'string' ? params.source.trim().toLowerCase() : '';
-    if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
+    if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
         return [];
     }
-    const validSource = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' ? source : 'all';
+    const validSource = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi' ? source : 'all';
     const rawLimit = Number(params.limit);
     const limit = Number.isFinite(rawLimit)
         ? Math.max(1, Math.min(rawLimit, MAX_SESSION_PATH_LIST_SIZE))
@@ -6309,6 +6583,9 @@ function listSessionPaths(params = {}) {
     if (validSource === 'all' || validSource === 'codebuddy') {
         sessions = sessions.concat(listSessionInventoryBySource('codebuddy', gatherLimit, scanOptions, { forceRefresh }));
     }
+    if (validSource === 'all' || validSource === 'pi') {
+        sessions = sessions.concat(listSessionInventoryBySource('pi', gatherLimit, scanOptions, { forceRefresh }));
+    }
 
     const dedupedPaths = [];
     const seen = new Set();
@@ -6334,7 +6611,7 @@ function listSessionPaths(params = {}) {
 }
 
 function resolveSessionFilePath(source, filePath, sessionId) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? source
         : 'codex';
     const homeDir = process && process.env && process.env.HOME ? process.env.HOME : '';
@@ -6346,7 +6623,9 @@ function resolveSessionFilePath(source, filePath, sessionId) {
             ? [getGeminiTmpDir()]
             : (normalizedSource === 'codebuddy'
                 ? [getCodeBuddyProjectsDir()]
-                : [getCodexSessionsDir(), derivedCodexDir]));
+                : (normalizedSource === 'pi'
+                    ? [getPiSessionsDir()]
+                    : [getCodexSessionsDir(), derivedCodexDir])));
     const availableRoots = roots.filter((dirPath) => dirPath && fs.existsSync(dirPath));
     if (availableRoots.length === 0) {
         return '';
@@ -6894,13 +7173,21 @@ function buildSessionSummaryFallback(source, filePath, sessionId = '') {
     const resolvedSessionId = sessionId || path.basename(filePath, '.jsonl');
     const sourceLabel = source === 'claude'
         ? 'Claude Code'
-        : (source === 'gemini' ? 'Gemini CLI' : (source === 'codebuddy' ? 'CodeBuddy Code' : 'Codex'));
+        : (source === 'gemini'
+            ? 'Gemini CLI'
+            : (source === 'codebuddy'
+                ? 'CodeBuddy Code'
+                : (source === 'pi' ? 'Pi' : 'Codex')));
     return {
         source,
         sourceLabel,
         provider: source === 'claude'
             ? 'claude'
-            : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : 'codex')),
+            : (source === 'gemini'
+                ? 'gemini'
+                : (source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (source === 'pi' ? 'pi' : 'codex'))),
         sessionId: resolvedSessionId,
         title: resolvedSessionId,
         cwd: '',
@@ -6953,7 +7240,9 @@ function normalizeSessionTrashEntry(entry) {
             ? 'codex'
             : (entry.source === 'gemini'
                 ? 'gemini'
-                : (entry.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (entry.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (entry.source === 'pi' ? 'pi' : ''))));
     const trashId = typeof entry.trashId === 'string' ? entry.trashId.trim() : '';
     if (!source || !trashId || trashId.includes('/') || trashId.includes('\\') || trashId.includes('\0')) {
         return null;
@@ -6970,7 +7259,11 @@ function normalizeSessionTrashEntry(entry) {
         source,
         sourceLabel: source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : (source === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')),
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'codebuddy'
+                    ? 'CodeBuddy Code'
+                    : (source === 'pi' ? 'Pi' : 'Codex'))),
         sessionId: sessionId || trashId,
         title: typeof entry.title === 'string' && entry.title.trim() ? entry.title.trim() : (sessionId || trashId),
         cwd: typeof entry.cwd === 'string' ? entry.cwd : '',
@@ -6986,7 +7279,7 @@ function normalizeSessionTrashEntry(entry) {
         originalFilePath: typeof entry.originalFilePath === 'string' ? entry.originalFilePath : '',
         provider: typeof entry.provider === 'string' && entry.provider.trim()
             ? entry.provider.trim()
-            : (source === 'claude' ? 'claude' : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : 'codex'))),
+            : (source === 'claude' ? 'claude' : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : (source === 'pi' ? 'pi' : 'codex')))),
         keywords: normalizeKeywords(entry.keywords),
         capabilities: normalizeCapabilities(entry.capabilities),
         claudeIndexPath: typeof entry.claudeIndexPath === 'string' ? entry.claudeIndexPath : '',
@@ -7073,7 +7366,13 @@ function purgeExpiredSessionTrashEntries(retentionDays) {
 }
 
 function buildSessionTrashEntry(summary, options = {}) {
-    const source = options.source === 'claude' ? 'claude' : 'codex';
+    const source = options.source === 'claude'
+        ? 'claude'
+        : (options.source === 'gemini'
+            ? 'gemini'
+            : (options.source === 'codebuddy'
+                ? 'codebuddy'
+                : (options.source === 'pi' ? 'pi' : 'codex')));
     const sessionId = options.sessionId || summary.sessionId || path.basename(options.originalFilePath || summary.filePath || '', '.jsonl');
     const claudeIndexEntry = options.claudeIndexEntry && typeof options.claudeIndexEntry === 'object' && !Array.isArray(options.claudeIndexEntry)
         ? options.claudeIndexEntry
@@ -7081,7 +7380,13 @@ function buildSessionTrashEntry(summary, options = {}) {
     const deletedAt = typeof options.deletedAt === 'string' && options.deletedAt
         ? options.deletedAt
         : new Date().toISOString();
-    const sourceLabel = source === 'claude' ? 'Claude Code' : 'Codex';
+    const sourceLabel = source === 'claude'
+        ? 'Claude Code'
+        : (source === 'gemini'
+            ? 'Gemini CLI'
+            : (source === 'codebuddy'
+                ? 'CodeBuddy Code'
+                : (source === 'pi' ? 'Pi' : 'Codex')));
     const fallbackTitle = truncateText(
         (claudeIndexEntry && (claudeIndexEntry.summary || claudeIndexEntry.firstPrompt)) || sessionId,
         120
@@ -7118,7 +7423,7 @@ function buildSessionTrashEntry(summary, options = {}) {
         originalFilePath: options.originalFilePath || summary.filePath || '',
         provider: (claudeIndexEntry && typeof claudeIndexEntry.provider === 'string' && claudeIndexEntry.provider.trim())
             ? claudeIndexEntry.provider.trim()
-            : (summary.provider || (source === 'claude' ? 'claude' : 'codex')),
+            : (summary.provider || (source === 'claude' ? 'claude' : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : (source === 'pi' ? 'pi' : 'codex'))))),
         keywords: normalizedClaudeKeywords.length > 0 ? normalizedClaudeKeywords : normalizedSummaryKeywords,
         capabilities: Object.keys(normalizedClaudeCapabilities).length > 0
             ? normalizedClaudeCapabilities
@@ -7137,7 +7442,9 @@ function resolveSessionRestoreTarget(entry) {
         ? getClaudeProjectsDir()
         : (normalized.source === 'gemini'
             ? getGeminiTmpDir()
-            : (normalized.source === 'codebuddy' ? getCodeBuddyProjectsDir() : getCodexSessionsDir()));
+            : (normalized.source === 'codebuddy'
+                ? getCodeBuddyProjectsDir()
+                : (normalized.source === 'pi' ? getPiSessionsDir() : getCodexSessionsDir())));
     const originalFilePath = typeof normalized.originalFilePath === 'string' ? normalized.originalFilePath.trim() : '';
     if (!root || !originalFilePath) {
         return '';
@@ -7277,7 +7584,9 @@ async function listSessionTrashItems(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : 'all')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : 'all'))));
     const countOnly = params.countOnly === true;
     const rawLimit = Number(params.limit);
     const limit = Number.isFinite(rawLimit)
@@ -7287,7 +7596,7 @@ async function listSessionTrashItems(params = {}) {
         purgeExpiredSessionTrashEntries(params.retentionDays);
     }
     const allEntries = readSessionTrashEntries();
-    let items = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    let items = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? allEntries.filter((entry) => entry.source === source)
         : allEntries.slice();
     items.sort((a, b) => {
@@ -7473,7 +7782,9 @@ async function trashSessionData(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -7487,7 +7798,9 @@ async function trashSessionData(params = {}) {
         ? parseClaudeSessionSummary(filePath)
         : (source === 'gemini'
             ? parseGeminiSessionSummary(filePath)
-            : (source === 'codebuddy' ? parseCodeBuddySessionSummary(filePath) : parseCodexSessionSummary(filePath))))
+            : (source === 'codebuddy'
+                ? parseCodeBuddySessionSummary(filePath)
+                : (source === 'pi' ? parsePiSessionSummary(filePath) : parseCodexSessionSummary(filePath)))))
         || buildSessionSummaryFallback(source, filePath, params.sessionId);
     const exactMessageCount = await countConversationMessagesInFile(filePath, source);
     if (Number.isFinite(Number(exactMessageCount))) {
@@ -7584,7 +7897,9 @@ async function deleteSessionData(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8054,6 +8369,32 @@ function extractCodeBuddyMessageFromRecord(record, state, lineIndex = -1) {
     }
 }
 
+function extractPiMessageFromRecord(record, state, lineIndex = -1) {
+    if (record && record.timestamp) {
+        state.updatedAt = toIsoTime(record.timestamp, state.updatedAt);
+    }
+    if (record && record.type === 'session') {
+        state.sessionId = record.id || state.sessionId;
+        state.cwd = record.cwd || state.cwd;
+        return;
+    }
+    if (!record || record.type !== 'message' || !record.message || typeof record.message !== 'object') {
+        return;
+    }
+    const role = normalizeRole(record.message.role);
+    if (role === 'user' || role === 'assistant' || role === 'system') {
+        const text = extractMessageText(record.message.content);
+        if (text && canAppendMessage(state)) {
+            state.messages.push({
+                role,
+                text,
+                timestamp: toIsoTime(record.timestamp, ''),
+                recordLineIndex: Number.isInteger(lineIndex) ? lineIndex : -1
+            });
+        }
+    }
+}
+
 function recordHasCodexMessage(record) {
     if (!record || record.type !== 'response_item' || !record.payload) {
         return false;
@@ -8095,9 +8436,22 @@ function recordHasCodeBuddyMessage(record) {
     return !!text;
 }
 
+function recordHasPiMessage(record) {
+    if (!record || record.type !== 'message' || !record.message || typeof record.message !== 'object') {
+        return false;
+    }
+    const role = normalizeRole(record.message.role);
+    if (role !== 'user' && role !== 'assistant' && role !== 'system') {
+        return false;
+    }
+    const text = extractMessageText(record.message.content);
+    return !!text;
+}
+
 function recordHasMessage(record, source) {
     if (source === 'codex') return recordHasCodexMessage(record);
     if (source === 'codebuddy') return recordHasCodeBuddyMessage(record);
+    if (source === 'pi') return recordHasPiMessage(record);
     return recordHasClaudeMessage(record);
 }
 
@@ -8118,6 +8472,8 @@ function extractMessagesFromRecords(records, source, options = {}) {
             extractCodexMessageFromRecord(record, state, lineIndex);
         } else if (source === 'codebuddy') {
             extractCodeBuddyMessageFromRecord(record, state, lineIndex);
+        } else if (source === 'pi') {
+            extractPiMessageFromRecord(record, state, lineIndex);
         } else {
             extractClaudeMessageFromRecord(record, state, lineIndex);
         }
@@ -8181,6 +8537,8 @@ async function extractMessagesFromFile(filePath, source, options = {}) {
                 extractCodexMessageFromRecord(record, state, currentLineIndex);
             } else if (source === 'codebuddy') {
                 extractCodeBuddyMessageFromRecord(record, state, currentLineIndex);
+            } else if (source === 'pi') {
+                extractPiMessageFromRecord(record, state, currentLineIndex);
             } else {
                 extractClaudeMessageFromRecord(record, state, currentLineIndex);
             }
@@ -8211,7 +8569,9 @@ async function readSessionDetail(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8273,7 +8633,9 @@ async function readSessionDetail(params = {}) {
         ? 'Codex'
         : (source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : 'CodeBuddy Code'));
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'pi' ? 'Pi' : 'CodeBuddy Code')));
     const clippedMessages = Array.isArray(extracted.messages) ? extracted.messages : [];
     const hasExactTotalMessages = Number.isFinite(extracted.totalMessages);
     const startIndex = hasExactTotalMessages
@@ -8340,7 +8702,9 @@ async function readSessionPlain(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8414,7 +8778,9 @@ async function readSessionPlain(params = {}) {
         ? 'Codex'
         : (source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : 'CodeBuddy Code'));
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'pi' ? 'Pi' : 'CodeBuddy Code')));
     const messages = removeLeadingSystemMessage(Array.isArray(extracted.messages) ? extracted.messages : []);
     const text = buildSessionPlainText(messages);
 
@@ -8436,7 +8802,9 @@ async function exportSessionData(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8510,7 +8878,9 @@ async function exportSessionData(params = {}) {
         ? 'Codex'
         : (source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : 'CodeBuddy Code'));
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'pi' ? 'Pi' : 'CodeBuddy Code')));
     const truncated = !!extracted.truncated;
     const maxMessagesLabel = maxMessages === Infinity ? 'all' : maxMessages;
     const markdown = buildSessionMarkdown({
@@ -13260,8 +13630,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'list-sessions':
                             {
                                 const source = typeof params.source === 'string' ? params.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = {
                                         sessions: await listSessionBrowse(params),
@@ -13274,8 +13644,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             {
                                 const usageParams = isPlainObject(params) ? params : {};
                                 const source = typeof usageParams.source === 'string' ? usageParams.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = {
                                         sessions: await listSessionUsage({
@@ -13291,8 +13661,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             {
                                 const usageParams = isPlainObject(params) ? params : {};
                                 const source = typeof usageParams.source === 'string' ? usageParams.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = await exportSessionUsage({
                                         ...usageParams,
@@ -13304,8 +13674,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'list-session-paths':
                             {
                                 const source = typeof params.source === 'string' ? params.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = {
                                         paths: listSessionPaths(params)
@@ -15877,7 +16247,7 @@ function createWorkflowToolCatalog() {
             handler: async (args = {}) => {
                 const source = normalizeMcpSource(args.source);
                 if (source === null) {
-                    return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                    return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                 }
                 return {
                     source: source || 'all',
@@ -17997,7 +18367,7 @@ function createMcpTools(options = {}) {
             const input = args && typeof args === 'object' ? args : {};
             const source = normalizeMcpSource(input.source);
             if (source === null) {
-                return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
             }
             const normalizedInput = {
                 ...input,
@@ -18457,7 +18827,7 @@ function createMcpResources() {
                         contents: [{
                             uri,
                             mimeType: 'application/json',
-                            text: JSON.stringify({ error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' }, null, 2)
+                            text: JSON.stringify({ error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' }, null, 2)
                         }]
                     };
                 }

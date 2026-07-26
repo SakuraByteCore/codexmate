@@ -850,6 +850,7 @@ const vi = Object.freeze({
     'sessions.source.claudeCode': 'Claude Code',
     'sessions.source.gemini': 'Gemini CLI',
     'sessions.source.codebuddy': 'CodeBuddy Code',
+    'sessions.source.pi': 'Pi',
     'sessions.loadingList': 'Đang tải phiên làm việc...',
     'sessions.empty': 'Không tìm thấy phiên nào',
     'sessions.unknownTime': 'thời gian không rõ',

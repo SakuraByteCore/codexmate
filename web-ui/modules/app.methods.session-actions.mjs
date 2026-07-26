@@ -28,8 +28,8 @@ export function createSessionActionMethods(options = {}) {
                 let error = '';
                 if (!source) {
                     error = '缺少 source 参数';
-                } else if (source !== 'codex' && source !== 'claude') {
-                    error = 'source 仅支持 codex 或 claude';
+                } else if (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi') {
+                    error = 'source 仅支持 codex、claude、gemini、codebuddy 或 pi';
                 }
                 if (!sessionId && !filePath) {
                     error = error ? `${error}，还缺少 sessionId 或 filePath` : '缺少 sessionId 或 filePath 参数';
@@ -67,7 +67,15 @@ export function createSessionActionMethods(options = {}) {
                 return;
             }
 
-            const sourceLabel = context.params.source === 'codex' ? 'Codex' : 'Claude Code';
+            const sourceLabel = context.params.source === 'codex'
+                ? 'Codex'
+                : (context.params.source === 'claude'
+                    ? 'Claude Code'
+                    : (context.params.source === 'gemini'
+                        ? 'Gemini CLI'
+                        : (context.params.source === 'pi'
+                            ? 'Pi'
+                            : (context.params.source === 'codebuddy' ? 'CodeBuddy Code' : context.params.source))));
             this.activeSession = {
                 source: context.params.source,
                 sourceLabel,
@@ -96,7 +104,7 @@ export function createSessionActionMethods(options = {}) {
         buildSessionStandaloneUrl(session) {
             if (!session) return '';
             const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';
-            if (!source || (source !== 'codex' && source !== 'claude')) return '';
+            if (!source || (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi')) return '';
             const sessionId = typeof session.sessionId === 'string' ? session.sessionId.trim() : '';
             const filePath = typeof session.filePath === 'string' ? session.filePath.trim() : '';
             if (!sessionId && !filePath) return '';

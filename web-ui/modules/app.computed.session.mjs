@@ -307,7 +307,8 @@ export function createSessionComputed() {
                 { value: "codex", label: this.t("sessions.source.codex") },
                 { value: "claude", label: this.t("sessions.source.claudeCode") },
                 { value: "gemini", label: this.t("sessions.source.gemini") },
-                { value: "codebuddy", label: this.t("sessions.source.codebuddy") }
+                { value: "codebuddy", label: this.t("sessions.source.codebuddy") },
+                { value: "pi", label: this.t("sessions.source.pi") }
             ];
         },
         activeSessionExportKey() {

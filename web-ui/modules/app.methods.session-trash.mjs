@@ -10,7 +10,7 @@ export function createSessionTrashMethods(options = {}) {
             const deletedAt = typeof result.deletedAt === 'string' && result.deletedAt
                 ? result.deletedAt
                 : new Date().toISOString();
-            const source = session && (session.source === 'claude' || session.source === 'gemini')
+            const source = session && (session.source === 'claude' || session.source === 'gemini' || session.source === 'codebuddy' || session.source === 'pi')
                 ? session.source
                 : 'codex';
             return {
@@ -18,7 +18,7 @@ export function createSessionTrashMethods(options = {}) {
                 source,
                 sourceLabel: session && typeof session.sourceLabel === 'string' && session.sourceLabel
                     ? session.sourceLabel
-                    : (source === 'claude' ? 'Claude Code' : (source === 'gemini' ? 'Gemini CLI' : 'Codex')),
+                    : (source === 'claude' ? 'Claude Code' : (source === 'gemini' ? 'Gemini CLI' : (source === 'pi' ? 'Pi' : (source === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))),
                 sessionId: session && typeof session.sessionId === 'string' ? session.sessionId : '',
                 title: session && typeof session.title === 'string' && session.title
                     ? session.title

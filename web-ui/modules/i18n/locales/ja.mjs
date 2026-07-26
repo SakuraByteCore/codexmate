@@ -647,6 +647,7 @@ const ja = Object.freeze({
     'sessions.source.claudeCode': 'Claude Code',
     'sessions.source.gemini': 'Gemini',
     'sessions.source.codebuddy': 'CodeBuddy',
+    'sessions.source.pi': 'Pi',
     'sessions.loadingList': 'セッション一覧を読み込み中...',
     'sessions.empty': 'セッションがありません',
     'sessions.unknownTime': '不明な時間',
