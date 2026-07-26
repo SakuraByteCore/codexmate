@@ -1020,7 +1020,7 @@ function normalizeSidebarCollapsedPreference(value) {
 
 function normalizeSessionFilterSourcePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    if (normalized === 'all' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy') return normalized;
+    if (normalized === 'all' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi') return normalized;
     return 'codex';
 }
 
