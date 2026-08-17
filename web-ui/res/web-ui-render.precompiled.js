@@ -4817,60 +4817,62 @@ return function render(_ctx, _cache) {
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.configTabs.title')), 1 /* TEXT */),
                       _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.configTabs.meta')), 1 /* TEXT */),
-                      _createElementVNode("label", { class: "settings-toggle-row" }, [
-                        _createElementVNode("input", {
-                          type: "checkbox",
-                          checked: _ctx.configModeVisibility.codex,
-                          onChange: $event => (_ctx.setConfigModeVisibility('codex', $event.target.checked))
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
-                        _createElementVNode("span", { class: "toggle-track" }, [
-                          _createElementVNode("span", { class: "toggle-thumb" })
+                      _createElementVNode("div", { class: "settings-toggle-grid" }, [
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.configModeVisibility.codex,
+                            onChange: $event => (_ctx.setConfigModeVisibility('codex', $event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.codex')), 1 /* TEXT */)
                         ]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.codex')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("label", { class: "settings-toggle-row" }, [
-                        _createElementVNode("input", {
-                          type: "checkbox",
-                          checked: _ctx.configModeVisibility.claude,
-                          onChange: $event => (_ctx.setConfigModeVisibility('claude', $event.target.checked))
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
-                        _createElementVNode("span", { class: "toggle-track" }, [
-                          _createElementVNode("span", { class: "toggle-thumb" })
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.configModeVisibility.claude,
+                            onChange: $event => (_ctx.setConfigModeVisibility('claude', $event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.claude')), 1 /* TEXT */)
                         ]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.claude')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("label", { class: "settings-toggle-row" }, [
-                        _createElementVNode("input", {
-                          type: "checkbox",
-                          checked: _ctx.configModeVisibility.openclaw,
-                          onChange: $event => (_ctx.setConfigModeVisibility('openclaw', $event.target.checked))
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
-                        _createElementVNode("span", { class: "toggle-track" }, [
-                          _createElementVNode("span", { class: "toggle-thumb" })
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.configModeVisibility.openclaw,
+                            onChange: $event => (_ctx.setConfigModeVisibility('openclaw', $event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.openclaw')), 1 /* TEXT */)
                         ]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.openclaw')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("label", { class: "settings-toggle-row" }, [
-                        _createElementVNode("input", {
-                          type: "checkbox",
-                          checked: _ctx.configModeVisibility.opencode,
-                          onChange: $event => (_ctx.setConfigModeVisibility('opencode', $event.target.checked))
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
-                        _createElementVNode("span", { class: "toggle-track" }, [
-                          _createElementVNode("span", { class: "toggle-thumb" })
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.configModeVisibility.opencode,
+                            onChange: $event => (_ctx.setConfigModeVisibility('opencode', $event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.opencode')), 1 /* TEXT */)
                         ]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.opencode')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("label", { class: "settings-toggle-row" }, [
-                        _createElementVNode("input", {
-                          type: "checkbox",
-                          checked: _ctx.configModeVisibility.kilocode,
-                          onChange: $event => (_ctx.setConfigModeVisibility('kilocode', $event.target.checked))
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
-                        _createElementVNode("span", { class: "toggle-track" }, [
-                          _createElementVNode("span", { class: "toggle-thumb" })
-                        ]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.kilocode')), 1 /* TEXT */)
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.configModeVisibility.kilocode,
+                            onChange: $event => (_ctx.setConfigModeVisibility('kilocode', $event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.kilocode')), 1 /* TEXT */)
+                        ])
                       ]),
                       _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.configTabs.hint')), 1 /* TEXT */)
                     ])

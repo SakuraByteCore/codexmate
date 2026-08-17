@@ -191,6 +191,13 @@
     color: var(--color-text-secondary);
 }
 
+.settings-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 4px 12px;
+    margin: 8px 0 4px;
+}
+
 /* ---- 切换按钮组 ---- */
 .settings-toggle-group {
     display: flex;

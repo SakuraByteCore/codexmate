@@ -144,6 +144,7 @@
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.configTabs.title') }}</div>
                                         <p class="settings-card-desc">{{ t('settings.configTabs.meta') }}</p>
+                                        <div class="settings-toggle-grid">
                                         <label class="settings-toggle-row">
                                             <input type="checkbox" :checked="configModeVisibility.codex" @change="setConfigModeVisibility('codex', $event.target.checked)">
                                             <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -169,6 +170,7 @@
                                             <span class="toggle-track"><span class="toggle-thumb"></span></span>
                                             <span>{{ t('tab.config.kilocode') }}</span>
                                         </label>
+                                        </div>
                                         <p class="settings-card-hint">{{ t('settings.configTabs.hint') }}</p>
                                     </div>
                                 </div>
