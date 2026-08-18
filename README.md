@@ -184,6 +184,10 @@ Special thanks to all contributors for their contributions to Codex Mate ❤️
   <img src="https://contrib.rocks/image?repo=SakuraByteCore/codexmate" />
 </a>
 
+## Star History
+
+[![Star History Chart](https://star-history.dera.page/svg?repos=SakuraByteCore/codexmate&type=Date)](https://star-history.dera.page/#SakuraByteCore/codexmate&Date)
+
 ## License
 
 Apache-2.0

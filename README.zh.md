@@ -181,6 +181,10 @@ flowchart TD
   <img src="https://contrib.rocks/image?repo=SakuraByteCore/codexmate" />
 </a>
 
+## Star 历史
+
+[![Star History Chart](https://star-history.dera.page/svg?repos=SakuraByteCore/codexmate&type=Date)](https://star-history.dera.page/#SakuraByteCore/codexmate&Date)
+
 ## 开源协议
 
 Apache-2.0
