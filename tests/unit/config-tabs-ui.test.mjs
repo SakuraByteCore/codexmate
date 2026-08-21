@@ -22,7 +22,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     const sideTabModes = [...html.matchAll(/id="side-tab-config-([a-z]+)"/g)]
         .map((match) => match[1]);
 
-    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']);
+    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']);
     assert.match(html, /id="tab-dashboard"/);
     assert.match(html, /v-if="healthCheckResult && healthCheckResult\.report" class="doctor-action-list"/);
     assert.match(html, /v-if="healthCheckResult\.report\.issues && healthCheckResult\.report\.issues\.length"/);
@@ -197,11 +197,11 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(sideRail, /role="tab"/);
     assert.match(sideRail, /id="side-tab-config-codex"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'codex' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-config-opencode"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'opencode' \? 'page' : null"/);
-    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']) {
+    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
         assert.match(sideRail, new RegExp(`id=\"side-tab-config-${mode}\"[\\s\\S]*?side\\.config\\.${mode}\\.meta`));
     }
     assert.doesNotMatch(sideRail, /currentProvider|currentClaudeConfig|currentOpenclawConfig|opencodeModel|kilocodeModel/);
-    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']) {
+    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
         assert.match(sideRail, new RegExp(`id=\"side-tab-config-${mode}\"[\\s\\S]*?:class=\"\\['side-item', 'side-item-compact'`));
     }
     assert.match(layoutShell, /\.side-item-compact\s*\{[\s\S]*padding-top:\s*7px;[\s\S]*padding-bottom:\s*7px;[\s\S]*gap:\s*2px;/);

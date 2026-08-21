@@ -1,0 +1,96 @@
+<!-- Pi 配置 -->
+                <div
+                    v-show="mainTab === 'config' && configMode === 'pi'"
+                    class="mode-content mode-cards"
+                    id="panel-config-pi"
+                    role="tabpanel"
+                    :aria-labelledby="forceCompactLayout ? 'tab-config' : 'side-tab-config-pi'">
+                <div v-if="forceCompactLayout && !sessionStandalone" class="segmented-control">
+                    <button v-if="isConfigModeVisible('codex')" type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
+                    <button v-if="isConfigModeVisible('claude')" type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
+                    <button v-if="isConfigModeVisible('openclaw')" type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
+                    <button v-if="isConfigModeVisible('opencode')" type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
+                    <button v-if="isConfigModeVisible('kilocode')" type="button" :class="['segment', { active: configMode === 'kilocode' }]" @click="switchConfigMode('kilocode')">{{ t('tab.config.kilocode') }}</button>
+                    <button v-if="isConfigModeVisible('pi')" type="button" :class="['segment', { active: configMode === 'pi' }]" @click="switchConfigMode('pi')">{{ t('tab.config.pi') }}</button>
+                </div>
+                <section class="tool-config-write-card" :aria-label="t('toolConfig.pi.title')">
+                    <div class="tool-config-write-copy">
+                        <div class="tool-config-write-title">{{ t('toolConfig.pi.title') }}</div>
+                        <p class="tool-config-write-desc">{{ t('toolConfig.pi.desc') }}</p>
+                    </div>
+                    <label class="settings-toggle-row tool-config-write-toggle">
+                        <input
+                            type="checkbox"
+                            autocomplete="off"
+                            :checked="isToolConfigWriteAllowed('pi')"
+                            :disabled="toolConfigPermissionSaving.pi"
+                            @change="setToolConfigPermission('pi', $event.target.checked)">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        <span>{{ toolConfigPermissionStatusLabel('pi') }}</span>
+                    </label>
+                </section>
+
+                <!-- 写入路径展示 -->
+                <section class="settings-card settings-card--wide openclaw-summary-card" aria-label="Pi 配置路径">
+                    <div class="settings-card-body">
+                        <div class="openclaw-summary-header">
+                            <div>
+                                <div class="summary-eyebrow">PI</div>
+                                <div class="summary-title">配置写入路径</div>
+                            </div>
+                        </div>
+                        <div class="openclaw-summary-grid">
+                            <div class="openclaw-summary-item">
+                                <div class="summary-item-label">全局配置</div>
+                                <div class="summary-item-value">~/.pi/config.json</div>
+                            </div>
+                            <div class="openclaw-summary-item">
+                                <div class="summary-item-label">项目配置</div>
+                                <div class="summary-item-value"><cwd>/.pi/config.json</cwd></div>
+                            </div>
+                        </div>
+                        <div class="openclaw-diagnostic-note">
+                            修改配置后，内容将写入上述对应文件。
+                        </div>
+                    </div>
+                </section>
+
+                <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('pi') }">
+                    <div class="tool-config-write-body">
+                        <section class="settings-card settings-card--wide">
+                            <div class="settings-card-body">
+                                <div class="card-list">
+                                    <div class="card" role="button" tabindex="0">
+                                        <div class="card-leading">
+                                            <div class="card-icon">📄</div>
+                                            <div class="card-content">
+                                                <div class="card-title">config.json</div>
+                                                <div class="card-subtitle">全局 Pi 配置文件</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-trailing">
+                                            <span class="pill empty">{{ t('pi.status.readOnly') }}</span>
+                                            <div class="card-actions" @click.stop>
+                                                <button class="card-action-btn" @click="openPiConfigFile('global')" :disabled="!isToolConfigWriteAllowed('pi')" :title="t('pi.config.openGlobal')">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                                        <path d="M15 3h6v6"/>
+                                                        <path d="M10 14L21 3"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <div v-if="!isToolConfigWriteAllowed('pi')" class="tool-config-write-overlay">
+                            <div class="tool-config-write-overlay-card">
+                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.pi.lockedTitle') }}</div>
+                                <p>{{ t('toolConfig.pi.lockedDesc') }}</p>
+                                <button type="button" class="btn-tool" @click="setToolConfigPermission('pi', true)" :disabled="toolConfigPermissionSaving.pi">{{ t('toolConfig.enableWrite') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>

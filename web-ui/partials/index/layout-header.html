@@ -258,6 +258,21 @@
                             <span>{{ t('side.config.kilocode.meta') }}</span>
                         </div>
                     </button>
+                    <button
+                        v-if="isConfigModeVisible('pi')"
+                        id="side-tab-config-pi"
+                        data-main-tab="config"
+                        data-config-mode="pi"
+                        :aria-current="mainTab === 'config' && configMode === 'pi' ? 'page' : null"
+                        :class="['side-item', 'side-item-compact', { active: isConfigModeNavActive('pi') }]"
+                        @pointerdown="onConfigTabPointerDown('pi', $event)"
+                        @click="onConfigTabClick('pi', $event)">
+                        <span class="side-item-icon" aria-hidden="true">P</span>
+                        <div class="side-item-title">{{ t('side.config.pi') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('side.config.pi.meta') }}</span>
+                        </div>
+                    </button>
                 </div>
 
 

@@ -147,7 +147,7 @@
             }
             const resolvedMode = configModeSet.has(normalizedMode) ? normalizedMode : 'codex';
             if (typeof this.isConfigModeVisible === 'function' && !this.isConfigModeVisible(resolvedMode)) {
-                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].find(m => this.isConfigModeVisible(m)) || 'codex';
+                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].find(m => this.isConfigModeVisible(m)) || 'codex';
                 this.configMode = configModeSet.has(fallback) ? fallback : 'codex';
             } else {
                 this.configMode = resolvedMode;

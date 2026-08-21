@@ -12,7 +12,8 @@ export const CONFIG_MODE_SET = new Set([
     'claude',
     'openclaw',
     'opencode',
-    'kilocode'
+    'kilocode',
+    'pi'
 ]);
 
 export function getProviderConfigModeMeta(mode) {

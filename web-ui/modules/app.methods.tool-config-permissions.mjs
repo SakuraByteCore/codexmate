@@ -3,7 +3,7 @@ export function createToolConfigPermissionMethods(options = {}) {
 
     function normalizeTarget(value) {
         const target = typeof value === 'string' ? value.trim().toLowerCase() : '';
-        return target === 'codex' || target === 'claude' || target === 'opencode' || target === 'kilocode' || target === 'openclaw' ? target : '';
+        return target === 'codex' || target === 'claude' || target === 'opencode' || target === 'kilocode' || target === 'openclaw' || target === 'pi' ? target : '';
     }
 
     function normalizePermissions(value) {
@@ -13,7 +13,8 @@ export function createToolConfigPermissionMethods(options = {}) {
             claude: source.claude === true,
             opencode: source.opencode === true,
             kilocode: source.kilocode === true,
-            openclaw: source.openclaw === true
+            openclaw: source.openclaw === true,
+            pi: source.pi === true
         };
     }
 

@@ -1,7 +1,9 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, resolveComponent: _resolveComponent, withCtx: _withCtx, createVNode: _createVNode, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
 
 return function render(_ctx, _cache) {
+  const _component_cwd = _resolveComponent("cwd")
+
   return (_openBlock(), _createElementBlock(_Fragment, null, [
     (!_ctx.sessionStandalone)
       ? (_openBlock(), _createElementBlock("div", {
@@ -366,6 +368,27 @@ return function render(_ctx, _cache) {
                       _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.kilocode')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "side-item-meta" }, [
                         _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.kilocode.meta')), 1 /* TEXT */)
+                      ])
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                  : _createCommentVNode("v-if", true),
+                (_ctx.isConfigModeVisible('pi'))
+                  ? (_openBlock(), _createElementBlock("button", {
+                      key: 5,
+                      id: "side-tab-config-pi",
+                      "data-main-tab": "config",
+                      "data-config-mode": "pi",
+                      "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'pi' ? 'page' : null,
+                      class: _normalizeClass(['side-item', 'side-item-compact', { active: _ctx.isConfigModeNavActive('pi') }]),
+                      onPointerdown: $event => (_ctx.onConfigTabPointerDown('pi', $event)),
+                      onClick: $event => (_ctx.onConfigTabClick('pi', $event))
+                    }, [
+                      _createElementVNode("span", {
+                        class: "side-item-icon",
+                        "aria-hidden": "true"
+                      }, "P"),
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.pi')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "side-item-meta" }, [
+                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.pi.meta')), 1 /* TEXT */)
                       ])
                     ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true)
@@ -3089,6 +3112,192 @@ return function render(_ctx, _cache) {
           ], 8 /* PROPS */, ["aria-labelledby"]), [
             [_vShow, _ctx.mainTab === 'config' && _ctx.configMode === 'kilocode']
           ]),
+          _createCommentVNode(" Pi 配置 "),
+          _withDirectives(_createElementVNode("div", {
+            class: "mode-content mode-cards",
+            id: "panel-config-pi",
+            role: "tabpanel",
+            "aria-labelledby": _ctx.forceCompactLayout ? 'tab-config' : 'side-tab-config-pi'
+          }, [
+            (_ctx.forceCompactLayout && !_ctx.sessionStandalone)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 0,
+                  class: "segmented-control"
+                }, [
+                  (_ctx.isConfigModeVisible('codex'))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 0,
+                        type: "button",
+                        class: _normalizeClass(['segment', { active: _ctx.configMode === 'codex' }]),
+                        onClick: $event => (_ctx.switchConfigMode('codex'))
+                      }, _toDisplayString(_ctx.t('tab.config.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.isConfigModeVisible('claude'))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 1,
+                        type: "button",
+                        class: _normalizeClass(['segment', { active: _ctx.configMode === 'claude' }]),
+                        onClick: $event => (_ctx.switchConfigMode('claude'))
+                      }, _toDisplayString(_ctx.t('tab.config.claude')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.isConfigModeVisible('openclaw'))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 2,
+                        type: "button",
+                        class: _normalizeClass(['segment', { active: _ctx.configMode === 'openclaw' }]),
+                        onClick: $event => (_ctx.switchConfigMode('openclaw'))
+                      }, _toDisplayString(_ctx.t('tab.config.openclaw')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.isConfigModeVisible('opencode'))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 3,
+                        type: "button",
+                        class: _normalizeClass(['segment', { active: _ctx.configMode === 'opencode' }]),
+                        onClick: $event => (_ctx.switchConfigMode('opencode'))
+                      }, _toDisplayString(_ctx.t('tab.config.opencode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.isConfigModeVisible('kilocode'))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 4,
+                        type: "button",
+                        class: _normalizeClass(['segment', { active: _ctx.configMode === 'kilocode' }]),
+                        onClick: $event => (_ctx.switchConfigMode('kilocode'))
+                      }, _toDisplayString(_ctx.t('tab.config.kilocode')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.isConfigModeVisible('pi'))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 5,
+                        type: "button",
+                        class: _normalizeClass(['segment', { active: _ctx.configMode === 'pi' }]),
+                        onClick: $event => (_ctx.switchConfigMode('pi'))
+                      }, _toDisplayString(_ctx.t('tab.config.pi')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true)
+                ]))
+              : _createCommentVNode("v-if", true),
+            _createElementVNode("section", {
+              class: "tool-config-write-card",
+              "aria-label": _ctx.t('toolConfig.pi.title')
+            }, [
+              _createElementVNode("div", { class: "tool-config-write-copy" }, [
+                _createElementVNode("div", { class: "tool-config-write-title" }, _toDisplayString(_ctx.t('toolConfig.pi.title')), 1 /* TEXT */),
+                _createElementVNode("p", { class: "tool-config-write-desc" }, _toDisplayString(_ctx.t('toolConfig.pi.desc')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("label", { class: "settings-toggle-row tool-config-write-toggle" }, [
+                _createElementVNode("input", {
+                  type: "checkbox",
+                  autocomplete: "off",
+                  checked: _ctx.isToolConfigWriteAllowed('pi'),
+                  disabled: _ctx.toolConfigPermissionSaving.pi,
+                  onChange: $event => (_ctx.setToolConfigPermission('pi', $event.target.checked))
+                }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange"]),
+                _createElementVNode("span", { class: "toggle-track" }, [
+                  _createElementVNode("span", { class: "toggle-thumb" })
+                ]),
+                _createElementVNode("span", null, _toDisplayString(_ctx.toolConfigPermissionStatusLabel('pi')), 1 /* TEXT */)
+              ])
+            ], 8 /* PROPS */, ["aria-label"]),
+            _createCommentVNode(" 写入路径展示 "),
+            _createElementVNode("section", {
+              class: "settings-card settings-card--wide openclaw-summary-card",
+              "aria-label": "Pi 配置路径"
+            }, [
+              _createElementVNode("div", { class: "settings-card-body" }, [
+                _createElementVNode("div", { class: "openclaw-summary-header" }, [
+                  _createElementVNode("div", null, [
+                    _createElementVNode("div", { class: "summary-eyebrow" }, "PI"),
+                    _createElementVNode("div", { class: "summary-title" }, "配置写入路径")
+                  ])
+                ]),
+                _createElementVNode("div", { class: "openclaw-summary-grid" }, [
+                  _createElementVNode("div", { class: "openclaw-summary-item" }, [
+                    _createElementVNode("div", { class: "summary-item-label" }, "全局配置"),
+                    _createElementVNode("div", { class: "summary-item-value" }, "~/.pi/config.json")
+                  ]),
+                  _createElementVNode("div", { class: "openclaw-summary-item" }, [
+                    _createElementVNode("div", { class: "summary-item-label" }, "项目配置"),
+                    _createElementVNode("div", { class: "summary-item-value" }, [
+                      _createVNode(_component_cwd, null, {
+                        default: _withCtx(() => [
+                          _createTextVNode("/.pi/config.json")
+                        ]),
+                        _: 1 /* STABLE */
+                      })
+                    ])
+                  ])
+                ]),
+                _createElementVNode("div", { class: "openclaw-diagnostic-note" }, " 修改配置后，内容将写入上述对应文件。 ")
+              ])
+            ]),
+            _createElementVNode("div", {
+              class: _normalizeClass(["tool-config-write-scope", { locked: !_ctx.isToolConfigWriteAllowed('pi') }])
+            }, [
+              _createElementVNode("div", { class: "tool-config-write-body" }, [
+                _createElementVNode("section", { class: "settings-card settings-card--wide" }, [
+                  _createElementVNode("div", { class: "settings-card-body" }, [
+                    _createElementVNode("div", { class: "card-list" }, [
+                      _createElementVNode("div", {
+                        class: "card",
+                        role: "button",
+                        tabindex: "0"
+                      }, [
+                        _createElementVNode("div", { class: "card-leading" }, [
+                          _createElementVNode("div", { class: "card-icon" }, "📄"),
+                          _createElementVNode("div", { class: "card-content" }, [
+                            _createElementVNode("div", { class: "card-title" }, "config.json"),
+                            _createElementVNode("div", { class: "card-subtitle" }, "全局 Pi 配置文件")
+                          ])
+                        ]),
+                        _createElementVNode("div", { class: "card-trailing" }, [
+                          _createElementVNode("span", { class: "pill empty" }, _toDisplayString(_ctx.t('pi.status.readOnly')), 1 /* TEXT */),
+                          _createElementVNode("div", {
+                            class: "card-actions",
+                            onClick: _withModifiers(() => {}, ["stop"])
+                          }, [
+                            _createElementVNode("button", {
+                              class: "card-action-btn",
+                              onClick: $event => (_ctx.openPiConfigFile('global')),
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi'),
+                              title: _ctx.t('pi.config.openGlobal')
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" }),
+                                _createElementVNode("path", { d: "M15 3h6v6" }),
+                                _createElementVNode("path", { d: "M10 14L21 3" })
+                              ]))
+                            ], 8 /* PROPS */, ["onClick", "disabled", "title"])
+                          ], 8 /* PROPS */, ["onClick"])
+                        ])
+                      ])
+                    ])
+                  ])
+                ]),
+                (!_ctx.isToolConfigWriteAllowed('pi'))
+                  ? (_openBlock(), _createElementBlock("div", {
+                      key: 0,
+                      class: "tool-config-write-overlay"
+                    }, [
+                      _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                        _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.pi.lockedTitle')), 1 /* TEXT */),
+                        _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.pi.lockedDesc')), 1 /* TEXT */),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool",
+                          onClick: $event => (_ctx.setToolConfigPermission('pi', true)),
+                          disabled: _ctx.toolConfigPermissionSaving.pi
+                        }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ]))
+                  : _createCommentVNode("v-if", true)
+              ])
+            ], 2 /* CLASS */)
+          ], 8 /* PROPS */, ["aria-labelledby"]), [
+            [_vShow, _ctx.mainTab === 'config' && _ctx.configMode === 'pi']
+          ]),
           _createCommentVNode(" 会话浏览模式 "),
           _withDirectives(_createElementVNode("div", {
             class: "mode-content",
@@ -4872,6 +5081,17 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "toggle-thumb" })
                           ]),
                           _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.kilocode')), 1 /* TEXT */)
+                        ]),
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.configModeVisibility.pi,
+                            onChange: $event => (_ctx.setConfigModeVisibility('pi', $event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('tab.config.pi')), 1 /* TEXT */)
                         ])
                       ]),
                       _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.configTabs.hint')), 1 /* TEXT */)
@@ -9679,3 +9899,4 @@ return function render(_ctx, _cache) {
   ], 64 /* STABLE_FRAGMENT */))
 }
 })();
+

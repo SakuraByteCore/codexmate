@@ -360,7 +360,7 @@ export function createSessionActionMethods(options = {}) {
         normalizeConfigModeVisibility(value) {
             const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
             const result = {};
-            for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']) {
+            for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
                 result[mode] = typeof source[mode] === 'boolean' ? source[mode] : true;
             }
             return result;
@@ -374,8 +374,8 @@ export function createSessionActionMethods(options = {}) {
 
         setConfigModeVisibility(mode, visible) {
             const normalizedMode = typeof mode === 'string' ? mode.trim().toLowerCase() : '';
-            if (!normalizedMode || !['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].includes(normalizedMode)) return;
-            const visibility = this.configModeVisibility || { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true };
+            if (!normalizedMode || !['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].includes(normalizedMode)) return;
+            const visibility = this.configModeVisibility || { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true, pi: true };
             const next = { ...visibility, [normalizedMode]: !!visible };
             const visibleCount = Object.values(next).filter(Boolean).length;
             if (visibleCount === 0) {
@@ -387,7 +387,7 @@ export function createSessionActionMethods(options = {}) {
                 this.persistWebUiPreferences({ configModeVisibility: next });
             }
             if (this.mainTab === 'config' && this.configMode === normalizedMode && !next[normalizedMode]) {
-                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].find(m => next[m] !== false);
+                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].find(m => next[m] !== false);
                 if (fallback) this.switchConfigMode(fallback);
             }
         },

@@ -457,7 +457,8 @@ export function createWebUiPreferencesMethods(options = {}) {
                         claude: source.toolConfigPermissions.claude === true,
                         opencode: source.toolConfigPermissions.opencode === true,
                         kilocode: source.toolConfigPermissions.kilocode === true,
-                        openclaw: source.toolConfigPermissions.openclaw === true
+                        openclaw: source.toolConfigPermissions.openclaw === true,
+                        pi: source.toolConfigPermissions.pi === true
                     };
                 }
                 if (Array.isArray(source.deletedClaudeSettingsImports)) {

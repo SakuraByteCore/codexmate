@@ -145,7 +145,8 @@ export function createStartupClaudeMethods(options = {}) {
                             claude: statusRes.toolConfigPermissions.claude === true,
                             opencode: statusRes.toolConfigPermissions.opencode === true,
                             kilocode: statusRes.toolConfigPermissions.kilocode === true,
-                            openclaw: statusRes.toolConfigPermissions.openclaw === true
+                            openclaw: statusRes.toolConfigPermissions.openclaw === true,
+                            pi: statusRes.toolConfigPermissions.pi === true
                         };
                     }
                     this.providersList = listRes.providers;

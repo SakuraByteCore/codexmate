@@ -170,6 +170,11 @@
                                             <span class="toggle-track"><span class="toggle-thumb"></span></span>
                                             <span>{{ t('tab.config.kilocode') }}</span>
                                         </label>
+                                        <label class="settings-toggle-row">
+                                            <input type="checkbox" :checked="configModeVisibility.pi" @change="setConfigModeVisibility('pi', $event.target.checked)">
+                                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                            <span>{{ t('tab.config.pi') }}</span>
+                                        </label>
                                         </div>
                                         <p class="settings-card-hint">{{ t('settings.configTabs.hint') }}</p>
                                     </div>

@@ -197,7 +197,8 @@ test('config side navigation meta labels are localized instead of stale English 
         'side.config.claude.meta',
         'side.config.openclaw.meta',
         'side.config.opencode.meta',
-        'side.config.kilocode.meta'
+        'side.config.kilocode.meta',
+        'side.config.pi.meta'
     ];
     for (const code of ['zh', 'zh-tw', 'ja', 'vi']) {
         for (const key of keys) {
