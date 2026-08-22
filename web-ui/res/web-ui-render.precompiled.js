@@ -3355,6 +3355,17 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("div", { class: "form-group" }, [
                         _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.models')), 1 /* TEXT */),
+                        (_ctx.piRemoteModelsLoading)
+                          ? (_openBlock(), _createElementBlock("p", {
+                              key: 0,
+                              class: "config-template-hint"
+                            }, _toDisplayString(_ctx.t('pi.providers.models.remoteLoading')), 1 /* TEXT */))
+                          : (_ctx.piRemoteModelError)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 1,
+                                class: "config-template-hint"
+                              }, _toDisplayString(_ctx.piRemoteModelError) + " · " + _toDisplayString(_ctx.t('pi.providers.models.remoteFailed')), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
                         _createElementVNode("div", { class: "card-list" }, [
                           (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.editingPiProvider.form.models, (model, index) => {
                             return (_openBlock(), _createElementBlock("div", {
@@ -3369,8 +3380,9 @@ return function render(_ctx, _cache) {
                                   autocomplete: "off",
                                   spellcheck: "false",
                                   placeholder: "claude-sonnet-4",
-                                  disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                                  disabled: !_ctx.isToolConfigWriteAllowed('pi'),
+                                  onInput: $event => (_ctx.piModelSearch = model.id)
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
                                   [_vModelText, model.id]
                                 ]),
                                 _createElementVNode("button", {
@@ -3381,69 +3393,50 @@ return function render(_ctx, _cache) {
                                 }, _toDisplayString(_ctx.t('pi.providers.models.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                               ])
                             ]))
-                          }), 128 /* KEYED_FRAGMENT */))
-                        ]),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool",
-                          onClick: _ctx.addPiProviderModel,
-                          disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                        }, _toDisplayString(_ctx.t('pi.providers.models.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                          }), 128 /* KEYED_FRAGMENT */)),
+                          (_ctx.editingPiProvider.form.models.length === 0)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 0,
+                                class: "card"
+                              }, [
+                                _withDirectives(_createElementVNode("input", {
+                                  class: "form-input",
+                                  type: "text",
+                                  "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
+                                  autocomplete: "off",
+                                  spellcheck: "false",
+                                  placeholder: _ctx.t('pi.providers.models.search'),
+                                  onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
+                                  [_vModelText, _ctx.piModelSearch]
+                                ])
+                              ]))
+                            : _createCommentVNode("v-if", true),
+                          (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piFilteredRemoteModels().length > 0)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 1,
+                                class: "card"
+                              }, [
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piFilteredRemoteModels(), (id) => {
+                                  return (_openBlock(), _createElementBlock("button", {
+                                    type: "button",
+                                    class: "btn-tool",
+                                    style: {"width":"100%","text-align":"left","justify-content":"flex-start"},
+                                    key: id,
+                                    onClick: $event => (_ctx.addPiRemoteModel(id))
+                                  }, _toDisplayString(id), 9 /* TEXT, PROPS */, ["onClick"]))
+                                }), 128 /* KEYED_FRAGMENT */)),
+                                _createElementVNode("p", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */)
+                              ]))
+                            : _createCommentVNode("v-if", true),
+                          (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piFilteredRemoteModels().length === 0)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 2,
+                                class: "config-template-hint"
+                              }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true)
+                        ])
                       ]),
-                      (_ctx.piRemoteModelsLoading || _ctx.piRemoteModelError || _ctx.piRemoteModels.length > 0)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 0,
-                            class: "form-group"
-                          }, [
-                            (_ctx.piRemoteModelsLoading)
-                              ? (_openBlock(), _createElementBlock("p", {
-                                  key: 0,
-                                  class: "config-template-hint"
-                                }, _toDisplayString(_ctx.t('pi.providers.models.remoteLoading')), 1 /* TEXT */))
-                              : (_ctx.piRemoteModelError)
-                                ? (_openBlock(), _createElementBlock("p", {
-                                    key: 1,
-                                    class: "config-template-hint"
-                                  }, _toDisplayString(_ctx.piRemoteModelError) + " · " + _toDisplayString(_ctx.t('pi.providers.models.remoteFailed')), 1 /* TEXT */))
-                                : (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
-                                    _createElementVNode("p", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */),
-                                    _withDirectives(_createElementVNode("input", {
-                                      class: "form-input",
-                                      type: "text",
-                                      "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
-                                      autocomplete: "off",
-                                      spellcheck: "false",
-                                      placeholder: _ctx.t('pi.providers.models.search')
-                                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                                      [_vModelText, _ctx.piModelSearch]
-                                    ]),
-                                    _createElementVNode("div", {
-                                      class: "card-list",
-                                      style: {"margin-top":"8px"}
-                                    }, [
-                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piFilteredRemoteModels(), (id) => {
-                                        return (_openBlock(), _createElementBlock("div", {
-                                          class: "card",
-                                          key: id
-                                        }, [
-                                          _createElementVNode("button", {
-                                            type: "button",
-                                            class: "btn-tool",
-                                            style: {"width":"100%","text-align":"left","justify-content":"flex-start"},
-                                            onClick: $event => (_ctx.addPiRemoteModel(id))
-                                          }, _toDisplayString(id), 9 /* TEXT, PROPS */, ["onClick"])
-                                        ]))
-                                      }), 128 /* KEYED_FRAGMENT */)),
-                                      (_ctx.piFilteredRemoteModels().length === 0)
-                                        ? (_openBlock(), _createElementBlock("p", {
-                                            key: 0,
-                                            class: "config-template-hint"
-                                          }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
-                                        : _createCommentVNode("v-if", true)
-                                    ])
-                                  ], 64 /* STABLE_FRAGMENT */))
-                          ]))
-                        : _createCommentVNode("v-if", true),
                       _createElementVNode("div", { class: "settings-tab-actions" }, [
                         _createElementVNode("button", {
                           type: "button",

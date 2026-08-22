@@ -1340,7 +1340,6 @@ const zh = Object.freeze({
     'pi.providers.fields.apiKey': 'API Key',
     'pi.providers.fields.models': '模型',
     'pi.providers.fields.configJson': '配置 JSON',
-    'pi.providers.models.add': '添加模型',
     'pi.providers.models.remove': '删除',
     'pi.providers.models.search': '搜索可用模型…',
     'pi.providers.models.remoteCount': '已拉取 {count} 个可用模型，点击添加',

@@ -182,17 +182,6 @@ export function createPiConfigMethods({ api: apiClient }) {
             const list = this.editingPiProvider.form.models;
             if (Array.isArray(list)) list.splice(index, 1);
         },
-        addPiProviderModel() {
-            if (!this.editingPiProvider) return;
-            this.editingPiProvider.form.models.push({
-                id: '',
-                name: '',
-                reasoning: false,
-                contextWindow: 128000,
-                maxTokens: 32000,
-                input: ''
-            });
-        },
         async fetchPiRemoteModels() {
             const provider = this.editingPiProvider;
             if (!provider) return;
@@ -219,26 +208,25 @@ export function createPiConfigMethods({ api: apiClient }) {
             }
         },
         piFilteredRemoteModels() {
-            const existing = new Set((this.editingPiProvider && Array.isArray(this.editingPiProvider.form.models)
-                ? this.editingPiProvider.form.models : []).map((m) => m.id).filter(Boolean));
             const query = (this.piModelSearch || '').trim().toLowerCase();
-            return this.piRemoteModels.filter((id) => {
-                if (existing.has(id)) return false;
-                return !query || id.toLowerCase().includes(query);
-            }).slice(0, 50);
+            if (!query) return [];
+            return this.piRemoteModels.filter((id) => id.toLowerCase().includes(query)).slice(0, 50);
         },
         addPiRemoteModel(modelId) {
             if (!this.isToolConfigWriteAllowed('pi') || !this.editingPiProvider) return;
+            const trimmed = typeof modelId === 'string' ? modelId.trim() : '';
+            if (!trimmed) return;
             const list = this.editingPiProvider.form.models;
             if (!Array.isArray(list)) return;
             list.splice(0, list.length, {
-                id: modelId,
-                name: modelId,
+                id: trimmed,
+                name: trimmed,
                 reasoning: false,
                 contextWindow: 128000,
                 maxTokens: 32000,
                 input: ''
             });
+            this.piModelSearch = '';
         },
         async confirmDeletePiProvider() {
             if (!this.editingPiProvider) return;

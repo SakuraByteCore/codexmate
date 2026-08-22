@@ -1342,7 +1342,6 @@ const en = Object.freeze({
     'pi.providers.fields.apiKey': 'API Key',
     'pi.providers.fields.models': 'Models',
     'pi.providers.fields.configJson': 'Config JSON',
-    'pi.providers.models.add': 'Add Model',
     'pi.providers.models.remove': 'Remove',
     'pi.providers.models.search': 'Search available models…',
     'pi.providers.models.remoteCount': '{count} models available, click to add',

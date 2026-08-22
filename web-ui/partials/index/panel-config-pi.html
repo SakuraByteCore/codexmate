@@ -89,29 +89,24 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">{{ t('pi.providers.fields.models') }}</label>
+                                <p v-if="piRemoteModelsLoading" class="config-template-hint">{{ t('pi.providers.models.remoteLoading') }}</p>
+                                <p v-else-if="piRemoteModelError" class="config-template-hint">{{ piRemoteModelError }} · {{ t('pi.providers.models.remoteFailed') }}</p>
                                 <div class="card-list">
                                     <div class="card" v-for="(model, index) in editingPiProvider.form.models" :key="index">
                                         <div class="input-with-toggle">
-                                            <input class="form-input" type="text" v-model="model.id" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4" :disabled="!isToolConfigWriteAllowed('pi')">
+                                            <input class="form-input" type="text" v-model="model.id" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4" :disabled="!isToolConfigWriteAllowed('pi')" @input="piModelSearch = model.id">
                                             <button type="button" class="btn-tool input-toggle-btn" @click="editingPiProvider.form.models.splice(index, 1)" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.remove') }}</button>
                                         </div>
                                     </div>
-                                </div>
-                                <button type="button" class="btn-tool" @click="addPiProviderModel" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.add') }}</button>
-                            </div>
-                            <div class="form-group" v-if="piRemoteModelsLoading || piRemoteModelError || piRemoteModels.length > 0">
-                                <p v-if="piRemoteModelsLoading" class="config-template-hint">{{ t('pi.providers.models.remoteLoading') }}</p>
-                                <p v-else-if="piRemoteModelError" class="config-template-hint">{{ piRemoteModelError }} · {{ t('pi.providers.models.remoteFailed') }}</p>
-                                <template v-else>
-                                    <p class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
-                                    <input class="form-input" type="text" v-model="piModelSearch" autocomplete="off" spellcheck="false" :placeholder="t('pi.providers.models.search')">
-                                    <div class="card-list" style="margin-top: 8px;">
-                                        <div class="card" v-for="id in piFilteredRemoteModels()" :key="id">
-                                            <button type="button" class="btn-tool" style="width: 100%; text-align: left; justify-content: flex-start;" @click="addPiRemoteModel(id)">{{ id }}</button>
-                                        </div>
-                                        <p v-if="piFilteredRemoteModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
+                                    <div class="card" v-if="editingPiProvider.form.models.length === 0">
+                                        <input class="form-input" type="text" v-model="piModelSearch" autocomplete="off" spellcheck="false" :placeholder="t('pi.providers.models.search')" @keydown.enter.prevent="addPiRemoteModel(piModelSearch.trim())">
                                     </div>
-                                </template>
+                                    <div class="card" v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piFilteredRemoteModels().length > 0">
+                                        <button type="button" class="btn-tool" style="width: 100%; text-align: left; justify-content: flex-start;" v-for="id in piFilteredRemoteModels()" :key="id" @click="addPiRemoteModel(id)">{{ id }}</button>
+                                        <p class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
+                                    </div>
+                                    <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piFilteredRemoteModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
+                                </div>
                             </div>
                             <div class="settings-tab-actions">
                                 <button type="button" class="btn-tool" @click="confirmDeletePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.delete') }}</button>

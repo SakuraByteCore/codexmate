@@ -1340,7 +1340,6 @@ const zhTw = Object.freeze({
     'pi.providers.fields.apiKey': 'API Key',
     'pi.providers.fields.models': '模型',
     'pi.providers.fields.configJson': '組態 JSON',
-    'pi.providers.models.add': '新增模型',
     'pi.providers.models.remove': '刪除',
     'pi.providers.models.search': '搜尋可用模型…',
     'pi.providers.models.remoteCount': '已取得 {count} 個可用模型，點擊新增',

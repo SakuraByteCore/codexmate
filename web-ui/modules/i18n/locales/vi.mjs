@@ -1311,7 +1311,6 @@ const vi = Object.freeze({
     'pi.providers.fields.apiKey': 'API Key',
     'pi.providers.fields.models': 'Mô hình',
     'pi.providers.fields.configJson': 'Cấu hình JSON',
-    'pi.providers.models.add': 'Thêm mô hình',
     'pi.providers.models.remove': 'Xóa',
     'pi.providers.models.search': 'Tìm kiếm mô hình khả dụng…',
     'pi.providers.models.remoteCount': 'Đã lấy {count} mô hình, bấm để thêm',

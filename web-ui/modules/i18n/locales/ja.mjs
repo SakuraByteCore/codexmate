@@ -1343,7 +1343,6 @@ const ja = Object.freeze({
     'pi.providers.fields.apiKey': 'API Key',
     'pi.providers.fields.models': 'モデル',
     'pi.providers.fields.configJson': '設定 JSON',
-    'pi.providers.models.add': 'モデルを追加',
     'pi.providers.models.remove': '削除',
     'pi.providers.models.search': '利用可能なモデルを検索…',
     'pi.providers.models.remoteCount': '{count} 個のモデルを取得しました。クリックで追加',
