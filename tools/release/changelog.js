@@ -251,7 +251,7 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
     if (!contributors.length) {
         lines.push('- Unknown contributor');
     } else {
-        lines.push(contributors.map(formatContributorCard).join('\n&nbsp;&nbsp;\n'));
+        lines.push(contributors.map((contributor) => formatContributorCard(contributor).replace(/\r?\n\s*/g, '')).join(' '));
     }
     return `${lines.join('\n').replace(/\n{3,}/g, '\n\n')}\n`;
 }

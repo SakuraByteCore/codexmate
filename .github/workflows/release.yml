@@ -243,18 +243,10 @@ jobs:
             exit 1
           fi
 
-          tmp_logins=$(mktemp)
-          trap 'rm -f "${tmp_logins}"' EXIT
-
-          # Fetch PR authors in range using base...head comparison
-          gh pr list \
-            --repo "${GITHUB_REPOSITORY}" \
-            --limit 500 \
-            --json author \
-            --jq '.[].author.login' 2>/dev/null | sort -u | grep -ivE '^anupamme$' > "${tmp_logins}" || true
+          tmp_merged=$(mktemp)
+          trap 'rm -f "${tmp_merged}"' EXIT
 
           # Fetch merged PRs in range using commits
-          tmp_merged=$(mktemp)
           git log "${LATEST_TAG}...${RELEASE_TAG}" --pretty=format:%s \
             | grep -oE '#[0-9]+' \
             | sed 's/^#//' \
@@ -266,11 +258,9 @@ jobs:
 
           if [ -s "${tmp_merged}" ]; then
             grep -ivE '^anupamme$' "${tmp_merged}" > "${CONTRIBUTORS_FILE}" || true
-          elif [ -s "${tmp_logins}" ]; then
-            cat "${tmp_logins}" > "${CONTRIBUTORS_FILE}"
           else
-            echo "::notice title=No contributors found::No contributors in this range."
-            echo "" > "${CONTRIBUTORS_FILE}"
+            echo "::notice title=No PRs in range::No merged PRs between tags; falling back to commit authors."
+            printf '' > "${CONTRIBUTORS_FILE}"
           fi
       - name: Generate release notes from actual commit range
         if: ${{ steps.release_exists.outputs.skip != 'true' }}
