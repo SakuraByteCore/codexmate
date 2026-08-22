@@ -112,10 +112,6 @@
                                 </div>
                                 <button type="button" class="btn-tool" @click="editingPiProvider.form.models.push({ id: '', name: '', reasoning: '', input: '', contextWindow: '', maxTokens: '' })" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.add') }}</button>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">{{ t('pi.providers.fields.configJson') }}</label>
-                                <textarea class="template-textarea" rows="8" v-model="editingPiProvider.form.configJsonDraft" spellcheck="false" :readonly="!isToolConfigWriteAllowed('pi')" placeholder="{}"></textarea>
-                            </div>
                             <div class="settings-tab-actions">
                                 <button type="button" class="btn-tool" @click="confirmDeletePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.delete') }}</button>
                             </div>

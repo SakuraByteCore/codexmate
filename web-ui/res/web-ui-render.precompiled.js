@@ -3420,19 +3420,6 @@ return function render(_ctx, _cache) {
                           disabled: !_ctx.isToolConfigWriteAllowed('pi')
                         }, _toDisplayString(_ctx.t('pi.providers.models.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                       ]),
-                      _createElementVNode("div", { class: "form-group" }, [
-                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.configJson')), 1 /* TEXT */),
-                        _withDirectives(_createElementVNode("textarea", {
-                          class: "template-textarea",
-                          rows: "8",
-                          "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.configJsonDraft) = $event),
-                          spellcheck: "false",
-                          readonly: !_ctx.isToolConfigWriteAllowed('pi'),
-                          placeholder: "{}"
-                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly"]), [
-                          [_vModelText, _ctx.editingPiProvider.form.configJsonDraft]
-                        ])
-                      ]),
                       _createElementVNode("div", { class: "settings-tab-actions" }, [
                         _createElementVNode("button", {
                           type: "button",

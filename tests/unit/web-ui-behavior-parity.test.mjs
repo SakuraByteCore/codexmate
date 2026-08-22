@@ -941,8 +941,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'resetPiProviderEditing',
         'savePiProvider',
         'savePiProviders',
-        'startAddPiProvider',
-        'tryParseJsonValue'
+        'startAddPiProvider'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',
@@ -951,6 +950,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isDerivedSessionId',
         'isImportToNativeAvailable',
         'isSessionConvertAvailable',
+        'tryParseJsonValue',
         'isSessionNativeAvailable',
         'openSessionStandalone',
         'closeInstallModal',

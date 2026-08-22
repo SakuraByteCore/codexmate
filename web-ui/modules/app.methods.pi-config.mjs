@@ -34,8 +34,7 @@ export function createPiConfigMethods({ api: apiClient }) {
 
             const updatedProvider = {
                 ...existing,
-                ...current,
-                configJson: current
+                ...current
             };
 
             return this.savePiProviders({ ...providers, [providerId]: updatedProvider });
@@ -61,11 +60,11 @@ export function createPiConfigMethods({ api: apiClient }) {
             try {
                 const providerId = this.editingPiProvider.id;
                 const values = this.editingPiProvider.form;
+                const extras = this.editingPiProvider.extras || {};
                 const provider = this.piProviders[providerId] || {};
 
-                const parsedExtras = this.tryParseJsonValue(values.configJsonDraft);
                 const merged = {
-                    ...parsedExtras,
+                    ...extras,
                     baseUrl: values.baseUrl,
                     api: values.api,
                     apiKey: values.apiKey || '',
@@ -99,8 +98,7 @@ export function createPiConfigMethods({ api: apiClient }) {
                     baseUrl: this.addingPiProviderBaseUrl || '',
                     api: this.addingPiProviderApi || 'openai',
                     models: [],
-                    apiKey: '',
-                    configJson: {}
+                    apiKey: ''
                 };
 
                 await this.persistPiProvider(providerId, values);
@@ -160,6 +158,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.editingPiProvider = {
                 id: providerId,
                 form,
+                extras,
                 original: provider
             };
             this.showAddPiProviderModal = false;
@@ -194,17 +193,6 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.resetPiProviderEditing();
             this.message = '供应商已删除';
             this.messageType = 'success';
-        },
-        tryParseJsonValue(raw) {
-            if (typeof raw !== 'string') return {};
-            const trimmed = raw.trim();
-            if (!trimmed) return {};
-            try {
-                const parsed = JSON.parse(trimmed);
-                return isPiPlainObject(parsed) ? parsed : {};
-            } catch (e) {
-                return {};
-            }
         },
         piProviderName(providerId) {
             const provider = this.piProviders[providerId] || {};
