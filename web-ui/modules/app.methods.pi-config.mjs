@@ -169,7 +169,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.addingPiProviderId = '';
             this.addingPiProviderName = '';
             this.addingPiProviderBaseUrl = '';
-            this.addingPiProviderApi = '';
+            this.addingPiProviderApi = 'openai-completions';
             this.addingPiProviderApiKey = '';
             this.addingPiProviderModel = '';
             this.addingPiRemoteModels = [];

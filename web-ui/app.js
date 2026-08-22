@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addingPiProviderId: '',
                 addingPiProviderName: '',
                 addingPiProviderBaseUrl: '',
-                addingPiProviderApi: '',
+                addingPiProviderApi: 'openai-completions',
                 addingPiProviderApiKey: '',
                 addingPiProviderModel: '',
                 addingPiRemoteModels: [],
