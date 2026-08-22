@@ -1335,6 +1335,8 @@ const zhTw = Object.freeze({
     'pi.providers.add': '新增供應商',
     'pi.providers.active': '已啟用',
     'pi.providers.setActive': '設為使用中',
+    'pi.providers.deleteTitle': '刪除 Pi 設定',
+    'pi.providers.deleteMessage': '確定刪除供應商 "{name}"？',
     'pi.providers.fields.name': '名稱',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': '介面格式',

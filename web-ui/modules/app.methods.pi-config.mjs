@@ -253,7 +253,14 @@ export function createPiConfigMethods({ api: apiClient }) {
         async confirmDeletePiProvider() {
             if (!this.editingPiProvider) return;
             const providerId = this.editingPiProvider.id;
-            if (!confirm(`确认删除 Pi 供应商：${providerId}？`)) return;
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('pi.providers.deleteTitle'),
+                message: this.t('pi.providers.deleteMessage', { name: this.piProviderName(providerId) }),
+                confirmText: this.t('confirm.ok'),
+                cancelText: this.t('confirm.cancel'),
+                danger: true
+            });
+            if (!confirmed) return;
             await this.removePiProvider(providerId);
             const updated = { ...this.piProviders };
             delete updated[providerId];

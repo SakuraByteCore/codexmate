@@ -1306,6 +1306,8 @@ const vi = Object.freeze({
     'pi.providers.add': 'Thêm nhà cung cấp',
     'pi.providers.active': 'Đang bật',
     'pi.providers.setActive': 'Đặt thành đang dùng',
+    'pi.providers.deleteTitle': 'Xóa cấu hình Pi',
+    'pi.providers.deleteMessage': 'Xóa nhà cung cấp "{name}"?',
     'pi.providers.fields.name': 'Tên',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': 'API',

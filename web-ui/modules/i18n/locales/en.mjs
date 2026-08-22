@@ -1337,6 +1337,8 @@ const en = Object.freeze({
     'pi.providers.add': 'Add Provider',
     'pi.providers.active': 'Active',
     'pi.providers.setActive': 'Set Active',
+    'pi.providers.deleteTitle': 'Delete Pi Provider',
+    'pi.providers.deleteMessage': 'Delete provider "{name}"?',
     'pi.providers.fields.name': 'Name',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': 'API',

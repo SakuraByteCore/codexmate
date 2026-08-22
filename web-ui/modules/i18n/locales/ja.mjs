@@ -1338,6 +1338,8 @@ const ja = Object.freeze({
     'pi.providers.add': 'プロバイダを追加',
     'pi.providers.active': '有効',
     'pi.providers.setActive': '使用中に設定',
+    'pi.providers.deleteTitle': 'Pi 設定を削除',
+    'pi.providers.deleteMessage': 'プロバイダー「{name}」を削除しますか？',
     'pi.providers.fields.name': '名前',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': 'API 形式',
