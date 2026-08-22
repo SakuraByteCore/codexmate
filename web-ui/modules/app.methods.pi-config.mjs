@@ -14,7 +14,29 @@ export function createPiConfigMethods({ api: apiClient }) {
         async loadPiSettings() {
             const result = await apiClient('read-pi-settings');
             const settings = isPiPlainObject(result && result.settings) ? result.settings : {};
+            this.piActiveProvider = typeof settings.defaultProvider === 'string' ? settings.defaultProvider : '';
+            this.piActiveModel = typeof settings.defaultModel === 'string' ? settings.defaultModel : '';
             return settings;
+        },
+        async switchPiActiveProvider(providerId) {
+            if (!this.isToolConfigWriteAllowed('pi') || this.piSaving) return;
+            const provider = this.piProviders[providerId];
+            if (!isPiPlainObject(provider)) return;
+            const firstModel = Array.isArray(provider.models) && provider.models.length > 0
+                ? (provider.models[0] && provider.models[0].id) || ''
+                : '';
+            const updates = { defaultProvider: providerId };
+            if (firstModel) updates.defaultModel = firstModel;
+            try {
+                const result = await apiClient('write-pi-settings', updates);
+                if (result && result.error) throw new Error(result.error);
+                await this.loadPiSettings();
+                this.message = '已切换为使用该供应商';
+                this.messageType = 'success';
+            } catch (e) {
+                this.message = e && e.message ? e.message : '切换默认供应商失败';
+                this.messageType = 'error';
+            }
         },
         async savePiProviders(providers) {
             return apiClient('write-pi-models', { providers });

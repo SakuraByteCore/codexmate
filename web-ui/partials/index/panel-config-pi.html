@@ -48,7 +48,8 @@
                                         </div>
                                     </div>
                                     <div class="card-trailing">
-                                        <span class="pill empty">{{ t('pi.providers.active') }}</span>
+                                        <span v-if="piActiveProvider === providerId" class="pill configured">{{ t('pi.providers.active') }}</span>
+                                        <button v-else type="button" class="btn-tool" @click.stop="switchPiActiveProvider(providerId)" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.setActive') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -60,7 +61,6 @@
                                 <span class="selector-title">{{ t('pi.providers.editorTitle') }}</span>
                                 <div class="settings-tab-actions">
                                     <button type="button" class="btn-tool" @click="savePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('common.save') }}</button>
-                                    <button type="button" class="btn-tool" @click="resetPiProviderEditing">{{ t('common.cancel') }}</button>
                                 </div>
                             </div>
                             <div class="codex-config-grid">

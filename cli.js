@@ -1205,7 +1205,8 @@ function getApiToolConfigWriteTarget(action) {
     if (kilocodeWriteActions.has(name)) return 'kilocode';
     if (openclawWriteActions.has(name)) return 'openclaw';
     const piWriteActions = new Set([
-        'write-pi-models'
+        'write-pi-models',
+        'write-pi-settings'
     ]);
     if (piWriteActions.has(name)) return 'pi';
     return '';
@@ -1289,6 +1290,34 @@ function readPiSettings(params = {}) {
         return { settings: data || {} };
     } catch (e) {
         return { error: e && e.message ? e.message : '读取 Pi settings.json 失败' };
+    }
+}
+
+function writePiSettings(params = {}) {
+    const updates = {};
+    if (typeof (params && params.defaultProvider) === 'string') updates.defaultProvider = params.defaultProvider;
+    if (typeof (params && params.defaultModel) === 'string') updates.defaultModel = params.defaultModel;
+    if (Object.keys(updates).length === 0) {
+        return { error: '缺少可写入的设置项' };
+    }
+    try {
+        const dir = getPiAgentDir();
+        fs.mkdirSync(dir, { recursive: true });
+        const filePath = path.join(dir, 'settings.json');
+        let existing = {};
+        if (fs.existsSync(filePath)) {
+            try {
+                existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+            } catch (_) {
+                existing = {};
+            }
+            if (!existing || typeof existing !== 'object' || Array.isArray(existing)) existing = {};
+        }
+        const updated = { ...existing, ...updates };
+        fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8');
+        return { success: true, settings: updated };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '写入 Pi settings.json 失败' };
     }
 }
 
@@ -13269,6 +13298,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         }
                         case 'read-pi-settings': {
                             result = readPiSettings(params || {});
+                            break;
+                        }
+                        case 'write-pi-settings': {
+                            result = writePiSettings(params || {});
                             break;
                         }
                         case 'fetch-pi-remote-models': {

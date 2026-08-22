@@ -1334,6 +1334,7 @@ const zh = Object.freeze({
     'pi.providers.editorTitle': '编辑供应商',
     'pi.providers.add': '添加供应商',
     'pi.providers.active': '已启用',
+    'pi.providers.setActive': '设为使用中',
     'pi.providers.fields.name': '名称',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': '接口格式',

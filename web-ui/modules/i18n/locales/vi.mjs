@@ -1305,6 +1305,7 @@ const vi = Object.freeze({
     'pi.providers.editorTitle': 'Chỉnh sửa nhà cung cấp',
     'pi.providers.add': 'Thêm nhà cung cấp',
     'pi.providers.active': 'Đang bật',
+    'pi.providers.setActive': 'Đặt thành đang dùng',
     'pi.providers.fields.name': 'Tên',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': 'API',

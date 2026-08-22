@@ -1336,6 +1336,7 @@ const en = Object.freeze({
     'pi.providers.editorTitle': 'Edit Provider',
     'pi.providers.add': 'Add Provider',
     'pi.providers.active': 'Active',
+    'pi.providers.setActive': 'Set Active',
     'pi.providers.fields.name': 'Name',
     'pi.providers.fields.baseUrl': 'Base URL',
     'pi.providers.fields.api': 'API',

@@ -3230,7 +3230,18 @@ return function render(_ctx, _cache) {
                               ])
                             ]),
                             _createElementVNode("div", { class: "card-trailing" }, [
-                              _createElementVNode("span", { class: "pill empty" }, _toDisplayString(_ctx.t('pi.providers.active')), 1 /* TEXT */)
+                              (_ctx.piActiveProvider === providerId)
+                                ? (_openBlock(), _createElementBlock("span", {
+                                    key: 0,
+                                    class: "pill configured"
+                                  }, _toDisplayString(_ctx.t('pi.providers.active')), 1 /* TEXT */))
+                                : (_openBlock(), _createElementBlock("button", {
+                                    key: 1,
+                                    type: "button",
+                                    class: "btn-tool",
+                                    onClick: _withModifiers($event => (_ctx.switchPiActiveProvider(providerId)), ["stop"]),
+                                    disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                                  }, _toDisplayString(_ctx.t('pi.providers.setActive')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
                             ])
                           ], 8 /* PROPS */, ["onClick"]))
                         }), 128 /* KEYED_FRAGMENT */))
@@ -3256,12 +3267,7 @@ return function render(_ctx, _cache) {
                             class: "btn-tool",
                             onClick: _ctx.savePiProvider,
                             disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
-                          }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "btn-tool",
-                            onClick: _ctx.resetPiProviderEditing
-                          }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"])
+                          }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                         ])
                       ]),
                       _createElementVNode("div", { class: "codex-config-grid" }, [

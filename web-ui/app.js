@@ -139,6 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 piRemoteModelsLoading: false,
                 piRemoteModelError: '',
                 piModelSearch: '',
+                piActiveProvider: '',
+                piActiveModel: '',
                 piShowKey: false,
                 // Plugins
                 pluginsActiveId: 'prompt-templates',
