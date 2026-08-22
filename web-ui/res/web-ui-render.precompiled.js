@@ -3295,15 +3295,23 @@ return function render(_ctx, _cache) {
                         ]),
                         _createElementVNode("div", { class: "form-group codex-config-field" }, [
                           _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.api')), 1 /* TEXT */),
-                          _withDirectives(_createElementVNode("input", {
+                          _withDirectives(_createElementVNode("select", {
                             class: "form-input",
-                            type: "text",
                             "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.api) = $event),
-                            autocomplete: "off",
-                            spellcheck: "false",
-                            placeholder: "openai|claude"
-                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                            [_vModelText, _ctx.editingPiProvider.form.api]
+                            disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                          }, [
+                            _createElementVNode("option", { value: "openai-completions" }, "openai-completions — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiCompletions')), 1 /* TEXT */),
+                            _createElementVNode("option", { value: "openai-responses" }, "openai-responses — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiResponses')), 1 /* TEXT */),
+                            _createElementVNode("option", { value: "anthropic-messages" }, "anthropic-messages — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.anthropicMessages')), 1 /* TEXT */),
+                            _createElementVNode("option", { value: "google-generative-ai" }, "google-generative-ai — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.googleGenerativeAi')), 1 /* TEXT */),
+                            (!['openai-completions', 'openai-responses', 'anthropic-messages', 'google-generative-ai'].includes(_ctx.editingPiProvider.form.api))
+                              ? (_openBlock(), _createElementBlock("option", {
+                                  key: 0,
+                                  value: _ctx.editingPiProvider.form.api
+                                }, _toDisplayString(_ctx.editingPiProvider.form.api || '—'), 9 /* TEXT, PROPS */, ["value"]))
+                              : _createCommentVNode("v-if", true)
+                          ], 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                            [_vModelSelect, _ctx.editingPiProvider.form.api]
                           ])
                         ]),
                         _createElementVNode("div", { class: "form-group codex-config-field" }, [
