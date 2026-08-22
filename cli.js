@@ -1259,6 +1259,24 @@ function writePiModels(params = {}) {
     }
 }
 
+async function fetchPiRemoteModels(params = {}) {
+    const baseUrl = typeof params.baseUrl === 'string' ? params.baseUrl.trim() : '';
+    const apiKey = typeof params.apiKey === 'string' ? params.apiKey.trim() : '';
+    if (!baseUrl || !isValidHttpUrl(baseUrl)) {
+        return { error: 'baseUrl 无效', models: [] };
+    }
+    try {
+        const result = await fetchModelsFromBaseUrl(baseUrl, apiKey);
+        const models = result && Array.isArray(result.models)
+            ? [...new Set(result.models.filter((id) => typeof id === 'string' && id !== ''))].sort()
+            : [];
+        if (models.length > 0) return { models };
+        return { error: (result && result.error) || '未获取到可用模型', models: [] };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '请求失败', models: [] };
+    }
+}
+
 function readPiSettings(params = {}) {
     try {
         const dir = getPiAgentDir();
@@ -13251,6 +13269,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         }
                         case 'read-pi-settings': {
                             result = readPiSettings(params || {});
+                            break;
+                        }
+                        case 'fetch-pi-remote-models': {
+                            result = await fetchPiRemoteModels(params || {});
                             break;
                         }
                         case 'install-status':
