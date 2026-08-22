@@ -231,8 +231,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             if (!this.isToolConfigWriteAllowed('pi') || !this.editingPiProvider) return;
             const list = this.editingPiProvider.form.models;
             if (!Array.isArray(list)) return;
-            if (list.some((m) => m.id === modelId)) return;
-            list.push({
+            list.splice(0, list.length, {
                 id: modelId,
                 name: modelId,
                 reasoning: false,
