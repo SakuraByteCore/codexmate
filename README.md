@@ -49,7 +49,7 @@
 
 Have you ever felt overwhelmed by managing multiple local AI agents? Each has its own config format, session storage, and skills directory.
 
-**Codex Mate** offers a unified control plane to bring order to the chaos. It's a local-first CLI + Web UI designed to manage [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode, and [OpenClaw](https://github.com/moeru-ai/openclaw) seamlessly.
+**Codex Mate** offers a unified control plane to bring order to the chaos. It's a local-first CLI + Web UI designed to manage [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode, [OpenClaw](https://github.com/moeru-ai/openclaw), and Pi seamlessly.
 
 ### What's So Special?
 
@@ -59,6 +59,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 - **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
 - **OpenCode Provider Control**: Manage OpenCode provider/model selection with a CodexMate-owned provider store under `~/.codexmate`, projecting only the active provider into native OpenCode config to avoid polluting or deleting user-owned settings.
 - **KiloCode Config Bridge**: Configure KiloCode providers from the CLI or Web UI, writing to `~/.config/kilo/kilo.jsonc` while preserving stored API keys.
+- **Pi Provider Config**: Manage Pi providers from the Web UI with lossless round-trip writes to `~/.pi/agent/models.json`, auto-fetched remote model lists, and one-click default provider/model switching via `~/.pi/agent/settings.json`.
 - **Provider Health Cleanup**: Probe local Codex and Claude provider routes, surface failed configs in one modal, and bulk-clean selected broken providers without touching healthy or protected entries.
 - **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
 - **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` with auto-detection of project paths, plus a shared preset pool for reusable prompts.
@@ -70,7 +71,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 
 | Feature | Status | Description |
 | --- | --- | --- |
-| **Provider Management** | ✅ | Switch providers/models for Codex, Claude, OpenCode, KiloCode, and OpenClaw |
+| **Provider Management** | ✅ | Switch providers/models for Codex, Claude, OpenCode, KiloCode, OpenClaw, and Pi |
 | **Live Agent Sync** | ✅ | Real-time monitoring of Codex/Claude config & status |
 | **Session Browser** | ✅ | Search, preview, filter, and export sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, and Pi |
 | **Usage Analytics** | ✅ | Visualize message trends and top projects |
@@ -80,6 +81,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 | **Claude Provider Bridge** | ✅ | Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama via the built-in Claude-compatible proxy |
 | **OpenCode Provider Store** | ✅ | Keep multiple OpenCode providers in `~/.codexmate` while projecting only the selected provider to native OpenCode config |
 | **KiloCode Config Bridge** | ✅ | Configure KiloCode through `codexmate kilo config` or the Web UI, writing provider URL/model/API key data to `~/.config/kilo/kilo.jsonc` |
+| **Pi Provider Config** | ✅ | Manage Pi providers in the Web UI writing to `~/.pi/agent/models.json` (unknown fields preserved) and switch the default provider/model in `~/.pi/agent/settings.json` |
 | **Provider Health Check** | ✅ | Probe local Codex/Claude provider routes, highlight failed configs, and bulk-remove selected broken providers safely |
 | **Prompt Templates** | ✅ | Reusable prompt plugins with variables |
 | **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with auto-detect, path switching, and a shared preset pool. Applying a preset only updates the editor; save manually to write the file. |
@@ -133,7 +135,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **KiloCode**: `npm install -g @kilocode/cli` (`kilo` / `kilocode`)
 - **OpenCode**: install from the [official OpenCode docs](https://opencode.ai/)
 - **OpenClaw**: see the [OpenClaw repository](https://github.com/moeru-ai/openclaw)
-- **Pi**: sessions are discovered from `~/.pi/agent/sessions`
+- **Pi**: sessions are discovered from `~/.pi/agent/sessions`; provider config lives in `~/.pi/agent/models.json` and the default provider/model in `~/.pi/agent/settings.json`
 
 ---
 

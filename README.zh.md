@@ -48,7 +48,7 @@
 
 你是否曾因管理多个本地 AI 智能体而感到疲惫？每个工具都有自己的配置格式、会话存储和 Skills 目录。
 
-**Codex Mate** 提供了一个统一的控制平面，让混乱重归有序。这是一个本地优先的 CLI + Web UI，旨在无缝管理 [Codex](https://github.com/openai/codex)、[Claude Code](https://github.com/anthropic-ai/claude-code)、[OpenCode](https://opencode.ai/)、KiloCode 和 [OpenClaw](https://github.com/moeru-ai/openclaw)。
+**Codex Mate** 提供了一个统一的控制平面，让混乱重归有序。这是一个本地优先的 CLI + Web UI，旨在无缝管理 [Codex](https://github.com/openai/codex)、[Claude Code](https://github.com/anthropic-ai/claude-code)、[OpenCode](https://opencode.ai/)、KiloCode、[OpenClaw](https://github.com/moeru-ai/openclaw) 与 Pi。
 
 ### 有什么独特之处？
 
@@ -57,6 +57,7 @@
 - **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用；内建 Codex 转换会补齐并规范化 `User-Agent`、`Version`、`OpenAI-Beta`、`Originator` 等 Codex 指纹，对上游伪装为官方 Codex CLI 请求。
 - **Claude Provider 桥接**：通过内建本地 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama。
 - **OpenCode Provider 控制**：在 `~/.codexmate` 下维护 CodexMate 自有的 OpenCode 多 provider 存储，只将当前选中的 provider 投影到 OpenCode 原生配置，避免污染或误删用户已有配置。
+- **Pi Provider 配置**：在 Web UI 中管理 Pi 供应商，写入 `~/.pi/agent/models.json` 时无损保留未知字段，支持自动拉取远端模型列表，并可一键切换 `~/.pi/agent/settings.json` 中的默认供应商/模型。
 - **Provider 健康清理**：探测本地 Codex 与 Claude provider 路由，在同一个弹窗里集中展示失败配置，并批量清理已选坏配置，不影响正常或受保护项。
 - **Skills 市场**：本地优先的市场，支持在不同的智能体应用之间共享和导入 Skills。
 - **提示词文件编辑器**：统一编辑全局和项目级 `CLAUDE.md` 与 `AGENTS.md`，支持项目路径自动检测，并提供通用预设池复用 prompt。
@@ -68,7 +69,7 @@
 
 | 特性 | 状态 | 描述 |
 | --- | --- | --- |
-| **Provider 管理** | ✅ | 切换 Codex、Claude、OpenCode、KiloCode 和 OpenClaw 的 provider/model |
+| **Provider 管理** | ✅ | 切换 Codex、Claude、OpenCode、KiloCode、OpenClaw 与 Pi 的 provider/model |
 | **状态实时同步** | ✅ | 实时感知 Codex/Claude 的配置与运行状态变更 |
 | **会话浏览器** | ✅ | 跨 Codex、Claude Code、Gemini CLI、CodeBuddy Code 与 Pi 的本地会话进行检索、预览、筛选与导出 |
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
@@ -77,6 +78,7 @@
 | **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式，并在内建转换中附加/规范化 Codex 指纹 |
 | **Claude Provider 桥接** | ✅ | 通过内建 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama |
 | **OpenCode Provider 存储** | ✅ | 在 `~/.codexmate` 中保留多个 OpenCode provider，只将当前选中的 provider 投影到 OpenCode 原生配置 |
+| **Pi Provider 配置** | ✅ | 在 Web UI 中管理 Pi 供应商，写入 `~/.pi/agent/models.json`（未知字段无损保留），并切换 `~/.pi/agent/settings.json` 中的默认供应商/模型 |
 | **Provider 健康检查** | ✅ | 探测本地 Codex/Claude provider 路由，标记失败配置，并安全批量移除已选坏配置 |
 | **提示词模板** | ✅ | 支持变量的可复用提示词插件 |
 | **提示词文件编辑器** | ✅ | 编辑全局和项目级 CLAUDE.md / AGENTS.md，支持自动检测、路径切换与通用预设池。应用预设只更新编辑器，需手动保存才会写入文件。 |
@@ -130,7 +132,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **KiloCode**: `npm install -g @kilocode/cli`（`kilo` / `kilocode`）
 - **OpenCode**: 参照 [OpenCode 官方文档](https://opencode.ai/) 安装
 - **OpenClaw**: 参见 [OpenClaw 仓库](https://github.com/moeru-ai/openclaw)
-- **Pi**: 会话从 `~/.pi/agent/sessions` 自动发现
+- **Pi**: 会话从 `~/.pi/agent/sessions` 自动发现；供应商配置位于 `~/.pi/agent/models.json`，默认供应商/模型位于 `~/.pi/agent/settings.json`
 
 ---
 

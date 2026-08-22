@@ -41,7 +41,7 @@
 
 Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent cục bộ? Mỗi tool lại có định dạng cấu hình, nơi lưu phiên và thư mục skill riêng.
 
-**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode và [OpenClaw](https://github.com/moeru-ai/openclaw) một cách liền mạch.
+**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode, [OpenClaw](https://github.com/moeru-ai/openclaw) và Pi một cách liền mạch.
 
 ### Điểm nổi bật
 
@@ -58,7 +58,8 @@ Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Ag
 
 | Tính năng | Trạng thái | Mô tả |
 | --- | --- | --- |
-| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode và OpenClaw |
+| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode, OpenClaw và Pi |
+| **Cấu hình Provider Pi** | ✅ | Quản lý provider Pi trong Web UI, ghi vào `~/.pi/agent/models.json` (giữ nguyên các trường không nhận dạng được) và chuyển đổi provider/model mặc định trong `~/.pi/agent/settings.json` |
 | **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
 | **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/Pi) |
 | **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
@@ -118,7 +119,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **KiloCode**: `npm install -g @kilocode/cli` (`kilo` / `kilocode`)
 - **OpenCode**: xem [tài liệu chính thức OpenCode](https://opencode.ai/)
 - **OpenClaw**: xem [kho lưu trữ OpenClaw](https://github.com/moeru-ai/openclaw)
-- **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`
+- **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`; cấu hình provider nằm ở `~/.pi/agent/models.json`, provider/model mặc định nằm ở `~/.pi/agent/settings.json`
 
 ---
 
