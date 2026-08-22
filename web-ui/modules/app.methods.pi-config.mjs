@@ -114,17 +114,25 @@ export function createPiConfigMethods({ api: apiClient }) {
             }
         },
         async addPiProviderFromModal() {
+            let createdId = null;
             this.piSaving = true;
             try {
-                const id = (this.addingPiProviderId || '').trim();
-                const providerId = id || `pi-provider-${Date.now()}`;
+                const baseUrl = (this.addingPiProviderBaseUrl || '').trim();
+                if (!baseUrl) throw new Error('Base URL 不能为空');
+                const providerId = this.derivePiProviderId(baseUrl);
+                const modelId = (this.addingPiProviderModel || '').trim();
                 const values = {
-                    id: providerId,
-                    name: this.addingPiProviderName || providerId,
-                    baseUrl: this.addingPiProviderBaseUrl || '',
-                    api: this.addingPiProviderApi || 'openai',
-                    models: [],
-                    apiKey: ''
+                    baseUrl,
+                    api: this.addingPiProviderApi || 'openai-completions',
+                    apiKey: (this.addingPiProviderApiKey || '').trim(),
+                    models: modelId ? [{
+                        id: modelId,
+                        name: modelId,
+                        reasoning: false,
+                        contextWindow: 128000,
+                        maxTokens: 32000,
+                        input: ''
+                    }] : []
                 };
 
                 await this.persistPiProvider(providerId, values);
@@ -133,12 +141,28 @@ export function createPiConfigMethods({ api: apiClient }) {
                 this.cancelAddPiProviderModal();
                 this.message = '供应商已添加';
                 this.messageType = 'success';
+                createdId = providerId;
             } catch (e) {
                 this.message = e && e.message ? e.message : '添加 Pi 供应商失败';
                 this.messageType = 'error';
             } finally {
                 this.piSaving = false;
+                if (createdId) this.openEditPiProvider(createdId);
             }
+        },
+        derivePiProviderId(baseUrl) {
+            let base = '';
+            try {
+                base = new URL(baseUrl).hostname.replace(/^www\./, '');
+            } catch (_) {
+                base = '';
+            }
+            const candidate = (base || 'pi-provider').replace(/[^a-zA-Z0-9-]/g, '-')
+                .replace(/-+/g, '-').replace(/^-|-$/g, '') || 'pi-provider';
+            if (!this.piProviders[candidate]) return candidate;
+            let suffix = 2;
+            while (this.piProviders[`${candidate}-${suffix}`]) suffix += 1;
+            return `${candidate}-${suffix}`;
         },
         startAddPiProvider() {
             if (!this.isToolConfigWriteAllowed('pi') || this.piSaving) return;
@@ -146,6 +170,11 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.addingPiProviderName = '';
             this.addingPiProviderBaseUrl = '';
             this.addingPiProviderApi = '';
+            this.addingPiProviderApiKey = '';
+            this.addingPiProviderModel = '';
+            this.addingPiRemoteModels = [];
+            this.addingPiRemoteLoading = false;
+            this.addingPiRemoteError = '';
             this.showAddPiProviderModal = true;
             this.editingPiProvider = null;
         },
@@ -155,6 +184,52 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.addingPiProviderName = '';
             this.addingPiProviderBaseUrl = '';
             this.addingPiProviderApi = '';
+            this.addingPiProviderApiKey = '';
+            this.addingPiProviderModel = '';
+            this.addingPiRemoteModels = [];
+            this.addingPiRemoteLoading = false;
+            this.addingPiRemoteError = '';
+        },
+        async fetchAddingPiRemoteModels() {
+            const baseUrl = (this.addingPiProviderBaseUrl || '').trim();
+            if (!baseUrl || !/^https?:\/\//i.test(baseUrl)) {
+                this.addingPiRemoteModels = [];
+                this.addingPiRemoteError = '';
+                return;
+            }
+            this.addingPiRemoteLoading = true;
+            this.addingPiRemoteError = '';
+            try {
+                const result = await apiClient('fetch-pi-remote-models', {
+                    baseUrl,
+                    apiKey: (this.addingPiProviderApiKey || '').trim()
+                });
+                if (!this.showAddPiProviderModal) return;
+                if (result && Array.isArray(result.models) && result.models.length > 0) {
+                    this.addingPiRemoteModels = result.models;
+                } else {
+                    this.addingPiRemoteModels = [];
+                    this.addingPiRemoteError = (result && result.error) || '未获取到可用模型';
+                }
+            } catch (e) {
+                if (!this.showAddPiProviderModal) return;
+                this.addingPiRemoteModels = [];
+                this.addingPiRemoteError = e && e.message ? e.message : '模型列表获取失败';
+            } finally {
+                if (this.showAddPiProviderModal) this.addingPiRemoteLoading = false;
+            }
+        },
+        onAddingPiEndpointChange() {
+            if (this.addingPiRemoteDebounce) clearTimeout(this.addingPiRemoteDebounce);
+            this.addingPiRemoteDebounce = setTimeout(() => {
+                this.addingPiRemoteDebounce = null;
+                this.fetchAddingPiRemoteModels();
+            }, 600);
+        },
+        piFilteredAddingRemoteModels() {
+            const query = (this.addingPiProviderModel || '').trim().toLowerCase();
+            if (!query) return [];
+            return this.addingPiRemoteModels.filter((id) => id.toLowerCase().includes(query)).slice(0, 50);
         },
         openEditPiProvider(providerId) {
             if (!this.isToolConfigWriteAllowed('pi') || this.piSaving) return;

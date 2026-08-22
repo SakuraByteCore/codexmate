@@ -124,20 +124,32 @@
                             <div class="config-template-hint">{{ t('pi.providers.addModal.subtitle') }}</div>
                             <div class="codex-config-grid">
                                 <div class="form-group codex-config-field">
-                                    <label class="form-label">{{ t('pi.providers.addModal.fields.id') }}</label>
-                                    <input class="form-input" type="text" v-model="addingPiProviderId" autocomplete="off" spellcheck="false" placeholder="pi-provider-1">
-                                </div>
-                                <div class="form-group codex-config-field">
-                                    <label class="form-label">{{ t('pi.providers.addModal.fields.name') }}</label>
-                                    <input class="form-input" type="text" v-model="addingPiProviderName" autocomplete="off" spellcheck="false" placeholder="My Piper Provider">
-                                </div>
-                                <div class="form-group codex-config-field">
                                     <label class="form-label">{{ t('pi.providers.addModal.fields.baseUrl') }}</label>
-                                    <input class="form-input" type="url" v-model="addingPiProviderBaseUrl" autocomplete="off" spellcheck="false" placeholder="https://">
+                                    <input class="form-input" type="url" v-model="addingPiProviderBaseUrl" autocomplete="off" spellcheck="false" placeholder="https://" @input="onAddingPiEndpointChange">
                                 </div>
                                 <div class="form-group codex-config-field">
                                     <label class="form-label">{{ t('pi.providers.addModal.fields.api') }}</label>
-                                    <input class="form-input" type="text" v-model="addingPiProviderApi" autocomplete="off" spellcheck="false" placeholder="openai|claude">
+                                    <select class="form-input" v-model="addingPiProviderApi">
+                                        <option value="openai-completions">openai-completions — {{ t('pi.providers.addModal.api.openaiCompletions') }}</option>
+                                        <option value="openai-responses">openai-responses — {{ t('pi.providers.addModal.api.openaiResponses') }}</option>
+                                        <option value="anthropic-messages">anthropic-messages — {{ t('pi.providers.addModal.api.anthropicMessages') }}</option>
+                                        <option value="google-generative-ai">google-generative-ai — {{ t('pi.providers.addModal.api.googleGenerativeAi') }}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.addModal.fields.apiKey') }}</label>
+                                    <input class="form-input" type="password" v-model="addingPiProviderApiKey" autocomplete="off" spellcheck="false" :placeholder="t('common.optional')" @input="onAddingPiEndpointChange">
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.fields.models') }}</label>
+                                    <p v-if="addingPiRemoteLoading" class="config-template-hint">{{ t('pi.providers.models.remoteLoading') }}</p>
+                                    <p v-else-if="addingPiRemoteError" class="config-template-hint">{{ addingPiRemoteError }} · {{ t('pi.providers.models.remoteFailed') }}</p>
+                                    <input class="form-input" type="text" v-model="addingPiProviderModel" autocomplete="off" spellcheck="false" :placeholder="addingPiRemoteModels.length ? t('pi.providers.models.search') : 'claude-sonnet-4'">
+                                    <template v-if="!addingPiRemoteLoading && addingPiProviderModel.trim() && piFilteredAddingRemoteModels().length > 0">
+                                        <button type="button" class="btn-tool" style="width: 100%; text-align: left; justify-content: flex-start; margin-top: 8px;" v-for="id in piFilteredAddingRemoteModels()" :key="id" @click="addingPiProviderModel = id">{{ id }}</button>
+                                        <p class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: addingPiRemoteModels.length }) }}</p>
+                                    </template>
+                                    <p v-else-if="!addingPiRemoteLoading && !addingPiRemoteError && addingPiProviderModel.trim() && addingPiRemoteModels.length > 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
                                 </div>
                             </div>
                         </section>
