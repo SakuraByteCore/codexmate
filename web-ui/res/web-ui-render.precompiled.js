@@ -1,9 +1,7 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, resolveComponent: _resolveComponent, withCtx: _withCtx, createVNode: _createVNode, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
 
 return function render(_ctx, _cache) {
-  const _component_cwd = _resolveComponent("cwd")
-
   return (_openBlock(), _createElementBlock(_Fragment, null, [
     (!_ctx.sessionStandalone)
       ? (_openBlock(), _createElementBlock("div", {
@@ -3196,89 +3194,336 @@ return function render(_ctx, _cache) {
                 _createElementVNode("span", null, _toDisplayString(_ctx.toolConfigPermissionStatusLabel('pi')), 1 /* TEXT */)
               ])
             ], 8 /* PROPS */, ["aria-label"]),
-            _createCommentVNode(" 写入路径展示 "),
-            _createElementVNode("section", {
-              class: "settings-card settings-card--wide openclaw-summary-card",
-              "aria-label": "Pi 配置路径"
-            }, [
-              _createElementVNode("div", { class: "settings-card-body" }, [
-                _createElementVNode("div", { class: "openclaw-summary-header" }, [
-                  _createElementVNode("div", null, [
-                    _createElementVNode("div", { class: "summary-eyebrow" }, "PI"),
-                    _createElementVNode("div", { class: "summary-title" }, "配置写入路径")
-                  ])
-                ]),
-                _createElementVNode("div", { class: "openclaw-summary-grid" }, [
-                  _createElementVNode("div", { class: "openclaw-summary-item" }, [
-                    _createElementVNode("div", { class: "summary-item-label" }, "全局配置"),
-                    _createElementVNode("div", { class: "summary-item-value" }, "~/.pi/config.json")
-                  ]),
-                  _createElementVNode("div", { class: "openclaw-summary-item" }, [
-                    _createElementVNode("div", { class: "summary-item-label" }, "项目配置"),
-                    _createElementVNode("div", { class: "summary-item-value" }, [
-                      _createVNode(_component_cwd, null, {
-                        default: _withCtx(() => [
-                          _createTextVNode("/.pi/config.json")
-                        ]),
-                        _: 1 /* STABLE */
-                      })
-                    ])
-                  ])
-                ]),
-                _createElementVNode("div", { class: "openclaw-diagnostic-note" }, " 修改配置后，内容将写入上述对应文件。 ")
-              ])
-            ]),
             _createElementVNode("div", {
               class: _normalizeClass(["tool-config-write-scope", { locked: !_ctx.isToolConfigWriteAllowed('pi') }])
             }, [
               _createElementVNode("div", { class: "tool-config-write-body" }, [
-                _createElementVNode("section", { class: "settings-card settings-card--wide" }, [
-                  _createElementVNode("div", { class: "settings-card-body" }, [
-                    _createElementVNode("div", { class: "card-list" }, [
-                      _createElementVNode("div", {
-                        class: "card",
-                        role: "button",
-                        tabindex: "0"
+                _createElementVNode("section", { class: "selector-section" }, [
+                  _createElementVNode("div", { class: "selector-header" }, [
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.title')), 1 /* TEXT */),
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: "btn-tool",
+                      onClick: _ctx.startAddPiProvider,
+                      disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                    }, _toDisplayString(_ctx.t('pi.providers.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ]),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.targetFile', { path: '~/.pi/agent/models.json' })), 1 /* TEXT */),
+                  (_ctx.piProviderIds.length)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "card-list"
                       }, [
-                        _createElementVNode("div", { class: "card-leading" }, [
-                          _createElementVNode("div", { class: "card-icon" }, "📄"),
-                          _createElementVNode("div", { class: "card-content" }, [
-                            _createElementVNode("div", { class: "card-title" }, "config.json"),
-                            _createElementVNode("div", { class: "card-subtitle" }, "全局 Pi 配置文件")
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piProviderIds, (providerId) => {
+                          return (_openBlock(), _createElementBlock("div", {
+                            key: providerId,
+                            class: "card",
+                            role: "button",
+                            tabindex: "0",
+                            onClick: $event => (_ctx.openEditPiProvider(providerId))
+                          }, [
+                            _createElementVNode("div", { class: "card-leading" }, [
+                              _createElementVNode("div", { class: "card-icon" }, _toDisplayString(_ctx.piProviderName(providerId).charAt(0).toUpperCase()), 1 /* TEXT */),
+                              _createElementVNode("div", { class: "card-content" }, [
+                                _createElementVNode("div", { class: "card-title" }, _toDisplayString(_ctx.piProviderName(providerId)), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "card-subtitle" }, _toDisplayString(_ctx.piProviderSummary(providerId)), 1 /* TEXT */)
+                              ])
+                            ]),
+                            _createElementVNode("div", { class: "card-trailing" }, [
+                              _createElementVNode("span", { class: "pill empty" }, _toDisplayString(_ctx.t('pi.providers.active')), 1 /* TEXT */)
+                            ])
+                          ], 8 /* PROPS */, ["onClick"]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  (!_ctx.piProviderIds.length)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 1,
+                        class: "config-template-hint"
+                      }, _toDisplayString(_ctx.t('pi.providers.empty')), 1 /* TEXT */))
+                    : _createCommentVNode("v-if", true)
+                ]),
+                (_ctx.editingPiProvider)
+                  ? (_openBlock(), _createElementBlock("section", {
+                      key: 0,
+                      class: "selector-section"
+                    }, [
+                      _createElementVNode("div", { class: "selector-header" }, [
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.editorTitle')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "settings-tab-actions" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool",
+                            onClick: _ctx.savePiProvider,
+                            disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                          }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool",
+                            onClick: _ctx.resetPiProviderEditing
+                          }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"])
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "codex-config-grid" }, [
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.name')), 1 /* TEXT */),
+                          _createElementVNode("input", {
+                            class: "form-input",
+                            type: "text",
+                            value: _ctx.piProviderName(_ctx.editingPiProvider.id),
+                            readonly: ""
+                          }, null, 8 /* PROPS */, ["value"])
+                        ]),
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.baseUrl')), 1 /* TEXT */),
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "url",
+                            "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.baseUrl) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: "https://"
+                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            [_vModelText, _ctx.editingPiProvider.form.baseUrl]
                           ])
                         ]),
-                        _createElementVNode("div", { class: "card-trailing" }, [
-                          _createElementVNode("span", { class: "pill empty" }, _toDisplayString(_ctx.t('pi.status.readOnly')), 1 /* TEXT */),
-                          _createElementVNode("div", {
-                            class: "card-actions",
-                            onClick: _withModifiers(() => {}, ["stop"])
-                          }, [
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.api')), 1 /* TEXT */),
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "text",
+                            "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.api) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: "openai|claude"
+                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            [_vModelText, _ctx.editingPiProvider.form.api]
+                          ])
+                        ]),
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.apiKey')), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "input-with-toggle" }, [
+                            _withDirectives(_createElementVNode("input", {
+                              class: "form-input",
+                              "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.apiKey) = $event),
+                              type: _ctx.piShowKey ? 'text' : 'password',
+                              autocomplete: "off",
+                              spellcheck: "false",
+                              placeholder: "sk-..."
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type"]), [
+                              [_vModelDynamic, _ctx.editingPiProvider.form.apiKey]
+                            ]),
                             _createElementVNode("button", {
-                              class: "card-action-btn",
-                              onClick: $event => (_ctx.openPiConfigFile('global')),
-                              disabled: !_ctx.isToolConfigWriteAllowed('pi'),
-                              title: _ctx.t('pi.config.openGlobal')
+                              type: "button",
+                              class: "input-toggle-btn",
+                              onMousedown: _withModifiers(() => {}, ["prevent"]),
+                              onClick: $event => (_ctx.piShowKey = !_ctx.piShowKey),
+                              title: _ctx.piShowKey ? _ctx.t('common.hide') : _ctx.t('common.show'),
+                              "aria-label": _ctx.piShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
                             }, [
-                              (_openBlock(), _createElementBlock("svg", {
-                                viewBox: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2"
-                              }, [
-                                _createElementVNode("path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" }),
-                                _createElementVNode("path", { d: "M15 3h6v6" }),
-                                _createElementVNode("path", { d: "M10 14L21 3" })
-                              ]))
-                            ], 8 /* PROPS */, ["onClick", "disabled", "title"])
-                          ], 8 /* PROPS */, ["onClick"])
+                              (!_ctx.piShowKey)
+                                ? (_openBlock(), _createElementBlock("svg", {
+                                    key: 0,
+                                    viewBox: "0 0 20 20",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "1.5",
+                                    width: "16",
+                                    height: "16"
+                                  }, [
+                                    _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                                    _createElementVNode("circle", {
+                                      cx: "10",
+                                      cy: "10",
+                                      r: "3"
+                                    })
+                                  ]))
+                                : (_openBlock(), _createElementBlock("svg", {
+                                    key: 1,
+                                    viewBox: "0 0 20 20",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "1.5",
+                                    width: "16",
+                                    height: "16"
+                                  }, [
+                                    _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                                  ]))
+                            ], 40 /* PROPS, NEED_HYDRATION */, ["onMousedown", "onClick", "title", "aria-label"])
+                          ])
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "form-group" }, [
+                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.models')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "card-list" }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.editingPiProvider.form.models, (model, index) => {
+                            return (_openBlock(), _createElementBlock("div", {
+                              class: "card",
+                              key: index
+                            }, [
+                              _createElementVNode("div", { class: "codex-config-grid" }, [
+                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                                  _createElementVNode("label", { class: "form-label" }, "ID"),
+                                  _withDirectives(_createElementVNode("input", {
+                                    class: "form-input",
+                                    type: "text",
+                                    "onUpdate:modelValue": $event => ((model.id) = $event),
+                                    autocomplete: "off",
+                                    spellcheck: "false",
+                                    placeholder: "claude-sonnet-4"
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                    [_vModelText, model.id]
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                                  _createElementVNode("label", { class: "form-label" }, "Name"),
+                                  _withDirectives(_createElementVNode("input", {
+                                    class: "form-input",
+                                    type: "text",
+                                    "onUpdate:modelValue": $event => ((model.name) = $event),
+                                    autocomplete: "off",
+                                    spellcheck: "false",
+                                    placeholder: "Claude Sonnet 4"
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                    [_vModelText, model.name]
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                                  _createElementVNode("label", { class: "form-label" }, "Context window"),
+                                  _withDirectives(_createElementVNode("input", {
+                                    class: "form-input",
+                                    type: "number",
+                                    "onUpdate:modelValue": $event => ((model.contextWindow) = $event),
+                                    autocomplete: "off",
+                                    spellcheck: "false",
+                                    placeholder: "200000"
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                    [_vModelText, model.contextWindow]
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-tool",
+                                    onClick: $event => (_ctx.editingPiProvider.form.models.splice(index, 1)),
+                                    disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                                  }, _toDisplayString(_ctx.t('pi.providers.models.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                ])
+                              ])
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool",
+                          onClick: $event => (_ctx.editingPiProvider.form.models.push({ id: '', name: '', reasoning: '', input: '', contextWindow: '', maxTokens: '' })),
+                          disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                        }, _toDisplayString(_ctx.t('pi.providers.models.add')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ]),
+                      _createElementVNode("div", { class: "form-group" }, [
+                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.configJson')), 1 /* TEXT */),
+                        _withDirectives(_createElementVNode("textarea", {
+                          class: "template-textarea",
+                          rows: "8",
+                          "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.configJsonDraft) = $event),
+                          spellcheck: "false",
+                          readonly: !_ctx.isToolConfigWriteAllowed('pi'),
+                          placeholder: "{}"
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly"]), [
+                          [_vModelText, _ctx.editingPiProvider.form.configJsonDraft]
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "settings-tab-actions" }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool",
+                          onClick: _ctx.confirmDeletePiProvider,
+                          disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                        }, _toDisplayString(_ctx.t('pi.providers.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ]))
+                  : _createCommentVNode("v-if", true),
+                (_ctx.showAddPiProviderModal)
+                  ? (_openBlock(), _createElementBlock("section", {
+                      key: 1,
+                      class: "selector-section"
+                    }, [
+                      _createElementVNode("div", { class: "selector-header" }, [
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.addModal.title')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "settings-tab-actions" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool",
+                            onClick: _ctx.addPiProviderFromModal,
+                            disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                          }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool",
+                            onClick: _ctx.cancelAddPiProviderModal
+                          }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"])
+                        ])
+                      ]),
+                      _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.addModal.subtitle')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "codex-config-grid" }, [
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.id')), 1 /* TEXT */),
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "text",
+                            "onUpdate:modelValue": $event => ((_ctx.addingPiProviderId) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: "pi-provider-1"
+                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            [_vModelText, _ctx.addingPiProviderId]
+                          ])
+                        ]),
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.name')), 1 /* TEXT */),
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "text",
+                            "onUpdate:modelValue": $event => ((_ctx.addingPiProviderName) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: "My Piper Provider"
+                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            [_vModelText, _ctx.addingPiProviderName]
+                          ])
+                        ]),
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.baseUrl')), 1 /* TEXT */),
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "url",
+                            "onUpdate:modelValue": $event => ((_ctx.addingPiProviderBaseUrl) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: "https://"
+                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            [_vModelText, _ctx.addingPiProviderBaseUrl]
+                          ])
+                        ]),
+                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.api')), 1 /* TEXT */),
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "text",
+                            "onUpdate:modelValue": $event => ((_ctx.addingPiProviderApi) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: "openai|claude"
+                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            [_vModelText, _ctx.addingPiProviderApi]
+                          ])
                         ])
                       ])
-                    ])
-                  ])
-                ]),
+                    ]))
+                  : _createCommentVNode("v-if", true),
                 (!_ctx.isToolConfigWriteAllowed('pi'))
                   ? (_openBlock(), _createElementBlock("div", {
-                      key: 0,
+                      key: 2,
                       class: "tool-config-write-overlay"
                     }, [
                       _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
@@ -9899,4 +10144,3 @@ return function render(_ctx, _cache) {
   ], 64 /* STABLE_FRAGMENT */))
 }
 })();
-

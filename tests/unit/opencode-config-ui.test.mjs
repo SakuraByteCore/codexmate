@@ -117,7 +117,7 @@ test('opencode backend actions are permission guarded in cli source', () => {
     const cli = readProjectFile('cli.js');
     assert.match(cli, /const OPENCODE_GLOBAL_JSONC_CONFIG_FILE = path\.join\(OPENCODE_CONFIG_DIR, 'opencode\.jsonc'\)/);
     assert.match(cli, /const OPENCODE_CONFIG_ENV_FILE = process\.env\.OPENCODE_CONFIG/);
-    assert.match(cli, /const TOOL_CONFIG_PERMISSION_TARGETS = new Set\(\['codex', 'claude', 'opencode', 'kilocode', 'openclaw'\]\)/);
+    assert.match(cli, /const TOOL_CONFIG_PERMISSION_TARGETS = new Set\(\['codex', 'claude', 'opencode', 'kilocode', 'openclaw', 'pi'\]\)/);
     assert.match(cli, /function applyOpencodeConfigRaw\(params = \{\}\) \{[\s\S]*assertToolConfigWriteAllowed\('opencode'\)/);
     assert.match(cli, /function updateOpencodeSelection\(params = \{\}\) \{[\s\S]*assertToolConfigWriteAllowed\('opencode'\)/);
     assert.match(cli, /case 'get-opencode-config':/);

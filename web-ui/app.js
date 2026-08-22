@@ -26,6 +26,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const { createApp } = Vue;
+    const showFatalErrorOverlay = (label, message, stack, extra) => {
+        try {
+            const target = document.querySelector('#app') || document.body;
+            const pre = document.createElement('pre');
+            pre.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#900;color:#fff;padding:12px;white-space:pre-wrap;font-size:12px;z-index:9999;';
+            pre.textContent = '[' + label + '] ' + (message || '') + '\n' + (stack || '') + (extra ? '\n' + extra : '');
+            target.appendChild(pre);
+        } catch (_) {}
+    };
+    window.addEventListener('error', (event) => {
+        console.error('[window error]', event.message, event.filename, event.lineno, event.colno, event.error);
+        try {
+            const target = document.querySelector('#app') || document.body;
+            const pre = document.createElement('pre');
+            pre.style.cssText = 'position:fixed;bottom:60px;left:0;right:0;background:#b00;color:#fff;padding:12px;white-space:pre-wrap;font-size:12px;z-index:9999;';
+            pre.textContent = '[window error] ' + (event.message || '') + '\n' + ((event.error && event.error.stack) || (event.filename + ':' + event.lineno + ':' + event.colno));
+            target.appendChild(pre);
+        } catch (_) {}
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error('[unhandled rejection]', event.reason);
+        try {
+            const target = document.querySelector('#app') || document.body;
+            const pre = document.createElement('pre');
+            pre.style.cssText = 'position:fixed;bottom:120px;left:0;right:0;background:#b00;color:#fff;padding:12px;white-space:pre-wrap;font-size:12px;z-index:9999;';
+            pre.textContent = '[unhandled rejection] ' + (event.reason && event.reason.message ? event.reason.message : String(event.reason)) + '\n' + ((event.reason && event.reason.stack) || '');
+            target.appendChild(pre);
+        } catch (_) {}
+    });
 
     const appOptions = {
         data() {
@@ -96,6 +125,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 showCodexBridgePoolModal: false,
                 showClaudeBridgePoolModal: false,
                 showWebhookModal: false,
+                piProviders: {},
+                piProviderIds: [],
+                editingPiProvider: null,
+                addingPiProviderId: '',
+                addingPiProviderName: '',
+                addingPiProviderBaseUrl: '',
+                addingPiProviderApi: '',
+                showAddPiProviderModal: false,
+                piProviderLoading: false,
+                piSaving: false,
+                piShowKey: false,
                 // Plugins
                 pluginsActiveId: 'prompt-templates',
                 pluginsLoading: false,
@@ -777,8 +817,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
+        watch: {
+            configMode(newMode) {
+                if (newMode === 'pi' && typeof this.loadPiSources === 'function') {
+                    this.loadPiSources();
+                }
+            }
+        },
+
         computed: createAppComputed(),
-        methods: createAppMethods()
+        methods: {
+            ...createAppMethods(),
+            ...(typeof createPiConfigMethods === 'function' ? createPiConfigMethods({ api }) : {})
+        }
     };
 
     if (typeof window.__CODEXMATE_WEB_UI_RENDER__ === 'function') {
@@ -786,6 +837,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const app = createApp(appOptions);
+    app.config.errorHandler = (err, vm, info) => {
+        console.error('[Vue error handler]', err, info);
+        if (err && err.stack) console.error(err.stack);
+        showFatalErrorOverlay('Vue error', err && err.message ? err.message : String(err), err && err.stack ? err.stack : '', info || '');
+    };
 
-    app.mount('#app');
+    try {
+        app.mount('#app');
+    } catch (error) {
+        console.error('Failed to mount Web UI:', error);
+        const fallback = document.querySelector('#app');
+        if (fallback) {
+            fallback.innerHTML = '<pre style="color:red;white-space:pre-wrap;">Failed to mount Web UI\n' + (error && error.stack ? error.stack : String(error)) + '</pre>';
+        }
+    }
 });

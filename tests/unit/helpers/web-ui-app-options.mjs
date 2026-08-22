@@ -240,6 +240,7 @@ async function captureAppOptionsFromScript(scriptSource, label) {
                 createApp(options) {
                     appOptions = options;
                     return {
+                        config: {},
                         mount() {}
                     };
                 }

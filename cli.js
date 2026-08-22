@@ -891,8 +891,8 @@ function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode', 'kilocode', 'openclaw']);
-const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false, kilocode: false, openclaw: false });
+const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode', 'kilocode', 'openclaw', 'pi']);
+const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false, kilocode: false, openclaw: false, pi: false });
 let toolConfigWriteGuardDepth = 0;
 
 function enterToolConfigWriteGuard() {
@@ -921,7 +921,8 @@ function normalizeToolConfigPermissions(value) {
         claude: source.claude === true,
         opencode: source.opencode === true,
         kilocode: source.kilocode === true,
-        openclaw: source.openclaw === true
+        openclaw: source.openclaw === true,
+        pi: source.pi === true
     };
 }
 
@@ -979,7 +980,7 @@ function normalizeMainTabPreference(value) {
 
 function normalizeConfigModePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return ['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].includes(normalized) ? normalized : 'codex';
+    return ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].includes(normalized) ? normalized : 'codex';
 }
 
 function normalizeUsageTimeRangePreference(value) {
@@ -1203,7 +1204,74 @@ function getApiToolConfigWriteTarget(action) {
     if (opencodeWriteActions.has(name)) return 'opencode';
     if (kilocodeWriteActions.has(name)) return 'kilocode';
     if (openclawWriteActions.has(name)) return 'openclaw';
+    const piWriteActions = new Set([
+        'write-pi-models'
+    ]);
+    if (piWriteActions.has(name)) return 'pi';
     return '';
+}
+
+function getPiAgentDir() {
+    const homeDir = (typeof os.homedir === 'function' ? os.homedir() : null) || process.env.HOME || process.env.USERPROFILE || '';
+    return path.join(homeDir, '.pi', 'agent');
+}
+
+function readPiModels(params = {}) {
+    try {
+        const dir = getPiAgentDir();
+        const filePath = path.join(dir, 'models.json');
+        if (!fs.existsSync(filePath)) {
+            return { providers: {} };
+        }
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(raw);
+        const providers = (data && typeof data === 'object' && data.providers && typeof data.providers === 'object')
+            ? data.providers
+            : {};
+        return { providers };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '读取 Pi models.json 失败' };
+    }
+}
+
+function writePiModels(params = {}) {
+    const providers = params && typeof params.providers === 'object' ? params.providers : null;
+    if (providers === null) {
+        return { error: 'providers 不能为空' };
+    }
+    try {
+        const dir = getPiAgentDir();
+        fs.mkdirSync(dir, { recursive: true });
+        const filePath = path.join(dir, 'models.json');
+        let existing = {};
+        if (fs.existsSync(filePath)) {
+            try {
+                existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+            } catch (_) {
+                existing = {};
+            }
+        }
+        existing.providers = providers;
+        fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), 'utf-8');
+        return { success: true };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '写入 Pi models.json 失败' };
+    }
+}
+
+function readPiSettings(params = {}) {
+    try {
+        const dir = getPiAgentDir();
+        const filePath = path.join(dir, 'settings.json');
+        if (!fs.existsSync(filePath)) {
+            return { settings: {} };
+        }
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(raw);
+        return { settings: data || {} };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '读取 Pi settings.json 失败' };
+    }
 }
 
 function setToolConfigPermission(params = {}) {
@@ -13171,6 +13239,18 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 initNotice: consumeInitNotice(),
                                 toolConfigPermissions: readToolConfigPermissions()
                             };
+                            break;
+                        }
+                        case 'read-pi-models': {
+                            result = readPiModels(params || {});
+                            break;
+                        }
+                        case 'write-pi-models': {
+                            result = writePiModels(params || {});
+                            break;
+                        }
+                        case 'read-pi-settings': {
+                            result = readPiSettings(params || {});
                             break;
                         }
                         case 'install-status':

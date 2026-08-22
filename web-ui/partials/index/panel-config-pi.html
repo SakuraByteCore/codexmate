@@ -30,57 +30,122 @@
                     </label>
                 </section>
 
-                <!-- 写入路径展示 -->
-                <section class="settings-card settings-card--wide openclaw-summary-card" aria-label="Pi 配置路径">
-                    <div class="settings-card-body">
-                        <div class="openclaw-summary-header">
-                            <div>
-                                <div class="summary-eyebrow">PI</div>
-                                <div class="summary-title">配置写入路径</div>
-                            </div>
-                        </div>
-                        <div class="openclaw-summary-grid">
-                            <div class="openclaw-summary-item">
-                                <div class="summary-item-label">全局配置</div>
-                                <div class="summary-item-value">~/.pi/config.json</div>
-                            </div>
-                            <div class="openclaw-summary-item">
-                                <div class="summary-item-label">项目配置</div>
-                                <div class="summary-item-value"><cwd>/.pi/config.json</cwd></div>
-                            </div>
-                        </div>
-                        <div class="openclaw-diagnostic-note">
-                            修改配置后，内容将写入上述对应文件。
-                        </div>
-                    </div>
-                </section>
-
                 <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('pi') }">
                     <div class="tool-config-write-body">
-                        <section class="settings-card settings-card--wide">
-                            <div class="settings-card-body">
-                                <div class="card-list">
-                                    <div class="card" role="button" tabindex="0">
-                                        <div class="card-leading">
-                                            <div class="card-icon">📄</div>
-                                            <div class="card-content">
-                                                <div class="card-title">config.json</div>
-                                                <div class="card-subtitle">全局 Pi 配置文件</div>
-                                            </div>
+                        <section class="selector-section">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.providers.title') }}</span>
+                                <button type="button" class="btn-tool" @click="startAddPiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.add') }}</button>
+                            </div>
+                            <div class="config-template-hint">{{ t('pi.providers.targetFile', { path: '~/.pi/agent/models.json' }) }}</div>
+                            <div class="card-list" v-if="piProviderIds.length">
+                                <div v-for="providerId in piProviderIds" :key="providerId" class="card" role="button" tabindex="0" @click="openEditPiProvider(providerId)">
+                                    <div class="card-leading">
+                                        <div class="card-icon">{{ piProviderName(providerId).charAt(0).toUpperCase() }}</div>
+                                        <div class="card-content">
+                                            <div class="card-title">{{ piProviderName(providerId) }}</div>
+                                            <div class="card-subtitle">{{ piProviderSummary(providerId) }}</div>
                                         </div>
-                                        <div class="card-trailing">
-                                            <span class="pill empty">{{ t('pi.status.readOnly') }}</span>
-                                            <div class="card-actions" @click.stop>
-                                                <button class="card-action-btn" @click="openPiConfigFile('global')" :disabled="!isToolConfigWriteAllowed('pi')" :title="t('pi.config.openGlobal')">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                                        <path d="M15 3h6v6"/>
-                                                        <path d="M10 14L21 3"/>
-                                                    </svg>
-                                                </button>
+                                    </div>
+                                    <div class="card-trailing">
+                                        <span class="pill empty">{{ t('pi.providers.active') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="!piProviderIds.length" class="config-template-hint">{{ t('pi.providers.empty') }}</div>
+                        </section>
+
+                        <section class="selector-section" v-if="editingPiProvider">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.providers.editorTitle') }}</span>
+                                <div class="settings-tab-actions">
+                                    <button type="button" class="btn-tool" @click="savePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('common.save') }}</button>
+                                    <button type="button" class="btn-tool" @click="resetPiProviderEditing">{{ t('common.cancel') }}</button>
+                                </div>
+                            </div>
+                            <div class="codex-config-grid">
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.fields.name') }}</label>
+                                    <input class="form-input" type="text" :value="piProviderName(editingPiProvider.id)" readonly>
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.fields.baseUrl') }}</label>
+                                    <input class="form-input" type="url" v-model="editingPiProvider.form.baseUrl" autocomplete="off" spellcheck="false" placeholder="https://">
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.fields.api') }}</label>
+                                    <input class="form-input" type="text" v-model="editingPiProvider.form.api" autocomplete="off" spellcheck="false" placeholder="openai|claude">
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.fields.apiKey') }}</label>
+                                    <div class="input-with-toggle">
+                                        <input class="form-input" v-model="editingPiProvider.form.apiKey" :type="piShowKey ? 'text' : 'password'" autocomplete="off" spellcheck="false" placeholder="sk-...">
+                                        <button type="button" class="input-toggle-btn" @mousedown.prevent @click="piShowKey = !piShowKey" :title="piShowKey ? t('common.hide') : t('common.show')" :aria-label="piShowKey ? t('common.hide') : t('common.show')">
+                                            <svg v-if="!piShowKey" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+                                            <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">{{ t('pi.providers.fields.models') }}</label>
+                                <div class="card-list">
+                                    <div class="card" v-for="(model, index) in editingPiProvider.form.models" :key="index">
+                                        <div class="codex-config-grid">
+                                            <div class="form-group codex-config-field">
+                                                <label class="form-label">ID</label>
+                                                <input class="form-input" type="text" v-model="model.id" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4">
+                                            </div>
+                                            <div class="form-group codex-config-field">
+                                                <label class="form-label">Name</label>
+                                                <input class="form-input" type="text" v-model="model.name" autocomplete="off" spellcheck="false" placeholder="Claude Sonnet 4">
+                                            </div>
+                                            <div class="form-group codex-config-field">
+                                                <label class="form-label">Context window</label>
+                                                <input class="form-input" type="number" v-model="model.contextWindow" autocomplete="off" spellcheck="false" placeholder="200000">
+                                            </div>
+                                            <div class="form-group codex-config-field">
+                                                <button type="button" class="btn-tool" @click="editingPiProvider.form.models.splice(index, 1)" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.remove') }}</button>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <button type="button" class="btn-tool" @click="editingPiProvider.form.models.push({ id: '', name: '', reasoning: '', input: '', contextWindow: '', maxTokens: '' })" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.add') }}</button>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">{{ t('pi.providers.fields.configJson') }}</label>
+                                <textarea class="template-textarea" rows="8" v-model="editingPiProvider.form.configJsonDraft" spellcheck="false" :readonly="!isToolConfigWriteAllowed('pi')" placeholder="{}"></textarea>
+                            </div>
+                            <div class="settings-tab-actions">
+                                <button type="button" class="btn-tool" @click="confirmDeletePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.delete') }}</button>
+                            </div>
+                        </section>
+
+                        <section class="selector-section" v-if="showAddPiProviderModal">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.providers.addModal.title') }}</span>
+                                <div class="settings-tab-actions">
+                                    <button type="button" class="btn-tool" @click="addPiProviderFromModal" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('common.save') }}</button>
+                                    <button type="button" class="btn-tool" @click="cancelAddPiProviderModal">{{ t('common.cancel') }}</button>
+                                </div>
+                            </div>
+                            <div class="config-template-hint">{{ t('pi.providers.addModal.subtitle') }}</div>
+                            <div class="codex-config-grid">
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.addModal.fields.id') }}</label>
+                                    <input class="form-input" type="text" v-model="addingPiProviderId" autocomplete="off" spellcheck="false" placeholder="pi-provider-1">
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.addModal.fields.name') }}</label>
+                                    <input class="form-input" type="text" v-model="addingPiProviderName" autocomplete="off" spellcheck="false" placeholder="My Piper Provider">
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.addModal.fields.baseUrl') }}</label>
+                                    <input class="form-input" type="url" v-model="addingPiProviderBaseUrl" autocomplete="off" spellcheck="false" placeholder="https://">
+                                </div>
+                                <div class="form-group codex-config-field">
+                                    <label class="form-label">{{ t('pi.providers.addModal.fields.api') }}</label>
+                                    <input class="form-input" type="text" v-model="addingPiProviderApi" autocomplete="off" spellcheck="false" placeholder="openai|claude">
                                 </div>
                             </div>
                         </section>
