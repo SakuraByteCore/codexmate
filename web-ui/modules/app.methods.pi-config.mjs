@@ -122,6 +122,8 @@ export function createPiConfigMethods({ api: apiClient }) {
                 const providerId = this.derivePiProviderId(baseUrl);
                 const modelId = (this.addingPiProviderModel || '').trim();
                 const values = {
+                    id: providerId,
+                    name: providerId,
                     baseUrl,
                     api: this.addingPiProviderApi || 'openai-completions',
                     apiKey: (this.addingPiProviderApiKey || '').trim(),
@@ -151,18 +153,12 @@ export function createPiConfigMethods({ api: apiClient }) {
             }
         },
         derivePiProviderId(baseUrl) {
-            let base = '';
-            try {
-                base = new URL(baseUrl).hostname.replace(/^www\./, '');
-            } catch (_) {
-                base = '';
-            }
-            const candidate = (base || 'pi-provider').replace(/[^a-zA-Z0-9-]/g, '-')
-                .replace(/-+/g, '-').replace(/^-|-$/g, '') || 'pi-provider';
-            if (!this.piProviders[candidate]) return candidate;
-            let suffix = 2;
-            while (this.piProviders[`${candidate}-${suffix}`]) suffix += 1;
-            return `${candidate}-${suffix}`;
+            let candidate = String(Date.now());
+            while (this.piProviders[candidate]) candidate = String(Number(candidate) + 1);
+            return candidate;
+        },
+        piProviderUrlTitle() {
+            return '';
         },
         startAddPiProvider() {
             if (!this.isToolConfigWriteAllowed('pi') || this.piSaving) return;
@@ -346,20 +342,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.messageType = 'success';
         },
         piProviderName(providerId) {
-            const provider = this.piProviders[providerId] || {};
-            if (provider.title || provider.name) return provider.title || provider.name;
-            const urlTitle = this.piProviderUrlTitle(provider);
-            return urlTitle || providerId;
-        },
-        piProviderUrlTitle(provider) {
-            const baseUrl = provider && provider.baseUrl ? String(provider.baseUrl) : '';
-            if (!baseUrl) return '';
-            try {
-                const hostname = new URL(baseUrl).hostname;
-                return hostname.replace(/^www\./, '');
-            } catch (e) {
-                return '';
-            }
+            return String(providerId || '');
         },
         piProviderSummary(providerId) {
             const provider = this.piProviders[providerId] || {};

@@ -1,4 +1,4 @@
-﻿export const PROVIDER_CONFIG_MODE_META = Object.freeze({
+export const PROVIDER_CONFIG_MODE_META = Object.freeze({
     codex: Object.freeze({
         label: 'Codex',
         modelPlaceholder: '例如: gpt-5.3-codex',
