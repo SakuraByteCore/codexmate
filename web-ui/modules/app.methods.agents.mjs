@@ -980,15 +980,26 @@ export function createAgentsMethods(options = {}) {
                 this.loadProjectPathOptions();
             }
             if (this.promptsSubTab === normalized) {
-                if (normalized === 'system') this.loadSystemPrompt();
-                else this.loadPromptsContent();
+                if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
                 return;
             }
+            this.__skipNextPromptsSubTabLoad = true;
             this.promptsSubTab = normalized;
-            if (normalized === 'system') this.loadSystemPrompt();
+            if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
             this.$nextTick(() => {
                 document.querySelector('.main-panel')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
             });
+        },
+
+        loadPromptsTabContent() {
+            if (this.promptsSubTab === 'system') {
+                if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
+            } else {
+                if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
+                    this.loadProjectPathOptions();
+                }
+                if (typeof this.loadPromptsContent === 'function') this.loadPromptsContent();
+            }
         },
 
         async loadPromptsContent() {

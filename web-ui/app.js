@@ -587,7 +587,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         return true;
                     }
                 })();
-                void this.loadWebUiPreferences({ applyNavigation: applyPreferenceNavigation });
+                this.loadWebUiPreferences({ applyNavigation: applyPreferenceNavigation }).then(() => {
+                    if (this.mainTab === 'prompts' && typeof this.loadPromptsTabContent === 'function') {
+                        this.loadPromptsTabContent();
+                    }
+                });
             }
             if (typeof this.t === 'function') {
                 this.confirmDialogConfirmText = this.t('confirm.ok');
@@ -786,14 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 if (newTab === 'prompts') {
-                    if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
-                        this.loadProjectPathOptions();
-                    }
-                    if (this.promptsSubTab === 'system') {
-                        if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
-                    } else if (typeof this.loadPromptsContent === 'function') {
-                        this.loadPromptsContent();
-                    }
+                    if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
                 }
             },
             promptsSubTab(newVal) {
@@ -805,11 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 if (this.mainTab === 'prompts') {
-                    if (this.promptsSubTab === 'system') {
-                        if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
-                    } else if (typeof this.loadPromptsContent === 'function') {
-                        this.loadPromptsContent();
-                    }
+                    if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
                 }
             },
             projectClaudeMdPath(newPath) {
