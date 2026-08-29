@@ -3458,6 +3458,32 @@ return function render(_ctx, _cache) {
                           onClick: _ctx.confirmDeletePiProvider,
                           disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
                         }, _toDisplayString(_ctx.t('pi.providers.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ]),
+                      _createElementVNode("section", { class: "selector-section" }, [
+                        _createElementVNode("div", { class: "selector-header" }, [
+                          _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.json.title')), 1 /* TEXT */)
+                        ]),
+                        _createElementVNode("p", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.json.desc')), 1 /* TEXT */),
+                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.json.previewTitle')), 1 /* TEXT */),
+                        _createElementVNode("pre", { class: "config-json-preview" }, _toDisplayString(_ctx.piProviderPreviewJson()), 1 /* TEXT */),
+                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.json.editTitle')), 1 /* TEXT */),
+                        _withDirectives(_createElementVNode("textarea", {
+                          class: "template-textarea config-json-editor",
+                          "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.configJsonDraft) = $event),
+                          spellcheck: "false",
+                          autocomplete: "off",
+                          disabled: !_ctx.isToolConfigWriteAllowed('pi'),
+                          onInput: _ctx.piEditorJsonDraftInput,
+                          placeholder: "{}"
+                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
+                          [_vModelText, _ctx.editingPiProvider.form.configJsonDraft]
+                        ]),
+                        (_ctx.piEditorJsonError)
+                          ? (_openBlock(), _createElementBlock("p", {
+                              key: 0,
+                              class: "config-template-hint error-text"
+                            }, _toDisplayString(_ctx.piEditorJsonError), 1 /* TEXT */))
+                          : _createCommentVNode("v-if", true)
                       ])
                     ]))
                   : _createCommentVNode("v-if", true),

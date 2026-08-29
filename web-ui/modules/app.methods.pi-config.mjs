@@ -81,24 +81,13 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piSaving = true;
             try {
                 const providerId = this.editingPiProvider.id;
-                const values = this.editingPiProvider.form;
-                const extras = this.editingPiProvider.extras || {};
-                const provider = this.piProviders[providerId] || {};
-
-                const merged = {
-                    ...extras,
-                    baseUrl: values.baseUrl,
-                    api: values.api,
-                    apiKey: values.apiKey || '',
-                    models: (Array.isArray(values.models) ? values.models : []).map((model) => ({
-                        ...model,
-                        id: model.id || '',
-                        name: model.id || ''
-                    }))
-                };
-                if (isPiPlainObject(provider.headers)) merged.headers = provider.headers;
-                if (typeof provider.title === 'string') merged.title = provider.title;
-                else if (typeof provider.name === 'string') merged.name = provider.name;
+                const { merged, ok, error } = this.piBuildMergedEditorRecord();
+                if (!ok || !merged) {
+                    this.piEditorJsonError = error || '配置 JSON 不合法';
+                    this.message = this.piEditorJsonError;
+                    this.messageType = 'error';
+                    return;
+                }
 
                 await this.persistPiProvider(providerId, merged);
                 this.piProviders = { ...this.piProviders, [providerId]: merged };
@@ -232,6 +221,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piRemoteModels = [];
             this.piRemoteModelError = '';
             this.piModelSearch = '';
+            this.piEditorJsonError = '';
             const provider = this.piProviders[providerId] || {};
             const knownKeys = ['id', 'name', 'title', 'baseUrl', 'api', 'apiKey', 'models', 'headers', 'configJson'];
             const extras = {};
@@ -269,6 +259,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piRemoteModels = [];
             this.piRemoteModelError = '';
             this.piModelSearch = '';
+            this.piEditorJsonError = '';
         },
         removePiProviderModel(index) {
             if (!this.editingPiProvider) return;
@@ -349,6 +340,58 @@ export function createPiConfigMethods({ api: apiClient }) {
             const baseUrl = provider.baseUrl || '';
             const api = provider.api || '';
             return [baseUrl, api].filter(Boolean).join(' • ') || 'Piper provider';
+        }
+        ,
+        piParseEditorJsonDraft() {
+            const provider = this.editingPiProvider;
+            const draft = provider && provider.form ? String(provider.form.configJsonDraft || '').trim() : '';
+            if (!draft) return { ok: true, extras: {} };
+            try {
+                const parsed = JSON.parse(draft);
+                if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') {
+                    return { ok: false, extras: {}, error: '配置 JSON 必须是对象' };
+                }
+                return { ok: true, extras: parsed };
+            } catch (e) {
+                return { ok: false, extras: {}, error: e && e.message ? '配置 JSON 解析失败：' + e.message : '配置 JSON 解析失败' };
+            }
+        },
+        piBuildMergedEditorRecord() {
+            const provider = this.editingPiProvider;
+            if (!provider || !provider.form) return { merged: null, ok: false, error: '未在编辑供应商', extras: {} };
+            const draft = this.piParseEditorJsonDraft();
+            if (!draft.ok) return { merged: null, ok: false, error: draft.error, extras: {} };
+            const values = provider.form || {};
+            const extras = draft.extras || {};
+            const orig = this.piProviders[provider.id] || {};
+            const mapModels = (xs) => (Array.isArray(xs) ? xs : []).map((model) => ({
+                ...model,
+                id: (model && model.id) || '',
+                name: (model && (model.name || model.id)) || ''
+            }));
+            const merged = { ...extras };
+            if (merged.baseUrl === undefined) merged.baseUrl = values.baseUrl || '';
+            if (merged.api === undefined) merged.api = values.api || '';
+            if (merged.apiKey === undefined) merged.apiKey = values.apiKey || '';
+            if (merged.models === undefined) merged.models = mapModels(values.models);
+            if (isPiPlainObject(orig.headers)) merged.headers = orig.headers;
+            if (typeof orig.title === 'string') merged.title = orig.title;
+            else if (typeof orig.name === 'string') merged.name = orig.name;
+            if (isPiPlainObject(orig.configJson)) merged.configJson = orig.configJson;
+            return { merged, ok: true, error: '', extras };
+        },
+        piProviderPreviewJson() {
+            const { merged, ok } = this.piBuildMergedEditorRecord();
+            if (!ok || !merged) return '{}';
+            try {
+                return JSON.stringify(merged, null, 2);
+            } catch (_) {
+                return '{}';
+            }
+        },
+        piEditorJsonDraftInput() {
+            const draft = this.piParseEditorJsonDraft();
+            this.piEditorJsonError = draft.ok ? '' : draft.error;
         }
     };
 }

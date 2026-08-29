@@ -352,6 +352,28 @@
     margin-top: 2px;
 }
 
+.config-json-preview {
+    width: 100%;
+    max-height: 240px;
+    overflow: auto;
+    margin: 0 0 10px;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre;
+    box-shadow: var(--shadow-subtle);
+}
+
+.config-json-editor {
+    min-height: 180px;
+    margin-bottom: 8px;
+}
+
 /* ============================================
    按钮
    ============================================ */
