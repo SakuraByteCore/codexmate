@@ -5,6 +5,10 @@
     align-items: start;
 }
 
+.plugins-layout-single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .plugins-sidebar {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -101,6 +105,11 @@
 
 .plugins-panel-head {
     margin-bottom: var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
 }
 
 .plugins-panel-title {
@@ -303,27 +312,15 @@
 
 .prompt-compose-workspace {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--spacing-sm);
+    align-items: start;
 }
 
-.prompt-compose-selected {
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border-soft);
-    background: linear-gradient(to bottom, rgba(255,243,236,0.5) 0%, rgba(255,255,255,0.6) 100%);
-}
-
-.prompt-compose-selected-title {
-    font-size: var(--font-size-body);
-    font-weight: var(--font-weight-primary);
-    color: var(--color-text-primary);
-}
-
-.prompt-compose-selected-meta {
-    margin-top: 6px;
-    font-size: var(--font-size-caption);
-    color: var(--color-text-tertiary);
-    line-height: 1.5;
+.prompt-compose-main {
+    display: grid;
+    gap: var(--spacing-sm);
+    min-width: 0;
 }
 
 .prompt-compose-canvas {
@@ -550,6 +547,9 @@
 
 @media (max-width: 980px) {
     .plugins-layout {
+        grid-template-columns: 1fr;
+    }
+    .prompt-compose-workspace {
         grid-template-columns: 1fr;
     }
     .prompt-templates-grid {

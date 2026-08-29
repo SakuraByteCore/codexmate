@@ -6187,49 +6187,54 @@ return function render(_ctx, _cache) {
             role: "tabpanel",
             "aria-labelledby": "tab-plugins"
           }, [
-            _createElementVNode("div", { class: "plugins-layout" }, [
-              _createElementVNode("aside", {
-                class: "plugins-sidebar",
-                "aria-label": _ctx.t('plugins.sidebar.ariaList')
-              }, [
-                _createElementVNode("div", { class: "selector-header plugins-sidebar-header" }, [
-                  _createElementVNode("div", null, [
-                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('plugins.sidebar.title')), 1 /* TEXT */),
-                    _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.sidebar.note')), 1 /* TEXT */)
-                  ]),
-                  _createElementVNode("div", { class: "settings-tab-actions" }, [
-                    _createElementVNode("button", {
-                      type: "button",
-                      class: "btn-tool btn-tool-compact",
-                      onClick: $event => (_ctx.loadPluginsOverview({ forceRefresh: true, silent: false })),
-                      disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading
-                    }, _toDisplayString(_ctx.pluginsLoading ? _ctx.t('plugins.refreshing') : _ctx.t('plugins.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ])
-                ]),
-                _createElementVNode("div", {
-                  class: "plugins-list",
-                  role: "list"
-                }, [
-                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.pluginsCatalog, (plugin) => {
-                    return (_openBlock(), _createElementBlock("button", {
-                      key: 'plugin-' + plugin.id,
-                      type: "button",
-                      class: _normalizeClass(['plugins-item', { active: _ctx.pluginsActiveId === plugin.id }]),
-                      "aria-current": _ctx.pluginsActiveId === plugin.id ? 'page' : null,
-                      disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading,
-                      onClick: $event => (_ctx.selectPlugin(plugin.id))
-                    }, [
-                      _createElementVNode("div", { class: "plugins-item-main" }, [
-                        _createElementVNode("div", { class: "plugins-item-title" }, _toDisplayString(plugin.title), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "plugins-item-meta" }, _toDisplayString(plugin.description), 1 /* TEXT */)
+            _createElementVNode("div", {
+              class: _normalizeClass(['plugins-layout', { 'plugins-layout-single': !_ctx.pluginsSidebarVisible }])
+            }, [
+              (_ctx.pluginsSidebarVisible)
+                ? (_openBlock(), _createElementBlock("aside", {
+                    key: 0,
+                    class: "plugins-sidebar",
+                    "aria-label": _ctx.t('plugins.sidebar.ariaList')
+                  }, [
+                    _createElementVNode("div", { class: "selector-header plugins-sidebar-header" }, [
+                      _createElementVNode("div", null, [
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('plugins.sidebar.title')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.sidebar.note')), 1 /* TEXT */)
                       ]),
-                      _createElementVNode("span", {
-                        class: _normalizeClass(['pill', plugin.tone])
-                      }, _toDisplayString(plugin.statusLabel), 3 /* TEXT, CLASS */)
-                    ], 10 /* CLASS, PROPS */, ["aria-current", "disabled", "onClick"]))
-                  }), 128 /* KEYED_FRAGMENT */))
-                ])
-              ], 8 /* PROPS */, ["aria-label"]),
+                      _createElementVNode("div", { class: "settings-tab-actions" }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool btn-tool-compact",
+                          onClick: $event => (_ctx.loadPluginsOverview({ forceRefresh: true, silent: false })),
+                          disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading
+                        }, _toDisplayString(_ctx.pluginsLoading ? _ctx.t('plugins.refreshing') : _ctx.t('plugins.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                      ])
+                    ]),
+                    _createElementVNode("div", {
+                      class: "plugins-list",
+                      role: "list"
+                    }, [
+                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.pluginsCatalog, (plugin) => {
+                        return (_openBlock(), _createElementBlock("button", {
+                          key: 'plugin-' + plugin.id,
+                          type: "button",
+                          class: _normalizeClass(['plugins-item', { active: _ctx.pluginsActiveId === plugin.id }]),
+                          "aria-current": _ctx.pluginsActiveId === plugin.id ? 'page' : null,
+                          disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading,
+                          onClick: $event => (_ctx.selectPlugin(plugin.id))
+                        }, [
+                          _createElementVNode("div", { class: "plugins-item-main" }, [
+                            _createElementVNode("div", { class: "plugins-item-title" }, _toDisplayString(plugin.title), 1 /* TEXT */),
+                            _createElementVNode("div", { class: "plugins-item-meta" }, _toDisplayString(plugin.description), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("span", {
+                            class: _normalizeClass(['pill', plugin.tone])
+                          }, _toDisplayString(plugin.statusLabel), 3 /* TEXT, CLASS */)
+                        ], 10 /* CLASS, PROPS */, ["aria-current", "disabled", "onClick"]))
+                      }), 128 /* KEYED_FRAGMENT */))
+                    ])
+                  ], 8 /* PROPS */, ["aria-label"]))
+                : _createCommentVNode("v-if", true),
               _createElementVNode("section", {
                 class: "plugins-main",
                 "aria-label": _ctx.t('plugins.main.ariaWorkspace')
@@ -6258,12 +6263,27 @@ return function render(_ctx, _cache) {
                           class: "plugins-panel"
                         }, [
                           _createElementVNode("div", { class: "plugins-panel-head" }, [
-                            _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.title')), 1 /* TEXT */),
-                            (_ctx.pluginsActiveAttribution)
+                            _createElementVNode("div", null, [
+                              _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.title')), 1 /* TEXT */),
+                              (_ctx.pluginsActiveAttribution)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 0,
+                                    class: "plugins-panel-note"
+                                  }, _toDisplayString(_ctx.pluginsActiveAttribution), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true)
+                            ]),
+                            (!_ctx.pluginsSidebarVisible)
                               ? (_openBlock(), _createElementBlock("div", {
                                   key: 0,
-                                  class: "plugins-panel-note"
-                                }, _toDisplayString(_ctx.pluginsActiveAttribution), 1 /* TEXT */))
+                                  class: "settings-tab-actions"
+                                }, [
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-tool btn-tool-compact",
+                                    onClick: $event => (_ctx.loadPluginsOverview({ forceRefresh: true, silent: false })),
+                                    disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading
+                                  }, _toDisplayString(_ctx.pluginsLoading ? _ctx.t('plugins.refreshing') : _ctx.t('plugins.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                ]))
                               : _createCommentVNode("v-if", true)
                           ]),
                           _createElementVNode("div", {
@@ -6317,126 +6337,118 @@ return function render(_ctx, _cache) {
                                 class: "prompt-compose"
                               }, [
                                 _createElementVNode("div", { class: "prompt-compose-workspace" }, [
-                                  _createElementVNode("div", { class: "prompt-compose-selected" }, [
-                                    _createElementVNode("div", { class: "prompt-compose-selected-title" }, _toDisplayString((_ctx.promptComposerActiveTemplate && _ctx.promptComposerActiveTemplate.name) ? _ctx.promptComposerActiveTemplate.name : _ctx.t('plugins.promptTemplates.compose.chooseTemplate')), 1 /* TEXT */),
-                                    _createElementVNode("div", { class: "prompt-compose-selected-meta" }, _toDisplayString((_ctx.promptComposerActiveTemplate && _ctx.promptComposerActiveTemplate.description) ? _ctx.promptComposerActiveTemplate.description : _ctx.t('plugins.promptTemplates.compose.chooseTemplateHint')), 1 /* TEXT */),
-                                    (_ctx.promptComposerActiveTemplate && _ctx.promptComposerActiveTemplate.isBuiltin && (_ctx.promptComposerActiveTemplate.createdBy || (_ctx.promptComposerActiveTemplate.maintainers && _ctx.promptComposerActiveTemplate.maintainers.length)))
-                                      ? (_openBlock(), _createElementBlock("div", {
-                                          key: 0,
-                                          class: "plugins-panel-note"
-                                        }, _toDisplayString(_ctx.t('plugins.meta.attribution', { createdBy: _ctx.promptComposerActiveTemplate.createdBy || '', maintainers: (_ctx.promptComposerActiveTemplate.maintainers || []).join(', ') })), 1 /* TEXT */))
-                                      : _createCommentVNode("v-if", true)
-                                  ]),
-                                  _createElementVNode("div", { class: "prompt-compose-form" }, [
-                                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.selectTemplate')), 1 /* TEXT */),
-                                    _createElementVNode("select", {
-                                      class: "form-select prompt-compose-template-select",
-                                      value: _ctx.promptComposerSelectedTemplateId,
-                                      onChange: $event => (_ctx.selectPromptComposerTemplate($event.target.value)),
-                                      disabled: _ctx.pluginsLoading || !_ctx.promptTemplatesList.length
-                                    }, [
-                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptTemplatesList, (tpl) => {
-                                        return (_openBlock(), _createElementBlock("option", {
-                                          key: 'compose-tpl-' + tpl.id,
-                                          value: tpl.id
-                                        }, _toDisplayString(tpl.name) + _toDisplayString(tpl.isBuiltin ? _ctx.t('plugins.promptTemplates.compose.builtinSuffix') : ''), 9 /* TEXT, PROPS */, ["value"]))
-                                      }), 128 /* KEYED_FRAGMENT */))
-                                    ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange", "disabled"]),
-                                    (!_ctx.promptComposerActiveTemplate)
-                                      ? (_openBlock(), _createElementBlock("div", {
-                                          key: 0,
-                                          class: "plugins-panel-note"
-                                        }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.empty')), 1 /* TEXT */))
-                                      : (!_ctx.promptComposerActiveTemplate.isBuiltin)
-                                        ? (_openBlock(), _createElementBlock("div", {
-                                            key: 1,
-                                            class: "plugins-panel-note"
-                                          }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.varsHint')), 1 /* TEXT */))
-                                        : _createCommentVNode("v-if", true),
-                                    (_ctx.promptComposerActiveTemplate && !_ctx.promptComposerActiveTemplate.isBuiltin)
-                                      ? (_openBlock(), _createElementBlock("div", {
-                                          key: 2,
-                                          class: "prompt-compose-actions"
-                                        }, [
-                                          _createElementVNode("button", {
-                                            type: "button",
-                                            class: "btn-mini",
-                                            onClick: $event => (_ctx.selectPromptTemplate(_ctx.promptComposerSelectedTemplateId)),
-                                            disabled: _ctx.pluginsLoading || !_ctx.promptComposerSelectedTemplateId
-                                          }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.goManage')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                                        ]))
-                                      : _createCommentVNode("v-if", true)
-                                  ]),
-                                  (_ctx.promptComposerActiveTemplate && _ctx.promptComposerActiveTemplate.vars && _ctx.promptComposerActiveTemplate.vars.length)
-                                    ? (_openBlock(), _createElementBlock("div", {
-                                        key: 0,
-                                        class: "prompt-vars-block"
+                                  _createElementVNode("div", { class: "prompt-compose-main" }, [
+                                    _createElementVNode("div", { class: "prompt-compose-form" }, [
+                                      _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.selectTemplate')), 1 /* TEXT */),
+                                      _createElementVNode("select", {
+                                        class: "form-select prompt-compose-template-select",
+                                        value: _ctx.promptComposerSelectedTemplateId,
+                                        onChange: $event => (_ctx.selectPromptComposerTemplate($event.target.value)),
+                                        disabled: _ctx.pluginsLoading || !_ctx.promptTemplatesList.length
                                       }, [
-                                        _createElementVNode("div", { class: "prompt-vars-head" }, [
-                                          _createElementVNode("div", null, [
-                                            _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.title')), 1 /* TEXT */),
-                                            (!_ctx.promptComposerActiveTemplate.isBuiltin)
-                                              ? (_openBlock(), _createElementBlock("div", {
-                                                  key: 0,
-                                                  class: "plugins-panel-note"
-                                                }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.varsHint')), 1 /* TEXT */))
-                                              : _createCommentVNode("v-if", true),
-                                            (_ctx.promptComposerMissingVars.length)
-                                              ? (_openBlock(), _createElementBlock("div", {
-                                                  key: 1,
-                                                  class: "plugins-panel-note"
-                                                }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.missingCount', { count: _ctx.promptComposerMissingVars.length })), 1 /* TEXT */))
-                                              : _createCommentVNode("v-if", true)
-                                          ]),
-                                          _createElementVNode("div", { class: "prompt-editor-actions" }, [
-                                            (_ctx.promptComposerMissingVars.length)
-                                              ? (_openBlock(), _createElementBlock("button", {
-                                                  key: 0,
-                                                  type: "button",
-                                                  class: "btn-mini",
-                                                  onClick: _ctx.focusPromptComposerFirstMissingVar,
-                                                  disabled: _ctx.pluginsLoading
-                                                }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.jumpToMissing')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                                              : _createCommentVNode("v-if", true),
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptTemplatesList, (tpl) => {
+                                          return (_openBlock(), _createElementBlock("option", {
+                                            key: 'compose-tpl-' + tpl.id,
+                                            value: tpl.id
+                                          }, _toDisplayString(tpl.name) + _toDisplayString(tpl.isBuiltin ? _ctx.t('plugins.promptTemplates.compose.builtinSuffix') : ''), 9 /* TEXT, PROPS */, ["value"]))
+                                        }), 128 /* KEYED_FRAGMENT */))
+                                      ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange", "disabled"]),
+                                      (!_ctx.promptComposerActiveTemplate)
+                                        ? (_openBlock(), _createElementBlock("div", {
+                                            key: 0,
+                                            class: "plugins-panel-note"
+                                          }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.empty')), 1 /* TEXT */))
+                                        : (_ctx.promptComposerActiveTemplate.description)
+                                          ? (_openBlock(), _createElementBlock("div", {
+                                              key: 1,
+                                              class: "plugins-panel-note"
+                                            }, _toDisplayString(_ctx.promptComposerActiveTemplate.description), 1 /* TEXT */))
+                                          : _createCommentVNode("v-if", true),
+                                      (_ctx.promptComposerActiveTemplate && !_ctx.promptComposerActiveTemplate.isBuiltin)
+                                        ? (_openBlock(), _createElementBlock("div", {
+                                            key: 2,
+                                            class: "prompt-compose-actions"
+                                          }, [
                                             _createElementVNode("button", {
                                               type: "button",
                                               class: "btn-mini",
-                                              onClick: _ctx.resetPromptComposerVarValues,
-                                              disabled: _ctx.pluginsLoading
-                                            }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.reset')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                                          ])
-                                        ]),
-                                        _createElementVNode("div", { class: "prompt-vars-grid" }, [
-                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptComposerActiveTemplate.vars, (name, idx) => {
-                                            return (_openBlock(), _createElementBlock("label", {
-                                              key: 'prompt-compose-var-' + name,
-                                              class: "prompt-var-row"
-                                            }, [
-                                              _createElementVNode("span", { class: "prompt-var-label mono" }, _toDisplayString(name), 1 /* TEXT */),
-                                              (idx === 0)
-                                                ? (_openBlock(), _createElementBlock("input", {
+                                              onClick: $event => (_ctx.selectPromptTemplate(_ctx.promptComposerSelectedTemplateId)),
+                                              disabled: _ctx.pluginsLoading || !_ctx.promptComposerSelectedTemplateId
+                                            }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.goManage')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                          ]))
+                                        : _createCommentVNode("v-if", true)
+                                    ]),
+                                    (_ctx.promptComposerActiveTemplate && _ctx.promptComposerActiveTemplate.vars && _ctx.promptComposerActiveTemplate.vars.length)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 0,
+                                          class: "prompt-vars-block"
+                                        }, [
+                                          _createElementVNode("div", { class: "prompt-vars-head" }, [
+                                            _createElementVNode("div", null, [
+                                              _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.title')), 1 /* TEXT */),
+                                              (!_ctx.promptComposerActiveTemplate.isBuiltin)
+                                                ? (_openBlock(), _createElementBlock("div", {
                                                     key: 0,
-                                                    ref_for: true,
-                                                    ref: "promptComposerFirstField",
-                                                    class: _normalizeClass(['form-input', 'prompt-var-input', { 'is-missing': _ctx.promptComposerMissingVars.includes(name) }]),
-                                                    type: "text",
-                                                    value: _ctx.promptComposerVarValues[name] || '',
-                                                    onInput: $event => (_ctx.setPromptComposerVarValue(name, $event.target.value)),
-                                                    placeholder: _ctx.t('plugins.promptTemplates.vars.valuePlaceholder', { name })
-                                                  }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["value", "onInput", "placeholder"]))
-                                                : (_openBlock(), _createElementBlock("input", {
+                                                    class: "plugins-panel-note"
+                                                  }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.varsHint')), 1 /* TEXT */))
+                                                : _createCommentVNode("v-if", true),
+                                              (_ctx.promptComposerMissingVars.length)
+                                                ? (_openBlock(), _createElementBlock("div", {
                                                     key: 1,
-                                                    class: _normalizeClass(['form-input', 'prompt-var-input', { 'is-missing': _ctx.promptComposerMissingVars.includes(name) }]),
-                                                    type: "text",
-                                                    value: _ctx.promptComposerVarValues[name] || '',
-                                                    onInput: $event => (_ctx.setPromptComposerVarValue(name, $event.target.value)),
-                                                    placeholder: _ctx.t('plugins.promptTemplates.vars.valuePlaceholder', { name })
-                                                  }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["value", "onInput", "placeholder"]))
-                                            ]))
-                                          }), 128 /* KEYED_FRAGMENT */))
-                                        ])
-                                      ]))
-                                    : _createCommentVNode("v-if", true),
+                                                    class: "plugins-panel-note"
+                                                  }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.missingCount', { count: _ctx.promptComposerMissingVars.length })), 1 /* TEXT */))
+                                                : _createCommentVNode("v-if", true)
+                                            ]),
+                                            _createElementVNode("div", { class: "prompt-editor-actions" }, [
+                                              (_ctx.promptComposerMissingVars.length)
+                                                ? (_openBlock(), _createElementBlock("button", {
+                                                    key: 0,
+                                                    type: "button",
+                                                    class: "btn-mini",
+                                                    onClick: _ctx.focusPromptComposerFirstMissingVar,
+                                                    disabled: _ctx.pluginsLoading
+                                                  }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.jumpToMissing')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                                                : _createCommentVNode("v-if", true),
+                                              _createElementVNode("button", {
+                                                type: "button",
+                                                class: "btn-mini",
+                                                onClick: _ctx.resetPromptComposerVarValues,
+                                                disabled: _ctx.pluginsLoading
+                                              }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.reset')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                            ])
+                                          ]),
+                                          _createElementVNode("div", { class: "prompt-vars-grid" }, [
+                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptComposerActiveTemplate.vars, (name, idx) => {
+                                              return (_openBlock(), _createElementBlock("label", {
+                                                key: 'prompt-compose-var-' + name,
+                                                class: "prompt-var-row"
+                                              }, [
+                                                _createElementVNode("span", { class: "prompt-var-label mono" }, _toDisplayString(name), 1 /* TEXT */),
+                                                (idx === 0)
+                                                  ? (_openBlock(), _createElementBlock("input", {
+                                                      key: 0,
+                                                      ref_for: true,
+                                                      ref: "promptComposerFirstField",
+                                                      class: _normalizeClass(['form-input', 'prompt-var-input', { 'is-missing': _ctx.promptComposerMissingVars.includes(name) }]),
+                                                      type: "text",
+                                                      value: _ctx.promptComposerVarValues[name] || '',
+                                                      onInput: $event => (_ctx.setPromptComposerVarValue(name, $event.target.value)),
+                                                      placeholder: _ctx.t('plugins.promptTemplates.vars.valuePlaceholder', { name })
+                                                    }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["value", "onInput", "placeholder"]))
+                                                  : (_openBlock(), _createElementBlock("input", {
+                                                      key: 1,
+                                                      class: _normalizeClass(['form-input', 'prompt-var-input', { 'is-missing': _ctx.promptComposerMissingVars.includes(name) }]),
+                                                      type: "text",
+                                                      value: _ctx.promptComposerVarValues[name] || '',
+                                                      onInput: $event => (_ctx.setPromptComposerVarValue(name, $event.target.value)),
+                                                      placeholder: _ctx.t('plugins.promptTemplates.vars.valuePlaceholder', { name })
+                                                    }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["value", "onInput", "placeholder"]))
+                                              ]))
+                                            }), 128 /* KEYED_FRAGMENT */))
+                                          ])
+                                        ]))
+                                      : _createCommentVNode("v-if", true)
+                                  ]),
                                   _createElementVNode("div", { class: "prompt-preview-block prompt-compose-preview" }, [
                                     _createElementVNode("div", { class: "prompt-vars-head" }, [
                                       _createElementVNode("div", null, [
@@ -6708,7 +6720,7 @@ return function render(_ctx, _cache) {
                           class: "skills-empty-state"
                         }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
               ], 8 /* PROPS */, ["aria-label"])
-            ])
+            ], 2 /* CLASS */)
           ], 512 /* NEED_PATCH */), [
             [_vShow, _ctx.mainTab === 'plugins']
           ]),
