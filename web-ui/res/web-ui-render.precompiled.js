@@ -661,13 +661,35 @@ return function render(_ctx, _cache) {
                               _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.opencodeConfigPath || _ctx.t('common.notSelected')), 1 /* TEXT */)
                             ])
                           ], 64 /* STABLE_FRAGMENT */))
-                        : (_openBlock(), _createElementBlock("div", {
-                            key: 4,
-                            class: "status-chip"
-                          }, [
-                            _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.configMode')), 1 /* TEXT */),
-                            _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.t('common.notSelected')), 1 /* TEXT */)
-                          ]))
+                        : (_ctx.configMode === 'kilocode')
+                          ? (_openBlock(), _createElementBlock(_Fragment, { key: 4 }, [
+                              _createElementVNode("div", { class: "status-chip" }, [
+                                _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.kilocodeProvider')), 1 /* TEXT */),
+                                _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.kilocodeProvider || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                              ]),
+                              _createElementVNode("div", { class: "status-chip" }, [
+                                _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.kilocodeModel')), 1 /* TEXT */),
+                                _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.kilocodeModel || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                              ])
+                            ], 64 /* STABLE_FRAGMENT */))
+                          : (_ctx.configMode === 'pi')
+                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 5 }, [
+                                _createElementVNode("div", { class: "status-chip" }, [
+                                  _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.piProvider')), 1 /* TEXT */),
+                                  _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.piActiveProvider || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                                ]),
+                                _createElementVNode("div", { class: "status-chip" }, [
+                                  _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.piModel')), 1 /* TEXT */),
+                                  _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.piActiveModel || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                                ])
+                              ], 64 /* STABLE_FRAGMENT */))
+                            : (_openBlock(), _createElementBlock("div", {
+                                key: 6,
+                                class: "status-chip"
+                              }, [
+                                _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.configMode')), 1 /* TEXT */),
+                                _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.t('common.notSelected')), 1 /* TEXT */)
+                              ]))
               ]))
             : (!_ctx.sessionStandalone && _ctx.mainTab === 'sessions')
               ? (_openBlock(), _createElementBlock("div", {

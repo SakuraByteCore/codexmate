@@ -471,6 +471,26 @@
                                 <span class="value">{{ opencodeConfigPath || t('common.notSelected') }}</span>
                             </div>
                         </template>
+                        <template v-else-if="configMode === 'kilocode'">
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.kilocodeProvider') }}</span>
+                                <span class="value">{{ kilocodeProvider || t('common.notSelected') }}</span>
+                            </div>
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.kilocodeModel') }}</span>
+                                <span class="value">{{ kilocodeModel || t('common.notSelected') }}</span>
+                            </div>
+                        </template>
+                        <template v-else-if="configMode === 'pi'">
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.piProvider') }}</span>
+                                <span class="value">{{ piActiveProvider || t('common.notSelected') }}</span>
+                            </div>
+                            <div class="status-chip">
+                                <span class="label">{{ t('status.piModel') }}</span>
+                                <span class="value">{{ piActiveModel || t('common.notSelected') }}</span>
+                            </div>
+                        </template>
                         <template v-else>
                             <div class="status-chip">
                                 <span class="label">{{ t('status.configMode') }}</span>
