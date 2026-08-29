@@ -108,7 +108,7 @@
         const mainTab = normalizeMainTab(mainTabSource);
         const configMode = typeof configModeSource === 'string' ? configModeSource.trim().toLowerCase() : '';
         const settingsTab = typeof vm.settingsTab === 'string' ? vm.settingsTab.trim().toLowerCase() : 'general';
-        const skillsTargetApp = typeof vm.skillsTargetApp === 'string' && (vm.skillsTargetApp === 'codex' || vm.skillsTargetApp === 'claude') ? vm.skillsTargetApp : 'codex';
+        const skillsTargetApp = typeof vm.skillsTargetApp === 'string' && (vm.skillsTargetApp === 'codex' || vm.skillsTargetApp === 'claude' || vm.skillsTargetApp === 'pi') ? vm.skillsTargetApp : 'codex';
         const promptTemplatesMode = typeof vm.promptTemplatesMode === 'string' && (vm.promptTemplatesMode === 'compose' || vm.promptTemplatesMode === 'manage') ? vm.promptTemplatesMode : 'compose';
         const snapshot = {
             settingsTab: settingsTab === 'data' ? 'data' : 'general',

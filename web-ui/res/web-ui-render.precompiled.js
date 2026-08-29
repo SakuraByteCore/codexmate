@@ -5928,7 +5928,14 @@ return function render(_ctx, _cache) {
                     "aria-pressed": _ctx.skillsTargetApp === 'claude',
                     disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy,
                     onClick: $event => (_ctx.setSkillsTargetApp('claude', { silent: false }))
-                  }, " Claude Code ", 10 /* CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"])
+                  }, " Claude Code ", 10 /* CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['skills-target-chip', { active: _ctx.skillsTargetApp === 'pi' }]),
+                    "aria-pressed": _ctx.skillsTargetApp === 'pi',
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy,
+                    onClick: $event => (_ctx.setSkillsTargetApp('pi', { silent: false }))
+                  }, " Pi ", 10 /* CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"])
                 ], 8 /* PROPS */, ["aria-label"])
               ]),
               _createElementVNode("div", { class: "skills-header-actions" }, [
@@ -9873,7 +9880,14 @@ return function render(_ctx, _cache) {
                     "aria-pressed": _ctx.skillsTargetApp === 'claude',
                     disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy,
                     onClick: $event => (_ctx.setSkillsTargetApp('claude', { silent: false }))
-                  }, " Claude Code ", 10 /* CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"])
+                  }, " Claude Code ", 10 /* CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: _normalizeClass(['market-target-chip', { active: _ctx.skillsTargetApp === 'pi' }]),
+                    "aria-pressed": _ctx.skillsTargetApp === 'pi',
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy,
+                    onClick: $event => (_ctx.setSkillsTargetApp('pi', { silent: false }))
+                  }, " Pi ", 10 /* CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"])
                 ], 8 /* PROPS */, ["aria-label"]),
                 _createElementVNode("button", {
                   class: "btn-mini",

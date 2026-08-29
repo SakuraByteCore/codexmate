@@ -102,13 +102,13 @@ function normalizeSessionSortMode(value) {
 }
 
 function normalizeNavigationSnapshot(vm, source = {}) {
-    const currentSkillsTargetApp = vm.skillsTargetApp === 'claude' ? 'claude' : 'codex';
+    const currentSkillsTargetApp = vm.skillsTargetApp === 'claude' || vm.skillsTargetApp === 'pi' ? vm.skillsTargetApp : 'codex';
     const currentPromptTemplatesMode = vm.promptTemplatesMode === 'manage' ? 'manage' : 'compose';
     return {
         mainTab: typeof source.mainTab === 'string' ? source.mainTab : vm.mainTab,
         configMode: typeof source.configMode === 'string' ? source.configMode : vm.configMode,
         settingsTab: typeof source.settingsTab === 'string' ? source.settingsTab : vm.settingsTab,
-        skillsTargetApp: source.skillsTargetApp === 'claude' || source.skillsTargetApp === 'codex'
+        skillsTargetApp: source.skillsTargetApp === 'claude' || source.skillsTargetApp === 'codex' || source.skillsTargetApp === 'pi'
             ? source.skillsTargetApp
             : currentSkillsTargetApp,
         promptTemplatesMode: source.promptTemplatesMode === 'manage' || source.promptTemplatesMode === 'compose'
@@ -477,7 +477,7 @@ export function createWebUiPreferencesMethods(options = {}) {
                             this.mainTab = nav.mainTab;
                         }
                     }
-                    if (nav.skillsTargetApp === 'codex' || nav.skillsTargetApp === 'claude') this.skillsTargetApp = nav.skillsTargetApp;
+                    if (nav.skillsTargetApp === 'codex' || nav.skillsTargetApp === 'claude' || nav.skillsTargetApp === 'pi') this.skillsTargetApp = nav.skillsTargetApp;
                     if (nav.promptTemplatesMode === 'compose' || nav.promptTemplatesMode === 'manage') this.promptTemplatesMode = nav.promptTemplatesMode;
                     if (typeof this.saveNavState === 'function') this.saveNavState();
                 }

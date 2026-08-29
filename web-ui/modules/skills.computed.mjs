@@ -1,10 +1,14 @@
 ﻿export function createSkillsComputed() {
     return {
         skillsTargetLabel() {
-            return this.skillsTargetApp === 'claude' ? 'Claude Code' : 'Codex';
+            if (this.skillsTargetApp === 'claude') return 'Claude Code';
+            if (this.skillsTargetApp === 'pi') return 'Pi';
+            return 'Codex';
         },
         skillsDefaultRootPath() {
-            return this.skillsTargetApp === 'claude' ? '~/.claude/skills' : '~/.codex/skills';
+            if (this.skillsTargetApp === 'claude') return '~/.claude/skills';
+            if (this.skillsTargetApp === 'pi') return '~/.pi/agent/skills';
+            return '~/.codex/skills';
         },
         filteredSkillsList() {
             const list = Array.isArray(this.skillsList) ? this.skillsList : [];

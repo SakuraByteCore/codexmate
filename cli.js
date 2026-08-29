@@ -1094,7 +1094,9 @@ function normalizeWebUiPreferences(value = {}) {
             mainTab: normalizeMainTabPreference(navigation.mainTab),
             configMode: normalizeConfigModePreference(navigation.configMode),
             settingsTab: normalizeSettingsTabPreference(navigation.settingsTab),
-            skillsTargetApp: navigation.skillsTargetApp === 'claude' ? 'claude' : 'codex',
+            skillsTargetApp: navigation.skillsTargetApp === 'claude' || navigation.skillsTargetApp === 'pi'
+                ? navigation.skillsTargetApp
+                : 'codex',
             promptTemplatesMode: navigation.promptTemplatesMode === 'manage' ? 'manage' : 'compose'
         }
     };

@@ -24,6 +24,7 @@ const CLAUDE_DIR = path.join(os.homedir(), '.claude');
 const CODEX_SKILLS_DIR = path.join(CONFIG_DIR, 'skills');
 const CLAUDE_SKILLS_DIR = path.join(CLAUDE_DIR, 'skills');
 const AGENTS_SKILLS_DIR = path.join(os.homedir(), '.agents', 'skills');
+const PI_SKILLS_DIR = path.join(os.homedir(), '.pi', 'agent', 'skills');
 
 const MAX_UPLOAD_SIZE = 200 * 1024 * 1024;
 const MAX_SKILLS_ZIP_UPLOAD_SIZE = 20 * 1024 * 1024;
@@ -72,9 +73,24 @@ function getClaudeSkillsDir() {
     return resolveExistingDir([homeConfigDir], CLAUDE_SKILLS_DIR);
 }
 
+function getPiSkillsDir() {
+    const joinPath = (basePath, ...segments) => {
+        const base = typeof basePath === 'string' ? basePath.trim() : '';
+        const pathApi = base.includes('/') && !base.includes('\\') && path.posix ? path.posix : path;
+        return pathApi.join(base, ...segments);
+    };
+    const envPiDir = typeof process.env.PI_CODING_AGENT_DIR === 'string' ? process.env.PI_CODING_AGENT_DIR.trim() : '';
+    if (envPiDir) {
+        const target = joinPath(envPiDir, 'skills');
+        return resolveExistingDir([target], target);
+    }
+    return resolveExistingDir([PI_SKILLS_DIR], PI_SKILLS_DIR);
+}
+
 const SKILL_TARGETS = Object.freeze([
     Object.freeze({ app: 'codex', label: 'Codex', dir: getCodexSkillsDir() }),
-    Object.freeze({ app: 'claude', label: 'Claude Code', dir: getClaudeSkillsDir() })
+    Object.freeze({ app: 'claude', label: 'Claude Code', dir: getClaudeSkillsDir() }),
+    Object.freeze({ app: 'pi', label: 'Pi', dir: getPiSkillsDir() })
 ]);
 
 const SKILL_IMPORT_SOURCES = Object.freeze([
@@ -1119,6 +1135,7 @@ module.exports = {
     SKILL_IMPORT_SOURCES,
     getCodexSkillsDir,
     getClaudeSkillsDir,
+    getPiSkillsDir,
     normalizeSkillTargetApp,
     getSkillTargetByApp,
     resolveSkillTarget,

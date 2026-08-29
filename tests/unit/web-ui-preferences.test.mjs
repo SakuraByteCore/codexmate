@@ -201,6 +201,35 @@ test('web UI preference snapshots preserve unrelated navigation sub-state', asyn
     assert.strictEqual(writeCall.params.preferences.navigation.promptTemplatesMode, 'manage');
 });
 
+test('web UI preferences load applies the pi skills target from navigation', async () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+    context.skillsTargetApp = '';
+    apiCalls.length = 0;
+    const navigationMethods = createNavigationMethods({
+        configModeSet: new Set(['codex', 'claude', 'openclaw', 'opencode']),
+        switchMainTabHelper: () => {},
+        loadMoreSessionMessagesHelper: () => {}
+    });
+    Object.assign(context, navigationMethods, {
+        async showMessage() {}
+    });
+    context.loadWebUiPreferences = createWebUiPreferencesMethods({
+        storage: createMemoryStorage(),
+        api: async (action) => {
+            if (action !== 'get-web-ui-preferences') return { success: true };
+            return {
+                preferences: {
+                    navigation: { skillsTargetApp: 'pi' }
+                }
+            };
+        }
+    }).loadWebUiPreferences;
+    await context.loadWebUiPreferences();
+
+    assert.strictEqual(context.skillsTargetApp, 'pi');
+});
+
 test('web UI preference debounce preserves nested pending overrides', async () => {
     const apiCalls = [];
     const context = createContext(apiCalls, createMemoryStorage());
