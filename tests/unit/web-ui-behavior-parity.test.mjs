@@ -1070,8 +1070,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionUsageWave',
         'usageHeroDelta',
         'usageHeroDeltaClass',
-        'usageHeroMainValue',
-        'usageHeroSubLabel',
+        'usageKpiCards',
+        'usageWaveHeaderSummary',
+        'usageRankedLists',
         'usageCurrentSessionStats',
         'taskOrchestrationSelectedRun',
         'taskOrchestrationSelectedRunNodes',
@@ -1111,7 +1112,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'currentClaudeHaikuModel',
         'currentClaudeSonnetModel',
         'currentClaudeOpusModel',
-        'currentInstalledCommandCards'
+        'currentInstalledCommandCards',
+        'usageHeroMainValue',
+        'usageHeroSubLabel'
     ];
     if (parityAgainstHead) {
         const allowedExtraComputedKeySet = new Set(allowedExtraCurrentComputedKeys);

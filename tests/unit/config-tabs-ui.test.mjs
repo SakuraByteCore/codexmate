@@ -148,7 +148,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(usagePanel, /sessionsUsageError && !sessionsUsageList\.length" class="usage-empty-state">/);
     assert.match(usagePanel, /v-else-if="!sessionsUsageList\.length" class="usage-empty-state">/);
     assert.match(usagePanel, /class="usage-empty-text">\{\{\s*t\('usage\.empty'\)\s*\}\}<\/p>/);
-    assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
+    assert.match(usagePanel, /usageRankedLists\.topPaths/);
     assert.match(usagePanel, /sessionUsageHourlyHeatmap/);
     assert.match(html, /data-main-tab="market"/);
     assert.match(html, /onMainTabPointerDown\('market', \$event\)/);
@@ -322,10 +322,14 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(usagePanel, /sessionsUsageList\.length/);
     assert.match(usagePanel, /loadSessionsUsage\(\{ forceRefresh: true, range: sessionsUsageTimeRange \}\)/);
     assert.match(usagePanel, /sessionUsageWave\.points/);
-    assert.match(usagePanel, /usage-hero/);
-    assert.match(usagePanel, /usage-hero-main/);
-    assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
-    assert.match(usagePanel, /sessionUsageCharts\.topSessionsByMessages/);
+    assert.match(usagePanel, /usage-kpi-grid/);
+    assert.match(usagePanel, /usage-kpi-card/);
+    assert.match(usagePanel, /usageKpiCards/);
+    assert.match(usagePanel, /usageRankedLists\.topPaths/);
+    assert.match(usagePanel, /usageRankedLists\.topSessions/);
+    assert.match(usagePanel, /usageRankedLists\.recentSessions/);
+    assert.match(usagePanel, /usageWaveHeaderSummary/);
+    assert.match(usagePanel, /usage-active-strip/);
     assert.match(usagePanel, /usage\.sessions\.topDensity/);
     assert.match(usagePanel, /usage-card-title/);
     assert.match(usagePanel, /usage-wave-chart/);

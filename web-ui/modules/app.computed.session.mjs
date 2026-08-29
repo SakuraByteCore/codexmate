@@ -896,25 +896,96 @@ export function createSessionComputed() {
             };
         },
 
-        usageHeroMainValue() {
+        usageKpiCards() {
             const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
                 ? this.sessionUsageCharts.summary
                 : null;
-            if (!summary) return '0';
-            return formatCompactUsageSummaryNumber(summary.totalTokens || 0);
+            if (!summary) return [];
+            const t = typeof this.t === 'function' ? this.t : null;
+            const totalTokens = summary.totalTokens || 0;
+            const activeDays = summary.activeDays || 0;
+            const dailyAvgTokens = activeDays > 0 ? Math.round(totalTokens / activeDays) : 0;
+            const noneLabel = t ? t('common.none') : '暂无';
+            const busiestDay = summary.busiestDay;
+            return [
+                {
+                    key: 'tokens',
+                    label: t ? t('usage.kpi.tokens') : '总 Token',
+                    value: formatCompactUsageSummaryNumber(totalTokens),
+                    title: formatUsageSummaryNumber(totalTokens),
+                    delta: this.usageHeroDelta,
+                    deltaClass: this.usageHeroDeltaClass
+                },
+                {
+                    key: 'sessions',
+                    label: t ? t('usage.kpi.sessions') : '会话数',
+                    value: formatUsageSummaryNumber(summary.totalSessions || 0)
+                },
+                {
+                    key: 'messages',
+                    label: t ? t('usage.kpi.messages') : '消息数',
+                    value: formatUsageSummaryNumber(summary.totalMessages || 0)
+                },
+                {
+                    key: 'daily-avg',
+                    label: t ? t('usage.kpi.dailyAvg') : '日均 Token',
+                    value: formatCompactUsageSummaryNumber(dailyAvgTokens),
+                    title: formatUsageSummaryNumber(dailyAvgTokens)
+                },
+                {
+                    key: 'busiest-day',
+                    label: t ? t('usage.kpi.busiestDay') : '最忙日',
+                    value: busiestDay && busiestDay.totalSessions > 0
+                        ? `${busiestDay.label} · ${busiestDay.totalSessions}`
+                        : noneLabel
+                }
+            ];
+        },
+        usageWaveHeaderSummary() {
+            const daily = this.sessionUsageDaily && typeof this.sessionUsageDaily === 'object'
+                ? this.sessionUsageDaily
+                : null;
+            const rows = daily && Array.isArray(daily.rows) ? daily.rows : [];
+            if (!rows.length) return '';
+            let totalTokens = 0;
+            let peakRow = rows[0];
+            for (const row of rows) {
+                const tokens = Number.isFinite(Number(row && row.tokenTotal)) ? Number(row.tokenTotal) : 0;
+                totalTokens += tokens;
+                if (tokens > (Number(peakRow.tokenTotal) || 0)) peakRow = row;
+            }
+            const t = typeof this.t === 'function' ? this.t : null;
+            const params = {
+                total: formatCompactUsageSummaryNumber(totalTokens),
+                peakDay: peakRow.key || '',
+                peakValue: formatCompactUsageSummaryNumber(peakRow.tokenTotal || 0)
+            };
+            return t
+                ? t('usage.wave.summary', params)
+                : `本期共 ${params.total} · 峰值 ${params.peakDay}（${params.peakValue}）`;
         },
 
-        usageHeroSubLabel() {
-            const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
-                ? this.sessionUsageCharts.summary
-                : null;
-            if (!summary) return '';
-            const t = typeof this.t === 'function' ? this.t : null;
-            const sessionCount = summary.totalSessions || 0;
-            const rangeLabel = this.sessionsUsageTimeRange === '30d' ? '30天' : (this.sessionsUsageTimeRange === 'all' ? '全部' : '7天');
-            const rangeText = t ? t('usage.range.' + this.sessionsUsageTimeRange) : rangeLabel;
-            return `${formatUsageSummaryNumber(sessionCount)} sessions · ${rangeText}`;
+        usageRankedLists() {
+            const charts = this.sessionUsageCharts && typeof this.sessionUsageCharts === 'object'
+                ? this.sessionUsageCharts
+                : {};
+            const withBars = (list, pickValue) => {
+                const items = Array.isArray(list) ? list : [];
+                const max = items.reduce((acc, item) => Math.max(acc, pickValue(item) || 0), 0);
+                return items.map((item) => ({
+                    ...item,
+                    barPercent: max > 0
+                        ? Math.max(6, Math.round(((pickValue(item) || 0) / max) * 1000) / 10)
+                        : 0
+                }));
+            };
+            return {
+                topSessions: withBars(charts.topSessionsByMessages, (item) => item && item.messageCount),
+                recentSessions: withBars(charts.recentSessions, (item) => item && item.messageCount),
+                topPaths: withBars(charts.topPaths, (item) => item && item.count)
+            };
         },
+
 
         usageHeroDelta() {
             const range = this.sessionsUsageTimeRange;

@@ -114,47 +114,27 @@
     line-height: 1.6;
 }
 
-/* ---- Hero 区域 (全宽沉浸式) ---- */
-.usage-hero {
-    padding: 32px 28px;
-    margin-bottom: 24px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(252,248,241,0.9));
-    border: 1px solid rgba(137, 111, 94, 0.08);
-    min-height: 160px;
+/* ---- 当前会话活跃条 (瘦身内嵌) ---- */
+.usage-active-strip {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 20px;
-    box-shadow: 0 8px 32px rgba(92, 68, 52, 0.08), 0 0 0 1px rgba(255,255,255,0.5) inset;
-    backdrop-filter: blur(10px);
-    position: relative;
-    overflow: hidden;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(200, 121, 99, 0.08), rgba(200, 121, 99, 0.04));
+    border: 1px solid rgba(200, 121, 99, 0.12);
+    font-size: 12px;
 }
 
-.usage-hero::before {
-    content: '';
-    position: absolute;
-    top: -72px;
-    right: 0;
-    width: min(320px, 62%);
-    height: min(320px, 62%);
-    background: radial-gradient(circle, rgba(200, 121, 99, 0.06) 0%, transparent 70%);
-    pointer-events: none;
-}
 
 .usage-hero-active {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 10px 16px;
-    padding: 12px 18px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(200, 121, 99, 0.08), rgba(200, 121, 99, 0.04));
-    border: 1px solid rgba(200, 121, 99, 0.12);
     font-size: 12px;
-    position: relative;
-    z-index: 1;
 }
 
 .usage-hero-active-dot {
@@ -191,49 +171,54 @@
     color: var(--color-border-strong);
 }
 
-.usage-hero-metrics {
-    text-align: center;
-    position: relative;
-    z-index: 1;
+.usage-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
 }
 
-.usage-hero-main {
-    font-size: 52px;
+.usage-kpi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(252, 248, 241, 0.7));
+    border: 1px solid rgba(137, 111, 94, 0.08);
+    box-shadow: 0 4px 16px rgba(92, 68, 52, 0.05);
+}
+
+.usage-kpi-label {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.usage-kpi-value {
+    font-size: 22px;
     font-weight: 700;
     color: var(--color-text-primary);
-    line-height: 1;
-    letter-spacing: -0.04em;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
-    animation: usage-hero-count 1s var(--ease-out-expo);
-    background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-brand) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: usage-kpi-count 0.6s var(--ease-out-expo);
 }
 
-@keyframes usage-hero-count {
-    from { opacity: 0; transform: translateY(16px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+.usage-kpi-card .usage-hero-delta {
+    align-self: flex-start;
 }
 
-.usage-hero-sub {
-    margin-top: 10px;
-    font-size: 14px;
-    color: var(--color-text-tertiary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    text-align: center;
-}
-
-.usage-hero-sub > span {
-    min-width: 0;
-    max-width: 100%;
-    overflow-wrap: anywhere;
+@keyframes usage-kpi-count {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .usage-hero-delta {
@@ -255,11 +240,27 @@
 
 /* ---- 波浪图 (流体动画) ---- */
 .usage-wave-section {
+    position: relative;
     overflow: hidden;
     border: none;
     background: transparent;
     padding: 0;
     margin-bottom: 24px;
+}
+
+.usage-wave-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.usage-wave-summary {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-tertiary);
+    letter-spacing: 0;
 }
 
 .usage-wave-container {
@@ -395,11 +396,16 @@
 
 /* ---- 日期详情 ---- */
 .usage-daydetail {
-    margin-top: 16px;
-    padding: 14px 18px;
+    position: absolute;
+    top: 40px;
+    right: 8px;
+    z-index: 3;
+    max-width: min(340px, calc(100% - 40px));
+    padding: 10px 14px;
     border-radius: 12px;
-    background: linear-gradient(135deg, rgba(247, 239, 232, 0.8), rgba(247, 239, 232, 0.4));
-    border: 1px solid rgba(137, 111, 94, 0.06);
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(137, 111, 94, 0.1);
+    box-shadow: 0 6px 20px rgba(92, 68, 52, 0.08);
 }
 
 .usage-daydetail-header {
@@ -619,6 +625,22 @@
     color: var(--color-text-muted);
     margin-top: 3px;
 }
+.usage-list-bar {
+    height: 3px;
+    margin-top: 6px;
+    border-radius: 2px;
+    background: rgba(137, 111, 94, 0.12);
+    overflow: hidden;
+}
+
+.usage-list-bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-brand), rgba(200, 121, 99, 0.55));
+    transition: width 300ms ease;
+}
+
 
 .usage-list-value {
     font-size: 13px;
@@ -677,9 +699,8 @@
 .usage-list-path-content {
     flex: 1;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 4px;
     min-width: 0;
 }
 
@@ -780,8 +801,8 @@
 
 @media (max-width: 960px) {
 
-    .usage-hero-main {
-        font-size: 44px;
+    .usage-kpi-grid {
+        gap: 10px;
     }
 }
 
@@ -796,27 +817,19 @@
         flex-wrap: wrap;
     }
 
-    .usage-hero {
-        padding: 22px 16px;
-        min-height: 140px;
-        gap: 16px;
-    }
-
-    .usage-hero::before {
-        top: -56px;
-        right: 0;
-        width: 220px;
-        height: 220px;
-    }
-
-    .usage-hero-active {
-        padding: 10px 12px;
+    .usage-active-strip {
+        padding: 8px 12px;
         gap: 8px 10px;
     }
 
-    .usage-hero-main {
-        font-size: clamp(32px, 10vw, 38px);
-        line-height: 1.08;
+    .usage-kpi-value {
+        font-size: 18px;
+    }
+
+    .usage-daydetail {
+        position: static;
+        max-width: 100%;
+        margin-top: 12px;
     }
 
     .usage-wave-chart {

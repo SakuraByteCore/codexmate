@@ -4777,40 +4777,55 @@ return function render(_ctx, _cache) {
                             })
                           ]))
                         : _createCommentVNode("v-if", true),
-                      _createCommentVNode(" Hero 区域：合并当前会话条 + 主要指标 "),
-                      _createElementVNode("div", { class: "usage-hero" }, [
-                        (_ctx.usageCurrentSessionStats)
-                          ? (_openBlock(), _createElementBlock("div", {
-                              key: 0,
-                              class: "usage-hero-active"
-                            }, [
-                              _createElementVNode("span", { class: "usage-hero-active-dot" }),
-                              _createElementVNode("span", { class: "usage-hero-active-label" }, _toDisplayString(_ctx.usageCurrentSessionStats.label), 1 /* TEXT */),
-                              _createElementVNode("span", { class: "usage-hero-active-stat" }, _toDisplayString(_ctx.usageCurrentSessionStats.tokenLabel) + " tokens", 1 /* TEXT */),
-                              _createElementVNode("span", { class: "usage-hero-active-stat" }, _toDisplayString(_ctx.usageCurrentSessionStats.apiDurationLabel) + " API", 1 /* TEXT */),
-                              _createElementVNode("span", { class: "usage-hero-active-stat" }, _toDisplayString(_ctx.usageCurrentSessionStats.totalDurationLabel) + " total", 1 /* TEXT */)
-                            ]))
-                          : _createCommentVNode("v-if", true),
-                        _createElementVNode("div", { class: "usage-hero-metrics" }, [
-                          _createElementVNode("div", { class: "usage-hero-main" }, _toDisplayString(_ctx.usageHeroMainValue), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "usage-hero-sub" }, [
-                            _createElementVNode("span", null, _toDisplayString(_ctx.usageHeroSubLabel), 1 /* TEXT */),
-                            (_ctx.usageHeroDelta)
+                      (_ctx.usageCurrentSessionStats)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 1,
+                            class: "usage-active-strip",
+                            role: "status"
+                          }, [
+                            _createElementVNode("span", { class: "usage-hero-active-dot" }),
+                            _createElementVNode("span", { class: "usage-hero-active-label" }, _toDisplayString(_ctx.usageCurrentSessionStats.label), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "usage-hero-active-stat" }, _toDisplayString(_ctx.usageCurrentSessionStats.tokenLabel) + " tokens", 1 /* TEXT */),
+                            _createElementVNode("span", { class: "usage-hero-active-stat" }, _toDisplayString(_ctx.usageCurrentSessionStats.apiDurationLabel) + " API", 1 /* TEXT */),
+                            _createElementVNode("span", { class: "usage-hero-active-stat" }, _toDisplayString(_ctx.usageCurrentSessionStats.totalDurationLabel) + " total", 1 /* TEXT */)
+                          ]))
+                        : _createCommentVNode("v-if", true),
+                      _createCommentVNode(" KPI 指标卡片行 "),
+                      _createElementVNode("div", { class: "usage-kpi-grid" }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.usageKpiCards, (card) => {
+                          return (_openBlock(), _createElementBlock("div", {
+                            key: card.key,
+                            class: "usage-kpi-card"
+                          }, [
+                            _createElementVNode("div", { class: "usage-kpi-label" }, _toDisplayString(card.label), 1 /* TEXT */),
+                            _createElementVNode("div", {
+                              class: "usage-kpi-value",
+                              title: card.title || card.value
+                            }, _toDisplayString(card.value), 9 /* TEXT, PROPS */, ["title"]),
+                            (card.delta)
                               ? (_openBlock(), _createElementBlock("span", {
                                   key: 0,
-                                  class: _normalizeClass(['usage-hero-delta', _ctx.usageHeroDeltaClass])
-                                }, _toDisplayString(_ctx.usageHeroDelta), 3 /* TEXT, CLASS */))
+                                  class: _normalizeClass(['usage-hero-delta', card.deltaClass])
+                                }, _toDisplayString(card.delta), 3 /* TEXT, CLASS */))
                               : _createCommentVNode("v-if", true)
-                          ])
-                        ])
+                          ]))
+                        }), 128 /* KEYED_FRAGMENT */))
                       ]),
                       _createCommentVNode(" 波浪图 "),
                       (_ctx.sessionUsageWave.points && _ctx.sessionUsageWave.points.length)
                         ? (_openBlock(), _createElementBlock("section", {
-                            key: 1,
+                            key: 2,
                             class: "usage-wave-section"
                           }, [
-                            _createElementVNode("div", { class: "usage-card-title" }, _toDisplayString(_ctx.t('usage.daily.title')), 1 /* TEXT */),
+                            _createElementVNode("div", { class: "usage-card-title usage-wave-title" }, [
+                              _createElementVNode("span", null, _toDisplayString(_ctx.t('usage.daily.title')), 1 /* TEXT */),
+                              (_ctx.usageWaveHeaderSummary)
+                                ? (_openBlock(), _createElementBlock("span", {
+                                    key: 0,
+                                    class: "usage-wave-summary"
+                                  }, _toDisplayString(_ctx.usageWaveHeaderSummary), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true)
+                            ]),
                             _createElementVNode("div", { class: "usage-wave-container" }, [
                               _createElementVNode("div", { class: "usage-wave-yaxis" }, [
                                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageWave.yTicks, (tick) => {
@@ -4975,7 +4990,7 @@ return function render(_ctx, _cache) {
                         _createCommentVNode(" Top Sessions "),
                         _createElementVNode("section", { class: "usage-card" }, [
                           _createElementVNode("div", { class: "usage-card-title" }, _toDisplayString(_ctx.t('usage.sessions.topDensity')), 1 /* TEXT */),
-                          (!_ctx.sessionUsageCharts.topSessionsByMessages.length)
+                          (!_ctx.usageRankedLists.topSessions.length)
                             ? (_openBlock(), _createElementBlock("div", {
                                 key: 0,
                                 class: "usage-list-value"
@@ -4984,7 +4999,7 @@ return function render(_ctx, _cache) {
                                 key: 1,
                                 class: "usage-list-compact"
                               }, [
-                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageCharts.topSessionsByMessages, (item) => {
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.usageRankedLists.topSessions, (item) => {
                                   return (_openBlock(), _createElementBlock("div", {
                                     key: item.key + '-dense',
                                     class: "usage-list-compact-item",
@@ -4994,7 +5009,16 @@ return function render(_ctx, _cache) {
                                     _createElementVNode("span", { class: "usage-list-bullet" }, "·"),
                                     _createElementVNode("div", { class: "usage-list-compact-content" }, [
                                       _createElementVNode("div", { class: "usage-list-title" }, _toDisplayString(item.title), 1 /* TEXT */),
-                                      _createElementVNode("div", { class: "usage-list-meta" }, _toDisplayString(item.messageCount) + " msgs · " + _toDisplayString(item.sourceLabel) + " · " + _toDisplayString(item.updatedAtLabel), 1 /* TEXT */)
+                                      _createElementVNode("div", { class: "usage-list-meta" }, _toDisplayString(item.messageCount) + " msgs · " + _toDisplayString(item.sourceLabel) + " · " + _toDisplayString(item.updatedAtLabel), 1 /* TEXT */),
+                                      _createElementVNode("div", {
+                                        class: "usage-list-bar",
+                                        "aria-hidden": "true"
+                                      }, [
+                                        _createElementVNode("span", {
+                                          class: "usage-list-bar-fill",
+                                          style: _normalizeStyle({ width: item.barPercent + '%' })
+                                        }, null, 4 /* STYLE */)
+                                      ])
                                     ])
                                   ], 8 /* PROPS */, ["onClick", "title"]))
                                 }), 128 /* KEYED_FRAGMENT */))
@@ -5003,7 +5027,7 @@ return function render(_ctx, _cache) {
                         _createCommentVNode(" Recent Activity "),
                         _createElementVNode("section", { class: "usage-card" }, [
                           _createElementVNode("div", { class: "usage-card-title" }, _toDisplayString(_ctx.t('usage.recent.title')), 1 /* TEXT */),
-                          (!_ctx.sessionUsageCharts.recentSessions.length)
+                          (!_ctx.usageRankedLists.recentSessions.length)
                             ? (_openBlock(), _createElementBlock("div", {
                                 key: 0,
                                 class: "usage-list-value"
@@ -5012,7 +5036,7 @@ return function render(_ctx, _cache) {
                                 key: 1,
                                 class: "usage-list-compact"
                               }, [
-                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageCharts.recentSessions, (item) => {
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.usageRankedLists.recentSessions, (item) => {
                                   return (_openBlock(), _createElementBlock("div", {
                                     key: item.key,
                                     class: "usage-list-compact-item",
@@ -5021,7 +5045,16 @@ return function render(_ctx, _cache) {
                                     _createElementVNode("span", { class: "usage-list-bullet" }, "·"),
                                     _createElementVNode("div", { class: "usage-list-compact-content" }, [
                                       _createElementVNode("div", { class: "usage-list-title" }, _toDisplayString(item.title), 1 /* TEXT */),
-                                      _createElementVNode("div", { class: "usage-list-meta" }, _toDisplayString(item.messageCount) + " msgs · " + _toDisplayString(item.sourceLabel) + " · " + _toDisplayString(item.updatedAtLabel), 1 /* TEXT */)
+                                      _createElementVNode("div", { class: "usage-list-meta" }, _toDisplayString(item.messageCount) + " msgs · " + _toDisplayString(item.sourceLabel) + " · " + _toDisplayString(item.updatedAtLabel), 1 /* TEXT */),
+                                      _createElementVNode("div", {
+                                        class: "usage-list-bar",
+                                        "aria-hidden": "true"
+                                      }, [
+                                        _createElementVNode("span", {
+                                          class: "usage-list-bar-fill",
+                                          style: _normalizeStyle({ width: item.barPercent + '%' })
+                                        }, null, 4 /* STYLE */)
+                                      ])
                                     ])
                                   ], 8 /* PROPS */, ["onClick"]))
                                 }), 128 /* KEYED_FRAGMENT */))
@@ -5030,7 +5063,7 @@ return function render(_ctx, _cache) {
                         _createCommentVNode(" Top Paths "),
                         _createElementVNode("section", { class: "usage-paths-section" }, [
                           _createElementVNode("div", { class: "usage-card-title" }, _toDisplayString(_ctx.t('usage.paths.title')), 1 /* TEXT */),
-                          (!_ctx.sessionUsageCharts.topPaths.length)
+                          (!_ctx.usageRankedLists.topPaths.length)
                             ? (_openBlock(), _createElementBlock("div", {
                                 key: 0,
                                 class: "usage-list-value"
@@ -5039,7 +5072,7 @@ return function render(_ctx, _cache) {
                                 key: 1,
                                 class: "usage-list-paths"
                               }, [
-                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionUsageCharts.topPaths, (item, index) => {
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.usageRankedLists.topPaths, (item, index) => {
                                   return (_openBlock(), _createElementBlock("div", {
                                     key: item.path,
                                     class: "usage-list-path-row"
@@ -5050,8 +5083,17 @@ return function render(_ctx, _cache) {
                                         class: "usage-list-path",
                                         title: item.path
                                       }, _toDisplayString(item.path), 9 /* TEXT, PROPS */, ["title"]),
-                                      _createElementVNode("div", { class: "usage-list-path-stat" }, _toDisplayString(item.count), 1 /* TEXT */)
-                                    ])
+                                      _createElementVNode("div", {
+                                        class: "usage-list-bar",
+                                        "aria-hidden": "true"
+                                      }, [
+                                        _createElementVNode("span", {
+                                          class: "usage-list-bar-fill",
+                                          style: _normalizeStyle({ width: item.barPercent + '%' })
+                                        }, null, 4 /* STYLE */)
+                                      ])
+                                    ]),
+                                    _createElementVNode("div", { class: "usage-list-path-stat" }, _toDisplayString(item.count), 1 /* TEXT */)
                                   ]))
                                 }), 128 /* KEYED_FRAGMENT */))
                               ]))
