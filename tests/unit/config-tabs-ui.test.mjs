@@ -684,3 +684,22 @@ test('session responsive styles keep mobile toolbar reachable without deprecated
     assert.doesNotMatch(responsiveStyles, /word-break:\s*break-word/);
     assert.match(responsiveStyles, /\.session-preview-title\s*\{[\s\S]*?overflow-wrap:\s*anywhere;[\s\S]*?\}/);
 });
+
+test('docs panel uses segmented package manager control and drops summary strip', () => {
+    const html = readBundledWebUiHtml();
+    const pmSelectorCount = (html.match(/installPackageManager === '/g) || []).length;
+
+    assert.doesNotMatch(html, /docs-summary-strip/);
+    assert.doesNotMatch(html, /docs-toolbar-card-wide/);
+    assert.doesNotMatch(html, /docs-install-package-manager/);
+    assert.doesNotMatch(html, /for="docs-install-package-manager"/);
+    assert.strictEqual(pmSelectorCount, 3);
+    assert.match(
+        html,
+        /<div class="install-action-tabs">[\s\S]*?installPackageManager === 'npm'[\s\S]*?installPackageManager === 'pnpm'[\s\S]*?installPackageManager === 'bun'/
+    );
+    assert.match(
+        html,
+        /<div class="docs-toolbar-card">\s*<label class="form-label">\{\{ t\('common\.packageManager'\) \}\}<\/label>\s*<div class="install-action-tabs">/
+    );
+});

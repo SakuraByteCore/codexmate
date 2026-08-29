@@ -5,7 +5,7 @@
 .docs-mode-content {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
 /* ---- Toolbar grid ----
@@ -20,17 +20,17 @@
 .docs-toolbar-card {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     padding: 14px;
     border: 1px solid var(--color-border-soft);
     border-radius: var(--radius-md);
     background: var(--color-surface);
 }
 
-.docs-toolbar-card-wide {
-    /* 历史遗留的宽卡类，等宽网格下不再需要额外跨度，
-       保留类名以兼容模板中的引用。 */
-    grid-column: auto;
+/* 三张卡统一承载分段控件：标签块级化，使相邻卡内
+   install-action-tabs 的顶部基线保持一致。 */
+.docs-toolbar-card .form-label {
+    display: block;
 }
 
 /* Segmented control：把 install/registry 的散落 btn-mini
@@ -49,7 +49,7 @@
     border-color: transparent;
     background: transparent;
     box-shadow: none;
-    padding: 6px 12px;
+    padding: 5px 12px;
 }
 
 .docs-toolbar-card .install-action-tabs .btn-mini:hover {
@@ -64,48 +64,6 @@
     box-shadow: var(--shadow-subtle);
 }
 
-/* ---- Summary strip ----
-   原为 4 列网格但仅有 3 个 item，末列长期空置。改为
-   3 列等宽，composition 直接对齐内容数量。 */
-.docs-summary-strip {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 2px;
-}
-
-.docs-summary-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 14px 16px;
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-}
-
-/* 三列等宽后不再需要额外跨度，保留类名兼容模板引用。 */
-.docs-summary-item-wide {
-    grid-column: auto;
-}
-
-.docs-summary-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--color-text-muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.docs-summary-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    word-break: break-word;
-}
-
 /* ---- Install rows ---- */
 .docs-install-list {
     display: flex;
@@ -114,7 +72,7 @@
 }
 
 .docs-install-row {
-    padding: 16px;
+    padding: 14px;
     border: 1px solid var(--color-border-soft);
     border-radius: var(--radius-md);
     background: var(--color-surface);
@@ -124,7 +82,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .docs-command-row {
@@ -253,10 +211,6 @@
     .docs-toolbar-grid > .docs-toolbar-card:first-child {
         grid-column: span 2;
     }
-
-    .docs-summary-strip {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
 }
 
 @media (max-width: 720px) {
@@ -268,7 +222,6 @@
         grid-column: auto;
     }
 
-    .docs-summary-strip,
     .docs-help-grid {
         grid-template-columns: 1fr;
     }

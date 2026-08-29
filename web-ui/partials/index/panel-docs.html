@@ -11,14 +11,14 @@
 
                         <div class="docs-toolbar-grid">
                             <div class="docs-toolbar-card">
-                                <label class="form-label" for="docs-install-package-manager">{{ t('common.packageManager') }}</label>
-                                <select id="docs-install-package-manager" class="form-input" v-model="installPackageManager">
-                                    <option value="npm">npm</option>
-                                    <option value="pnpm">pnpm</option>
-                                    <option value="bun">bun</option>
-                                </select>
+                                <label class="form-label">{{ t('common.packageManager') }}</label>
+                                <div class="install-action-tabs">
+                                    <button type="button" class="btn-mini" :class="{ active: installPackageManager === 'npm' }" @click="installPackageManager = 'npm'">npm</button>
+                                    <button type="button" class="btn-mini" :class="{ active: installPackageManager === 'pnpm' }" @click="installPackageManager = 'pnpm'">pnpm</button>
+                                    <button type="button" class="btn-mini" :class="{ active: installPackageManager === 'bun' }" @click="installPackageManager = 'bun'">bun</button>
+                                </div>
                             </div>
-                            <div class="docs-toolbar-card docs-toolbar-card-wide">
+                            <div class="docs-toolbar-card">
                                 <label class="form-label">{{ t('common.mirror') }}</label>
                                 <div class="install-action-tabs">
                                     <button type="button" class="btn-mini" :class="{ active: installRegistryPreset === 'npmmirror' }" @click="setInstallRegistryPreset('npmmirror')">npmmirror</button>
@@ -29,7 +29,7 @@
                                 <div class="form-hint install-registry-hint" v-if="installRegistryPreview">{{ t('docs.registryHintPrefix') }} --registry={{ installRegistryPreview }}</div>
                                 <div class="form-hint install-registry-hint" v-else-if="installRegistryPreset === 'custom'">{{ t('docs.registryHintCustom') }}</div>
                             </div>
-                            <div class="docs-toolbar-card docs-toolbar-card-wide">
+                            <div class="docs-toolbar-card">
                                 <label class="form-label">{{ t('common.action') }}</label>
                                 <div class="install-action-tabs">
                                     <button type="button" class="btn-mini" :class="{ active: installCommandAction === 'install' }" @click="setInstallCommandAction('install')">{{ t('common.install') }}</button>
@@ -39,20 +39,6 @@
                             </div>
                         </div>
 
-                        <div class="docs-summary-strip">
-                            <div class="docs-summary-item">
-                                <span class="docs-summary-label">{{ t('common.targets') }}</span>
-                                <strong class="docs-summary-value">{{ installTargetCards.length }}</strong>
-                            </div>
-                            <div class="docs-summary-item">
-                                <span class="docs-summary-label">{{ t('common.currentPm') }}</span>
-                                <strong class="docs-summary-value">{{ String(installPackageManager || 'npm').toUpperCase() }}</strong>
-                            </div>
-                            <div class="docs-summary-item docs-summary-item-wide">
-                                <span class="docs-summary-label">{{ t('common.registry') }}</span>
-                                <strong class="docs-summary-value">{{ installRegistryPreview || 'npmmirror' }}</strong>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="selector-section">

@@ -5115,23 +5115,26 @@ return function render(_ctx, _cache) {
               ]),
               _createElementVNode("div", { class: "docs-toolbar-grid" }, [
                 _createElementVNode("div", { class: "docs-toolbar-card" }, [
-                  _createElementVNode("label", {
-                    class: "form-label",
-                    for: "docs-install-package-manager"
-                  }, _toDisplayString(_ctx.t('common.packageManager')), 1 /* TEXT */),
-                  _withDirectives(_createElementVNode("select", {
-                    id: "docs-install-package-manager",
-                    class: "form-input",
-                    "onUpdate:modelValue": $event => ((_ctx.installPackageManager) = $event)
-                  }, [
-                    _createElementVNode("option", { value: "npm" }, "npm"),
-                    _createElementVNode("option", { value: "pnpm" }, "pnpm"),
-                    _createElementVNode("option", { value: "bun" }, "bun")
-                  ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                    [_vModelSelect, _ctx.installPackageManager]
+                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('common.packageManager')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "install-action-tabs" }, [
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: _normalizeClass(["btn-mini", { active: _ctx.installPackageManager === 'npm' }]),
+                      onClick: $event => (_ctx.installPackageManager = 'npm')
+                    }, "npm", 10 /* CLASS, PROPS */, ["onClick"]),
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: _normalizeClass(["btn-mini", { active: _ctx.installPackageManager === 'pnpm' }]),
+                      onClick: $event => (_ctx.installPackageManager = 'pnpm')
+                    }, "pnpm", 10 /* CLASS, PROPS */, ["onClick"]),
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: _normalizeClass(["btn-mini", { active: _ctx.installPackageManager === 'bun' }]),
+                      onClick: $event => (_ctx.installPackageManager = 'bun')
+                    }, "bun", 10 /* CLASS, PROPS */, ["onClick"])
                   ])
                 ]),
-                _createElementVNode("div", { class: "docs-toolbar-card docs-toolbar-card-wide" }, [
+                _createElementVNode("div", { class: "docs-toolbar-card" }, [
                   _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('common.mirror')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "install-action-tabs" }, [
                     _createElementVNode("button", {
@@ -5172,7 +5175,7 @@ return function render(_ctx, _cache) {
                         }, _toDisplayString(_ctx.t('docs.registryHintCustom')), 1 /* TEXT */))
                       : _createCommentVNode("v-if", true)
                 ]),
-                _createElementVNode("div", { class: "docs-toolbar-card docs-toolbar-card-wide" }, [
+                _createElementVNode("div", { class: "docs-toolbar-card" }, [
                   _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('common.action')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "install-action-tabs" }, [
                     _createElementVNode("button", {
@@ -5191,20 +5194,6 @@ return function render(_ctx, _cache) {
                       onClick: $event => (_ctx.setInstallCommandAction('uninstall'))
                     }, _toDisplayString(_ctx.t('common.uninstall')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                   ])
-                ])
-              ]),
-              _createElementVNode("div", { class: "docs-summary-strip" }, [
-                _createElementVNode("div", { class: "docs-summary-item" }, [
-                  _createElementVNode("span", { class: "docs-summary-label" }, _toDisplayString(_ctx.t('common.targets')), 1 /* TEXT */),
-                  _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(_ctx.installTargetCards.length), 1 /* TEXT */)
-                ]),
-                _createElementVNode("div", { class: "docs-summary-item" }, [
-                  _createElementVNode("span", { class: "docs-summary-label" }, _toDisplayString(_ctx.t('common.currentPm')), 1 /* TEXT */),
-                  _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(String(_ctx.installPackageManager || 'npm').toUpperCase()), 1 /* TEXT */)
-                ]),
-                _createElementVNode("div", { class: "docs-summary-item docs-summary-item-wide" }, [
-                  _createElementVNode("span", { class: "docs-summary-label" }, _toDisplayString(_ctx.t('common.registry')), 1 /* TEXT */),
-                  _createElementVNode("strong", { class: "docs-summary-value" }, _toDisplayString(_ctx.installRegistryPreview || 'npmmirror'), 1 /* TEXT */)
                 ])
               ])
             ]),
