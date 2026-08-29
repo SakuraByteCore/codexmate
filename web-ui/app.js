@@ -819,10 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof this.persistWebUiPreferences === 'function') {
                     this.persistWebUiPreferences({ sysPromptMode: newVal });
                 }
-            }
-        },
-
-        watch: {
+            },
             configMode(newMode) {
                 if (newMode === 'pi' && typeof this.loadPiSources === 'function') {
                     this.loadPiSources();

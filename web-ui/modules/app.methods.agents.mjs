@@ -471,6 +471,18 @@ export function createAgentsMethods(options = {}) {
                         .filter(Boolean)
                         .filter(function (v, i, a) { return a.indexOf(v) === i; });
                 }
+                if (this.promptsSubTab === 'claude-project'
+                    && this.mainTab === 'prompts'
+                    && Array.isArray(this.projectPathOptions)
+                    && this.projectPathOptions.length) {
+                    const currentPath = (this.projectClaudeMdPath || '').trim();
+                    if (currentPath && this.projectPathOptions.indexOf(currentPath) !== -1) {
+                        this.projectClaudeMdPath = currentPath;
+                    } else {
+                        this.projectClaudeMdPath = this.projectPathOptions[0];
+                    }
+                    if (typeof this.loadPromptsContent === 'function') this.loadPromptsContent();
+                }
             } catch (_) {
                 // silent
             } finally {
@@ -1015,7 +1027,11 @@ export function createAgentsMethods(options = {}) {
                     if (!this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
                         this.loadProjectPathOptions();
                     }
-                    const projectPath = (this.projectClaudeMdPath || '').trim();
+                    let projectPath = (this.projectClaudeMdPath || '').trim();
+                    if (!projectPath && Array.isArray(this.projectPathOptions) && this.projectPathOptions.length) {
+                        this.projectClaudeMdPath = this.projectPathOptions[0];
+                        projectPath = this.projectClaudeMdPath.trim();
+                    }
                     if (projectPath) {
                         rpcParams.baseDir = projectPath;
                     }
