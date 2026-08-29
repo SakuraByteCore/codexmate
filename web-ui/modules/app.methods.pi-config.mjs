@@ -66,7 +66,8 @@ export function createPiConfigMethods({ api: apiClient }) {
             try {
                 const [providers] = await Promise.all([
                     this.loadPiProviders(),
-                    this.loadPiSettings()
+                    this.loadPiSettings(),
+                    this.loadPiFileJsons()
                 ]);
                 this.piProviders = providers || {};
                 this.piProviderIds = Object.keys(this.piProviders || {}).sort();
@@ -342,6 +343,88 @@ export function createPiConfigMethods({ api: apiClient }) {
             return [baseUrl, api].filter(Boolean).join(' • ') || 'Piper provider';
         }
         ,
+        piParseFileJsonDraft(draft, label) {
+            const name = label || 'JSON';
+            const text = String(draft || '').trim();
+            if (!text) return { ok: false, value: null, error: name + ' 内容不能为空' };
+            try {
+                const parsed = JSON.parse(text);
+                if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') {
+                    return { ok: false, value: null, error: name + ' 必须是 JSON 对象' };
+                }
+                return { ok: true, value: parsed, error: '' };
+            } catch (e) {
+                return { ok: false, value: null, error: name + ' 解析失败：' + (e && e.message ? e.message : '') };
+            }
+        },
+        async loadPiFileJsons() {
+            const [modelsResult, settingsResult] = await Promise.all([
+                apiClient('read-pi-models'),
+                apiClient('read-pi-settings')
+            ]);
+            const modelsFile = isPiPlainObject(modelsResult && modelsResult.file) ? modelsResult.file : {};
+            const settings = isPiPlainObject(settingsResult && settingsResult.settings) ? settingsResult.settings : {};
+            this.piModelsJsonDraft = JSON.stringify(modelsFile, null, 2);
+            this.piSettingsJsonDraft = JSON.stringify(settings, null, 2);
+            this.piModelsJsonError = '';
+            this.piSettingsJsonError = '';
+        },
+        piSettingsJsonInput() {
+            const parsed = this.piParseFileJsonDraft(this.piSettingsJsonDraft, 'settings.json');
+            this.piSettingsJsonError = parsed.ok ? '' : parsed.error;
+        },
+        piModelsJsonInput() {
+            const parsed = this.piParseFileJsonDraft(this.piModelsJsonDraft, 'models.json');
+            this.piModelsJsonError = parsed.ok ? '' : parsed.error;
+        },
+        async savePiSettingsJson() {
+            if (!this.isToolConfigWriteAllowed('pi') || this.piSaving || this.piFileJsonSaving) return;
+            const parsed = this.piParseFileJsonDraft(this.piSettingsJsonDraft, 'settings.json');
+            if (!parsed.ok) {
+                this.piSettingsJsonError = parsed.error;
+                this.message = parsed.error;
+                this.messageType = 'error';
+                return;
+            }
+            this.piFileJsonSaving = true;
+            try {
+                const result = await apiClient('write-pi-settings', { settings: parsed.value });
+                if (result && result.error) throw new Error(result.error);
+                this.piSettingsJsonError = '';
+                this.piSettingsJsonDraft = JSON.stringify(parsed.value, null, 2);
+                await this.loadPiSettings();
+                this.message = 'settings.json 已保存';
+                this.messageType = 'success';
+            } catch (e) {
+                this.message = e && e.message ? e.message : '保存 settings.json 失败';
+                this.messageType = 'error';
+            } finally {
+                this.piFileJsonSaving = false;
+            }
+        },
+        async savePiModelsJson() {
+            if (!this.isToolConfigWriteAllowed('pi') || this.piSaving || this.piFileJsonSaving) return;
+            const parsed = this.piParseFileJsonDraft(this.piModelsJsonDraft, 'models.json');
+            if (!parsed.ok) {
+                this.piModelsJsonError = parsed.error;
+                this.message = parsed.error;
+                this.messageType = 'error';
+                return;
+            }
+            this.piFileJsonSaving = true;
+            try {
+                const result = await apiClient('write-pi-models', { file: parsed.value });
+                if (result && result.error) throw new Error(result.error);
+                await this.loadPiSources();
+                this.message = 'models.json 已保存';
+                this.messageType = 'success';
+            } catch (e) {
+                this.message = e && e.message ? e.message : '保存 models.json 失败';
+                this.messageType = 'error';
+            } finally {
+                this.piFileJsonSaving = false;
+            }
+        },
         piParseEditorJsonDraft() {
             const provider = this.editingPiProvider;
             const draft = provider && provider.form ? String(provider.form.configJsonDraft || '').trim() : '';

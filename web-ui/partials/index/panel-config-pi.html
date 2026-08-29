@@ -178,6 +178,38 @@
                                 </div>
                             </div>
                         </section>
+                        <section class="selector-section">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.files.title') }}</span>
+                            </div>
+                            <div class="config-template-hint">{{ t('pi.files.desc') }}</div>
+                            <label class="form-label">{{ t('pi.files.settingsTitle') }}</label>
+                            <textarea
+                                class="template-textarea config-json-editor"
+                                v-model="piSettingsJsonDraft"
+                                spellcheck="false"
+                                autocomplete="off"
+                                :disabled="!isToolConfigWriteAllowed('pi')"
+                                @input="piSettingsJsonInput"
+                                placeholder="{}"></textarea>
+                            <p v-if="piSettingsJsonError" class="config-template-hint error-text">{{ piSettingsJsonError }}</p>
+                            <div class="settings-tab-actions">
+                                <button type="button" class="btn-tool" @click="savePiSettingsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piSettingsJsonError">{{ t('common.save') }}</button>
+                            </div>
+                            <label class="form-label">{{ t('pi.files.modelsTitle') }}</label>
+                            <textarea
+                                class="template-textarea config-json-editor"
+                                v-model="piModelsJsonDraft"
+                                spellcheck="false"
+                                autocomplete="off"
+                                :disabled="!isToolConfigWriteAllowed('pi')"
+                                @input="piModelsJsonInput"
+                                placeholder="{}"></textarea>
+                            <p v-if="piModelsJsonError" class="config-template-hint error-text">{{ piModelsJsonError }}</p>
+                            <div class="settings-tab-actions">
+                                <button type="button" class="btn-tool" @click="savePiModelsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piModelsJsonError">{{ t('common.save') }}</button>
+                            </div>
+                        </section>
                         <div v-if="!isToolConfigWriteAllowed('pi')" class="tool-config-write-overlay">
                             <div class="tool-config-write-overlay-card">
                                 <div class="tool-config-write-overlay-title">{{ t('toolConfig.pi.lockedTitle') }}</div>

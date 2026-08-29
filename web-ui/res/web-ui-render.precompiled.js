@@ -3598,6 +3598,64 @@ return function render(_ctx, _cache) {
                       ])
                     ]))
                   : _createCommentVNode("v-if", true),
+                _createElementVNode("section", { class: "selector-section" }, [
+                  _createElementVNode("div", { class: "selector-header" }, [
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.files.title')), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.files.desc')), 1 /* TEXT */),
+                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.files.settingsTitle')), 1 /* TEXT */),
+                  _withDirectives(_createElementVNode("textarea", {
+                    class: "template-textarea config-json-editor",
+                    "onUpdate:modelValue": $event => ((_ctx.piSettingsJsonDraft) = $event),
+                    spellcheck: "false",
+                    autocomplete: "off",
+                    disabled: !_ctx.isToolConfigWriteAllowed('pi'),
+                    onInput: _ctx.piSettingsJsonInput,
+                    placeholder: "{}"
+                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
+                    [_vModelText, _ctx.piSettingsJsonDraft]
+                  ]),
+                  (_ctx.piSettingsJsonError)
+                    ? (_openBlock(), _createElementBlock("p", {
+                        key: 0,
+                        class: "config-template-hint error-text"
+                      }, _toDisplayString(_ctx.piSettingsJsonError), 1 /* TEXT */))
+                    : _createCommentVNode("v-if", true),
+                  _createElementVNode("div", { class: "settings-tab-actions" }, [
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: "btn-tool",
+                      onClick: _ctx.savePiSettingsJson,
+                      disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piSettingsJsonError
+                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ]),
+                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.files.modelsTitle')), 1 /* TEXT */),
+                  _withDirectives(_createElementVNode("textarea", {
+                    class: "template-textarea config-json-editor",
+                    "onUpdate:modelValue": $event => ((_ctx.piModelsJsonDraft) = $event),
+                    spellcheck: "false",
+                    autocomplete: "off",
+                    disabled: !_ctx.isToolConfigWriteAllowed('pi'),
+                    onInput: _ctx.piModelsJsonInput,
+                    placeholder: "{}"
+                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
+                    [_vModelText, _ctx.piModelsJsonDraft]
+                  ]),
+                  (_ctx.piModelsJsonError)
+                    ? (_openBlock(), _createElementBlock("p", {
+                        key: 1,
+                        class: "config-template-hint error-text"
+                      }, _toDisplayString(_ctx.piModelsJsonError), 1 /* TEXT */))
+                    : _createCommentVNode("v-if", true),
+                  _createElementVNode("div", { class: "settings-tab-actions" }, [
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: "btn-tool",
+                      onClick: _ctx.savePiModelsJson,
+                      disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piModelsJsonError
+                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ])
+                ]),
                 (!_ctx.isToolConfigWriteAllowed('pi'))
                   ? (_openBlock(), _createElementBlock("div", {
                       key: 2,

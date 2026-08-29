@@ -574,6 +574,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'piProviderLoading',
         'piSaving',
         'piShowKey',
+        'piSettingsJsonDraft',
+        'piSettingsJsonError',
+        'piModelsJsonDraft',
+        'piModelsJsonError',
+        'piFileJsonSaving',
         'piActiveProvider',
         'piActiveModel',
         'addingPiProviderApiKey',
@@ -965,6 +970,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'resetPiProviderEditing',
         'savePiProvider',
         'savePiProviders',
+        'piParseFileJsonDraft',
+        'loadPiFileJsons',
+        'piSettingsJsonInput',
+        'piModelsJsonInput',
+        'savePiSettingsJson',
+        'savePiModelsJson',
         'startAddPiProvider'
     );
     const allowedMissingCurrentMethodKeys = [

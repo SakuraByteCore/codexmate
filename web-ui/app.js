@@ -148,6 +148,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 piActiveProvider: '',
                 piActiveModel: '',
                 piShowKey: false,
+                piSettingsJsonDraft: '',
+                piSettingsJsonError: '',
+                piModelsJsonDraft: '',
+                piModelsJsonError: '',
+                piFileJsonSaving: false,
                 // Plugins
                 pluginsActiveId: 'prompt-templates',
                 pluginsLoading: false,

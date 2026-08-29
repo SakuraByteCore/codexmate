@@ -1222,28 +1222,34 @@ function readPiModels(params = {}) {
         const dir = getPiAgentDir();
         const filePath = path.join(dir, 'models.json');
         if (!fs.existsSync(filePath)) {
-            return { providers: {} };
+            return { providers: {}, file: {} };
         }
         const raw = fs.readFileSync(filePath, 'utf-8');
         const data = JSON.parse(raw);
         const providers = (data && typeof data === 'object' && data.providers && typeof data.providers === 'object')
             ? data.providers
             : {};
-        return { providers };
+        const file = data && typeof data === 'object' && !Array.isArray(data) ? data : { providers };
+        return { providers, file };
     } catch (e) {
         return { error: e && e.message ? e.message : '读取 Pi models.json 失败' };
     }
 }
 
 function writePiModels(params = {}) {
+    const file = params && typeof params.file === 'object' && params.file !== null && !Array.isArray(params.file) ? params.file : null;
     const providers = params && typeof params.providers === 'object' ? params.providers : null;
-    if (providers === null) {
-        return { error: 'providers 不能为空' };
+    if (!file && providers === null) {
+        return { error: '缺少可写入的内容' };
     }
     try {
         const dir = getPiAgentDir();
         fs.mkdirSync(dir, { recursive: true });
         const filePath = path.join(dir, 'models.json');
+        if (file) {
+            fs.writeFileSync(filePath, JSON.stringify(file, null, 2), 'utf-8');
+            return { success: true };
+        }
         let existing = {};
         if (fs.existsSync(filePath)) {
             try {
@@ -1294,16 +1300,21 @@ function readPiSettings(params = {}) {
 }
 
 function writePiSettings(params = {}) {
+    const fullSettings = params && typeof params.settings === 'object' && params.settings !== null && !Array.isArray(params.settings) ? params.settings : null;
     const updates = {};
     if (typeof (params && params.defaultProvider) === 'string') updates.defaultProvider = params.defaultProvider;
     if (typeof (params && params.defaultModel) === 'string') updates.defaultModel = params.defaultModel;
-    if (Object.keys(updates).length === 0) {
+    if (!fullSettings && Object.keys(updates).length === 0) {
         return { error: '缺少可写入的设置项' };
     }
     try {
         const dir = getPiAgentDir();
         fs.mkdirSync(dir, { recursive: true });
         const filePath = path.join(dir, 'settings.json');
+        if (fullSettings) {
+            fs.writeFileSync(filePath, JSON.stringify(fullSettings, null, 2), 'utf-8');
+            return { success: true, settings: fullSettings };
+        }
         let existing = {};
         if (fs.existsSync(filePath)) {
             try {
