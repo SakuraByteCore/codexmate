@@ -101,18 +101,49 @@
                                     <div class="card" v-for="(model, index) in editingPiProvider.form.models" :key="index">
                                         <div class="input-with-toggle">
                                             <input class="form-input" type="text" v-model="model.id" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4" :disabled="!isToolConfigWriteAllowed('pi')" @input="piModelSearch = model.id">
+                                            <button type="button" class="btn-tool input-toggle-btn" :disabled="!isToolConfigWriteAllowed('pi') || piCatalogFillIndex !== -1 || !model.id.trim()" @click="fillPiModelFromCatalog(index)">{{ piCatalogFillIndex === index ? t('pi.providers.models.catalogFilling') : t('pi.providers.models.catalogFill') }}</button>
                                             <button type="button" class="btn-tool input-toggle-btn" @click="editingPiProvider.form.models.splice(index, 1)" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.remove') }}</button>
+                                        </div>
+                                        <div class="codex-config-grid">
+                                            <div class="form-group codex-config-field">
+                                                <label class="form-label">{{ t('pi.providers.models.name') }}</label>
+                                                <input class="form-input" type="text" v-model="model.name" autocomplete="off" spellcheck="false" :disabled="!isToolConfigWriteAllowed('pi')" :placeholder="t('pi.providers.models.name')">
+                                            </div>
+                                            <div class="form-group codex-config-field">
+                                                <label class="settings-toggle-row">
+                                                    <input type="checkbox" v-model="model.reasoning" :disabled="!isToolConfigWriteAllowed('pi')">
+                                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                                    <span>{{ t('pi.providers.models.reasoning') }}</span>
+                                                </label>
+                                            </div>
+                                            <div class="form-group codex-config-field">
+                                                <label class="form-label">{{ t('pi.providers.models.contextWindow') }}</label>
+                                                <input class="form-input" type="number" v-model="model.contextWindow" :disabled="!isToolConfigWriteAllowed('pi')">
+                                            </div>
+                                            <div class="form-group codex-config-field">
+                                                <label class="form-label">{{ t('pi.providers.models.maxTokens') }}</label>
+                                                <input class="form-input" type="number" v-model="model.maxTokens" :disabled="!isToolConfigWriteAllowed('pi')">
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card" v-if="editingPiProvider.form.models.length === 0">
                                         <input class="form-input" type="text" v-model="piModelSearch" autocomplete="off" spellcheck="false" :placeholder="t('pi.providers.models.search')" @keydown.enter.prevent="addPiRemoteModel(piModelSearch.trim())">
                                     </div>
-                                    <div class="card" v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piFilteredRemoteModels().length > 0">
-                                        <button type="button" class="btn-tool" style="width: 100%; text-align: left; justify-content: flex-start;" v-for="id in piFilteredRemoteModels()" :key="id" @click="addPiRemoteModel(id)">{{ id }}</button>
-                                        <p class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
+                                    <span class="selector-title">{{ t('pi.providers.models.importTitle') }}</span>
+                                    <input class="form-input" type="text" v-model="piModelSearch" autocomplete="off" spellcheck="false" :placeholder="t('pi.providers.models.search')" @keydown.enter.prevent="addPiRemoteModel(piModelSearch.trim())">
+                                    <div class="pi-model-import-list" v-if="!piRemoteModelsLoading && piRemoteSelectableModels().length > 0">
+                                        <label class="pi-model-import-item" v-for="id in piRemoteSelectableModels()" :key="id">
+                                            <input type="checkbox" :checked="isPiRemoteChecked(id)" @change="togglePiRemoteChecked(id)" :disabled="!isToolConfigWriteAllowed('pi')">
+                                            <span class="pi-model-import-id">{{ id }}</span>
+                                        </label>
                                     </div>
-                                    <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piFilteredRemoteModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
+                                    <div class="settings-tab-actions" v-if="!piRemoteModelsLoading && piRemoteSelectableModels().length > 0">
+                                        <button type="button" class="btn-tool" :disabled="!isToolConfigWriteAllowed('pi') || piCheckedRemoteCount() === 0" @click="addSelectedPiRemoteModels">{{ t('pi.providers.models.addSelected', { count: piCheckedRemoteCount() }) }}</button>
+                                    </div>
+                                    <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piRemoteModels.length" class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
+                                    <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piRemoteSelectableModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
                                 </div>
+                                <p v-if="piCatalogFillError" class="config-template-hint error-text">{{ piCatalogFillError }}</p>
                             </div>
                             <div class="settings-tab-actions">
                                 <button type="button" class="btn-tool" @click="confirmDeletePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.delete') }}</button>
@@ -142,12 +173,29 @@
                             <div class="selector-header">
                                 <span class="selector-title">{{ t('pi.providers.addModal.title') }}</span>
                                 <div class="settings-tab-actions">
-                                    <button type="button" class="btn-tool" @click="addPiProviderFromModal" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('common.save') }}</button>
+                                    <button type="button" class="btn-tool" v-if="piSelectedProviderTemplate" @click="addPiProviderFromModal" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('common.save') }}</button>
                                     <button type="button" class="btn-tool" @click="cancelAddPiProviderModal">{{ t('common.cancel') }}</button>
                                 </div>
                             </div>
                             <div class="config-template-hint">{{ t('pi.providers.addModal.subtitle') }}</div>
-                            <div class="codex-config-grid">
+                            <div v-if="!piSelectedProviderTemplate" class="pi-picker">
+                                <input class="form-input" type="text" v-model="piProviderPickerQuery" autocomplete="off" spellcheck="false" :placeholder="t('pi.picker.searchPlaceholder')">
+                                <div class="pi-picker-group" v-for="group in piProviderTemplateGroups()" :key="group.id">
+                                    <div class="pi-picker-group-title">{{ t(group.i18nKey) }}</div>
+                                    <div class="pi-picker-grid">
+                                        <button type="button" class="card pi-picker-card" v-for="tpl in group.templates" :key="tpl.id" @click="selectPiProviderTemplate(tpl.id)">
+                                            <span class="card-icon">{{ tpl.name.charAt(0).toUpperCase() }}</span>
+                                            <span class="pi-picker-card-name">{{ tpl.name }}</span>
+                                            <span v-if="tpl.baseUrl" class="pi-picker-card-url">{{ tpl.baseUrl }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p v-if="piProviderPickerQuery.trim() && !piProviderTemplateGroups().length" class="config-template-hint">{{ t('pi.picker.empty') }}</p>
+                            </div>
+                            <div class="settings-tab-actions" v-if="piSelectedProviderTemplate">
+                                <button type="button" class="btn-tool" @click="resetPiProviderTemplateSelection">{{ t('pi.picker.back') }}</button>
+                            </div>
+                            <div class="codex-config-grid" v-if="piSelectedProviderTemplate">
                                 <div class="form-group codex-config-field">
                                     <label class="form-label">{{ t('pi.providers.addModal.fields.baseUrl') }}</label>
                                     <input class="form-input" type="url" v-model="addingPiProviderBaseUrl" autocomplete="off" spellcheck="false" placeholder="https://" @input="onAddingPiEndpointChange">

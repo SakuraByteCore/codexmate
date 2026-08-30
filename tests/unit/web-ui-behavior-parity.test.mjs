@@ -591,6 +591,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'piRemoteModelsLoading',
         'piRemoteModelError',
         'piModelSearch',
+        'piProviderPickerQuery',
+        'piSelectedProviderTemplate',
+        'piRemoteChecked',
+        'piCatalogFillIndex',
+        'piCatalogFillError',
         'sysPromptScope',
         'sysPromptMode',
         'sysPromptContent',
@@ -976,7 +981,17 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'piModelsJsonInput',
         'savePiSettingsJson',
         'savePiModelsJson',
-        'startAddPiProvider'
+        'startAddPiProvider',
+        'piProviderTemplateGroups',
+        'selectPiProviderTemplate',
+        'resetPiProviderTemplateSelection',
+        'piRemoteSelectableModels',
+        'isPiRemoteChecked',
+        'togglePiRemoteChecked',
+        'piCheckedRemoteCount',
+        'piCreateModelRecord',
+        'addSelectedPiRemoteModels',
+        'fillPiModelFromCatalog'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

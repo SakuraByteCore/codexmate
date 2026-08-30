@@ -869,3 +869,13 @@
     border-top: 1px solid rgba(137, 111, 94, 0.14);
     background: rgba(255, 253, 252, 0.92);
 }
+
+.pi-picker { display: flex; flex-direction: column; gap: 12px; }
+.pi-picker-group-title { font-weight: 600; margin-bottom: 6px; opacity: 0.8; }
+.pi-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.pi-picker-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; cursor: pointer; }
+.pi-picker-card-name { font-weight: 600; }
+.pi-picker-card-url { font-size: 12px; opacity: 0.6; word-break: break-all; }
+.pi-model-import-list { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.pi-model-import-item { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; }
+.pi-model-import-id { font-family: monospace; font-size: 13px; }

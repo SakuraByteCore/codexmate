@@ -1287,6 +1287,130 @@ async function fetchPiRemoteModels(params = {}) {
     }
 }
 
+const PI_MODELS_DEV_API_URL = 'https://models.dev/api.json';
+const PI_MODELS_CATALOG_CACHE_TTL_MS = 60 * 60 * 1000;
+const PI_MODELS_DEV_TIMEOUT_MS = 15000;
+let g_piModelsDevCatalogCache = null;
+let g_piModelsDevCatalogCachedAt = 0;
+
+function fetchPiModelsDevCatalog() {
+    if (g_piModelsDevCatalogCache && Date.now() - g_piModelsDevCatalogCachedAt < PI_MODELS_CATALOG_CACHE_TTL_MS) {
+        return Promise.resolve(g_piModelsDevCatalogCache);
+    }
+    return new Promise((resolve) => {
+        const finish = (payload) => {
+            if (payload && !payload.error) {
+                g_piModelsDevCatalogCache = payload;
+                g_piModelsDevCatalogCachedAt = Date.now();
+            }
+            resolve(payload);
+        };
+        const req = https.get(PI_MODELS_DEV_API_URL, {
+            headers: {
+                'User-Agent': 'codexmate-models',
+                'Accept': 'application/json'
+            },
+            agent: HTTPS_KEEP_ALIVE_AGENT
+        }, (res) => {
+            const status = res.statusCode || 0;
+            if (status >= 400) {
+                res.resume();
+                return finish({ error: `HTTP ${status}` });
+            }
+            let body = '';
+            res.on('data', chunk => {
+                body += chunk;
+            });
+            res.on('end', () => {
+                try {
+                    const catalog = JSON.parse(body || '{}');
+                    if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) {
+                        return finish({ error: '响应内容不是有效的目录对象' });
+                    }
+                    finish(catalog);
+                } catch (e) {
+                    finish({ error: e && e.message ? e.message : '解析目录响应失败' });
+                }
+            });
+        });
+        req.setTimeout(PI_MODELS_DEV_TIMEOUT_MS, () => {
+            req.destroy(new Error('请求超时'));
+        });
+        req.on('error', (err) => {
+            finish({ error: err && err.message ? err.message : '请求失败' });
+        });
+    });
+}
+
+function normalizePiCatalogUrl(url) {
+    return typeof url === 'string' ? url.trim().replace(/\/+$/, '') : '';
+}
+
+function findPiCatalogModelInProvider(provider, modelId) {
+    const models = provider && typeof provider === 'object' ? provider.models : null;
+    if (!models || typeof models !== 'object') return null;
+    const hit = models[modelId];
+    return hit && typeof hit === 'object' ? hit : null;
+}
+
+function findPiCatalogModel(catalog, lookup) {
+    if (lookup.providerId && catalog[lookup.providerId]) {
+        return findPiCatalogModelInProvider(catalog[lookup.providerId], lookup.modelId);
+    }
+    const entries = Object.entries(catalog);
+    for (const [key, provider] of entries) {
+        const api = normalizePiCatalogUrl(provider && typeof provider === 'object' ? provider.api : '');
+        if ((lookup.baseUrl && api === lookup.baseUrl) || (lookup.providerId && key === lookup.providerId)) {
+            return findPiCatalogModelInProvider(provider, lookup.modelId);
+        }
+    }
+    for (const [, provider] of entries) {
+        const hit = findPiCatalogModelInProvider(provider, lookup.modelId);
+        if (hit) return hit;
+    }
+    return null;
+}
+
+function toPiCatalogModelInfo(raw) {
+    const numericOrNull = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+    const limit = raw && typeof raw.limit === 'object' && raw.limit !== null ? raw.limit : {};
+    const cost = raw && typeof raw.cost === 'object' && raw.cost !== null ? raw.cost : {};
+    return {
+        name: typeof raw.name === 'string' ? raw.name : '',
+        reasoning: !!raw.reasoning,
+        contextWindow: numericOrNull(limit.context),
+        maxTokens: numericOrNull(limit.output),
+        cost: {
+            input: numericOrNull(cost.input),
+            output: numericOrNull(cost.output),
+            cacheRead: numericOrNull(cost.cache_read),
+            cacheWrite: numericOrNull(cost.cache_write)
+        }
+    };
+}
+
+async function fetchPiModelsCatalog(params = {}) {
+    const modelId = typeof params.modelId === 'string' ? params.modelId.trim() : '';
+    if (!modelId) {
+        return { error: '模型 ID 不能为空' };
+    }
+    const lookup = {
+        modelId,
+        providerId: typeof params.providerId === 'string' ? params.providerId.trim() : '',
+        baseUrl: normalizePiCatalogUrl(params.baseUrl)
+    };
+    const catalog = await fetchPiModelsDevCatalog();
+    if (!catalog || typeof catalog !== 'object' || typeof catalog.error === 'string') {
+        const reason = catalog && catalog.error ? catalog.error : '响应结构无效';
+        return { error: `models.dev 目录请求失败：${reason}` };
+    }
+    const hit = findPiCatalogModel(catalog, lookup);
+    if (!hit) {
+        return { error: 'models.dev 目录中未找到该模型' };
+    }
+    return { ok: true, model: toPiCatalogModelInfo(hit) };
+}
+
 function readPiSettings(params = {}) {
     try {
         const dir = getPiAgentDir();
@@ -13362,6 +13486,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         }
                         case 'fetch-pi-remote-models': {
                             result = await fetchPiRemoteModels(params || {});
+                            break;
+                        }
+                        case 'pi-models-catalog': {
+                            result = await fetchPiModelsCatalog(params || {});
                             break;
                         }
                         case 'install-status':

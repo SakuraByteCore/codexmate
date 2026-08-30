@@ -1,4 +1,5 @@
 import { api } from './api.mjs';
+import { PI_PROVIDER_TEMPLATE_GROUPS } from './pi-provider-templates.mjs';
 
 function isPiPlainObject(value) {
     return value && typeof value === 'object' && !Array.isArray(value);
@@ -161,6 +162,8 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.addingPiRemoteModels = [];
             this.addingPiRemoteLoading = false;
             this.addingPiRemoteError = '';
+            this.piProviderPickerQuery = '';
+            this.piSelectedProviderTemplate = '';
             this.showAddPiProviderModal = true;
             this.editingPiProvider = null;
         },
@@ -175,6 +178,9 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.addingPiRemoteModels = [];
             this.addingPiRemoteLoading = false;
             this.addingPiRemoteError = '';
+            this.piProviderPickerQuery = '';
+            this.piSelectedProviderTemplate = '';
+            this.piCatalogFillError = '';
         },
         async fetchAddingPiRemoteModels() {
             const baseUrl = (this.addingPiProviderBaseUrl || '').trim();
@@ -217,10 +223,119 @@ export function createPiConfigMethods({ api: apiClient }) {
             if (!query) return [];
             return this.addingPiRemoteModels.filter((id) => id.toLowerCase().includes(query)).slice(0, 50);
         },
+        piProviderTemplateGroups() {
+            const query = (this.piProviderPickerQuery || '').trim().toLowerCase();
+            if (!query) return PI_PROVIDER_TEMPLATE_GROUPS;
+            return PI_PROVIDER_TEMPLATE_GROUPS
+                .map((group) => ({
+                    id: group.id,
+                    i18nKey: group.i18nKey,
+                    templates: group.templates.filter((tpl) =>
+                        tpl.name.toLowerCase().includes(query) || tpl.id.toLowerCase().includes(query))
+                }))
+                .filter((group) => group.templates.length > 0);
+        },
+        selectPiProviderTemplate(tplId) {
+            if (!this.isToolConfigWriteAllowed('pi') || this.piSaving) return;
+            const tpl = PI_PROVIDER_TEMPLATE_GROUPS
+                .flatMap((group) => group.templates)
+                .find((item) => item.id === tplId);
+            if (!tpl) return;
+            this.piSelectedProviderTemplate = tpl.id;
+            this.addingPiProviderBaseUrl = tpl.baseUrl || '';
+            this.addingPiProviderApi = tpl.api || 'openai-completions';
+            this.addingPiProviderModel = '';
+            if (tpl.baseUrl) this.onAddingPiEndpointChange();
+        },
+        resetPiProviderTemplateSelection() {
+            this.piSelectedProviderTemplate = '';
+        },
+        piRemoteSelectableModels() {
+            const base = Array.isArray(this.piRemoteModels) ? this.piRemoteModels : [];
+            const form = this.editingPiProvider && this.editingPiProvider.form;
+            const existing = Array.isArray(form && form.models) ? form.models : [];
+            const added = new Set(existing.map((m) => String(m && m.id || '').trim().toLowerCase()));
+            const q = (this.piModelSearch || '').trim().toLowerCase();
+            return base
+                .filter((id) => {
+                    if (added.has(String(id).trim().toLowerCase())) return false;
+                    return !q || String(id).toLowerCase().includes(q);
+                })
+                .slice(0, 50);
+        },
+        isPiRemoteChecked(id) {
+            return !!this.piRemoteChecked[String(id)];
+        },
+        togglePiRemoteChecked(id) {
+            const key = String(id);
+            const next = { ...this.piRemoteChecked };
+            if (next[key]) delete next[key];
+            else next[key] = true;
+            this.piRemoteChecked = next;
+        },
+        piCheckedRemoteCount() {
+            return this.piRemoteSelectableModels().filter((id) => this.isPiRemoteChecked(id)).length;
+        },
+        piCreateModelRecord(id) {
+            const t = String(id || '').trim();
+            return {
+                id: t,
+                name: t,
+                reasoning: false,
+                contextWindow: 128000,
+                maxTokens: 32000,
+                input: ''
+            };
+        },
+        addSelectedPiRemoteModels() {
+            if (!this.isToolConfigWriteAllowed('pi') || !this.editingPiProvider) return;
+            const form = this.editingPiProvider.form;
+            if (!form || !Array.isArray(form.models)) return;
+            const existing = new Set(form.models.map((m) => String(m && m.id || '').trim().toLowerCase()));
+            for (const id of this.piRemoteSelectableModels()) {
+                if (!this.isPiRemoteChecked(id)) continue;
+                const key = String(id).trim().toLowerCase();
+                if (existing.has(key)) continue;
+                form.models.push(this.piCreateModelRecord(id));
+                existing.add(key);
+            }
+            this.piRemoteChecked = {};
+            this.piModelSearch = '';
+        },
+        async fillPiModelFromCatalog(index) {
+            if (!this.isToolConfigWriteAllowed('pi') || !this.editingPiProvider) return;
+            const models = this.editingPiProvider.form && this.editingPiProvider.form.models;
+            const model = Array.isArray(models) ? models[index] : null;
+            if (!model || !String(model.id || '').trim()) return;
+            if (this.piCatalogFillIndex !== -1) return;
+            this.piCatalogFillIndex = index;
+            this.piCatalogFillError = '';
+            try {
+                const result = await apiClient('pi-models-catalog', {
+                    modelId: String(model.id).trim(),
+                    providerId: this.editingPiProvider.id,
+                    baseUrl: this.editingPiProvider.form.baseUrl || ''
+                });
+                if (result && result.ok && isPiPlainObject(result.model)) {
+                    const info = result.model;
+                    if (model.name === '' && typeof info.name === 'string') model.name = info.name;
+                    if (model.contextWindow === '' && Number.isFinite(info.contextWindow)) model.contextWindow = info.contextWindow;
+                    if (model.maxTokens === '' && Number.isFinite(info.maxTokens)) model.maxTokens = info.maxTokens;
+                    model.reasoning = !!info.reasoning;
+                } else {
+                    this.piCatalogFillError = (result && result.error) || 'models.dev 目录中未找到该模型';
+                }
+            } finally {
+                this.piCatalogFillIndex = -1;
+            }
+        },
         openEditPiProvider(providerId) {
             if (!this.isToolConfigWriteAllowed('pi') || this.piSaving) return;
             this.piRemoteModels = [];
             this.piRemoteModelError = '';
+            this.piRemoteChecked = {};
+            this.piCatalogFillError = '';
+            this.piCatalogFillIndex = -1;
             this.piModelSearch = '';
             this.piEditorJsonError = '';
             const provider = this.piProviders[providerId] || {};
@@ -259,6 +374,9 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.editingPiProvider = null;
             this.piRemoteModels = [];
             this.piRemoteModelError = '';
+            this.piRemoteChecked = {};
+            this.piCatalogFillError = '';
+            this.piCatalogFillIndex = -1;
             this.piModelSearch = '';
             this.piEditorJsonError = '';
         },
@@ -280,13 +398,16 @@ export function createPiConfigMethods({ api: apiClient }) {
                 if (this.editingPiProvider !== provider) return;
                 if (result && Array.isArray(result.models) && result.models.length > 0) {
                     this.piRemoteModels = result.models;
+                    this.piRemoteChecked = {};
                 } else {
                     this.piRemoteModels = [];
+                    this.piRemoteChecked = {};
                     this.piRemoteModelError = (result && result.error) || '未获取到可用模型';
                 }
             } catch (e) {
                 if (this.editingPiProvider !== provider) return;
                 this.piRemoteModels = [];
+                this.piRemoteChecked = {};
                 this.piRemoteModelError = e && e.message ? e.message : '模型列表获取失败';
             } finally {
                 if (this.editingPiProvider === provider) this.piRemoteModelsLoading = false;
@@ -303,14 +424,10 @@ export function createPiConfigMethods({ api: apiClient }) {
             if (!trimmed) return;
             const list = this.editingPiProvider.form.models;
             if (!Array.isArray(list)) return;
-            list.splice(0, list.length, {
-                id: trimmed,
-                name: trimmed,
-                reasoning: false,
-                contextWindow: 128000,
-                maxTokens: 32000,
-                input: ''
-            });
+            const key = trimmed.toLowerCase();
+            const duplicated = list.some((m) => String(m && m.id || '').trim().toLowerCase() === key);
+            if (duplicated) return;
+            list.push(this.piCreateModelRecord(trimmed));
             this.piModelSearch = '';
         },
         async confirmDeletePiProvider() {
