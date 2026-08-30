@@ -153,6 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 piModelsJsonDraft: '',
                 piModelsJsonError: '',
                 piFileJsonSaving: false,
+                piHistoryTarget: '',
+                piHistoryLoading: false,
+                piHistoryItems: [],
+                piHistoryPreviewId: '',
+                piHistoryPreviewContent: '',
+                piHistoryError: '',
+                piHistoryApplying: false,
                 // Plugins
                 pluginsActiveId: 'prompt-templates',
                 pluginsLoading: false,

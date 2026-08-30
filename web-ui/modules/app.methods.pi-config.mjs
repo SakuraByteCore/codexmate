@@ -475,6 +475,86 @@ export function createPiConfigMethods({ api: apiClient }) {
         piEditorJsonDraftInput() {
             const draft = this.piParseEditorJsonDraft();
             this.piEditorJsonError = draft.ok ? '' : draft.error;
+        },
+        piHistoryBucketFor(target) {
+            return target === 'settings' ? 'pi-settings' : 'pi-models';
+        },
+        async openPiConfigHistory(target) {
+            if (this.piHistoryLoading) return;
+            const tgt = target === 'settings' ? 'settings' : (target === 'models' ? 'models' : '');
+            if (!tgt) return;
+            this.piHistoryTarget = tgt;
+            this.piHistoryItems = [];
+            this.piHistoryPreviewId = '';
+            this.piHistoryPreviewContent = '';
+            this.piHistoryError = '';
+            this.piHistoryLoading = true;
+            try {
+                const res = await api('list-prompt-history', { bucket: this.piHistoryBucketFor(tgt) });
+                if (res && res.error) {
+                    this.piHistoryError = res.error;
+                    return;
+                }
+                this.piHistoryItems = Array.isArray(res) ? res : [];
+            } catch (e) {
+                this.piHistoryError = this.t('toast.load.fail');
+            } finally {
+                this.piHistoryLoading = false;
+            }
+        },
+        closePiConfigHistory() {
+            this.piHistoryTarget = '';
+            this.piHistoryItems = [];
+            this.piHistoryPreviewId = '';
+            this.piHistoryPreviewContent = '';
+            this.piHistoryError = '';
+            this.piHistoryLoading = false;
+        },
+        async viewPiConfigHistoryItem(item) {
+            if (!item || !item.id) return;
+            if (this.piHistoryLoading) return;
+            if (this.piHistoryPreviewId === item.id && this.piHistoryPreviewContent) return;
+            this.piHistoryPreviewId = item.id;
+            this.piHistoryPreviewContent = '';
+            try {
+                const res = await api('get-prompt-history', { bucket: this.piHistoryBucketFor(this.piHistoryTarget), id: item.id });
+                if (res && res.error) {
+                    this.piHistoryError = res.error;
+                    this.piHistoryPreviewId = '';
+                    return;
+                }
+                this.piHistoryPreviewContent = typeof res.content === 'string' ? res.content : '';
+            } catch (e) {
+                this.piHistoryError = this.t('toast.load.fail');
+                this.piHistoryPreviewId = '';
+            }
+        },
+        async applyPiConfigHistory() {
+            if (this.piHistoryApplying || this.piHistoryLoading) return;
+            if (!this.piHistoryTarget || !this.piHistoryPreviewId) return;
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('common.history'),
+                message: this.t('pi.history.confirm'),
+                confirmText: this.t('confirm.ok'),
+                cancelText: this.t('confirm.cancel'),
+                danger: true
+            });
+            if (!confirmed) return;
+            this.piHistoryApplying = true;
+            try {
+                const res = await api('apply-pi-config-history', { target: this.piHistoryTarget, id: this.piHistoryPreviewId });
+                if (res && res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                this.showMessage(this.t('pi.history.applied'), 'success');
+                this.closePiConfigHistory();
+                await this.loadPiSources();
+            } catch (e) {
+                this.showMessage(this.t('pi.history.applyFailed'), 'error');
+            } finally {
+                this.piHistoryApplying = false;
+            }
         }
     };
 }
