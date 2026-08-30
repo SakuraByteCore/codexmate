@@ -1249,6 +1249,7 @@ function writePiModels(params = {}) {
         fs.mkdirSync(dir, { recursive: true });
         const filePath = path.join(dir, 'models.json');
         if (file) {
+            historyBackup('pi-models', filePath);
             fs.writeFileSync(filePath, JSON.stringify(file, null, 2), 'utf-8');
             return { success: true };
         }
@@ -1314,6 +1315,7 @@ function writePiSettings(params = {}) {
         fs.mkdirSync(dir, { recursive: true });
         const filePath = path.join(dir, 'settings.json');
         if (fullSettings) {
+            historyBackup('pi-settings', filePath);
             fs.writeFileSync(filePath, JSON.stringify(fullSettings, null, 2), 'utf-8');
             return { success: true, settings: fullSettings };
         }
@@ -1332,6 +1334,43 @@ function writePiSettings(params = {}) {
     } catch (e) {
         return { error: e && e.message ? e.message : '写入 Pi settings.json 失败' };
     }
+}
+
+function applyPiConfigHistory(params = {}) {
+    const target = typeof params.target === 'string' ? params.target.trim() : '';
+    if (target !== 'settings' && target !== 'models') {
+        return { error: '无效的历史记录目标' };
+    }
+    const bucket = target === 'settings' ? 'pi-settings' : 'pi-models';
+    const fileName = target === 'settings' ? 'settings.json' : 'models.json';
+    let entry;
+    try {
+        entry = readPromptHistory(bucket, String(params.id || ''));
+    } catch (_) {
+        return { error: '历史记录不存在或读取失败' };
+    }
+    const content = entry && typeof entry.content === 'string' ? entry.content : '';
+    let parsed = null;
+    if (content) {
+        try {
+            parsed = JSON.parse(content);
+        } catch (_) {
+            parsed = null;
+        }
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return { error: '历史记录内容不是有效的 JSON 对象' };
+    }
+    try {
+        const filePath = path.join(getPiAgentDir(), fileName);
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        historyBackup(bucket, filePath);
+        fs.writeFileSync(filePath, JSON.stringify(parsed, null, 2), 'utf-8');
+    } catch (e) {
+        return { error: (e && e.message) || '应用历史记录失败' };
+    }
+    if (target === 'settings') return { success: true, settings: parsed };
+    return { success: true, file: parsed };
 }
 
 function setToolConfigPermission(params = {}) {
@@ -13315,6 +13354,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         }
                         case 'write-pi-settings': {
                             result = writePiSettings(params || {});
+                            break;
+                        }
+                        case 'apply-pi-config-history': {
+                            result = applyPiConfigHistory(params || {});
                             break;
                         }
                         case 'fetch-pi-remote-models': {
