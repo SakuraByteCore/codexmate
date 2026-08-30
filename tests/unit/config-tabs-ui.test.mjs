@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { DICT } from '../../web-ui/modules/i18n.dict.mjs';
 import {
     readBundledWebUiCss,
     readBundledWebUiHtml,
@@ -702,4 +703,28 @@ test('docs panel uses segmented package manager control and drops summary strip'
         html,
         /<div class="docs-toolbar-card">\s*<label class="form-label">\{\{ t\('common\.packageManager'\) \}\}<\/label>\s*<div class="install-action-tabs">/
     );
+});
+
+test('pi config file-JSON sections expose history panels with locale copy in every language', () => {
+    const piPanel = readProjectFile('web-ui/partials/index/panel-config-pi.html');
+
+    assert.match(piPanel, /@click="openPiConfigHistory\('settings'\)"/);
+    assert.match(piPanel, /@click="openPiConfigHistory\('models'\)"/);
+    assert.match(piPanel, /v-if="piHistoryTarget === 'settings'"/);
+    assert.match(piPanel, /v-if="piHistoryTarget === 'models'"/);
+    for (const section of ['settings', 'models']) {
+        const historyPanel = piPanel.match(
+            new RegExp(`<details v-if="piHistoryTarget === '${section}'"[\\s\\S]*?</details>`)
+        )?.[0] || '';
+        assert.ok(historyPanel, `pi ${section} history panel should exist`);
+        assert.match(historyPanel, /@click="applyPiConfigHistory" :disabled="piHistoryApplying \|\| !isToolConfigWriteAllowed\('pi'\)"/);
+        assert.match(historyPanel, /t\('pi\.history\.apply'\)/);
+    }
+
+    for (const code of ['zh', 'zh-tw', 'en', 'ja', 'vi']) {
+        for (const key of ['pi.history.apply', 'pi.history.applied', 'pi.history.applyFailed', 'pi.history.confirm']) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+        }
+    }
 });

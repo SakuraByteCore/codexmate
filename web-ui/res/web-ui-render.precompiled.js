@@ -3649,8 +3649,80 @@ return function render(_ctx, _cache) {
                       class: "btn-tool",
                       onClick: _ctx.savePiSettingsJson,
                       disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piSettingsJsonError
-                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: "btn-mini",
+                      onClick: $event => (_ctx.openPiConfigHistory('settings')),
+                      disabled: _ctx.piHistoryLoading
+                    }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                   ]),
+                  (_ctx.piHistoryTarget === 'settings')
+                    ? (_openBlock(), _createElementBlock("details", {
+                        key: 1,
+                        class: "prompt-history-panel",
+                        open: ""
+                      }, [
+                        _createElementVNode("summary", { class: "prompt-history-summary" }, [
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('common.history')), 1 /* TEXT */),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-mini prompt-history-close",
+                            onClick: _ctx.closePiConfigHistory,
+                            title: _ctx.t('common.close')
+                          }, "✕", 8 /* PROPS */, ["onClick", "title"])
+                        ]),
+                        _createElementVNode("div", { class: "prompt-history-body" }, [
+                          (!_ctx.piHistoryLoading && !_ctx.piHistoryError && _ctx.piHistoryItems.length)
+                            ? (_openBlock(), _createElementBlock("ul", {
+                                key: 0,
+                                class: "prompt-history-list"
+                              }, [
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piHistoryItems, (item) => {
+                                  return (_openBlock(), _createElementBlock("li", {
+                                    key: item.id,
+                                    class: _normalizeClass(['prompt-history-item', { active: _ctx.piHistoryPreviewId === item.id }]),
+                                    onClick: $event => (_ctx.viewPiConfigHistoryItem(item))
+                                  }, [
+                                    _createElementVNode("span", { class: "prompt-history-time" }, _toDisplayString(item.id), 1 /* TEXT */),
+                                    _createElementVNode("span", { class: "prompt-history-size" }, _toDisplayString(Math.round(item.size / 1024 * 10) / 10) + " KB", 1 /* TEXT */)
+                                  ], 10 /* CLASS, PROPS */, ["onClick"]))
+                                }), 128 /* KEYED_FRAGMENT */))
+                              ]))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.piHistoryLoading)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 1,
+                                class: "state-message"
+                              }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
+                            : (_ctx.piHistoryError)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 2,
+                                  class: "state-message error"
+                                }, _toDisplayString(_ctx.piHistoryError), 1 /* TEXT */))
+                              : (!_ctx.piHistoryItems.length)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 3,
+                                    class: "state-message"
+                                  }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true),
+                          (_ctx.piHistoryPreviewContent)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 4,
+                                class: "prompt-history-preview-wrap"
+                              }, [
+                                _createElementVNode("pre", { class: "prompt-history-preview" }, _toDisplayString(_ctx.piHistoryPreviewContent), 1 /* TEXT */),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini btn-confirm-mini",
+                                  onClick: _ctx.applyPiConfigHistory,
+                                  disabled: _ctx.piHistoryApplying || !_ctx.isToolConfigWriteAllowed('pi')
+                                }, _toDisplayString(_ctx.t('pi.history.apply')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                              ]))
+                            : _createCommentVNode("v-if", true)
+                        ])
+                      ]))
+                    : _createCommentVNode("v-if", true),
                   _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.files.modelsTitle')), 1 /* TEXT */),
                   _withDirectives(_createElementVNode("textarea", {
                     class: "template-textarea config-json-editor",
@@ -3665,7 +3737,7 @@ return function render(_ctx, _cache) {
                   ]),
                   (_ctx.piModelsJsonError)
                     ? (_openBlock(), _createElementBlock("p", {
-                        key: 1,
+                        key: 2,
                         class: "config-template-hint error-text"
                       }, _toDisplayString(_ctx.piModelsJsonError), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true),
@@ -3675,8 +3747,80 @@ return function render(_ctx, _cache) {
                       class: "btn-tool",
                       onClick: _ctx.savePiModelsJson,
                       disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piModelsJsonError
-                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ])
+                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: "btn-mini",
+                      onClick: $event => (_ctx.openPiConfigHistory('models')),
+                      disabled: _ctx.piHistoryLoading
+                    }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ]),
+                  (_ctx.piHistoryTarget === 'models')
+                    ? (_openBlock(), _createElementBlock("details", {
+                        key: 3,
+                        class: "prompt-history-panel",
+                        open: ""
+                      }, [
+                        _createElementVNode("summary", { class: "prompt-history-summary" }, [
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('common.history')), 1 /* TEXT */),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-mini prompt-history-close",
+                            onClick: _ctx.closePiConfigHistory,
+                            title: _ctx.t('common.close')
+                          }, "✕", 8 /* PROPS */, ["onClick", "title"])
+                        ]),
+                        _createElementVNode("div", { class: "prompt-history-body" }, [
+                          (!_ctx.piHistoryLoading && !_ctx.piHistoryError && _ctx.piHistoryItems.length)
+                            ? (_openBlock(), _createElementBlock("ul", {
+                                key: 0,
+                                class: "prompt-history-list"
+                              }, [
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piHistoryItems, (item) => {
+                                  return (_openBlock(), _createElementBlock("li", {
+                                    key: item.id,
+                                    class: _normalizeClass(['prompt-history-item', { active: _ctx.piHistoryPreviewId === item.id }]),
+                                    onClick: $event => (_ctx.viewPiConfigHistoryItem(item))
+                                  }, [
+                                    _createElementVNode("span", { class: "prompt-history-time" }, _toDisplayString(item.id), 1 /* TEXT */),
+                                    _createElementVNode("span", { class: "prompt-history-size" }, _toDisplayString(Math.round(item.size / 1024 * 10) / 10) + " KB", 1 /* TEXT */)
+                                  ], 10 /* CLASS, PROPS */, ["onClick"]))
+                                }), 128 /* KEYED_FRAGMENT */))
+                              ]))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.piHistoryLoading)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 1,
+                                class: "state-message"
+                              }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
+                            : (_ctx.piHistoryError)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 2,
+                                  class: "state-message error"
+                                }, _toDisplayString(_ctx.piHistoryError), 1 /* TEXT */))
+                              : (!_ctx.piHistoryItems.length)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 3,
+                                    class: "state-message"
+                                  }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true),
+                          (_ctx.piHistoryPreviewContent)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 4,
+                                class: "prompt-history-preview-wrap"
+                              }, [
+                                _createElementVNode("pre", { class: "prompt-history-preview" }, _toDisplayString(_ctx.piHistoryPreviewContent), 1 /* TEXT */),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini btn-confirm-mini",
+                                  onClick: _ctx.applyPiConfigHistory,
+                                  disabled: _ctx.piHistoryApplying || !_ctx.isToolConfigWriteAllowed('pi')
+                                }, _toDisplayString(_ctx.t('pi.history.apply')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                              ]))
+                            : _createCommentVNode("v-if", true)
+                        ])
+                      ]))
+                    : _createCommentVNode("v-if", true)
                 ]),
                 (!_ctx.isToolConfigWriteAllowed('pi'))
                   ? (_openBlock(), _createElementBlock("div", {

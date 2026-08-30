@@ -195,7 +195,29 @@
                             <p v-if="piSettingsJsonError" class="config-template-hint error-text">{{ piSettingsJsonError }}</p>
                             <div class="settings-tab-actions">
                                 <button type="button" class="btn-tool" @click="savePiSettingsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piSettingsJsonError">{{ t('common.save') }}</button>
+                                <button type="button" class="btn-mini" @click="openPiConfigHistory('settings')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
                             </div>
+                            <details v-if="piHistoryTarget === 'settings'" class="prompt-history-panel" open>
+                                <summary class="prompt-history-summary">
+                                    <span>{{ t('common.history') }}</span>
+                                    <button type="button" class="btn-mini prompt-history-close" @click="closePiConfigHistory" :title="t('common.close')">✕</button>
+                                </summary>
+                                <div class="prompt-history-body">
+                                    <ul v-if="!piHistoryLoading && !piHistoryError && piHistoryItems.length" class="prompt-history-list">
+                                        <li v-for="item in piHistoryItems" :key="item.id" :class="['prompt-history-item', { active: piHistoryPreviewId === item.id }]" @click="viewPiConfigHistoryItem(item)">
+                                            <span class="prompt-history-time">{{ item.id }}</span>
+                                            <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                        </li>
+                                    </ul>
+                                    <div v-if="piHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                    <div v-else-if="piHistoryError" class="state-message error">{{ piHistoryError }}</div>
+                                    <div v-else-if="!piHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                                    <div v-if="piHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                        <pre class="prompt-history-preview">{{ piHistoryPreviewContent }}</pre>
+                                        <button type="button" class="btn-mini btn-confirm-mini" @click="applyPiConfigHistory" :disabled="piHistoryApplying || !isToolConfigWriteAllowed('pi')">{{ t('pi.history.apply') }}</button>
+                                    </div>
+                                </div>
+                            </details>
                             <label class="form-label">{{ t('pi.files.modelsTitle') }}</label>
                             <textarea
                                 class="template-textarea config-json-editor"
@@ -208,7 +230,29 @@
                             <p v-if="piModelsJsonError" class="config-template-hint error-text">{{ piModelsJsonError }}</p>
                             <div class="settings-tab-actions">
                                 <button type="button" class="btn-tool" @click="savePiModelsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piModelsJsonError">{{ t('common.save') }}</button>
+                                <button type="button" class="btn-mini" @click="openPiConfigHistory('models')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
                             </div>
+                            <details v-if="piHistoryTarget === 'models'" class="prompt-history-panel" open>
+                                <summary class="prompt-history-summary">
+                                    <span>{{ t('common.history') }}</span>
+                                    <button type="button" class="btn-mini prompt-history-close" @click="closePiConfigHistory" :title="t('common.close')">✕</button>
+                                </summary>
+                                <div class="prompt-history-body">
+                                    <ul v-if="!piHistoryLoading && !piHistoryError && piHistoryItems.length" class="prompt-history-list">
+                                        <li v-for="item in piHistoryItems" :key="item.id" :class="['prompt-history-item', { active: piHistoryPreviewId === item.id }]" @click="viewPiConfigHistoryItem(item)">
+                                            <span class="prompt-history-time">{{ item.id }}</span>
+                                            <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                        </li>
+                                    </ul>
+                                    <div v-if="piHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                    <div v-else-if="piHistoryError" class="state-message error">{{ piHistoryError }}</div>
+                                    <div v-else-if="!piHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                                    <div v-if="piHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                        <pre class="prompt-history-preview">{{ piHistoryPreviewContent }}</pre>
+                                        <button type="button" class="btn-mini btn-confirm-mini" @click="applyPiConfigHistory" :disabled="piHistoryApplying || !isToolConfigWriteAllowed('pi')">{{ t('pi.history.apply') }}</button>
+                                    </div>
+                                </div>
+                            </details>
                         </section>
                         <div v-if="!isToolConfigWriteAllowed('pi')" class="tool-config-write-overlay">
                             <div class="tool-config-write-overlay-card">
