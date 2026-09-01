@@ -3282,7 +3282,7 @@ return function render(_ctx, _cache) {
                       class: "selector-section"
                     }, [
                       _createElementVNode("div", { class: "selector-header" }, [
-                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.editorTitle')), 1 /* TEXT */),
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.editingPiProvider.isNew ? _ctx.t('pi.providers.addModal.title') : _ctx.t('pi.providers.editorTitle')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "settings-tab-actions" }, [
                           _createElementVNode("button", {
                             type: "button",
@@ -3573,14 +3573,19 @@ return function render(_ctx, _cache) {
                             }, _toDisplayString(_ctx.piCatalogFillError), 1 /* TEXT */))
                           : _createCommentVNode("v-if", true)
                       ]),
-                      _createElementVNode("div", { class: "settings-tab-actions" }, [
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool",
-                          onClick: _ctx.confirmDeletePiProvider,
-                          disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
-                        }, _toDisplayString(_ctx.t('pi.providers.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ]),
+                      (!_ctx.editingPiProvider.isNew)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 0,
+                            class: "settings-tab-actions"
+                          }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool",
+                              onClick: _ctx.confirmDeletePiProvider,
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                            }, _toDisplayString(_ctx.t('pi.providers.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                          ]))
+                        : _createCommentVNode("v-if", true),
                       _createElementVNode("section", { class: "selector-section" }, [
                         _createElementVNode("div", { class: "selector-header" }, [
                           _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.json.title')), 1 /* TEXT */)
@@ -3617,15 +3622,6 @@ return function render(_ctx, _cache) {
                       _createElementVNode("div", { class: "selector-header" }, [
                         _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.addModal.title')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "settings-tab-actions" }, [
-                          (_ctx.piSelectedProviderTemplate)
-                            ? (_openBlock(), _createElementBlock("button", {
-                                key: 0,
-                                type: "button",
-                                class: "btn-tool",
-                                onClick: _ctx.addPiProviderFromModal,
-                                disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
-                              }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
-                            : _createCommentVNode("v-if", true),
                           _createElementVNode("button", {
                             type: "button",
                             class: "btn-tool",
@@ -3694,98 +3690,6 @@ return function render(_ctx, _cache) {
                               class: "btn-tool",
                               onClick: _ctx.resetPiProviderTemplateSelection
                             }, _toDisplayString(_ctx.t('pi.picker.back')), 9 /* TEXT, PROPS */, ["onClick"])
-                          ]))
-                        : _createCommentVNode("v-if", true),
-                      (_ctx.piSelectedProviderTemplate)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 2,
-                            class: "codex-config-grid"
-                          }, [
-                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.baseUrl')), 1 /* TEXT */),
-                              _withDirectives(_createElementVNode("input", {
-                                class: "form-input",
-                                type: "url",
-                                "onUpdate:modelValue": $event => ((_ctx.addingPiProviderBaseUrl) = $event),
-                                autocomplete: "off",
-                                spellcheck: "false",
-                                placeholder: "https://",
-                                onInput: _ctx.onAddingPiEndpointChange
-                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onInput"]), [
-                                [_vModelText, _ctx.addingPiProviderBaseUrl]
-                              ])
-                            ]),
-                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.api')), 1 /* TEXT */),
-                              _withDirectives(_createElementVNode("select", {
-                                class: "form-input",
-                                "onUpdate:modelValue": $event => ((_ctx.addingPiProviderApi) = $event)
-                              }, [
-                                _createElementVNode("option", { value: "openai-completions" }, "openai-completions — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiCompletions')), 1 /* TEXT */),
-                                _createElementVNode("option", { value: "openai-responses" }, "openai-responses — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiResponses')), 1 /* TEXT */),
-                                _createElementVNode("option", { value: "anthropic-messages" }, "anthropic-messages — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.anthropicMessages')), 1 /* TEXT */),
-                                _createElementVNode("option", { value: "google-generative-ai" }, "google-generative-ai — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.googleGenerativeAi')), 1 /* TEXT */)
-                              ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                                [_vModelSelect, _ctx.addingPiProviderApi]
-                              ])
-                            ]),
-                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.addModal.fields.apiKey')), 1 /* TEXT */),
-                              _withDirectives(_createElementVNode("input", {
-                                class: "form-input",
-                                type: "password",
-                                "onUpdate:modelValue": $event => ((_ctx.addingPiProviderApiKey) = $event),
-                                autocomplete: "off",
-                                spellcheck: "false",
-                                placeholder: _ctx.t('common.optional'),
-                                onInput: _ctx.onAddingPiEndpointChange
-                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onInput"]), [
-                                [_vModelText, _ctx.addingPiProviderApiKey]
-                              ])
-                            ]),
-                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.models')), 1 /* TEXT */),
-                              (_ctx.addingPiRemoteLoading)
-                                ? (_openBlock(), _createElementBlock("p", {
-                                    key: 0,
-                                    class: "config-template-hint"
-                                  }, _toDisplayString(_ctx.t('pi.providers.models.remoteLoading')), 1 /* TEXT */))
-                                : (_ctx.addingPiRemoteError)
-                                  ? (_openBlock(), _createElementBlock("p", {
-                                      key: 1,
-                                      class: "config-template-hint"
-                                    }, _toDisplayString(_ctx.addingPiRemoteError) + " · " + _toDisplayString(_ctx.t('pi.providers.models.remoteFailed')), 1 /* TEXT */))
-                                  : _createCommentVNode("v-if", true),
-                              _withDirectives(_createElementVNode("input", {
-                                class: "form-input",
-                                type: "text",
-                                "onUpdate:modelValue": $event => ((_ctx.addingPiProviderModel) = $event),
-                                autocomplete: "off",
-                                spellcheck: "false",
-                                placeholder: _ctx.addingPiRemoteModels.length ? _ctx.t('pi.providers.models.search') : 'claude-sonnet-4'
-                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                                [_vModelText, _ctx.addingPiProviderModel]
-                              ]),
-                              (!_ctx.addingPiRemoteLoading && _ctx.addingPiProviderModel.trim() && _ctx.piFilteredAddingRemoteModels().length > 0)
-                                ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
-                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piFilteredAddingRemoteModels(), (id) => {
-                                      return (_openBlock(), _createElementBlock("button", {
-                                        type: "button",
-                                        class: "btn-tool",
-                                        style: {"width":"100%","text-align":"left","justify-content":"flex-start","margin-top":"8px"},
-                                        key: id,
-                                        onClick: $event => (_ctx.addingPiProviderModel = id)
-                                      }, _toDisplayString(id), 9 /* TEXT, PROPS */, ["onClick"]))
-                                    }), 128 /* KEYED_FRAGMENT */)),
-                                    _createElementVNode("p", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.addingPiRemoteModels.length })), 1 /* TEXT */)
-                                  ], 64 /* STABLE_FRAGMENT */))
-                                : (!_ctx.addingPiRemoteLoading && !_ctx.addingPiRemoteError && _ctx.addingPiProviderModel.trim() && _ctx.addingPiRemoteModels.length > 0)
-                                  ? (_openBlock(), _createElementBlock("p", {
-                                      key: 3,
-                                      class: "config-template-hint"
-                                    }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
-                                  : _createCommentVNode("v-if", true)
-                            ])
                           ]))
                         : _createCommentVNode("v-if", true)
                     ]))

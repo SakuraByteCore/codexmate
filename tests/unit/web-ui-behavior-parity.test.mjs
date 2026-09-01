@@ -438,6 +438,16 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'projectPathOptionsLoading'
     ];
     const allowedMissingCurrentKeys = [
+        'addingPiProviderApi',
+        'addingPiProviderApiKey',
+        'addingPiProviderBaseUrl',
+        'addingPiProviderId',
+        'addingPiProviderModel',
+        'addingPiProviderName',
+        'addingPiRemoteDebounce',
+        'addingPiRemoteError',
+        'addingPiRemoteLoading',
+        'addingPiRemoteModels',
         'localProxyRunning',
         'localProxyRuntime',
         'localProxySettings',
@@ -952,6 +962,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'fetchAddingPiRemoteModels',
         'onAddingPiEndpointChange',
         'piFilteredAddingRemoteModels',
+        'startPiProviderDraft',
+        'resetPiEditorTransientState',
         'fetchPiRemoteModels',
         'piFilteredRemoteModels',
         'addPiRemoteModel',
@@ -994,6 +1006,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'fillPiModelFromCatalog'
     );
     const allowedMissingCurrentMethodKeys = [
+        'addPiProviderFromModal',
+        'fetchAddingPiRemoteModels',
+        'onAddingPiEndpointChange',
+        'piFilteredAddingRemoteModels',
         'convertSession',
         'importDerivedSessionToNative',
         'isDerivedSession',
