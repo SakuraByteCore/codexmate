@@ -149,24 +149,6 @@
                                 <button type="button" class="btn-tool" @click="confirmDeletePiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.delete') }}</button>
                             </div>
 
-                        <section class="selector-section">
-                            <div class="selector-header">
-                                <span class="selector-title">{{ t('pi.providers.json.title') }}</span>
-                            </div>
-                            <p class="config-template-hint">{{ t('pi.providers.json.desc') }}</p>
-                            <label class="form-label">{{ t('pi.providers.json.previewTitle') }}</label>
-                            <pre class="config-json-preview">{{ piProviderPreviewJson() }}</pre>
-                            <label class="form-label">{{ t('pi.providers.json.editTitle') }}</label>
-                            <textarea
-                                class="template-textarea config-json-editor"
-                                v-model="editingPiProvider.form.configJsonDraft"
-                                spellcheck="false"
-                                autocomplete="off"
-                                :disabled="!isToolConfigWriteAllowed('pi')"
-                                @input="piEditorJsonDraftInput"
-                                placeholder="{}"></textarea>
-                            <p v-if="piEditorJsonError" class="config-template-hint error-text">{{ piEditorJsonError }}</p>
-                        </section>
                         </section>
 
                         <section class="selector-section" v-if="showAddPiProviderModal">
