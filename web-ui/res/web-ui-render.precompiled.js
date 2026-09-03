@@ -3276,398 +3276,6 @@ return function render(_ctx, _cache) {
                       }, _toDisplayString(_ctx.t('pi.providers.empty')), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true)
                 ]),
-                (_ctx.editingPiProvider)
-                  ? (_openBlock(), _createElementBlock("section", {
-                      key: 0,
-                      class: "selector-section"
-                    }, [
-                      _createElementVNode("div", { class: "selector-header" }, [
-                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.editingPiProvider.isNew ? _ctx.t('pi.providers.addModal.title') : _ctx.t('pi.providers.editorTitle')), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "settings-tab-actions" }, [
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "btn-tool",
-                            onClick: _ctx.savePiProvider,
-                            disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
-                          }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                        ])
-                      ]),
-                      _createElementVNode("div", { class: "codex-config-grid" }, [
-                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.name')), 1 /* TEXT */),
-                          _createElementVNode("input", {
-                            class: "form-input",
-                            type: "text",
-                            value: _ctx.piProviderName(_ctx.editingPiProvider.id),
-                            readonly: ""
-                          }, null, 8 /* PROPS */, ["value"])
-                        ]),
-                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.baseUrl')), 1 /* TEXT */),
-                          _withDirectives(_createElementVNode("input", {
-                            class: "form-input",
-                            type: "url",
-                            "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.baseUrl) = $event),
-                            autocomplete: "off",
-                            spellcheck: "false",
-                            placeholder: "https://"
-                          }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                            [_vModelText, _ctx.editingPiProvider.form.baseUrl]
-                          ])
-                        ]),
-                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.api')), 1 /* TEXT */),
-                          _withDirectives(_createElementVNode("select", {
-                            class: "form-input",
-                            "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.api) = $event),
-                            disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                          }, [
-                            _createElementVNode("option", { value: "openai-completions" }, "openai-completions — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiCompletions')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "openai-responses" }, "openai-responses — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiResponses')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "anthropic-messages" }, "anthropic-messages — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.anthropicMessages')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "google-generative-ai" }, "google-generative-ai — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.googleGenerativeAi')), 1 /* TEXT */),
-                            (!['openai-completions', 'openai-responses', 'anthropic-messages', 'google-generative-ai'].includes(_ctx.editingPiProvider.form.api))
-                              ? (_openBlock(), _createElementBlock("option", {
-                                  key: 0,
-                                  value: _ctx.editingPiProvider.form.api
-                                }, _toDisplayString(_ctx.editingPiProvider.form.api || '—'), 9 /* TEXT, PROPS */, ["value"]))
-                              : _createCommentVNode("v-if", true)
-                          ], 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                            [_vModelSelect, _ctx.editingPiProvider.form.api]
-                          ])
-                        ]),
-                        _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.apiKey')), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "input-with-toggle" }, [
-                            _withDirectives(_createElementVNode("input", {
-                              class: "form-input",
-                              "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.apiKey) = $event),
-                              type: _ctx.piShowKey ? 'text' : 'password',
-                              autocomplete: "off",
-                              spellcheck: "false",
-                              placeholder: "sk-..."
-                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type"]), [
-                              [_vModelDynamic, _ctx.editingPiProvider.form.apiKey]
-                            ]),
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "input-toggle-btn",
-                              onMousedown: _withModifiers(() => {}, ["prevent"]),
-                              onClick: $event => (_ctx.piShowKey = !_ctx.piShowKey),
-                              title: _ctx.piShowKey ? _ctx.t('common.hide') : _ctx.t('common.show'),
-                              "aria-label": _ctx.piShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
-                            }, [
-                              (!_ctx.piShowKey)
-                                ? (_openBlock(), _createElementBlock("svg", {
-                                    key: 0,
-                                    viewBox: "0 0 20 20",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    "stroke-width": "1.5",
-                                    width: "16",
-                                    height: "16"
-                                  }, [
-                                    _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
-                                    _createElementVNode("circle", {
-                                      cx: "10",
-                                      cy: "10",
-                                      r: "3"
-                                    })
-                                  ]))
-                                : (_openBlock(), _createElementBlock("svg", {
-                                    key: 1,
-                                    viewBox: "0 0 20 20",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    "stroke-width": "1.5",
-                                    width: "16",
-                                    height: "16"
-                                  }, [
-                                    _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
-                                  ]))
-                            ], 40 /* PROPS, NEED_HYDRATION */, ["onMousedown", "onClick", "title", "aria-label"])
-                          ])
-                        ])
-                      ]),
-                      _createElementVNode("div", { class: "form-group" }, [
-                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.models')), 1 /* TEXT */),
-                        (_ctx.piRemoteModelsLoading)
-                          ? (_openBlock(), _createElementBlock("p", {
-                              key: 0,
-                              class: "config-template-hint"
-                            }, _toDisplayString(_ctx.t('pi.providers.models.remoteLoading')), 1 /* TEXT */))
-                          : (_ctx.piRemoteModelError)
-                            ? (_openBlock(), _createElementBlock("p", {
-                                key: 1,
-                                class: "config-template-hint"
-                              }, _toDisplayString(_ctx.piRemoteModelError) + " · " + _toDisplayString(_ctx.t('pi.providers.models.remoteFailed')), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true),
-                        _createElementVNode("div", { class: "card-list" }, [
-                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.editingPiProvider.form.models, (model, index) => {
-                            return (_openBlock(), _createElementBlock("div", {
-                              class: "card",
-                              key: index
-                            }, [
-                              _createElementVNode("div", { class: "input-with-toggle" }, [
-                                _withDirectives(_createElementVNode("input", {
-                                  class: "form-input",
-                                  type: "text",
-                                  "onUpdate:modelValue": $event => ((model.id) = $event),
-                                  autocomplete: "off",
-                                  spellcheck: "false",
-                                  placeholder: "claude-sonnet-4",
-                                  disabled: !_ctx.isToolConfigWriteAllowed('pi'),
-                                  onInput: $event => (_ctx.piModelSearch = model.id)
-                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
-                                  [_vModelText, model.id]
-                                ]),
-                                _createElementVNode("button", {
-                                  type: "button",
-                                  class: "btn-tool input-toggle-btn",
-                                  disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCatalogFillIndex !== -1 || !model.id.trim(),
-                                  onClick: $event => (_ctx.fillPiModelFromCatalog(index))
-                                }, _toDisplayString(_ctx.piCatalogFillIndex === index ? _ctx.t('pi.providers.models.catalogFilling') : _ctx.t('pi.providers.models.catalogFill')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
-                                _createElementVNode("button", {
-                                  type: "button",
-                                  class: "btn-tool input-toggle-btn",
-                                  onClick: $event => (_ctx.editingPiProvider.form.models.splice(index, 1)),
-                                  disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                }, _toDisplayString(_ctx.t('pi.providers.models.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                              ]),
-                              _createElementVNode("div", { class: "codex-config-grid" }, [
-                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.name')), 1 /* TEXT */),
-                                  _withDirectives(_createElementVNode("input", {
-                                    class: "form-input",
-                                    type: "text",
-                                    "onUpdate:modelValue": $event => ((model.name) = $event),
-                                    autocomplete: "off",
-                                    spellcheck: "false",
-                                    disabled: !_ctx.isToolConfigWriteAllowed('pi'),
-                                    placeholder: _ctx.t('pi.providers.models.name')
-                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled", "placeholder"]), [
-                                    [_vModelText, model.name]
-                                  ])
-                                ]),
-                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                                  _createElementVNode("label", { class: "settings-toggle-row" }, [
-                                    _withDirectives(_createElementVNode("input", {
-                                      type: "checkbox",
-                                      "onUpdate:modelValue": $event => ((model.reasoning) = $event),
-                                      disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                                      [_vModelCheckbox, model.reasoning]
-                                    ]),
-                                    _createElementVNode("span", { class: "toggle-track" }, [
-                                      _createElementVNode("span", { class: "toggle-thumb" })
-                                    ]),
-                                    _createElementVNode("span", null, _toDisplayString(_ctx.t('pi.providers.models.reasoning')), 1 /* TEXT */)
-                                  ])
-                                ]),
-                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.contextWindow')), 1 /* TEXT */),
-                                  _withDirectives(_createElementVNode("input", {
-                                    class: "form-input",
-                                    type: "number",
-                                    "onUpdate:modelValue": $event => ((model.contextWindow) = $event),
-                                    disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                                    [_vModelText, model.contextWindow]
-                                  ])
-                                ]),
-                                _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.maxTokens')), 1 /* TEXT */),
-                                  _withDirectives(_createElementVNode("input", {
-                                    class: "form-input",
-                                    type: "number",
-                                    "onUpdate:modelValue": $event => ((model.maxTokens) = $event),
-                                    disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                                    [_vModelText, model.maxTokens]
-                                  ])
-                                ])
-                              ])
-                            ]))
-                          }), 128 /* KEYED_FRAGMENT */)),
-                          (_ctx.editingPiProvider.form.models.length === 0)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 0,
-                                class: "card"
-                              }, [
-                                _withDirectives(_createElementVNode("input", {
-                                  class: "form-input",
-                                  type: "text",
-                                  "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
-                                  autocomplete: "off",
-                                  spellcheck: "false",
-                                  placeholder: _ctx.t('pi.providers.models.search'),
-                                  onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
-                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
-                                  [_vModelText, _ctx.piModelSearch]
-                                ])
-                              ]))
-                            : _createCommentVNode("v-if", true),
-                          _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.models.importTitle')), 1 /* TEXT */),
-                          _withDirectives(_createElementVNode("input", {
-                            class: "form-input",
-                            type: "text",
-                            "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
-                            autocomplete: "off",
-                            spellcheck: "false",
-                            placeholder: _ctx.t('pi.providers.models.search'),
-                            onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
-                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
-                            [_vModelText, _ctx.piModelSearch]
-                          ]),
-                          (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 1,
-                                class: "pi-model-import-list"
-                              }, [
-                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piRemoteSelectableModels(), (id) => {
-                                  return (_openBlock(), _createElementBlock("label", {
-                                    class: "pi-model-import-item",
-                                    key: id
-                                  }, [
-                                    _createElementVNode("input", {
-                                      type: "checkbox",
-                                      checked: _ctx.isPiRemoteChecked(id),
-                                      onChange: $event => (_ctx.togglePiRemoteChecked(id)),
-                                      disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                    }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange", "disabled"]),
-                                    _createElementVNode("span", { class: "pi-model-import-id" }, _toDisplayString(id), 1 /* TEXT */)
-                                  ]))
-                                }), 128 /* KEYED_FRAGMENT */))
-                              ]))
-                            : _createCommentVNode("v-if", true),
-                          (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 2,
-                                class: "settings-tab-actions"
-                              }, [
-                                _createElementVNode("button", {
-                                  type: "button",
-                                  class: "btn-tool",
-                                  disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCheckedRemoteCount() === 0,
-                                  onClick: _ctx.addSelectedPiRemoteModels
-                                }, _toDisplayString(_ctx.t('pi.providers.models.addSelected', { count: _ctx.piCheckedRemoteCount() })), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
-                              ]))
-                            : _createCommentVNode("v-if", true),
-                          (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piRemoteModels.length)
-                            ? (_openBlock(), _createElementBlock("p", {
-                                key: 3,
-                                class: "config-template-hint"
-                              }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true),
-                          (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piRemoteSelectableModels().length === 0)
-                            ? (_openBlock(), _createElementBlock("p", {
-                                key: 4,
-                                class: "config-template-hint"
-                              }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true)
-                        ]),
-                        (_ctx.piCatalogFillError)
-                          ? (_openBlock(), _createElementBlock("p", {
-                              key: 2,
-                              class: "config-template-hint error-text"
-                            }, _toDisplayString(_ctx.piCatalogFillError), 1 /* TEXT */))
-                          : _createCommentVNode("v-if", true)
-                      ]),
-                      (!_ctx.editingPiProvider.isNew)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 0,
-                            class: "settings-tab-actions"
-                          }, [
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool",
-                              onClick: _ctx.confirmDeletePiProvider,
-                              disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
-                            }, _toDisplayString(_ctx.t('pi.providers.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                          ]))
-                        : _createCommentVNode("v-if", true)
-                    ]))
-                  : _createCommentVNode("v-if", true),
-                (_ctx.showAddPiProviderModal)
-                  ? (_openBlock(), _createElementBlock("section", {
-                      key: 1,
-                      class: "selector-section"
-                    }, [
-                      _createElementVNode("div", { class: "selector-header" }, [
-                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.addModal.title')), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "settings-tab-actions" }, [
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "btn-tool",
-                            onClick: _ctx.cancelAddPiProviderModal
-                          }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"])
-                        ])
-                      ]),
-                      _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.addModal.subtitle')), 1 /* TEXT */),
-                      (!_ctx.piSelectedProviderTemplate)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 0,
-                            class: "pi-picker"
-                          }, [
-                            _withDirectives(_createElementVNode("input", {
-                              class: "form-input",
-                              type: "text",
-                              "onUpdate:modelValue": $event => ((_ctx.piProviderPickerQuery) = $event),
-                              autocomplete: "off",
-                              spellcheck: "false",
-                              placeholder: _ctx.t('pi.picker.searchPlaceholder')
-                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                              [_vModelText, _ctx.piProviderPickerQuery]
-                            ]),
-                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piProviderTemplateGroups(), (group) => {
-                              return (_openBlock(), _createElementBlock("div", {
-                                class: "pi-picker-group",
-                                key: group.id
-                              }, [
-                                _createElementVNode("div", { class: "pi-picker-group-title" }, _toDisplayString(_ctx.t(group.i18nKey)), 1 /* TEXT */),
-                                _createElementVNode("div", { class: "pi-picker-grid" }, [
-                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(group.templates, (tpl) => {
-                                    return (_openBlock(), _createElementBlock("button", {
-                                      type: "button",
-                                      class: "card pi-picker-card",
-                                      key: tpl.id,
-                                      onClick: $event => (_ctx.selectPiProviderTemplate(tpl.id))
-                                    }, [
-                                      _createElementVNode("span", { class: "card-icon" }, _toDisplayString(tpl.name.charAt(0).toUpperCase()), 1 /* TEXT */),
-                                      _createElementVNode("span", { class: "pi-picker-card-name" }, _toDisplayString(tpl.name), 1 /* TEXT */),
-                                      (tpl.baseUrl)
-                                        ? (_openBlock(), _createElementBlock("span", {
-                                            key: 0,
-                                            class: "pi-picker-card-url"
-                                          }, _toDisplayString(tpl.baseUrl), 1 /* TEXT */))
-                                        : _createCommentVNode("v-if", true)
-                                    ], 8 /* PROPS */, ["onClick"]))
-                                  }), 128 /* KEYED_FRAGMENT */))
-                                ])
-                              ]))
-                            }), 128 /* KEYED_FRAGMENT */)),
-                            (_ctx.piProviderPickerQuery.trim() && !_ctx.piProviderTemplateGroups().length)
-                              ? (_openBlock(), _createElementBlock("p", {
-                                  key: 0,
-                                  class: "config-template-hint"
-                                }, _toDisplayString(_ctx.t('pi.picker.empty')), 1 /* TEXT */))
-                              : _createCommentVNode("v-if", true)
-                          ]))
-                        : _createCommentVNode("v-if", true),
-                      (_ctx.piSelectedProviderTemplate)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 1,
-                            class: "settings-tab-actions"
-                          }, [
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool",
-                              onClick: _ctx.resetPiProviderTemplateSelection
-                            }, _toDisplayString(_ctx.t('pi.picker.back')), 9 /* TEXT, PROPS */, ["onClick"])
-                          ]))
-                        : _createCommentVNode("v-if", true)
-                    ]))
-                  : _createCommentVNode("v-if", true),
                 _createElementVNode("section", { class: "selector-section" }, [
                   _createElementVNode("div", { class: "selector-header" }, [
                     _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.files.title')), 1 /* TEXT */)
@@ -3872,7 +3480,7 @@ return function render(_ctx, _cache) {
                 ]),
                 (!_ctx.isToolConfigWriteAllowed('pi'))
                   ? (_openBlock(), _createElementBlock("div", {
-                      key: 2,
+                      key: 0,
                       class: "tool-config-write-overlay"
                     }, [
                       _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
@@ -3892,6 +3500,381 @@ return function render(_ctx, _cache) {
           ], 8 /* PROPS */, ["aria-labelledby"]), [
             [_vShow, _ctx.mainTab === 'config' && _ctx.configMode === 'pi']
           ]),
+          _createCommentVNode(" Pi 新增供应商模板选择模态框 "),
+          (_ctx.showAddPiProviderModal && !_ctx.editingPiProvider)
+            ? (_openBlock(), _createElementBlock("div", {
+                key: 0,
+                class: "modal-overlay",
+                onClick: _withModifiers(_ctx.cancelAddPiProviderModal, ["self"])
+              }, [
+                _createElementVNode("div", {
+                  class: "modal modal-wide",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "pi-provider-picker-modal-title"
+                }, [
+                  _createElementVNode("div", {
+                    class: "modal-title",
+                    id: "pi-provider-picker-modal-title"
+                  }, _toDisplayString(_ctx.t('pi.providers.addModal.title')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.addModal.subtitle')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "pi-picker" }, [
+                    _withDirectives(_createElementVNode("input", {
+                      class: "form-input",
+                      type: "text",
+                      "onUpdate:modelValue": $event => ((_ctx.piProviderPickerQuery) = $event),
+                      autocomplete: "off",
+                      spellcheck: "false",
+                      placeholder: _ctx.t('pi.picker.searchPlaceholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                      [_vModelText, _ctx.piProviderPickerQuery]
+                    ]),
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piProviderTemplateGroups(), (group) => {
+                      return (_openBlock(), _createElementBlock("div", {
+                        class: "pi-picker-group",
+                        key: group.id
+                      }, [
+                        _createElementVNode("div", { class: "pi-picker-group-title" }, _toDisplayString(_ctx.t(group.i18nKey)), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "pi-picker-grid" }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(group.templates, (tpl) => {
+                            return (_openBlock(), _createElementBlock("button", {
+                              type: "button",
+                              class: "card pi-picker-card",
+                              key: tpl.id,
+                              onClick: $event => (_ctx.selectPiProviderTemplate(tpl.id))
+                            }, [
+                              _createElementVNode("span", { class: "card-icon" }, _toDisplayString(tpl.name.charAt(0).toUpperCase()), 1 /* TEXT */),
+                              _createElementVNode("span", { class: "pi-picker-card-name" }, _toDisplayString(tpl.name), 1 /* TEXT */),
+                              (tpl.baseUrl)
+                                ? (_openBlock(), _createElementBlock("span", {
+                                    key: 0,
+                                    class: "pi-picker-card-url"
+                                  }, _toDisplayString(tpl.baseUrl), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true)
+                            ], 8 /* PROPS */, ["onClick"]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ])
+                      ]))
+                    }), 128 /* KEYED_FRAGMENT */)),
+                    (_ctx.piProviderPickerQuery.trim() && !_ctx.piProviderTemplateGroups().length)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 0,
+                          class: "config-template-hint"
+                        }, _toDisplayString(_ctx.t('pi.picker.empty')), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true)
+                  ]),
+                  _createElementVNode("div", { class: "btn-group" }, [
+                    _createElementVNode("button", {
+                      class: "btn btn-cancel",
+                      onClick: _ctx.cancelAddPiProviderModal
+                    }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"])
+                  ])
+                ])
+              ], 8 /* PROPS */, ["onClick"]))
+            : _createCommentVNode("v-if", true),
+          _createCommentVNode(" Pi 供应商编辑器模态框 "),
+          (_ctx.editingPiProvider)
+            ? (_openBlock(), _createElementBlock("div", {
+                key: 1,
+                class: "modal-overlay",
+                onClick: _withModifiers(_ctx.closePiProviderEditor, ["self"])
+              }, [
+                _createElementVNode("div", {
+                  class: "modal modal-wide",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "pi-provider-editor-modal-title"
+                }, [
+                  _createElementVNode("div", {
+                    class: "modal-title",
+                    id: "pi-provider-editor-modal-title"
+                  }, _toDisplayString(_ctx.editingPiProvider.isNew ? _ctx.t('pi.providers.addModal.title') : _ctx.t('pi.providers.editorTitle')), 1 /* TEXT */),
+                  (!_ctx.editingPiProvider.isNew)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "form-group"
+                      }, [
+                        _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.name')), 1 /* TEXT */),
+                        _createElementVNode("input", {
+                          class: "form-input",
+                          type: "text",
+                          value: _ctx.piProviderName(_ctx.editingPiProvider.id),
+                          readonly: ""
+                        }, null, 8 /* PROPS */, ["value"])
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  _createElementVNode("div", { class: "form-group" }, [
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.baseUrl')), 1 /* TEXT */),
+                    _withDirectives(_createElementVNode("input", {
+                      class: "form-input",
+                      type: "url",
+                      "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.baseUrl) = $event),
+                      autocomplete: "off",
+                      spellcheck: "false",
+                      placeholder: "https://"
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      [_vModelText, _ctx.editingPiProvider.form.baseUrl]
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "form-group" }, [
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.api')), 1 /* TEXT */),
+                    _withDirectives(_createElementVNode("select", {
+                      class: "form-input",
+                      "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.api) = $event),
+                      disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                    }, [
+                      _createElementVNode("option", { value: "openai-completions" }, "openai-completions — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiCompletions')), 1 /* TEXT */),
+                      _createElementVNode("option", { value: "openai-responses" }, "openai-responses — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.openaiResponses')), 1 /* TEXT */),
+                      _createElementVNode("option", { value: "anthropic-messages" }, "anthropic-messages — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.anthropicMessages')), 1 /* TEXT */),
+                      _createElementVNode("option", { value: "google-generative-ai" }, "google-generative-ai — " + _toDisplayString(_ctx.t('pi.providers.addModal.api.googleGenerativeAi')), 1 /* TEXT */),
+                      (!['openai-completions', 'openai-responses', 'anthropic-messages', 'google-generative-ai'].includes(_ctx.editingPiProvider.form.api))
+                        ? (_openBlock(), _createElementBlock("option", {
+                            key: 0,
+                            value: _ctx.editingPiProvider.form.api
+                          }, _toDisplayString(_ctx.editingPiProvider.form.api || '—'), 9 /* TEXT, PROPS */, ["value"]))
+                        : _createCommentVNode("v-if", true)
+                    ], 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                      [_vModelSelect, _ctx.editingPiProvider.form.api]
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "form-group" }, [
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.apiKey')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "input-with-toggle" }, [
+                      _withDirectives(_createElementVNode("input", {
+                        class: "form-input",
+                        "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.apiKey) = $event),
+                        type: _ctx.piShowKey ? 'text' : 'password',
+                        autocomplete: "off",
+                        spellcheck: "false",
+                        placeholder: "sk-..."
+                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type"]), [
+                        [_vModelDynamic, _ctx.editingPiProvider.form.apiKey]
+                      ]),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "input-toggle-btn",
+                        onMousedown: _withModifiers(() => {}, ["prevent"]),
+                        onClick: $event => (_ctx.piShowKey = !_ctx.piShowKey),
+                        title: _ctx.piShowKey ? _ctx.t('common.hide') : _ctx.t('common.show'),
+                        "aria-label": _ctx.piShowKey ? _ctx.t('common.hide') : _ctx.t('common.show')
+                      }, [
+                        (!_ctx.piShowKey)
+                          ? (_openBlock(), _createElementBlock("svg", {
+                              key: 0,
+                              viewBox: "0 0 20 20",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "1.5",
+                              width: "16",
+                              height: "16"
+                            }, [
+                              _createElementVNode("path", { d: "M10 4C5 4 1.73 8.11 1 10c.73 1.89 4 6 9 6s8.27-4.11 9-6c-.73-1.89-4-6-9-6z" }),
+                              _createElementVNode("circle", {
+                                cx: "10",
+                                cy: "10",
+                                r: "3"
+                              })
+                            ]))
+                          : (_openBlock(), _createElementBlock("svg", {
+                              key: 1,
+                              viewBox: "0 0 20 20",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "1.5",
+                              width: "16",
+                              height: "16"
+                            }, [
+                              _createElementVNode("path", { d: "M2 2l16 16M8.2 4.2A9.9 9.9 0 0 1 10 4c5 0 8.27 4.11 9 6-.44.94-1.5 2.7-3.2 4.2M14.5 14.5A5.9 5.9 0 0 1 10 16c-5 0-8.27-4.11-9-6 .76-1.66 2.2-3.6 4.3-5" })
+                            ]))
+                      ], 40 /* PROPS, NEED_HYDRATION */, ["onMousedown", "onClick", "title", "aria-label"])
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "form-group" }, [
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.fields.models')), 1 /* TEXT */),
+                    (_ctx.piRemoteModelsLoading)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 0,
+                          class: "config-template-hint"
+                        }, _toDisplayString(_ctx.t('pi.providers.models.remoteLoading')), 1 /* TEXT */))
+                      : (_ctx.piRemoteModelError)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 1,
+                            class: "config-template-hint"
+                          }, _toDisplayString(_ctx.piRemoteModelError) + " · " + _toDisplayString(_ctx.t('pi.providers.models.remoteFailed')), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                    _createElementVNode("div", { class: "card-list" }, [
+                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.editingPiProvider.form.models, (model, index) => {
+                        return (_openBlock(), _createElementBlock("div", {
+                          class: "card",
+                          key: index
+                        }, [
+                          _createElementVNode("div", { class: "input-with-toggle" }, [
+                            _withDirectives(_createElementVNode("input", {
+                              class: "form-input",
+                              type: "text",
+                              "onUpdate:modelValue": $event => ((model.id) = $event),
+                              autocomplete: "off",
+                              spellcheck: "false",
+                              placeholder: "claude-sonnet-4",
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi'),
+                              onInput: $event => (_ctx.piModelSearch = model.id)
+                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
+                              [_vModelText, model.id]
+                            ]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool input-toggle-btn",
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCatalogFillIndex !== -1 || !model.id.trim(),
+                              onClick: $event => (_ctx.fillPiModelFromCatalog(index))
+                            }, _toDisplayString(_ctx.piCatalogFillIndex === index ? _ctx.t('pi.providers.models.catalogFilling') : _ctx.t('pi.providers.models.catalogFill')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool input-toggle-btn",
+                              onClick: $event => (_ctx.editingPiProvider.form.models.splice(index, 1)),
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                            }, _toDisplayString(_ctx.t('pi.providers.models.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                          ]),
+                          _createElementVNode("div", { class: "codex-config-grid" }, [
+                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.contextWindow')), 1 /* TEXT */),
+                              _withDirectives(_createElementVNode("input", {
+                                class: "form-input",
+                                type: "number",
+                                "onUpdate:modelValue": $event => ((model.contextWindow) = $event),
+                                disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                                [_vModelText, model.contextWindow]
+                              ])
+                            ]),
+                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
+                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.maxTokens')), 1 /* TEXT */),
+                              _withDirectives(_createElementVNode("input", {
+                                class: "form-input",
+                                type: "number",
+                                "onUpdate:modelValue": $event => ((model.maxTokens) = $event),
+                                disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                                [_vModelText, model.maxTokens]
+                              ])
+                            ])
+                          ]),
+                          _createElementVNode("label", { class: "form-label" }, [
+                            _withDirectives(_createElementVNode("input", {
+                              type: "checkbox",
+                              "onUpdate:modelValue": $event => ((model.reasoning) = $event)
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                              [_vModelCheckbox, model.reasoning]
+                            ]),
+                            _createTextVNode(" " + _toDisplayString(_ctx.t('pi.providers.models.reasoning')), 1 /* TEXT */)
+                          ])
+                        ]))
+                      }), 128 /* KEYED_FRAGMENT */)),
+                      (_ctx.editingPiProvider.form.models.length === 0)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 0,
+                            class: "card"
+                          }, [
+                            _withDirectives(_createElementVNode("input", {
+                              class: "form-input",
+                              type: "text",
+                              "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
+                              autocomplete: "off",
+                              spellcheck: "false",
+                              placeholder: _ctx.t('pi.providers.models.search'),
+                              onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
+                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
+                              [_vModelText, _ctx.piModelSearch]
+                            ])
+                          ]))
+                        : _createCommentVNode("v-if", true),
+                      _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.models.importTitle')), 1 /* TEXT */),
+                      _withDirectives(_createElementVNode("input", {
+                        class: "form-input",
+                        type: "text",
+                        "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
+                        autocomplete: "off",
+                        spellcheck: "false",
+                        placeholder: _ctx.t('pi.providers.models.search'),
+                        onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
+                        [_vModelText, _ctx.piModelSearch]
+                      ]),
+                      (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 1,
+                            class: "pi-model-import-list"
+                          }, [
+                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piRemoteSelectableModels(), (id) => {
+                              return (_openBlock(), _createElementBlock("label", {
+                                class: "pi-model-import-item",
+                                key: id
+                              }, [
+                                _createElementVNode("input", {
+                                  type: "checkbox",
+                                  checked: _ctx.isPiRemoteChecked(id),
+                                  onChange: $event => (_ctx.togglePiRemoteChecked(id)),
+                                  disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange", "disabled"]),
+                                _createElementVNode("span", { class: "pi-model-import-id" }, _toDisplayString(id), 1 /* TEXT */)
+                              ]))
+                            }), 128 /* KEYED_FRAGMENT */))
+                          ]))
+                        : _createCommentVNode("v-if", true),
+                      (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 2,
+                            class: "settings-tab-actions"
+                          }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool",
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCheckedRemoteCount() === 0,
+                              onClick: _ctx.addSelectedPiRemoteModels
+                            }, _toDisplayString(_ctx.t('pi.providers.models.addSelected', { count: _ctx.piCheckedRemoteCount() })), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+                          ]))
+                        : _createCommentVNode("v-if", true),
+                      (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piRemoteModels.length)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 3,
+                            class: "config-template-hint"
+                          }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                      (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piRemoteSelectableModels().length === 0)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 4,
+                            class: "config-template-hint"
+                          }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ]),
+                    (_ctx.piCatalogFillError)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 2,
+                          class: "config-template-hint error-text"
+                        }, _toDisplayString(_ctx.piCatalogFillError), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true)
+                  ]),
+                  _createElementVNode("div", { class: "btn-group" }, [
+                    _createElementVNode("button", {
+                      class: "btn btn-cancel",
+                      onClick: _ctx.closePiProviderEditor
+                    }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"]),
+                    (!_ctx.editingPiProvider.isNew)
+                      ? (_openBlock(), _createElementBlock("button", {
+                          key: 0,
+                          class: "btn btn-confirm btn-danger",
+                          onClick: _ctx.confirmDeletePiProvider,
+                          disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                        }, _toDisplayString(_ctx.t('pi.providers.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("button", {
+                      class: "btn btn-confirm",
+                      onClick: _ctx.savePiProvider,
+                      disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
+                    }, _toDisplayString(_ctx.t(_ctx.piSaving ? 'common.saving' : 'common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ])
+                ])
+              ], 8 /* PROPS */, ["onClick"]))
+            : _createCommentVNode("v-if", true),
           _createCommentVNode(" 会话浏览模式 "),
           _withDirectives(_createElementVNode("div", {
             class: "mode-content",
@@ -6922,7 +6905,7 @@ return function render(_ctx, _cache) {
           _createCommentVNode(" Prompts editor "),
           (_ctx.mainTab === 'prompts')
             ? (_openBlock(), _createElementBlock("div", {
-                key: 0,
+                key: 2,
                 class: "mode-content mode-cards",
                 id: "panel-prompts",
                 role: "tabpanel",
@@ -7746,12 +7729,12 @@ return function render(_ctx, _cache) {
           _createCommentVNode(" 加载状态 "),
           (_ctx.loading && _ctx.mainTab !== 'usage')
             ? (_openBlock(), _createElementBlock("div", {
-                key: 1,
+                key: 3,
                 class: "state-message"
               }, _toDisplayString(_ctx.t('app.loadingConfig')), 1 /* TEXT */))
             : (_ctx.initError)
               ? (_openBlock(), _createElementBlock("div", {
-                  key: 2,
+                  key: 4,
                   class: "state-message error"
                 }, [
                   _createCommentVNode(" 错误状态 "),

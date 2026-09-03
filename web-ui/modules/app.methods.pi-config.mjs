@@ -344,6 +344,13 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piModelSearch = '';
             this.piEditorJsonError = '';
         },
+        closePiProviderEditor() {
+            const editor = this.editingPiProvider;
+            if (!editor) return;
+            const wasNew = !!editor.isNew;
+            this.resetPiProviderEditing();
+            if (wasNew) this.piSelectedProviderTemplate = '';
+        },
         removePiProviderModel(index) {
             if (!this.editingPiProvider) return;
             const list = this.editingPiProvider.form.models;

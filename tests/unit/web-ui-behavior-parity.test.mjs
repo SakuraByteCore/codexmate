@@ -968,6 +968,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'piFilteredRemoteModels',
         'addPiRemoteModel',
         'cancelAddPiProviderModal',
+        'closePiProviderEditor',
         'confirmDeletePiProvider',
         'loadPiProviders',
         'loadPiSettings',
