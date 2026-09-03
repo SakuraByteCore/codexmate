@@ -62,21 +62,9 @@
                     <div class="card-list">
                         <div class="card" v-for="(model, index) in editingPiProvider.form.models" :key="index">
                             <div class="input-with-toggle">
-                                <input class="form-input" type="text" v-model="model.id" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4" :disabled="!isToolConfigWriteAllowed('pi')" @input="piModelSearch = model.id">
-                                <button type="button" class="btn-tool input-toggle-btn" :disabled="!isToolConfigWriteAllowed('pi') || piCatalogFillIndex !== -1 || !model.id.trim()" @click="fillPiModelFromCatalog(index)">{{ piCatalogFillIndex === index ? t('pi.providers.models.catalogFilling') : t('pi.providers.models.catalogFill') }}</button>
+                                <input class="form-input" type="text" v-model="model.id" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4" :disabled="!isToolConfigWriteAllowed('pi')">
                                 <button type="button" class="btn-tool input-toggle-btn" @click="editingPiProvider.form.models.splice(index, 1)" :disabled="!isToolConfigWriteAllowed('pi')">{{ t('pi.providers.models.remove') }}</button>
                             </div>
-                            <div class="codex-config-grid">
-                                <div class="form-group codex-config-field">
-                                    <label class="form-label">{{ t('pi.providers.models.contextWindow') }}</label>
-                                    <input class="form-input" type="number" v-model="model.contextWindow" :disabled="!isToolConfigWriteAllowed('pi')">
-                                </div>
-                                <div class="form-group codex-config-field">
-                                    <label class="form-label">{{ t('pi.providers.models.maxTokens') }}</label>
-                                    <input class="form-input" type="number" v-model="model.maxTokens" :disabled="!isToolConfigWriteAllowed('pi')">
-                                </div>
-                            </div>
-                            <label class="form-label"><input type="checkbox" v-model="model.reasoning"> {{ t('pi.providers.models.reasoning') }}</label>
                         </div>
                         <div class="card" v-if="editingPiProvider.form.models.length === 0">
                             <input class="form-input" type="text" v-model="piModelSearch" autocomplete="off" spellcheck="false" :placeholder="t('pi.providers.models.search')" @keydown.enter.prevent="addPiRemoteModel(piModelSearch.trim())">
@@ -95,7 +83,6 @@
                         <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piRemoteModels.length" class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
                         <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piRemoteSelectableModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
                     </div>
-                    <p v-if="piCatalogFillError" class="config-template-hint error-text">{{ piCatalogFillError }}</p>
                 </div>
                 <div class="btn-group">
                     <button class="btn btn-cancel" @click="closePiProviderEditor">{{ t('common.cancel') }}</button>

@@ -3716,56 +3716,16 @@ return function render(_ctx, _cache) {
                               autocomplete: "off",
                               spellcheck: "false",
                               placeholder: "claude-sonnet-4",
-                              disabled: !_ctx.isToolConfigWriteAllowed('pi'),
-                              onInput: $event => (_ctx.piModelSearch = model.id)
-                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "disabled", "onInput"]), [
+                              disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
                               [_vModelText, model.id]
                             ]),
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool input-toggle-btn",
-                              disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCatalogFillIndex !== -1 || !model.id.trim(),
-                              onClick: $event => (_ctx.fillPiModelFromCatalog(index))
-                            }, _toDisplayString(_ctx.piCatalogFillIndex === index ? _ctx.t('pi.providers.models.catalogFilling') : _ctx.t('pi.providers.models.catalogFill')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
                             _createElementVNode("button", {
                               type: "button",
                               class: "btn-tool input-toggle-btn",
                               onClick: $event => (_ctx.editingPiProvider.form.models.splice(index, 1)),
                               disabled: !_ctx.isToolConfigWriteAllowed('pi')
                             }, _toDisplayString(_ctx.t('pi.providers.models.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                          ]),
-                          _createElementVNode("div", { class: "codex-config-grid" }, [
-                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.contextWindow')), 1 /* TEXT */),
-                              _withDirectives(_createElementVNode("input", {
-                                class: "form-input",
-                                type: "number",
-                                "onUpdate:modelValue": $event => ((model.contextWindow) = $event),
-                                disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                                [_vModelText, model.contextWindow]
-                              ])
-                            ]),
-                            _createElementVNode("div", { class: "form-group codex-config-field" }, [
-                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.providers.models.maxTokens')), 1 /* TEXT */),
-                              _withDirectives(_createElementVNode("input", {
-                                class: "form-input",
-                                type: "number",
-                                "onUpdate:modelValue": $event => ((model.maxTokens) = $event),
-                                disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                                [_vModelText, model.maxTokens]
-                              ])
-                            ])
-                          ]),
-                          _createElementVNode("label", { class: "form-label" }, [
-                            _withDirectives(_createElementVNode("input", {
-                              type: "checkbox",
-                              "onUpdate:modelValue": $event => ((model.reasoning) = $event)
-                            }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                              [_vModelCheckbox, model.reasoning]
-                            ]),
-                            _createTextVNode(" " + _toDisplayString(_ctx.t('pi.providers.models.reasoning')), 1 /* TEXT */)
                           ])
                         ]))
                       }), 128 /* KEYED_FRAGMENT */)),
@@ -3845,13 +3805,7 @@ return function render(_ctx, _cache) {
                             class: "config-template-hint"
                           }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
                         : _createCommentVNode("v-if", true)
-                    ]),
-                    (_ctx.piCatalogFillError)
-                      ? (_openBlock(), _createElementBlock("p", {
-                          key: 2,
-                          class: "config-template-hint error-text"
-                        }, _toDisplayString(_ctx.piCatalogFillError), 1 /* TEXT */))
-                      : _createCommentVNode("v-if", true)
+                    ])
                   ]),
                   _createElementVNode("div", { class: "btn-group" }, [
                     _createElementVNode("button", {
