@@ -3746,53 +3746,55 @@ return function render(_ctx, _cache) {
                           ])
                         ])
                       ]),
-                      _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.models.importTitle')), 1 /* TEXT */),
-                      (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 0,
-                            class: "pi-model-import-list"
-                          }, [
-                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piRemoteSelectableModels(), (id) => {
-                              return (_openBlock(), _createElementBlock("label", {
-                                class: "pi-model-import-item",
-                                key: id
-                              }, [
-                                _createElementVNode("input", {
-                                  type: "checkbox",
-                                  checked: _ctx.isPiRemoteChecked(id),
-                                  onChange: $event => (_ctx.togglePiRemoteChecked(id)),
-                                  disabled: !_ctx.isToolConfigWriteAllowed('pi')
-                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange", "disabled"]),
-                                _createElementVNode("span", { class: "pi-model-import-id" }, _toDisplayString(id), 1 /* TEXT */)
-                              ]))
-                            }), 128 /* KEYED_FRAGMENT */))
-                          ]))
-                        : _createCommentVNode("v-if", true),
-                      (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 1,
-                            class: "settings-tab-actions"
-                          }, [
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool",
-                              disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCheckedRemoteCount() === 0,
-                              onClick: _ctx.addSelectedPiRemoteModels
-                            }, _toDisplayString(_ctx.t('pi.providers.models.addSelected', { count: _ctx.piCheckedRemoteCount() })), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
-                          ]))
-                        : _createCommentVNode("v-if", true),
-                      (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piRemoteModels.length)
-                        ? (_openBlock(), _createElementBlock("p", {
-                            key: 2,
-                            class: "config-template-hint"
-                          }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */))
-                        : _createCommentVNode("v-if", true),
-                      (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piRemoteSelectableModels().length === 0)
-                        ? (_openBlock(), _createElementBlock("p", {
-                            key: 3,
-                            class: "config-template-hint"
-                          }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
-                        : _createCommentVNode("v-if", true)
+                      _createElementVNode("div", { class: "pi-model-import-section" }, [
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.models.importTitle')), 1 /* TEXT */),
+                        (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 0,
+                              class: "pi-model-import-list"
+                            }, [
+                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piRemoteSelectableModels(), (id) => {
+                                return (_openBlock(), _createElementBlock("label", {
+                                  class: "pi-model-import-item",
+                                  key: id
+                                }, [
+                                  _createElementVNode("input", {
+                                    type: "checkbox",
+                                    checked: _ctx.isPiRemoteChecked(id),
+                                    onChange: $event => (_ctx.togglePiRemoteChecked(id)),
+                                    disabled: !_ctx.isToolConfigWriteAllowed('pi')
+                                  }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange", "disabled"]),
+                                  _createElementVNode("span", { class: "pi-model-import-id" }, _toDisplayString(id), 1 /* TEXT */)
+                                ]))
+                              }), 128 /* KEYED_FRAGMENT */))
+                            ]))
+                          : _createCommentVNode("v-if", true),
+                        (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 1,
+                              class: "settings-tab-actions"
+                            }, [
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-tool",
+                                disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piCheckedRemoteCount() === 0,
+                                onClick: _ctx.addSelectedPiRemoteModels
+                              }, _toDisplayString(_ctx.t('pi.providers.models.addSelected', { count: _ctx.piCheckedRemoteCount() })), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+                            ]))
+                          : _createCommentVNode("v-if", true),
+                        (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piRemoteModels.length)
+                          ? (_openBlock(), _createElementBlock("p", {
+                              key: 2,
+                              class: "config-template-hint"
+                            }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */))
+                          : _createCommentVNode("v-if", true),
+                        (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piRemoteSelectableModels().length === 0)
+                          ? (_openBlock(), _createElementBlock("p", {
+                              key: 3,
+                              class: "config-template-hint"
+                            }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
+                          : _createCommentVNode("v-if", true)
+                      ])
                     ])
                   ]),
                   _createElementVNode("div", { class: "btn-group" }, [

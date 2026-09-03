@@ -71,18 +71,20 @@
                                 <input class="form-input" type="text" v-model="piModelSearch" autocomplete="off" spellcheck="false" :placeholder="t('pi.providers.models.search')" @keydown.enter.prevent="addPiRemoteModel(piModelSearch.trim())">
                             </div>
                         </div>
-                        <span class="selector-title">{{ t('pi.providers.models.importTitle') }}</span>
-                        <div class="pi-model-import-list" v-if="!piRemoteModelsLoading && piRemoteSelectableModels().length > 0">
-                            <label class="pi-model-import-item" v-for="id in piRemoteSelectableModels()" :key="id">
-                                <input type="checkbox" :checked="isPiRemoteChecked(id)" @change="togglePiRemoteChecked(id)" :disabled="!isToolConfigWriteAllowed('pi')">
-                                <span class="pi-model-import-id">{{ id }}</span>
-                            </label>
+                        <div class="pi-model-import-section">
+                            <span class="selector-title">{{ t('pi.providers.models.importTitle') }}</span>
+                            <div class="pi-model-import-list" v-if="!piRemoteModelsLoading && piRemoteSelectableModels().length > 0">
+                                <label class="pi-model-import-item" v-for="id in piRemoteSelectableModels()" :key="id">
+                                    <input type="checkbox" :checked="isPiRemoteChecked(id)" @change="togglePiRemoteChecked(id)" :disabled="!isToolConfigWriteAllowed('pi')">
+                                    <span class="pi-model-import-id">{{ id }}</span>
+                                </label>
+                            </div>
+                            <div class="settings-tab-actions" v-if="!piRemoteModelsLoading && piRemoteSelectableModels().length > 0">
+                                <button type="button" class="btn-tool" :disabled="!isToolConfigWriteAllowed('pi') || piCheckedRemoteCount() === 0" @click="addSelectedPiRemoteModels">{{ t('pi.providers.models.addSelected', { count: piCheckedRemoteCount() }) }}</button>
+                            </div>
+                            <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piRemoteModels.length" class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
+                            <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piRemoteSelectableModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
                         </div>
-                        <div class="settings-tab-actions" v-if="!piRemoteModelsLoading && piRemoteSelectableModels().length > 0">
-                            <button type="button" class="btn-tool" :disabled="!isToolConfigWriteAllowed('pi') || piCheckedRemoteCount() === 0" @click="addSelectedPiRemoteModels">{{ t('pi.providers.models.addSelected', { count: piCheckedRemoteCount() }) }}</button>
-                        </div>
-                        <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piRemoteModels.length" class="config-template-hint">{{ t('pi.providers.models.remoteCount', { count: piRemoteModels.length }) }}</p>
-                        <p v-if="!piRemoteModelsLoading && !piRemoteModelError && piModelSearch.trim() && piRemoteSelectableModels().length === 0" class="config-template-hint">{{ t('pi.providers.models.noMatch') }}</p>
                     </div>
                 </div>
                 <div class="btn-group">
