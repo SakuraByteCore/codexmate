@@ -3004,7 +3004,6 @@ function addProviderToConfig(params = {}) {
     let baseUrlForConfig = normalizedUrl;
     let authKeyForConfig = key;
     const extraLines = [];
-    const requiresOpenaiAuth = useTransform;
 
     if (useTransform) {
         const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, normalizedUrl, key, undefined, { maxRetries: openaiBridgeMaxRetries });
@@ -3029,7 +3028,7 @@ function addProviderToConfig(params = {}) {
         `name = "${safeName}"`,
         `base_url = "${safeUrl}"`,
         `wire_api = "responses"`,
-        `requires_openai_auth = ${requiresOpenaiAuth ? 'true' : 'false'}`,
+        `requires_openai_auth = true`,
         `preferred_auth_method = "${safeKey}"`,
         `models = [{ id = "${escapeTomlBasicString(model)}", name = "${escapeTomlBasicString(model)}" }]`,
         ...extraLines,
@@ -10531,7 +10530,7 @@ ${buildModelProviderTableHeader(providerName)}
 name = "${safeName}"
 base_url = "${safeBaseUrl}"
 wire_api = "responses"
-requires_openai_auth = false
+requires_openai_auth = true
 preferred_auth_method = "${safeApiKey}"
 request_max_retries = 4
 stream_max_retries = 10

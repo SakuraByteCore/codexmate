@@ -331,6 +331,15 @@ preferred_auth_method = "shadow-key"
     assert(!addedProviderTemplate.error, `get-config-template should accept add-provider model: ${addedProviderTemplate.error || ''}`);
     assert(addedProviderTemplate.template.includes('model_provider = "e2e-api"'), 'entered provider should be usable in generated config template');
     assert(addedProviderTemplate.template.includes('model = "gpt-e2e-api"'), 'entered model should be used in generated config template');
+    const configAfterAdd = fs.readFileSync(path.join(tmpHome, '.codex', 'config.toml'), 'utf-8');
+    const addedProviderBlockMatch = configAfterAdd.match(
+        /(?:^|\n)\s*\[model_providers\.(?:"e2e-api"|'e2e-api'|e2e-api)\][\s\S]*?(?=\n\s*\[|$)/
+    );
+    assert(addedProviderBlockMatch, 'config.toml should contain e2e-api provider block after add-provider');
+    assert(
+        addedProviderBlockMatch[0].includes('requires_openai_auth = true'),
+        'add-provider should write requires_openai_auth = true for non-bridge providers'
+    );
 
     const addProviderMissingModel = await api('add-provider', { name: 'test-empty-model', url: mockProviderUrl, key: 'sk-empty-model', model: '   ' });
     assert(addProviderMissingModel.error, 'add-provider should reject empty model');
