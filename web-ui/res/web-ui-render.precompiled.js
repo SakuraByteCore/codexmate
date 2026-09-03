@@ -3611,8 +3611,9 @@ return function render(_ctx, _cache) {
                       "onUpdate:modelValue": $event => ((_ctx.editingPiProvider.form.baseUrl) = $event),
                       autocomplete: "off",
                       spellcheck: "false",
-                      placeholder: "https://"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      placeholder: "https://",
+                      onChange: _ctx.fetchPiRemoteModels
+                    }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onChange"]), [
                       [_vModelText, _ctx.editingPiProvider.form.baseUrl]
                     ])
                   ]),
@@ -3646,8 +3647,9 @@ return function render(_ctx, _cache) {
                         type: _ctx.piShowKey ? 'text' : 'password',
                         autocomplete: "off",
                         spellcheck: "false",
-                        placeholder: "sk-..."
-                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "type"]), [
+                        placeholder: "sk-...",
+                        onChange: _ctx.fetchPiRemoteModels
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "type", "onChange"]), [
                         [_vModelDynamic, _ctx.editingPiProvider.form.apiKey]
                       ]),
                       _createElementVNode("button", {
@@ -3729,39 +3731,25 @@ return function render(_ctx, _cache) {
                           ])
                         ]))
                       }), 128 /* KEYED_FRAGMENT */)),
-                      (_ctx.editingPiProvider.form.models.length === 0)
-                        ? (_openBlock(), _createElementBlock("div", {
-                            key: 0,
-                            class: "card"
-                          }, [
-                            _withDirectives(_createElementVNode("input", {
-                              class: "form-input",
-                              type: "text",
-                              "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
-                              autocomplete: "off",
-                              spellcheck: "false",
-                              placeholder: _ctx.t('pi.providers.models.search'),
-                              onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
-                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
-                              [_vModelText, _ctx.piModelSearch]
-                            ])
-                          ]))
-                        : _createCommentVNode("v-if", true),
-                      _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.models.importTitle')), 1 /* TEXT */),
-                      _withDirectives(_createElementVNode("input", {
-                        class: "form-input",
-                        type: "text",
-                        "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
-                        autocomplete: "off",
-                        spellcheck: "false",
-                        placeholder: _ctx.t('pi.providers.models.search'),
-                        onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
-                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
-                        [_vModelText, _ctx.piModelSearch]
+                      _createElementVNode("div", { class: "card" }, [
+                        _createElementVNode("div", { class: "input-with-toggle" }, [
+                          _withDirectives(_createElementVNode("input", {
+                            class: "form-input",
+                            type: "text",
+                            "onUpdate:modelValue": $event => ((_ctx.piModelSearch) = $event),
+                            autocomplete: "off",
+                            spellcheck: "false",
+                            placeholder: _ctx.t('pi.providers.models.search'),
+                            onKeydown: _withKeys(_withModifiers($event => (_ctx.addPiRemoteModel(_ctx.piModelSearch.trim())), ["prevent"]), ["enter"])
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
+                            [_vModelText, _ctx.piModelSearch]
+                          ])
+                        ])
                       ]),
+                      _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.providers.models.importTitle')), 1 /* TEXT */),
                       (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
                         ? (_openBlock(), _createElementBlock("div", {
-                            key: 1,
+                            key: 0,
                             class: "pi-model-import-list"
                           }, [
                             (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.piRemoteSelectableModels(), (id) => {
@@ -3782,7 +3770,7 @@ return function render(_ctx, _cache) {
                         : _createCommentVNode("v-if", true),
                       (!_ctx.piRemoteModelsLoading && _ctx.piRemoteSelectableModels().length > 0)
                         ? (_openBlock(), _createElementBlock("div", {
-                            key: 2,
+                            key: 1,
                             class: "settings-tab-actions"
                           }, [
                             _createElementVNode("button", {
@@ -3795,13 +3783,13 @@ return function render(_ctx, _cache) {
                         : _createCommentVNode("v-if", true),
                       (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piRemoteModels.length)
                         ? (_openBlock(), _createElementBlock("p", {
-                            key: 3,
+                            key: 2,
                             class: "config-template-hint"
                           }, _toDisplayString(_ctx.t('pi.providers.models.remoteCount', { count: _ctx.piRemoteModels.length })), 1 /* TEXT */))
                         : _createCommentVNode("v-if", true),
                       (!_ctx.piRemoteModelsLoading && !_ctx.piRemoteModelError && _ctx.piModelSearch.trim() && _ctx.piRemoteSelectableModels().length === 0)
                         ? (_openBlock(), _createElementBlock("p", {
-                            key: 4,
+                            key: 3,
                             class: "config-template-hint"
                           }, _toDisplayString(_ctx.t('pi.providers.models.noMatch')), 1 /* TEXT */))
                         : _createCommentVNode("v-if", true)
