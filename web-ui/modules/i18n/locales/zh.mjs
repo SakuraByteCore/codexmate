@@ -268,6 +268,7 @@ const zh = Object.freeze({
     'dashboard.doctor.export.json': '导出 JSON',
     'dashboard.doctor.export.md': '导出 Markdown',
     'dashboard.doctor.open': '打开',
+    'dashboard.doctor.empty': '尚未运行检查。点击上方“运行检查”诊断当前配置。',
     'doctor.action.openConfig': '打开 Config',
     'doctor.action.checkProvider': '检查 Provider 配置',
     'doctor.action.openUsage': '打开 Usage',

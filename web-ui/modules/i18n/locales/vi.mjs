@@ -539,6 +539,7 @@ const vi = Object.freeze({
     'dashboard.doctor.export.json': 'Xuất JSON',
     'dashboard.doctor.export.md': 'Xuất Markdown',
     'dashboard.doctor.open': 'Mở',
+    'dashboard.doctor.empty': 'Chưa chạy lần kiểm tra nào. Nhấn "Chạy kiểm tra" để chẩn đoán cấu hình hiện tại.',
     'doctor.action.openConfig': 'Mở cấu hình',
     'doctor.action.checkProvider': 'Kiểm tra cấu hình nhà cung cấp',
     'doctor.action.openUsage': 'Mở thống kê',

@@ -268,6 +268,7 @@ const zhTw = Object.freeze({
     'dashboard.doctor.export.json': '匯出 JSON',
     'dashboard.doctor.export.md': '匯出 Markdown',
     'dashboard.doctor.open': '打開',
+    'dashboard.doctor.empty': '尚未執行檢查。點擊「運行檢查」診斷目前設定。',
     'doctor.action.openConfig': '打開 Config',
     'doctor.action.checkProvider': '檢查 Provider 設定',
     'doctor.action.openUsage': '打開 Usage',

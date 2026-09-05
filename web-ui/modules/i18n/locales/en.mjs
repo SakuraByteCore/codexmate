@@ -268,6 +268,7 @@ const en = Object.freeze({
     'dashboard.doctor.export.json': 'Export JSON',
     'dashboard.doctor.export.md': 'Export Markdown',
     'dashboard.doctor.open': 'Open',
+    'dashboard.doctor.empty': 'No checks have been run yet. Run checks to diagnose the current setup.',
     'doctor.action.openConfig': 'Open Config',
     'doctor.action.checkProvider': 'Check provider config',
     'doctor.action.openUsage': 'Open Usage',

@@ -25,7 +25,9 @@ test('config template keeps expected config tabs in top and side navigation', ()
 
     assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']);
     assert.match(html, /id="tab-dashboard"/);
-    assert.match(html, /v-if="healthCheckResult && healthCheckResult\.report" class="doctor-action-list"/);
+    assert.match(html, /<div class="doctor-result-section">/);
+    assert.match(html, /<template v-if="healthCheckResult">[\s\S]*?v-if="healthCheckResult\.report" class="doctor-action-list"/);
+    assert.match(html, /<div v-else class="doctor-result-empty">/);
     assert.match(html, /v-if="healthCheckResult\.report\.issues && healthCheckResult\.report\.issues\.length"/);
     assert.match(html, /action\.type === 'navigate' && action\.target/);
     assert.match(html, /@click="action\.target \? switchMainTab\(action\.target\) : null"/);

@@ -270,6 +270,7 @@ const ja = Object.freeze({
     'dashboard.doctor.export.json': 'JSON エクスポート',
     'dashboard.doctor.export.md': 'Markdown エクスポート',
     'dashboard.doctor.open': '開く',
+    'dashboard.doctor.empty': 'まだチェックは実行されていません。「チェックを実行」で現在のセットアップを診断します。',
     'doctor.action.openConfig': 'Config を開く',
     'doctor.action.checkProvider': 'Provider 設定をチェック',
     'doctor.action.openUsage': 'Usage を開く',
