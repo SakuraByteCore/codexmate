@@ -56,7 +56,7 @@ test('desktop release backend uses bundled Node runtime instead of requiring sys
     assert.match(libSource, /CODEXMATE_NODE/);
     assert.match(libSource, /node-runtime/);
     assert.match(libSource, /bundled_node_executable_name\(\)/);
-    assert.match(libSource, /let node_bin = find_node_runtime_path\(app\)\?/);
+    assert.match(libSource, /let node_bin = strip_path_prefix\(find_node_runtime_path\(app\)\?\)/);
     assert.match(libSource, /Command::new\(&node_bin\)/);
     assert.doesNotMatch(libSource, /unwrap_or_else\(\|_\| "node"\.to_string\(\)\)/);
 });
@@ -74,6 +74,15 @@ test('desktop startup reuses healthy backend without killing occupied ports', ()
     assert.doesNotMatch(libSource, /kill[\s\S]*-9/);
     assert.doesNotMatch(libSource, /ShellExecuteW/);
     assert.doesNotMatch(libSource, /runas/);
+});
+
+test('desktop backend spawn strips verbatim path prefix for node entrypoint', () => {
+    const libSource = readSource('src-tauri/src/lib.rs');
+
+    assert.match(libSource, /fn strip_path_prefix\(path: PathBuf\) -> PathBuf/);
+    assert.match(libSource, /raw\.strip_prefix\(r"\\\\\?\\"\)/);
+    assert.match(libSource, /let cli_path = strip_path_prefix\(find_cli_path\(app\)\?\)/);
+    assert.match(libSource, /let node_bin = strip_path_prefix\(find_node_runtime_path\(app\)\?\)/);
 });
 
 test('desktop Windows package does not require administrator privileges', () => {

@@ -361,6 +361,22 @@ fn find_cli_path(app: &tauri::App) -> Result<PathBuf, Box<dyn std::error::Error>
         .ok_or_else(|| "unable to locate bundled codexmate cli.js".into())
 }
 
+fn strip_path_prefix(path: PathBuf) -> PathBuf {
+    #[cfg(windows)]
+    {
+        let raw = path.as_os_str().to_string_lossy();
+        if let Some(rest) = raw.strip_prefix(r"\\?\") {
+            let mut chars = rest.chars();
+            let is_drive_path = matches!(chars.next(), Some(c) if c.is_ascii_alphabetic())
+                && matches!(chars.next(), Some(':'));
+            if is_drive_path {
+                return PathBuf::from(rest.to_string());
+            }
+        }
+    }
+    path
+}
+
 fn bundled_node_executable_name() -> &'static str {
     if cfg!(windows) {
         "node.exe"
@@ -434,11 +450,11 @@ fn spawn_backend(app: &tauri::App) -> Result<Option<Child>, Box<dyn std::error::
         return startup_error(message);
     }
 
-    let cli_path = find_cli_path(app)?;
+    let cli_path = strip_path_prefix(find_cli_path(app)?);
     let cli_dir = cli_path
         .parent()
         .ok_or_else(|| "unable to resolve codexmate cli directory")?;
-    let node_bin = find_node_runtime_path(app)?;
+    let node_bin = strip_path_prefix(find_node_runtime_path(app)?);
     let inherit_backend_stdio = DESKTOP_CONSOLE_LOGGING.load(Ordering::Relaxed);
 
     desktop_log(format!(
