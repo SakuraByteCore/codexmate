@@ -278,7 +278,7 @@ fn backend_port_occupied() -> bool {
 }
 
 fn backend_port_occupied_message() -> String {
-    "端口 3737 已被其他进程占用，Codex Mate 无法启动后端。请先关闭旧的 Codex Mate / codexmate run 实例后重试；如果问题持续，请查看 startup.log。".to_string()
+    "端口 3737 已被其他进程占用，Codex Mate 无法启动后端。请先关闭旧的 Codex Mate / codexmate run 实例后重试；如果旧进程是以管理员身份启动的（普通方式无法结束时），请以管理员身份打开任务管理器或 PowerShell 结束它，或重启电脑；如果问题持续，请查看 startup.log。".to_string()
 }
 
 fn wait_for_backend(timeout: Duration) -> bool {

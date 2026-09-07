@@ -80,6 +80,12 @@ $env:CODEXMATE_DESKTOP_LOG_FILE = "$env:TEMP\codexmate-desktop.log"
 codexmate-desktop.exe --debug-console
 ```
 
+## 端口占用与管理员残留进程
+
+桌面端启动时会先探测 `127.0.0.1:3737`：已有健康后端会直接复用；端口被占用但后端尚未就绪时会短暂等待它恢复。如果端口仍被其他进程占用，应用会弹出“Codex Mate 启动失败”对话框并给出处置指引，不会强制结束任何进程、也不要求管理员权限启动。
+
+如果残留进程是以管理员身份启动的（普通权限的任务管理器会结束失败），请右键任务管理器或 PowerShell 并选择“以管理员身份运行”，在其中结束旧的 Codex Mate / node 进程；或者直接重启电脑。由于桌面端不再获取管理员权限，它无法代替用户清理这类残留进程。
+
 ## CI
 
 `.github/workflows/desktop-build.yml` 会在 GitHub Actions 上：

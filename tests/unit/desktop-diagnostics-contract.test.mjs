@@ -102,6 +102,7 @@ test('desktop startup surfaces occupied backend port guidance instead of killing
     assert.match(libSource, /fn backend_port_occupied_message\(\) -> String/);
     assert.match(libSource, /端口 3737 已被其他进程占用/);
     assert.match(libSource, /请先关闭旧的 Codex Mate \/ codexmate run 实例后重试/);
+    assert.match(libSource, /以管理员身份运行/);
     assert.match(libSource, /startup\.log/);
     assert.match(libSource, /if backend_port_occupied\(\)[\s\S]*wait_for_backend\(Duration::from_secs\(5\)\)[\s\S]*return startup_error\(message\)/);
     assert.match(libSource, /backend port remains occupied after grace wait/);
