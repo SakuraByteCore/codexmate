@@ -21,28 +21,29 @@
                     </div>
                 </div>
                 <div v-else>
-                <div class="selector-section">
+                <div class="selector-section session-selector-section">
                     <div class="selector-header" style="display:none">
                         <span class="selector-title">{{ t('sessions.sourceTitle') }}</span>
                         <div class="selector-actions sessions-header-actions"></div>
                     </div>
+                    <div class="session-source-tabs-row">
+                        <div class="session-source-pills" role="group" :aria-label="t('sessions.sourceTitle')">
+                            <button
+                                v-for="src in sessionSourceOptions"
+                                :key="src.value"
+                                :class="['session-source-pill', { active: sessionFilterSource === src.value }]"
+                                :data-source="src.value"
+                                @click="setSessionSource(src.value)"
+                                :disabled="sessionsLoading"
+                                :aria-pressed="sessionFilterSource === src.value"
+                                type="button">
+                                <span class="session-source-pill-dot"></span>
+                                <span class="session-source-pill-label">{{ src.label }}</span>
+                            </button>
+                        </div>
+                    </div>
                     <div class="session-toolbar">
                         <div class="session-toolbar-group session-toolbar-primary">
-                            <div class="session-source-pills" role="radiogroup" aria-label="Session source">
-                                <button
-                                    v-for="src in sessionSourceOptions"
-                                    :key="src.value"
-                                    :class="['session-source-pill', { active: sessionFilterSource === src.value }]"
-                                    :data-source="src.value"
-                                    @click="setSessionSource(src.value)"
-                                    :disabled="sessionsLoading"
-                                    :aria-pressed="sessionFilterSource === src.value"
-                                    role="radio"
-                                    type="button">
-                                    <span class="session-source-pill-dot"></span>
-                                    <span class="session-source-pill-label">{{ src.label }}</span>
-                                </button>
-                            </div>
                             <select
                                 class="session-path-select"
                                 v-model="sessionPathFilter"
@@ -102,6 +103,22 @@
                             <button class="btn-tool btn-tool-compact" type="button" @click="clearSessionFilters" :disabled="sessionsLoading">
                                 {{ t('common.resetFilters') }}
                             </button>
+                            <button v-if="!sessionBatchSelectMode" class="btn-tool btn-tool-compact btn-tool-batch" type="button" @click="enterSessionBatchSelectMode" :disabled="sessionsLoading" :title="t('sessions.batch.select')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2M10 11v6M14 11v6"/><path d="M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"/></svg>
+                                <span>{{ t('sessions.batch.select') }}</span>
+                            </button>
+                            <template v-else>
+                                <button class="btn-tool btn-tool-compact" type="button" @click="toggleSelectAllVisibleForBatch" :disabled="sessionsLoading" :title="isAllVisibleBatchSelected() ? t('sessions.batch.unselectAll') : t('sessions.batch.selectAll')">
+                                    {{ isAllVisibleBatchSelected() ? t('sessions.batch.unselectAll') : t('sessions.batch.selectAll') }}
+                                </button>
+                                <button class="btn-tool btn-tool-compact btn-tool-batch-delete" type="button" @click="deleteSelectedSessions" :disabled="sessionsLoading || sessionDeletingSelected || getSelectedBatchCount() === 0" :title="getSelectedBatchCount() > 0 ? t('sessions.batch.deleteSelectedN', { count: getSelectedBatchCount() }) : t('sessions.batch.emptySelection')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2M10 11v6M14 11v6"/><path d="M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"/></svg>
+                                    <span>{{ sessionDeletingSelected ? t('sessions.batch.deletingSelected') : (getSelectedBatchCount() > 0 ? t('sessions.batch.deleteSelectedN', { count: getSelectedBatchCount() }) : t('sessions.batch.deleteSelected')) }}</span>
+                                </button>
+                                <button class="btn-tool btn-tool-compact" type="button" @click="exitSessionBatchSelectMode" :disabled="sessionDeletingSelected" :title="t('sessions.batch.exit')">
+                                    {{ t('sessions.batch.exit') }}
+                                </button>
+                            </template>
                         </div>
                     </div>
                     <div v-if="hasActiveSessionFilters()" class="session-filter-chips" :aria-label="t('sessions.filters.copyLink')">
@@ -136,12 +153,14 @@
                         <div
                             v-for="session in visibleSessionsList"
                             :key="session.source + '-' + session.sessionId + '-' + session.filePath"
-                            v-memo="[activeSessionExportKey === getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, isSessionPinned(session), sessionsLoading, session.match && session.match.count]"
+                            v-memo="[activeSessionExportKey === getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, isSessionPinned(session), sessionsLoading, session.match && session.match.count, sessionBatchSelectMode, isSessionSelectedForBatch(session)]"
                             :class="[
                                 'session-item',
                                 {
                                     active: activeSessionExportKey === getSessionExportKey(session),
-                                    pinned: isSessionPinned(session)
+                                    pinned: isSessionPinned(session),
+                                    'batch-selected': sessionBatchSelectMode && isSessionSelectedForBatch(session),
+                                    'batch-selectable': sessionBatchSelectMode
                                 }
                             ]"
                             @click="selectSession(session)"
@@ -151,6 +170,16 @@
                             role="button"
                             :aria-current="activeSessionExportKey === getSessionExportKey(session) ? 'true' : null">
                             <div class="session-item-header">
+                                <label v-if="sessionBatchSelectMode" class="session-batch-check" @click.stop :data-session-key="getSessionExportKey(session)">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isSessionSelectedForBatch(session)"
+                                        :disabled="sessionsLoading || sessionDeletingSelected || sessionDeleting[getSessionExportKey(session)] || !isSessionBatchSelectable(session)"
+                                        @change="toggleSessionSelectionForBatch(session)"
+                                        @click.stop
+                                        :aria-label="t('sessions.batch.select')">
+                                    <span class="session-batch-check-mark"></span>
+                                </label>
                                 <div class="session-item-main">
                                     <div class="session-item-title">{{ session.title || session.sessionId }}</div>
                                     <span class="session-count-badge">{{ session.messageCount == null ? '...' : session.messageCount }}</span>
@@ -219,27 +248,30 @@
                                         </div>
                                     </div>
                                     <div class="session-actions">
-                                        <button class="btn-session-refresh" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
+                                        <button class="btn-session-refresh has-label" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
                                             :title="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')"
                                             :aria-label="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')">
                                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.8"/><path d="M13.5 8a5.5 5.5 0 0 1-9.4 3.8"/><polyline points="2.5 2 2.5 5 5.5 5"/><polyline points="13.5 14 13.5 11 10.5 11"/></svg>
+                                            <span class="session-action-label">{{ t('sessions.preview.refresh') }}</span>
                                         </button>
                                         <button
                                             v-if="isDeleteAvailable(activeSession)"
-                                            class="btn-session-delete"
+                                            class="btn-session-delete has-label"
                                             @click="deleteSession(activeSession)"
                                             :disabled="!activeSession || sessionsLoading || sessionDeleting[getSessionExportKey(activeSession)]"
                                             :title="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))"
                                             :aria-label="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))">
                                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 4 4 4 13 4"/><path d="M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4"/><path d="M12 4v9.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 13.5V4"/></svg>
+                                            <span class="session-action-label">{{ (activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash')) }}</span>
                                         </button>
                                         <button
-                                            class="btn-session-export"
+                                            class="btn-session-export has-label"
                                             @click="exportSession(activeSession)"
                                             :disabled="!activeSession || sessionExporting[getSessionExportKey(activeSession)]"
                                             :title="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')"
                                             :aria-label="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')">
                                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"/><polyline points="4 7 8 10.5 12 7"/><path d="M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12"/></svg>
+                                            <span class="session-action-label">{{ (activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export') }}</span>
                                         </button>
                                         <div class="session-link-group">
                                         <button
@@ -260,12 +292,13 @@
                                         </button>
                                         </div>
                                         <button
-                                            class="btn-session-open"
+                                            class="btn-session-open has-label"
                                             @click="copySessionPath(activeSession)"
                                             :disabled="!activeSession || !getSessionFilePath(activeSession)"
                                             :title="t('sessions.preview.copyPath')"
                                             :aria-label="t('sessions.preview.copyPath')">
                                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z"/></svg>
+                                            <span class="session-action-label">{{ t('sessions.preview.copyPath') }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -294,12 +327,77 @@
                                 </div>
 
                                 <div v-else class="session-preview-body">
+                                    <section v-if="activeSessionWorkspaceSummary.available" class="session-workspace" :aria-label="t('sessions.workspace.title')">
+                                        <div class="session-workspace-header">
+                                            <div>
+                                                <div class="session-workspace-kicker">{{ t('sessions.workspace.kicker') }}</div>
+                                                <h3 class="session-workspace-title">{{ t('sessions.workspace.title') }}</h3>
+                                                <p class="session-workspace-subtitle">
+                                                    {{ t('sessions.workspace.subtitle', { count: activeSessionWorkspaceSummary.messageCount }) }}
+                                                </p>
+                                            </div>
+                                            <button class="btn-mini" type="button" @click="copySessionWorkspaceBrief">
+                                                {{ t('sessions.workspace.copy') }}
+                                            </button>
+                                        </div>
+
+                                        <div class="session-workspace-metrics">
+                                            <div v-for="metric in activeSessionWorkspaceSummary.metrics" :key="metric.key" class="session-workspace-metric">
+                                                <span class="session-workspace-metric-value">{{ metric.value }}</span>
+                                                <span class="session-workspace-metric-label">{{ metric.label }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="session-workspace-grid">
+                                            <div class="session-workspace-card session-workspace-card-wide">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.signals') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.signals.length" class="session-workspace-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.signals" :key="'signal-' + index">{{ item }}</li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.empty') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.commands') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.commands.length" class="session-workspace-list session-workspace-code-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.commands" :key="'command-' + index"><code>{{ item }}</code></li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneCommands') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.files') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.files.length" class="session-workspace-list session-workspace-code-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.files" :key="'file-' + index"><code>{{ item }}</code></li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneFiles') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.links') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.links.length" class="session-workspace-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.links" :key="'link-' + index">{{ item }}</li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneLinks') }}</div>
+                                            </div>
+
+                                            <div class="session-workspace-card" :class="{ 'session-workspace-card-alert': activeSessionWorkspaceSummary.risks.length || activeSessionWorkspaceSummary.nextSteps.length }">
+                                                <div class="session-workspace-card-title">{{ t('sessions.workspace.risks') }}</div>
+                                                <ul v-if="activeSessionWorkspaceSummary.risks.length || activeSessionWorkspaceSummary.nextSteps.length" class="session-workspace-list">
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.risks" :key="'risk-' + index">{{ item }}</li>
+                                                    <li v-for="(item, index) in activeSessionWorkspaceSummary.nextSteps" :key="'next-' + index">{{ item }}</li>
+                                                </ul>
+                                                <div v-else class="session-workspace-empty">{{ t('sessions.workspace.noneRisks') }}</div>
+                                            </div>
+                                        </div>
+                                    </section>
+
                                     <div class="session-preview-messages">
                                         <div v-if="activeSessionDetailClipped" class="session-item-sub session-item-wrap">
                                             {{ t('sessions.preview.clipped', { count: activeSessionMessages.length }) }}
                                         </div>
                                         <div
-                                            v-for="(msg, idx) in activeSessionMessages"
+                                            v-for="(msg, idx) in activeSessionVisibleMessages"
                                             :key="getRecordRenderKey(msg, idx)"
                                             v-memo="[msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole]"
                                             :data-message-key="getRecordRenderKey(msg, idx)"
@@ -312,6 +410,24 @@
                                                 </div>
                                             </div>
                                             <div class="session-msg-content" v-html="highlightQueryText(msg.text) || ''"></div>
+                                            <button
+                                                v-if="msg.normalizedRole === 'user'"
+                                                type="button"
+                                                class="session-msg-copy"
+                                                @click="copySessionMessage(msg)"
+                                                :aria-label="t('sessions.preview.copyMessage')"
+                                                :title="t('sessions.preview.copyMessage')">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="8" y="8" width="12" height="12" rx="2"></rect>
+                                                    <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div v-if="canLoadMoreSessionMessages" class="session-preview-load-more">
+                                            <span>{{ t('sessions.preview.shownCount', { shown: activeSessionVisibleMessages.length, total: activeSessionMessages.length }) }}</span>
+                                            <button class="btn-mini" type="button" @click="loadMoreSessionMessages" :disabled="sessionPreviewLoadingMore">
+                                                {{ sessionPreviewLoadingMore ? t('sessions.preview.loadingMore') : t('sessions.preview.loadMore', { remain: sessionPreviewRemainingCount }) }}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

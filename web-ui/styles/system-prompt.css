@@ -1,0 +1,23 @@
+.sys-prompt-controls {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.sys-prompt-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sys-prompt-control-group .form-label {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.sys-prompt-select {
+    min-width: 180px;
+}
+
+

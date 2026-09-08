@@ -305,6 +305,17 @@
     transform: translateY(-1px);
 }
 
+.top-tab.top-tab-disabled,
+.top-tab.top-tab-disabled:hover {
+    border-color: var(--color-border-soft);
+    background: rgba(255, 255, 255, 0.38);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    opacity: 0.64;
+    transform: none;
+    box-shadow: none;
+}
+
 .top-tab.active,
 .top-tab.nav-intent-active {
     border-color: rgba(200, 121, 99, 0.28);

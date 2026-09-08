@@ -1,4 +1,5 @@
-﻿import assert from 'assert';
+import assert from 'assert';
+import { DICT } from '../../web-ui/modules/i18n.dict.mjs';
 import {
     readBundledWebUiCss,
     readBundledWebUiHtml,
@@ -13,20 +14,20 @@ test('config template keeps expected config tabs in top and side navigation', ()
     const openclawModal = readProjectFile('web-ui/partials/index/modal-openclaw-config.html');
     const sessionsPanel = readProjectFile('web-ui/partials/index/panel-sessions.html');
     const usagePanel = readProjectFile('web-ui/partials/index/panel-usage.html');
-    const orchestrationPanel = readProjectFile('web-ui/partials/index/panel-orchestration.html');
     const bundledScript = readBundledWebUiScript();
     const baseTheme = readProjectFile('web-ui/styles/base-theme.css');
     const controlsForms = readProjectFile('web-ui/styles/controls-forms.css');
-    const taskOrchestrationStyles = readProjectFile('web-ui/styles/task-orchestration.css');
     const layoutShell = readProjectFile('web-ui/styles/layout-shell.css');
     const bundledStyles = readBundledWebUiCss();
     const sideRail = html.match(/<aside class="side-rail"[\s\S]*?<\/aside>/)?.[0] || '';
     const sideTabModes = [...html.matchAll(/id="side-tab-config-([a-z]+)"/g)]
         .map((match) => match[1]);
 
-    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode']);
+    assert.deepStrictEqual(sideTabModes, ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']);
     assert.match(html, /id="tab-dashboard"/);
-    assert.match(html, /v-if="healthCheckResult && healthCheckResult\.report" class="doctor-action-list"/);
+    assert.match(html, /<div class="doctor-result-section">/);
+    assert.match(html, /<template v-if="healthCheckResult">[\s\S]*?v-if="healthCheckResult\.report" class="doctor-action-list"/);
+    assert.match(html, /<div v-else class="doctor-result-empty">/);
     assert.match(html, /v-if="healthCheckResult\.report\.issues && healthCheckResult\.report\.issues\.length"/);
     assert.match(html, /action\.type === 'navigate' && action\.target/);
     assert.match(html, /@click="action\.target \? switchMainTab\(action\.target\) : null"/);
@@ -71,60 +72,44 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /setConfigTemplateDiffConfirmEnabled/);
     assert.match(html, /configTemplateDiffConfirmEnabled/);
     assert.match(html, /sessionTrashCount/);
-    assert.match(html, /v-if="taskOrchestrationTabEnabled"[^>]*class="top-tab"[\s\S]*id="tab-orchestration"/);
-    assert.match(html, /v-if="taskOrchestrationTabEnabled" class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
-    assert.match(html, /v-if="taskOrchestrationTabEnabled"[\s\S]*id="panel-orchestration"/);
-    assert.match(html, /taskOrchestrationTabEnabled && mainTab === 'orchestration'/);
-    assert.match(bundledScript, /taskOrchestrationTabEnabled:\s*true/);
-    assert.match(html, /id="side-tab-orchestration"/);
-    assert.match(html, /id="tab-orchestration"/);
-    assert.match(html, /data-main-tab="orchestration"/);
-    assert.match(html, /onMainTabPointerDown\('orchestration', \$event\)/);
-    assert.match(html, /onMainTabClick\('orchestration', \$event\)/);
-    assert.match(html, /aria-controls="panel-orchestration"/);
-    assert.match(html, /:aria-selected="mainTab === 'orchestration'"/);
-    assert.match(html, /id="panel-orchestration"/);
-    assert.match(html, /v-show="mainTab === 'orchestration'"/);
-    assert.match(orchestrationPanel, /t\('orchestration\.hero\.kicker'\)/);
-    assert.match(orchestrationPanel, /t\('orchestration\.hero\.title'\)/);
-    assert.match(orchestrationPanel, /@click="previewTaskPlan\(\)"/);
-    assert.match(orchestrationPanel, /@click="planAndRunTaskOrchestration\(\)"/);
-    assert.match(orchestrationPanel, /@click="queueTaskOrchestrationAndStart\(\)"/);
-    assert.match(orchestrationPanel, /@click="startTaskQueueRunner\(\)"/);
-    assert.match(orchestrationPanel, /@click="retryTaskRunFromUi\(taskOrchestration.selectedRunId\)"/);
-    assert.match(orchestrationPanel, /class="selector-section task-hero-card"/);
-    assert.match(orchestrationPanel, /class="task-layout-grid task-layout-grid-primary"/);
-    assert.match(orchestrationPanel, /class="task-template-chip-group"/);
-    assert.match(orchestrationPanel, /class="task-workflow-suggestions"/);
-    assert.match(orchestrationPanel, /@click="appendTaskWorkflowId\(workflow.id \|\| workflow.name\)"/);
-    assert.match(orchestrationPanel, /class="[^"]*task-draft-overview[^"]*"/);
-    assert.match(orchestrationPanel, /class="task-advanced-panel"/);
-    assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.summary/);
-    assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.title/);
-    assert.match(orchestrationPanel, /class="task-config-strip"/);
-    assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'queue'/);
-    assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'runs'/);
-    assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'detail'/);
-    assert.match(orchestrationPanel, /taskOrchestration\.queue\.length \|\| taskOrchestration\.runs\.length \|\| taskOrchestration\.selectedRunId \|\| taskOrchestration\.selectedRunError/);
-    assert.match(orchestrationPanel, /taskOrchestration\.plan \|\| taskOrchestration\.planIssues\.length \|\| taskOrchestration\.planWarnings\.length \|\| taskOrchestration\.lastError/);
-    assert.match(orchestrationPanel, /class="selector-section task-stage-card"/);
-    assert.match(orchestrationPanel, /t\('orchestration\.stage\.title'\)/);
-    assert.match(orchestrationPanel, /class="btn-tool task-action-preview" @click="previewTaskPlan\(\)"/);
-    assert.match(orchestrationPanel, /class="task-action-row-right task-action-row-right-prominent"/);
-    assert.match(orchestrationPanel, /class="task-action-caption"/);
-    assert.match(orchestrationPanel, /class="task-empty-state"/);
-    assert.match(orchestrationPanel, /taskOrchestration.selectedRunError/);
-    assert.match(orchestrationPanel, /taskOrchestrationSelectedRunNodes/);
-    for (const styles of [taskOrchestrationStyles, bundledStyles]) {
-        assert.match(styles, /\.task-layout-grid-primary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
-        assert.match(styles, /\.task-layout-grid-secondary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
-        assert.match(styles, /\.task-hero-card,[\s\S]*\.task-empty-state\s*\{[\s\S]*border:\s*1px solid/);
-        assert.match(styles, /\.task-template-chip-group,[\s\S]*\.task-workflow-suggestions\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
-        assert.match(styles, /\.task-checklist-inline\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
-        assert.match(styles, /\.task-stage-empty\s*\{[\s\S]*display:\s*flex;/);
-        assert.match(styles, /\.task-workbench-tabs\s*\{[\s\S]*display:\s*flex;/);
-        assert.match(styles, /\.task-action-row-right\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
-        assert.match(styles, /\.task-runtime-item-actions\s*\{[\s\S]*flex-direction:\s*row;[\s\S]*align-items:\s*center;/);
+    const webUiRedirectBlock = bundledScript.match(/pathname === '\/web-ui'[\s\S]*?window\.location\.replace\(url\.toString\(\)\);/)?.[0] || '';
+    assert.match(webUiRedirectBlock, /url\.pathname\s*=\s*'\/'/);
+    assert.doesNotMatch(webUiRedirectBlock, /url\.search\s*=/);
+    assert.doesNotMatch(webUiRedirectBlock, /url\.hash\s*=/);
+    assert.match(html, /id="side-tab-prompts"/);
+    assert.doesNotMatch(html, /<div class="side-section-title">\{\{ t\('side\.prompts'\) \}\}<\/div>/);
+    assert.doesNotMatch(html, /<div class="side-section" role="navigation" :aria-label="t\('side\.prompts'\)">/);
+    assert.doesNotMatch(html, /id="side-tab-prompts-agents"/);
+    assert.doesNotMatch(html, /id="side-tab-prompts-project"/);
+    assert.doesNotMatch(html, /id="side-tab-prompts-presets"/);
+    assert.match(html, /@click="onMainTabClick\('prompts', \$event\)"/);
+    assert.match(html, /t\('side\.prompts'\)/);
+    assert.match(html, /t\('side\.prompts\.meta'\)/);
+    const configSectionIndex = sideRail.indexOf(':aria-label="t(\'side.config\')"');
+    const workspaceSectionIndex = sideRail.indexOf(':aria-label="t(\'side.workspace\')"');
+    const promptsSideTabIndex = sideRail.indexOf('id="side-tab-prompts"');
+    assert.ok(configSectionIndex >= 0, 'config side section should exist');
+    assert.ok(workspaceSectionIndex > configSectionIndex, 'workspace side section should follow config section');
+    assert.ok(promptsSideTabIndex > workspaceSectionIndex, 'Prompts should live inside the workspace section, not config');
+    assert.match(sideRail, /:aria-label="t\('side\.workspace'\)"[\s\S]*id="side-tab-sessions"[\s\S]*id="side-tab-prompts"[\s\S]*id="side-tab-usage"/);
+    assert.doesNotMatch(html, /promptsSubTab === 'presets'/);
+    assert.doesNotMatch(html, /switchPromptsSubTab\('presets'\)/);
+    assert.match(html, /<details class="prompt-presets-panel">/);
+    assert.match(html, /class="form-input prompt-presets-select"/);
+    assert.match(html, /@change="applyPromptPresetSelection\(\$event\)"/);
+    assert.match(html, /t\('prompts\.presets\.selectPlaceholder'\)/);
+    assert.match(html, /v-model="promptPresetNameDraft"/);
+    assert.match(html, /@keydown.enter.prevent="saveCurrentPromptAsPreset"/);
+    assert.match(html, /@click="saveCurrentPromptAsPreset"/);
+    assert.match(html, /@click="applyPromptPresetToEditor\(preset\)"/);
+    assert.doesNotMatch(html, /@click="applyPromptPresetToEditor\(preset, 'codex'\)"/);
+    assert.doesNotMatch(html, /@click="applyPromptPresetToEditor\(preset, 'claude-project'\)"/);
+    assert.match(html, /class="form-group prompt-presets-body"/);
+    assert.match(html, /class="editor-frame prompt-presets-frame"/);
+    // orchestration panel removed in ee55bb3d; assertions pruned
+    for (const styles of [bundledStyles]) {
+        assert.match(styles, /\.health-failed-provider-main input\s*\{[\s\S]*flex:\s*0 0 auto;[\s\S]*width:\s*13px;[\s\S]*height:\s*13px;[\s\S]*accent-color:\s*var\(--color-brand-dark\);/);
+        assert.match(styles, /\.health-failed-provider-main > span\s*\{[\s\S]*min-width:\s*0;/);
     }
     const sideGhostTab = sideRail.match(/<div id="side-tab-new"[\s\S]*?<\/div>\s*<\/div>/)?.[0] || '';
     assert.match(sideGhostTab, /class="side-item side-item-ghost"/);
@@ -166,7 +151,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(usagePanel, /sessionsUsageError && !sessionsUsageList\.length" class="usage-empty-state">/);
     assert.match(usagePanel, /v-else-if="!sessionsUsageList\.length" class="usage-empty-state">/);
     assert.match(usagePanel, /class="usage-empty-text">\{\{\s*t\('usage\.empty'\)\s*\}\}<\/p>/);
-    assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
+    assert.match(usagePanel, /usageRankedLists\.topPaths/);
     assert.match(usagePanel, /sessionUsageHourlyHeatmap/);
     assert.match(html, /data-main-tab="market"/);
     assert.match(html, /onMainTabPointerDown\('market', \$event\)/);
@@ -203,8 +188,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<button type="button" class="btn-mini" @click="refreshSkillsList\(\{ silent: false \}\)"/);
     assert.match(html, /class="skills-target-switch" role="group" :aria-label="t\('market\.target\.aria'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.config'\)"/);
-    assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.sessions'\)"/);
-    assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
+    assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.workspace'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.skills'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.docs'\)"/);
     assert.match(html, /class="side-section" role="navigation" :aria-label="t\('side\.system'\)"/);
@@ -216,6 +200,14 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(sideRail, /role="tab"/);
     assert.match(sideRail, /id="side-tab-config-codex"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'codex' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-config-opencode"[\s\S]*:aria-current="mainTab === 'config' && configMode === 'opencode' \? 'page' : null"/);
+    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
+        assert.match(sideRail, new RegExp(`id=\"side-tab-config-${mode}\"[\\s\\S]*?side\\.config\\.${mode}\\.meta`));
+    }
+    assert.doesNotMatch(sideRail, /currentProvider|currentClaudeConfig|currentOpenclawConfig|opencodeModel|kilocodeModel/);
+    for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
+        assert.match(sideRail, new RegExp(`id=\"side-tab-config-${mode}\"[\\s\\S]*?:class=\"\\['side-item', 'side-item-compact'`));
+    }
+    assert.match(layoutShell, /\.side-item-compact\s*\{[\s\S]*padding-top:\s*7px;[\s\S]*padding-bottom:\s*7px;[\s\S]*gap:\s*2px;/);
     assert.match(sideRail, /id="side-tab-docs"[\s\S]*:aria-current="mainTab === 'docs' \? 'page' : null"/);
     assert.match(sideRail, /id="side-tab-settings"[\s\S]*:aria-current="mainTab === 'settings' \? 'page' : null"/);
     assert.match(html, /skillsDefaultRootPath/);
@@ -321,7 +313,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     );
     assert.match(
         html,
-        /:class="\['card', \{ active: currentOpenclawConfig === name \}\]"[\s\S]*@click="applyOpenclawConfig\(name\)"[\s\S]*@keydown\.enter\.self\.prevent="applyOpenclawConfig\(name\)"[\s\S]*@keydown\.space\.self\.prevent="applyOpenclawConfig\(name\)"[\s\S]*tabindex="0"[\s\S]*role="button"[\s\S]*:aria-current="currentOpenclawConfig === name \? 'true' : null"/
+        /:class="\['card', \{ active: currentOpenclawConfig === name, disabled: !isToolConfigWriteAllowed\('openclaw'\) \}\]"[\s\S]*@click="isToolConfigWriteAllowed\('openclaw'\) && applyOpenclawConfig\(name\)"[\s\S]*@keydown\.enter\.self\.prevent="isToolConfigWriteAllowed\('openclaw'\) && applyOpenclawConfig\(name\)"[\s\S]*@keydown\.space\.self\.prevent="isToolConfigWriteAllowed\('openclaw'\) && applyOpenclawConfig\(name\)"[\s\S]*:tabindex="isToolConfigWriteAllowed\('openclaw'\) \? 0 : -1"[\s\S]*role="button"[\s\S]*:aria-disabled="!isToolConfigWriteAllowed\('openclaw'\) \? 'true' : null"[\s\S]*:aria-current="currentOpenclawConfig === name \? 'true' : null"/
     );
     assert.match(html, /class="session-item-copy session-item-pin"/);
     assert.doesNotMatch(sessionsPanel, /sessionsViewMode/);
@@ -333,10 +325,14 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(usagePanel, /sessionsUsageList\.length/);
     assert.match(usagePanel, /loadSessionsUsage\(\{ forceRefresh: true, range: sessionsUsageTimeRange \}\)/);
     assert.match(usagePanel, /sessionUsageWave\.points/);
-    assert.match(usagePanel, /usage-hero/);
-    assert.match(usagePanel, /usage-hero-main/);
-    assert.match(usagePanel, /sessionUsageCharts\.topPaths/);
-    assert.match(usagePanel, /sessionUsageCharts\.topSessionsByMessages/);
+    assert.match(usagePanel, /usage-kpi-grid/);
+    assert.match(usagePanel, /usage-kpi-card/);
+    assert.match(usagePanel, /usageKpiCards/);
+    assert.match(usagePanel, /usageRankedLists\.topPaths/);
+    assert.match(usagePanel, /usageRankedLists\.topSessions/);
+    assert.match(usagePanel, /usageRankedLists\.recentSessions/);
+    assert.match(usagePanel, /usageWaveHeaderSummary/);
+    assert.match(usagePanel, /usage-active-strip/);
     assert.match(usagePanel, /usage\.sessions\.topDensity/);
     assert.match(usagePanel, /usage-card-title/);
     assert.match(usagePanel, /usage-wave-chart/);
@@ -352,7 +348,16 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<div[\s\S]*v-if="sessionListRenderEnabled"[\s\S]*class="session-list"/);
     assert.match(html, /:ref="setSessionListRef"/);
     assert.match(html, /@scroll\.passive="onSessionListScroll"/);
+    assert.match(html, /class="selector-section session-selector-section"/);
+    assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-toolbar"/);
+    assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-source-pills"/);
+    assert.match(html, /class="session-source-pills" role="group" :aria-label="t\('sessions\.sourceTitle'\)"/);
+    assert.doesNotMatch(sessionsPanel, /aria-label="Session source"/);
+    assert.doesNotMatch(sessionsPanel, /role="radio"/);
+    assert.doesNotMatch(html, /class="session-toolbar-group session-toolbar-primary"[\s\S]*class="session-source-pills"[\s\S]*class="session-path-select"/);
     assert.match(html, /v-memo="\[activeSessionExportKey === getSessionExportKey\(session\)/);
+    assert.match(html, /v-for="\(msg, idx\) in activeSessionVisibleMessages"/);
+    assert.match(html, /canLoadMoreSessionMessages/);
     assert.match(html, /v-memo="\[msg\.text,\s*msg\.timestamp,\s*msg\.roleLabel,\s*msg\.normalizedRole\]"/);
     assert.match(html, /v-memo="\[sessionTimelineActiveKey === node\.key,\s*node\.safePercent,\s*node\.title\]"/);
     const providerShareButton = html.match(
@@ -610,6 +615,12 @@ test('trash item styles stay aligned', () => {
     assert.match(styles, /\.codex-config-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(240px,\s*100%\),\s*1fr\)\);/);
     assert.match(styles, /\.codex-config-field\s*\{/);
     assert.match(styles, /\.codex-config-field\s*\{[\s\S]*min-width:\s*0;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*88px;[\s\S]*padding-top:\s*22px;[\s\S]*padding-bottom:\s*22px;/);
+    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*84px;[\s\S]*padding-top:\s*18px;[\s\S]*padding-bottom:\s*18px;/);
+    assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)\s*\{[\s\S]*#panel-config-provider \.card-list,\s*#panel-config-claude \.card-list\s*\{[\s\S]*grid-template-columns:\s*1fr;/);
+    assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*96px;[\s\S]*padding-top:\s*24px;[\s\S]*padding-bottom:\s*24px;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title,\s*#panel-config-claude \.card-list > \.card \.card-title\s*\{[\s\S]*flex-wrap:\s*wrap;[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title > span:first-child,\s*#panel-config-claude \.card-list > \.card \.card-title > span:first-child\s*\{[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
 });
 
 test('settings tab header actions keep compact tool buttons inline on wider screens', () => {
@@ -659,4 +670,63 @@ test('settings tab header actions keep compact tool buttons inline on wider scre
     assert.match(styles, /--font-size-large:\s*[0-9.]+(?:px|rem);/);
     assert.doesNotMatch(styles, /\.market-online-list\s*\{/);
     assert.doesNotMatch(styles, /\.market-ecosystem-grid\s*\{/);
+});
+
+test('session responsive styles keep mobile toolbar reachable without deprecated wrapping', () => {
+    const toolbarStyles = readProjectFile('web-ui/styles/sessions-toolbar-trash.css');
+    const responsiveStyles = readProjectFile('web-ui/styles/responsive.css');
+
+    assert.match(
+        toolbarStyles,
+        /\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-start;[\s\S]*?flex-wrap:\s*wrap;[\s\S]*?\}/
+    );
+    assert.match(
+        toolbarStyles,
+        /@media \(min-width: 1101px\) \{[\s\S]*?\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-end;[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?\}/
+    );
+    assert.doesNotMatch(responsiveStyles, /word-break:\s*break-word/);
+    assert.match(responsiveStyles, /\.session-preview-title\s*\{[\s\S]*?overflow-wrap:\s*anywhere;[\s\S]*?\}/);
+});
+
+test('docs panel uses segmented package manager control and drops summary strip', () => {
+    const html = readBundledWebUiHtml();
+    const pmSelectorCount = (html.match(/installPackageManager === '/g) || []).length;
+
+    assert.doesNotMatch(html, /docs-summary-strip/);
+    assert.doesNotMatch(html, /docs-toolbar-card-wide/);
+    assert.doesNotMatch(html, /docs-install-package-manager/);
+    assert.doesNotMatch(html, /for="docs-install-package-manager"/);
+    assert.strictEqual(pmSelectorCount, 3);
+    assert.match(
+        html,
+        /<div class="install-action-tabs">[\s\S]*?installPackageManager === 'npm'[\s\S]*?installPackageManager === 'pnpm'[\s\S]*?installPackageManager === 'bun'/
+    );
+    assert.match(
+        html,
+        /<div class="docs-toolbar-card">\s*<label class="form-label">\{\{ t\('common\.packageManager'\) \}\}<\/label>\s*<div class="install-action-tabs">/
+    );
+});
+
+test('pi config file-JSON sections expose history panels with locale copy in every language', () => {
+    const piPanel = readProjectFile('web-ui/partials/index/panel-config-pi.html');
+
+    assert.match(piPanel, /@click="openPiConfigHistory\('settings'\)"/);
+    assert.match(piPanel, /@click="openPiConfigHistory\('models'\)"/);
+    assert.match(piPanel, /v-if="piHistoryTarget === 'settings'"/);
+    assert.match(piPanel, /v-if="piHistoryTarget === 'models'"/);
+    for (const section of ['settings', 'models']) {
+        const historyPanel = piPanel.match(
+            new RegExp(`<details v-if="piHistoryTarget === '${section}'"[\\s\\S]*?</details>`)
+        )?.[0] || '';
+        assert.ok(historyPanel, `pi ${section} history panel should exist`);
+        assert.match(historyPanel, /@click="applyPiConfigHistory" :disabled="piHistoryApplying \|\| !isToolConfigWriteAllowed\('pi'\)"/);
+        assert.match(historyPanel, /t\('pi\.history\.apply'\)/);
+    }
+
+    for (const code of ['zh', 'zh-tw', 'en', 'ja', 'vi']) {
+        for (const key of ['pi.history.apply', 'pi.history.applied', 'pi.history.applyFailed', 'pi.history.confirm']) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+        }
+    }
 });

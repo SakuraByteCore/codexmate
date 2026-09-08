@@ -149,6 +149,16 @@ export function createDashboardComputed() {
                         version: '',
                         commandPath: '',
                         error: ''
+                    },
+                    {
+                        id: 'kilocode',
+                        name: 'KiloCode CLI',
+                        packageName: '@kilocode/cli',
+                        installed: false,
+                        bin: 'kilo',
+                        version: '',
+                        commandPath: '',
+                        error: ''
                     }
                 ];
             const action = this.normalizeInstallAction(this.installCommandAction);
@@ -175,9 +185,6 @@ export function createDashboardComputed() {
             if (this.codexApplying || this.configTemplateApplying || this.openclawApplying) tasks.push(this.t('dashboard.busy.configApply'));
             if (this.agentsSaving) tasks.push(this.t('dashboard.busy.agents'));
             if (this.skillsLoading || this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting) tasks.push(this.t('dashboard.busy.skills'));
-            if (this.taskOrchestration && (this.taskOrchestration.loading || this.taskOrchestration.planning || this.taskOrchestration.running || this.taskOrchestration.queueAdding || this.taskOrchestration.queueStarting || this.taskOrchestration.retrying || this.taskOrchestration.selectedRunLoading)) {
-                tasks.push(this.t('dashboard.busy.tasks'));
-            }
             return tasks.length ? tasks.join(' / ') : this.t('dashboard.busy.idle');
         },
         inspectorMessageSummary() {

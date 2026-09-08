@@ -1,0 +1,144 @@
+<!-- Pi 配置 -->
+                <div
+                    v-show="mainTab === 'config' && configMode === 'pi'"
+                    class="mode-content mode-cards"
+                    id="panel-config-pi"
+                    role="tabpanel"
+                    :aria-labelledby="forceCompactLayout ? 'tab-config' : 'side-tab-config-pi'">
+                <div v-if="forceCompactLayout && !sessionStandalone" class="segmented-control">
+                    <button v-if="isConfigModeVisible('codex')" type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
+                    <button v-if="isConfigModeVisible('claude')" type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
+                    <button v-if="isConfigModeVisible('openclaw')" type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
+                    <button v-if="isConfigModeVisible('opencode')" type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
+                    <button v-if="isConfigModeVisible('kilocode')" type="button" :class="['segment', { active: configMode === 'kilocode' }]" @click="switchConfigMode('kilocode')">{{ t('tab.config.kilocode') }}</button>
+                    <button v-if="isConfigModeVisible('pi')" type="button" :class="['segment', { active: configMode === 'pi' }]" @click="switchConfigMode('pi')">{{ t('tab.config.pi') }}</button>
+                </div>
+                <section class="tool-config-write-card" :aria-label="t('toolConfig.pi.title')">
+                    <div class="tool-config-write-copy">
+                        <div class="tool-config-write-title">{{ t('toolConfig.pi.title') }}</div>
+                        <p class="tool-config-write-desc">{{ t('toolConfig.pi.desc') }}</p>
+                    </div>
+                    <label class="settings-toggle-row tool-config-write-toggle">
+                        <input
+                            type="checkbox"
+                            autocomplete="off"
+                            :checked="isToolConfigWriteAllowed('pi')"
+                            :disabled="toolConfigPermissionSaving.pi"
+                            @change="setToolConfigPermission('pi', $event.target.checked)">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        <span>{{ toolConfigPermissionStatusLabel('pi') }}</span>
+                    </label>
+                </section>
+
+                <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('pi') }">
+                    <div class="tool-config-write-body">
+                        <section class="selector-section">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.providers.title') }}</span>
+                                <button type="button" class="btn-tool" @click="startAddPiProvider" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.add') }}</button>
+                            </div>
+                            <div class="config-template-hint">{{ t('pi.providers.targetFile', { path: '~/.pi/agent/models.json' }) }}</div>
+                            <div class="card-list" v-if="piProviderIds.length">
+                                <div v-for="providerId in piProviderIds" :key="providerId" class="card" role="button" tabindex="0" @click="openEditPiProvider(providerId)">
+                                    <div class="card-leading">
+                                        <div class="card-icon">{{ piProviderName(providerId).charAt(0).toUpperCase() }}</div>
+                                        <div class="card-content">
+                                            <div class="card-title">{{ piProviderName(providerId) }}</div>
+                                            <div class="card-subtitle">{{ piProviderSummary(providerId) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-trailing">
+                                        <span v-if="piActiveProvider === providerId" class="pill configured">{{ t('pi.providers.active') }}</span>
+                                        <button v-else type="button" class="btn-tool" @click.stop="switchPiActiveProvider(providerId)" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.setActive') }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="!piProviderIds.length" class="config-template-hint">{{ t('pi.providers.empty') }}</div>
+                        </section>
+
+                        <section class="selector-section">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.files.title') }}</span>
+                            </div>
+                            <div class="config-template-hint">{{ t('pi.files.desc') }}</div>
+                            <label class="form-label">{{ t('pi.files.settingsTitle') }}</label>
+                            <textarea
+                                class="template-textarea config-json-editor"
+                                v-model="piSettingsJsonDraft"
+                                spellcheck="false"
+                                autocomplete="off"
+                                :disabled="!isToolConfigWriteAllowed('pi')"
+                                @input="piSettingsJsonInput"
+                                placeholder="{}"></textarea>
+                            <p v-if="piSettingsJsonError" class="config-template-hint error-text">{{ piSettingsJsonError }}</p>
+                            <div class="settings-tab-actions">
+                                <button type="button" class="btn-tool" @click="savePiSettingsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piSettingsJsonError">{{ t('common.save') }}</button>
+                                <button type="button" class="btn-mini" @click="openPiConfigHistory('settings')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
+                            </div>
+                            <details v-if="piHistoryTarget === 'settings'" class="prompt-history-panel" open>
+                                <summary class="prompt-history-summary">
+                                    <span>{{ t('common.history') }}</span>
+                                    <button type="button" class="btn-mini prompt-history-close" @click="closePiConfigHistory" :title="t('common.close')">✕</button>
+                                </summary>
+                                <div class="prompt-history-body">
+                                    <ul v-if="!piHistoryLoading && !piHistoryError && piHistoryItems.length" class="prompt-history-list">
+                                        <li v-for="item in piHistoryItems" :key="item.id" :class="['prompt-history-item', { active: piHistoryPreviewId === item.id }]" @click="viewPiConfigHistoryItem(item)">
+                                            <span class="prompt-history-time">{{ item.id }}</span>
+                                            <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                        </li>
+                                    </ul>
+                                    <div v-if="piHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                    <div v-else-if="piHistoryError" class="state-message error">{{ piHistoryError }}</div>
+                                    <div v-else-if="!piHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                                    <div v-if="piHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                        <pre class="prompt-history-preview">{{ piHistoryPreviewContent }}</pre>
+                                        <button type="button" class="btn-mini btn-confirm-mini" @click="applyPiConfigHistory" :disabled="piHistoryApplying || !isToolConfigWriteAllowed('pi')">{{ t('pi.history.apply') }}</button>
+                                    </div>
+                                </div>
+                            </details>
+                            <label class="form-label">{{ t('pi.files.modelsTitle') }}</label>
+                            <textarea
+                                class="template-textarea config-json-editor"
+                                v-model="piModelsJsonDraft"
+                                spellcheck="false"
+                                autocomplete="off"
+                                :disabled="!isToolConfigWriteAllowed('pi')"
+                                @input="piModelsJsonInput"
+                                placeholder="{}"></textarea>
+                            <p v-if="piModelsJsonError" class="config-template-hint error-text">{{ piModelsJsonError }}</p>
+                            <div class="settings-tab-actions">
+                                <button type="button" class="btn-tool" @click="savePiModelsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piModelsJsonError">{{ t('common.save') }}</button>
+                                <button type="button" class="btn-mini" @click="openPiConfigHistory('models')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
+                            </div>
+                            <details v-if="piHistoryTarget === 'models'" class="prompt-history-panel" open>
+                                <summary class="prompt-history-summary">
+                                    <span>{{ t('common.history') }}</span>
+                                    <button type="button" class="btn-mini prompt-history-close" @click="closePiConfigHistory" :title="t('common.close')">✕</button>
+                                </summary>
+                                <div class="prompt-history-body">
+                                    <ul v-if="!piHistoryLoading && !piHistoryError && piHistoryItems.length" class="prompt-history-list">
+                                        <li v-for="item in piHistoryItems" :key="item.id" :class="['prompt-history-item', { active: piHistoryPreviewId === item.id }]" @click="viewPiConfigHistoryItem(item)">
+                                            <span class="prompt-history-time">{{ item.id }}</span>
+                                            <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                        </li>
+                                    </ul>
+                                    <div v-if="piHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                    <div v-else-if="piHistoryError" class="state-message error">{{ piHistoryError }}</div>
+                                    <div v-else-if="!piHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                                    <div v-if="piHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                        <pre class="prompt-history-preview">{{ piHistoryPreviewContent }}</pre>
+                                        <button type="button" class="btn-mini btn-confirm-mini" @click="applyPiConfigHistory" :disabled="piHistoryApplying || !isToolConfigWriteAllowed('pi')">{{ t('pi.history.apply') }}</button>
+                                    </div>
+                                </div>
+                            </details>
+                        </section>
+                        <div v-if="!isToolConfigWriteAllowed('pi')" class="tool-config-write-overlay">
+                            <div class="tool-config-write-overlay-card">
+                                <div class="tool-config-write-overlay-title">{{ t('toolConfig.pi.lockedTitle') }}</div>
+                                <p>{{ t('toolConfig.pi.lockedDesc') }}</p>
+                                <button type="button" class="btn-tool" @click="setToolConfigPermission('pi', true)" :disabled="toolConfigPermissionSaving.pi">{{ t('toolConfig.enableWrite') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>

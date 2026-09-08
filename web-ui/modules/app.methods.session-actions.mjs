@@ -1,6 +1,5 @@
 import {
-    normalizeConfigTemplateDiffConfirmEnabled,
-    persistConfigTemplateDiffConfirmEnabledToStorage
+    normalizeConfigTemplateDiffConfirmEnabled
 } from './config-template-confirm-pref.mjs';
 
 export function createSessionActionMethods(options = {}) {
@@ -29,8 +28,8 @@ export function createSessionActionMethods(options = {}) {
                 let error = '';
                 if (!source) {
                     error = '缺少 source 参数';
-                } else if (source !== 'codex' && source !== 'claude') {
-                    error = 'source 仅支持 codex 或 claude';
+                } else if (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi') {
+                    error = 'source 仅支持 codex、claude、gemini、codebuddy 或 pi';
                 }
                 if (!sessionId && !filePath) {
                     error = error ? `${error}，还缺少 sessionId 或 filePath` : '缺少 sessionId 或 filePath 参数';
@@ -68,7 +67,15 @@ export function createSessionActionMethods(options = {}) {
                 return;
             }
 
-            const sourceLabel = context.params.source === 'codex' ? 'Codex' : 'Claude Code';
+            const sourceLabel = context.params.source === 'codex'
+                ? 'Codex'
+                : (context.params.source === 'claude'
+                    ? 'Claude Code'
+                    : (context.params.source === 'gemini'
+                        ? 'Gemini CLI'
+                        : (context.params.source === 'pi'
+                            ? 'Pi'
+                            : (context.params.source === 'codebuddy' ? 'CodeBuddy Code' : context.params.source))));
             this.activeSession = {
                 source: context.params.source,
                 sourceLabel,
@@ -97,7 +104,7 @@ export function createSessionActionMethods(options = {}) {
         buildSessionStandaloneUrl(session) {
             if (!session) return '';
             const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';
-            if (!source || (source !== 'codex' && source !== 'claude')) return '';
+            if (!source || (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi')) return '';
             const sessionId = typeof session.sessionId === 'string' ? session.sessionId.trim() : '';
             const filePath = typeof session.filePath === 'string' ? session.filePath.trim() : '';
             if (!sessionId && !filePath) return '';
@@ -165,6 +172,30 @@ export function createSessionActionMethods(options = {}) {
             this.showMessage(this.t('toast.copy.fail'), 'error');
         },
 
+        async copySessionWorkspaceBrief() {
+            const summary = this.activeSessionWorkspaceSummary;
+            const text = summary && typeof summary.briefText === 'string'
+                ? summary.briefText.trim()
+                : '';
+            if (!text) {
+                this.showMessage(this.t('sessions.workspace.copy.empty'), 'error');
+                return;
+            }
+            const ok = this.fallbackCopyText(text);
+            if (ok) {
+                this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage(this.t('toast.copy.fail'), 'error');
+        },
+
         getSessionExportKey(session) {
             return `${session.source || 'unknown'}:${session.sessionId || ''}:${session.filePath || ''}`;
         },
@@ -194,7 +225,7 @@ export function createSessionActionMethods(options = {}) {
         isDeleteAvailable(session) {
             if (!session) return false;
             const source = String(session.source || '').trim().toLowerCase();
-            if (source !== 'codex' && source !== 'claude') return false;
+            if (source !== 'codex' && source !== 'claude' && source !== 'pi') return false;
             const sessionId = typeof session.sessionId === 'string' ? session.sessionId.trim() : '';
             const filePath = typeof session.filePath === 'string' ? session.filePath.trim() : '';
             return !!sessionId || !!filePath;
@@ -277,21 +308,42 @@ export function createSessionActionMethods(options = {}) {
 
         setSessionTrashEnabled(value) {
             const enabled = this.normalizeSessionTrashEnabled(value);
+            const changed = this.sessionTrashEnabled !== enabled;
             this.sessionTrashEnabled = enabled;
-            try {
-                localStorage.setItem('codexmateSessionTrashEnabled', enabled ? 'true' : 'false');
-            } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ sessionTrashEnabled: enabled });
+            }
+            // 关闭/开启回收站后立即反映当前状态，无需用户手动刷新
+            if (changed && typeof this.applySessionTrashEnabledChange === 'function') {
+                this.applySessionTrashEnabledChange(enabled);
+            }
+        },
+
+        applySessionTrashEnabledChange(enabled) {
+            if (typeof this.invalidateSessionTrashRequests === 'function') {
+                this.invalidateSessionTrashRequests();
+            }
+            if (enabled) {
+                // 重新开启：立即拉取最新回收站内容
+                if (typeof this.loadSessionTrash === 'function') {
+                    void this.loadSessionTrash({ forceRefresh: true });
+                }
+            } else {
+                // 关闭回收站：即时清空已展示的列表与计数，避免残留陈旧数据需手动刷新
+                this.sessionTrashItems = [];
+                this.sessionTrashVisibleCount = 0;
+                this.sessionTrashTotalCount = 0;
+                this.sessionTrashCountLoadedOnce = false;
+                this.sessionTrashLoadedOnce = false;
+                this.sessionTrashLastLoadFailed = false;
+                this.sessionTrashRestoring = {};
+                this.sessionTrashPurging = {};
             }
         },
 
         setSessionTimelineStyle(style) {
             const normalized = style === 'bar' ? 'bar' : 'dots';
             this.sessionTimelineStyle = normalized;
-            try {
-                localStorage.setItem('codexmateSessionTimelineStyle', normalized);
-            } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ sessionTimelineStyle: normalized });
             }
@@ -300,11 +352,46 @@ export function createSessionActionMethods(options = {}) {
         setConfigTemplateDiffConfirmEnabled(value) {
             const enabled = this.normalizeConfigTemplateDiffConfirmEnabled(value);
             this.configTemplateDiffConfirmEnabled = enabled;
-            persistConfigTemplateDiffConfirmEnabledToStorage(enabled);
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ configTemplateDiffConfirmEnabled: enabled });
             }
         },
+
+        normalizeConfigModeVisibility(value) {
+            const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+            const result = {};
+            for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
+                result[mode] = typeof source[mode] === 'boolean' ? source[mode] : true;
+            }
+            return result;
+        },
+
+        isConfigModeVisible(mode) {
+            const normalizedMode = typeof mode === 'string' ? mode.trim().toLowerCase() : '';
+            if (!this.configModeVisibility) return true;
+            return this.configModeVisibility[normalizedMode] !== false;
+        },
+
+        setConfigModeVisibility(mode, visible) {
+            const normalizedMode = typeof mode === 'string' ? mode.trim().toLowerCase() : '';
+            if (!normalizedMode || !['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].includes(normalizedMode)) return;
+            const visibility = this.configModeVisibility || { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true, pi: true };
+            const next = { ...visibility, [normalizedMode]: !!visible };
+            const visibleCount = Object.values(next).filter(Boolean).length;
+            if (visibleCount === 0) {
+                this.showMessage(typeof this.t === 'function' ? this.t('settings.configTabs.minRequired') : 'At least one tab must remain visible', 'info');
+                return;
+            }
+            this.configModeVisibility = next;
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ configModeVisibility: next });
+            }
+            if (this.mainTab === 'config' && this.configMode === normalizedMode && !next[normalizedMode]) {
+                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].find(m => next[m] !== false);
+                if (fallback) this.switchConfigMode(fallback);
+            }
+        },
+
 
         getShareCommandPrefixInvocation() {
             const prefix = this.normalizeShareCommandPrefix(this.shareCommandPrefix);
@@ -314,9 +401,6 @@ export function createSessionActionMethods(options = {}) {
         setShareCommandPrefix(value) {
             const normalized = this.normalizeShareCommandPrefix(value);
             this.shareCommandPrefix = normalized;
-            try {
-                localStorage.setItem('codexmateShareCommandPrefix', normalized);
-            } catch (_) {}
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ shareCommandPrefix: normalized });
             }
@@ -343,6 +427,27 @@ export function createSessionActionMethods(options = {}) {
                     textarea.parentNode.removeChild(textarea);
                 }
             }
+        },
+
+        async copySessionMessage(msg) {
+            const text = msg && typeof msg.text === 'string' ? msg.text : '';
+            if (!text) {
+                this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.empty') : 'Nothing to copy', 'info');
+                return;
+            }
+            const ok = this.fallbackCopyText(text);
+            if (ok) {
+                this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.ok') : 'Copied', 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.ok') : 'Copied', 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.fail') : 'Copy failed', 'error');
         },
 
         copyAgentsContent() {
@@ -591,27 +696,16 @@ export function createSessionActionMethods(options = {}) {
             }
         },
 
-        async deleteSession(session) {
+        async deleteSession(session, batchOpts = {}) {
+            const batch = !!(batchOpts && batchOpts.batch);
             if (!this.isDeleteAvailable(session)) {
-                this.showMessage('不支持此操作', 'error');
-                return;
+                if (!batch) this.showMessage('不支持此操作', 'error');
+                return false;
             }
             const useTrash = this.sessionTrashEnabled !== false;
-            if (!useTrash && typeof this.requestConfirmDialog === 'function') {
-                const confirmed = await this.requestConfirmDialog({
-                    title: '直接删除会话',
-                    message: '关闭回收站后，删除会话将直接永久删除，且无法恢复。',
-                    confirmText: '直接删除',
-                    cancelText: '取消',
-                    danger: true
-                });
-                if (!confirmed) {
-                    return;
-                }
-            }
             const key = this.getSessionExportKey(session);
             if (this.sessionDeleting[key]) {
-                return;
+                return false;
             }
             this.sessionDeleting[key] = true;
             try {
@@ -622,13 +716,14 @@ export function createSessionActionMethods(options = {}) {
                     filePath: session.filePath
                 });
                 if (!res || res.error) {
-                    this.showMessage((res && res.error) || '删除失败', 'error');
-                    return;
+                    const msg = (res && res.error) || (typeof this.t === 'function' ? this.t('toast.delete.fail') : '删除失败');
+                    if (!batch) this.showMessage(msg, 'error');
+                    return false;
                 }
                 this.removeSessionPin(session);
                 if (useTrash) {
                     this.invalidateSessionTrashRequests();
-                    this.showMessage('已移入回收站', 'success');
+                    if (!batch) this.showMessage('已移入回收站', 'success');
                     if (this.sessionTrashLoadedOnce) {
                         this.prependSessionTrashItem(this.buildSessionTrashItemFromSession(session, res), {
                             totalCount: res && res.totalCount !== undefined ? res.totalCount : undefined
@@ -641,7 +736,7 @@ export function createSessionActionMethods(options = {}) {
                             this.sessionTrashItems
                         );
                     }
-                } else {
+                } else if (!batch) {
                     this.showMessage('已删除', 'success');
                 }
                 if (typeof this.invalidateSessionsUsageData === 'function') {
@@ -652,10 +747,145 @@ export function createSessionActionMethods(options = {}) {
                 } catch (_) {
                     // The delete already succeeded remotely; keep the success result.
                 }
+                return true;
             } catch (_) {
-                this.showMessage(this.t('toast.delete.fail'), 'error');
+                if (!batch) {
+                    this.showMessage(this.t && this.t('toast.delete.fail') ? this.t('toast.delete.fail') : '删除失败', 'error');
+                }
+                return false;
             } finally {
                 this.sessionDeleting[key] = false;
+            }
+        },
+
+        isSessionBatchSelectable(session) {
+            return this.isDeleteAvailable(session);
+        },
+
+        isSessionSelectedForBatch(session) {
+            const key = this.getSessionExportKey(session);
+            if (!key) return false;
+            return !!this.sessionSelectedKeys[key];
+        },
+
+        toggleSessionSelectionForBatch(session) {
+            const key = this.getSessionExportKey(session);
+            if (!key) return;
+            if (this.sessionSelectedKeys[key]) {
+                const next = { ...this.sessionSelectedKeys };
+                delete next[key];
+                this.sessionSelectedKeys = next;
+                return;
+            }
+            this.sessionSelectedKeys = { ...this.sessionSelectedKeys, [key]: true };
+        },
+
+        enterSessionBatchSelectMode() {
+            if (this.sessionBatchSelectMode) return;
+            this.sessionBatchSelectMode = true;
+            this.sessionSelectedKeys = {};
+        },
+
+        exitSessionBatchSelectMode() {
+            if (!this.sessionBatchSelectMode) return;
+            this.sessionBatchSelectMode = false;
+            this.sessionSelectedKeys = {};
+        },
+
+        getSelectedBatchCount() {
+            return this.sessionsList.filter(s => this.sessionBatchSelectMode && this.isSessionSelectedForBatch(s)).length;
+        },
+
+        getVisibleBatchSelectableCount() {
+            return (this.visibleSessionsList || []).filter(s => this.isDeleteAvailable(s)).length;
+        },
+
+        isAllVisibleBatchSelected() {
+            const visible = (this.visibleSessionsList || []).filter(s => this.isDeleteAvailable(s));
+            if (visible.length === 0) return false;
+            return visible.every(s => this.isSessionSelectedForBatch(s) || this.sessionDeleting[this.getSessionExportKey(s)]);
+        },
+
+        toggleSelectAllVisibleForBatch() {
+            const visible = (this.visibleSessionsList || []).filter(s => this.isDeleteAvailable(s) && !this.sessionDeleting[this.getSessionExportKey(s)]);
+            if (visible.length === 0) return;
+            const allSelected = visible.every(s => this.isSessionSelectedForBatch(s));
+            const next = { ...this.sessionSelectedKeys };
+            if (allSelected) {
+                for (const s of visible) {
+                    delete next[this.getSessionExportKey(s)];
+                }
+            } else {
+                for (const s of visible) {
+                    next[this.getSessionExportKey(s)] = true;
+                }
+            }
+            this.sessionSelectedKeys = next;
+        },
+
+        clearSessionBatchSelection() {
+            this.sessionSelectedKeys = {};
+        },
+
+        async deleteSelectedSessions() {
+            if (this.sessionDeletingSelected) return;
+            const selected = (this.sessionsList || []).filter(s => this.isSessionSelectedForBatch(s));
+            if (selected.length === 0) {
+                if (typeof this.t === 'function') {
+                    this.showMessage(this.t('sessions.batch.emptySelection'), 'warning');
+                }
+                return;
+            }
+            const useTrash = this.sessionTrashEnabled !== false;
+            this.sessionDeletingSelected = true;
+            let failed = 0;
+            const succeededKeys = [];
+            try {
+                for (const session of selected) {
+                    const ok = await this.deleteSession(session, { batch: true });
+                    if (ok) {
+                        succeededKeys.push(this.getSessionExportKey(session));
+                    } else {
+                        failed += 1;
+                    }
+                }
+                if (succeededKeys.length > 0) {
+                    if (typeof this.invalidateSessionsUsageData === 'function') {
+                        this.invalidateSessionsUsageData({ preserveList: true });
+                    }
+                    this.invalidateSessionTrashRequests();
+                    // Remove succeeded sessions from the current list in order
+                    for (const key of succeededKeys) {
+                        const session = (this.sessionsList || []).find(s => this.getSessionExportKey(s) === key);
+                        if (session) {
+                            try {
+                                await this.removeSessionFromCurrentList(session);
+                            } catch (_) {
+                                // Remote delete already succeeded; ignore local cleanup errors.
+                            }
+                        }
+                    }
+                    // Clear succeeded selections; keep failed ones selected
+                    const next = {};
+                    for (const session of selected) {
+                        const k = this.getSessionExportKey(session);
+                        if (failed > 0 && !succeededKeys.includes(k)) {
+                            next[k] = true;
+                        }
+                    }
+                    this.sessionSelectedKeys = next;
+                }
+                if (failed === 0) {
+                    const okMsg = useTrash ? '已移入回收站' : '已删除';
+                    this.showMessage(okMsg + ' · ' + succeededKeys.length, 'success');
+                    this.sessionBatchSelectMode = false;
+                } else if (failed === selected.length) {
+                    this.showMessage(this.t('sessions.batch.allFail'), 'error');
+                } else {
+                    this.showMessage(this.t('sessions.batch.partialFail', { failed }), 'warning');
+                }
+            } finally {
+                this.sessionDeletingSelected = false;
             }
         }
     };

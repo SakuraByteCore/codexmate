@@ -4,7 +4,7 @@
 
 # Codex Mate
 
-**Một dashboard duy nhất cho tất cả AI coding agent cục bộ của bạn. Chuyển đổi provider, quản lý phiên làm việc và điều phối tác vụ giữa Codex, Claude Code và OpenClaw. Không cloud, trung tâm điều khiển agent hoàn toàn cục bộ.**
+**Một dashboard duy nhất cho tất cả AI coding agent cục bộ của bạn. Chuyển đổi provider, quản lý phiên làm việc và điều phối tác vụ giữa Codex, Claude Code, Gemini CLI, CodeBuddy Code, Pi, OpenCode, KiloCode và OpenClaw. Không cloud, trung tâm điều khiển agent hoàn toàn cục bộ.**
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[Tài liệu]</a>
@@ -22,6 +22,7 @@
 [![License](https://img.shields.io/npm/l/codexmate?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/SakuraByteCore/codexmate?style=flat-square&color=gold)](https://github.com/SakuraByteCore/codexmate/stargazers)
 [![Issues](https://img.shields.io/github/issues/SakuraByteCore/codexmate?style=flat-square&color=ff69b4)](https://github.com/SakuraByteCore/codexmate/issues)
+[![On StackMap](https://img.shields.io/endpoint?url=https%3A%2F%2Fstackmap.shipwithai.xyz%2Fapi%2Fbadge%2Fcodexmate.json)](https://stackmap.shipwithai.xyz/repos/SakuraByteCore/codexmate?utm_source=badge)
 
 <br />
 
@@ -41,13 +42,14 @@
 
 Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent cục bộ? Mỗi tool lại có định dạng cấu hình, nơi lưu phiên và thư mục skill riêng.
 
-**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code) và [OpenClaw](https://github.com/moeru-ai/openclaw) một cách liền mạch.
+**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode, [OpenClaw](https://github.com/moeru-ai/openclaw) và Pi một cách liền mạch.
 
 ### Điểm nổi bật
 
 Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Agent Bridge cục bộ**:
-- **Trình duyệt phiên thống nhất**: Tìm kiếm và xuất phiên làm việc từ tất cả tool trong một nơi duy nhất.
+- **Trình duyệt phiên thống nhất**: Tìm kiếm, xem trước, lọc và xuất phiên làm việc từ Codex, Claude Code, Gemini CLI, CodeBuddy Code và Pi trong một nơi duy nhất.
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
+- **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
 - **Điều phối tác vụ**: Lập kế hoạch và thực thi tác vụ phức tạp với theo dõi phụ thuộc.
 
@@ -57,14 +59,17 @@ Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Ag
 
 | Tính năng | Trạng thái | Mô tả |
 | --- | --- | --- |
-| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude và OpenClaw |
+| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode, OpenClaw và Pi |
+| **Cấu hình Provider Pi** | ✅ | Quản lý provider Pi trong Web UI, ghi vào `~/.pi/agent/models.json` (giữ nguyên các trường không nhận dạng được) và chuyển đổi provider/model mặc định trong `~/.pi/agent/settings.json` |
 | **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
-| **Trình duyệt phiên** | ✅ | Liệt kê, lọc và xuất phiên (Codex/Claude/Gemini) |
+| **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/Pi) |
 | **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
 | **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
 | **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |
 | **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
+| **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
 | **Mẫu Prompt** | ✅ | Plugin prompt tái sử dụng được với hỗ trợ biến |
+| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md và dùng kho preset chung. Áp dụng preset chỉ cập nhật editor; cần lưu thủ công để ghi vào tệp. |
 | **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
 | **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
 
@@ -112,7 +117,10 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **Claude Code**: `npm install -g @anthropic-ai/claude-code`
 - **Gemini CLI**: `npm install -g @google/gemini-cli`
 - **CodeBuddy**: `npm install -g @tencent-ai/codebuddy-code`
+- **KiloCode**: `npm install -g @kilocode/cli` (`kilo` / `kilocode`)
 - **OpenCode**: xem [tài liệu chính thức OpenCode](https://opencode.ai/)
+- **OpenClaw**: xem [kho lưu trữ OpenClaw](https://github.com/moeru-ai/openclaw)
+- **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`; cấu hình provider nằm ở `~/.pi/agent/models.json`, provider/model mặc định nằm ở `~/.pi/agent/settings.json`
 
 ---
 
@@ -160,10 +168,6 @@ Cảm ơn tất cả những người đóng góp cho Codex Mate ❤️
 <a href="https://github.com/SakuraByteCore/codexmate/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=SakuraByteCore/codexmate" alt="Contributors" />
 </a>
-
-## Lịch sử Star
-
-[![Star History Chart](https://api.star-history.com/svg?repos=SakuraByteCore/codexmate&type=Date)](https://star-history.com/#SakuraByteCore/codexmate&Date)
 
 ## Giấy phép
 

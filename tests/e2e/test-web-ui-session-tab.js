@@ -88,6 +88,10 @@ function createBundledNavigationContext(appOptions) {
     vm.cancelSessionTimelineSync = function cancelSessionTimelineSync() {
         this._cancelTimelineSyncCalls += 1;
     };
+    vm._persistCalls = [];
+    vm.persistWebUiPreferences = function persistWebUiPreferences(overrides) {
+        this._persistCalls.push(overrides || {});
+    };
 
     return vm;
 }
@@ -113,6 +117,7 @@ module.exports = async function testWebUiSessionTab() {
     globalThis.window = createWindowMock('http://127.0.0.1:3737/web-ui/index.html?tab=sessions#stale');
     try {
         vm.mainTab = 'sessions';
+        vm.preserveSessionRenderOnTabLeave = false;
         vm.sessionListRenderEnabled = true;
         vm.sessionPreviewRenderEnabled = true;
         vm.sessionTabRenderTicket = 5;
@@ -128,8 +133,8 @@ module.exports = async function testWebUiSessionTab() {
 
         assert(vm.fastHidden === true, 'pointerdown should hide the sessions panel immediately');
         assert(
-            String(globalThis.localStorage.getItem('codexmateNavState.v1') || '').includes('"mainTab":"settings"'),
-            'pointerdown should persist the intended nav tab even while the commit is deferred'
+            vm._persistCalls.some((call) => call && call.navigation && call.navigation.mainTab === 'settings'),
+            'pointerdown should persist the intended nav tab through web UI preferences even while the commit is deferred'
         );
         assert(vm.mainTab === 'sessions', 'tab commit should stay deferred until the next frame');
         assert(vm.sessionListRenderEnabled === false, 'leaving sessions should suspend list rendering immediately');
@@ -163,14 +168,54 @@ module.exports = async function testWebUiSessionTab() {
         assert(vm.sessionListRenderEnabled === true, 'session list rendering should recover after canceling the leave');
         assert(vm.sessionPreviewRenderEnabled === true, 'session preview rendering should recover after canceling the leave');
 
-        globalThis.localStorage.setItem('codexmateNavState.v1', JSON.stringify({
-            mainTab: 'usage',
-            configMode: 'codex'
-        }));
         const vm2 = createBundledNavigationContext(appOptions);
         vm2.mainTab = 'dashboard';
-        vm2.restoreNavStateFromStorage();
-        assert(vm2.mainTab === 'usage', 'nav state restore should select the cached sidebar tab');
+        vm2.applyWebUiPreferences({
+            navigation: {
+                mainTab: 'usage',
+                configMode: 'codex'
+            }
+        });
+        assert(vm2.mainTab === 'usage', 'preference navigation restore should select the cached sidebar tab');
+
+        const vm3 = createBundledNavigationContext(appOptions);
+        vm3.mainTab = 'usage';
+        vm3.applyWebUiPreferences({
+            navigation: {
+                mainTab: 'orchestration',
+                configMode: 'codex'
+            }
+        });
+        assert(vm3.mainTab === 'dashboard', 'preference navigation restore should fall back when the task tab is disabled');
+
+        vm3.switchMainTab('orchestration');
+        assert(vm3.mainTab === 'dashboard', 'programmatic task tab selection should fall back to the first selectable tab');
+
+        vm3.mainTab = 'usage';
+        vm3.switchMainTab('');
+        assert(vm3.mainTab === 'usage', 'empty tab selection should be ignored');
+
+        vm3.switchMainTab('not-a-tab');
+        assert(vm3.mainTab === 'usage', 'unknown tab selection should be ignored');
+
+        let prevented = 0;
+        let stopped = 0;
+        vm3.mainTab = 'usage';
+        vm3.onMainTabPointerDown('orchestration', {
+            button: 0,
+            pointerType: 'mouse',
+            preventDefault() { prevented += 1; },
+            stopPropagation() { stopped += 1; }
+        });
+        assert(vm3.mainTab === 'usage', 'pointerdown should not select the disabled task tab');
+        assert(prevented === 1 && stopped === 1, 'disabled task tab pointerdown should cancel the event');
+
+        vm3.onMainTabClick('orchestration', {
+            preventDefault() { prevented += 1; },
+            stopPropagation() { stopped += 1; }
+        });
+        assert(vm3.mainTab === 'usage', 'click should not select the disabled task tab');
+        assert(prevented === 2 && stopped === 2, 'disabled task tab click should cancel the event');
     } finally {
         globalThis.localStorage = prevLocalStorage;
         globalThis.window = prevWindow;

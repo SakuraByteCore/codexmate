@@ -86,6 +86,41 @@ test('release changelog maps contributor display names to GitHub avatar cards', 
     assert.doesNotMatch(card, /<sub><b>ymkiux<\/b><\/sub>/);
 });
 
+test('release changelog excludes anupamme from external logins and commit authors', () => {
+    const commits = [
+        parseLogLine('f5700cf\u001ffix(proxy): bypass probe (#180)\u001fanupamme'),
+        parseLogLine('abc1234\u001fchore: update assets\u001fawsl233777')
+    ];
+
+    const fromCommits = listContributors(commits);
+    assert.ok(!fromCommits.some((c) => /anupamme/i.test(c.login)));
+    assert.ok(fromCommits.some((c) => c.login === 'awsl233777'));
+
+    const fromExternal = listContributors([], ['anupamme', 'awsl233777']);
+    assert.ok(!fromExternal.some((c) => /anupamme/i.test(c.login)));
+    assert.ok(fromExternal.some((c) => c.login === 'awsl233777'));
+});
+
+test('release changelog omits anupamme from commits-without-pr section and contributors', () => {
+    const commits = [
+        parseLogLine('f5700cf\u001ffix(proxy): bypass probe (#180)\u001fanupamme'),
+        parseLogLine('abc1234\u001fchore: update assets\u001fawsl233777')
+    ];
+
+    const changelog = formatChangelog({
+        repository: 'SakuraByteCore/codexmate',
+        previousTag: 'v0.0.1',
+        currentTag: 'v0.0.2',
+        currentRef: 'HEAD',
+        commits,
+        externalLogins: ['anupamme', 'awsl233777']
+    });
+
+    assert.doesNotMatch(changelog, /anupamme/i);
+    assert.match(changelog, /### Commits without PR[\s\S]*abc1234 chore: update assets — awsl233777/);
+    assert.match(changelog, /### Contributors[\s\S]*href="https:\/\/github\.com\/awsl233777"/);
+});
+
 test('release changelog reports initial release when no previous tag exists', () => {
     const changelog = formatChangelog({
         repository: 'SakuraByteCore/codexmate',

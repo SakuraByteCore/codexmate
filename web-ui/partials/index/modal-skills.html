@@ -23,6 +23,14 @@
                                 @click="setSkillsTargetApp('claude', { silent: false })">
                                 Claude Code
                             </button>
+                            <button
+                                type="button"
+                                :class="['market-target-chip', { active: skillsTargetApp === 'pi' }]"
+                                :aria-pressed="skillsTargetApp === 'pi'"
+                                :disabled="loading || !!initError || skillsMarketBusy"
+                                @click="setSkillsTargetApp('pi', { silent: false })">
+                                Pi
+                            </button>
                         </div>
                         <button class="btn-mini" @click="refreshSkillsList({ silent: false })" :disabled="skillsLoading || skillsDeleting || skillsScanningImports || skillsImporting || skillsZipImporting || skillsExporting">
                             {{ skillsLoading ? t('common.refreshing') : t('common.refresh') }}

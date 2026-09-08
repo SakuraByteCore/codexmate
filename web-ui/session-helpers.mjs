@@ -85,7 +85,6 @@ export function switchMainTab(tab) {
     const leavingSessions = previousTab === 'sessions' && nextTab !== 'sessions';
     const enteringSessionsTab = nextTab === 'sessions';
     const enteringUsageTab = nextTab === 'usage';
-    const enteringOrchestrationTab = nextTab === 'orchestration';
     const enteringPluginsTab = nextTab === 'plugins';
     emitSessionLoadDebug(this, 'switchMainTab:start', `from=${previousTab}\nto=${nextTab}`);
     this.mainTab = nextTab;
@@ -141,21 +140,6 @@ export function switchMainTab(tab) {
     if (enteringUsageTab && !this.sessionsUsageLoadedOnce && typeof this.loadSessionsUsage === 'function') {
         this.loadSessionsUsage();
     }
-    if (enteringOrchestrationTab && typeof this.loadTaskOrchestrationOverview === 'function') {
-        let orchestrationOverviewLoad = null;
-        try {
-            orchestrationOverviewLoad = this.loadTaskOrchestrationOverview({
-                silent: true,
-                includeDetail: true
-            });
-        } catch (_) {
-            orchestrationOverviewLoad = null;
-        }
-        void Promise.resolve(orchestrationOverviewLoad).catch(() => {});
-    }
-    if (nextTab !== 'orchestration' && typeof this.stopTaskOrchestrationPolling === 'function') {
-        this.stopTaskOrchestrationPolling();
-    }
     if (
         nextTab === 'sessions'
         && (
@@ -164,6 +148,15 @@ export function switchMainTab(tab) {
         )
     ) {
         this.prepareSessionTabRender();
+    }
+    const enteringTrashTab = nextTab === 'trash';
+    const shouldLoadTrashListOnTrashEnter = enteringTrashTab
+        && typeof this.loadSessionTrash === 'function'
+        && this.sessionTrashEnabled !== false;
+    if (shouldLoadTrashListOnTrashEnter) {
+        this.loadSessionTrash({
+            forceRefresh: !!this.sessionTrashLoadedOnce
+        });
     }
     const shouldLoadTrashListOnSettingsEnter = nextTab === 'settings'
         && this.settingsTab === 'data'
@@ -267,6 +260,9 @@ export async function loadSessions(api, options = {}) {
             loadSucceeded = true;
             const rawSessions = Array.isArray(res.sessions) ? res.sessions : [];
             this.sessionsList = rawSessions.filter(s => s && typeof s === 'object');
+            if (typeof this.clearSessionBatchSelection === 'function') {
+                this.clearSessionBatchSelection();
+            }
             for (const session of this.sessionsList) {
                 const rawUpdatedAt = typeof session.updatedAt === 'string' ? session.updatedAt : '';
                 session.updatedAtLabel = formatSessionTimelineTimestamp(rawUpdatedAt);
@@ -478,7 +474,10 @@ export async function loadActiveSessionDetail(api, options = {}) {
                 const nextLimit = Math.min(currentLimit + fetchStep, limitCap);
                 if (nextLimit <= currentLimit) return;
                 this.sessionDetailMessageLimit = nextLimit;
-                this.sessionPreviewPendingVisibleCount = nextLimit;
+                const currentVisible = Number(this.sessionPreviewVisibleCount);
+                this.sessionPreviewPendingVisibleCount = Number.isFinite(currentVisible)
+                    ? Math.max(0, Math.floor(currentVisible))
+                    : 0;
                 void this.loadActiveSessionDetail({ preserveVisibleCount: true });
             });
         }

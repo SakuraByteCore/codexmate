@@ -188,6 +188,7 @@ test('tool config write guard maps provider write actions to per-tab permission 
     assert.strictEqual(getApiToolConfigWriteTarget('apply-claude-config'), 'claude');
     assert.strictEqual(getApiToolConfigWriteTarget('claude-local-bridge-set-excluded'), 'claude');
     assert.strictEqual(getApiToolConfigWriteTarget('claude-local-bridge-sync-providers'), 'claude');
+    assert.strictEqual(getApiToolConfigWriteTarget('delete-provider-cache-record'), 'claude');
     assert.strictEqual(getApiToolConfigWriteTarget('status'), '');
     assert.strictEqual(getApiToolConfigWriteTarget('list-sessions'), '');
 });
@@ -1467,7 +1468,8 @@ test('buildMcpProviderListPayload keeps regular providers editable', () => {
             maskKey: (value) => value ? '***' : '',
             isBuiltinManagedProvider: () => false,
             isNonDeletableProvider: () => false,
-            isNonEditableProvider: () => false
+            isNonEditableProvider: () => false,
+            resolveProviderOpenaiBridgeMaxRetries: () => 2
         }
     );
 

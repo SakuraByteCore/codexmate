@@ -62,6 +62,17 @@ test('skills modal script is modularized and exposes computed/methods from skill
     assert.doesNotMatch(skillsMethods, /window\.confirm\(/);
 });
 
+test('skills target switch includes pi chip in modal and market panel', () => {
+    const html = readBundledWebUiHtml();
+    assert.match(html, /skillsTargetApp === 'pi'/);
+    assert.match(html, /\['market-target-chip', \{ active: skillsTargetApp === 'pi' \}\]/);
+    assert.match(html, /\['skills-target-chip', \{ active: skillsTargetApp === 'pi' \}\]/);
+    assert.match(html, /:aria-pressed="skillsTargetApp === 'pi'"/);
+
+    const piChipClicks = html.match(/setSkillsTargetApp\('pi', \{ silent: false \}\)/g) || [];
+    assert.strictEqual(piChipClicks.length, 2);
+});
+
 test('skills modal styles define summary and panel layout hooks', () => {
     const styles = readBundledWebUiCss();
     const html = readBundledWebUiHtml();

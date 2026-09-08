@@ -1,3 +1,5 @@
+import { nextCodexProviderName } from './provider-default-names.mjs';
+
 const PROVIDER_NAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
 const RESERVED_PROXY_PROVIDER_NAME = 'codexmate-proxy';
 const RESERVED_LOCAL_PROVIDER_NAME = 'local';
@@ -74,11 +76,12 @@ function getProviderValidationForContext(vm, mode = 'add') {
     const url = normalizeProviderUrl(draft && draft.url);
     const model = normalizeText(draft && draft.model);
     const key = normalizeText(draft && draft.key);
+    const useTransform = !!(draft && draft.useTransform);
     const errors = {
         name: '',
         url: '',
         key: '',
-        model: ''
+        model: '',
     };
 
     if (mode === 'add') {
@@ -115,6 +118,7 @@ function getProviderValidationForContext(vm, mode = 'add') {
         url,
         key,
         model,
+        useTransform,
         errors,
         ok: !errors.name && !errors.url && !errors.key && !errors.model
     };
@@ -321,7 +325,19 @@ export function createProvidersMethods(options = {}) {
                 url: cloneUrl,
                 key: '',
                 model: '',
-                useTransform: isTransform
+                useTransform: isTransform,
+            };
+            this.showAddProviderKey = false;
+            this.showAddModal = true;
+        },
+
+        openAddProviderModal() {
+            this.newProvider = {
+                name: nextCodexProviderName(this.providersList),
+                url: '',
+                key: '',
+                model: '',
+                useTransform: false,
             };
             this.showAddProviderKey = false;
             this.showAddModal = true;
@@ -349,7 +365,7 @@ export function createProvidersMethods(options = {}) {
                 nonEditable: typeof provider.nonEditable === 'boolean'
                     ? provider.nonEditable
                     : this.isNonDeletableProvider(provider),
-                useTransform: isTransformProvider
+                useTransform: isTransformProvider,
             };
             this._editProviderOriginalKey = '';
             this._editProviderRealKeyLoaded = false;
@@ -435,7 +451,8 @@ export function createProvidersMethods(options = {}) {
                             ...p,
                             url: validation.url,
                             key: keyUpdated ? maskKeyLocal(params.key) : p.key,
-                            hasKey: keyUpdated ? !!params.key : p.hasKey
+                            hasKey: keyUpdated ? !!params.key : p.hasKey,
+                            codexmate_bridge: params.useTransform ? 'openai' : p.codexmate_bridge,
                         };
                     }
                     return p;
@@ -536,7 +553,7 @@ export function createProvidersMethods(options = {}) {
         closeAddModal() {
             this.showAddModal = false;
             this.showAddProviderKey = false;
-            this.newProvider = { name: '', url: '', key: '', model: '', useTransform: false };
+            this.newProvider = { name: nextCodexProviderName(this.providersList), url: '', key: '', model: '', useTransform: false };
         },
 
         toggleAddProviderKey() {

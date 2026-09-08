@@ -6,9 +6,9 @@
                     role="tabpanel"
                     :aria-labelledby="forceCompactLayout ? 'tab-config' : 'side-tab-config-claude'">
                 <div v-if="forceCompactLayout && !sessionStandalone" class="segmented-control">
-                    <button type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
-                    <button type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
-                    <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
+                    <button v-if="isConfigModeVisible('codex')" type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
+                    <button v-if="isConfigModeVisible('claude')" type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
+                    <button v-if="isConfigModeVisible('openclaw')" type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
                 <template v-if="shouldShowCliInstallPlaceholder('claude')">
                     <div class="selector-section">

@@ -39,6 +39,8 @@ module.exports = async function testWebUiAssets(ctx) {
         'root web ui page should return html content type'
     );
     assert(rootPage.body.includes('id="panel-market"'), 'root web ui page should inline market panel');
+    assert(rootPage.body.includes('id="panel-config-kilocode"'), 'root web ui page should inline KiloCode config panel');
+    assert(rootPage.body.includes('id="side-tab-config-kilocode"'), 'root web ui page should inline KiloCode side tab');
     assert(rootPage.body.includes('class="modal modal-wide skills-modal"'), 'root web ui page should inline skills modal');
     assert(rootPage.body.includes('src="/web-ui/app.js"'), 'root web ui page should point to the absolute app entry');
     assert(!rootPage.body.includes('src="web-ui/app.js"'), 'root web ui page should not use a relative app entry');
@@ -76,6 +78,7 @@ module.exports = async function testWebUiAssets(ctx) {
         'app entry should not leak split re-export directives'
     );
     assert(appEntry.body.includes('onClaudeModelChange'), 'app entry should expose Claude model handler');
+    assert(appEntry.body.includes('createKilocodeConfigMethods'), 'app entry should include KiloCode config methods');
 
     const logicEntry = await getText(port, '/web-ui/logic.mjs');
     assert(logicEntry.statusCode === 200, 'logic entry should return 200');

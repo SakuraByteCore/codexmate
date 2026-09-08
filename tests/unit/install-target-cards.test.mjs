@@ -29,9 +29,9 @@ function createContext(overrides = {}) {
 test('installTargetCards falls back when install-status is missing', () => {
     const ctx = createContext();
     const cards = computed.installTargetCards.call(ctx);
-    assert.strictEqual(cards.length, 4);
+    assert.strictEqual(cards.length, 5);
     const ids = cards.map((item) => item.id).sort();
-    assert.deepStrictEqual(ids, ['claude', 'codebuddy', 'codex', 'gemini']);
+    assert.deepStrictEqual(ids, ['claude', 'codebuddy', 'codex', 'gemini', 'kilocode']);
     for (const card of cards) {
         assert.strictEqual(typeof card.command, 'string');
         assert(card.command.length > 0);
@@ -40,6 +40,44 @@ test('installTargetCards falls back when install-status is missing', () => {
     assert(codex);
     assert.strictEqual(typeof codex.termuxCommand, 'string');
     assert(codex.termuxCommand.includes('@mmmbuto/codex-cli-termux'));
+    const kilocode = cards.find((item) => item.id === 'kilocode');
+    assert(kilocode);
+    assert(kilocode.command.includes('@kilocode/cli'));
+    assert.strictEqual(kilocode.termuxCommand, '');
+});
+
+test('currentInstalledCommandCards exposes detected installed commands only', () => {
+    const ctx = createContext({
+        installStatusTargets: [
+            {
+                id: 'codex',
+                name: 'Codex CLI',
+                packageName: '@openai/codex',
+                installed: true,
+                bin: 'codex',
+                version: '0.1.0',
+                commandPath: '/usr/local/bin/codex',
+                error: ''
+            },
+            {
+                id: 'gemini',
+                name: 'Gemini CLI',
+                packageName: '@google/gemini-cli',
+                installed: false,
+                bin: 'gemini',
+                version: '',
+                commandPath: '',
+                error: 'not found'
+            }
+        ]
+    });
+    ctx.installTargetCards = computed.installTargetCards.call(ctx);
+
+    const cards = computed.currentInstalledCommandCards.call(ctx);
+
+    assert.deepStrictEqual(cards.map((item) => item.id), ['codex']);
+    assert.strictEqual(cards[0].commandPath, '/usr/local/bin/codex');
+    assert.strictEqual(cards[0].version, '0.1.0');
 });
 
 test('app update notice only appears when latest package version is newer', () => {

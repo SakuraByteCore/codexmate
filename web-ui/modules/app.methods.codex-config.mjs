@@ -24,6 +24,28 @@ function getResponseMessage(response, fallback) {
     return fallback;
 }
 
+
+function normalizeProviderName(value) {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function providerIssueDetail(issues) {
+    if (!Array.isArray(issues) || !issues.length) return '';
+    return issues
+        .map((issue) => issue && (issue.message || issue.code || ''))
+        .filter(Boolean)
+        .join('；');
+}
+
+function remoteProviderDetail(remote) {
+    if (!remote || typeof remote !== 'object') return '';
+    const parts = [];
+    if (remote.endpoint) parts.push(remote.endpoint);
+    if (remote.statusCode) parts.push(String(remote.statusCode));
+    if (remote.message) parts.push(remote.message);
+    return parts.join(' · ');
+}
+
 export function createCodexConfigMethods(options = {}) {
     const {
         api,
@@ -303,6 +325,7 @@ export function createCodexConfigMethods(options = {}) {
         async runHealthCheck(options = {}) {
             this.healthCheckLoading = true;
             this.healthCheckResult = null;
+            this.healthCheckFailedProviderSelections = {};
             this.healthCheckBatchTotal = 0;
             this.healthCheckBatchDone = 0;
             this.healthCheckBatchFailed = 0;
@@ -354,7 +377,13 @@ export function createCodexConfigMethods(options = {}) {
                 }
 
                 if (this.configMode === 'claude') {
-                    const entries = Object.entries(this.claudeConfigs || {});
+                    const configs = this.claudeConfigs || {};
+                    const currentName = typeof this.currentClaudeConfig === 'string' && configs[this.currentClaudeConfig]
+                        ? this.currentClaudeConfig
+                        : Object.keys(configs)[0];
+                    const entries = currentName && configs[currentName]
+                        ? [[currentName, configs[currentName]]]
+                        : [];
                     this.healthCheckBatchTotal = entries.length;
 
                     const speedTasks = entries.map(([name, config]) => this.runClaudeSpeedTest(name, config)
@@ -395,80 +424,44 @@ export function createCodexConfigMethods(options = {}) {
                             speedTests: results
                         }
                     };
+                    if (!silent) {
+                        this.showHealthCheckModal = true;
+                    }
                     if (ok && !silent) {
-                        this.showMessage('检查通过', 'success');
+                        this.showMessage(this.t('toast.check.success'), 'success');
                     }
                     return;
                 }
 
-                const shouldRunSpeedTests = this.configMode === 'codex';
-                const speedTimeoutMs = shouldRunSpeedTests ? 3500 : 0;
-                const providers = shouldRunSpeedTests
-                    ? (this.providersList || [])
-                        .map((provider) => typeof provider === 'string'
-                            ? provider.trim()
-                            : String((provider && provider.name) || '').trim())
-                        .filter(Boolean)
-                    : [];
-                const currentProvider = String(this.currentProvider || '').trim();
-                const orderedProviders = currentProvider && providers.includes(currentProvider)
-                    ? [currentProvider, ...providers.filter((name) => name !== currentProvider)]
-                    : providers;
-                this.healthCheckBatchTotal = orderedProviders.length;
-
-                const speedTasks = orderedProviders.map((provider) => this.runSpeedTest(provider, { silent: true, timeoutMs: speedTimeoutMs })
-                    .then((result) => {
-                        if (!result || result.ok !== true) {
-                            this.healthCheckBatchFailed += 1;
-                        }
-                        return { name: provider, result };
-                    })
-                    .catch((err) => {
-                        this.healthCheckBatchFailed += 1;
-                        return {
-                            name: provider,
-                            result: { ok: false, error: err && err.message ? err.message : 'Speed test failed' }
-                        };
-                    })
-                    .finally(() => {
-                        this.healthCheckBatchDone += 1;
-                    })
-                );
-
-                const configTask = api('config-health-check', { remote: this.configMode === 'codex' });
-                const [res, pairs] = await Promise.all([
-                    configTask,
-                    Promise.all(speedTasks)
+                const [configRes, providersRes] = await Promise.all([
+                    api('config-health-check', { remote: true }),
+                    api('providers-health', { remote: false })
                 ]);
-                if (hasResponseError(res)) {
+                if (providersRes && typeof providersRes === 'object' && !hasResponseError(providersRes)) {
+                    this.providersHealthResult = providersRes;
+                }
+                if (hasResponseError(configRes)) {
                     this.healthCheckResult = null;
                     if (!silent) {
-                        this.showMessage(getResponseMessage(res, '检查失败'), 'error');
+                        this.showMessage(getResponseMessage(configRes, this.t('toast.check.fail')), 'error');
                     }
-                } else if (res && typeof res === 'object') {
-                    const issues = Array.isArray(res.issues) ? [...res.issues] : [];
-                    let remote = res.remote || null;
-                    if (shouldRunSpeedTests) {
-                        const results = {};
-                        for (const pair of pairs) {
-                            results[pair.name] = pair.result || null;
-                            const issue = this.buildSpeedTestIssue(pair.name, pair.result);
-                            if (issue) issues.push(issue);
-                        }
-                        remote = remote && typeof remote === 'object'
-                            ? { ...remote, speedTests: results }
-                            : { type: 'speed-test', speedTests: results };
-                    }
-
-                    const ok = issues.length === 0;
+                } else if (configRes && typeof configRes === 'object') {
+                    const issues = Array.isArray(configRes.issues) ? [...configRes.issues] : [];
+                    const ok = typeof configRes.ok === 'boolean' ? configRes.ok : issues.length === 0;
                     this.healthCheckResult = {
-                        ...res,
+                        ...configRes,
                         ok,
                         issues,
-                        remote
+                        remote: configRes.remote || null
                     };
-                    if (ok && !silent) {
-                        this.showMessage('检查通过', 'success');
+                    this.healthCheckBatchTotal = 1;
+                    this.healthCheckBatchDone = 1;
+                    this.healthCheckBatchFailed = ok ? 0 : 1;
+                    if (!silent) {
+                        this.showHealthCheckModal = true;
+                    }
+                    if (!silent) {
+                        this.showMessage(this.t(ok ? 'toast.check.success' : 'toast.check.fail'), ok ? 'success' : 'error');
                     }
                 } else {
                     this.healthCheckResult = null;
@@ -479,15 +472,251 @@ export function createCodexConfigMethods(options = {}) {
             } catch (e) {
                 this.healthCheckResult = null;
                 if (!(options && options.silent)) {
-                    this.showMessage('检查失败', 'error');
+                    this.showMessage(this.t('toast.check.fail'), 'error');
                 }
             } finally {
                 this.healthCheckBatchTotal = this.healthCheckBatchTotal || 0;
                 this.healthCheckBatchDone = Math.min(this.healthCheckBatchDone || 0, this.healthCheckBatchTotal || 0);
                 this.healthCheckLoading = false;
-                if (typeof this.runProvidersHealthCheck === 'function' && this.configMode === 'codex') {
-                    void this.runProvidersHealthCheck({ remote: true });
+            }
+        },
+
+        getHealthCheckFailedProviderItems() {
+            const result = this.healthCheckResult && typeof this.healthCheckResult === 'object'
+                ? this.healthCheckResult
+                : null;
+            if (!result) return [];
+            const remote = result.remote && typeof result.remote === 'object' ? result.remote : null;
+            const items = new Map();
+            const currentMode = this.configMode === 'claude' ? 'claude' : 'codex';
+            const pushItem = (name, detail, status = 'red', mode = currentMode) => {
+                const providerName = normalizeProviderName(name);
+                if (!providerName) return;
+                const key = `${mode}:${providerName}`;
+                const provider = (this.providersList || []).find((item) => item && item.name === providerName) || providerName;
+                const baseDeletable = mode === 'claude'
+                    ? !!(this.claudeConfigs && this.claudeConfigs[providerName])
+                    : (typeof this.shouldShowProviderDelete === 'function' ? this.shouldShowProviderDelete(provider) : true);
+                const writeAllowed = typeof this.isToolConfigWriteAllowed === 'function'
+                    ? this.isToolConfigWriteAllowed(mode)
+                    : true;
+                const deletable = baseDeletable && writeAllowed;
+                const blockedReason = !baseDeletable ? 'reserved' : (!writeAllowed ? 'readonly' : '');
+                const previous = items.get(key) || {};
+                items.set(key, {
+                    key,
+                    mode,
+                    name: providerName,
+                    status: previous.status || status || 'red',
+                    detail: detail || previous.detail || '',
+                    deletable,
+                    blockedReason: previous.blockedReason || blockedReason,
+                    selected: !!(this.healthCheckFailedProviderSelections && this.healthCheckFailedProviderSelections[key])
+                });
+            };
+
+            if (remote && remote.type === 'providers-health' && Array.isArray(remote.providers)) {
+                for (const provider of remote.providers) {
+                    if (!provider || provider.status === 'green') continue;
+                    pushItem(provider.provider, providerIssueDetail(provider.issues) || remoteProviderDetail(provider.remote), provider.status || 'red', 'codex');
                 }
+            }
+
+            if (remote && remote.type === 'remote-health-check' && (result.ok === false || remote.ok === false)) {
+                pushItem(remote.provider, remoteProviderDetail(remote), 'red', 'codex');
+            }
+
+            if (remote && remote.speedTests && typeof remote.speedTests === 'object') {
+                for (const [name, speedResult] of Object.entries(remote.speedTests)) {
+                    if (speedResult && speedResult.ok === true) continue;
+                    pushItem(name, speedResult && speedResult.error ? speedResult.error : this.t('config.health.fail'), 'red', this.configMode === 'claude' ? 'claude' : 'codex');
+                }
+            }
+
+            if (Array.isArray(result.issues)) {
+                for (const issue of result.issues) {
+                    if (!issue || typeof issue !== 'object') continue;
+                    const name = normalizeProviderName(issue.provider || issue.providerName || issue.name);
+                    if (name) pushItem(name, issue.message || issue.code || '', 'red', currentMode);
+                }
+            }
+
+            return Array.from(items.values());
+        },
+
+        getSelectableHealthCheckFailedProviderItems() {
+            return this.getHealthCheckFailedProviderItems().filter((item) => item.deletable);
+        },
+
+        hasHealthCheckFailedProviderSelection() {
+            return this.getSelectableHealthCheckFailedProviderItems().some((item) => item.selected);
+        },
+
+        areAllHealthCheckFailedProvidersSelected() {
+            const selectable = this.getSelectableHealthCheckFailedProviderItems();
+            return selectable.length > 0 && selectable.every((item) => item.selected);
+        },
+
+        setAllHealthCheckFailedProviderSelections(checked) {
+            const selectable = this.getSelectableHealthCheckFailedProviderItems();
+            const next = { ...(this.healthCheckFailedProviderSelections || {}) };
+            for (const item of selectable) {
+                next[item.key] = !!checked;
+            }
+            this.healthCheckFailedProviderSelections = next;
+        },
+
+        toggleHealthCheckFailedProviderSelection(item, checked) {
+            if (!item || !item.key || !item.deletable) return;
+            this.healthCheckFailedProviderSelections = {
+                ...(this.healthCheckFailedProviderSelections || {}),
+                [item.key]: !!checked
+            };
+        },
+
+        async deleteSelectedHealthCheckFailedProviders() {
+            const selectedItems = this.getHealthCheckFailedProviderItems()
+                .filter((item) => item.selected && item.deletable);
+            if (!selectedItems.length) {
+                this.showMessage(this.t('toast.health.noFailedProviderSelection'), 'info');
+                return;
+            }
+            this.healthCheckFailedProviderDeleting = true;
+            const deleted = [];
+            try {
+                const claudeItems = selectedItems.filter((item) => item.mode === 'claude');
+                const codexItems = selectedItems.filter((item) => item.mode !== 'claude');
+
+                if (claudeItems.length) {
+                    const configs = this.claudeConfigs && typeof this.claudeConfigs === 'object' ? this.claudeConfigs : {};
+                    const names = claudeItems.map((item) => item.name).filter((name) => configs[name]);
+                    if (names.length) {
+                        const deletedCurrentClaude = names.includes(this.currentClaudeConfig);
+                        const remainingNames = Object.keys(configs).filter((name) => !names.includes(name));
+                        if (remainingNames.length === 0) {
+                            throw new Error(this.t('toast.claude.keepOne'));
+                        }
+                        for (const name of names) {
+                            const config = configs[name];
+                            if (config && (config.providerCacheRef || config.source === 'provider-cache')) {
+                                if (typeof this.deleteClaudeProviderCacheRef === 'function') {
+                                    const ok = await this.deleteClaudeProviderCacheRef(config);
+                                    if (!ok) throw new Error(this.t('toast.delete.fail'));
+                                } else {
+                                    const cacheName = typeof config.providerCacheRef === 'string' && config.providerCacheRef.trim()
+                                        ? config.providerCacheRef.trim()
+                                        : name;
+                                    const res = await api('delete-provider-cache-record', { name: cacheName, group: 'claude' });
+                                    if (res && res.error) throw new Error(res.error);
+                                }
+                            }
+                            if (typeof this.rememberDeletedClaudeSettingsImport === 'function') {
+                                this.rememberDeletedClaudeSettingsImport(config);
+                            }
+                            delete configs[name];
+                            deleted.push(name);
+                        }
+                        if (deletedCurrentClaude) {
+                            this.currentClaudeConfig = typeof this.selectClaudeFallbackConfigName === 'function'
+                                ? this.selectClaudeFallbackConfigName(names)
+                                : remainingNames[0];
+                        }
+                        if (typeof this.saveClaudeConfigs === 'function') {
+                            this.saveClaudeConfigs();
+                        }
+                        if (deletedCurrentClaude && typeof this.applyCurrentClaudeConfigSilently === 'function') {
+                            await this.applyCurrentClaudeConfigSilently();
+                        } else if (typeof this.refreshClaudeModelContext === 'function') {
+                            this.refreshClaudeModelContext();
+                        }
+                    }
+                }
+
+                for (const item of codexItems) {
+                    const res = await api('delete-provider', { name: item.name });
+                    if (res && res.error) {
+                        throw new Error(res.error);
+                    }
+                    this.providersList = (this.providersList || []).filter((provider) => provider && provider.name !== item.name);
+                    if (this.currentModels && this.currentModels[item.name]) {
+                        delete this.currentModels[item.name];
+                    }
+                    if (res && res.switched && res.provider) {
+                        this.currentProvider = res.provider;
+                        if (res.model) this.currentModel = res.model;
+                        this.providersList = (this.providersList || []).map((provider) => ({
+                            ...provider,
+                            current: provider.name === res.provider
+                        }));
+                    }
+                    deleted.push(item.name);
+                }
+                const deletedSet = new Set(deleted);
+                this.healthCheckFailedProviderSelections = {};
+                const result = this.healthCheckResult;
+                const remote = result && result.remote;
+                const remainingIssues = Array.isArray(result && result.issues)
+                    ? result.issues.filter((issue) => {
+                        const name = normalizeProviderName(issue && (issue.provider || issue.providerName || issue.name));
+                        return !name || !deletedSet.has(name);
+                    })
+                    : [];
+                if (result && typeof result === 'object') {
+                    if (remote && remote.type === 'providers-health' && Array.isArray(remote.providers)) {
+                        const providers = remote.providers.filter((provider) => !deletedSet.has(provider && provider.provider));
+                        const summary = {
+                            total: providers.length,
+                            green: providers.filter((p) => p && p.status === 'green').length,
+                            yellow: providers.filter((p) => p && p.status === 'yellow').length,
+                            red: providers.filter((p) => p && p.status === 'red').length
+                        };
+                        this.healthCheckResult = {
+                            ...result,
+                            ok: remainingIssues.length === 0 && summary.yellow === 0 && summary.red === 0,
+                            remote: {
+                                ...remote,
+                                providers,
+                                summary
+                            },
+                            issues: remainingIssues
+                        };
+                        this.healthCheckBatchTotal = summary.total;
+                        this.healthCheckBatchDone = summary.total;
+                        this.healthCheckBatchFailed = summary.yellow + summary.red;
+                    } else if (remote && remote.type === 'speed-test' && remote.speedTests && typeof remote.speedTests === 'object') {
+                        const speedTests = Object.fromEntries(
+                            Object.entries(remote.speedTests).filter(([name]) => !deletedSet.has(normalizeProviderName(name)))
+                        );
+                        const total = Object.keys(speedTests).length;
+                        const failed = Object.values(speedTests).filter((entry) => !entry || entry.ok !== true).length;
+                        this.healthCheckResult = {
+                            ...result,
+                            ok: remainingIssues.length === 0 && failed === 0,
+                            remote: {
+                                ...remote,
+                                speedTests
+                            },
+                            issues: remainingIssues
+                        };
+                        this.healthCheckBatchTotal = total;
+                        this.healthCheckBatchDone = total;
+                        this.healthCheckBatchFailed = failed;
+                    } else {
+                        const removedRemote = remote && remote.type === 'remote-health-check' && deletedSet.has(remote.provider);
+                        this.healthCheckResult = {
+                            ...result,
+                            ok: remainingIssues.length === 0,
+                            remote: removedRemote ? null : remote,
+                            issues: remainingIssues
+                        };
+                    }
+                }
+                this.showMessage(this.t('toast.health.deleteFailedProvidersDone', { count: deleted.length }), 'success');
+                this.showHealthCheckModal = false;
+            } catch (e) {
+                this.showMessage(e && e.message ? e.message : this.t('toast.delete.fail'), 'error');
+            } finally {
+                this.healthCheckFailedProviderDeleting = false;
             }
         },
 

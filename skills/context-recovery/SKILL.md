@@ -1,5 +1,5 @@
 ---
-name: codexmate-project-context-recovery
+name: context-recovery
 description: Recovers project handoff context from local Codex, Claude Code, Gemini, CodeBuddy, and codexmate-derived sessions. Use when the user asks what happened in prior project/PR/branch/file/error work, needs a handoff brief, wants old decisions or validations recovered, or asks to summarize cross-session project activity with evidence.
 ---
 
@@ -13,7 +13,7 @@ Old sessions are historical evidence. Mutable facts such as PR state, CI, releas
 
 ## Quick Start
 
-Generate a context brief first. Resolve `scripts/search_sessions.py` relative to this skill directory; after npm installation the full package path is `node_modules/codexmate/skills/codexmate-project-context-recovery/scripts/search_sessions.py`.
+Generate a context brief first. Resolve `scripts/search_sessions.py` relative to this skill directory; after npm installation the full package path is `node_modules/codexmate/skills/context-recovery/scripts/search_sessions.py`.
 
 ```bash
 python3 scripts/search_sessions.py "SakuraByteCore/codexmate feat/task-orchestration-tab" --mode brief --source all --path-filter codexmate --match all --format text --limit 8

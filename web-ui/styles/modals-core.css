@@ -61,6 +61,85 @@
     max-height: calc(100vh - 56px);
 }
 
+.agents-modal:has(.modal-editor-body--openclaw-workspace) {
+    width: min(94vw, 1040px);
+    max-height: calc(100vh - 40px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 246, 241, 0.96) 100%);
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .modal-editor-header {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid rgba(137, 111, 94, 0.10);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(249, 244, 239, 0.82));
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .modal-title {
+    margin-bottom: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .modal-header-actions {
+    gap: 6px;
+}
+
+.agents-modal .modal-editor-body--openclaw-workspace {
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px 20px 20px;
+    overflow: hidden;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-target-file-group {
+    align-self: start;
+    margin-bottom: 0;
+    padding: 14px;
+    border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-target-file-group .form-hint {
+    margin-top: 8px;
+    font-family: var(--font-family-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-content-group {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-content-group > .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .template-editor,
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .agents-diff-editor {
+    min-height: min(64vh, 620px);
+    max-height: min(68vh, 680px);
+    border-radius: var(--radius-lg);
+    border-color: rgba(137, 111, 94, 0.14);
+    background: rgba(255, 255, 255, 0.88);
+    font-size: 13px;
+    line-height: 1.62;
+}
+
+.agents-modal:has(.modal-editor-body--openclaw-workspace) .template-editor-warning {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: rgba(137, 111, 94, 0.06);
+}
+
 .modal-editor-header {
     margin-bottom: 0;
     padding: var(--spacing-md) var(--spacing-md) 0;
@@ -692,4 +771,263 @@
 @keyframes diffSlideIn {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.prompts-md-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0 0 12px;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.prompts-md-tab {
+    padding: 7px 10px 8px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    box-shadow: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-secondary);
+}
+
+.prompts-md-tab:hover {
+    color: var(--color-text-primary);
+    background: transparent;
+}
+
+.prompts-md-tab.active {
+    color: var(--color-brand-dark);
+    border-bottom-color: var(--color-brand);
+    background: transparent;
+    box-shadow: none;
+}
+
+.prompt-presets-inline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+}
+
+.prompt-presets-inline-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.prompt-presets-inline-group--save {
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.prompt-presets-inline-label {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.prompt-presets-select {
+    min-width: 180px;
+}
+
+.prompt-presets-panel {
+    margin: 12px 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+}
+
+.prompt-presets-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-primary);
+}
+
+.prompt-presets-summary small {
+    color: var(--color-text-secondary);
+    font-weight: 400;
+}
+
+.prompt-presets-toolbar {
+    padding: 0 12px 10px;
+}
+
+.prompt-presets-save-row {
+    gap: 8px;
+}
+
+.prompt-presets-name-input {
+    width: min(340px, 34vw);
+}
+
+.prompt-presets-body {
+    min-height: 0;
+    margin: 0;
+    padding: 0 12px 12px;
+}
+
+.prompt-presets-frame {
+    max-height: 320px;
+    min-height: 0;
+    overflow: auto;
+    background: var(--color-bg-card);
+}
+
+.prompt-presets-empty {
+    margin: 0;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+}
+
+.prompt-presets-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.prompt-preset-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border-soft);
+    background: transparent;
+}
+
+.prompt-preset-row:last-child {
+    border-bottom: none;
+}
+
+.prompt-preset-main {
+    min-width: 0;
+}
+
+.prompt-preset-name {
+    font-weight: var(--font-weight-primary);
+}
+
+.prompt-preset-preview {
+    max-height: 180px;
+    margin: 8px 0 0;
+    padding: 10px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-subtle);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+}
+
+.prompt-preset-actions {
+    align-self: start;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 260px;
+}
+
+.btn-danger-mini {
+    color: var(--color-danger);
+}
+
+.prompt-history-panel {
+    margin: 12px 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+}
+
+.prompt-history-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    cursor: default;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-primary);
+}
+
+.prompt-history-close {
+    margin-left: auto;
+}
+
+.prompt-history-body {
+    padding: 0 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.prompt-history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+}
+
+.prompt-history-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.prompt-history-item:last-child {
+    border-bottom: none;
+}
+
+.prompt-history-item:hover {
+    background: var(--color-bg-hover);
+}
+
+.prompt-history-item.active {
+    background: var(--color-bg-active);
+}
+
+.prompt-history-time {
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.prompt-history-size {
+    color: var(--color-text-secondary);
+}
+
+.prompt-history-preview-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prompt-history-preview {
+    margin: 0;
+    padding: 10px;
+    max-height: 240px;
+    overflow: auto;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-inline);
+    white-space: pre-wrap;
+    word-break: break-word;
 }

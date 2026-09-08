@@ -25,6 +25,14 @@
                                     @click="setSkillsTargetApp('claude', { silent: false })">
                                     Claude Code
                                 </button>
+                                <button
+                                    type="button"
+                                    :class="['skills-target-chip', { active: skillsTargetApp === 'pi' }]"
+                                    :aria-pressed="skillsTargetApp === 'pi'"
+                                    :disabled="loading || !!initError || skillsMarketBusy"
+                                    @click="setSkillsTargetApp('pi', { silent: false })">
+                                    Pi
+                                </button>
                             </div>
                         </div>
                         <div class="skills-header-actions">

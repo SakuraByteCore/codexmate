@@ -450,3 +450,52 @@ test('formatProviderValue shows readable labels for env template and SecretRef i
         'SecretRef(env:default:OPENAI_API_KEY)'
     );
 });
+
+test('getOpenclawConfigSummary extracts high-signal config fields', () => {
+    const context = {
+        ...methods
+    };
+    const summary = methods.getOpenclawConfigSummary.call(context, {
+        content: JSON.stringify({
+            agents: {
+                defaults: {
+                    model: {
+                        primary: 'openai/gpt-5.4',
+                        fallbacks: ['anthropic/claude-sonnet']
+                    },
+                    workspace: '/repo/workspace'
+                }
+            },
+            browser: {
+                enabled: true,
+                headless: true,
+                executablePath: '/usr/bin/chrome'
+            },
+            models: {
+                providers: {
+                    openai: {},
+                    anthropic: {}
+                }
+            }
+        })
+    });
+
+    assert.deepStrictEqual(summary.slice(0, 6), [
+        { key: 'primary', label: '默认模型', value: 'openai/gpt-5.4' },
+        { key: 'fallbacks', label: 'Fallback', value: 'anthropic/claude-sonnet' },
+        { key: 'workspace', label: 'Workspace', value: '/repo/workspace' },
+        { key: 'browser', label: 'Browser', value: 'Headless' },
+        { key: 'browser-path', label: 'Chrome', value: '/usr/bin/chrome' },
+        { key: 'providers', label: 'Providers', value: 'openai / anthropic' }
+    ]);
+});
+
+test('getOpenclawConfigSummary reports parse errors without throwing', () => {
+    const context = {
+        ...methods
+    };
+    assert.deepStrictEqual(
+        methods.getOpenclawConfigSummary.call(context, { content: '{ broken' }),
+        [{ key: 'parse-error', label: '配置状态', value: '解析失败', tone: 'warning' }]
+    );
+});

@@ -8,18 +8,26 @@ export default {
   lastUpdated: true,
   themeConfig: {
     nav: [
-      { text: "快速开始", link: "/guide/getting-started" },
-      { text: "核心工作流", link: "/guide/workflow" },
-      { text: "GitHub Pages", link: "/guide/github-pages" },
+      { text: "目录", link: "/" },
+      { text: "从这里开始", link: "/guide/start-here" },
+      { text: "架构", link: "/guide/architecture" },
       { text: "GitHub", link: "https://github.com/SakuraByteCore/codexmate" }
     ],
     sidebar: [
       {
-        text: "使用指南",
+        text: "目录",
         items: [
-          { text: "快速开始", link: "/guide/getting-started" },
+          { text: "从这里开始", link: "/guide/start-here" },
+          { text: "它能做什么", link: "/guide/capabilities" },
+          { text: "快速开始", link: "/guide/quick-start" },
           { text: "核心工作流", link: "/guide/workflow" },
-          { text: "GitHub Pages", link: "/guide/github-pages" }
+          { text: "Web UI 集中管理", link: "/guide/web-ui" },
+          { text: "会话管理", link: "/guide/sessions" },
+          { text: "Skills 与提示词", link: "/guide/skills-prompt" },
+          { text: "任务编排", link: "/guide/tasks" },
+          { text: "架构总览", link: "/guide/architecture" },
+          { text: "设计边界", link: "/guide/limits" },
+          { text: "GitHub Pages 部署", link: "/guide/github-pages" }
         ]
       }
     ],

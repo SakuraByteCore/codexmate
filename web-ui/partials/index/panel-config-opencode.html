@@ -6,10 +6,11 @@
                     role="tabpanel"
                     :aria-labelledby="forceCompactLayout ? 'tab-config' : 'side-tab-config-opencode'">
                     <div v-if="forceCompactLayout && !sessionStandalone" class="segmented-control">
-                        <button type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
-                        <button type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
-                        <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
-                        <button type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
+                        <button v-if="isConfigModeVisible('codex')" type="button" :class="['segment', { active: configMode === 'codex' }]" @click="switchConfigMode('codex')">{{ t('tab.config.codex') }}</button>
+                        <button v-if="isConfigModeVisible('claude')" type="button" :class="['segment', { active: configMode === 'claude' }]" @click="switchConfigMode('claude')">{{ t('tab.config.claude') }}</button>
+                        <button v-if="isConfigModeVisible('openclaw')" type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
+                        <button v-if="isConfigModeVisible('opencode')" type="button" :class="['segment', { active: configMode === 'opencode' }]" @click="switchConfigMode('opencode')">{{ t('tab.config.opencode') }}</button>
+                        <button v-if="isConfigModeVisible('kilocode')" type="button" :class="['segment', { active: configMode === 'kilocode' }]" @click="switchConfigMode('kilocode')">{{ t('tab.config.kilocode') }}</button>
                     </div>
 
                     <section class="tool-config-write-card" :aria-label="t('opencode.writeAria')">

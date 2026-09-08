@@ -54,8 +54,8 @@ function parseAnalyticsExportArgs(args = []) {
     if (options.format !== 'csv' && options.format !== 'json') {
         errors.push('--format 必须是 csv 或 json');
     }
-    if (options.source && !['codex', 'claude', 'gemini', 'codebuddy', 'all'].includes(options.source)) {
-        errors.push('--source 必须是 codex、claude、gemini、codebuddy 或 all');
+    if (options.source && !['codex', 'claude', 'gemini', 'codebuddy', 'pi', 'all'].includes(options.source)) {
+        errors.push('--source 必须是 codex、claude、gemini、codebuddy、pi 或 all');
     }
     return {
         options,

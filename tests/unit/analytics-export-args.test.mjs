@@ -52,5 +52,12 @@ test('parseAnalyticsExportArgs reports unknown tokens and invalid choices', () =
 
     assert.match(parsed.error, /未知参数 --surprise/);
     assert.match(parsed.error, /--format 必须是 csv 或 json/);
-    assert.match(parsed.error, /--source 必须是 codex、claude、gemini、codebuddy 或 all/);
+    assert.match(parsed.error, /--source 必须是 codex、claude、gemini、codebuddy、pi 或 all/);
+});
+
+test('parseAnalyticsExportArgs accepts pi source', () => {
+    const parsed = parseAnalyticsExportArgs(['--source', 'pi']);
+
+    assert.strictEqual(parsed.error, '');
+    assert.strictEqual(parsed.options.source, 'pi');
 });

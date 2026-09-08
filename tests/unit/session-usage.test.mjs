@@ -151,3 +151,28 @@ test('buildUsageHourlyHeatmap returns empty grid for no sessions', () => {
     assert.strictEqual(result.grid[0].length, 24);
     assert.strictEqual(result.maxSessionCount, 1);
 });
+
+test('sessionUsageDaily orders days ascending so the last row is today', async () => {
+    const computedModule = await import(pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.computed.session.mjs')));
+    const computed = computedModule.createSessionComputed();
+    const now = Date.UTC(2026, 3, 10, 12, 0, 0);
+    const sessions = [
+        { source: 'codex', updatedAt: '2026-04-10T08:00:00.000Z', messageCount: 5, totalTokens: 120, contextWindow: 1000, cwd: '/a' },
+        { source: 'claude', updatedAt: '2026-04-09T08:00:00.000Z', messageCount: 7, totalTokens: 230, contextWindow: 1000, cwd: '/a' },
+        { source: 'codex', updatedAt: '2026-04-04T08:00:00.000Z', messageCount: 3, totalTokens: 90, contextWindow: 1000, cwd: '/b' }
+    ];
+    const charts = buildUsageChartGroups(sessions, { range: '7d', now });
+    const vm = {
+        sessionUsageCharts: charts,
+        sessionsUsageList: sessions,
+        sessionsUsageTimeRange: '7d',
+        sessionsUsageCompareEnabled: false
+    };
+    const daily = computed.sessionUsageDaily.call(vm);
+    assert.ok(Array.isArray(daily.rows) && daily.rows.length > 0, 'sessionUsageDaily should emit rows');
+    for (let i = 1; i < daily.rows.length; i += 1) {
+        assert.ok(daily.rows[i - 1].key <= daily.rows[i].key,
+            `rows should be ascending by dayKey (got ${daily.rows[i - 1].key} before ${daily.rows[i].key})`);
+    }
+    assert.strictEqual(daily.rows[daily.rows.length - 1].key, '2026-04-10', 'last row should be today');
+});

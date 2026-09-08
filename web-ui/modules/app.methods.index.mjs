@@ -12,6 +12,7 @@ import {
     SESSION_TRASH_PAGE_SIZE
 } from './app.constants.mjs';
 import { createAgentsMethods } from './app.methods.agents.mjs';
+import { createSystemPromptMethods } from './app.methods.system-prompt.mjs';
 import { createClaudeConfigMethods } from './app.methods.claude-config.mjs';
 import { createCodexConfigMethods } from './app.methods.codex-config.mjs';
 import { createInstallMethods } from './app.methods.install.mjs';
@@ -20,11 +21,12 @@ import { createOpenclawCoreMethods } from './app.methods.openclaw-core.mjs';
 import { createOpenclawEditingMethods } from './app.methods.openclaw-editing.mjs';
 import { createOpenclawPersistMethods } from './app.methods.openclaw-persist.mjs';
 import { createOpencodeConfigMethods } from './app.methods.opencode-config.mjs';
+import { createKilocodeConfigMethods } from './app.methods.kilocode-config.mjs';
+import { createPiConfigMethods } from './app.methods.pi-config.mjs';
 import { createProvidersMethods } from './app.methods.providers.mjs';
 import { createProviderCacheMethods } from './app.methods.provider-cache.mjs';
 import { createRuntimeMethods } from './app.methods.runtime.mjs';
 import { createToolConfigPermissionMethods } from './app.methods.tool-config-permissions.mjs';
-import { createTaskOrchestrationMethods } from './app.methods.task-orchestration.mjs';
 import { createSessionActionMethods } from './app.methods.session-actions.mjs';
 import { createSessionBrowserMethods } from './app.methods.session-browser.mjs';
 import { createSessionTimelineMethods } from './app.methods.session-timeline.mjs';
@@ -84,6 +86,7 @@ export function createAppMethods() {
         ...createSkillsMethods({ api }),
         ...createPluginsMethods(),
         ...createAgentsMethods({ api, apiWithMeta }),
+        ...createSystemPromptMethods({ api, apiWithMeta }),
         ...createProvidersMethods({ api }),
         ...createProviderCacheMethods({ api }),
         ...createWebUiPreferencesMethods({ api }),
@@ -99,8 +102,9 @@ export function createAppMethods() {
             api,
             modelCatalog: OPENCODE_MODEL_CATALOG
         }),
+        ...createKilocodeConfigMethods({ api }),
+        ...createPiConfigMethods({ api }),
         ...createInstallMethods({ api }),
-        ...createRuntimeMethods({ api }),
-        ...createTaskOrchestrationMethods({ api })
+        ...createRuntimeMethods({ api })
     };
 }

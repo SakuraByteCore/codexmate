@@ -167,6 +167,11 @@ export function createPluginsComputed() {
                 .map((meta) => localizePluginMeta(meta, this.t));
         },
 
+        pluginsSidebarVisible() {
+            const catalog = Array.isArray(this.pluginsCatalog) ? this.pluginsCatalog : [];
+            return catalog.length > 1;
+        },
+
         pluginsActiveMeta() {
             const id = typeof this.pluginsActiveId === 'string' ? this.pluginsActiveId.trim() : '';
             const entry = pluginsRegistry.find((item) => item && item.id === id) || null;

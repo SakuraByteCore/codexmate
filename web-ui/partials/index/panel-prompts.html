@@ -5,9 +5,10 @@
                     id="panel-prompts"
                     role="tabpanel"
                     aria-labelledby="tab-prompts">
-                <div class="segmented-control">
-                    <button type="button" :class="['segment', { active: promptsSubTab === 'codex' }]" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
-                    <button type="button" :class="['segment', { active: promptsSubTab === 'claude-project' }]" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                <div class="prompts-md-tabs" role="tablist" :aria-label="t('tab.prompts')">
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'codex' }]" role="tab" :aria-selected="promptsSubTab === 'codex'" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'claude-project' }]" role="tab" :aria-selected="promptsSubTab === 'claude-project'" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'system' }]" role="tab" :aria-selected="promptsSubTab === 'system'" @click="switchPromptsSubTab('system')">{{ t('prompts.subTab.system') }}</button>
                 </div>
 
                 <div v-if="promptsSubTab === 'claude-project'" class="project-path-selector">
@@ -32,7 +33,8 @@
                     </div>
                 </div>
 
-                <div class="prompts-editor">
+
+                <div v-if="promptsSubTab !== 'system'" class="prompts-editor">
                     <div class="prompts-editor-toolbar">
                         <div class="form-hint">
                             {{ agentsPath || t('common.notLoaded') }}
@@ -63,6 +65,13 @@
                                     :title="t('common.paste')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
                                 </button>
+                                <button
+                                    class="btn-mini"
+                                    @click="openPromptHistory"
+                                    :disabled="agentsSaving || agentsDiffVisible"
+                                    :title="t('common.history')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4"/></svg>
+                                </button>
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
                                 <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
@@ -83,6 +92,89 @@
                             </div>
                         </div>
                     </div>
+                    <details v-if="promptHistoryVisible" class="prompt-history-panel" open>
+                        <summary class="prompt-history-summary">
+                            <span>{{ t('common.history') }}</span>
+                            <button type="button" class="btn-mini prompt-history-close" @click="closePromptHistory" :title="t('common.close')">✕</button>
+                        </summary>
+                        <div class="prompt-history-body">
+                            <ul v-if="!promptHistoryLoading && !promptHistoryError && promptHistoryItems.length" class="prompt-history-list">
+                                <li v-for="item in promptHistoryItems" :key="item.id" :class="['prompt-history-item', { active: promptHistoryPreviewId === item.id }]" @click="viewPromptHistoryItem(item)">
+                                    <span class="prompt-history-time">{{ item.id }}</span>
+                                    <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                </li>
+                            </ul>
+                            <div v-if="promptHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                            <div v-else-if="promptHistoryError" class="state-message error">{{ promptHistoryError }}</div>
+                            <div v-else-if="!promptHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                            <div v-if="promptHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                <pre class="prompt-history-preview">{{ promptHistoryPreviewContent }}</pre>
+                                <button type="button" class="btn-mini btn-confirm-mini" @click="applyPromptHistoryToEditor" :disabled="agentsSaving || agentsDiffVisible">{{ t('common.restoreToEditor') }}</button>
+                            </div>
+                        </div>
+                    </details>
+                    <div class="prompt-presets-inline-row">
+                        <div class="prompt-presets-inline-group">
+                            <label class="prompt-presets-inline-label">{{ t('prompts.presets.title') }}</label>
+                            <select
+                                class="form-input prompt-presets-select"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible || !promptPresets.length"
+                                :title="t('prompts.presets.title')"
+                                @change="applyPromptPresetSelection($event)">
+                                <option value="">{{ t('prompts.presets.selectPlaceholder') }}</option>
+                                <option v-for="preset in promptPresets" :key="preset.id" :value="preset.id">{{ preset.name }}</option>
+                            </select>
+                        </div>
+                        <div class="prompt-presets-inline-group prompt-presets-inline-group--save">
+                            <input
+                                type="text"
+                                class="form-input prompt-presets-name-input"
+                                v-model="promptPresetNameDraft"
+                                :placeholder="t('prompts.presets.namePlaceholder')"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
+                                @keydown.enter.prevent="saveCurrentPromptAsPreset">
+                            <button
+                                type="button"
+                                class="btn-mini btn-confirm-mini"
+                                @click="saveCurrentPromptAsPreset"
+                                :disabled="promptPresetSaving || agentsLoading || agentsSaving || agentsDiffVisible"
+                                :title="t('prompts.presets.saveCurrent')">
+                                {{ t('prompts.presets.saveCurrent') }}
+                            </button>
+                        </div>
+                    </div>
+                        <details class="prompt-presets-panel">
+                            <summary class="prompt-presets-summary">
+                                <span>{{ t('prompts.presets.title') }}</span>
+                                <small>{{ t('prompts.presets.hint') }}</small>
+                            </summary>
+                            <div class="form-group prompt-presets-body">
+                                <div class="editor-frame prompt-presets-frame">
+                                    <div v-if="!promptPresets.length" class="state-message prompt-presets-empty">{{ t('prompts.presets.empty') }}</div>
+                                    <div v-else class="prompt-presets-list">
+                                        <article v-for="preset in promptPresets" :key="preset.id" class="prompt-preset-row">
+                                            <div class="prompt-preset-main">
+                                                <input
+                                                    type="text"
+                                                    class="form-input prompt-preset-name"
+                                                    :value="getPromptPresetRenameDraft(preset)"
+                                                    @input="setPromptPresetRenameDraft(preset.id, $event.target.value)"
+                                                    @keydown.enter.prevent="renamePromptPreset(preset)"
+                                                    :aria-label="t('prompts.presets.renameAria')">
+                                                <div class="form-hint">{{ t('prompts.presets.updatedAt', { time: formatPromptPresetTime(preset.updatedAt) }) }}</div>
+                                                <pre class="prompt-preset-preview">{{ preset.content }}</pre>
+                                            </div>
+                                            <div class="prompts-editor-actions prompt-preset-actions">
+                                                <button type="button" class="btn-mini" @click="renamePromptPreset(preset)">{{ t('common.save') }}</button>
+                                                <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset)">{{ t('common.paste') }}</button>
+                                                <button type="button" class="btn-mini btn-danger-mini" @click="deletePromptPreset(preset)">{{ t('common.delete') }}</button>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
 
                     <div class="form-group">
                         <div v-if="agentsDiffVisible">
@@ -125,5 +217,123 @@
                         </div>
                     </div>
 
+                </div>
+
+                <div v-if="promptsSubTab === 'system'">
+                    <div class="sys-prompt-controls">
+                        <div class="sys-prompt-control-group">
+                            <label class="form-label">{{ t('sysPrompt.scope.label') }}</label>
+                            <select class="form-input sys-prompt-select" :value="sysPromptScope" @change="switchSysPromptScope($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible">
+                                <option value="global">{{ t('sysPrompt.scope.global') }}</option>
+                                <option value="project">{{ t('sysPrompt.scope.project') }}</option>
+                            </select>
+                        </div>
+                        <div class="sys-prompt-control-group">
+                            <label class="form-label">{{ t('sysPrompt.mode.label') }}</label>
+                            <select class="form-input sys-prompt-select" :value="sysPromptMode" @change="switchSysPromptMode($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible">
+                                <option value="append">{{ t('sysPrompt.mode.append') }}</option>
+                                <option value="system">{{ t('sysPrompt.mode.system') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="prompts-editor">
+                        <div class="prompts-editor-toolbar">
+                            <div class="form-hint">
+                                {{ sysPromptPath || t('common.notLoaded') }}
+                                <span v-if="sysPromptPath">
+                                    （{{ sysPromptExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
+                                </span>
+                            </div>
+                            <div class="prompts-editor-actions">
+                                <div class="prompts-editor-group prompts-editor-group--secondary">
+                                    <button class="btn-mini" @click="exportSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || !sysPromptContent" :title="t('modal.agents.export')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 17v2h16v-2"/></svg>
+                                    </button>
+                                    <button class="btn-mini" @click="copySysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || !sysPromptContent" :title="t('modal.agents.copy')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                    </button>
+                                    <button class="btn-mini" @click="pasteSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('common.paste')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
+                                    </button>
+                                    <button class="btn-mini" @click="openSysHistory" :disabled="sysPromptSaving || sysPromptDiffVisible" :title="t('common.history')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4"/></svg>
+                                    </button>
+                                </div>
+                                <div class="prompts-editor-group prompts-editor-group--workflow">
+                                    <button class="btn-mini" @click="cancelSysPromptEdit" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    </button>
+                                    <button v-if="sysPromptDiffVisible" class="btn-mini" @click="resetSysPromptDiffState" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.backToEdit')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                    </button>
+                                    <button class="btn-mini btn-confirm-mini" @click="applySystemPrompt" :disabled="sysPromptSaving || sysPromptLoading || sysPromptDiffLoading || (!sysPromptDiffVisible && !hasSysPromptContentChanged()) || (sysPromptDiffVisible && !sysPromptDiffHasChangesValue)" :title="sysPromptDiffVisible ? t('common.save') : t('common.preview')">
+                                        <svg v-if="sysPromptDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                        <svg v-else class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <details v-if="sysHistoryVisible" class="prompt-history-panel" open>
+                            <summary class="prompt-history-summary">
+                                <span>{{ t('common.history') }}</span>
+                                <button type="button" class="btn-mini prompt-history-close" @click="closeSysHistory" :title="t('common.close')">✕</button>
+                            </summary>
+                            <div class="prompt-history-body">
+                                <ul v-if="!sysHistoryLoading && !sysHistoryError && sysHistoryItems.length" class="prompt-history-list">
+                                    <li v-for="item in sysHistoryItems" :key="item.id" :class="['prompt-history-item', { active: sysHistoryPreviewId === item.id }]" @click="viewSysHistoryItem(item)">
+                                        <span class="prompt-history-time">{{ item.id }}</span>
+                                        <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                    </li>
+                                </ul>
+                                <div v-if="sysHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                <div v-else-if="sysHistoryError" class="state-message error">{{ sysHistoryError }}</div>
+                                <div v-else-if="!sysHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                                <div v-if="sysHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                    <pre class="prompt-history-preview">{{ sysHistoryPreviewContent }}</pre>
+                                    <button type="button" class="btn-mini btn-confirm-mini" @click="applySysHistoryToEditor" :disabled="sysPromptSaving || sysPromptDiffVisible">{{ t('common.restoreToEditor') }}</button>
+                                </div>
+                            </div>
+                        </details>
+                        <div class="form-group">
+                            <div v-if="sysPromptDiffVisible">
+                                <div
+                                    v-if="!sysPromptDiffLoading && !sysPromptDiffError && !sysPromptDiffTruncated && (sysPromptDiffStats.added || sysPromptDiffStats.removed)"
+                                    class="agents-diff-summary">
+                                    <span class="agents-diff-stat add">+{{ sysPromptDiffStats.added }}</span>
+                                    <span class="agents-diff-stat del">-{{ sysPromptDiffStats.removed }}</span>
+                                </div>
+                                <div v-if="sysPromptDiffLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                <div v-else-if="sysPromptDiffError" class="state-message error">{{ sysPromptDiffError }}</div>
+                                <div v-else-if="sysPromptDiffTruncated" class="agents-diff-empty">{{ t('diff.tooLargeSkip') }}</div>
+                                <div v-else-if="!sysPromptDiffHasChangesValue" class="agents-diff-empty">{{ t('diff.noChanges') }}</div>
+                                <div v-else class="agents-diff-view agents-diff-editor">
+                                    <div
+                                        v-for="(line, index) in sysPromptDiffLines"
+                                        :key="'sys-prompt-diff-' + index"
+                                        :class="['agents-diff-line', line.type]">
+                                        <span class="agents-diff-line-sign">
+                                            {{ line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ') }}
+                                        </span>
+                                        <span class="agents-diff-line-text">{{ line.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div :class="['editor-frame', { 'editor-frame--loading': sysPromptLoading }]">
+                                <div v-if="sysPromptLoading" class="editor-skeleton">
+                                    <div class="skeleton-line" v-for="i in 6" :key="i"></div>
+                                </div>
+                                <textarea
+                                    v-model="sysPromptContent"
+                                    class="form-input template-editor"
+                                    spellcheck="false"
+                                    :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
+                                    :placeholder="t('sysPrompt.placeholder')"></textarea>
+                            </div>
+                            <div v-if="sysPromptContextHint()" :class="['prompts-context-hint', { 'prompts-context-hint--warn': sysPromptContextHint().warn }]">
+                                {{ sysPromptContextHint().text }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 </div>

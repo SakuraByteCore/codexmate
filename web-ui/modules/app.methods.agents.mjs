@@ -4,6 +4,7 @@ import {
     isAgentsDiffPreviewPayloadTooLarge,
     shouldApplyAgentsDiffPreviewResponse
 } from '../logic.mjs';
+import { issueLatestRequestToken, isLatestRequestToken } from './request-token.mjs';
 
 function isValidOpenclawWorkspaceFileName(fileName) {
     if (typeof fileName !== 'string') {
@@ -19,14 +20,20 @@ function isValidOpenclawWorkspaceFileName(fileName) {
     return true;
 }
 
-function issueLatestRequestToken(context, key) {
-    const token = (Number(context[key]) || 0) + 1;
-    context[key] = token;
-    return token;
+function sanitizePromptHistoryId(raw) {
+    const safe = typeof raw === 'string' ? raw.trim() : '';
+    if (!safe) return 'global';
+    const replaced = safe.replace(/[^A-Za-z0-9_.-]/g, '_');
+    return (replaced || 'global').slice(0, 64);
 }
 
-function isLatestRequestToken(context, key, token) {
-    return !!context && context[key] === token;
+function resolveAgentsHistoryBucket(instance) {
+    const subTab = typeof instance.promptsSubTab === 'string' ? instance.promptsSubTab : 'codex';
+    if (subTab === 'claude-project') {
+        const projectPath = (instance.projectClaudeMdPath || '').trim();
+        return 'claude-project_' + sanitizePromptHistoryId(projectPath || 'global');
+    }
+    return 'codex_global';
 }
 
 export function createAgentsMethods(options = {}) {
@@ -206,13 +213,13 @@ export function createAgentsMethods(options = {}) {
                 this.agentsContext = 'openclaw-workspace';
                 this.agentsWorkspaceFileName = fileName;
                 this.agentsModalTitle = tr('modal.agents.title.openclawWorkspaceFile', `OpenClaw 工作区文件: ${fileName}`, { fileName });
-                this.agentsModalHint = tr('modal.agents.hint.openclawWorkspaceFile', `保存后会写入 OpenClaw Workspace 下的 ${fileName}。`, { fileName });
+                this.agentsModalHint = tr('modal.agents.hint.openclawWorkspaceFile', `Workspace / ${fileName}`, { fileName });
                 return;
             }
             this.agentsContext = context === 'openclaw' ? 'openclaw' : 'codex';
             if (this.agentsContext === 'openclaw') {
                 this.agentsModalTitle = tr('modal.agents.title.openclaw', 'OpenClaw AGENTS.md 编辑器');
-                this.agentsModalHint = tr('modal.agents.hint.openclaw', '保存后会写入 OpenClaw Workspace 下的 AGENTS.md。');
+                this.agentsModalHint = tr('modal.agents.hint.openclaw', 'Workspace / AGENTS.md');
             } else {
                 this.agentsModalTitle = tr('modal.agents.title.default', 'AGENTS.md 编辑器');
                 this.agentsModalHint = tr('modal.agents.hint.default', '保存后会写入目标 AGENTS.md（与 config.toml 同级）。');
@@ -354,6 +361,9 @@ export function createAgentsMethods(options = {}) {
             return !!this.agentsSaving || this.hasAgentsContentChanged() || this.agentsDiffVisible;
         },
         handleBeforeUnload(event) {
+            if (typeof this.flushWebUiPreferences === 'function') {
+                this.flushWebUiPreferences();
+            }
             if (!this.hasPendingAgentsDraft()) {
                 return;
             }
@@ -460,6 +470,18 @@ export function createAgentsMethods(options = {}) {
                         .map(function (p) { return (p && p.cwd) || p || ''; })
                         .filter(Boolean)
                         .filter(function (v, i, a) { return a.indexOf(v) === i; });
+                }
+                if (this.promptsSubTab === 'claude-project'
+                    && this.mainTab === 'prompts'
+                    && Array.isArray(this.projectPathOptions)
+                    && this.projectPathOptions.length) {
+                    const currentPath = (this.projectClaudeMdPath || '').trim();
+                    if (currentPath && this.projectPathOptions.indexOf(currentPath) !== -1) {
+                        this.projectClaudeMdPath = currentPath;
+                    } else {
+                        this.projectClaudeMdPath = this.projectPathOptions[0];
+                    }
+                    if (typeof this.loadPromptsContent === 'function') this.loadPromptsContent();
                 }
             } catch (_) {
                 // silent
@@ -687,6 +709,9 @@ export function createAgentsMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
+                if (typeof res.historyBucket === 'string' && res.historyBucket) {
+                    this.promptHistoryBucket = res.historyBucket;
+                }
                 const successLabel = this.agentsContext === 'openclaw-workspace'
                     ? this.t('toast.agents.saved.workspace', { name: this.agentsWorkspaceFileName || '' }).replace(/:\s*$/, '')
                     : (this.agentsContext === 'claude-project'
@@ -705,16 +730,288 @@ export function createAgentsMethods(options = {}) {
             }
         },
 
+
+        normalizePromptPresetName(name) {
+            return typeof name === 'string' ? name.trim() : '';
+        },
+        buildPromptPresetId() {
+            const randomPart = Math.random().toString(36).slice(2, 8);
+            return `prompt-preset-${Date.now()}-${randomPart}`;
+        },
+        getPromptPresetRenameDraft(preset) {
+            if (!preset || !preset.id) return '';
+            if (Object.prototype.hasOwnProperty.call(this.promptPresetRenameDraft || {}, preset.id)) {
+                return this.promptPresetRenameDraft[preset.id];
+            }
+            return preset.name || '';
+        },
+        setPromptPresetRenameDraft(id, value) {
+            if (!id) return;
+            this.promptPresetRenameDraft = {
+                ...(this.promptPresetRenameDraft || {}),
+                [id]: value
+            };
+        },
+        formatPromptPresetTime(value) {
+            if (typeof value !== 'string' || !value) {
+                return this.t('common.none');
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return value;
+            }
+            return date.toLocaleString();
+        },
+        findPromptPresetByName(name, excludeId = '') {
+            const normalizedName = this.normalizePromptPresetName(name).toLowerCase();
+            return (Array.isArray(this.promptPresets) ? this.promptPresets : []).find((preset) => {
+                if (!preset || preset.id === excludeId) return false;
+                return this.normalizePromptPresetName(preset.name).toLowerCase() === normalizedName;
+            }) || null;
+        },
+        async persistPromptPresets() {
+            if (typeof this.persistWebUiPreferences === 'function') {
+                await this.persistWebUiPreferences({ promptPresets: this.promptPresets });
+            }
+        },
+        getCurrentPromptPresetDefaultName() {
+            if (this.promptsSubTab === 'claude-project') {
+                const projectPath = typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath.trim() : '';
+                return projectPath
+                    ? this.t('prompts.presets.defaultName.project', { path: projectPath })
+                    : this.t('prompts.subTab.project');
+            }
+            const fileName = typeof this.agentsPath === 'string' && this.agentsPath.trim()
+                ? (this.agentsPath.trim().split(/[\\/]/).filter(Boolean).pop() || '')
+                : '';
+            return fileName || this.t('prompts.subTab.codex');
+        },
+        async saveEditorPromptAsPreset() {
+            if (this.promptPresetSaving || this.agentsLoading || this.agentsDiffVisible) return;
+            const name = this.getCurrentPromptPresetDefaultName();
+            const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
+            if (!content.trim()) {
+                this.showMessage(this.t('prompts.presets.error.emptyContent'), 'error');
+                return;
+            }
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('prompts.presets.confirm.addCurrentTitle'),
+                message: this.t('prompts.presets.confirm.addCurrentMessage', { name }),
+                confirmText: this.t('prompts.presets.addCurrent'),
+                cancelText: this.t('common.cancel'),
+                danger: false
+            });
+            if (!confirmed) return;
+            this.promptPresetNameDraft = name;
+            await this.saveCurrentPromptAsPreset();
+        },
+        async saveCurrentPromptAsPreset() {
+            if (this.promptPresetSaving || this.agentsLoading) return;
+            const draftName = this.normalizePromptPresetName(this.promptPresetNameDraft);
+            const name = draftName || this.normalizePromptPresetName(this.getCurrentPromptPresetDefaultName());
+            const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
+            if (!name) {
+                this.showMessage(this.t('prompts.presets.error.emptyName'), 'error');
+                return;
+            }
+            if (!content.trim()) {
+                this.showMessage(this.t('prompts.presets.error.emptyContent'), 'error');
+                return;
+            }
+            const existing = this.findPromptPresetByName(name);
+            if (existing) {
+                const confirmed = await this.requestConfirmDialog({
+                    title: this.t('prompts.presets.confirm.overwriteTitle'),
+                    message: this.t('prompts.presets.confirm.overwriteMessage', { name }),
+                    confirmText: this.t('prompts.presets.confirm.overwriteConfirm'),
+                    cancelText: this.t('common.cancel'),
+                    danger: false
+                });
+                if (!confirmed) return;
+            }
+            this.promptPresetSaving = true;
+            try {
+                const now = new Date().toISOString();
+                if (existing) {
+                    this.promptPresets = this.promptPresets.map((preset) => preset.id === existing.id
+                        ? { ...preset, name, content, updatedAt: now }
+                        : preset);
+                    this.selectedPromptPresetId = existing.id;
+                } else {
+                    const preset = {
+                        id: this.buildPromptPresetId(),
+                        name,
+                        content,
+                        updatedAt: now
+                    };
+                    this.promptPresets = [preset, ...this.promptPresets];
+                    this.selectedPromptPresetId = preset.id;
+                }
+                this.promptPresetNameDraft = '';
+                await this.persistPromptPresets();
+                this.showMessage(this.t('prompts.presets.toast.saved'), 'success');
+            } finally {
+                this.promptPresetSaving = false;
+            }
+        },
+        async applyPromptPresetToEditor(preset) {
+            if (!preset || typeof preset.content !== 'string' || !preset.content) return;
+            this.agentsContent = preset.content;
+            this.onAgentsContentInput();
+            this.selectedPromptPresetId = preset.id;
+            this.showMessage(this.t('prompts.presets.toast.pasted'), 'success');
+        },
+        async applyPromptPresetSelection(event) {
+            const select = event && event.target;
+            const presetId = select && typeof select.value === 'string' ? select.value : '';
+            if (!presetId) return;
+            const preset = (Array.isArray(this.promptPresets) ? this.promptPresets : []).find((item) => item && item.id === presetId);
+            await this.applyPromptPresetToEditor(preset);
+            if (select) select.value = '';
+        },
+        async renamePromptPreset(preset) {
+            if (!preset || !preset.id) return;
+            const name = this.normalizePromptPresetName(this.getPromptPresetRenameDraft(preset));
+            if (!name) {
+                this.showMessage(this.t('prompts.presets.error.emptyName'), 'error');
+                return;
+            }
+            const existing = this.findPromptPresetByName(name, preset.id);
+            if (existing) {
+                this.showMessage(this.t('prompts.presets.error.duplicateName'), 'error');
+                return;
+            }
+            if (name === preset.name) {
+                this.showMessage(this.t('toast.noChanges'), 'info');
+                return;
+            }
+            const now = new Date().toISOString();
+            this.promptPresets = this.promptPresets.map((item) => item.id === preset.id
+                ? { ...item, name, updatedAt: now }
+                : item);
+            const drafts = { ...(this.promptPresetRenameDraft || {}) };
+            delete drafts[preset.id];
+            this.promptPresetRenameDraft = drafts;
+            await this.persistPromptPresets();
+            this.showMessage(this.t('prompts.presets.toast.renamed'), 'success');
+        },
+        async deletePromptPreset(preset) {
+            if (!preset || !preset.id) return;
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('prompts.presets.confirm.deleteTitle'),
+                message: this.t('prompts.presets.confirm.deleteMessage', { name: preset.name || '' }),
+                confirmText: this.t('common.delete'),
+                cancelText: this.t('common.cancel'),
+                danger: true
+            });
+            if (!confirmed) return;
+            this.promptPresets = this.promptPresets.filter((item) => item.id !== preset.id);
+            if (this.selectedPromptPresetId === preset.id) {
+                this.selectedPromptPresetId = '';
+            }
+            const drafts = { ...(this.promptPresetRenameDraft || {}) };
+            delete drafts[preset.id];
+            this.promptPresetRenameDraft = drafts;
+            await this.persistPromptPresets();
+            this.showMessage(this.t('prompts.presets.toast.deleted'), 'success');
+        },
+        async openPromptHistory() {
+            if (this.promptHistoryLoading) return;
+            const bucket = this.promptHistoryBucket || resolveAgentsHistoryBucket(this);
+            this.promptHistoryVisible = true;
+            this.promptHistoryError = '';
+            await this.loadPromptHistory(bucket);
+        },
+
+        async loadPromptHistory(bucketArg) {
+            if (this.promptHistoryLoading) return;
+            const bucket = typeof bucketArg === 'string' && bucketArg.trim()
+                ? bucketArg.trim()
+                : (this.promptHistoryBucket || resolveAgentsHistoryBucket(this));
+            this.promptHistoryBucket = bucket;
+            this.promptHistoryLoading = true;
+            this.promptHistoryError = '';
+            this.promptHistoryItems = [];
+            this.promptHistoryPreviewId = '';
+            this.promptHistoryPreviewContent = '';
+            try {
+                const res = await api('list-prompt-history', { bucket });
+                if (res && res.error) {
+                    this.promptHistoryError = res.error;
+                    return;
+                }
+                this.promptHistoryItems = Array.isArray(res) ? res : [];
+            } catch (e) {
+                this.promptHistoryError = this.t('toast.load.fail');
+            } finally {
+                this.promptHistoryLoading = false;
+            }
+        },
+
+        closePromptHistory() {
+            this.promptHistoryVisible = false;
+            this.promptHistoryPreviewId = '';
+            this.promptHistoryPreviewContent = '';
+            this.promptHistoryError = '';
+        },
+
+        async viewPromptHistoryItem(item) {
+            if (!item || !item.id) return;
+            if (this.promptHistoryLoading) return;
+            if (this.promptHistoryPreviewId === item.id && this.promptHistoryPreviewContent) return;
+            this.promptHistoryPreviewId = item.id;
+            this.promptHistoryPreviewContent = '';
+            try {
+                const res = await api('get-prompt-history', { bucket: this.promptHistoryBucket, id: item.id });
+                if (res && res.error) {
+                    this.promptHistoryError = res.error;
+                    this.promptHistoryPreviewId = '';
+                    return;
+                }
+                this.promptHistoryPreviewContent = typeof res.content === 'string' ? res.content : '';
+            } catch (e) {
+                this.promptHistoryError = this.t('toast.load.fail');
+                this.promptHistoryPreviewId = '';
+            }
+        },
+
+        applyPromptHistoryToEditor() {
+            if (!this.promptHistoryPreviewContent) return;
+            if (this.agentsSaving || this.agentsDiffVisible) return;
+            this.agentsContent = this.promptHistoryPreviewContent;
+            if (typeof this.onAgentsContentInput === 'function') this.onAgentsContentInput();
+            this.promptHistoryVisible = false;
+            this.promptHistoryPreviewId = '';
+            this.promptHistoryPreviewContent = '';
+            this.showMessage(this.t('toast.history.restored'), 'success');
+        },
+
         switchPromptsSubTab(subTab) {
-            const normalized = subTab === 'claude-project' ? 'claude-project' : 'codex';
+            const normalized = subTab === 'claude-project' || subTab === 'system' ? subTab : 'codex';
             if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
                 this.loadProjectPathOptions();
             }
             if (this.promptsSubTab === normalized) {
-                this.loadPromptsContent();
+                if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
                 return;
             }
+            this.__skipNextPromptsSubTabLoad = true;
             this.promptsSubTab = normalized;
+            if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
+            this.$nextTick(() => {
+                document.querySelector('.main-panel')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            });
+        },
+
+        loadPromptsTabContent() {
+            if (this.promptsSubTab === 'system') {
+                if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
+            } else {
+                if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
+                    this.loadProjectPathOptions();
+                }
+                if (typeof this.loadPromptsContent === 'function') this.loadPromptsContent();
+            }
         },
 
         async loadPromptsContent() {
@@ -730,7 +1027,11 @@ export function createAgentsMethods(options = {}) {
                     if (!this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
                         this.loadProjectPathOptions();
                     }
-                    const projectPath = (this.projectClaudeMdPath || '').trim();
+                    let projectPath = (this.projectClaudeMdPath || '').trim();
+                    if (!projectPath && Array.isArray(this.projectPathOptions) && this.projectPathOptions.length) {
+                        this.projectClaudeMdPath = this.projectPathOptions[0];
+                        projectPath = this.projectClaudeMdPath.trim();
+                    }
                     if (projectPath) {
                         rpcParams.baseDir = projectPath;
                     }

@@ -10,7 +10,6 @@
 @import url('./styles/sessions-preview.css');
 @import url('./styles/sessions-usage.css');
 @import url('./styles/dashboard.css');
-@import url('./styles/task-orchestration.css');
 @import url('./styles/modals-core.css');
 @import url('./styles/health-check-dialog.css');
 @import url('./styles/openclaw-structured.css');
@@ -22,3 +21,4 @@
 @import url('./styles/responsive.css');
 @import url('./styles/webhook.css');
 @import url('./styles/trash-panel.css');
+@import url('./styles/system-prompt.css');

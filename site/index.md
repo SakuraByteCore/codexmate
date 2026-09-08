@@ -1,113 +1,64 @@
-﻿---
+---
 layout: home
 
 hero:
   name: Codex Mate
-  text: Codex / Claude Code / OpenClaw 本地配置与会话管理
-  tagline: 用一个 CLI + Web UI 管理多工具配置与本地会话。
+  text: 本地优先的多 agent 配置与会话管理
+  tagline: 一个 CLI + 一个 Web UI,管 Codex / Claude Code / Gemini CLI / CodeBuddy / Pi / OpenCode / KiloCode / OpenClaw。零云端,本地优先。
   actions:
     - theme: brand
-      text: 快速开始
-      link: /guide/getting-started
+      text: 从这里开始
+      link: /guide/start-here
     - theme: alt
-      text: 核心工作流
-      link: /guide/workflow
+      text: 它能做什么
+      link: /guide/capabilities
     - theme: alt
       text: GitHub
       link: https://github.com/SakuraByteCore/codexmate
 
 features:
-  - title: 统一入口
-    details: Codex、Claude Code、OpenClaw 配置在同一入口管理。
-  - title: 本地优先
-    details: 配置写入本地文件，首轮接管有备份，便于回滚。
-  - title: 会话可管理
-    details: 支持会话筛选、导出、删除与批量清理。
-  - title: 自动化友好
-    details: 提供 MCP stdio 能力，可按需开启写入工具。
+  - icon: 🚀
+    title: 从这里开始
+    details: 它解决什么、怎么装、最短启动路径,三步跑起来。
+    link: /guide/start-here
+  - icon: 🧭
+    title: 它能做什么
+    details: 15 项能力清单:provider 管理、会话浏览、Skills、任务编排。
+    link: /guide/capabilities
+  - icon: ⚡
+    title: 快速开始
+    details: Homebrew / npm / curl 三种安装,官方 CLI 透传,校验建议。
+    link: /guide/quick-start
+  - icon: 🔁
+    title: 核心工作流
+    details: 初始化 → 切换 → 写配 → 集中管理 → 导出复盘 → 测试 六步串起。
+    link: /guide/workflow
+  - icon: 🖥️
+    title: Web UI 集中管理
+    details: 启动选项、provider 桥、健康检查、会话视图一网打尽。
+    link: /guide/web-ui
+  - icon: 📂
+    title: 会话管理
+    details: 五工具会话统一视图,搜索/导出/清理,用量分析。
+    link: /guide/sessions
+  - icon: 🧩
+    title: Skills 与提示词
+    details: 本地 Skills Market 跨应用导入导出,prompt 文件编辑器带 preset 池。
+    link: /guide/skills-prompt
+  - icon: 📋
+    title: 任务编排
+    details: 基于 DAG 的任务队列,依赖追踪、执行与日志。
+    link: /guide/tasks
+  - icon: 🏗️
+    title: 架构总览
+    details: 用户 → CLI/WebUI/MCP → HTTP API → 核心 → 本地 FS,各层职责。
+    link: /guide/architecture
+  - icon: 🚧
+    title: 设计边界
+    details: 不做云端、不代管密钥、不替代原工具——三条红线明确边界。
+    link: /guide/limits
+  - icon: 🌐
+    title: GitHub Pages 部署
+    details: 内置 Pages 工作流,base 路径策略,fork 后仍可访问。
+    link: /guide/github-pages
 ---
-
-## 这是什么
-
-Codex Mate 是一个本地优先的配置与会话管理工具，覆盖：
-
-- Codex provider/model 切换与配置写入
-- Claude Code 配置方案管理（写入 `~/.claude/settings.json`）
-- OpenClaw JSON5 配置与 Workspace `AGENTS.md`
-- Codex / Claude / Gemini CLI / CodeBuddy Code 本地会话浏览、导出、删除
-
-## 快速开始
-
-```bash
-npm install -g codexmate
-codexmate setup
-codexmate status
-codexmate run
-```
-
-仅启动服务（测试 / CI）：
-
-```bash
-codexmate run --no-browser
-```
-
-如果默认端口 `3737` 不可用，Codex Mate 会自动尝试后续端口（`3738`、`3739` ...）。如需固定端口，可指定：
-
-```bash
-CODEXMATE_PORT=8080 codexmate run
-```
-
-Windows PowerShell：
-
-```powershell
-$env:CODEXMATE_PORT=8080; codexmate run
-```
-
-## 命令速查
-
-- `codexmate status`
-- `codexmate setup`
-- `codexmate list` / `codexmate models`
-- `codexmate switch <provider>` / `codexmate use <model>`
-- `codexmate claude <BaseURL> <API_KEY> [model]`
-- `codexmate auth <list|import|switch|delete|status>`
-- `codexmate workflow <list|get|validate|run|runs>`
-- `codexmate qwen [args...]`
-- `codexmate run [--host <HOST>] [--no-browser]`
-- `codexmate export-session --source <codex|claude> ...`
-
-## 模块能力
-
-### Codex
-
-- provider / model 切换
-- `config.toml` 模板确认写入
-- `~/.codex/AGENTS.md` 与 skills 管理
-
-
-### Claude Code
-
-- 多配置方案管理
-- 一键写入 `~/.claude/settings.json`
-
-### OpenClaw
-
-- JSON5 多方案管理
-- 写入 `~/.openclaw/openclaw.json`
-- 管理 `~/.openclaw/workspace/AGENTS.md`
-
-### 会话
-
-- Codex + Claude + Gemini CLI + CodeBuddy Code 会话统一视图
-- 搜索、筛选、导出、删除、批量清理
-
-## 测试约定
-
-- 自动化测试只启动服务，不打开页面。
-- 推荐命令：`codexmate run --no-browser`。
-
-## 设计边界
-
-- 不做云端托管与账号体系。
-- 不代管密钥，配置写入本地文件。
-- 不替代原工具，仅负责配置管理与会话管理层。

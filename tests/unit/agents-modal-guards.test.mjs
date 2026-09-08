@@ -11,8 +11,17 @@ const { createAgentsMethods } = await import(
 const { createCodexConfigMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.codex-config.mjs'))
 );
+const { createClaudeConfigMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.claude-config.mjs'))
+);
 const { createI18nMethods } = await import(
     pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'i18n.mjs'))
+);
+const { createRuntimeMethods } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'modules', 'app.methods.runtime.mjs'))
+);
+const { buildSpeedTestIssue } = await import(
+    pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'logic.runtime.mjs'))
 );
 
 test('closeConfigTemplateModal ignores user close attempts while template apply is busy', () => {
@@ -231,61 +240,103 @@ test('runHealthCheck treats backend error payloads as failures', async () => {
     }]);
 });
 
-test('runHealthCheck skips Claude speed tests when the primary health check already failed', async () => {
+test('runHealthCheck checks only the selected Claude config', async () => {
     const methods = createCodexConfigMethods({
-        api: async () => ({ error: 'health failed' }),
+        api: async (action) => {
+            throw new Error(`Claude batch health check should not call backend action: ${action}`);
+        },
         getProviderConfigModeMeta() {
             return null;
         }
     });
-    let claudeSpeedTestCalls = 0;
+    const speedTestCalls = [];
+    const runtimeMethods = createRuntimeMethods({
+        api: async (action, payload) => {
+            assert.strictEqual(action, 'speed-test');
+            speedTestCalls.push(payload);
+            if (payload.targetApi === 'chat_completions') return { ok: false, error: 'timeout' };
+            return { ok: true, durationMs: payload.targetApi === 'responses' ? 11 : 22, status: 200 };
+        }
+    });
     const context = {
         ...createI18nMethods(),
         ...methods,
+        ...runtimeMethods,
         lang: 'zh',
-        providersList: ['alpha'],
+        providersList: ['codex-provider-should-not-run'],
         speedResults: {},
         speedLoading: {},
+        claudeSpeedResults: {},
+        claudeSpeedLoading: {},
         healthCheckLoading: false,
         healthCheckResult: { ok: true },
+        healthCheckBatchTotal: 99,
+        healthCheckBatchDone: 99,
+        healthCheckBatchFailed: 99,
         configMode: 'claude',
+        currentClaudeConfig: 'chat',
         claudeConfigs: {
-            primary: {
-                baseUrl: 'https://example.com',
-                apiKey: 'secret'
+            anthropic: {
+                baseUrl: 'https://anthropic.example.com/v1',
+                apiKey: 'sk-anthropic',
+                model: 'claude-sonnet-4-6',
+                targetApi: 'responses'
+            },
+            chat: {
+                baseUrl: 'https://openai.example.com/v1',
+                apiKey: 'sk-chat',
+                model: 'gpt-4.1',
+                targetApi: 'chat_completions'
+            },
+            ollama: {
+                baseUrl: 'http://127.0.0.1:11434',
+                apiKey: '',
+                model: 'llama3.1:8b',
+                targetApi: 'ollama'
             }
         },
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        async runClaudeSpeedTest() {
-            claudeSpeedTestCalls += 1;
-            return { ok: false, error: 'timeout' };
-        }
+        buildSpeedTestIssue
     };
 
     await methods.runHealthCheck.call(context);
 
+    const callsByTarget = Object.fromEntries(speedTestCalls.map((payload) => [payload.targetApi, payload]));
     assert.strictEqual(context.healthCheckLoading, false);
-    assert.strictEqual(claudeSpeedTestCalls, 1);
+    assert.strictEqual(context.healthCheckBatchTotal, 1);
+    assert.strictEqual(context.healthCheckBatchDone, 1);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.deepStrictEqual(speedTestCalls.map((payload) => payload.targetApi).sort(), ['chat_completions']);
+    assert.strictEqual(callsByTarget.chat_completions.apiKey, 'sk-chat');
+    assert.strictEqual(context.claudeSpeedResults.ollama, undefined);
     assert.strictEqual(context.healthCheckResult.ok, false);
+    assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
+        chat: { ok: false, error: 'timeout' }
+    });
+    assert.deepStrictEqual(context.healthCheckResult.issues, [{
+        code: 'remote-speedtest-timeout',
+        message: '提供商 chat 远程测速超时',
+        suggestion: '检查网络或 base_url 是否可达'
+    }]);
+    assert.deepStrictEqual(context.shownMessages, []);
 });
 
-test('runHealthCheck preserves backend remote health result while appending speed test summaries', async () => {
+test('runHealthCheck checks only the current Codex route and ignores unselected provider probe failures', async () => {
+    const apiCalls = [];
+    let configResolve;
+    let providersResolve;
+    const configPromise = new Promise((resolve) => { configResolve = resolve; });
+    const providersPromise = new Promise((resolve) => { providersResolve = resolve; });
     const methods = createCodexConfigMethods({
-        api: async () => ({
-            ok: true,
-            issues: [],
-            remote: {
-                type: 'remote-health-check',
-                provider: 'alpha',
-                endpoint: 'https://example.com/v1',
-                statusCode: 200,
-                ok: true,
-                message: 'ok'
-            }
-        }),
+        api: async (action, payload) => {
+            apiCalls.push({ action, payload });
+            if (action === 'config-health-check') return configPromise;
+            if (action === 'providers-health') return providersPromise;
+            throw new Error(`unexpected action: ${action}`);
+        },
         getProviderConfigModeMeta() {
             return null;
         }
@@ -294,33 +345,423 @@ test('runHealthCheck preserves backend remote health result while appending spee
         ...createI18nMethods(),
         ...methods,
         lang: 'zh',
-        providersList: ['alpha', 'beta'],
+        providersList: [{ name: 'local' }, { name: 'bad' }, { name: 'system', nonDeletable: true }],
+        currentProvider: 'local',
         speedResults: {},
         speedLoading: {},
         healthCheckLoading: false,
         healthCheckResult: null,
+        healthCheckFailedProviderSelections: {},
+        showHealthCheckModal: false,
+        healthCheckBatchTotal: 99,
+        healthCheckBatchDone: 99,
+        healthCheckBatchFailed: 99,
         configMode: 'codex',
         shownMessages: [],
         showMessage(message, type) {
             this.shownMessages.push({ message, type });
         },
-        async runSpeedTest(name) {
-            return { ok: true, durationMs: name === 'alpha' ? 10 : 20, status: 200 };
+        shouldShowProviderDelete(provider) {
+            return !(provider && provider.nonDeletable);
+        },
+        isToolConfigWriteAllowed() {
+            return true;
+        },
+        async runSpeedTest() {
+            throw new Error('Codex settings health check must not run provider-card speed tests');
         },
         buildSpeedTestIssue() {
-            return null;
+            throw new Error('speed test issues should not be built');
+        },
+        runProvidersHealthCheck() {
+            throw new Error('runProvidersHealthCheck UI helper should not be used here');
         }
     };
 
-    await methods.runHealthCheck.call(context);
+    const runPromise = methods.runHealthCheck.call(context);
+    await Promise.resolve();
+    assert.deepStrictEqual(apiCalls, [
+        { action: 'config-health-check', payload: { remote: true } },
+        { action: 'providers-health', payload: { remote: false } }
+    ]);
+
+    providersResolve({
+        ok: false,
+        currentProvider: 'local',
+        summary: { total: 3, green: 1, yellow: 1, red: 1 },
+        providers: [
+            { provider: 'local', status: 'green', issues: [], remote: { ok: true, statusCode: 200, message: 'ok' } },
+            { provider: 'bad', status: 'red', issues: [{ code: 'remote-model-probe-http-error', message: 'bad HTTP 502' }], remote: { ok: false, statusCode: 502, message: 'bad' } },
+            { provider: 'system', status: 'yellow', issues: [{ code: 'api-key-missing', message: 'system key missing' }], remote: null }
+        ]
+    });
+    configResolve({
+        ok: false,
+        issues: [{ code: 'remote-model-probe-http-error', message: 'local HTTP 502' }],
+        summary: { currentProvider: 'local', currentModel: 'e2e-model' },
+        remote: { type: 'remote-health-check', provider: 'local', ok: false, statusCode: 502, message: 'local HTTP 502' }
+    });
+    await runPromise;
 
     assert.strictEqual(context.healthCheckLoading, false);
+    assert.strictEqual(context.showHealthCheckModal, true);
+    assert.deepStrictEqual(context.providersHealthResult.providers.map((provider) => provider.provider), ['local', 'bad', 'system']);
+    assert.strictEqual(context.healthCheckBatchTotal, 1);
+    assert.strictEqual(context.healthCheckBatchDone, 1);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.strictEqual(context.healthCheckResult.ok, false);
     assert.strictEqual(context.healthCheckResult.remote.type, 'remote-health-check');
-    assert.strictEqual(context.healthCheckResult.remote.statusCode, 200);
-    assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
-        alpha: { ok: true, durationMs: 10, status: 200 },
-        beta: { ok: true, durationMs: 20, status: 200 }
+    assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), [undefined]);
+    assert.deepStrictEqual(context.getHealthCheckFailedProviderItems().map((item) => ({
+        name: item.name,
+        status: item.status,
+        deletable: item.deletable,
+        detail: item.detail
+    })), [
+        { name: 'local', status: 'red', deletable: true, detail: '502 · local HTTP 502' }
+    ]);
+    assert.deepStrictEqual(context.getSelectableHealthCheckFailedProviderItems().map((item) => item.name), ['local']);
+    assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), false);
+    context.setAllHealthCheckFailedProviderSelections(true);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:local': true });
+    assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), true);
+    assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), true);
+    context.setAllHealthCheckFailedProviderSelections(false);
+    assert.deepStrictEqual(
+        context.getSelectableHealthCheckFailedProviderItems().filter((item) => item.selected).map((item) => item.name),
+        []
+    );
+    assert.strictEqual(context.hasHealthCheckFailedProviderSelection(), false);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '检查失败', type: 'error' }]);
+});
+
+test('deleteSelectedHealthCheckFailedProviders deletes only selected deletable failed providers', async () => {
+    const deleted = [];
+    const methods = createCodexConfigMethods({
+        api: async (action, payload) => {
+            if (action === 'delete-provider') {
+                deleted.push(payload.name);
+                return { success: true };
+            }
+            return { ok: true, issues: [], summary: {}, remote: null };
+        },
+        getProviderConfigModeMeta() {
+            return null;
+        }
     });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        configMode: 'codex',
+        providersList: [{ name: 'bad' }, { name: 'system', nonDeletable: true }, { name: 'ok' }],
+        healthCheckFailedProviderSelections: {},
+        healthCheckFailedProviderDeleting: false,
+        showHealthCheckModal: true,
+        healthCheckBatchTotal: 3,
+        healthCheckBatchDone: 3,
+        healthCheckBatchFailed: 2,
+        healthCheckResult: {
+            ok: false,
+            issues: [
+                { provider: 'bad', message: 'bad HTTP 502' },
+                { provider: 'system', message: 'system key missing' }
+            ],
+            remote: {
+                type: 'providers-health',
+                currentProvider: 'ok',
+                summary: { total: 3, green: 1, yellow: 1, red: 1 },
+                providers: [
+                    { provider: 'ok', status: 'green', issues: [] },
+                    { provider: 'bad', status: 'red', issues: [{ message: 'bad HTTP 502' }] },
+                    { provider: 'system', status: 'yellow', issues: [{ message: 'system key missing' }] }
+                ]
+            }
+        },
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        shouldShowProviderDelete(provider) {
+            return !(provider && provider.nonDeletable);
+        },
+        isToolConfigWriteAllowed() {
+            return true;
+        }
+    };
+
+    context.setAllHealthCheckFailedProviderSelections(true);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'codex:bad': true });
+    assert.strictEqual(context.areAllHealthCheckFailedProvidersSelected(), true);
+
+    await methods.deleteSelectedHealthCheckFailedProviders.call(context);
+
+    assert.deepStrictEqual(deleted, ['bad']);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
+    assert.deepStrictEqual(context.healthCheckResult.remote.providers.map((provider) => provider.provider), ['ok', 'system']);
+    assert.deepStrictEqual(context.healthCheckResult.issues.map((issue) => issue.provider), ['system']);
+    assert.strictEqual(context.healthCheckBatchTotal, 2);
+    assert.strictEqual(context.healthCheckBatchFailed, 1);
+    assert.strictEqual(context.showHealthCheckModal, false);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 1 个失败提供商', type: 'success' }]);
+});
+
+test('deleteSelectedHealthCheckFailedProviders bulk-deletes Claude configs and provider-cache refs without per-item confirmation', async () => {
+    const cacheDeletes = [];
+    const methods = createCodexConfigMethods({
+        api: async (action, payload) => {
+            if (action === 'delete-provider-cache-record') {
+                cacheDeletes.push(payload);
+                return { success: true, removed: true };
+            }
+            throw new Error(`Unexpected backend action for Claude bulk cleanup: ${action}`);
+        },
+        getProviderConfigModeMeta() {
+            return null;
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        configMode: 'claude',
+        claudeConfigs: {
+            bad: { name: 'bad', providerCacheRef: 'bad', source: 'provider-cache' },
+            worse: { name: 'worse', providerCacheRef: 'worse-cache', source: 'provider-cache' },
+            ok: { name: 'ok', providerCacheRef: 'ok-cache', source: 'provider-cache' }
+        },
+        currentClaudeConfig: 'bad',
+        healthCheckFailedProviderSelections: {},
+        healthCheckFailedProviderDeleting: false,
+        showHealthCheckModal: true,
+        healthCheckBatchTotal: 3,
+        healthCheckBatchDone: 3,
+        healthCheckBatchFailed: 2,
+        healthCheckResult: {
+            ok: false,
+            issues: [
+                { provider: 'bad', message: 'bad failed' },
+                { providerName: 'worse', message: 'worse failed' }
+            ],
+            remote: {
+                type: 'speed-test',
+                speedTests: {
+                    bad: { ok: false, error: 'bad failed' },
+                    worse: { ok: false, error: 'worse failed' },
+                    ok: { ok: true, durationMs: 12, status: 200 }
+                }
+            }
+        },
+        saved: 0,
+        refreshed: 0,
+        remembered: [],
+        applied: [],
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        isToolConfigWriteAllowed() {
+            return true;
+        },
+        saveClaudeConfigs() {
+            this.saved += 1;
+        },
+        refreshClaudeModelContext() {
+            this.refreshed += 1;
+        },
+        rememberDeletedClaudeSettingsImport(config) {
+            this.remembered.push(config && config.providerCacheRef);
+        },
+        async applyCurrentClaudeConfigSilently() {
+            this.applied.push(this.currentClaudeConfig);
+            return true;
+        },
+        async requestConfirmDialog() {
+            throw new Error('bulk failed-provider cleanup must not request per-item confirmation');
+        },
+        async deleteClaudeConfig() {
+            throw new Error('bulk failed-provider cleanup must not call deleteClaudeConfig');
+        }
+    };
+
+    context.setAllHealthCheckFailedProviderSelections(true);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, { 'claude:bad': true, 'claude:worse': true });
+
+    await methods.deleteSelectedHealthCheckFailedProviders.call(context);
+
+    assert.deepStrictEqual(cacheDeletes, [
+        { name: 'bad', group: 'claude' },
+        { name: 'worse-cache', group: 'claude' }
+    ]);
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
+    assert.strictEqual(context.currentClaudeConfig, 'ok');
+    assert.strictEqual(context.saved, 1);
+    assert.strictEqual(context.refreshed, 0);
+    assert.deepStrictEqual(context.remembered, ['bad', 'worse-cache']);
+    assert.deepStrictEqual(context.applied, ['ok']);
+    assert.deepStrictEqual(context.healthCheckFailedProviderSelections, {});
+    assert.deepStrictEqual(context.healthCheckResult.issues, []);
+    assert.deepStrictEqual(context.healthCheckResult.remote.speedTests, {
+        ok: { ok: true, durationMs: 12, status: 200 }
+    });
+    assert.strictEqual(context.healthCheckResult.ok, true);
+    assert.strictEqual(context.healthCheckBatchTotal, 1);
+    assert.strictEqual(context.healthCheckBatchDone, 1);
+    assert.strictEqual(context.healthCheckBatchFailed, 0);
+    assert.strictEqual(context.showHealthCheckModal, false);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '已删除 2 个失败提供商', type: 'success' }]);
+});
+
+test('deleteClaudeConfig prunes provider-cache source before local removal', async () => {
+    const cacheDeletes = [];
+    const methods = createClaudeConfigMethods({
+        api: async (action, payload) => {
+            if (action === 'delete-provider-cache-record') {
+                cacheDeletes.push(payload);
+                return { success: true, removed: true };
+            }
+            return { success: true };
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        claudeConfigs: {
+            bad: { name: 'bad', providerCacheRef: 'bad-cache', source: 'provider-cache' },
+            ok: { name: 'ok' }
+        },
+        currentClaudeConfig: 'bad',
+        saved: 0,
+        refreshed: 0,
+        remembered: [],
+        applied: [],
+        synced: 0,
+        shownMessages: [],
+        async requestConfirmDialog() {
+            return true;
+        },
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        saveClaudeConfigs() {
+            this.saved += 1;
+        },
+        refreshClaudeModelContext() {
+            this.refreshed += 1;
+        },
+        rememberDeletedClaudeSettingsImport(config) {
+            this.remembered.push(config && config.providerCacheRef);
+        },
+        async applyCurrentClaudeConfigSilently() {
+            this.applied.push(this.currentClaudeConfig);
+            return true;
+        },
+        syncClaudeBridgeProviders() {
+            this.synced += 1;
+        }
+    };
+
+    await methods.deleteClaudeConfig.call(context, 'bad');
+
+    assert.deepStrictEqual(cacheDeletes, [{ name: 'bad-cache', group: 'claude' }]);
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['ok']);
+    assert.strictEqual(context.currentClaudeConfig, 'ok');
+    assert.strictEqual(context.saved, 1);
+    assert.strictEqual(context.refreshed, 0);
+    assert.deepStrictEqual(context.remembered, ['bad-cache']);
+    assert.deepStrictEqual(context.applied, ['ok']);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '操作成功', type: 'success' }]);
+});
+
+test('deleteClaudeConfig reports provider-cache delete transport failures without local removal', async () => {
+    const methods = createClaudeConfigMethods({
+        api: async (action) => {
+            if (action === 'delete-provider-cache-record') {
+                throw new Error('network down');
+            }
+            return { success: true };
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        claudeConfigs: {
+            bad: { name: 'bad', providerCacheRef: 'bad-cache', source: 'provider-cache' },
+            ok: { name: 'ok' }
+        },
+        currentClaudeConfig: 'bad',
+        saved: 0,
+        refreshed: 0,
+        shownMessages: [],
+        async requestConfirmDialog() {
+            return true;
+        },
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        saveClaudeConfigs() {
+            this.saved += 1;
+        },
+        refreshClaudeModelContext() {
+            this.refreshed += 1;
+        }
+    };
+
+    await methods.deleteClaudeConfig.call(context, 'bad');
+
+    assert.deepStrictEqual(Object.keys(context.claudeConfigs), ['bad', 'ok']);
+    assert.strictEqual(context.currentClaudeConfig, 'bad');
+    assert.strictEqual(context.saved, 0);
+    assert.strictEqual(context.refreshed, 0);
+    assert.deepStrictEqual(context.shownMessages, [{ message: 'network down', type: 'error' }]);
+});
+
+test('deleteSelectedHealthCheckFailedProviders requires an explicit selected provider', async () => {
+    const methods = createCodexConfigMethods({
+        api: async () => ({ ok: true, issues: [], summary: {}, remote: null }),
+        getProviderConfigModeMeta() {
+            return null;
+        }
+    });
+    const context = {
+        ...createI18nMethods(),
+        ...methods,
+        lang: 'zh',
+        configMode: 'codex',
+        providersList: [{ name: 'bad' }],
+        healthCheckFailedProviderSelections: {},
+        showHealthCheckModal: true,
+        healthCheckResult: {
+            ok: false,
+            issues: [{ provider: 'bad', message: 'bad HTTP 502' }],
+            remote: {
+                type: 'providers-health',
+                providers: [
+                    { provider: 'bad', status: 'red', issues: [{ message: 'bad HTTP 502' }] }
+                ]
+            }
+        },
+        shownMessages: [],
+        showMessage(message, type) {
+            this.shownMessages.push({ message, type });
+        },
+        shouldShowProviderDelete() {
+            return true;
+        },
+        isToolConfigWriteAllowed() {
+            return true;
+        },
+        async deleteProvider() {
+            throw new Error('delete should require explicit selection');
+        }
+    };
+
+    await methods.deleteSelectedHealthCheckFailedProviders.call(context);
+
+    assert.strictEqual(context.showHealthCheckModal, true);
+    assert.deepStrictEqual(context.shownMessages, [{ message: '请先选择至少一个失败提供商', type: 'info' }]);
 });
 
 test('applyCodexConfigDirect keeps the successful apply result when only the refresh fails', async () => {

@@ -70,20 +70,6 @@ const {
     executeWorkflowDefinition
 } = require('./lib/workflow-engine');
 const {
-    truncateText: truncateTaskText,
-    buildTaskPlan,
-    validateTaskPlan,
-    executeTaskPlan
-} = require('./lib/task-orchestrator');
-const {
-    readAutomationConfig,
-    matchAutomationRule,
-    buildAutomationEventKey,
-    isCronMatch,
-    dispatchAutomationNotifiers,
-    formatTaskRunNotificationPayload
-} = require('./lib/automation');
-const {
     ALLOWED_EVENTS: WEBHOOK_ALLOWED_EVENTS,
     defaultConfigPath: defaultWebhookConfigPath,
     loadWebhookConfig,
@@ -119,6 +105,12 @@ const {
 const {
     createAgentsFileController
 } = require('./cli/agents-files');
+const {
+    createSystemPromptFileController
+} = require('./cli/system-prompt-files');
+const {
+    createPromptHistoryController
+} = require('./cli/prompt-history');
 const {
     createArchiveHelperController
 } = require('./cli/archive-helpers');
@@ -186,6 +178,9 @@ const CONFIG_DIR = path.join(os.homedir(), '.codex');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.toml');
 const AUTH_FILE = path.join(CONFIG_DIR, 'auth.json');
 const OPENCODE_CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode');
+const KILOCODE_CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'kilo');
+const KILOCODE_GLOBAL_JSONC_CONFIG_FILE = path.join(KILOCODE_CONFIG_DIR, 'kilo.jsonc');
+const KILOCODE_GLOBAL_JSON_CONFIG_FILE = path.join(KILOCODE_CONFIG_DIR, 'kilo.json');
 const OPENCODE_CONFIG_ENV_FILE = process.env.OPENCODE_CONFIG ? path.resolve(process.env.OPENCODE_CONFIG) : '';
 const OPENCODE_GLOBAL_JSONC_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'opencode.jsonc');
 const OPENCODE_GLOBAL_JSON_CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'opencode.json');
@@ -231,6 +226,15 @@ const PROVIDER_CACHE_FILE_GROUPS = Object.freeze({
         'opencode-provider-current-models.json'
     ]
 });
+const PROVIDER_CACHE_PROVIDER_FILES = Object.freeze([
+    'codex-providers.json',
+    'claude-providers.json',
+    'opencode-providers.json'
+]);
+const PROVIDER_CACHE_CURRENT_MODEL_FILES = Object.freeze([
+    'codex-provider-current-models.json',
+    'opencode-provider-current-models.json'
+]);
 const PROVIDER_CACHE_MAX_FILE_BYTES = 256 * 1024;
 const CODEXMATE_PREFERENCES_FILE = path.join(CODEXMATE_DIR, 'preferences.json');
 const CODEXMATE_OPENCODE_DIR = path.join(CODEXMATE_DIR, 'opencode');
@@ -241,15 +245,13 @@ const CODEXMATE_DERIVED_CODEX_DIR = path.join(CODEXMATE_DERIVED_SESSIONS_DIR, 'c
 const CODEXMATE_DERIVED_CLAUDE_DIR = path.join(CODEXMATE_DERIVED_SESSIONS_DIR, 'claude');
 const GEMINI_DIR = path.join(os.homedir(), '.gemini');
 const GEMINI_TMP_DIR = path.join(GEMINI_DIR, 'tmp');
+const PI_DIR = path.join(os.homedir(), '.pi');
+const PI_SESSIONS_DIR = path.join(PI_DIR, 'agent', 'sessions');
 const RECENT_CONFIGS_FILE = path.join(CONFIG_DIR, 'recent-configs.json');
 const WORKFLOW_DEFINITIONS_FILE = path.join(CONFIG_DIR, 'codexmate-workflows.json');
 const WORKFLOW_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-workflow-runs.jsonl');
-const TASK_QUEUE_FILE = path.join(CONFIG_DIR, 'codexmate-task-queue.json');
-const TASK_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-task-runs.jsonl');
-const TASK_RUN_DETAILS_DIR = path.join(CONFIG_DIR, 'codexmate-task-runs');
-const TASK_QUEUE_WORKER_FILE = path.join(CONFIG_DIR, 'codexmate-task-queue-worker.json');
-const TASK_ARTIFACTS_DIR = path.join(CONFIG_DIR, 'codexmate-task-artifacts');
-const AUTOMATION_CONFIG_FILE = path.join(CONFIG_DIR, 'codexmate-automation.json');
+const TASK_OPENAI_CHAT_TIMEOUT_MS = 180000;
+const TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 const DEFAULT_CLAUDE_MODEL = 'glm-4.7';
 const DEFAULT_MODEL_CONTEXT_WINDOW = 190000;
 const DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT = 185000;
@@ -284,6 +286,7 @@ const FAST_SESSION_DETAIL_PREVIEW_FILE_BYTES = 256 * 1024;
 const FAST_SESSION_DETAIL_PREVIEW_CHUNK_BYTES = 64 * 1024;
 const FAST_SESSION_DETAIL_PREVIEW_MAX_BYTES = 1024 * 1024;
 const AGENTS_FILE_NAME = 'AGENTS.md';
+const PI_AGENT_DIR = path.join(os.homedir(), '.pi', 'agent');
 const MODELS_CACHE_TTL_MS = 60 * 1000;
 const MODELS_NEGATIVE_CACHE_TTL_MS = 5 * 1000;
 const MODELS_CACHE_MAX_ENTRIES = 50;
@@ -343,6 +346,12 @@ const CLI_INSTALL_TARGETS = Object.freeze([
         name: 'Codex CLI',
         packageName: '@openai/codex',
         bins: ['codex']
+    },
+    {
+        id: 'kilocode',
+        name: 'KiloCode CLI',
+        packageName: '@kilocode/cli',
+        bins: ['kilo', 'kilocode']
     }
 ]);
 
@@ -742,7 +751,8 @@ let g_sessionFileLookupCache = {
     codex: new Map(),
     claude: new Map(),
     gemini: new Map(),
-    codebuddy: new Map()
+    codebuddy: new Map(),
+    pi: new Map()
 };
 let g_exactMessageCountCache = new Map();
 let g_modelsCache = new Map();
@@ -881,8 +891,8 @@ function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode']);
-const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false });
+const TOOL_CONFIG_PERMISSION_TARGETS = new Set(['codex', 'claude', 'opencode', 'kilocode', 'openclaw', 'pi']);
+const TOOL_CONFIG_PERMISSION_DEFAULTS = Object.freeze({ codex: false, claude: false, opencode: false, kilocode: false, openclaw: false, pi: false });
 let toolConfigWriteGuardDepth = 0;
 
 function enterToolConfigWriteGuard() {
@@ -909,7 +919,10 @@ function normalizeToolConfigPermissions(value) {
     return {
         codex: source.codex === true,
         claude: source.claude === true,
-        opencode: source.opencode === true
+        opencode: source.opencode === true,
+        kilocode: source.kilocode === true,
+        openclaw: source.openclaw === true,
+        pi: source.pi === true
     };
 }
 
@@ -961,13 +974,13 @@ function normalizeSettingsTabPreference(value) {
 
 function normalizeMainTabPreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    const allowed = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
+    const allowed = new Set(['dashboard', 'config', 'sessions', 'usage', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
     return allowed.has(normalized) ? normalized : 'dashboard';
 }
 
 function normalizeConfigModePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return ['codex', 'claude', 'openclaw', 'opencode'].includes(normalized) ? normalized : 'codex';
+    return ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi'].includes(normalized) ? normalized : 'codex';
 }
 
 function normalizeUsageTimeRangePreference(value) {
@@ -978,7 +991,78 @@ function normalizeUsageTimeRangePreference(value) {
 
 function normalizePromptsSubTabPreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'claude-project' ? 'claude-project' : 'codex';
+    if (normalized === 'claude-project') return normalized;
+    if (normalized === 'system') return normalized;
+    return 'codex';
+}
+
+function normalizeSysPromptScopePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'project' ? 'project' : 'global';
+}
+
+function normalizeSysPromptModePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'append' ? 'append' : 'system';
+}
+
+function normalizeSidebarCollapsedPreference(value) {
+    return normalizeBooleanPreference(value, false);
+}
+
+function normalizeSessionFilterSourcePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === 'all' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi') return normalized;
+    return 'codex';
+}
+
+function normalizeSessionRoleFilterPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === 'user' || normalized === 'assistant' || normalized === 'system' || normalized === 'tool') return normalized;
+    return 'all';
+}
+
+function normalizeSessionTimePresetPreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === '24h' || normalized === '7d' || normalized === '30d') return normalized;
+    return 'all';
+}
+
+function normalizeSessionSortModePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'hot' ? 'hot' : 'time';
+}
+
+function normalizeSessionFiltersPreference(value = {}) {
+    const source = isPlainObject(value) ? value : {};
+    return {
+        source: normalizeSessionFilterSourcePreference(source.source),
+        pathFilter: typeof source.pathFilter === 'string' ? source.pathFilter : '',
+        query: typeof source.query === 'string' ? source.query : '',
+        roleFilter: normalizeSessionRoleFilterPreference(source.roleFilter),
+        timePreset: normalizeSessionTimePresetPreference(source.timePreset),
+        sortMode: normalizeSessionSortModePreference(source.sortMode)
+    };
+}
+
+function normalizeSessionPinnedMapPreference(value = {}) {
+    const source = isPlainObject(value) ? value : {};
+    const next = {};
+    for (const [key, item] of Object.entries(source)) {
+        if (!key) continue;
+        const numeric = Number(item);
+        if (!Number.isFinite(numeric) || numeric <= 0) continue;
+        next[key] = Math.floor(numeric);
+    }
+    return next;
+}
+
+function normalizePlainObjectPreference(value = {}) {
+    return isPlainObject(value) ? value : {};
+}
+
+function normalizeArrayPreference(value = []) {
+    return Array.isArray(value) ? value : [];
 }
 
 function normalizeWebUiPreferences(value = {}) {
@@ -992,12 +1076,27 @@ function normalizeWebUiPreferences(value = {}) {
         configTemplateDiffConfirmEnabled: normalizeBooleanPreference(source.configTemplateDiffConfirmEnabled, true),
         sessionsUsageTimeRange: normalizeUsageTimeRangePreference(source.sessionsUsageTimeRange),
         promptsSubTab: normalizePromptsSubTabPreference(source.promptsSubTab),
+        sysPromptScope: normalizeSysPromptScopePreference(source.sysPromptScope),
+        sysPromptMode: normalizeSysPromptModePreference(source.sysPromptMode),
         projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',
+        sidebarCollapsed: normalizeSidebarCollapsedPreference(source.sidebarCollapsed),
+        starPrompted: normalizeBooleanPreference(source.starPrompted, false),
+        sessionLoadNativeDialog: normalizeBooleanPreference(source.sessionLoadNativeDialog, false),
+        language: typeof source.language === 'string' ? source.language : '',
+        sessionFilters: normalizeSessionFiltersPreference(source.sessionFilters),
+        sessionPinnedMap: normalizeSessionPinnedMapPreference(source.sessionPinnedMap),
+        claudeConfigs: normalizePlainObjectPreference(source.claudeConfigs),
+        currentClaudeConfig: typeof source.currentClaudeConfig === 'string' ? source.currentClaudeConfig : '',
+        openclawConfigs: normalizePlainObjectPreference(source.openclawConfigs),
+        toolConfigPermissions: normalizeToolConfigPermissions(source.toolConfigPermissions || TOOL_CONFIG_PERMISSION_DEFAULTS),
+        deletedClaudeSettingsImports: normalizeArrayPreference(source.deletedClaudeSettingsImports),
         navigation: {
             mainTab: normalizeMainTabPreference(navigation.mainTab),
             configMode: normalizeConfigModePreference(navigation.configMode),
             settingsTab: normalizeSettingsTabPreference(navigation.settingsTab),
-            skillsTargetApp: navigation.skillsTargetApp === 'claude' ? 'claude' : 'codex',
+            skillsTargetApp: navigation.skillsTargetApp === 'claude' || navigation.skillsTargetApp === 'pi'
+                ? navigation.skillsTargetApp
+                : 'codex',
             promptTemplatesMode: navigation.promptTemplatesMode === 'manage' ? 'manage' : 'compose'
         }
     };
@@ -1021,6 +1120,9 @@ function setWebUiPreferences(params = {}) {
         }
     });
     preferences.webUi = next;
+    if (isPlainObject(incoming.toolConfigPermissions)) {
+        preferences.toolConfigPermissions = normalizeToolConfigPermissions(incoming.toolConfigPermissions);
+    }
     writeCodexmatePreferences(preferences);
     return { success: true, preferences: next };
 }
@@ -1083,16 +1185,316 @@ function getApiToolConfigWriteTarget(action) {
         'restore-claude-dir',
         'claude-local-bridge-toggle',
         'claude-local-bridge-set-excluded',
-        'claude-local-bridge-sync-providers'
+        'claude-local-bridge-sync-providers',
+        'delete-provider-cache-record'
     ]);
     const opencodeWriteActions = new Set([
         'apply-opencode-config',
         'update-opencode-selection'
     ]);
+    const kilocodeWriteActions = new Set([
+        'apply-kilocode-config',
+        'start-kilocode'
+    ]);
+    const openclawWriteActions = new Set([
+        'apply-openclaw-config',
+        'apply-openclaw-agents-file',
+        'apply-openclaw-workspace-file'
+    ]);
     if (codexWriteActions.has(name)) return 'codex';
     if (claudeWriteActions.has(name)) return 'claude';
     if (opencodeWriteActions.has(name)) return 'opencode';
+    if (kilocodeWriteActions.has(name)) return 'kilocode';
+    if (openclawWriteActions.has(name)) return 'openclaw';
+    const piWriteActions = new Set([
+        'write-pi-models',
+        'write-pi-settings'
+    ]);
+    if (piWriteActions.has(name)) return 'pi';
     return '';
+}
+
+function getPiAgentDir() {
+    const homeDir = (typeof os.homedir === 'function' ? os.homedir() : null) || process.env.HOME || process.env.USERPROFILE || '';
+    return path.join(homeDir, '.pi', 'agent');
+}
+
+function readPiModels(params = {}) {
+    try {
+        const dir = getPiAgentDir();
+        const filePath = path.join(dir, 'models.json');
+        if (!fs.existsSync(filePath)) {
+            return { providers: {}, file: {} };
+        }
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(raw);
+        const providers = (data && typeof data === 'object' && data.providers && typeof data.providers === 'object')
+            ? data.providers
+            : {};
+        const file = data && typeof data === 'object' && !Array.isArray(data) ? data : { providers };
+        return { providers, file };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '读取 Pi models.json 失败' };
+    }
+}
+
+function writePiModels(params = {}) {
+    const file = params && typeof params.file === 'object' && params.file !== null && !Array.isArray(params.file) ? params.file : null;
+    const providers = params && typeof params.providers === 'object' ? params.providers : null;
+    if (!file && providers === null) {
+        return { error: '缺少可写入的内容' };
+    }
+    try {
+        const dir = getPiAgentDir();
+        fs.mkdirSync(dir, { recursive: true });
+        const filePath = path.join(dir, 'models.json');
+        if (file) {
+            historyBackup('pi-models', filePath);
+            fs.writeFileSync(filePath, JSON.stringify(file, null, 2), 'utf-8');
+            return { success: true };
+        }
+        let existing = {};
+        if (fs.existsSync(filePath)) {
+            try {
+                existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+            } catch (_) {
+                existing = {};
+            }
+        }
+        existing.providers = providers;
+        fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), 'utf-8');
+        return { success: true };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '写入 Pi models.json 失败' };
+    }
+}
+
+async function fetchPiRemoteModels(params = {}) {
+    const baseUrl = typeof params.baseUrl === 'string' ? params.baseUrl.trim() : '';
+    const apiKey = typeof params.apiKey === 'string' ? params.apiKey.trim() : '';
+    if (!baseUrl || !isValidHttpUrl(baseUrl)) {
+        return { error: 'baseUrl 无效', models: [] };
+    }
+    try {
+        const result = await fetchModelsFromBaseUrl(baseUrl, apiKey);
+        const models = result && Array.isArray(result.models)
+            ? [...new Set(result.models.filter((id) => typeof id === 'string' && id !== ''))].sort()
+            : [];
+        if (models.length > 0) return { models };
+        return { error: (result && result.error) || '未获取到可用模型', models: [] };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '请求失败', models: [] };
+    }
+}
+
+const PI_MODELS_DEV_API_URL = 'https://models.dev/api.json';
+const PI_MODELS_CATALOG_CACHE_TTL_MS = 60 * 60 * 1000;
+const PI_MODELS_DEV_TIMEOUT_MS = 15000;
+let g_piModelsDevCatalogCache = null;
+let g_piModelsDevCatalogCachedAt = 0;
+
+function fetchPiModelsDevCatalog() {
+    if (g_piModelsDevCatalogCache && Date.now() - g_piModelsDevCatalogCachedAt < PI_MODELS_CATALOG_CACHE_TTL_MS) {
+        return Promise.resolve(g_piModelsDevCatalogCache);
+    }
+    return new Promise((resolve) => {
+        const finish = (payload) => {
+            if (payload && !payload.error) {
+                g_piModelsDevCatalogCache = payload;
+                g_piModelsDevCatalogCachedAt = Date.now();
+            }
+            resolve(payload);
+        };
+        const req = https.get(PI_MODELS_DEV_API_URL, {
+            headers: {
+                'User-Agent': 'codexmate-models',
+                'Accept': 'application/json'
+            },
+            agent: HTTPS_KEEP_ALIVE_AGENT
+        }, (res) => {
+            const status = res.statusCode || 0;
+            if (status >= 400) {
+                res.resume();
+                return finish({ error: `HTTP ${status}` });
+            }
+            let body = '';
+            res.on('data', chunk => {
+                body += chunk;
+            });
+            res.on('end', () => {
+                try {
+                    const catalog = JSON.parse(body || '{}');
+                    if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) {
+                        return finish({ error: '响应内容不是有效的目录对象' });
+                    }
+                    finish(catalog);
+                } catch (e) {
+                    finish({ error: e && e.message ? e.message : '解析目录响应失败' });
+                }
+            });
+        });
+        req.setTimeout(PI_MODELS_DEV_TIMEOUT_MS, () => {
+            req.destroy(new Error('请求超时'));
+        });
+        req.on('error', (err) => {
+            finish({ error: err && err.message ? err.message : '请求失败' });
+        });
+    });
+}
+
+function normalizePiCatalogUrl(url) {
+    return typeof url === 'string' ? url.trim().replace(/\/+$/, '') : '';
+}
+
+function findPiCatalogModelInProvider(provider, modelId) {
+    const models = provider && typeof provider === 'object' ? provider.models : null;
+    if (!models || typeof models !== 'object') return null;
+    const hit = models[modelId];
+    return hit && typeof hit === 'object' ? hit : null;
+}
+
+function findPiCatalogModel(catalog, lookup) {
+    if (lookup.providerId && catalog[lookup.providerId]) {
+        return findPiCatalogModelInProvider(catalog[lookup.providerId], lookup.modelId);
+    }
+    const entries = Object.entries(catalog);
+    for (const [key, provider] of entries) {
+        const api = normalizePiCatalogUrl(provider && typeof provider === 'object' ? provider.api : '');
+        if ((lookup.baseUrl && api === lookup.baseUrl) || (lookup.providerId && key === lookup.providerId)) {
+            return findPiCatalogModelInProvider(provider, lookup.modelId);
+        }
+    }
+    for (const [, provider] of entries) {
+        const hit = findPiCatalogModelInProvider(provider, lookup.modelId);
+        if (hit) return hit;
+    }
+    return null;
+}
+
+function toPiCatalogModelInfo(raw) {
+    const numericOrNull = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+    const limit = raw && typeof raw.limit === 'object' && raw.limit !== null ? raw.limit : {};
+    const cost = raw && typeof raw.cost === 'object' && raw.cost !== null ? raw.cost : {};
+    return {
+        name: typeof raw.name === 'string' ? raw.name : '',
+        reasoning: !!raw.reasoning,
+        contextWindow: numericOrNull(limit.context),
+        maxTokens: numericOrNull(limit.output),
+        cost: {
+            input: numericOrNull(cost.input),
+            output: numericOrNull(cost.output),
+            cacheRead: numericOrNull(cost.cache_read),
+            cacheWrite: numericOrNull(cost.cache_write)
+        }
+    };
+}
+
+async function fetchPiModelsCatalog(params = {}) {
+    const modelId = typeof params.modelId === 'string' ? params.modelId.trim() : '';
+    if (!modelId) {
+        return { error: '模型 ID 不能为空' };
+    }
+    const lookup = {
+        modelId,
+        providerId: typeof params.providerId === 'string' ? params.providerId.trim() : '',
+        baseUrl: normalizePiCatalogUrl(params.baseUrl)
+    };
+    const catalog = await fetchPiModelsDevCatalog();
+    if (!catalog || typeof catalog !== 'object' || typeof catalog.error === 'string') {
+        const reason = catalog && catalog.error ? catalog.error : '响应结构无效';
+        return { error: `models.dev 目录请求失败：${reason}` };
+    }
+    const hit = findPiCatalogModel(catalog, lookup);
+    if (!hit) {
+        return { error: 'models.dev 目录中未找到该模型' };
+    }
+    return { ok: true, model: toPiCatalogModelInfo(hit) };
+}
+
+function readPiSettings(params = {}) {
+    try {
+        const dir = getPiAgentDir();
+        const filePath = path.join(dir, 'settings.json');
+        if (!fs.existsSync(filePath)) {
+            return { settings: {} };
+        }
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(raw);
+        return { settings: data || {} };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '读取 Pi settings.json 失败' };
+    }
+}
+
+function writePiSettings(params = {}) {
+    const fullSettings = params && typeof params.settings === 'object' && params.settings !== null && !Array.isArray(params.settings) ? params.settings : null;
+    const updates = {};
+    if (typeof (params && params.defaultProvider) === 'string') updates.defaultProvider = params.defaultProvider;
+    if (typeof (params && params.defaultModel) === 'string') updates.defaultModel = params.defaultModel;
+    if (!fullSettings && Object.keys(updates).length === 0) {
+        return { error: '缺少可写入的设置项' };
+    }
+    try {
+        const dir = getPiAgentDir();
+        fs.mkdirSync(dir, { recursive: true });
+        const filePath = path.join(dir, 'settings.json');
+        if (fullSettings) {
+            historyBackup('pi-settings', filePath);
+            fs.writeFileSync(filePath, JSON.stringify(fullSettings, null, 2), 'utf-8');
+            return { success: true, settings: fullSettings };
+        }
+        let existing = {};
+        if (fs.existsSync(filePath)) {
+            try {
+                existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+            } catch (_) {
+                existing = {};
+            }
+            if (!existing || typeof existing !== 'object' || Array.isArray(existing)) existing = {};
+        }
+        const updated = { ...existing, ...updates };
+        fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8');
+        return { success: true, settings: updated };
+    } catch (e) {
+        return { error: e && e.message ? e.message : '写入 Pi settings.json 失败' };
+    }
+}
+
+function applyPiConfigHistory(params = {}) {
+    const target = typeof params.target === 'string' ? params.target.trim() : '';
+    if (target !== 'settings' && target !== 'models') {
+        return { error: '无效的历史记录目标' };
+    }
+    const bucket = target === 'settings' ? 'pi-settings' : 'pi-models';
+    const fileName = target === 'settings' ? 'settings.json' : 'models.json';
+    let entry;
+    try {
+        entry = readPromptHistory(bucket, String(params.id || ''));
+    } catch (_) {
+        return { error: '历史记录不存在或读取失败' };
+    }
+    const content = entry && typeof entry.content === 'string' ? entry.content : '';
+    let parsed = null;
+    if (content) {
+        try {
+            parsed = JSON.parse(content);
+        } catch (_) {
+            parsed = null;
+        }
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return { error: '历史记录内容不是有效的 JSON 对象' };
+    }
+    try {
+        const filePath = path.join(getPiAgentDir(), fileName);
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        historyBackup(bucket, filePath);
+        fs.writeFileSync(filePath, JSON.stringify(parsed, null, 2), 'utf-8');
+    } catch (e) {
+        return { error: (e && e.message) || '应用历史记录失败' };
+    }
+    if (target === 'settings') return { success: true, settings: parsed };
+    return { success: true, file: parsed };
 }
 
 function setToolConfigPermission(params = {}) {
@@ -1707,6 +2109,20 @@ function getCodeBuddyProjectsDir() {
     return resolveExistingDir(candidates, CODEBUDDY_PROJECTS_DIR);
 }
 
+function getPiSessionsDir() {
+    const candidates = [];
+    const envPiHome = process.env.PI_HOME;
+    if (envPiHome) {
+        candidates.push(path.join(envPiHome, 'agent', 'sessions'));
+    }
+    const xdgConfig = process.env.XDG_CONFIG_HOME;
+    if (xdgConfig) {
+        candidates.push(path.join(xdgConfig, 'pi', 'agent', 'sessions'));
+    }
+    candidates.push(PI_SESSIONS_DIR);
+    return resolveExistingDir(candidates, PI_SESSIONS_DIR);
+}
+
 function getCodexmateDerivedSessionsRoot(target) {
     if (target === 'claude') {
         return CODEXMATE_DERIVED_CLAUDE_DIR;
@@ -1936,6 +2352,17 @@ async function fetchProviderModels(providerName, overrides = {}) {
 
 // buildAgentsDiff keeps the metaOnly optimization inside cli/agents-files.js.
 const {
+    backupPromptBeforeWrite: historyBackup,
+    listPromptHistory,
+    readPromptHistory,
+    clearPromptHistory
+} = createPromptHistoryController({
+    fs,
+    path,
+    CONFIG_DIR
+});
+
+const {
     resolveAgentsFilePath,
     validateAgentsBaseDir,
     detectProjectClaudeMdDir,
@@ -1961,12 +2388,28 @@ const {
     AGENTS_FILE_NAME,
     CLAUDE_DIR,
     CLAUDE_MD_FILE_NAME,
+    backupPromptBeforeWrite: historyBackup,
     readOpenclawAgentsFile() {
         return readOpenclawAgentsFile(...arguments);
     },
     readOpenclawWorkspaceFile() {
         return readOpenclawWorkspaceFile(...arguments);
     }
+});
+
+const {
+    readSystemPromptFile,
+    saveSystemPromptFile,
+    buildSystemPromptDiff
+} = createSystemPromptFileController({
+    fs,
+    path,
+    os,
+    crypto,
+    buildLineDiff,
+    CONFIG_DIR,
+    PI_AGENT_DIR,
+    backupPromptBeforeWrite: historyBackup
 });
 
 const {
@@ -2467,6 +2910,28 @@ function buildClaudeSettingsDiff(params = {}) {
     };
 }
 
+
+function normalizeOpenaiBridgeMaxRetries(value, fallback = 2) {
+    const raw = Number(value);
+    const fallbackRaw = Number(fallback);
+    const base = Number.isFinite(raw) ? raw : (Number.isFinite(fallbackRaw) ? fallbackRaw : 2);
+    return Math.min(10, Math.max(2, Math.floor(base)));
+}
+
+function resolveProviderOpenaiBridgeMaxRetries(provider) {
+    if (!provider || typeof provider !== 'object') return 2;
+    if (provider.codexmate_bridge_max_retries !== undefined) {
+        return normalizeOpenaiBridgeMaxRetries(provider.codexmate_bridge_max_retries);
+    }
+    if (provider.openai_bridge_max_retries !== undefined) {
+        return normalizeOpenaiBridgeMaxRetries(provider.openai_bridge_max_retries);
+    }
+    if (provider.max_retries !== undefined) {
+        return normalizeOpenaiBridgeMaxRetries(provider.max_retries);
+    }
+    return 2;
+}
+
 function addProviderToConfig(params = {}) {
     const name = typeof params.name === 'string' ? params.name.trim() : '';
     const url = typeof params.url === 'string' ? params.url.trim() : '';
@@ -2481,6 +2946,8 @@ function addProviderToConfig(params = {}) {
         ? params.model.trim()
         : fallbackModel;
     const useTransform = !!params.useTransform;
+    const hasOpenaiBridgeMaxRetries = params.openaiBridgeMaxRetries !== undefined || params.maxRetries !== undefined;
+    const openaiBridgeMaxRetries = normalizeOpenaiBridgeMaxRetries(params.openaiBridgeMaxRetries ?? params.maxRetries);
     const allowManaged = !!params.allowManaged;
     const normalizedUrl = normalizeBaseUrl(url);
 
@@ -2537,10 +3004,9 @@ function addProviderToConfig(params = {}) {
     let baseUrlForConfig = normalizedUrl;
     let authKeyForConfig = key;
     const extraLines = [];
-    const requiresOpenaiAuth = useTransform;
 
     if (useTransform) {
-        const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, normalizedUrl, key);
+        const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, normalizedUrl, key, undefined, { maxRetries: openaiBridgeMaxRetries });
         if (saveRes && saveRes.error) {
             return { error: String(saveRes.error) };
         }
@@ -2552,6 +3018,7 @@ function addProviderToConfig(params = {}) {
         ).toString().replace(/\/+$/g, '');
         authKeyForConfig = 'codexmate';
         extraLines.push(`codexmate_bridge = "openai"`);
+        extraLines.push(`codexmate_bridge_max_retries = ${openaiBridgeMaxRetries}`);
     }
 
     const safeUrl = escapeTomlBasicString(baseUrlForConfig);
@@ -2561,7 +3028,7 @@ function addProviderToConfig(params = {}) {
         `name = "${safeName}"`,
         `base_url = "${safeUrl}"`,
         `wire_api = "responses"`,
-        `requires_openai_auth = ${requiresOpenaiAuth ? 'true' : 'false'}`,
+        `requires_openai_auth = true`,
         `preferred_auth_method = "${safeKey}"`,
         `models = [{ id = "${escapeTomlBasicString(model)}", name = "${escapeTomlBasicString(model)}" }]`,
         ...extraLines,
@@ -2595,6 +3062,8 @@ function updateProviderInConfig(params = {}) {
         ? String(params.key).trim()
         : undefined;
     const useTransform = !!params.useTransform;
+    const hasOpenaiBridgeMaxRetries = params.openaiBridgeMaxRetries !== undefined || params.maxRetries !== undefined;
+    const openaiBridgeMaxRetries = normalizeOpenaiBridgeMaxRetries(params.openaiBridgeMaxRetries ?? params.maxRetries);
     const allowManaged = !!params.allowManaged;
 
     if (!name) return { error: '名称不能为空' };
@@ -2609,7 +3078,7 @@ function updateProviderInConfig(params = {}) {
     }
 
     try {
-        cmdUpdate(name, url || undefined, key, true, { allowManaged, useTransform });
+        cmdUpdate(name, url || undefined, key, true, { allowManaged, useTransform, ...(hasOpenaiBridgeMaxRetries ? { openaiBridgeMaxRetries } : {}) });
         return { success: true };
     } catch (e) {
         return { error: e.message || '更新失败' };
@@ -2877,6 +3346,99 @@ function normalizeProviderCacheProviderMap(rawProviders) {
     return providers;
 }
 
+function removeProviderFromProviderCacheContainer(rawProviders, providerName) {
+    const targetName = typeof providerName === 'string' ? providerName.trim() : '';
+    if (!targetName) return { value: rawProviders, changed: false };
+
+    const matchesProviderName = (name) => String(name || '').trim() === targetName;
+    if (Array.isArray(rawProviders)) {
+        const filtered = rawProviders.filter((item) => {
+            if (!isPlainObject(item)) return true;
+            const itemName = pickProviderCacheString(item, ['name', 'id', 'provider']);
+            return !matchesProviderName(itemName);
+        });
+        return { value: filtered, changed: filtered.length !== rawProviders.length };
+    }
+    if (!isPlainObject(rawProviders)) return { value: rawProviders, changed: false };
+
+    const next = { ...rawProviders };
+    let changed = false;
+    for (const [name, entry] of Object.entries(rawProviders)) {
+        const entryName = isPlainObject(entry)
+            ? pickProviderCacheString(entry, ['name', 'id', 'provider'])
+            : '';
+        if (matchesProviderName(name) || matchesProviderName(entryName)) {
+            delete next[name];
+            changed = true;
+        }
+    }
+    return { value: next, changed };
+}
+
+function resolveProviderCacheDeleteGroups(groups) {
+    const requested = Array.isArray(groups) ? groups : (groups ? [groups] : []);
+    const normalized = requested
+        .map((item) => String(item || '').trim().toLowerCase())
+        .filter((item) => Object.prototype.hasOwnProperty.call(PROVIDER_CACHE_FILE_GROUPS, item));
+    return normalized.length ? Array.from(new Set(normalized)) : Object.keys(PROVIDER_CACHE_FILE_GROUPS);
+}
+
+function removeProviderFromProviderCacheRecords(providerName, options = {}) {
+    const targetName = typeof providerName === 'string' ? providerName.trim() : '';
+    const summary = { removed: false, providerFiles: [], currentModelFiles: [] };
+    if (!targetName) return summary;
+
+    const groups = resolveProviderCacheDeleteGroups(options.groups || options.group);
+    const providerFiles = groups
+        .flatMap((group) => PROVIDER_CACHE_FILE_GROUPS[group] || [])
+        .filter((fileName) => PROVIDER_CACHE_PROVIDER_FILES.includes(fileName));
+    const currentModelFiles = groups
+        .flatMap((group) => PROVIDER_CACHE_FILE_GROUPS[group] || [])
+        .filter((fileName) => PROVIDER_CACHE_CURRENT_MODEL_FILES.includes(fileName));
+
+    for (const fileName of Array.from(new Set(providerFiles))) {
+        const existing = readProviderCacheJsonObject(fileName);
+        if (!isPlainObject(existing) || !Object.prototype.hasOwnProperty.call(existing, 'providers')) continue;
+        const removed = removeProviderFromProviderCacheContainer(existing.providers, targetName);
+        if (!removed.changed) continue;
+        writeProviderCacheJsonObject(fileName, {
+            ...existing,
+            generatedAt: new Date().toISOString(),
+            providers: removed.value
+        });
+        summary.removed = true;
+        summary.providerFiles.push(fileName);
+    }
+
+    for (const fileName of Array.from(new Set(currentModelFiles))) {
+        const existing = readProviderCacheJsonObject(fileName);
+        if (!isPlainObject(existing) || !Object.prototype.hasOwnProperty.call(existing, targetName)) continue;
+        const next = { ...existing };
+        delete next[targetName];
+        writeProviderCacheJsonObject(fileName, next);
+        summary.removed = true;
+        summary.currentModelFiles.push(fileName);
+    }
+    return summary;
+}
+
+function deleteProviderCacheRecord(params = {}) {
+    const name = typeof params.name === 'string' ? params.name.trim() : '';
+    if (!name) return { error: '名称不能为空' };
+    const group = typeof params.group === 'string' ? params.group.trim().toLowerCase() : '';
+    const groups = resolveProviderCacheDeleteGroups(group || params.groups);
+    const summary = removeProviderFromProviderCacheRecords(name, { groups });
+    return {
+        success: true,
+        name,
+        groups,
+        removed: summary.removed,
+        providerFiles: summary.providerFiles,
+        currentModelFiles: summary.currentModelFiles,
+        records: readProviderCacheRecords()
+    };
+}
+
 function readClaudeProviderCacheProvider(name) {
     const targetName = typeof name === 'string' ? name.trim() : '';
     if (!targetName) return null;
@@ -2953,10 +3515,11 @@ function buildProviderCacheSyncProviders() {
 function mergeProviderCacheFile(fileName, nextProviders, buildEntry) {
     const existing = readProviderCacheJsonObject(fileName);
     const existingProviders = normalizeProviderCacheProviderMap(existing.providers);
-    const providers = { ...existingProviders };
+    const providers = {};
     for (const provider of nextProviders) {
         const previous = isPlainObject(providers[provider.name]) ? providers[provider.name] : {};
-        providers[provider.name] = { ...previous, ...buildEntry(provider) };
+        const cachedPrevious = isPlainObject(existingProviders[provider.name]) ? existingProviders[provider.name] : previous;
+        providers[provider.name] = { ...cachedPrevious, ...buildEntry(provider) };
     }
     const next = {
         ...existing,
@@ -2970,9 +3533,13 @@ function mergeProviderCacheFile(fileName, nextProviders, buildEntry) {
 
 function mergeProviderCacheCurrentModelsFile(fileName, nextProviders) {
     const existing = readProviderCacheJsonObject(fileName);
-    const next = { ...existing };
+    const next = {};
     for (const provider of nextProviders) {
-        if (provider.model) next[provider.name] = provider.model;
+        if (provider.model) {
+            next[provider.name] = provider.model;
+        } else if (typeof existing[provider.name] === 'string' && existing[provider.name].trim()) {
+            next[provider.name] = existing[provider.name];
+        }
     }
     const displayPath = writeProviderCacheJsonObject(fileName, next);
     return { path: displayPath, modelCount: Object.keys(next).length };
@@ -3213,6 +3780,7 @@ function performProviderDeletion(name, options = {}) {
 
     writeCurrentModels(currentModels);
     writeConfig(updatedContent.trimEnd() + lineEnding);
+    removeProviderFromProviderCacheRecords(name);
 
     return result;
 }
@@ -3600,6 +4168,15 @@ async function countConversationMessagesInFile(filePath, source) {
                         role = '';
                     }
                 }
+            } else if (source === 'pi') {
+                if (record && record.type === 'message' && record.message && typeof record.message === 'object') {
+                    role = normalizeRole(record.message.role);
+                    if (role === 'assistant' || role === 'user' || role === 'system') {
+                        text = extractMessageText(record.message.content);
+                    } else {
+                        role = '';
+                    }
+                }
             } else {
                 role = normalizeRole(record.type);
                 if (role === 'assistant' || role === 'user' || role === 'system') {
@@ -3768,7 +4345,9 @@ async function hydrateSessionTrashEntries(entries, options = {}) {
             ? 'codex'
             : (options.source === 'gemini'
                 ? 'gemini'
-                : (options.source === 'codebuddy' ? 'codebuddy' : 'all')));
+                : (options.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (options.source === 'pi' ? 'pi' : 'all'))));
     const hydratedEntries = await mapWithConcurrency(Array.isArray(entries) ? entries : [], 8, async (entry) => {
         const normalizedEntry = normalizeSessionTrashEntry(entry);
         if (!normalizedEntry) {
@@ -3777,7 +4356,7 @@ async function hydrateSessionTrashEntries(entries, options = {}) {
         return await resolveSessionTrashEntryExactMessageCount(normalizedEntry);
     });
 
-    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy') {
+    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi') {
         return hydratedEntries.filter((entry) => entry.source === source);
     }
     return hydratedEntries;
@@ -3795,7 +4374,11 @@ async function hydrateSessionItemsExactMessageCount(items) {
             ? 'claude'
             : (item.source === 'codex'
                 ? 'codex'
-                : (item.source === 'gemini' ? 'gemini' : (item.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (item.source === 'gemini'
+                    ? 'gemini'
+                    : (item.source === 'codebuddy'
+                        ? 'codebuddy'
+                        : (item.source === 'pi' ? 'pi' : ''))));
         const filePath = typeof item.filePath === 'string' ? item.filePath : '';
         if (!source || !filePath || !fs.existsSync(filePath)) {
             return item;
@@ -3843,7 +4426,11 @@ async function readSessionMessageCounts(params = {}) {
             ? 'claude'
             : (item.source === 'codex'
                 ? 'codex'
-                : (item.source === 'gemini' ? 'gemini' : (item.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (item.source === 'gemini'
+                    ? 'gemini'
+                    : (item.source === 'codebuddy'
+                        ? 'codebuddy'
+                        : (item.source === 'pi' ? 'pi' : ''))));
         const filePath = typeof item.filePath === 'string' ? item.filePath : '';
         if (!source || !filePath || !fs.existsSync(filePath)) {
             return { key };
@@ -4357,7 +4944,13 @@ function setSessionListCache(cacheKey, value) {
 }
 
 function buildSessionInventoryCacheKey(source, limit, options = {}) {
-    const normalizedSource = source === 'claude' ? 'claude' : 'codex';
+    const normalizedSource = source === 'claude'
+        ? 'claude'
+        : (source === 'gemini'
+            ? 'gemini'
+            : (source === 'codebuddy'
+                ? 'codebuddy'
+                : (source === 'pi' ? 'pi' : 'codex')));
     const normalizedLimit = Number.isFinite(Number(limit))
         ? Math.max(1, Math.floor(Number(limit)))
         : 1;
@@ -4443,7 +5036,7 @@ function getSessionInventoryCache(cacheKey, forceRefresh = false) {
 }
 
 function registerSessionFileLookupEntries(source, sessions = []) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? source
         : 'codex';
     const store = g_sessionFileLookupCache[normalizedSource];
@@ -4484,7 +5077,7 @@ function setSessionInventoryCache(cacheKey, source, value) {
 }
 
 function listSessionInventoryBySource(source, limit, scanOptions = {}, options = {}) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? source
         : 'codex';
     const forceRefresh = !!options.forceRefresh;
@@ -4500,7 +5093,9 @@ function listSessionInventoryBySource(source, limit, scanOptions = {}, options =
             ? listGeminiSessions(limit, scanOptions)
             : (normalizedSource === 'codebuddy'
                 ? listCodeBuddySessions(limit, scanOptions)
-                : listCodexSessions(limit, scanOptions)));
+                : (normalizedSource === 'pi'
+                    ? listPiSessions(limit, scanOptions)
+                    : listCodexSessions(limit, scanOptions))));
     setSessionInventoryCache(cacheKey, normalizedSource, sessions);
     return sessions;
 }
@@ -4512,7 +5107,8 @@ function invalidateSessionListCache() {
         codex: new Map(),
         claude: new Map(),
         gemini: new Map(),
-        codebuddy: new Map()
+        codebuddy: new Map(),
+        pi: new Map()
     };
 }
 
@@ -4746,7 +5342,13 @@ function readSessionProviderFromRecord(record, source = '') {
     if (provider) {
         return provider;
     }
-    return source === 'claude' ? 'claude' : 'codex';
+    return source === 'claude'
+        ? 'claude'
+        : (source === 'gemini'
+            ? 'gemini'
+            : (source === 'codebuddy'
+                ? 'codebuddy'
+                : (source === 'pi' ? 'pi' : 'codex')));
 }
 
 function applySessionUsageSummaryFromRecord(state, record, source) {
@@ -5445,6 +6047,177 @@ function parseGeminiSessionSummary(filePath, options = {}) {
     };
 }
 
+function extractPiUsageFromMessage(message) {
+    if (!message || typeof message !== 'object' || Array.isArray(message)) {
+        return null;
+    }
+    const usage = message.usage;
+    if (!usage || typeof usage !== 'object' || Array.isArray(usage)) {
+        return null;
+    }
+    const inputTokens = readNonNegativeInteger(usage.input);
+    const outputTokens = readNonNegativeInteger(usage.output);
+    const cachedInputTokens = readNonNegativeInteger(usage.cacheRead);
+    const cacheCreationInputTokens = readNonNegativeInteger(usage.cacheWrite);
+    const reasoningOutputTokens = readNonNegativeInteger(usage.reasoning);
+    if (inputTokens === null && outputTokens === null && cachedInputTokens === null && cacheCreationInputTokens === null && reasoningOutputTokens === null) {
+        return null;
+    }
+    return {
+        inputTokens: inputTokens || 0,
+        cachedInputTokens: cachedInputTokens || 0,
+        cacheCreationInputTokens: cacheCreationInputTokens || 0,
+        outputTokens: outputTokens || 0,
+        reasoningOutputTokens: reasoningOutputTokens || 0
+    };
+}
+
+function parsePiSessionSummary(filePath, options = {}) {
+    const summaryReadBytes = Number.isFinite(Number(options.summaryReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.summaryReadBytes)))
+        : SESSION_SUMMARY_READ_BYTES;
+    const titleReadBytes = Number.isFinite(Number(options.titleReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.titleReadBytes)))
+        : SESSION_TITLE_READ_BYTES;
+    const records = parseJsonlHeadRecords(filePath, summaryReadBytes);
+    if (records.length === 0) {
+        return null;
+    }
+
+    let stat;
+    try {
+        stat = fs.statSync(filePath);
+    } catch (_) {
+        return null;
+    }
+
+    let sessionId = path.basename(filePath, '.jsonl');
+    let cwd = '';
+    let createdAt = '';
+    let updatedAt = stat.mtime.toISOString();
+    let firstPrompt = '';
+    let messageCount = 0;
+    let totalTokens = 0;
+    let contextWindow = 0;
+    let inputTokens = 0;
+    let cachedInputTokens = 0;
+    let cacheCreationInputTokens = 0;
+    let outputTokens = 0;
+    let reasoningOutputTokens = 0;
+    let provider = 'pi';
+    let model = '';
+    const models = [];
+    const previewMessages = [];
+
+    for (const record of records) {
+        if (!createdAt && record && record.type === 'session' && record.timestamp) {
+            createdAt = toIsoTime(record.timestamp, createdAt);
+        }
+        if (record && record.timestamp) {
+            updatedAt = updateLatestIso(updatedAt, record.timestamp);
+        }
+        if (record && record.type === 'session') {
+            sessionId = record.id || sessionId;
+            cwd = record.cwd || cwd;
+        }
+        if (record && record.type === 'model_change' && record.modelId) {
+            if (!models.includes(record.modelId)) {
+                models.push(record.modelId);
+            }
+            model = model || record.modelId;
+            if (record.provider) {
+                provider = record.provider;
+            }
+        }
+        if (record && record.type === 'message' && record.message && typeof record.message === 'object') {
+            const role = normalizeRole(record.message.role);
+            if (role === 'user' || role === 'assistant' || role === 'system') {
+                messageCount += 1;
+                const text = extractMessageText(record.message.content);
+                if (role === 'assistant' && record.message.model && !models.includes(record.message.model)) {
+                    models.push(record.message.model);
+                    model = model || record.message.model;
+                }
+                if (record.message.provider) {
+                    provider = record.message.provider;
+                }
+                const piUsage = extractPiUsageFromMessage(record.message);
+                if (piUsage) {
+                    inputTokens += piUsage.inputTokens;
+                    cachedInputTokens += piUsage.cachedInputTokens;
+                    cacheCreationInputTokens += piUsage.cacheCreationInputTokens;
+                    outputTokens += piUsage.outputTokens;
+                    reasoningOutputTokens += piUsage.reasoningOutputTokens;
+                }
+                if (text) {
+                    previewMessages.push({ role, text });
+                    if (!firstPrompt && role === 'user') {
+                        firstPrompt = text.split('\n')[0].slice(0, 80);
+                    }
+                }
+            }
+        }
+    }
+
+    totalTokens = inputTokens + cachedInputTokens + cacheCreationInputTokens + outputTokens + reasoningOutputTokens;
+
+    const tailRecords = parseJsonlTailRecords(filePath, summaryReadBytes);
+    let tailMessageCount = 0;
+    let tailHasMore = false;
+    for (const record of tailRecords) {
+        if (record && record.timestamp) {
+            updatedAt = updateLatestIso(updatedAt, record.timestamp);
+        }
+        if (record && record.type === 'message' && record.message && typeof record.message === 'object') {
+            const role = normalizeRole(record.message.role);
+            if (role === 'user' || role === 'assistant' || role === 'system') {
+                tailMessageCount += 1;
+                const piUsage = extractPiUsageFromMessage(record.message);
+                if (piUsage) {
+                    inputTokens += piUsage.inputTokens;
+                    cachedInputTokens += piUsage.cachedInputTokens;
+                    cacheCreationInputTokens += piUsage.cacheCreationInputTokens;
+                    outputTokens += piUsage.outputTokens;
+                    reasoningOutputTokens += piUsage.reasoningOutputTokens;
+                }
+                if (role === 'assistant' && record.message.model && !models.includes(record.message.model)) {
+                    models.push(record.message.model);
+                }
+                if (record.message.provider) {
+                    provider = record.message.provider;
+                }
+            }
+        }
+    }
+    totalTokens = inputTokens + cachedInputTokens + cacheCreationInputTokens + outputTokens + reasoningOutputTokens;
+
+    const fileName = path.basename(filePath, '.jsonl');
+    return {
+        source: 'pi',
+        sourceLabel: 'Pi',
+        provider,
+        model,
+        models,
+        sessionId,
+        title: firstPrompt || sessionId || fileName,
+        cwd,
+        createdAt,
+        updatedAt,
+        messageCount,
+        totalTokens,
+        contextWindow,
+        inputTokens,
+        cachedInputTokens,
+        cacheCreationInputTokens,
+        outputTokens,
+        reasoningOutputTokens,
+        __messageCountExact: false,
+        filePath,
+        keywords: [],
+        capabilities: { code: true }
+    };
+}
+
 function listCodexSessions(limit, options = {}) {
     const codexSessionsDir = getCodexSessionsDir();
     const scanFactor = Number.isFinite(Number(options.scanFactor))
@@ -5884,8 +6657,56 @@ function listCodeBuddySessions(limit, options = {}) {
     return mergeAndLimitSessions(sessions, limit);
 }
 
+function listPiSessions(limit, options = {}) {
+    const sessionsDir = getPiSessionsDir();
+    if (!fs.existsSync(sessionsDir)) {
+        return [];
+    }
+
+    const scanFactor = Number.isFinite(Number(options.scanFactor))
+        ? Math.max(1, Number(options.scanFactor))
+        : SESSION_SCAN_FACTOR;
+    const minFiles = Number.isFinite(Number(options.minFiles))
+        ? Math.max(1, Number(options.minFiles))
+        : Math.min(SESSION_SCAN_MIN_FILES, MAX_SESSION_LIST_SIZE * SESSION_SCAN_FACTOR);
+    const targetCount = Number.isFinite(Number(options.targetCount))
+        ? Math.max(1, Math.floor(Number(options.targetCount)))
+        : Math.max(1, Math.floor(limit * scanFactor));
+    const scanCount = Number.isFinite(Number(options.scanCount))
+        ? Math.max(targetCount, Math.floor(Number(options.scanCount)))
+        : Math.max(targetCount, minFiles);
+    const maxFilesScanned = Number.isFinite(Number(options.maxFilesScanned))
+        ? Math.max(scanCount, Math.floor(Number(options.maxFilesScanned)))
+        : Math.max(scanCount * 2, minFiles);
+    const summaryReadBytes = Number.isFinite(Number(options.summaryReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.summaryReadBytes)))
+        : SESSION_SUMMARY_READ_BYTES;
+    const titleReadBytes = Number.isFinite(Number(options.titleReadBytes))
+        ? Math.max(1024, Math.floor(Number(options.titleReadBytes)))
+        : SESSION_TITLE_READ_BYTES;
+
+    const files = collectRecentJsonlFiles(sessionsDir, {
+        returnCount: scanCount,
+        maxFilesScanned
+    });
+    const sessions = [];
+    for (const filePath of files) {
+        const summary = parsePiSessionSummary(filePath, {
+            summaryReadBytes,
+            titleReadBytes
+        });
+        if (summary) {
+            sessions.push(summary);
+        }
+        if (sessions.length >= targetCount) {
+            break;
+        }
+    }
+    return mergeAndLimitSessions(sessions, limit);
+}
+
 async function listAllSessions(params = {}) {
-    const source = params.source === 'codex' || params.source === 'claude' || params.source === 'gemini' || params.source === 'codebuddy'
+    const source = params.source === 'codex' || params.source === 'claude' || params.source === 'gemini' || params.source === 'codebuddy' || params.source === 'pi'
         ? params.source
         : 'all';
     const rawLimit = Number(params.limit);
@@ -5934,6 +6755,9 @@ async function listAllSessions(params = {}) {
     }
     if (source === 'all' || source === 'codebuddy') {
         sessions = sessions.concat(listSessionInventoryBySource('codebuddy', limit, scanOptions, { forceRefresh }));
+    }
+    if (source === 'all' || source === 'pi') {
+        sessions = sessions.concat(listSessionInventoryBySource('pi', limit, scanOptions, { forceRefresh }));
     }
 
     if (hasPathFilter) {
@@ -6017,6 +6841,7 @@ async function listSessionUsage(params = {}) {
         parseClaudeSessionSummary,
         parseCodeBuddySessionSummary,
         parseGeminiSessionSummary,
+        parsePiSessionSummary,
         MAX_SESSION_USAGE_LIST_SIZE,
         SESSION_BROWSE_SUMMARY_READ_BYTES
     });
@@ -6030,10 +6855,10 @@ async function exportSessionUsage(params = {}) {
 
 function listSessionPaths(params = {}) {
     const source = typeof params.source === 'string' ? params.source.trim().toLowerCase() : '';
-    if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
+    if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
         return [];
     }
-    const validSource = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' ? source : 'all';
+    const validSource = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi' ? source : 'all';
     const rawLimit = Number(params.limit);
     const limit = Number.isFinite(rawLimit)
         ? Math.max(1, Math.min(rawLimit, MAX_SESSION_PATH_LIST_SIZE))
@@ -6067,6 +6892,9 @@ function listSessionPaths(params = {}) {
     if (validSource === 'all' || validSource === 'codebuddy') {
         sessions = sessions.concat(listSessionInventoryBySource('codebuddy', gatherLimit, scanOptions, { forceRefresh }));
     }
+    if (validSource === 'all' || validSource === 'pi') {
+        sessions = sessions.concat(listSessionInventoryBySource('pi', gatherLimit, scanOptions, { forceRefresh }));
+    }
 
     const dedupedPaths = [];
     const seen = new Set();
@@ -6092,7 +6920,7 @@ function listSessionPaths(params = {}) {
 }
 
 function resolveSessionFilePath(source, filePath, sessionId) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? source
         : 'codex';
     const homeDir = process && process.env && process.env.HOME ? process.env.HOME : '';
@@ -6104,7 +6932,9 @@ function resolveSessionFilePath(source, filePath, sessionId) {
             ? [getGeminiTmpDir()]
             : (normalizedSource === 'codebuddy'
                 ? [getCodeBuddyProjectsDir()]
-                : [getCodexSessionsDir(), derivedCodexDir]));
+                : (normalizedSource === 'pi'
+                    ? [getPiSessionsDir()]
+                    : [getCodexSessionsDir(), derivedCodexDir])));
     const availableRoots = roots.filter((dirPath) => dirPath && fs.existsSync(dirPath));
     if (availableRoots.length === 0) {
         return '';
@@ -6652,13 +7482,21 @@ function buildSessionSummaryFallback(source, filePath, sessionId = '') {
     const resolvedSessionId = sessionId || path.basename(filePath, '.jsonl');
     const sourceLabel = source === 'claude'
         ? 'Claude Code'
-        : (source === 'gemini' ? 'Gemini CLI' : (source === 'codebuddy' ? 'CodeBuddy Code' : 'Codex'));
+        : (source === 'gemini'
+            ? 'Gemini CLI'
+            : (source === 'codebuddy'
+                ? 'CodeBuddy Code'
+                : (source === 'pi' ? 'Pi' : 'Codex')));
     return {
         source,
         sourceLabel,
         provider: source === 'claude'
             ? 'claude'
-            : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : 'codex')),
+            : (source === 'gemini'
+                ? 'gemini'
+                : (source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (source === 'pi' ? 'pi' : 'codex'))),
         sessionId: resolvedSessionId,
         title: resolvedSessionId,
         cwd: '',
@@ -6711,7 +7549,9 @@ function normalizeSessionTrashEntry(entry) {
             ? 'codex'
             : (entry.source === 'gemini'
                 ? 'gemini'
-                : (entry.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (entry.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (entry.source === 'pi' ? 'pi' : ''))));
     const trashId = typeof entry.trashId === 'string' ? entry.trashId.trim() : '';
     if (!source || !trashId || trashId.includes('/') || trashId.includes('\\') || trashId.includes('\0')) {
         return null;
@@ -6728,7 +7568,11 @@ function normalizeSessionTrashEntry(entry) {
         source,
         sourceLabel: source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : (source === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')),
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'codebuddy'
+                    ? 'CodeBuddy Code'
+                    : (source === 'pi' ? 'Pi' : 'Codex'))),
         sessionId: sessionId || trashId,
         title: typeof entry.title === 'string' && entry.title.trim() ? entry.title.trim() : (sessionId || trashId),
         cwd: typeof entry.cwd === 'string' ? entry.cwd : '',
@@ -6744,7 +7588,7 @@ function normalizeSessionTrashEntry(entry) {
         originalFilePath: typeof entry.originalFilePath === 'string' ? entry.originalFilePath : '',
         provider: typeof entry.provider === 'string' && entry.provider.trim()
             ? entry.provider.trim()
-            : (source === 'claude' ? 'claude' : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : 'codex'))),
+            : (source === 'claude' ? 'claude' : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : (source === 'pi' ? 'pi' : 'codex')))),
         keywords: normalizeKeywords(entry.keywords),
         capabilities: normalizeCapabilities(entry.capabilities),
         claudeIndexPath: typeof entry.claudeIndexPath === 'string' ? entry.claudeIndexPath : '',
@@ -6831,7 +7675,13 @@ function purgeExpiredSessionTrashEntries(retentionDays) {
 }
 
 function buildSessionTrashEntry(summary, options = {}) {
-    const source = options.source === 'claude' ? 'claude' : 'codex';
+    const source = options.source === 'claude'
+        ? 'claude'
+        : (options.source === 'gemini'
+            ? 'gemini'
+            : (options.source === 'codebuddy'
+                ? 'codebuddy'
+                : (options.source === 'pi' ? 'pi' : 'codex')));
     const sessionId = options.sessionId || summary.sessionId || path.basename(options.originalFilePath || summary.filePath || '', '.jsonl');
     const claudeIndexEntry = options.claudeIndexEntry && typeof options.claudeIndexEntry === 'object' && !Array.isArray(options.claudeIndexEntry)
         ? options.claudeIndexEntry
@@ -6839,7 +7689,13 @@ function buildSessionTrashEntry(summary, options = {}) {
     const deletedAt = typeof options.deletedAt === 'string' && options.deletedAt
         ? options.deletedAt
         : new Date().toISOString();
-    const sourceLabel = source === 'claude' ? 'Claude Code' : 'Codex';
+    const sourceLabel = source === 'claude'
+        ? 'Claude Code'
+        : (source === 'gemini'
+            ? 'Gemini CLI'
+            : (source === 'codebuddy'
+                ? 'CodeBuddy Code'
+                : (source === 'pi' ? 'Pi' : 'Codex')));
     const fallbackTitle = truncateText(
         (claudeIndexEntry && (claudeIndexEntry.summary || claudeIndexEntry.firstPrompt)) || sessionId,
         120
@@ -6876,7 +7732,7 @@ function buildSessionTrashEntry(summary, options = {}) {
         originalFilePath: options.originalFilePath || summary.filePath || '',
         provider: (claudeIndexEntry && typeof claudeIndexEntry.provider === 'string' && claudeIndexEntry.provider.trim())
             ? claudeIndexEntry.provider.trim()
-            : (summary.provider || (source === 'claude' ? 'claude' : 'codex')),
+            : (summary.provider || (source === 'claude' ? 'claude' : (source === 'gemini' ? 'gemini' : (source === 'codebuddy' ? 'codebuddy' : (source === 'pi' ? 'pi' : 'codex'))))),
         keywords: normalizedClaudeKeywords.length > 0 ? normalizedClaudeKeywords : normalizedSummaryKeywords,
         capabilities: Object.keys(normalizedClaudeCapabilities).length > 0
             ? normalizedClaudeCapabilities
@@ -6895,7 +7751,9 @@ function resolveSessionRestoreTarget(entry) {
         ? getClaudeProjectsDir()
         : (normalized.source === 'gemini'
             ? getGeminiTmpDir()
-            : (normalized.source === 'codebuddy' ? getCodeBuddyProjectsDir() : getCodexSessionsDir()));
+            : (normalized.source === 'codebuddy'
+                ? getCodeBuddyProjectsDir()
+                : (normalized.source === 'pi' ? getPiSessionsDir() : getCodexSessionsDir())));
     const originalFilePath = typeof normalized.originalFilePath === 'string' ? normalized.originalFilePath.trim() : '';
     if (!root || !originalFilePath) {
         return '';
@@ -7035,7 +7893,9 @@ async function listSessionTrashItems(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : 'all')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : 'all'))));
     const countOnly = params.countOnly === true;
     const rawLimit = Number(params.limit);
     const limit = Number.isFinite(rawLimit)
@@ -7045,7 +7905,7 @@ async function listSessionTrashItems(params = {}) {
         purgeExpiredSessionTrashEntries(params.retentionDays);
     }
     const allEntries = readSessionTrashEntries();
-    let items = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy'
+    let items = source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi'
         ? allEntries.filter((entry) => entry.source === source)
         : allEntries.slice();
     items.sort((a, b) => {
@@ -7231,7 +8091,9 @@ async function trashSessionData(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -7245,7 +8107,9 @@ async function trashSessionData(params = {}) {
         ? parseClaudeSessionSummary(filePath)
         : (source === 'gemini'
             ? parseGeminiSessionSummary(filePath)
-            : (source === 'codebuddy' ? parseCodeBuddySessionSummary(filePath) : parseCodexSessionSummary(filePath))))
+            : (source === 'codebuddy'
+                ? parseCodeBuddySessionSummary(filePath)
+                : (source === 'pi' ? parsePiSessionSummary(filePath) : parseCodexSessionSummary(filePath)))))
         || buildSessionSummaryFallback(source, filePath, params.sessionId);
     const exactMessageCount = await countConversationMessagesInFile(filePath, source);
     if (Number.isFinite(Number(exactMessageCount))) {
@@ -7342,7 +8206,9 @@ async function deleteSessionData(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -7812,6 +8678,32 @@ function extractCodeBuddyMessageFromRecord(record, state, lineIndex = -1) {
     }
 }
 
+function extractPiMessageFromRecord(record, state, lineIndex = -1) {
+    if (record && record.timestamp) {
+        state.updatedAt = toIsoTime(record.timestamp, state.updatedAt);
+    }
+    if (record && record.type === 'session') {
+        state.sessionId = record.id || state.sessionId;
+        state.cwd = record.cwd || state.cwd;
+        return;
+    }
+    if (!record || record.type !== 'message' || !record.message || typeof record.message !== 'object') {
+        return;
+    }
+    const role = normalizeRole(record.message.role);
+    if (role === 'user' || role === 'assistant' || role === 'system') {
+        const text = extractMessageText(record.message.content);
+        if (text && canAppendMessage(state)) {
+            state.messages.push({
+                role,
+                text,
+                timestamp: toIsoTime(record.timestamp, ''),
+                recordLineIndex: Number.isInteger(lineIndex) ? lineIndex : -1
+            });
+        }
+    }
+}
+
 function recordHasCodexMessage(record) {
     if (!record || record.type !== 'response_item' || !record.payload) {
         return false;
@@ -7853,9 +8745,22 @@ function recordHasCodeBuddyMessage(record) {
     return !!text;
 }
 
+function recordHasPiMessage(record) {
+    if (!record || record.type !== 'message' || !record.message || typeof record.message !== 'object') {
+        return false;
+    }
+    const role = normalizeRole(record.message.role);
+    if (role !== 'user' && role !== 'assistant' && role !== 'system') {
+        return false;
+    }
+    const text = extractMessageText(record.message.content);
+    return !!text;
+}
+
 function recordHasMessage(record, source) {
     if (source === 'codex') return recordHasCodexMessage(record);
     if (source === 'codebuddy') return recordHasCodeBuddyMessage(record);
+    if (source === 'pi') return recordHasPiMessage(record);
     return recordHasClaudeMessage(record);
 }
 
@@ -7876,6 +8781,8 @@ function extractMessagesFromRecords(records, source, options = {}) {
             extractCodexMessageFromRecord(record, state, lineIndex);
         } else if (source === 'codebuddy') {
             extractCodeBuddyMessageFromRecord(record, state, lineIndex);
+        } else if (source === 'pi') {
+            extractPiMessageFromRecord(record, state, lineIndex);
         } else {
             extractClaudeMessageFromRecord(record, state, lineIndex);
         }
@@ -7939,6 +8846,8 @@ async function extractMessagesFromFile(filePath, source, options = {}) {
                 extractCodexMessageFromRecord(record, state, currentLineIndex);
             } else if (source === 'codebuddy') {
                 extractCodeBuddyMessageFromRecord(record, state, currentLineIndex);
+            } else if (source === 'pi') {
+                extractPiMessageFromRecord(record, state, currentLineIndex);
             } else {
                 extractClaudeMessageFromRecord(record, state, currentLineIndex);
             }
@@ -7969,7 +8878,9 @@ async function readSessionDetail(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8031,7 +8942,9 @@ async function readSessionDetail(params = {}) {
         ? 'Codex'
         : (source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : 'CodeBuddy Code'));
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'pi' ? 'Pi' : 'CodeBuddy Code')));
     const clippedMessages = Array.isArray(extracted.messages) ? extracted.messages : [];
     const hasExactTotalMessages = Number.isFinite(extracted.totalMessages);
     const startIndex = hasExactTotalMessages
@@ -8098,7 +9011,9 @@ async function readSessionPlain(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8172,7 +9087,9 @@ async function readSessionPlain(params = {}) {
         ? 'Codex'
         : (source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : 'CodeBuddy Code'));
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'pi' ? 'Pi' : 'CodeBuddy Code')));
     const messages = removeLeadingSystemMessage(Array.isArray(extracted.messages) ? extracted.messages : []);
     const text = buildSessionPlainText(messages);
 
@@ -8194,7 +9111,9 @@ async function exportSessionData(params = {}) {
             ? 'codex'
             : (params.source === 'gemini'
                 ? 'gemini'
-                : (params.source === 'codebuddy' ? 'codebuddy' : '')));
+                : (params.source === 'codebuddy'
+                    ? 'codebuddy'
+                    : (params.source === 'pi' ? 'pi' : ''))));
     if (!source) {
         return { error: 'Invalid source' };
     }
@@ -8268,7 +9187,9 @@ async function exportSessionData(params = {}) {
         ? 'Codex'
         : (source === 'claude'
             ? 'Claude Code'
-            : (source === 'gemini' ? 'Gemini CLI' : 'CodeBuddy Code'));
+            : (source === 'gemini'
+                ? 'Gemini CLI'
+                : (source === 'pi' ? 'Pi' : 'CodeBuddy Code')));
     const truncated = !!extracted.truncated;
     const maxMessagesLabel = maxMessages === Infinity ? 'all' : maxMessages;
     const markdown = buildSessionMarkdown({
@@ -9354,7 +10275,6 @@ async function cmdDoctor(argv = []) {
             buildInstallStatusReport,
             buildConfigHealthReport,
             listSessionUsage,
-            buildTaskOverviewPayload,
             listSkills
         });
         const format = options.format === 'md' ? 'md' : 'json';
@@ -9610,7 +10530,7 @@ ${buildModelProviderTableHeader(providerName)}
 name = "${safeName}"
 base_url = "${safeBaseUrl}"
 wire_api = "responses"
-requires_openai_auth = false
+requires_openai_auth = true
 preferred_auth_method = "${safeApiKey}"
 request_max_retries = 4
 stream_max_retries = 10
@@ -9653,6 +10573,8 @@ function cmdDelete(name, silent = false) {
 function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
     const allowManaged = !!(options && options.allowManaged);
     const forceUseTransform = !!(options && options.useTransform);
+    const hasOpenaiBridgeMaxRetries = options && Object.prototype.hasOwnProperty.call(options, 'openaiBridgeMaxRetries');
+    const openaiBridgeMaxRetries = normalizeOpenaiBridgeMaxRetries(options && options.openaiBridgeMaxRetries);
     const normalizedBaseUrl = baseUrl === undefined ? undefined : normalizeBaseUrl(baseUrl);
     if (!name) {
         if (!silent) console.error('错误: 提供商名称必填');
@@ -9812,6 +10734,32 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
         return next;
     };
 
+    const replaceTomlNumberField = (block, fieldName, rawValue) => {
+        const numberValue = String(Math.floor(Number(rawValue)));
+        const escapedFieldName = escapeRegex(fieldName);
+        const multilineRanges = collectTomlMultilineStringRanges(block);
+        const withCommentRegex = new RegExp(`^(\\s*${escapedFieldName}\\s*=\\s*)([-+]?\\d+(?:\\.\\d+)?)(\\s+#.*)?$`, 'mg');
+        let replaced = false;
+        let next = block.replace(withCommentRegex, (full, prefix, _value, suffix = '', offset) => {
+            if (replaced || isIndexInRanges(offset, multilineRanges)) {
+                return full;
+            }
+            replaced = true;
+            return `${prefix}${numberValue}${suffix}`;
+        });
+        if (!replaced) {
+            const keyIndentMatch = block.match(/^(\s*)[A-Za-z0-9_.-]+\s*=/m);
+            const indent = keyIndentMatch ? keyIndentMatch[1] : '';
+            const lineEnding = block.includes('\r\n') ? '\r\n' : '\n';
+            const tailMatch = block.match(/(\s*)$/);
+            const tail = tailMatch ? tailMatch[1] : '';
+            const body = block.slice(0, block.length - tail.length);
+            const separator = body.endsWith('\n') || body.endsWith('\r') ? '' : lineEnding;
+            next = `${body}${separator}${indent}${fieldName} = ${numberValue}${tail}`;
+        }
+        return next;
+    };
+
     const replaceTomlBooleanField = (block, fieldName, rawValue) => {
         const boolValue = rawValue ? 'true' : 'false';
         const escapedFieldName = escapeRegex(fieldName);
@@ -9868,7 +10816,9 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
                 : existingApiKey;
 
             if (upstreamBaseUrl) {
-                const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, upstreamBaseUrl, upstreamApiKey);
+                const saveRes = upsertOpenaiBridgeProvider(OPENAI_BRIDGE_SETTINGS_FILE, name, upstreamBaseUrl, upstreamApiKey, undefined, {
+                    maxRetries: hasOpenaiBridgeMaxRetries ? openaiBridgeMaxRetries : resolveProviderOpenaiBridgeMaxRetries(providerConfig)
+                });
                 if (saveRes && saveRes.error) {
                     throw new Error(String(saveRes.error));
                 }
@@ -9884,6 +10834,9 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
             updatedBlock = replaceTomlBooleanField(updatedBlock, 'requires_openai_auth', true);
             updatedBlock = replaceTomlStringField(updatedBlock, 'preferred_auth_method', 'codexmate');
             updatedBlock = replaceTomlStringField(updatedBlock, 'codexmate_bridge', 'openai');
+            if (hasOpenaiBridgeMaxRetries) {
+                updatedBlock = replaceTomlNumberField(updatedBlock, 'codexmate_bridge_max_retries', openaiBridgeMaxRetries);
+            }
         } else {
             if (normalizedBaseUrl) {
                 updatedBlock = replaceTomlStringField(updatedBlock, 'base_url', normalizedBaseUrl);
@@ -9913,6 +10866,347 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
     if (!silent) {
         console.log('✓ 已更新提供商:', name);
         console.log();
+    }
+}
+
+function stripJsoncComments(input) {
+    const text = String(input || '');
+    let output = '';
+    let inString = false;
+    let quote = '';
+    let escaped = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+        if (inString) {
+            output += ch;
+            if (escaped) {
+                escaped = false;
+            } else if (ch === '\\') {
+                escaped = true;
+            } else if (ch === quote) {
+                inString = false;
+                quote = '';
+            }
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            inString = true;
+            quote = ch;
+            output += ch;
+            continue;
+        }
+        if (ch === '/' && next === '/') {
+            while (i < text.length && text[i] !== '\n') i++;
+            output += '\n';
+            continue;
+        }
+        if (ch === '/' && next === '*') {
+            i += 2;
+            while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i++;
+            i += 1;
+            continue;
+        }
+        output += ch;
+    }
+    return output.replace(/,\s*([}\]])/g, '$1');
+}
+
+function readKilocodeGlobalConfig() {
+    const candidates = [KILOCODE_GLOBAL_JSONC_CONFIG_FILE, KILOCODE_GLOBAL_JSON_CONFIG_FILE];
+    const filePath = candidates.find((candidate) => fs.existsSync(candidate)) || KILOCODE_GLOBAL_JSONC_CONFIG_FILE;
+    if (!fs.existsSync(filePath)) {
+        return { filePath, config: {} };
+    }
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    if (!raw.trim()) {
+        return { filePath, config: {} };
+    }
+    try {
+        const parsed = JSON.parse(stripJsoncComments(raw));
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('配置根节点必须是对象');
+        }
+        return { filePath, config: parsed };
+    } catch (e) {
+        throw new Error(`读取 KiloCode 配置失败: ${e.message}`);
+    }
+}
+
+function normalizeKilocodeProviderName(value) {
+    const name = typeof value === 'string' && value.trim() ? value.trim() : 'codexmate';
+    if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+        throw new Error('provider 仅支持字母/数字/._-');
+    }
+    return name;
+}
+
+function writeKilocodeProviderConfig(params = {}) {
+    const provider = normalizeKilocodeProviderName(params.provider);
+    const url = normalizeBaseUrl(params.url || '');
+    const incomingKey = typeof params.key === 'string' ? params.key.trim() : '';
+    const model = typeof params.model === 'string' ? params.model.trim() : '';
+    if (!url) throw new Error('URL 必填');
+    if (!model) throw new Error('模型名称必填');
+    if (!isValidHttpUrl(url)) throw new Error('URL 仅支持 http/https');
+
+    const { filePath, config } = readKilocodeGlobalConfig();
+    const existingProvider = config.provider
+        && typeof config.provider === 'object'
+        && !Array.isArray(config.provider)
+        && config.provider[provider]
+        && typeof config.provider[provider] === 'object'
+        && !Array.isArray(config.provider[provider])
+        ? config.provider[provider]
+        : {};
+    const existingOptions = existingProvider.options && typeof existingProvider.options === 'object' && !Array.isArray(existingProvider.options)
+        ? existingProvider.options
+        : {};
+    const existingKey = typeof existingOptions.apiKey === 'string' ? existingOptions.apiKey.trim() : '';
+    const key = incomingKey || existingKey;
+    if (!key) throw new Error('API Key 必填');
+
+    const next = { ...config };
+    if (!next.$schema) {
+        next.$schema = 'https://app.kilo.ai/config.json';
+    }
+    next.provider = next.provider && typeof next.provider === 'object' && !Array.isArray(next.provider)
+        ? { ...next.provider }
+        : {};
+    next.provider[provider] = {
+        ...(next.provider[provider] && typeof next.provider[provider] === 'object' && !Array.isArray(next.provider[provider])
+            ? next.provider[provider]
+            : {}),
+        name: provider,
+        npm: '@ai-sdk/openai-compatible',
+        api: url,
+        env: [],
+        models: {
+            [model]: {
+                name: model,
+                tool_call: true
+            }
+        },
+        options: {
+            ...(next.provider[provider]
+                && typeof next.provider[provider] === 'object'
+                && next.provider[provider].options
+                && typeof next.provider[provider].options === 'object'
+                && !Array.isArray(next.provider[provider].options)
+                ? next.provider[provider].options
+                : {}),
+            apiKey: key,
+            baseURL: url
+        }
+    };
+    next.model = `${provider}/${model}`;
+    const enabled = Array.isArray(next.enabled_providers) ? next.enabled_providers.filter((item) => typeof item === 'string' && item.trim()) : [];
+    next.enabled_providers = enabled.includes(provider) ? enabled : [...enabled, provider];
+
+    ensureDir(path.dirname(filePath));
+    fs.writeFileSync(filePath, JSON.stringify(next, null, 2) + '\n', 'utf-8');
+    return { filePath, provider, model, url };
+}
+
+function parseKilocodeCommandArgs(argv = []) {
+    const options = { provider: 'codexmate', command: '' };
+    const positional = [];
+    let passthrough = [];
+    for (let i = 0; i < argv.length; i++) {
+        const token = String(argv[i] || '');
+        if (token === '--') {
+            passthrough = argv.slice(i + 1).map(item => String(item));
+            break;
+        }
+        if (token === '--provider') {
+            const value = String(argv[i + 1] || '');
+            if (!value || value.startsWith('--')) throw new Error('错误: --provider 需要一个值');
+            options.provider = value;
+            i += 1;
+            continue;
+        }
+        if (token.startsWith('--provider=')) {
+            options.provider = token.slice('--provider='.length);
+            continue;
+        }
+        if (token === '--help' || token === '-h') {
+            options.help = true;
+            continue;
+        }
+        positional.push(token);
+    }
+    if (positional[0] === 'config' || positional[0] === 'setup') {
+        options.command = positional.shift();
+    }
+    return {
+        command: options.command,
+        url: positional[0],
+        key: positional[1],
+        model: positional[2],
+        provider: options.provider,
+        help: !!options.help,
+        passthrough: passthrough.length ? passthrough : positional.slice(options.command ? 3 : 0)
+    };
+}
+
+function printKilocodeUsage() {
+    console.log('\n用法:');
+    console.log('  codexmate kilo [KiloCode参数...]');
+    console.log('  codexmate kilo <URL> <API密钥> <模型> [--provider <id>] [-- KiloCode参数...]');
+    console.log('  codexmate kilo config <URL> <API密钥> <模型> [--provider <id>]');
+    console.log('\n说明:');
+    console.log('  codexmate kilo 默认启动 KiloCode；带 URL/API密钥/模型时会先写入 KiloCode provider 配置再启动。');
+    console.log('  纯配置请使用 codexmate kilo config ...');
+    console.log('  配置写入 ~/.config/kilo/kilo.jsonc（或已存在的 kilo.json）。');
+}
+
+function resolveKilocodeBinary() {
+    for (const bin of ['kilo', 'kilocode']) {
+        if (commandExists(bin, '--version')) return bin;
+    }
+    return '';
+}
+
+function runKilocodeCommand(args = [], options = {}) {
+    const bin = resolveKilocodeBinary();
+    if (!bin) {
+        throw new Error('无法启动 KiloCode，请确认已安装 KiloCode CLI，并且 kilo 或 kilocode 在 PATH 中。');
+    }
+    const finalArgs = Array.isArray(args) ? args.filter(item => item !== undefined).map(item => String(item)) : [];
+    if (options.detached === true) {
+        const child = spawn(bin, finalArgs, {
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true
+        });
+        child.unref();
+        return { success: true, bin, args: finalArgs, pid: child.pid };
+    }
+    return new Promise((resolve, reject) => {
+        const child = spawn(bin, finalArgs, {
+            stdio: 'inherit',
+            windowsHide: false
+        });
+        child.on('error', reject);
+        child.on('exit', (code, signal) => {
+            if (signal) {
+                reject(new Error(`KiloCode 已终止: ${signal}`));
+                return;
+            }
+            resolve(code || 0);
+        });
+    });
+}
+
+async function cmdKilocode(argv = []) {
+    const parsed = parseKilocodeCommandArgs(argv);
+    if (parsed.help) {
+        printKilocodeUsage();
+        return 0;
+    }
+    if (parsed.command === 'config') {
+        if (!parsed.url || !parsed.key || !parsed.model) {
+            printKilocodeUsage();
+            throw new Error('URL、API密钥和模型名称必填');
+        }
+        const result = writeKilocodeProviderConfig(parsed);
+        console.log('✓ 已写入 KiloCode 配置');
+        console.log('  文件:', result.filePath);
+        console.log('  provider:', result.provider);
+        console.log('  URL:', result.url);
+        console.log('  模型:', `${result.provider}/${result.model}`);
+        console.log();
+        return 0;
+    }
+    let passthrough = parsed.passthrough;
+    if (parsed.url && parsed.key && parsed.model) {
+        const result = writeKilocodeProviderConfig(parsed);
+        console.log('✓ 已写入 KiloCode 配置，正在启动 KiloCode');
+        console.log('  文件:', result.filePath);
+        console.log('  模型:', `${result.provider}/${result.model}`);
+        console.log();
+        passthrough = parsed.passthrough;
+    } else if (parsed.url || parsed.key || parsed.model) {
+        passthrough = [parsed.url, parsed.key, parsed.model, ...parsed.passthrough].filter(item => item !== undefined && item !== '');
+    }
+    return runKilocodeCommand(passthrough);
+}
+
+function summarizeKilocodeConfig(config = {}, targetPath = KILOCODE_GLOBAL_JSONC_CONFIG_FILE, exists = false) {
+    const providers = getRecord(config.provider);
+    const modelRef = typeof config.model === 'string' ? config.model.trim() : '';
+    const slash = modelRef.indexOf('/');
+    const currentProvider = slash > 0 ? modelRef.slice(0, slash) : '';
+    const currentModel = slash > 0 ? modelRef.slice(slash + 1) : modelRef;
+    const providerNames = [...new Set([...Object.keys(providers), currentProvider].filter(Boolean))];
+    const redactedConfig = JSON.parse(JSON.stringify(config && typeof config === 'object' ? config : {}));
+    const redactedProviders = getRecord(redactedConfig.provider);
+    for (const provider of Object.values(redactedProviders)) {
+        const options = getRecord(provider && provider.options);
+        if (typeof options.apiKey === 'string' && options.apiKey) {
+            options.apiKey = maskKey(options.apiKey);
+        }
+    }
+    return {
+        exists: !!exists,
+        targetPath,
+        currentProvider,
+        currentModel,
+        providers: providerNames.map((name) => {
+            const provider = getRecord(providers[name]);
+            const options = getRecord(provider.options);
+            const apiKey = typeof options.apiKey === 'string' ? options.apiKey : '';
+            const modelNames = Object.keys(getRecord(provider.models));
+            return {
+                name,
+                api: typeof provider.api === 'string' ? provider.api : '',
+                baseURL: typeof options.baseURL === 'string' ? options.baseURL : '',
+                hasKey: apiKey.trim().length > 0,
+                apiKey: maskKey(apiKey),
+                models: modelNames
+            };
+        }),
+        content: JSON.stringify(redactedConfig, null, 2) + '\n',
+        redacted: true
+    };
+}
+
+function readKilocodeConfigInfo() {
+    try {
+        const { filePath, config } = readKilocodeGlobalConfig();
+        return summarizeKilocodeConfig(config, filePath, fs.existsSync(filePath));
+    } catch (e) {
+        return { error: e.message || '读取 KiloCode 配置失败', targetPath: KILOCODE_GLOBAL_JSONC_CONFIG_FILE };
+    }
+}
+
+function applyKilocodeConfig(params = {}) {
+    assertToolConfigWriteAllowed('kilocode');
+    try {
+        const result = writeKilocodeProviderConfig({
+            provider: params.provider,
+            url: params.url,
+            key: params.apiKey,
+            model: params.model
+        });
+        const info = readKilocodeConfigInfo();
+        return { success: true, ...result, ...info };
+    } catch (e) {
+        return { error: e.message || '写入 KiloCode 配置失败' };
+    }
+}
+
+function startKilocodeFromWeb(params = {}) {
+    assertToolConfigWriteAllowed('kilocode');
+    try {
+        if (params && params.configure === true) {
+            const saved = applyKilocodeConfig(params);
+            if (saved && saved.error) return saved;
+        }
+        const args = Array.isArray(params.args) ? params.args.map(item => String(item)) : [];
+        return runKilocodeCommand(args, { detached: true });
+    } catch (e) {
+        return { error: e.message || '启动 KiloCode 失败' };
     }
 }
 
@@ -11080,7 +12374,7 @@ function resolveExportOutputPath(outputPath, defaultFileName) {
 }
 
 function printExportSessionUsage() {
-    console.log('\n用法: codexmate export-session --source <codex|claude|gemini|codebuddy> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
+    console.log('\n用法: codexmate export-session --source <codex|claude|gemini|codebuddy|pi> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('\n示例:');
     console.log('  codexmate export-session --source codex --session-id 123456');
     console.log('  codexmate export-session --source claude --file "~/.claude/projects/demo/session.jsonl"');
@@ -11152,8 +12446,8 @@ function parseExportSessionArgs(args = []) {
     }
 
     const normalizedSource = options.source.trim().toLowerCase();
-    if (normalizedSource && normalizedSource !== 'codex' && normalizedSource !== 'claude') {
-        errors.push('参数 --source 仅支持 codex 或 claude');
+    if (normalizedSource && normalizedSource !== 'codex' && normalizedSource !== 'claude' && normalizedSource !== 'pi') {
+        errors.push('参数 --source 仅支持 codex、claude 或 pi');
     }
     options.source = normalizedSource;
 
@@ -11226,7 +12520,7 @@ async function cmdExportSession(args = []) {
 
 function printAnalyticsUsage() {
     console.log('\n用法:');
-    console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--source <codex|claude|gemini|codebuddy|all>] [--output <PATH|->] [-o <PATH|->]');
+    console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--source <codex|claude|gemini|codebuddy|pi|all>] [--output <PATH|->] [-o <PATH|->]');
     console.log('');
 }
 
@@ -11685,110 +12979,6 @@ function verifyGithubWebhookSignature(secret, signatureHeader, rawBuffer) {
     return safeTimingEqual(signature, expected);
 }
 
-async function handleAutomationHook(req, res, source) {
-    const method = (req.method || 'GET').toUpperCase();
-    if (method !== 'POST') {
-        writeJsonResponse(res, 405, { error: 'Method Not Allowed' });
-        return;
-    }
-    const deliveryId = typeof (req.headers || {})['x-github-delivery'] === 'string'
-        ? String(req.headers['x-github-delivery'] || '')
-        : (typeof (req.headers || {})['x-gitlab-event-uuid'] === 'string' ? String(req.headers['x-gitlab-event-uuid'] || '') : '');
-    const remember = rememberWebhookDeliveryId(deliveryId);
-    if (remember.seen) {
-        writeJsonResponse(res, 200, { ok: true, deduped: true });
-        return;
-    }
-    const parsedBody = await readJsonRequestBody(req, res);
-    if (!parsedBody.ok) {
-        if (parsedBody.error !== 'payload-too-large') {
-            writeJsonResponse(res, 400, { error: parsedBody.error || 'invalid request body' });
-        }
-        return;
-    }
-    const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
-    const isLoopback = !remoteAddr || isLoopbackRemoteAddress(remoteAddr);
-    const normalizedSource = typeof source === 'string' ? source.trim().toLowerCase() : '';
-    if (normalizedSource === 'github') {
-        const secret = typeof process.env.CODEXMATE_GITHUB_WEBHOOK_SECRET === 'string'
-            ? process.env.CODEXMATE_GITHUB_WEBHOOK_SECRET
-            : '';
-        if (!secret && !isLoopback) {
-            writeJsonResponse(res, 403, { error: 'Remote GitHub webhook is disabled (set CODEXMATE_GITHUB_WEBHOOK_SECRET)' });
-            return;
-        }
-        if (secret) {
-            const signature = (req.headers || {})['x-hub-signature-256'];
-            if (!verifyGithubWebhookSignature(secret, signature, parsedBody.rawBuffer)) {
-                writeJsonResponse(res, 401, { error: 'Invalid webhook signature' });
-                return;
-            }
-        }
-    } else if (normalizedSource === 'gitlab') {
-        const secret = typeof process.env.CODEXMATE_GITLAB_WEBHOOK_SECRET === 'string'
-            ? process.env.CODEXMATE_GITLAB_WEBHOOK_SECRET.trim()
-            : '';
-        if (!secret && !isLoopback) {
-            writeJsonResponse(res, 403, { error: 'Remote GitLab webhook is disabled (set CODEXMATE_GITLAB_WEBHOOK_SECRET)' });
-            return;
-        }
-        if (secret) {
-            const tokenHeader = typeof (req.headers || {})['x-gitlab-token'] === 'string'
-                ? String(req.headers['x-gitlab-token']).trim()
-                : '';
-            if (!tokenHeader || tokenHeader !== secret) {
-                writeJsonResponse(res, 401, { error: 'Invalid webhook token' });
-                return;
-            }
-        }
-    }
-    const payload = parsedBody.body && typeof parsedBody.body === 'object' ? parsedBody.body : {};
-    const eventKey = buildAutomationEventKey(source, req.headers || {}, payload);
-    if (!eventKey) {
-        writeJsonResponse(res, 400, { error: 'unknown event' });
-        return;
-    }
-    const cfg = readAutomationConfig(AUTOMATION_CONFIG_FILE, { env: process.env });
-    if (!cfg.ok) {
-        writeJsonResponse(res, 500, { error: cfg.error || 'failed to load automation config' });
-        return;
-    }
-    const rule = matchAutomationRule(cfg.config, { source, event: eventKey });
-    if (!rule) {
-        writeJsonResponse(res, 404, { error: 'no matching rule', source, event: eventKey });
-        return;
-    }
-    const action = rule.action && typeof rule.action === 'object' ? rule.action : {};
-    const actionType = typeof action.type === 'string' ? action.type.trim().toLowerCase() : '';
-    if (actionType !== 'task.queue.add') {
-        writeJsonResponse(res, 400, { error: 'unsupported rule action', action: actionType || '' });
-        return;
-    }
-    const taskPayload = action.task && typeof action.task === 'object' ? action.task : {};
-    const enqueue = addTaskToQueue(taskPayload);
-    if (enqueue.error) {
-        writeJsonResponse(res, 400, { error: enqueue.error, issues: enqueue.issues || [], warnings: enqueue.warnings || [] });
-        return;
-    }
-    const taskId = enqueue.task && enqueue.task.taskId ? enqueue.task.taskId : '';
-    const shouldStart = action.startQueue === true;
-    const queueResult = shouldStart
-        ? await startTaskQueueProcessing({ taskId: '', detach: true })
-        : { ok: true, started: false };
-    writeJsonResponse(res, 200, {
-        ok: true,
-        ruleId: rule.id,
-        source,
-        event: eventKey,
-        taskId,
-        queue: {
-            started: !!queueResult.started,
-            alreadyRunning: !!queueResult.alreadyRunning,
-            detached: !!queueResult.detached
-        }
-    });
-}
-
 function streamZipDownloadResponse(res, filePath, options = {}) {
     if (!filePath || !fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -12154,7 +13344,6 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         if (
             requestPath === '/api'
             || requestPath.startsWith('/api/import-')
-            || requestPath.startsWith('/hooks/')
             || requestPath.startsWith('/download/')
         ) {
             const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
@@ -12177,12 +13366,6 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         }
         if (requestPath === '/api/import-codex-skills-zip') {
             void handleImportSkillsZipUpload(req, res, { targetApp: 'codex' });
-            return;
-        }
-        if (requestPath.startsWith('/hooks/')) {
-            const segments = requestPath.split('/').filter(Boolean);
-            const source = segments[1] ? String(segments[1]) : '';
-            void handleAutomationHook(req, res, source);
             return;
         }
         if (requestPath === '/api') {
@@ -12278,6 +13461,34 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 initNotice: consumeInitNotice(),
                                 toolConfigPermissions: readToolConfigPermissions()
                             };
+                            break;
+                        }
+                        case 'read-pi-models': {
+                            result = readPiModels(params || {});
+                            break;
+                        }
+                        case 'write-pi-models': {
+                            result = writePiModels(params || {});
+                            break;
+                        }
+                        case 'read-pi-settings': {
+                            result = readPiSettings(params || {});
+                            break;
+                        }
+                        case 'write-pi-settings': {
+                            result = writePiSettings(params || {});
+                            break;
+                        }
+                        case 'apply-pi-config-history': {
+                            result = applyPiConfigHistory(params || {});
+                            break;
+                        }
+                        case 'fetch-pi-remote-models': {
+                            result = await fetchPiRemoteModels(params || {});
+                            break;
+                        }
+                        case 'pi-models-catalog': {
+                            result = await fetchPiModelsCatalog(params || {});
                             break;
                         }
                         case 'install-status':
@@ -12387,6 +13598,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'sync-provider-cache-records':
                             result = syncProviderCacheRecords();
                             break;
+                        case 'delete-provider-cache-record':
+                            result = deleteProviderCacheRecord(params || {});
+                            break;
                         case 'delete-provider':
                             result = deleteProviderFromConfig(params || {});
                             break;
@@ -12407,7 +13621,6 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                     buildInstallStatusReport,
                                     buildConfigHealthReport,
                                     listSessionUsage,
-                                    buildTaskOverviewPayload,
                                     listSkills
                                 });
                                 result = buildDoctorLegacyPayload(report);
@@ -12490,6 +13703,21 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'apply-openclaw-workspace-file':
                             result = applyOpenclawWorkspaceFile(params || {});
                             break;
+                        case 'get-system-prompt':
+                            result = readSystemPromptFile(params || {});
+                            break;
+                        case 'apply-system-prompt':
+                            result = saveSystemPromptFile(params || {});
+                            break;
+                        case 'preview-system-prompt-diff':
+                            result = buildSystemPromptDiff(params || {});
+                            break;
+                        case 'list-prompt-history':
+                            result = listPromptHistory((params && params.bucket) || '');
+                            break;
+                        case 'get-prompt-history':
+                            result = readPromptHistory((params && params.bucket) || '', (params && params.id) || '');
+                            break;
                         case 'switch':
                         case 'use':
                         case 'add':
@@ -12520,11 +13748,20 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'get-opencode-config':
                             result = readOpencodeConfigInfo();
                             break;
+                        case 'get-kilocode-config':
+                            result = readKilocodeConfigInfo();
+                            break;
                         case 'apply-opencode-config':
                             result = applyOpencodeConfigRaw(params || {});
                             break;
                         case 'update-opencode-selection':
                             result = updateOpencodeSelection(params || {});
+                            break;
+                        case 'apply-kilocode-config':
+                            result = applyKilocodeConfig(params || {});
+                            break;
+                        case 'start-kilocode':
+                            result = startKilocodeFromWeb(params || {});
                             break;
                         case 'apply-claude-config':
                             result = await applyToClaudeSettings(params.config);
@@ -12623,14 +13860,17 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 break;
                             }
                             // 不返回 apiKey（敏感信息），仅返回用户填过的上游 URL
-                            result = { baseUrl: upstream.baseUrl, hasApiKey: !!(upstream.apiKey) };
+                            const config = readConfig();
+                            const provider = config.model_providers && config.model_providers[name];
+                            const providerMaxRetries = resolveProviderOpenaiBridgeMaxRetries(provider);
+                            result = { baseUrl: upstream.baseUrl, hasApiKey: !!(upstream.apiKey), maxRetries: providerMaxRetries };
                             break;
                         }
                         case 'list-sessions':
                             {
                                 const source = typeof params.source === 'string' ? params.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = {
                                         sessions: await listSessionBrowse(params),
@@ -12643,8 +13883,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             {
                                 const usageParams = isPlainObject(params) ? params : {};
                                 const source = typeof usageParams.source === 'string' ? usageParams.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = {
                                         sessions: await listSessionUsage({
@@ -12660,8 +13900,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             {
                                 const usageParams = isPlainObject(params) ? params : {};
                                 const source = typeof usageParams.source === 'string' ? usageParams.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = await exportSessionUsage({
                                         ...usageParams,
@@ -12673,8 +13913,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'list-session-paths':
                             {
                                 const source = typeof params.source === 'string' ? params.source.trim().toLowerCase() : '';
-                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'all') {
-                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'pi' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                                 } else {
                                     result = {
                                         paths: listSessionPaths(params)
@@ -12860,111 +14100,6 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                     limit
                                 };
                             }
-                            break;
-                        case 'task-overview':
-                            result = buildTaskOverviewPayload(params || {});
-                            break;
-                        case 'task-plan':
-                            {
-                                const plan = coerceTaskPlanPayload(params || {});
-                                const validation = validatePreparedTaskPlan(plan);
-                                result = {
-                                    ok: validation.ok,
-                                    plan,
-                                    issues: validation.issues || [],
-                                    warnings: validation.warnings || []
-                                };
-                                if (!validation.ok) {
-                                    result.error = validation.error || 'task plan validation failed';
-                                }
-                            }
-                            break;
-                        case 'task-run':
-                            {
-                                const detach = !!(params && params.detach);
-                                if (detach) {
-                                    const plan = coerceTaskPlanPayload(params || {});
-                                    const validation = validatePreparedTaskPlan(plan);
-                                    if (!validation.ok) {
-                                        result = {
-                                            ok: false,
-                                            error: validation.error || 'task plan validation failed',
-                                            issues: validation.issues || [],
-                                            warnings: validation.warnings || []
-                                        };
-                                        break;
-                                    }
-                                    const taskId = typeof params.taskId === 'string' && params.taskId.trim() ? params.taskId.trim() : createTaskId();
-                                    const runId = createTaskRunId();
-                                    runTaskPlanInternal(plan, { taskId, runId }).catch(() => { });
-                                    result = {
-                                        ok: true,
-                                        started: true,
-                                        detached: true,
-                                        taskId,
-                                        runId,
-                                        warnings: validation.warnings || []
-                                    };
-                                } else {
-                                    result = await runTaskNow(params || {});
-                                }
-                            }
-                            break;
-                        case 'task-runs':
-                            {
-                                const rawLimit = params && Number.isFinite(params.limit) ? params.limit : parseInt(params && params.limit, 10);
-                                const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.floor(rawLimit)) : 20;
-                                result = {
-                                    runs: listTaskRunRecords(limit),
-                                    limit
-                                };
-                            }
-                            break;
-                        case 'task-run-detail':
-                            {
-                                const runIdValidation = validateTaskRunId(params && typeof params.runId === 'string' ? params.runId : '');
-                                if (!runIdValidation.ok) {
-                                    result = { error: runIdValidation.error };
-                                    break;
-                                }
-                                const detail = readTaskRunDetail(runIdValidation.runId);
-                                result = detail || { error: `task run not found: ${runIdValidation.runId}` };
-                            }
-                            break;
-                        case 'task-queue-add':
-                            result = addTaskToQueue(params || {});
-                            break;
-                        case 'task-queue-list':
-                            {
-                                const rawLimit = params && Number.isFinite(params.limit) ? params.limit : parseInt(params && params.limit, 10);
-                                const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.floor(rawLimit)) : 50;
-                                result = {
-                                    tasks: listTaskQueueItems({ limit, status: params && params.status }),
-                                    limit
-                                };
-                            }
-                            break;
-                        case 'task-queue-show':
-                            {
-                                const taskId = params && typeof params.taskId === 'string' ? params.taskId.trim() : '';
-                                if (!taskId) {
-                                    result = { error: 'taskId is required' };
-                                    break;
-                                }
-                                result = getTaskQueueItem(taskId) || { error: `task not found: ${taskId}` };
-                            }
-                            break;
-                        case 'task-queue-start':
-                            result = await startTaskQueueProcessing(params || {});
-                            break;
-                        case 'task-retry':
-                            result = await retryTaskRun(params || {});
-                            break;
-                        case 'task-cancel':
-                            result = cancelTaskRunOrQueue(params || {});
-                            break;
-                        case 'task-logs':
-                            result = getTaskLogs(params || {});
                             break;
                         default:
                             result = { error: '未知操作' };
@@ -13330,15 +14465,12 @@ async function cmdStart(options = {}) {
         openBrowser: shouldOpenBrowser
     });
 
-    const stopAutomationScheduler = startAutomationScheduler();
-
     // 禁止前端变更侦测与自动重启：避免终端输出噪音与访问时短暂 Connection Refused。
     // 如需热重启，请由开发者自行使用外部 watcher / nodemon 等工具。
     const stopWatch = () => { };
 
     const handleExit = () => {
         stopWatch();
-        stopAutomationScheduler();
         Promise.allSettled([
             serverHandle.stop(),
             stopBuiltinProxyRuntime(),
@@ -13722,606 +14854,6 @@ async function cmdWorkflow(args = []) {
     }
 
     throw new Error(`未知 workflow 子命令: ${subcommand}`);
-}
-
-function printTaskHelp() {
-    console.log('\n用法: codexmate task <plan|run|runs|queue|retry|cancel|logs> [参数]');
-    console.log('  codexmate task plan --target "实现任务编排 Tab" --follow-up "继续处理 review"');
-    console.log('  codexmate task run --target "修复失败测试" --allow-write --concurrency 2');
-    console.log('  codexmate task run --target "检查请求链路" --dry-run --plan-only');
-    console.log('  codexmate task runs --limit 20');
-    console.log('  codexmate task queue add --target "整理 workflow 入口" --allow-write');
-    console.log('  codexmate task queue list');
-    console.log('  codexmate task queue show <taskId>');
-    console.log('  codexmate task queue start [<taskId>] [--detach]');
-    console.log('  codexmate task retry <runId>');
-    console.log('  codexmate task cancel <taskId|runId>');
-    console.log('  codexmate task logs <runId>');
-    console.log('参数:');
-    console.log('  --target <文本>         任务目标文本');
-    console.log('  --title <文本>          任务标题');
-    console.log('  --notes <文本>          附加说明');
-    console.log('  --plan <JSON|@file>     直接提供任务计划对象');
-    console.log('  --workflow-id <ID>      复用现有 workflow（可重复）');
-    console.log('  --follow-up <文本>      追加 follow-up（可重复）');
-    console.log('  --allow-write           允许写入工作区');
-    console.log('  --dry-run               仅计划/预演，不执行写入');
-    console.log('  --plan-only             仅输出计划，不执行');
-    console.log('  --engine <codex|workflow>  选择编排引擎');
-    console.log('  --concurrency <N>       并发度');
-    console.log('  --auto-fix-rounds <N>   自动修复回合数');
-    console.log('  --limit <N>             runs/queue list 数量');
-    console.log('  --task-id <ID>          指定任务 ID');
-    console.log('  --run-id <ID>           指定运行 ID');
-    console.log('  --status <状态>         queue list 状态过滤');
-    console.log('  --detach                后台启动任务或队列');
-    console.log('  --json                  以 JSON 输出');
-    console.log();
-}
-
-function parseTaskCliOptions(args = []) {
-    const options = {
-        title: '',
-        target: '',
-        notes: '',
-        planRaw: '',
-        workflowIds: [],
-        followUps: [],
-        allowWrite: false,
-        dryRun: false,
-        planOnly: false,
-        engine: 'codex',
-        concurrency: 2,
-        autoFixRounds: 1,
-        limit: 20,
-        taskId: '',
-        runId: '',
-        status: '',
-        detach: false,
-        json: false,
-        explicit: {}
-    };
-    const rest = [];
-    const pushValue = (key, value, optionName) => {
-        const text = value === undefined || value === null ? '' : String(value).trim();
-        if (!text) {
-            throw new Error(`${optionName} 需要提供非空内容`);
-        }
-        options[key].push(text);
-    };
-    for (let i = 0; i < args.length; i += 1) {
-        const arg = String(args[i] || '');
-        if (!arg) continue;
-        if (arg === '--allow-write') {
-            options.allowWrite = true;
-            options.explicit.allowWrite = true;
-            continue;
-        }
-        if (arg === '--dry-run') {
-            options.dryRun = true;
-            options.explicit.dryRun = true;
-            continue;
-        }
-        if (arg === '--plan-only') {
-            options.planOnly = true;
-            continue;
-        }
-        if (arg === '--detach') {
-            options.detach = true;
-            continue;
-        }
-        if (arg === '--json') {
-            options.json = true;
-            continue;
-        }
-        if (arg === '--title') {
-            options.title = String(args[i + 1] || '').trim();
-            options.explicit.title = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--title=')) {
-            options.title = arg.slice('--title='.length).trim();
-            options.explicit.title = true;
-            continue;
-        }
-        if (arg === '--target') {
-            options.target = String(args[i + 1] || '').trim();
-            options.explicit.target = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--target=')) {
-            options.target = arg.slice('--target='.length).trim();
-            options.explicit.target = true;
-            continue;
-        }
-        if (arg === '--notes') {
-            options.notes = String(args[i + 1] || '').trim();
-            options.explicit.notes = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--notes=')) {
-            options.notes = arg.slice('--notes='.length).trim();
-            options.explicit.notes = true;
-            continue;
-        }
-        if (arg === '--plan') {
-            options.planRaw = String(args[i + 1] || '').trim();
-            options.explicit.planRaw = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--plan=')) {
-            options.planRaw = arg.slice('--plan='.length).trim();
-            options.explicit.planRaw = true;
-            continue;
-        }
-        if (arg === '--workflow-id') {
-            pushValue('workflowIds', args[i + 1], '--workflow-id');
-            options.explicit.workflowIds = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--workflow-id=')) {
-            pushValue('workflowIds', arg.slice('--workflow-id='.length), '--workflow-id');
-            options.explicit.workflowIds = true;
-            continue;
-        }
-        if (arg === '--follow-up') {
-            pushValue('followUps', args[i + 1], '--follow-up');
-            options.explicit.followUps = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--follow-up=')) {
-            pushValue('followUps', arg.slice('--follow-up='.length), '--follow-up');
-            options.explicit.followUps = true;
-            continue;
-        }
-        if (arg === '--engine') {
-            options.engine = normalizeTaskEngine(args[i + 1]);
-            options.explicit.engine = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--engine=')) {
-            options.engine = normalizeTaskEngine(arg.slice('--engine='.length));
-            options.explicit.engine = true;
-            continue;
-        }
-        if (arg === '--concurrency') {
-            const value = parseInt(args[i + 1], 10);
-            if (Number.isFinite(value)) options.concurrency = value;
-            options.explicit.concurrency = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--concurrency=')) {
-            const value = parseInt(arg.slice('--concurrency='.length), 10);
-            if (Number.isFinite(value)) options.concurrency = value;
-            options.explicit.concurrency = true;
-            continue;
-        }
-        if (arg === '--auto-fix-rounds') {
-            const value = parseInt(args[i + 1], 10);
-            if (Number.isFinite(value)) options.autoFixRounds = value;
-            options.explicit.autoFixRounds = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--auto-fix-rounds=')) {
-            const value = parseInt(arg.slice('--auto-fix-rounds='.length), 10);
-            if (Number.isFinite(value)) options.autoFixRounds = value;
-            options.explicit.autoFixRounds = true;
-            continue;
-        }
-        if (arg === '--limit') {
-            const value = parseInt(args[i + 1], 10);
-            if (Number.isFinite(value)) options.limit = value;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--limit=')) {
-            const value = parseInt(arg.slice('--limit='.length), 10);
-            if (Number.isFinite(value)) options.limit = value;
-            continue;
-        }
-        if (arg === '--task-id') {
-            options.taskId = String(args[i + 1] || '').trim();
-            options.explicit.taskId = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--task-id=')) {
-            options.taskId = arg.slice('--task-id='.length).trim();
-            options.explicit.taskId = true;
-            continue;
-        }
-        if (arg === '--run-id') {
-            options.runId = String(args[i + 1] || '').trim();
-            options.explicit.runId = true;
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--run-id=')) {
-            options.runId = arg.slice('--run-id='.length).trim();
-            options.explicit.runId = true;
-            continue;
-        }
-        if (arg === '--status') {
-            options.status = String(args[i + 1] || '').trim().toLowerCase();
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith('--status=')) {
-            options.status = arg.slice('--status='.length).trim().toLowerCase();
-            continue;
-        }
-        rest.push(arg);
-    }
-    return { options, rest };
-}
-
-function buildTaskCliPayload(options = {}, rest = []) {
-    const explicit = options && options.explicit && typeof options.explicit === 'object' ? options.explicit : {};
-    const payload = {};
-    if (explicit.title && options.title) payload.title = options.title;
-    if (explicit.target && options.target) payload.target = options.target;
-    if (explicit.notes && options.notes) payload.notes = options.notes;
-    if (explicit.workflowIds && Array.isArray(options.workflowIds)) payload.workflowIds = options.workflowIds.slice();
-    if (explicit.followUps && Array.isArray(options.followUps)) payload.followUps = options.followUps.slice();
-    if (explicit.allowWrite) payload.allowWrite = options.allowWrite === true;
-    if (explicit.dryRun) payload.dryRun = options.dryRun === true;
-    if (explicit.engine) payload.engine = options.engine || 'codex';
-    if (explicit.concurrency) payload.concurrency = options.concurrency;
-    if (explicit.autoFixRounds) payload.autoFixRounds = options.autoFixRounds;
-    if (explicit.taskId && options.taskId) payload.taskId = options.taskId;
-    if (explicit.runId && options.runId) payload.runId = options.runId;
-    if (!payload.target && Array.isArray(rest) && rest.length > 0) {
-        payload.target = rest.join(' ').trim();
-    }
-    if (options.planRaw) {
-        payload.plan = parseWorkflowInputArg(options.planRaw);
-    }
-    return payload;
-}
-
-function printTaskPlanSummary(plan, warnings = []) {
-    console.log(`\n任务计划: ${plan.title || '(untitled)'}`);
-    console.log(`  engine: ${plan.engine || 'codex'}`);
-    console.log(`  allowWrite: ${plan.allowWrite === true ? 'yes' : 'no'}`);
-    console.log(`  dryRun: ${plan.dryRun === true ? 'yes' : 'no'}`);
-    console.log(`  concurrency: ${plan.concurrency || 1}`);
-    if (plan.target) {
-        console.log(`  target: ${truncateTaskText(plan.target, 200)}`);
-    }
-    const waves = Array.isArray(plan.waves) ? plan.waves : [];
-    console.log(`  waves: ${waves.length}`);
-    for (const wave of waves) {
-        const ids = Array.isArray(wave.nodeIds) ? wave.nodeIds.join(', ') : '';
-        console.log(`    - ${wave.label || `Wave ${wave.index + 1}`}: ${ids}`);
-    }
-    const nodes = Array.isArray(plan.nodes) ? plan.nodes : [];
-    for (const node of nodes) {
-        console.log(`  - ${node.id} [${node.kind}] ${node.title || ''}`.trim());
-        if (node.workflowId) {
-            console.log(`    workflowId: ${node.workflowId}`);
-        }
-        if (Array.isArray(node.dependsOn) && node.dependsOn.length > 0) {
-            console.log(`    dependsOn: ${node.dependsOn.join(', ')}`);
-        }
-    }
-    if (Array.isArray(warnings) && warnings.length > 0) {
-        console.log('  warnings:');
-        warnings.forEach((item) => console.log(`    - ${item}`));
-    }
-    console.log();
-}
-
-function printTaskRunSummary(detail = {}) {
-    const run = detail.run && typeof detail.run === 'object' ? detail.run : {};
-    console.log(`\n任务执行 ${run.status === 'success' ? '完成' : '结束'}: ${detail.title || detail.taskId || ''}`.trim());
-    console.log(`  taskId: ${detail.taskId || ''}`);
-    console.log(`  runId: ${detail.runId || ''}`);
-    console.log(`  status: ${run.status || detail.status || 'unknown'}`);
-    console.log(`  duration: ${run.durationMs || 0}ms`);
-    if (run.summary) {
-        console.log(`  summary: ${run.summary}`);
-    }
-    if (run.error) {
-        console.log(`  error: ${run.error}`);
-    }
-    const nodes = Array.isArray(run.nodes) ? run.nodes : [];
-    for (const node of nodes) {
-        console.log(`  - ${node.id}: ${node.status || 'unknown'} attempts=${node.attemptCount || 0}`);
-        if (node.summary) {
-            console.log(`    ${node.summary}`);
-        }
-        if (node.error && node.error !== node.summary) {
-            console.log(`    error: ${node.error}`);
-        }
-    }
-    console.log();
-}
-
-async function cmdTask(args = []) {
-    const argv = Array.isArray(args) ? args : [];
-    if (argv.length === 0 || argv.includes('--help') || argv.includes('-h')) {
-        printTaskHelp();
-        return;
-    }
-    const subcommand = String(argv[0] || '').trim().toLowerCase();
-    const parsed = parseTaskCliOptions(argv.slice(1));
-    const options = parsed.options;
-    const rest = parsed.rest;
-
-    if (subcommand === 'plan') {
-        const payload = buildTaskCliPayload(options, rest);
-        const plan = coerceTaskPlanPayload(payload);
-        const validation = validatePreparedTaskPlan(plan);
-        const result = {
-            ok: validation.ok,
-            plan,
-            issues: validation.issues || [],
-            warnings: validation.warnings || []
-        };
-        if (options.json) {
-            console.log(JSON.stringify(result, null, 2));
-        } else {
-            if (!validation.ok) {
-                throw new Error(validation.error || 'task plan validation failed');
-            }
-            printTaskPlanSummary(plan, validation.warnings || []);
-        }
-        if (!validation.ok) {
-            throw new Error(validation.error || 'task plan validation failed');
-        }
-        return;
-    }
-
-    if (subcommand === 'runs') {
-        const limit = Number.isFinite(options.limit) ? Math.max(1, Math.floor(options.limit)) : 20;
-        const runs = listTaskRunRecords(limit);
-        if (options.json) {
-            console.log(JSON.stringify({ runs, limit }, null, 2));
-            return;
-        }
-        console.log(`\n最近任务运行（${runs.length}/${limit}）:`);
-        for (const item of runs) {
-            console.log(`  - [${item.status || 'unknown'}] ${item.title || item.taskId || ''} runId=${item.runId || ''} duration=${item.durationMs || 0}ms`);
-            if (item.summary) {
-                console.log(`    ${item.summary}`);
-            }
-            if (item.error) {
-                console.log(`    error: ${item.error}`);
-            }
-        }
-        console.log();
-        return;
-    }
-
-    if (subcommand === 'queue') {
-        const queueSubcommand = String(rest[0] || '').trim().toLowerCase();
-        const tail = rest.slice(1);
-        if (!queueSubcommand) {
-            throw new Error('queue 子命令不能为空');
-        }
-        if (queueSubcommand === 'add') {
-            const payload = buildTaskCliPayload(options, tail);
-            const result = addTaskToQueue(payload);
-            if (options.json) {
-                console.log(JSON.stringify(result, null, 2));
-            } else {
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-                console.log(`✓ 已加入队列: ${result.task.taskId}`);
-                console.log(`  ${result.task.title || result.task.target || ''}`);
-                console.log();
-            }
-            if (result.error) {
-                throw new Error(result.error);
-            }
-            return;
-        }
-        if (queueSubcommand === 'list') {
-            const limit = Number.isFinite(options.limit) ? Math.max(1, Math.floor(options.limit)) : 20;
-            const tasks = listTaskQueueItems({ limit, status: options.status || '' });
-            if (options.json) {
-                console.log(JSON.stringify({ tasks, limit }, null, 2));
-                return;
-            }
-            console.log(`\n任务队列（${tasks.length}/${limit}）:`);
-            for (const item of tasks) {
-                console.log(`  - [${item.status}] ${item.taskId} ${item.title || item.target || ''}`.trim());
-                if (item.lastSummary) {
-                    console.log(`    ${item.lastSummary}`);
-                }
-            }
-            console.log();
-            return;
-        }
-        if (queueSubcommand === 'show') {
-            const taskId = options.taskId || String(tail[0] || '').trim();
-            if (!taskId) {
-                throw new Error('taskId is required');
-            }
-            const task = getTaskQueueItem(taskId);
-            if (!task) {
-                throw new Error(`task not found: ${taskId}`);
-            }
-            console.log(JSON.stringify(task, null, 2));
-            return;
-        }
-        if (queueSubcommand === 'start') {
-            const taskId = options.taskId || String(tail[0] || '').trim();
-            const result = await startTaskQueueProcessing({ taskId, detach: options.detach });
-            if (options.json) {
-                console.log(JSON.stringify(result, null, 2));
-            } else if (result.error) {
-                throw new Error(result.error);
-            } else if (result.detached) {
-                console.log('✓ 队列处理已在后台启动');
-                console.log();
-            } else if (result.detail) {
-                printTaskRunSummary(result.detail);
-            } else {
-                console.log('队列中暂无可执行任务');
-                console.log();
-            }
-            if (result.error) {
-                throw new Error(result.error);
-            }
-            return;
-        }
-        throw new Error(`未知 queue 子命令: ${queueSubcommand}`);
-    }
-
-    if (subcommand === 'run') {
-        const payload = buildTaskCliPayload(options, rest);
-        if (options.planOnly) {
-            const plan = coerceTaskPlanPayload(payload);
-            const validation = validatePreparedTaskPlan(plan);
-            const result = {
-                ok: validation.ok,
-                plan,
-                issues: validation.issues || [],
-                warnings: validation.warnings || []
-            };
-            if (options.json) {
-                console.log(JSON.stringify(result, null, 2));
-            } else {
-                if (!validation.ok) {
-                    throw new Error(validation.error || 'task plan validation failed');
-                }
-                printTaskPlanSummary(plan, validation.warnings || []);
-            }
-            if (!validation.ok) {
-                throw new Error(validation.error || 'task plan validation failed');
-            }
-            return;
-        }
-        if (options.detach) {
-            const plan = coerceTaskPlanPayload(payload);
-            const validation = validatePreparedTaskPlan(plan);
-            if (!validation.ok) {
-                throw new Error(validation.error || 'task plan validation failed');
-            }
-            const taskId = options.taskId || createTaskId();
-            const runId = createTaskRunId();
-            spawnDetachedTaskWorker({
-                type: 'run-plan',
-                plan,
-                taskId,
-                runId
-            });
-            const result = { ok: true, detached: true, taskId, runId, warnings: validation.warnings || [] };
-            if (options.json) {
-                console.log(JSON.stringify(result, null, 2));
-            } else {
-                console.log(`✓ 后台任务已启动: taskId=${taskId} runId=${runId}`);
-                console.log();
-            }
-            return;
-        }
-        const detail = await runTaskNow(payload);
-        if (options.json) {
-            console.log(JSON.stringify(detail, null, 2));
-        } else {
-            printTaskRunSummary(detail);
-        }
-        if (detail.error || (detail.run && detail.run.status && detail.run.status !== 'success')) {
-            throw new Error(detail.error || (detail.run && detail.run.error) || 'task run failed');
-        }
-        return;
-    }
-
-    if (subcommand === 'retry') {
-        const runId = options.runId || String(rest[0] || '').trim();
-        if (options.detach) {
-            const detail = readTaskRunDetail(runId);
-            if (!detail || !detail.plan) {
-                throw new Error(`task run not found: ${runId}`);
-            }
-            const nextRunId = createTaskRunId();
-            spawnDetachedTaskWorker({
-                type: 'run-plan',
-                plan: cloneJson(detail.plan, {}),
-                taskId: detail.taskId || createTaskId(),
-                runId: nextRunId
-            });
-            const result = {
-                ok: true,
-                started: true,
-                detached: true,
-                runId: nextRunId,
-                taskId: detail.taskId || ''
-            };
-            if (options.json) {
-                console.log(JSON.stringify(result, null, 2));
-            } else {
-                console.log(`✓ 已后台重试: runId=${result.runId}`);
-                console.log();
-            }
-            return;
-        }
-        const result = await retryTaskRun({ runId, detach: options.detach });
-        if (options.json) {
-            console.log(JSON.stringify(result, null, 2));
-        } else if (result.detached) {
-            console.log(`✓ 已后台重试: runId=${result.runId}`);
-            console.log();
-        } else {
-            printTaskRunSummary(result);
-        }
-        if (result.error) {
-            throw new Error(result.error);
-        }
-        if (!result.detached && result.run && result.run.status === 'failed') {
-            throw new Error(result.run.error || 'task retry failed');
-        }
-        return;
-    }
-
-    if (subcommand === 'cancel') {
-        const result = cancelTaskRunOrQueue({
-            target: String(rest[0] || '').trim(),
-            taskId: options.taskId,
-            runId: options.runId
-        });
-        if (options.json) {
-            console.log(JSON.stringify(result, null, 2));
-        } else {
-            if (result.error) {
-                throw new Error(result.error);
-            }
-            console.log('✓ 已发出取消请求');
-            console.log();
-        }
-        if (result.error) {
-            throw new Error(result.error);
-        }
-        return;
-    }
-
-    if (subcommand === 'logs') {
-        const runId = options.runId || String(rest[0] || '').trim();
-        const result = getTaskLogs({ runId });
-        if (result.error) {
-            throw new Error(result.error);
-        }
-        if (options.json) {
-            console.log(JSON.stringify(result, null, 2));
-        } else {
-            console.log(result.logs || '(no logs)');
-            console.log();
-        }
-        return;
-    }
-
-    throw new Error(`未知 task 子命令: ${subcommand}`);
 }
 
 // #region parseCodexProxyOptions
@@ -14823,11 +15355,13 @@ function buildMcpProviderListPayload() {
                     upstreamUrl = upstream.baseUrl.trim();
                 }
             }
+            const openaiBridgeMaxRetries = resolveProviderOpenaiBridgeMaxRetries(p);
             return {
                 name,
                 url: p.base_url || '',
                 upstreamUrl,
                 codexmate_bridge: bridge,
+                openaiBridgeMaxRetries,
                 key: maskKey(p.preferred_auth_method || ''),
                 hasKey: !!(p.preferred_auth_method && p.preferred_auth_method.trim()),
                 models: Array.isArray(p.models)
@@ -14891,7 +15425,7 @@ function buildMcpClaudeSettingsPayload() {
 function normalizeMcpSource(value) {
     const source = typeof value === 'string' ? value.trim().toLowerCase() : '';
     if (!source) return '';
-    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'all') {
+    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'pi' || source === 'all') {
         return source;
     }
     return null;
@@ -15204,7 +15738,7 @@ function createWorkflowToolCatalog() {
             handler: async (args = {}) => {
                 const source = normalizeMcpSource(args.source);
                 if (source === null) {
-                    return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                    return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
                 }
                 return {
                     source: source || 'all',
@@ -15436,1333 +15970,6 @@ async function runWorkflowById(workflowId, input = {}, options = {}) {
     };
 }
 
-function createTaskId() {
-    return `task-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
-}
-
-function createTaskRunId() {
-    return `tr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
-}
-
-function validateTaskRunId(value) {
-    const runId = typeof value === 'string' ? value.trim() : '';
-    if (!runId) {
-        return { ok: false, error: 'runId is required', runId: '' };
-    }
-    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(runId)) {
-        return { ok: false, error: 'runId contains unsupported characters', runId: '' };
-    }
-    return { ok: true, error: '', runId };
-}
-
-function normalizeTaskEngine(value) {
-    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'workflow' ? 'workflow' : 'codex';
-}
-
-function normalizeTaskFollowUps(input = []) {
-    const seen = new Set();
-    const result = [];
-    for (const item of Array.isArray(input) ? input : []) {
-        const text = typeof item === 'string' ? item.trim() : '';
-        if (!text || seen.has(text)) continue;
-        seen.add(text);
-        result.push(text);
-    }
-    return result;
-}
-
-function buildTaskWorkflowCatalog() {
-    const listed = listWorkflowDefinitions();
-    return {
-        workflows: Array.isArray(listed.workflows)
-            ? listed.workflows.map((item) => ({
-                id: item.id,
-                name: item.name,
-                description: item.description,
-                readOnly: item.readOnly !== false,
-                stepCount: item.stepCount || 0
-            }))
-            : [],
-        warnings: Array.isArray(listed.warnings) ? listed.warnings : []
-    };
-}
-
-function normalizeTaskPlanRequest(params = {}) {
-    const source = params && typeof params === 'object' ? params : {};
-    const rawWorkflowIds = Array.isArray(source.workflowIds)
-        ? source.workflowIds
-        : (typeof source.workflowId === 'string' && source.workflowId.trim() ? [source.workflowId.trim()] : []);
-    const rawFollowUps = Array.isArray(source.followUps)
-        ? source.followUps
-        : (typeof source.followUp === 'string' && source.followUp.trim() ? [source.followUp.trim()] : []);
-    return {
-        id: typeof source.id === 'string' ? source.id.trim() : '',
-        title: typeof source.title === 'string' ? source.title.trim() : '',
-        target: typeof source.target === 'string' ? source.target.trim() : '',
-        notes: typeof source.notes === 'string' ? source.notes.trim() : '',
-        cwd: typeof source.cwd === 'string' ? source.cwd.trim() : process.cwd(),
-        engine: normalizeTaskEngine(source.engine),
-        allowWrite: source.allowWrite === true,
-        dryRun: source.dryRun === true,
-        concurrency: Number.isFinite(source.concurrency) ? source.concurrency : parseInt(source.concurrency, 10),
-        autoFixRounds: Number.isFinite(source.autoFixRounds) ? source.autoFixRounds : parseInt(source.autoFixRounds, 10),
-        workflowIds: rawWorkflowIds,
-        followUps: normalizeTaskFollowUps(rawFollowUps)
-    };
-}
-
-function coerceTaskPlanPayload(params = {}) {
-    if (params && params.plan && typeof params.plan === 'object' && !Array.isArray(params.plan)) {
-        const plan = cloneJson(params.plan, {});
-        const overrideKeys = ['id', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'workflowIds', 'followUps'];
-        for (const key of overrideKeys) {
-            if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined) {
-                plan[key] = cloneJson(params[key], params[key]);
-            }
-        }
-        plan.engine = normalizeTaskEngine(plan.engine);
-        plan.workflowIds = normalizeTaskFollowUps(plan.workflowIds || []).map((id) => normalizeWorkflowId(id)).filter(Boolean);
-        plan.followUps = normalizeTaskFollowUps(plan.followUps || []);
-        plan.waves = computePlanWaves(Array.isArray(plan.nodes) ? plan.nodes : []);
-        return plan;
-    }
-    const request = normalizeTaskPlanRequest(params || {});
-    const catalog = buildTaskWorkflowCatalog();
-    const plan = buildTaskPlan(request, {
-        workflowCatalog: catalog.workflows,
-        cwd: request.cwd || process.cwd()
-    });
-    return {
-        ...plan,
-        engine: normalizeTaskEngine(request.engine || plan.engine)
-    };
-}
-
-function validatePreparedTaskPlan(plan) {
-    const catalog = buildTaskWorkflowCatalog();
-    const validation = validateTaskPlan(plan, {
-        workflowCatalog: catalog.workflows
-    });
-    return {
-        ...validation,
-        warnings: catalog.warnings || []
-    };
-}
-
-function normalizeTaskQueueItem(raw = {}) {
-    const plan = raw.plan && typeof raw.plan === 'object' && !Array.isArray(raw.plan)
-        ? cloneJson(raw.plan, {})
-        : {};
-    const taskId = typeof raw.taskId === 'string' ? raw.taskId.trim() : '';
-    return {
-        taskId: taskId || createTaskId(),
-        title: typeof raw.title === 'string' ? raw.title.trim() : (typeof plan.title === 'string' ? plan.title.trim() : ''),
-        target: typeof raw.target === 'string' ? raw.target.trim() : (typeof plan.target === 'string' ? plan.target.trim() : ''),
-        status: typeof raw.status === 'string' ? raw.status.trim().toLowerCase() : 'queued',
-        createdAt: toIsoTime(raw.createdAt || Date.now(), ''),
-        updatedAt: toIsoTime(raw.updatedAt || raw.createdAt || Date.now(), ''),
-        engine: normalizeTaskEngine(raw.engine || plan.engine),
-        allowWrite: raw.allowWrite === true || plan.allowWrite === true,
-        dryRun: raw.dryRun === true || plan.dryRun === true,
-        concurrency: Number.isFinite(raw.concurrency) ? raw.concurrency : (Number.isFinite(plan.concurrency) ? plan.concurrency : 2),
-        autoFixRounds: Number.isFinite(raw.autoFixRounds) ? raw.autoFixRounds : (Number.isFinite(plan.autoFixRounds) ? plan.autoFixRounds : 1),
-        lastRunId: typeof raw.lastRunId === 'string' ? raw.lastRunId.trim() : '',
-        lastSummary: typeof raw.lastSummary === 'string' ? raw.lastSummary.trim() : '',
-        plan,
-        runStatus: typeof raw.runStatus === 'string' ? raw.runStatus.trim().toLowerCase() : ''
-    };
-}
-
-function readTaskQueueState() {
-    const parsed = readJsonObjectFromFile(TASK_QUEUE_FILE, {});
-    if (!parsed.ok && parsed.exists) {
-        return {
-            tasks: [],
-            error: parsed.error || 'failed to read task queue'
-        };
-    }
-    if (!parsed.ok || !parsed.exists) {
-        return {
-            tasks: [],
-            error: ''
-        };
-    }
-    const source = parsed.data && typeof parsed.data === 'object' ? parsed.data : {};
-    const tasks = Array.isArray(source.tasks) ? source.tasks.map((item) => normalizeTaskQueueItem(item)) : [];
-    return { tasks, error: '' };
-}
-
-function writeTaskQueueState(state = {}) {
-    ensureDir(path.dirname(TASK_QUEUE_FILE));
-    writeJsonAtomic(TASK_QUEUE_FILE, {
-        tasks: Array.isArray(state.tasks) ? state.tasks.map((item) => normalizeTaskQueueItem(item)) : []
-    });
-}
-
-function withTaskQueueLock(fn) {
-    const lockPath = `${TASK_QUEUE_FILE}.lock`;
-    ensureDir(path.dirname(lockPath));
-    let lockFd = null;
-    try {
-        lockFd = fs.openSync(lockPath, 'wx', 0o600);
-    } catch (error) {
-        const code = error && error.code ? error.code : '';
-        if (code === 'EEXIST') {
-            try {
-                const stat = fs.statSync(lockPath);
-                const ageMs = Date.now() - stat.mtimeMs;
-                if (ageMs > 5000) {
-                    try {
-                        fs.unlinkSync(lockPath);
-                    } catch (_) { }
-                    lockFd = fs.openSync(lockPath, 'wx', 0o600);
-                }
-            } catch (_) { }
-        }
-    }
-    if (!lockFd) {
-        return { error: 'task queue is busy' };
-    }
-    try {
-        return fn();
-    } finally {
-        try {
-            fs.closeSync(lockFd);
-        } catch (_) { }
-        try {
-            fs.unlinkSync(lockPath);
-        } catch (_) { }
-    }
-}
-
-function upsertTaskQueueItem(item) {
-    return withTaskQueueLock(() => {
-        const state = readTaskQueueState();
-        if (state.error) {
-            return { error: state.error };
-        }
-        const next = normalizeTaskQueueItem(item || {});
-        const index = state.tasks.findIndex((entry) => entry.taskId === next.taskId);
-        if (index >= 0) {
-            state.tasks[index] = next;
-        } else {
-            state.tasks.push(next);
-        }
-        writeTaskQueueState(state);
-        return next;
-    });
-}
-
-function getTaskQueueItem(taskId) {
-    const id = typeof taskId === 'string' ? taskId.trim() : '';
-    if (!id) return null;
-    return readTaskQueueState().tasks.find((item) => item.taskId === id) || null;
-}
-
-function listTaskQueueItems(options = {}) {
-    const state = readTaskQueueState();
-    const limit = Number.isFinite(options.limit) ? Math.max(1, Math.floor(options.limit)) : 50;
-    const statusFilter = typeof options.status === 'string' ? options.status.trim().toLowerCase() : '';
-    const statusRank = {
-        running: 0,
-        queued: 1,
-        failed: 2,
-        completed: 3,
-        cancelled: 4
-    };
-    return state.tasks
-        .filter((item) => !statusFilter || item.status === statusFilter)
-        .sort((a, b) => {
-            const rankDiff = (statusRank[a.status] ?? 99) - (statusRank[b.status] ?? 99);
-            if (rankDiff !== 0) return rankDiff;
-            return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
-        })
-        .slice(0, limit);
-}
-
-function appendTaskRunRecord(record) {
-    ensureDir(path.dirname(TASK_RUNS_FILE));
-    fs.appendFileSync(TASK_RUNS_FILE, `${JSON.stringify(record)}\n`, { encoding: 'utf-8', mode: 0o600 });
-}
-
-let g_taskRunRecordsLastParseErrors = 0;
-
-function listTaskRunRecords(limit = 20) {
-    const max = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 20;
-    if (!fs.existsSync(TASK_RUNS_FILE)) {
-        g_taskRunRecordsLastParseErrors = 0;
-        return [];
-    }
-    let content = '';
-    try {
-        content = fs.readFileSync(TASK_RUNS_FILE, 'utf-8');
-    } catch (_) {
-        g_taskRunRecordsLastParseErrors = 0;
-        return [];
-    }
-    const rows = content
-        .split(/\r?\n/g)
-        .map((line) => line.trim())
-        .filter(Boolean);
-    const parsed = [];
-    let parseErrors = 0;
-    for (let i = rows.length - 1; i >= 0; i -= 1) {
-        try {
-            parsed.push(JSON.parse(rows[i]));
-            if (parsed.length >= max) {
-                break;
-            }
-        } catch (_) {
-            parseErrors += 1;
-        }
-    }
-    g_taskRunRecordsLastParseErrors = parseErrors;
-    return parsed;
-}
-
-function getTaskRunDetailPath(runId) {
-    const validation = validateTaskRunId(runId);
-    if (!validation.ok) {
-        return '';
-    }
-    const baseDir = path.resolve(TASK_RUN_DETAILS_DIR);
-    const detailPath = path.resolve(baseDir, `${validation.runId}.json`);
-    if (!(detailPath === baseDir || detailPath.startsWith(`${baseDir}${path.sep}`))) {
-        return '';
-    }
-    return detailPath;
-}
-
-function writeTaskRunDetail(detail = {}) {
-    const detailPath = getTaskRunDetailPath(detail.runId);
-    if (!detailPath) return;
-    ensureDir(path.dirname(detailPath));
-    writeJsonAtomic(detailPath, detail);
-}
-
-function readTaskRunDetail(runId) {
-    const detailPath = getTaskRunDetailPath(runId);
-    if (!detailPath) {
-        return null;
-    }
-    const parsed = readJsonObjectFromFile(detailPath, {});
-    if (!parsed.ok || !parsed.exists) {
-        return null;
-    }
-    return parsed.data && typeof parsed.data === 'object' ? parsed.data : null;
-}
-
-function collectTaskRunSummary(detail = {}) {
-    const run = detail.run && typeof detail.run === 'object' ? detail.run : {};
-    const nodes = Array.isArray(run.nodes) ? run.nodes : [];
-    return {
-        runId: detail.runId || '',
-        taskId: detail.taskId || '',
-        title: detail.title || '',
-        target: detail.target || '',
-        engine: detail.engine || '',
-        allowWrite: detail.allowWrite === true,
-        dryRun: detail.dryRun === true,
-        concurrency: detail.concurrency || 0,
-        status: run.status || detail.status || '',
-        startedAt: run.startedAt || detail.startedAt || '',
-        endedAt: run.endedAt || detail.endedAt || '',
-        durationMs: run.durationMs || 0,
-        summary: run.summary || detail.summary || '',
-        error: run.error || detail.error || '',
-        nodeCount: nodes.length,
-        successCount: nodes.filter((node) => node.status === 'success').length,
-        failedCount: nodes.filter((node) => node.status === 'failed').length,
-        blockedCount: nodes.filter((node) => node.status === 'blocked').length,
-        cancelledCount: nodes.filter((node) => node.status === 'cancelled').length
-    };
-}
-
-function writeTaskRunArtifacts(detail = {}) {
-    const validation = validateTaskRunId(detail && typeof detail.runId === 'string' ? detail.runId : '');
-    if (!validation.ok) {
-        return;
-    }
-    const run = detail.run && typeof detail.run === 'object' ? detail.run : {};
-    const nodes = Array.isArray(run.nodes) ? run.nodes : [];
-    const dir = path.join(TASK_ARTIFACTS_DIR, validation.runId);
-    ensureDir(dir);
-    writeJsonAtomic(path.join(dir, 'summary.json'), collectTaskRunSummary(detail));
-    const runLogText = summarizeTaskLogs(run.logs || [], 200);
-    const nodeLogText = nodes
-        .map((node) => {
-            const header = node && node.id ? `\n# ${node.id}\n` : '\n# node\n';
-            const text = summarizeTaskLogs(node && node.logs ? node.logs : [], 200);
-            return `${header}${text}`.trimEnd();
-        })
-        .filter(Boolean)
-        .join('\n');
-    const combined = `${runLogText}${nodeLogText ? `\n\n${nodeLogText}` : ''}`.trim();
-    try {
-        fs.writeFileSync(path.join(dir, 'logs.txt'), combined, { encoding: 'utf-8', mode: 0o600 });
-    } catch (_) { }
-}
-
-async function notifyAutomationOnTaskRun(detail = {}) {
-    const cfg = readAutomationConfig(AUTOMATION_CONFIG_FILE, { env: process.env });
-    if (!cfg.ok || !cfg.config) {
-        return [];
-    }
-    const payload = formatTaskRunNotificationPayload(detail);
-    const status = String(payload.status || '').toLowerCase();
-    const eventType = status === 'success'
-        ? 'task.completed'
-        : (status === 'failed' ? 'task.failed' : 'task.finished');
-    return await dispatchAutomationNotifiers(cfg.config, eventType, payload);
-}
-
-function startAutomationScheduler() {
-    const lastTicks = new Map();
-    let tickInFlight = false;
-    let timer = setInterval(async () => {
-        if (tickInFlight) {
-            return;
-        }
-        tickInFlight = true;
-        try {
-            const cfg = readAutomationConfig(AUTOMATION_CONFIG_FILE, { env: process.env });
-            if (!cfg.ok || !cfg.config) {
-                return;
-            }
-            const schedules = Array.isArray(cfg.config.schedules) ? cfg.config.schedules : [];
-            if (schedules.length === 0) {
-                return;
-            }
-            const now = new Date();
-            const tickKey = now.toISOString().slice(0, 16);
-            for (const schedule of schedules) {
-                if (!schedule || schedule.enabled === false) continue;
-                if (!schedule.id || !schedule.cron) continue;
-                if (!isCronMatch(schedule.cron, now)) continue;
-                if (lastTicks.get(schedule.id) === tickKey) continue;
-                lastTicks.set(schedule.id, tickKey);
-                const action = schedule.action && typeof schedule.action === 'object' ? schedule.action : {};
-                const actionType = typeof action.type === 'string' ? action.type.trim().toLowerCase() : '';
-                if (actionType !== 'task.queue.add') continue;
-                const taskPayload = action.task && typeof action.task === 'object' ? action.task : {};
-                try {
-                    const enqueue = addTaskToQueue(taskPayload);
-                    if (enqueue && enqueue.error) continue;
-                    if (action.startQueue === true) {
-                        await startTaskQueueProcessing({ taskId: '', detach: true });
-                    }
-                } catch (_) { }
-            }
-        } finally {
-            tickInFlight = false;
-        }
-    }, 30000);
-    if (timer && typeof timer.unref === 'function') {
-        timer.unref();
-    }
-    return () => {
-        if (!timer) return;
-        clearInterval(timer);
-        timer = null;
-    };
-}
-
-function buildTaskOverviewPayload(options = {}) {
-    const queueLimit = Number.isFinite(options.queueLimit) ? Math.max(1, Math.floor(options.queueLimit)) : 20;
-    const runLimit = Number.isFinite(options.runLimit) ? Math.max(1, Math.floor(options.runLimit)) : 20;
-    const workflowCatalog = buildTaskWorkflowCatalog();
-    const queueState = readTaskQueueState();
-    const queue = queueState.error ? [] : listTaskQueueItems({ limit: queueLimit });
-    const runs = listTaskRunRecords(runLimit);
-    const warnings = Array.isArray(workflowCatalog.warnings) ? [...workflowCatalog.warnings] : [];
-    if (queueState.error) {
-        warnings.push(`task queue read error: ${queueState.error}`);
-    }
-    if (g_taskRunRecordsLastParseErrors > 0) {
-        warnings.push(`task run history parse errors: ${g_taskRunRecordsLastParseErrors}`);
-    }
-    return {
-        workflows: workflowCatalog.workflows,
-        warnings,
-        queue,
-        runs,
-        activeRunIds: Array.from(g_taskRunControllers.keys()),
-        queueError: queueState.error || '',
-        runParseErrors: g_taskRunRecordsLastParseErrors
-    };
-}
-
-function summarizeTaskLogs(logs = [], limit = 80) {
-    return (Array.isArray(logs) ? logs : [])
-        .slice(0, limit)
-        .map((item) => {
-            if (!item || typeof item !== 'object') {
-                return String(item || '');
-            }
-            const at = item.at ? `[${item.at}] ` : '';
-            const level = item.level ? `${String(item.level).toUpperCase()} ` : '';
-            const message = item.message ? String(item.message) : '';
-            return `${at}${level}${message}`.trim();
-        })
-        .filter(Boolean)
-        .join('\n');
-}
-
-function findCodexSessionId(value, depth = 0) {
-    if (depth > 6 || value === null || value === undefined) {
-        return '';
-    }
-    if (Array.isArray(value)) {
-        for (const item of value) {
-            const found = findCodexSessionId(item, depth + 1);
-            if (found) return found;
-        }
-        return '';
-    }
-    if (typeof value !== 'object') {
-        return '';
-    }
-    const candidateKeys = ['session_id', 'sessionId', 'conversation_id', 'conversationId', 'thread_id', 'threadId'];
-    for (const key of candidateKeys) {
-        const candidate = value[key];
-        if (typeof candidate === 'string' && candidate.trim()) {
-            return candidate.trim();
-        }
-    }
-    for (const item of Object.values(value)) {
-        const found = findCodexSessionId(item, depth + 1);
-        if (found) return found;
-    }
-    return '';
-}
-
-function readCodexLastMessageFile(filePath) {
-    if (!filePath) return '';
-    try {
-        return fs.readFileSync(filePath, 'utf-8').trim();
-    } catch (_) {
-        return '';
-    }
-}
-
-async function runCodexExecTaskNode(node, context = {}) {
-    const codexPath = resolveSpawnCommand('codex');
-    const codexProbeCommand = process.platform === 'win32' ? 'codex' : codexPath;
-    if (!commandExists(codexProbeCommand, '--version')) {
-        return {
-            success: false,
-            error: '未找到 codex CLI，请先安装并确保 PATH 可用',
-            summary: 'codex CLI 不可用',
-            output: null,
-            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: 'codex CLI 不可用' }]
-        };
-    }
-    const allowWrite = context.allowWrite === true && node.write === true;
-    const cwd = typeof context.cwd === 'string' && context.cwd.trim() ? context.cwd.trim() : process.cwd();
-    const dependencyResults = Array.isArray(context.dependencyResults) ? context.dependencyResults : [];
-    const dependencyLines = dependencyResults
-        .map((item) => {
-            const summary = item && (item.summary || item.error) ? String(item.summary || item.error) : '';
-            return summary ? `- ${item.id}: ${summary}` : '';
-        })
-        .filter(Boolean);
-    const previousAttempts = Array.isArray(context.previousAttempts) ? context.previousAttempts : [];
-    const lastAttempt = previousAttempts.length > 0 ? previousAttempts[previousAttempts.length - 1] : null;
-    const attempt = Number.isFinite(context.attempt) ? context.attempt : 1;
-    const promptParts = [String(node.prompt || '').trim()];
-    if (dependencyLines.length > 0) {
-        promptParts.push(`前置节点摘要:\n${dependencyLines.join('\n')}`);
-    }
-    if (attempt > 1 && lastAttempt) {
-        promptParts.push(`上一轮失败摘要:\n${String(lastAttempt.error || lastAttempt.summary || '').trim()}`);
-        promptParts.push('请在保持目标不变的前提下修复上一轮失败并继续完成当前节点。');
-    }
-    const finalPrompt = promptParts.filter(Boolean).join('\n\n');
-    const tempRoot = path.join(TASK_RUN_DETAILS_DIR, 'tmp');
-    ensureDir(tempRoot);
-    const tempDir = fs.mkdtempSync(path.join(tempRoot, 'codex-'));
-    const outputFile = path.join(tempDir, 'last-message.txt');
-    const args = [
-        '-a', 'never',
-        '-s', allowWrite ? 'workspace-write' : 'read-only',
-        '-C', cwd,
-        'exec',
-        '--json',
-        '--skip-git-repo-check',
-        '--output-last-message', outputFile,
-        finalPrompt
-    ];
-    const stdoutLines = [];
-    const stderrLines = [];
-    const parsedEvents = [];
-    let sessionId = '';
-    let stdoutPartial = '';
-    let stderrPartial = '';
-    const processCapturedLine = (bucket, line) => {
-        const normalizedLine = String(line || '').trim();
-        if (!normalizedLine) {
-            return;
-        }
-        if (bucket.length < 120) {
-            bucket.push(truncateTaskText(normalizedLine, 1200));
-        }
-        try {
-            const payload = JSON.parse(normalizedLine);
-            if (parsedEvents.length < 120) {
-                parsedEvents.push(payload);
-            }
-            if (!sessionId) {
-                sessionId = findCodexSessionId(payload);
-            }
-        } catch (_) { }
-    };
-    const captureLines = (bucket, text, stream) => {
-        const currentPartial = stream === 'stderr' ? stderrPartial : stdoutPartial;
-        const merged = `${currentPartial}${String(text || '')}`;
-        const pieces = merged.split(/\r?\n/g);
-        const nextPartial = pieces.pop() || '';
-        if (stream === 'stderr') {
-            stderrPartial = nextPartial;
-        } else {
-            stdoutPartial = nextPartial;
-        }
-        for (const line of pieces) {
-            processCapturedLine(bucket, line);
-        }
-    };
-    const flushCapturedPartial = (bucket, stream) => {
-        const partial = stream === 'stderr' ? stderrPartial : stdoutPartial;
-        if (stream === 'stderr') {
-            stderrPartial = '';
-        } else {
-            stdoutPartial = '';
-        }
-        processCapturedLine(bucket, partial);
-    };
-    const exit = await new Promise((resolve) => {
-        const child = spawn(codexPath, args, {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            windowsHide: true,
-            shell: process.platform === 'win32'
-        });
-        if (typeof context.registerAbort === 'function') {
-            context.registerAbort(() => {
-                try {
-                    child.kill('SIGTERM');
-                } catch (_) { }
-            });
-        }
-        child.stdout.on('data', (chunk) => {
-            captureLines(stdoutLines, chunk, 'stdout');
-        });
-        child.stderr.on('data', (chunk) => {
-            captureLines(stderrLines, chunk, 'stderr');
-        });
-        child.on('error', (error) => {
-            resolve({ code: 1, signal: '', error: error && error.message ? error.message : String(error || 'spawn failed') });
-        });
-        child.on('close', (code, signal) => {
-            flushCapturedPartial(stdoutLines, 'stdout');
-            flushCapturedPartial(stderrLines, 'stderr');
-            resolve({ code: typeof code === 'number' ? code : 1, signal: signal || '', error: '' });
-        });
-    });
-    const lastMessage = readCodexLastMessageFile(outputFile);
-    try {
-        if (fs.rmSync) {
-            fs.rmSync(tempDir, { recursive: true, force: true });
-        } else {
-            fs.rmdirSync(tempDir, { recursive: true });
-        }
-    } catch (_) { }
-    const success = exit.code === 0;
-    const errorMessage = success
-        ? ''
-        : (exit.error || stderrLines[stderrLines.length - 1] || stdoutLines[stdoutLines.length - 1] || `codex exec exited with code ${exit.code}`);
-    const summary = truncateTaskText(lastMessage || (success ? 'Codex 执行完成' : errorMessage), 400);
-    return {
-        success,
-        error: errorMessage,
-        summary,
-        output: {
-            exitCode: exit.code,
-            signal: exit.signal || '',
-            sessionId,
-            lastMessage,
-            events: parsedEvents,
-            stdoutPreview: stdoutLines,
-            stderrPreview: stderrLines
-        },
-        logs: [
-            ...stdoutLines.map((line) => ({ at: toIsoTime(Date.now()), level: 'info', message: line })),
-            ...stderrLines.map((line) => ({ at: toIsoTime(Date.now()), level: 'warn', message: line }))
-        ]
-    };
-}
-
-async function executeTaskNodeAdapter(node, context = {}) {
-    if (node.kind === 'workflow') {
-        const input = {
-            ...(node.input && typeof node.input === 'object' && !Array.isArray(node.input) ? cloneJson(node.input, {}) : {}),
-            task: {
-                title: context.plan && context.plan.title ? context.plan.title : '',
-                target: context.plan && context.plan.target ? context.plan.target : '',
-                dependencyResults: cloneJson(context.dependencyResults || [], [])
-            }
-        };
-        const result = await runWorkflowById(node.workflowId, input, {
-            allowWrite: context.allowWrite === true,
-            dryRun: context.dryRun === true
-        });
-        return {
-            success: result && result.success === true,
-            error: result && result.error ? result.error : '',
-            summary: truncateTaskText(
-                result && result.error
-                    ? result.error
-                    : `${result && result.workflowName ? result.workflowName : node.workflowId} ${result && result.success === true ? '完成' : '失败'}`,
-                400
-            ),
-            output: cloneJson(result, null),
-            logs: Array.isArray(result && result.steps)
-                ? result.steps.map((step) => ({
-                    at: step.startedAt || toIsoTime(Date.now()),
-                    level: step.status === 'failed' ? 'error' : (step.status === 'skipped' ? 'warn' : 'info'),
-                    message: `${step.id || step.tool || 'step'}: ${step.status || 'unknown'}${step.error ? ` (${step.error})` : ''}`
-                }))
-                : []
-        };
-    }
-    return runCodexExecTaskNode(node, context);
-}
-
-async function runTaskPlanInternal(plan, options = {}) {
-    const validation = validatePreparedTaskPlan(plan);
-    if (!validation.ok) {
-        return {
-            error: validation.error || 'task plan validation failed',
-            issues: validation.issues || [],
-            warnings: validation.warnings || []
-        };
-    }
-    const taskId = typeof options.taskId === 'string' && options.taskId.trim() ? options.taskId.trim() : (plan.id || createTaskId());
-    const runId = typeof options.runId === 'string' && options.runId.trim() ? options.runId.trim() : createTaskRunId();
-    const controller = new AbortController();
-    const baseDetail = {
-        runId,
-        taskId,
-        workerPid: process.pid,
-        title: plan.title || '',
-        target: plan.target || '',
-        engine: normalizeTaskEngine(plan.engine),
-        allowWrite: plan.allowWrite === true,
-        dryRun: plan.dryRun === true,
-        concurrency: Number.isFinite(plan.concurrency) ? plan.concurrency : 2,
-        createdAt: toIsoTime(Date.now()),
-        updatedAt: toIsoTime(Date.now()),
-        warnings: validation.warnings || [],
-        plan: cloneJson(plan, {})
-    };
-    writeTaskRunDetail({
-        ...baseDetail,
-        status: 'running',
-        run: {
-            status: 'running',
-            startedAt: toIsoTime(Date.now()),
-            endedAt: '',
-            durationMs: 0,
-            nodes: [],
-            logs: []
-        }
-    });
-    g_taskRunControllers.set(runId, {
-        runId,
-        taskId,
-        controller,
-        abort() {
-            try {
-                controller.abort();
-            } catch (_) { }
-        }
-    });
-    if (options.queueItem) {
-        const queued = upsertTaskQueueItem({
-            ...options.queueItem,
-            taskId,
-            status: 'running',
-            runStatus: 'running',
-            lastRunId: runId,
-            lastSummary: '',
-            updatedAt: toIsoTime(Date.now()),
-            plan
-        });
-        if (queued && queued.error) { }
-    }
-    try {
-        const run = await executeTaskPlan(plan, {
-            concurrency: plan.concurrency,
-            signal: controller.signal,
-            executeNode: async (node, nodeContext) => executeTaskNodeAdapter(node, {
-                ...nodeContext,
-                plan,
-                taskId,
-                runId,
-                allowWrite: plan.allowWrite === true,
-                dryRun: plan.dryRun === true,
-                cwd: plan.cwd || process.cwd()
-            }),
-            onUpdate: async (snapshot) => {
-                const nextDetail = {
-                    ...baseDetail,
-                    updatedAt: toIsoTime(Date.now()),
-                    status: snapshot.status || 'running',
-                    run: snapshot
-                };
-                writeTaskRunDetail(nextDetail);
-                if (options.queueItem) {
-                    const queued = upsertTaskQueueItem({
-                        ...options.queueItem,
-                        taskId,
-                        status: snapshot.status === 'success'
-                            ? 'completed'
-                            : (snapshot.status === 'failed' ? 'failed' : (snapshot.status === 'cancelled' ? 'cancelled' : 'running')),
-                        runStatus: snapshot.status || 'running',
-                        lastRunId: runId,
-                        lastSummary: snapshot.summary || '',
-                        updatedAt: toIsoTime(Date.now()),
-                        plan
-                    });
-                    if (queued && queued.error) { }
-                }
-            }
-        });
-        const detail = {
-            ...baseDetail,
-            updatedAt: toIsoTime(Date.now()),
-            status: run.status || 'failed',
-            run
-        };
-        writeTaskRunDetail(detail);
-        appendTaskRunRecord(collectTaskRunSummary(detail));
-        writeTaskRunArtifacts(detail);
-        try {
-            await notifyAutomationOnTaskRun(detail);
-        } catch (_) { }
-        if (options.queueItem) {
-            const queued = upsertTaskQueueItem({
-                ...options.queueItem,
-                taskId,
-                status: run.status === 'success'
-                    ? 'completed'
-                    : (run.status === 'cancelled' ? 'cancelled' : 'failed'),
-                runStatus: run.status || '',
-                lastRunId: runId,
-                lastSummary: run.summary || run.error || '',
-                updatedAt: toIsoTime(Date.now()),
-                plan
-            });
-            if (queued && queued.error) { }
-        }
-        return detail;
-    } finally {
-        g_taskRunControllers.delete(runId);
-    }
-}
-
-function addTaskToQueue(params = {}) {
-    const plan = coerceTaskPlanPayload(params || {});
-    const validation = validatePreparedTaskPlan(plan);
-    if (!validation.ok) {
-        return {
-            error: validation.error || 'task plan validation failed',
-            issues: validation.issues || [],
-            warnings: validation.warnings || []
-        };
-    }
-    const taskId = typeof params.taskId === 'string' && params.taskId.trim() ? params.taskId.trim() : createTaskId();
-    const item = upsertTaskQueueItem({
-        taskId,
-        title: plan.title,
-        target: plan.target,
-        status: 'queued',
-        createdAt: toIsoTime(Date.now()),
-        updatedAt: toIsoTime(Date.now()),
-        engine: plan.engine,
-        allowWrite: plan.allowWrite === true,
-        dryRun: plan.dryRun === true,
-        concurrency: plan.concurrency || 2,
-        autoFixRounds: plan.autoFixRounds || 1,
-        lastRunId: '',
-        lastSummary: '',
-        runStatus: '',
-        plan
-    });
-    if (item && item.error) {
-        return { error: item.error };
-    }
-    return {
-        ok: true,
-        task: item,
-        warnings: validation.warnings || []
-    };
-}
-
-async function runTaskNow(params = {}) {
-    const rawRunId = params && typeof params.runId === 'string' ? params.runId.trim() : '';
-    const runIdValidation = rawRunId
-        ? validateTaskRunId(rawRunId)
-        : { ok: true, runId: createTaskRunId(), error: '' };
-    if (!runIdValidation.ok) {
-        return { error: runIdValidation.error };
-    }
-    const plan = coerceTaskPlanPayload(params || {});
-    const detail = await runTaskPlanInternal(plan, {
-        taskId: typeof params.taskId === 'string' && params.taskId.trim() ? params.taskId.trim() : createTaskId(),
-        runId: runIdValidation.runId
-    });
-    return detail;
-}
-
-async function runTaskQueueProcessingInternal(options = {}) {
-    const taskId = typeof options.taskId === 'string' ? options.taskId.trim() : '';
-    let latestDetail = null;
-    while (true) {
-        const queue = listTaskQueueItems({ limit: 200, status: 'queued' });
-        const nextItem = taskId
-            ? queue.find((item) => item.taskId === taskId)
-            : queue[queue.length - 1];
-        if (!nextItem) {
-            break;
-        }
-        latestDetail = await runTaskPlanInternal(nextItem.plan, {
-            taskId: nextItem.taskId,
-            runId: createTaskRunId(),
-            queueItem: nextItem
-        });
-        if (taskId) {
-            break;
-        }
-    }
-    return latestDetail;
-}
-
-async function startTaskQueueProcessing(options = {}) {
-    const taskId = typeof options.taskId === 'string' ? options.taskId.trim() : '';
-    const detach = options.detach === true;
-    const queueItemById = taskId ? getTaskQueueItem(taskId) : null;
-    if (taskId && !queueItemById) {
-        return { error: `task not found: ${taskId}` };
-    }
-    if (queueItemById && queueItemById.status !== 'queued') {
-        return { error: `task is not queued: ${taskId}` };
-    }
-    const detachedWorker = readTaskQueueWorkerState();
-    const runner = async () => runTaskQueueProcessingInternal({ taskId });
-    if (detach) {
-        if (g_taskQueueProcessor || detachedWorker) {
-            return {
-                ok: true,
-                started: false,
-                alreadyRunning: true
-            };
-        }
-        spawnDetachedTaskWorker({
-            type: 'queue-runner',
-            taskId
-        });
-        return {
-            ok: true,
-            started: true,
-            detached: true
-        };
-    }
-    if (detachedWorker) {
-        return {
-            ok: true,
-            started: false,
-            alreadyRunning: true
-        };
-    }
-    if (g_taskQueueProcessor) {
-        const detail = await g_taskQueueProcessor;
-        return {
-            ok: true,
-            started: false,
-            detached: false,
-            detail,
-            alreadyRunning: true
-        };
-    }
-    g_taskQueueProcessor = runner()
-        .catch(() => null)
-        .finally(() => {
-            g_taskQueueProcessor = null;
-        });
-    const detail = await g_taskQueueProcessor;
-    return {
-        ok: true,
-        started: true,
-        detached: false,
-        detail
-    };
-}
-
-async function retryTaskRun(params = {}) {
-    const runIdValidation = validateTaskRunId(params && typeof params.runId === 'string' ? params.runId : '');
-    if (!runIdValidation.ok) {
-        return { error: runIdValidation.error };
-    }
-    const detail = readTaskRunDetail(runIdValidation.runId);
-    if (!detail || !detail.plan) {
-        return { error: `task run not found: ${runIdValidation.runId}` };
-    }
-    const plan = cloneJson(detail.plan, {});
-    const detach = params.detach === true;
-    const nextRunId = createTaskRunId();
-    if (detach) {
-        spawnDetachedTaskWorker({
-            type: 'run-plan',
-            plan,
-            taskId: detail.taskId || createTaskId(),
-            runId: nextRunId
-        });
-        return {
-            ok: true,
-            started: true,
-            detached: true,
-            runId: nextRunId,
-            taskId: detail.taskId || ''
-        };
-    }
-    return runTaskPlanInternal(plan, {
-        taskId: detail.taskId || createTaskId(),
-        runId: nextRunId
-    });
-}
-
-function cancelTaskRunOrQueue(params = {}) {
-    const rawTarget = typeof params.target === 'string' ? params.target.trim() : '';
-    const runId = typeof params.runId === 'string' ? params.runId.trim() : '';
-    const taskId = typeof params.taskId === 'string' ? params.taskId.trim() : '';
-    const target = rawTarget || runId || taskId;
-    if (!target) {
-        return { error: 'taskId or runId is required' };
-    }
-    const controllerByRun = g_taskRunControllers.get(target)
-        || Array.from(g_taskRunControllers.values()).find((entry) => entry && entry.taskId === target);
-    if (controllerByRun) {
-        controllerByRun.abort();
-        return {
-            ok: true,
-            cancelled: true,
-            runId: controllerByRun.runId,
-            taskId: controllerByRun.taskId,
-            mode: 'running'
-        };
-    }
-    const queueItem = getTaskQueueItem(target);
-    if (queueItem) {
-        if (queueItem.status === 'queued') {
-            const next = upsertTaskQueueItem({
-                ...queueItem,
-                status: 'cancelled',
-                runStatus: 'cancelled',
-                updatedAt: toIsoTime(Date.now()),
-                lastSummary: queueItem.lastSummary || '已取消'
-            });
-            if (next && next.error) {
-                return { error: next.error };
-            }
-            return {
-                ok: true,
-                cancelled: true,
-                task: next,
-                mode: 'queued'
-            };
-        }
-        if (queueItem.lastRunId && g_taskRunControllers.has(queueItem.lastRunId)) {
-            const active = g_taskRunControllers.get(queueItem.lastRunId);
-            active.abort();
-            return {
-                ok: true,
-                cancelled: true,
-                runId: active.runId,
-                taskId: active.taskId,
-                mode: 'running'
-            };
-        }
-        if (queueItem.lastRunId) {
-            const detachedResult = signalDetachedTaskWorker(readTaskRunDetail(queueItem.lastRunId) || {});
-            if (!detachedResult.error) {
-                return detachedResult;
-            }
-        }
-        return {
-            error: `task cannot be cancelled in current status: ${queueItem.status}`
-        };
-    }
-    const detail = readTaskRunDetail(target);
-    if (detail && g_taskRunControllers.has(detail.runId)) {
-        const active = g_taskRunControllers.get(detail.runId);
-        active.abort();
-        return {
-            ok: true,
-            cancelled: true,
-            runId: active.runId,
-            taskId: active.taskId,
-            mode: 'running'
-        };
-    }
-    if (detail) {
-        const detachedResult = signalDetachedTaskWorker(detail);
-        if (!detachedResult.error) {
-            return detachedResult;
-        }
-    }
-    const detailByTaskId = findRunningTaskRunDetailByTaskId(target);
-    if (detailByTaskId) {
-        const detachedResult = signalDetachedTaskWorker(detailByTaskId);
-        if (!detachedResult.error) {
-            return detachedResult;
-        }
-    }
-    return { error: `task/run not found: ${target}` };
-}
-
-function getTaskLogs(params = {}) {
-    const runIdValidation = validateTaskRunId(params && typeof params.runId === 'string' ? params.runId : '');
-    if (!runIdValidation.ok) {
-        return { error: runIdValidation.error };
-    }
-    const detail = readTaskRunDetail(runIdValidation.runId);
-    if (!detail) {
-        return { error: `task run not found: ${runIdValidation.runId}` };
-    }
-    const run = detail.run && typeof detail.run === 'object' ? detail.run : {};
-    const lines = [];
-    for (const node of Array.isArray(run.nodes) ? run.nodes : []) {
-        lines.push(`# ${node.id}${node.title ? ` ${node.title}` : ''}`);
-        const body = summarizeTaskLogs(node.logs || [], 120);
-        if (body) {
-            lines.push(body);
-        } else {
-            lines.push('(no logs)');
-        }
-        lines.push('');
-    }
-    return {
-        runId: runIdValidation.runId,
-        logs: lines.join('\n').trim(),
-        detail
-    };
-}
-
-function writeDetachedTaskWorkerPayload(payload = {}) {
-    const tempRoot = path.join(TASK_RUN_DETAILS_DIR, 'tmp');
-    ensureDir(tempRoot);
-    const payloadPath = path.join(tempRoot, `task-worker-${Date.now()}-${crypto.randomBytes(3).toString('hex')}.json`);
-    writeJsonAtomic(payloadPath, payload);
-    return payloadPath;
-}
-
-function readDetachedTaskWorkerPayload(payloadPath = '') {
-    const filePath = typeof payloadPath === 'string' ? payloadPath.trim() : '';
-    if (!filePath) {
-        return { error: 'task worker payload path is required' };
-    }
-    const parsed = readJsonObjectFromFile(filePath, {});
-    try {
-        fs.unlinkSync(filePath);
-    } catch (_) { }
-    if (!parsed.ok || !parsed.exists) {
-        return { error: parsed.error || 'task worker payload not found' };
-    }
-    return { payload: parsed.data && typeof parsed.data === 'object' ? parsed.data : {} };
-}
-
-function spawnDetachedTaskWorker(payload = {}) {
-    const payloadPath = writeDetachedTaskWorkerPayload(payload);
-    const child = spawn(process.execPath, [__filename, '__task-worker', payloadPath], {
-        stdio: 'ignore',
-        detached: true,
-        windowsHide: true
-    });
-    child.on('error', () => { });
-    if (typeof child.unref === 'function') {
-        child.unref();
-    }
-    return {
-        ok: true,
-        detached: true,
-        pid: child.pid || 0
-    };
-}
-
-function isLiveProcessId(value) {
-    const pid = Number.isFinite(Number(value)) ? Math.floor(Number(value)) : 0;
-    if (!pid) {
-        return false;
-    }
-    try {
-        process.kill(pid, 0);
-        return true;
-    } catch (_) {
-        return false;
-    }
-}
-
-function isTaskWorkerProcessId(value) {
-    const pid = Number.isFinite(Number(value)) ? Math.floor(Number(value)) : 0;
-    if (!isLiveProcessId(pid)) return false;
-    if (process.platform === 'linux') {
-        try {
-            const raw = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf-8');
-            return raw.includes('__task-worker');
-        } catch (_) {
-            return true;
-        }
-    }
-    if (process.platform === 'darwin') {
-        try {
-            const probe = spawnSync('ps', ['-p', String(pid), '-o', 'command='], { encoding: 'utf-8', timeout: 1500 });
-            if (probe.error || probe.status !== 0) return true;
-            const cmd = String(probe.stdout || '');
-            return cmd.includes('__task-worker');
-        } catch (_) {
-            return true;
-        }
-    }
-    return true;
-}
-
-function readTaskQueueWorkerState() {
-    const parsed = readJsonObjectFromFile(TASK_QUEUE_WORKER_FILE, {});
-    if (!parsed.ok || !parsed.exists || !parsed.data || typeof parsed.data !== 'object') {
-        return null;
-    }
-    const state = parsed.data;
-    if (!isTaskWorkerProcessId(state.pid)) {
-        try {
-            fs.unlinkSync(TASK_QUEUE_WORKER_FILE);
-        } catch (_) { }
-        return null;
-    }
-    return state;
-}
-
-function writeTaskQueueWorkerState(state = {}) {
-    ensureDir(path.dirname(TASK_QUEUE_WORKER_FILE));
-    writeJsonAtomic(TASK_QUEUE_WORKER_FILE, {
-        pid: process.pid,
-        taskId: typeof state.taskId === 'string' ? state.taskId.trim() : '',
-        startedAt: state.startedAt || toIsoTime(Date.now())
-    });
-}
-
-function clearTaskQueueWorkerState() {
-    try {
-        fs.unlinkSync(TASK_QUEUE_WORKER_FILE);
-    } catch (_) { }
-}
-
-function findRunningTaskRunDetailByTaskId(taskId = '') {
-    const normalizedTaskId = typeof taskId === 'string' ? taskId.trim() : '';
-    if (!normalizedTaskId || !fs.existsSync(TASK_RUN_DETAILS_DIR)) {
-        return null;
-    }
-    let entries = [];
-    try {
-        entries = fs.readdirSync(TASK_RUN_DETAILS_DIR, { withFileTypes: true });
-    } catch (_) {
-        return null;
-    }
-    const candidates = [];
-    for (const entry of entries) {
-        if (!entry || !entry.isFile() || !entry.name.endsWith('.json')) {
-            continue;
-        }
-        const detail = readTaskRunDetail(entry.name.slice(0, -5));
-        if (!detail || detail.taskId !== normalizedTaskId) {
-            continue;
-        }
-        const status = detail.run && detail.run.status ? detail.run.status : detail.status;
-        if (status !== 'running') {
-            continue;
-        }
-        candidates.push(detail);
-    }
-    candidates.sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
-    return candidates[0] || null;
-}
-
-function signalDetachedTaskWorker(detail = {}) {
-    const workerPid = Number.isFinite(Number(detail && detail.workerPid)) ? Math.floor(Number(detail.workerPid)) : 0;
-    if (!workerPid) {
-        return { error: 'task worker pid is missing' };
-    }
-    try {
-        process.kill(workerPid, 'SIGTERM');
-        return {
-            ok: true,
-            cancelled: true,
-            runId: detail.runId || '',
-            taskId: detail.taskId || '',
-            workerPid,
-            mode: 'running'
-        };
-    } catch (error) {
-        return {
-            error: error && error.code === 'ESRCH'
-                ? `task worker is not running: ${workerPid}`
-                : (error && error.message ? error.message : 'failed to signal task worker')
-        };
-    }
-}
-
-async function cmdTaskWorker(args = []) {
-    const payloadResult = readDetachedTaskWorkerPayload(args[0] || '');
-    if (payloadResult.error) {
-        throw new Error(payloadResult.error);
-    }
-    const payload = payloadResult.payload || {};
-    if (payload.type === 'run-plan') {
-        const runId = typeof payload.runId === 'string' ? payload.runId.trim() : '';
-        const taskId = typeof payload.taskId === 'string' ? payload.taskId.trim() : '';
-        let cancelRequested = false;
-        const cancelHandler = () => {
-            if (cancelRequested) return;
-            cancelRequested = true;
-            cancelTaskRunOrQueue({ runId, taskId });
-        };
-        process.once('SIGTERM', cancelHandler);
-        process.once('SIGINT', cancelHandler);
-        try {
-            const detail = await runTaskPlanInternal(payload.plan || {}, { taskId, runId });
-            if (detail && detail.error) {
-                throw new Error(detail.error);
-            }
-            if (detail && detail.run && detail.run.status === 'failed') {
-                throw new Error(detail.run.error || 'task run failed');
-            }
-            return;
-        } finally {
-            process.removeListener('SIGTERM', cancelHandler);
-            process.removeListener('SIGINT', cancelHandler);
-        }
-    }
-    if (payload.type === 'queue-runner') {
-        writeTaskQueueWorkerState({ taskId: payload.taskId || '', startedAt: toIsoTime(Date.now()) });
-        try {
-            await runTaskQueueProcessingInternal({ taskId: payload.taskId || '' });
-            return;
-        } finally {
-            clearTaskQueueWorkerState();
-        }
-    }
-    throw new Error(`unknown task worker payload type: ${payload.type || ''}`);
-}
-
 function createMcpTools(options = {}) {
     const allowWrite = !!options.allowWrite;
     const tools = [];
@@ -16897,7 +16104,7 @@ function createMcpTools(options = {}) {
             const input = args && typeof args === 'object' ? args : {};
             const source = normalizeMcpSource(input.source);
             if (source === null) {
-                return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' };
+                return { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' };
             }
             const normalizedInput = {
                 ...input,
@@ -17357,7 +16564,7 @@ function createMcpResources() {
                         contents: [{
                             uri,
                             mimeType: 'application/json',
-                            text: JSON.stringify({ error: 'Invalid source. Must be codex, claude, gemini, codebuddy, or all' }, null, 2)
+                            text: JSON.stringify({ error: 'Invalid source. Must be codex, claude, gemini, codebuddy, pi, or all' }, null, 2)
                         }]
                     };
                 }
@@ -17594,11 +16801,11 @@ function printMainHelp() {
     console.log('  codexmate delete <名称>    删除提供商');
     console.log('  codexmate claude            等同于 claude --dangerously-skip-permissions');
     console.log('  codexmate claude <BaseURL> <API密钥> [模型] [--target-api responses|chat_completions|ollama]  写入 Claude Code 配置');
+    console.log('  codexmate kilo [URL API密钥 模型] [--provider <id>]  配置后启动 KiloCode');
     console.log('  codexmate auth <list|import|switch|delete|status>  认证管理');
     console.log('  codexmate add-model <模型> 添加模型');
     console.log('  codexmate delete-model <模型> 删除模型');
     console.log('  codexmate workflow <list|get|validate|run|runs>  MCP 工作流中心');
-    console.log('  codexmate task <plan|run|runs|queue|retry|cancel|logs>  本地任务编排');
     console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--output <PATH|->] [-o <PATH|->]  导出 Usage 数据');
     console.log('  codexmate run [--host <HOST>] [--no-browser]    启动 Web 界面');
     console.log('  codexmate update [--check] 检查并快速更新工具');
@@ -17606,7 +16813,7 @@ function printMainHelp() {
     console.log('    注: follow-up 自动排队仅支持 linux/android/netbsd/openbsd/darwin/freebsd 且 stdin 必须是 TTY，其他平台会报错');
     console.log('  codexmate qwen [参数...]   等同于 qwen --yolo');
     console.log('  codexmate mcp [serve] [--transport stdio] [--allow-write|--read-only]');
-    console.log('  codexmate export-session --source <codex|claude|gemini|codebuddy> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
+    console.log('  codexmate export-session --source <codex|claude|gemini|codebuddy|pi> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('  codexmate convert-session --from <codex|claude> --to <codex|claude> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('  codexmate zip <路径> [--max:级别]  压缩（系统 zip 优先，其次 zip-lib）');
     console.log('  codexmate unzip <zip文件> [输出目录]  解压（zip-lib）');
@@ -17670,7 +16877,6 @@ async function main() {
     };
 
     switch (command) {
-        case '__task-worker': await cmdTaskWorker(args.slice(1)); break;
         case 'status': cmdStatus(); break;
         case 'doctor': await cmdDoctor(args.slice(1)); break;
         case 'import-skills': await cmdImportSkills(args.slice(1)); break;
@@ -17689,12 +16895,16 @@ async function main() {
             const exitCode = await cmdClaude(args.slice(1));
             process.exit(exitCode);
         }
+        case 'kilo':
+        case 'kilocode': {
+            const exitCode = await cmdKilocode(args.slice(1));
+            process.exit(exitCode || 0);
+        }
         case 'add-model': cmdAddModel(args[1]); break;
         case 'delete-model': cmdDeleteModel(args[1]); break;
         case 'auth': cmdAuth(args.slice(1)); break;
         case 'proxy': await cmdProxy(args.slice(1)); break;
         case 'workflow': await cmdWorkflow(args.slice(1)); break;
-        case 'task': await cmdTask(args.slice(1)); break;
         case 'analytics': await cmdAnalytics(args.slice(1)); break;
         case 'run': await cmdStart(parseStartOptions(args.slice(1))); break;
         case 'update': await cmdToolUpdate(args.slice(1)); break;

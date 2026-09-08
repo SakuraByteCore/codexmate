@@ -6,8 +6,43 @@
                     role="tabpanel"
                     aria-labelledby="tab-trash">
                     <div v-if="!loading" class="trash-panel-shell">
+                        <!-- Trash configuration -->
+                        <section class="settings-card trash-config-card" :aria-label="t('settings.trashConfig.title')">
+                            <div class="settings-card-main">
+                                <div class="settings-card-content">
+                                    <div class="settings-card-title">{{ t('settings.trashConfig.title') }}</div>
+                                    <p class="settings-card-desc">{{ t('settings.trashConfig.meta') }}</p>
+                                    <label class="settings-toggle-row">
+                                        <input type="checkbox" :checked="sessionTrashEnabled" @change="setSessionTrashEnabled($event.target.checked)">
+                                        <span class="toggle-track">
+                                            <span class="toggle-thumb"></span>
+                                        </span>
+                                        <span>{{ t('settings.deleteBehavior.toggle') }}</span>
+                                    </label>
+                                    <div class="settings-retention">
+                                        <label for="settings-trash-retention-days">{{ t('settings.trash.retentionLabel') }}</label>
+                                        <input id="settings-trash-retention-days" type="number" min="1" max="365" :value="sessionTrashRetentionDays" @change="setSessionTrashRetentionDays(Number($event.target.value))" class="settings-retention-input" />
+                                        <span>{{ t('settings.trash.retentionUnit') }}</span>
+                                    </div>
+                                    <p class="settings-card-hint">{{ t('settings.trash.retentionHint') }}</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Disabled state -->
+                        <div v-if="getSessionTrashViewState() === 'disabled'" class="trash-empty-state trash-disabled-state">
+                            <svg class="trash-empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <path d="M20 22l4 32h16l4-32" />
+                                <path d="M14 22h36" />
+                                <path d="M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" />
+                                <path d="M10 10l44 44" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <div class="trash-empty-title">{{ t('settings.trash.disabled') }}</div>
+                            <div class="trash-empty-hint">{{ t('settings.trash.disabledHint') }}</div>
+                        </div>
+
                         <!-- Empty state -->
-                        <div v-if="getSessionTrashViewState() === 'empty'" class="trash-empty-state">
+                        <div v-else-if="getSessionTrashViewState() === 'empty'" class="trash-empty-state">
                             <svg class="trash-empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.2">
                                 <path d="M20 22l4 32h16l4-32"/>
                                 <path d="M14 22h36"/>

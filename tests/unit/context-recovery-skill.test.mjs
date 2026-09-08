@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..', '..');
-const searchScript = path.join(projectRoot, 'skills', 'codexmate-project-context-recovery', 'scripts', 'search_sessions.py');
+const searchScript = path.join(projectRoot, 'skills', 'context-recovery', 'scripts', 'search_sessions.py');
 
 function hasPython3() {
     try {
@@ -51,7 +51,7 @@ test('project context recovery skill script finds evidence and builds a handoff 
                 }
             }),
             JSON.stringify({ role: 'user', content: 'Investigate SakuraByteCore/codexmate PR 197 project context recovery skill' }),
-            JSON.stringify({ role: 'assistant', content: 'Updated skills/codexmate-project-context-recovery/SKILL.md and scripts/search_sessions.py. Validation passed: npm run lint and npm run test:unit.' })
+            JSON.stringify({ role: 'assistant', content: 'Updated skills/context-recovery/SKILL.md and scripts/search_sessions.py. Validation passed: npm run lint and npm run test:unit.' })
         ].join('\n'));
         fs.writeFileSync(path.join(derivedCodexDir, 'derived-session.jsonl'), JSON.stringify({
             cwd: '/work/SakuraByteCore/codexmate',

@@ -32,6 +32,7 @@ const testWebUiSessionBrowser = require('./test-web-ui-session-browser');
 const testWebUiUsageInteractions = require('./test-web-ui-usage-interactions');
 const testInstallStatus = require('./test-install-status');
 const testWebhook = require('./test-webhook');
+const testKilocodeConfig = require('./test-kilocode-config');
 
 async function main() {
     const realHome = os.homedir();
@@ -58,6 +59,17 @@ async function main() {
         try {
             fs.writeFileSync(binPath, '#!/usr/bin/env sh\necho \"claude 1.2.3\"\\n', 'utf-8');
             fs.chmodSync(binPath, 0o755);
+            const kiloPath = path.join(tmpBin, 'kilo');
+            fs.writeFileSync(kiloPath, `#!/usr/bin/env node
+const fs = require('fs');
+const path = require('path');
+if (process.argv[2] === '--version') {
+  console.log('kilo 0.0.0-e2e');
+  process.exit(0);
+}
+fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.stringify({ args: process.argv.slice(2) }), 'utf8');
+`, 'utf-8');
+            fs.chmodSync(kiloPath, 0o755);
         } catch (e) {}
     }
     const env = {
@@ -166,6 +178,7 @@ async function main() {
         await testWebUiAssets(ctx);
         await testWebUiSessionBrowser(ctx);
         await testWebUiUsageInteractions(ctx);
+        await testKilocodeConfig(ctx);
 
     } finally {
         const waitForExit = new Promise((resolve) => {

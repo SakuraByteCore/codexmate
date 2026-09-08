@@ -14,7 +14,8 @@ function createAgentsFileController(deps = {}) {
         CLAUDE_DIR,
         CLAUDE_MD_FILE_NAME,
         readOpenclawAgentsFile,
-        readOpenclawWorkspaceFile
+        readOpenclawWorkspaceFile,
+        backupPromptBeforeWrite
     } = deps;
 
     if (!fs) throw new Error('createAgentsFileController 缺少 fs');
@@ -32,12 +33,19 @@ function createAgentsFileController(deps = {}) {
     if (typeof CLAUDE_MD_FILE_NAME !== 'string' || !CLAUDE_MD_FILE_NAME) throw new Error('createAgentsFileController 缺少 CLAUDE_MD_FILE_NAME');
     if (typeof readOpenclawAgentsFile !== 'function') throw new Error('createAgentsFileController 缺少 readOpenclawAgentsFile');
     if (typeof readOpenclawWorkspaceFile !== 'function') throw new Error('createAgentsFileController 缺少 readOpenclawWorkspaceFile');
+    if (typeof backupPromptBeforeWrite !== 'function' && typeof backupPromptBeforeWrite !== 'undefined') throw new Error('createAgentsFileController 备份回调无效');
 
     function resolveAgentsFilePath(params = {}) {
         const baseDir = typeof params.baseDir === 'string' && params.baseDir.trim()
             ? params.baseDir.trim()
             : CONFIG_DIR;
         return path.join(baseDir, AGENTS_FILE_NAME);
+    }
+
+    function sanitizeHistoryId(raw) {
+        const safe = typeof raw === 'string' ? raw.trim() : '';
+        if (!safe) return 'global';
+        return safe.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 64) || 'global';
     }
 
     function validateAgentsBaseDir(filePath) {
@@ -152,6 +160,13 @@ function createAgentsFileController(deps = {}) {
         if (content.length > 2 * 1024 * 1024) {
             return { error: 'content too large (max 2MB)' };
         }
+        if (typeof backupPromptBeforeWrite === 'function') {
+            var bucket = resolved.isProject
+                ? 'claude-project_' + sanitizeHistoryId(resolved.projectPath)
+                : 'claude-global';
+            backupPromptBeforeWrite(bucket, filePath);
+            resolved.historyBucket = bucket;
+        }
         var lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
         var normalized = normalizeLineEnding(content, lineEnding);
         var finalContent = ensureUtf8Bom(normalized);
@@ -159,6 +174,7 @@ function createAgentsFileController(deps = {}) {
             ensureDir(path.dirname(filePath));
             fs.writeFileSync(filePath, finalContent, 'utf-8');
             var result = { success: true, path: filePath };
+            if (resolved.historyBucket) result.historyBucket = resolved.historyBucket;
             if (resolved.isProject) {
                 result.projectPath = resolved.projectPath;
                 result.detectionSource = resolved.detectionSource;
@@ -218,13 +234,21 @@ function createAgentsFileController(deps = {}) {
         if (content.length > 2 * 1024 * 1024) {
             return { error: '内容过大（最大 2MB）' };
         }
+        let agentsHistoryBucket = '';
+        if (typeof backupPromptBeforeWrite === 'function') {
+            const bucket = 'codex_' + sanitizeHistoryId(String(params.baseDir || '').trim() || 'global');
+            backupPromptBeforeWrite(bucket, filePath);
+            agentsHistoryBucket = bucket;
+        }
         const lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
-        const normalized = normalizeLineEnding(content, lineEnding);
+        var normalized = normalizeLineEnding(content, lineEnding);
         const finalContent = ensureUtf8Bom(normalized);
 
         try {
             fs.writeFileSync(filePath, finalContent, 'utf-8');
-            return { success: true, path: filePath };
+            const agentsResult = { success: true, path: filePath };
+            if (agentsHistoryBucket) agentsResult.historyBucket = agentsHistoryBucket;
+            return agentsResult;
         } catch (e) {
             return { error: `写入 AGENTS.md 失败: ${e.message}` };
         }

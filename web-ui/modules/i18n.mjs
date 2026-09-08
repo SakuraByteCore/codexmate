@@ -1,7 +1,5 @@
 import { DICT } from './i18n.dict.mjs';
 
-const I18N_STORAGE_KEY = 'codexmateLang';
-
 const LANGUAGE_META = Object.freeze([
     Object.freeze({ code: 'zh', nativeName: '中文', englishName: 'Chinese', htmlLang: 'zh-CN', dir: 'ltr' }),
     Object.freeze({ code: 'zh-tw', nativeName: '繁體中文', englishName: 'Chinese-TW', htmlLang: 'zh-TW', dir: 'ltr' }),
@@ -52,10 +50,7 @@ export function createI18nMethods() {
     return {
         normalizeLang,
         initI18n() {
-            const saved = typeof localStorage !== 'undefined'
-                ? localStorage.getItem(I18N_STORAGE_KEY)
-                : '';
-            const next = normalizeLang(saved);
+            const next = normalizeLang(this.lang);
             this.lang = next;
             applyDocumentLanguage(next);
         },
@@ -90,15 +85,13 @@ export function createI18nMethods() {
                 }
             });
         },
-        setLang(nextLang) {
+        setLang(nextLang, options = {}) {
             const next = normalizeLang(nextLang);
             this.lang = next;
-            try {
-                if (typeof localStorage !== 'undefined') {
-                    localStorage.setItem(I18N_STORAGE_KEY, next);
-                }
-            } catch (_) {}
             applyDocumentLanguage(next);
+            if (!(options && options.persist === false) && typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ language: next });
+            }
         },
         t(key, params = null) {
             const lang = normalizeLang(this.lang);

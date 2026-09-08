@@ -96,8 +96,17 @@ test('Japanese orchestration template copy stays localized', () => {
     }
 });
 
-test('provider cache and local Web preference settings are localized in every locale', () => {
+test('provider cache, prompt sidebar, and local Web preference settings are localized in every locale', () => {
     const keys = [
+        'side.prompts.meta',
+        'side.prompts.presets',
+        'side.prompts.presets.meta',
+        'prompts.presets.addCurrent',
+        'prompts.presets.defaultName.project',
+        'prompts.presets.confirm.addCurrentTitle',
+        'prompts.presets.confirm.addCurrentMessage',
+        'prompts.presets.toast.pasted',
+        'prompts.presets.selectPlaceholder',
         'announcement.providerCache.open',
         'announcement.project.eyebrow',
         'announcement.project.title',
@@ -182,6 +191,72 @@ test('provider cache and local Web preference settings are localized in every lo
 });
 
 
+test('config side navigation meta labels are localized instead of stale English copy', () => {
+    const keys = [
+        'side.config.codex.meta',
+        'side.config.claude.meta',
+        'side.config.openclaw.meta',
+        'side.config.opencode.meta',
+        'side.config.kilocode.meta',
+        'side.config.pi.meta'
+    ];
+    for (const code of ['zh', 'zh-tw', 'ja', 'vi']) {
+        for (const key of keys) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+            assert.notStrictEqual(DICT[code][key], DICT.en[key], `${code} ${key} should not reuse the English label`);
+        }
+    }
+});
+
+// task orchestration chat composer copy removed in ee55bb3d
+test("task orchestration chat composer copy is localized in every locale [skipped: ee55bb3d]", function() {});
+/*
+    const keys = [
+        'orchestration.chat.input.label',
+        'orchestration.chat.input.placeholder',
+        'orchestration.chat.input.hint',
+        'orchestration.chat.context.aria',
+        'orchestration.chat.context.workspace.auto',
+        'orchestration.chat.context.workspace.value',
+        'orchestration.chat.context.thread.auto',
+        'orchestration.chat.context.thread.value',
+        'orchestration.chat.thread.aria',
+        'orchestration.chat.input.send',
+        'orchestration.chat.input.firstHint',
+        'orchestration.chat.input.sequenceHint',
+        'orchestration.chat.assistant.contextLabel',
+        'orchestration.chat.assistant.contextFallback',
+        'orchestration.chat.assistant.readyLabel',
+        'orchestration.chat.assistant.empty',
+        'orchestration.chat.assistant.planLabel',
+        'orchestration.chat.assistant.planSummary',
+        'orchestration.chat.assistant.sequenceReady',
+        'orchestration.chat.assistant.singleReady',
+        'orchestration.chat.user.step',
+        'orchestration.chat.meta.thread',
+        'orchestration.chat.meta.workspace',
+        'orchestration.chat.meta.order',
+        'orchestration.chat.meta.first',
+        'orchestration.chat.meta.afterPrevious',
+        'orchestration.chat.meta.contextKept',
+        'orchestration.chat.meta.previewNext'
+    ];
+    for (const code of expectedLocales) {
+        for (const key of keys) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+            assert.deepStrictEqual(
+                placeholders(DICT[code][key]),
+                placeholders(DICT.zh[key]),
+                `${code} placeholder mismatch for key: ${key}`
+            );
+        }
+    }
+});
+*/
+
+
 test('plugins catalog metadata is localized from i18n dictionaries', async () => {
     const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');
     const computed = createPluginsComputed();
@@ -261,4 +336,52 @@ test('zh-tw fallback resolves through zh before en', () => {
     assert.strictEqual(tFallback('common.copy'), DICT['zh-tw']['common.copy']);
     // For a hypothetical missing key, it would fall back to zh then en
     assert.strictEqual(tFallback('nonexistent.key.xyz'), 'nonexistent.key.xyz');
+});
+
+test('all locale key sets stay aligned across the five supported languages', () => {
+    const baselineKeys = Object.keys(DICT.zh).sort();
+    const baselineKeySet = new Set(baselineKeys);
+    // ja keeps a legacy unused key not present in other locales
+    const allowedExtraKeys = Object.freeze({
+        ja: new Set(['sessions.preview.openStandalone'])
+    });
+    for (const code of expectedLocales) {
+        const localeKeys = Object.keys(DICT[code]);
+        const missingFromLocale = baselineKeys.filter((key) => !Object.prototype.hasOwnProperty.call(DICT[code], key));
+        const extraInLocale = localeKeys.filter((key) => !baselineKeySet.has(key));
+        const allowedExtra = allowedExtraKeys[code] || new Set();
+        const unexpectedExtra = extraInLocale.filter((key) => !allowedExtra.has(key));
+        assert.deepStrictEqual(missingFromLocale, [], `${code} must define every key present in zh baseline`);
+        assert.deepStrictEqual(unexpectedExtra, [], `${code} defines keys beyond zh baseline (${extraInLocale.join(', ')})`);
+    }
+});
+
+test('every t() key referenced by templates and app modules exists in all locales', () => {
+    const partialDir = path.join(repoRoot, 'web-ui', 'partials');
+    const moduleDir = path.join(repoRoot, 'web-ui', 'modules');
+    const referenceKeyPattern = /\bt\('([a-zA-Z0-9]+\.[a-zA-Z0-9_.]+)'(?:\s*,\s*\{[^}]*\})?\)/g;
+    const referencedKeys = new Set();
+    const walk = (dir) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) { walk(full); continue; }
+            if (!/\.(?:html|mjs|js)$/.test(entry.name)) continue;
+            const content = fs.readFileSync(full, 'utf8');
+            let match;
+            while ((match = referenceKeyPattern.exec(content)) !== null) {
+                referencedKeys.add(match[1]);
+            }
+        }
+    };
+    walk(partialDir);
+    walk(moduleDir);
+    for (const key of referencedKeys) {
+        for (const code of expectedLocales) {
+            assert.strictEqual(
+                typeof DICT[code][key],
+                'string',
+                `${code} should define referenced key: ${key}`
+            );
+        }
+    }
 });

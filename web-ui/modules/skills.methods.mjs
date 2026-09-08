@@ -12,7 +12,7 @@ export function createSkillsMethods({ api }) {
             if (app == null) {
                 return 'codex';
             }
-            if (app === 'codex' || app === 'claude') {
+            if (app === 'codex' || app === 'claude' || app === 'pi') {
                 return app;
             }
             throw createUnsupportedSkillsTargetAppError(app);

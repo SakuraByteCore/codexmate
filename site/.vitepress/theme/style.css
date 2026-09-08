@@ -1,0 +1,72 @@
+.VPHome .VPFeatures {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 24px 96px;
+}
+.VPHome .VPFeatures .container {
+  margin: 0 !important;
+}
+.VPHome .VPFeatures .items {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 18px !important;
+}
+.VPHome .VPFeatures .item {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.VPHome .VPFeatures .item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: var(--vp-c-brand-1);
+}
+.VPHome .VPFeatures .VPFeature {
+  height: 100%;
+}
+.VPHome .VPFeatures .title {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 24px;
+}
+.VPHome .VPFeatures .details {
+  font-size: 13.5px;
+  line-height: 22px;
+  margin-top: 8px;
+  color: var(--vp-c-text-2);
+}
+
+.book-nav-bottom {
+  margin: 48px auto 24px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--vp-c-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 768px;
+}
+.book-nav-bottom a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--vp-c-text-1);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.book-nav-bottom a:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-bg);
+}
+.book-nav-bottom .to-toc {
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+}
+.book-nav-bottom .placeholder {
+  visibility: hidden;
+}

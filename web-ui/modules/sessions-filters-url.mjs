@@ -133,6 +133,5 @@ export function buildSessionsFilterShareUrl(vm) {
 
 export function syncSessionsFilterUrl(vm) {
     // URL 保持静态，不同步状态到 URL
-    // 所有状态通过 localStorage 管理
+    // 状态通过本地 preferences API 管理
 }
-

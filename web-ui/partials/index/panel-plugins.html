@@ -4,8 +4,8 @@
                     id="panel-plugins"
                     role="tabpanel"
                     aria-labelledby="tab-plugins">
-                    <div class="plugins-layout">
-                        <aside class="plugins-sidebar" :aria-label="t('plugins.sidebar.ariaList')">
+                    <div :class="['plugins-layout', { 'plugins-layout-single': !pluginsSidebarVisible }]">
+                        <aside v-if="pluginsSidebarVisible" class="plugins-sidebar" :aria-label="t('plugins.sidebar.ariaList')">
                             <div class="selector-header plugins-sidebar-header">
                                 <div>
                                     <span class="selector-title">{{ t('plugins.sidebar.title') }}</span>
@@ -44,8 +44,15 @@
                             </div>
                             <div v-else-if="pluginsActiveId === 'prompt-templates'" class="plugins-panel">
                                 <div class="plugins-panel-head">
-                                    <div class="plugins-panel-title">{{ t('plugins.promptTemplates.title') }}</div>
-                                    <div v-if="pluginsActiveAttribution" class="plugins-panel-note">{{ pluginsActiveAttribution }}</div>
+                                    <div>
+                                        <div class="plugins-panel-title">{{ t('plugins.promptTemplates.title') }}</div>
+                                        <div v-if="pluginsActiveAttribution" class="plugins-panel-note">{{ pluginsActiveAttribution }}</div>
+                                    </div>
+                                    <div v-if="!pluginsSidebarVisible" class="settings-tab-actions">
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="loadPluginsOverview({ forceRefresh: true, silent: false })" :disabled="loading || !!initError || pluginsLoading">
+                                            {{ pluginsLoading ? t('plugins.refreshing') : t('plugins.refresh') }}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="prompt-templates-modebar" role="tablist" :aria-label="t('plugins.promptTemplates.mode.aria')">
@@ -65,14 +72,7 @@
 
                                 <div v-if="promptTemplatesMode === 'compose'" class="prompt-compose">
                                     <div class="prompt-compose-workspace">
-                                        <div class="prompt-compose-selected">
-                                            <div class="prompt-compose-selected-title">{{ (promptComposerActiveTemplate && promptComposerActiveTemplate.name) ? promptComposerActiveTemplate.name : t('plugins.promptTemplates.compose.chooseTemplate') }}</div>
-                                            <div class="prompt-compose-selected-meta">{{ (promptComposerActiveTemplate && promptComposerActiveTemplate.description) ? promptComposerActiveTemplate.description : t('plugins.promptTemplates.compose.chooseTemplateHint') }}</div>
-                                            <div v-if="promptComposerActiveTemplate && promptComposerActiveTemplate.isBuiltin && (promptComposerActiveTemplate.createdBy || (promptComposerActiveTemplate.maintainers && promptComposerActiveTemplate.maintainers.length))" class="plugins-panel-note">
-                                                {{ t('plugins.meta.attribution', { createdBy: promptComposerActiveTemplate.createdBy || '', maintainers: (promptComposerActiveTemplate.maintainers || []).join(', ') }) }}
-                                            </div>
-                                        </div>
-
+                                        <div class="prompt-compose-main">
                                         <div class="prompt-compose-form">
                                             <label class="form-label">{{ t('plugins.promptTemplates.compose.selectTemplate') }}</label>
                                             <select
@@ -86,7 +86,7 @@
                                             </select>
 
                                             <div v-if="!promptComposerActiveTemplate" class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.empty') }}</div>
-                                            <div v-else-if="!promptComposerActiveTemplate.isBuiltin" class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.varsHint') }}</div>
+                                            <div v-else-if="promptComposerActiveTemplate.description" class="plugins-panel-note">{{ promptComposerActiveTemplate.description }}</div>
                                             <div v-if="promptComposerActiveTemplate && !promptComposerActiveTemplate.isBuiltin" class="prompt-compose-actions">
                                                 <button
                                                     type="button"
@@ -121,6 +121,7 @@
                                             </div>
                                         </div>
 
+                                        </div>
                                         <div class="prompt-preview-block prompt-compose-preview">
                                             <div class="prompt-vars-head">
                                                 <div>

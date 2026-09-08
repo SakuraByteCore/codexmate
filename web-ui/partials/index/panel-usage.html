@@ -50,30 +50,29 @@
                                 <span class="usage-spinner" aria-hidden="true"></span>
                             </div>
 
-                            <!-- Hero 区域：合并当前会话条 + 主要指标 -->
-                            <div class="usage-hero">
-                                <div v-if="usageCurrentSessionStats" class="usage-hero-active">
-                                    <span class="usage-hero-active-dot"></span>
-                                    <span class="usage-hero-active-label">{{ usageCurrentSessionStats.label }}</span>
-                                    <span class="usage-hero-active-stat">{{ usageCurrentSessionStats.tokenLabel }} tokens</span>
-                                    <span class="usage-hero-active-stat">{{ usageCurrentSessionStats.apiDurationLabel }} API</span>
-                                    <span class="usage-hero-active-stat">{{ usageCurrentSessionStats.totalDurationLabel }} total</span>
-                                </div>
+                            <div v-if="usageCurrentSessionStats" class="usage-active-strip" role="status">
+                                <span class="usage-hero-active-dot"></span>
+                                <span class="usage-hero-active-label">{{ usageCurrentSessionStats.label }}</span>
+                                <span class="usage-hero-active-stat">{{ usageCurrentSessionStats.tokenLabel }} tokens</span>
+                                <span class="usage-hero-active-stat">{{ usageCurrentSessionStats.apiDurationLabel }} API</span>
+                                <span class="usage-hero-active-stat">{{ usageCurrentSessionStats.totalDurationLabel }} total</span>
+                            </div>
 
-                                <div class="usage-hero-metrics">
-                                    <div class="usage-hero-main">{{ usageHeroMainValue }}</div>
-                                    <div class="usage-hero-sub">
-                                        <span>{{ usageHeroSubLabel }}</span>
-                                        <span v-if="usageHeroDelta" :class="['usage-hero-delta', usageHeroDeltaClass]">
-                                            {{ usageHeroDelta }}
-                                        </span>
-                                    </div>
+                            <!-- KPI 指标卡片行 -->
+                            <div class="usage-kpi-grid">
+                                <div v-for="card in usageKpiCards" :key="card.key" class="usage-kpi-card">
+                                    <div class="usage-kpi-label">{{ card.label }}</div>
+                                    <div class="usage-kpi-value" :title="card.title || card.value">{{ card.value }}</div>
+                                    <span v-if="card.delta" :class="['usage-hero-delta', card.deltaClass]">{{ card.delta }}</span>
                                 </div>
                             </div>
 
                             <!-- 波浪图 -->
                             <section v-if="sessionUsageWave.points && sessionUsageWave.points.length" class="usage-wave-section">
-                                <div class="usage-card-title">{{ t('usage.daily.title') }}</div>
+                                <div class="usage-card-title usage-wave-title">
+                                    <span>{{ t('usage.daily.title') }}</span>
+                                    <span v-if="usageWaveHeaderSummary" class="usage-wave-summary">{{ usageWaveHeaderSummary }}</span>
+                                </div>
                                 <div class="usage-wave-container">
                                     <div class="usage-wave-yaxis">
                                         <span v-for="tick in sessionUsageWave.yTicks" :key="tick.value"
@@ -150,13 +149,14 @@
                                 <!-- Top Sessions -->
                                 <section class="usage-card">
                                     <div class="usage-card-title">{{ t('usage.sessions.topDensity') }}</div>
-                                    <div v-if="!sessionUsageCharts.topSessionsByMessages.length" class="usage-list-value">{{ t('usage.sessions.empty') }}</div>
+                                    <div v-if="!usageRankedLists.topSessions.length" class="usage-list-value">{{ t('usage.sessions.empty') }}</div>
                                     <div v-else class="usage-list-compact">
-                                        <div v-for="item in sessionUsageCharts.topSessionsByMessages" :key="item.key + '-dense'" class="usage-list-compact-item" @click="selectSession(item)" :title="item.title">
+                                        <div v-for="item in usageRankedLists.topSessions" :key="item.key + '-dense'" class="usage-list-compact-item" @click="selectSession(item)" :title="item.title">
                                             <span class="usage-list-bullet">·</span>
                                             <div class="usage-list-compact-content">
                                                 <div class="usage-list-title">{{ item.title }}</div>
                                                 <div class="usage-list-meta">{{ item.messageCount }} msgs · {{ item.sourceLabel }} · {{ item.updatedAtLabel }}</div>
+                                                <div class="usage-list-bar" aria-hidden="true"><span class="usage-list-bar-fill" :style="{ width: item.barPercent + '%' }"></span></div>
                                             </div>
                                         </div>
                                     </div>
@@ -165,13 +165,14 @@
                                 <!-- Recent Activity -->
                                 <section class="usage-card">
                                     <div class="usage-card-title">{{ t('usage.recent.title') }}</div>
-                                    <div v-if="!sessionUsageCharts.recentSessions.length" class="usage-list-value">{{ t('usage.sessions.empty') }}</div>
+                                    <div v-if="!usageRankedLists.recentSessions.length" class="usage-list-value">{{ t('usage.sessions.empty') }}</div>
                                     <div v-else class="usage-list-compact">
-                                        <div v-for="item in sessionUsageCharts.recentSessions" :key="item.key" class="usage-list-compact-item" @click="selectSession(item)">
+                                        <div v-for="item in usageRankedLists.recentSessions" :key="item.key" class="usage-list-compact-item" @click="selectSession(item)">
                                             <span class="usage-list-bullet">·</span>
                                             <div class="usage-list-compact-content">
                                                 <div class="usage-list-title">{{ item.title }}</div>
                                                 <div class="usage-list-meta">{{ item.messageCount }} msgs · {{ item.sourceLabel }} · {{ item.updatedAtLabel }}</div>
+                                                <div class="usage-list-bar" aria-hidden="true"><span class="usage-list-bar-fill" :style="{ width: item.barPercent + '%' }"></span></div>
                                             </div>
                                         </div>
                                     </div>
@@ -180,14 +181,15 @@
                                 <!-- Top Paths -->
                                 <section class="usage-paths-section">
                                     <div class="usage-card-title">{{ t('usage.paths.title') }}</div>
-                                    <div v-if="!sessionUsageCharts.topPaths.length" class="usage-list-value">{{ t('usage.paths.empty') }}</div>
+                                    <div v-if="!usageRankedLists.topPaths.length" class="usage-list-value">{{ t('usage.paths.empty') }}</div>
                                     <div v-else class="usage-list-paths">
-                                        <div v-for="(item, index) in sessionUsageCharts.topPaths" :key="item.path" class="usage-list-path-row">
+                                        <div v-for="(item, index) in usageRankedLists.topPaths" :key="item.path" class="usage-list-path-row">
                                             <span class="usage-list-path-rank">{{ index + 1 }}</span>
                                             <div class="usage-list-path-content">
                                                 <div class="usage-list-path" :title="item.path">{{ item.path }}</div>
-                                                <div class="usage-list-path-stat">{{ item.count }}</div>
+                                                <div class="usage-list-bar" aria-hidden="true"><span class="usage-list-bar-fill" :style="{ width: item.barPercent + '%' }"></span></div>
                                             </div>
+                                            <div class="usage-list-path-stat">{{ item.count }}</div>
                                         </div>
                                     </div>
                                 </section>

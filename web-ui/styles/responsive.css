@@ -186,6 +186,24 @@ textarea:focus-visible {
 
     .mode-cards > .segmented-control {
         flex-direction: row;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+    }
+
+    .mode-cards > .segmented-control::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mode-cards > .segmented-control > .segment {
+        flex: 0 0 auto;
+        min-width: 0;
+        white-space: nowrap;
+        scroll-snap-align: start;
     }
 
     .prompts-editor-toolbar {
@@ -197,6 +215,22 @@ textarea:focus-visible {
     .prompts-editor-actions {
         width: 100%;
         flex-wrap: wrap;
+    }
+
+    .prompt-presets-inline-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .prompt-presets-inline-group,
+    .prompt-presets-inline-group--save {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .prompt-presets-select,
+    .prompt-presets-name-input {
+        width: 100%;
     }
 
     .template-editor,
@@ -274,6 +308,8 @@ textarea:focus-visible {
     }
     .main-panel {
         padding: 0 10px 12px;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .main-panel-topbar {
@@ -286,6 +322,35 @@ textarea:focus-visible {
         grid-template-columns: 1fr;
         height: auto;
         min-height: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .session-toolbar,
+    .session-toolbar-group,
+    .session-toolbar-primary,
+    .session-toolbar-secondary,
+    .session-toolbar-grow,
+    .session-list,
+    .session-preview,
+    .session-preview-scroll,
+    .session-preview-body,
+    .session-workspace,
+    .session-workspace-card,
+    .session-item,
+    .session-item-main {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .session-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+        overflow-x: hidden;
+    }
+
+    .session-toolbar-group {
+        width: 100%;
     }
 
     .status-strip {
@@ -319,6 +384,14 @@ textarea:focus-visible {
         height: 44px;
     }
 
+    .btn-session-export.has-label,
+    .btn-session-open.has-label,
+    .btn-session-refresh.has-label,
+    .btn-session-delete.has-label {
+        width: auto;
+        height: 44px;
+        padding: 0 14px;
+    }
     .session-link-group .btn-session-open {
         width: 44px;
         height: 44px;
@@ -400,6 +473,13 @@ textarea:focus-visible {
         padding: 8px;
     }
 
+    #panel-config-provider .card-list > .card,
+    #panel-config-claude .card-list > .card {
+        min-height: 84px;
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+
     .card-list {
         gap: 4px;
         margin-bottom: 4px;
@@ -477,6 +557,70 @@ textarea:focus-visible {
 
     .session-preview {
         border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .session-preview-header {
+        padding: 12px;
+        gap: 10px;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .session-preview-header > div:first-child {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .session-preview-meta {
+        min-width: 0;
+    }
+
+    .session-preview-meta-item {
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .session-preview-title {
+        -webkit-line-clamp: 3;
+        overflow-wrap: anywhere;
+    }
+
+    .session-actions {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: 100%;
+        gap: 6px;
+        justify-content: stretch;
+    }
+
+    .session-link-group {
+        display: contents;
+    }
+
+    .session-actions .btn-session-export,
+    .session-actions .btn-session-open,
+    .session-actions .btn-session-refresh,
+    .session-actions .btn-session-delete,
+    .session-link-group .btn-session-open {
+        width: 100%;
+        min-width: 0;
+        height: 40px;
+    }
+
+    .session-actions .session-action-label {
+        display: none;
+    }
+
+    .session-preview-body {
+        padding: 12px;
+    }
+
+    .session-workspace {
+        border-radius: 14px;
     }
 
     .skills-summary-strip {
@@ -505,6 +649,22 @@ textarea:focus-visible {
     .prompts-editor-actions {
         width: 100%;
         flex-wrap: wrap;
+    }
+
+    .prompt-presets-inline-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .prompt-presets-inline-group,
+    .prompt-presets-inline-group--save {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .prompt-presets-select,
+    .prompt-presets-name-input {
+        width: 100%;
     }
 }
 

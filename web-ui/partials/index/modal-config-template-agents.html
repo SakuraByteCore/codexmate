@@ -117,8 +117,8 @@
                     </div>
                 </div>
 
-                <div class="modal-editor-body">
-                    <div class="form-group">
+                <div class="modal-editor-body" :class="{ 'modal-editor-body--openclaw-workspace': agentsContext === 'openclaw-workspace' }">
+                    <div class="form-group agents-target-file-group">
                         <label class="form-label">{{ t('modal.agents.targetFile') }}</label>
                         <div class="form-hint">
                             {{ agentsPath || t('common.notLoaded') }}
@@ -129,8 +129,12 @@
                     </div>
 
 
-                    <div class="form-group">
-                        <label class="form-label">{{ t(agentsContext === 'claude-project' ? 'modal.agents.contentLabel.claudeProject' : 'modal.agents.contentLabel') }}</label>
+                    <div class="form-group agents-content-group">
+                        <label class="form-label">
+                            {{ agentsContext === 'openclaw-workspace'
+                                ? `${agentsWorkspaceFileName || '工作区文件'} 内容`
+                                : t(agentsContext === 'claude-project' ? 'modal.agents.contentLabel.claudeProject' : 'modal.agents.contentLabel') }}
+                        </label>
                         <div
                             v-if="!agentsLoading && (hasAgentsContentChanged() || agentsDiffVisible)"
                             class="agents-diff-save-alert">

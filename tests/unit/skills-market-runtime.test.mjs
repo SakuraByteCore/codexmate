@@ -355,6 +355,18 @@ test('deleteSelectedSkills reports busy state while import sources scan is runni
     }]);
 });
 
+test('pi skills target normalizes and resolves label plus default root path', async () => {
+    const vm = buildVm(async () => ({}), {
+        skillsTargetApp: 'pi'
+    });
+
+    assert.strictEqual(vm.normalizeSkillsTargetApp('pi'), 'pi');
+    assert.throws(() => vm.normalizeSkillsTargetApp('Pi'), /Unsupported skills target app/);
+    assert.throws(() => vm.normalizeSkillsTargetApp(' claude '), /Unsupported skills target app/);
+    assert.strictEqual(vm.skillsTargetLabel, 'Pi');
+    assert.strictEqual(vm.skillsDefaultRootPath, '~/.pi/agent/skills');
+});
+
 test('deleteSelectedSkills wires confirm dialog disabled state to live scan status', async () => {
     let confirmOptions = null;
     const vm = buildVm(async () => ({}), {

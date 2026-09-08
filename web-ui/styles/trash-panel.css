@@ -37,6 +37,15 @@
     line-height: 1.5;
 }
 
+.trash-disabled-state .trash-empty-svg {
+    opacity: 0.4;
+}
+
+.trash-disabled-state .trash-empty-title {
+    color: var(--color-text-muted);
+}
+
+
 /* ---- 工具栏 — 克制·精确 ---- */
 .trash-toolbar {
     display: flex;

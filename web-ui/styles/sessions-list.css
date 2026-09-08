@@ -188,6 +188,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    vertical-align: middle;
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border-soft);
     background: var(--color-surface);
@@ -195,9 +196,11 @@
     cursor: pointer;
     transition: all 120ms var(--ease-spring);
     padding: 0;
+    line-height: 0;
 }
 
 .trash-action-btn svg {
+    display: block;
     width: 16px;
     height: 16px;
 }
@@ -329,8 +332,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    vertical-align: middle;
     line-height: 1;
     white-space: nowrap;
+
 }
 
 .trash-item-time {
@@ -681,4 +686,100 @@
 @keyframes context-critical-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
+}
+
+/* === 会话批量删除交互 === */
+.session-item.batch-selectable {
+    cursor: default;
+}
+
+.session-item.batch-selectable .session-item-main,
+.session-item.batch-selectable .session-item-meta {
+    pointer-events: none;
+}
+
+.session-item.batch-selectable .session-item-actions {
+    pointer-events: none;
+    opacity: 0.45;
+}
+
+.session-item.batch-selected {
+    background: var(--color-brand-light);
+    box-shadow: inset 3px 0 0 var(--color-brand);
+}
+
+.session-batch-check {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-right: 10px;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    pointer-events: auto;
+}
+
+.session-batch-check input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+.session-batch-check-mark {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border-strong);
+    background: var(--color-surface-elevated);
+    transition: background var(--transition-fast) var(--ease-spring-soft),
+                border-color var(--transition-fast) var(--ease-spring-soft);
+}
+
+.session-batch-check input:checked + .session-batch-check-mark {
+    background: var(--color-brand);
+    border-color: var(--color-brand);
+}
+
+.session-batch-check input:checked + .session-batch-check-mark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 3px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.session-batch-check input:disabled + .session-batch-check-mark {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.session-item.batch-selectable .session-item-header {
+    align-items: center;
+}
+
+.btn-tool-batch,
+.btn-tool-batch-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-tool-batch svg,
+.btn-tool-batch-delete svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-tool-batch-delete:not(:disabled) {
+    color: var(--color-error);
 }

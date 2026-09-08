@@ -363,6 +363,7 @@
 }
 
 .openclaw-workspace-card.settings-card,
+.openclaw-summary-card,
 .openclaw-configs-card {
     margin: 0;
     padding: 0;
@@ -375,133 +376,159 @@
 }
 
 .openclaw-workspace-card.settings-card:hover,
+.openclaw-summary-card:hover,
 .openclaw-configs-card:hover {
     border-color: transparent;
     box-shadow: none;
 }
 
 .openclaw-workspace-card.settings-card > .settings-card-body,
+.openclaw-summary-card > .settings-card-body,
 .openclaw-configs-card > .settings-card-body {
     width: 100%;
     min-width: 0;
 }
 
-/* Nested workspace card - distinguish from outer section */
-.openclaw-workspace-card.settings-card > .settings-card-body > .openclaw-workspace-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px;
-    min-height: 70px;
-    padding: 14px 16px;
+.openclaw-summary-card > .settings-card-body {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
     border: 1px solid rgba(137, 111, 94, 0.12);
     border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.76);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(249, 244, 239, 0.72));
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* Workspace tool button */
+.openclaw-summary-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.summary-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--color-text-tertiary);
+    font-weight: 600;
+}
+
+.summary-title {
+    margin-top: 2px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.summary-note,
+.openclaw-diagnostic-note {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    line-height: 1.45;
+}
+
+.summary-note {
+    max-width: 260px;
+    text-align: right;
+}
+
+.openclaw-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.openclaw-summary-item {
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(137, 111, 94, 0.10);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.summary-item-label {
+    margin-bottom: 4px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+}
+
+.summary-item-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    overflow-wrap: anywhere;
+}
+
 .openclaw-tools-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 8px;
-    align-items: stretch;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
 }
 
 .openclaw-tool-btn {
-    min-width: 0;
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 12px;
-    min-height: 70px;
+    align-items: center;
+    min-height: 74px;
     padding: 14px 16px;
-    width: 100%;
-    border-radius: var(--radius-lg);
     border: 1px solid rgba(137, 111, 94, 0.12);
+    border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.76);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    color: var(--color-text-primary);
     text-align: left;
-    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .openclaw-tool-btn:hover:not(:disabled) {
-    border-color: rgba(137, 111, 94, 0.18);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
+    border-color: rgba(137, 111, 94, 0.22);
+    box-shadow: 0 8px 22px rgba(68, 52, 39, 0.08);
 }
 
 .openclaw-tool-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.58;
     cursor: not-allowed;
 }
 
 .tool-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    background: rgba(200, 121, 99, 0.08);
+    width: 38px;
+    height: 38px;
     border-radius: var(--radius-md);
-    flex-shrink: 0;
+    background: rgba(137, 111, 94, 0.08);
+    font-size: 19px;
 }
 
 .tool-content {
-    flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
 }
 
 .tool-title {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--color-text-primary);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .tool-meta {
+    margin-top: 4px;
     font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
     color: var(--color-text-tertiary);
-    line-height: 1.45;
+    white-space: nowrap;
 }
 
 .tool-chevron {
     width: 18px;
     height: 18px;
-    color: var(--color-text-muted);
-    flex-shrink: 0;
-}
-
-.workspace-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-text-primary);
-}
-
-.workspace-input-group {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content;
-    gap: 8px;
-    align-items: center;
-    width: 100%;
-}
-
-.workspace-input-group .form-input {
-    min-height: 36px;
-    width: 100%;
-}
-
-.workspace-input-group .btn-tool {
-    white-space: nowrap;
-}
-
-.workspace-meta {
-    font-size: 11px;
     color: var(--color-text-tertiary);
-    line-height: 1.45;
 }
 
 .openclaw-card-list {
@@ -563,6 +590,23 @@
     overflow-wrap: anywhere;
 }
 
+.openclaw-config-summary-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.openclaw-config-summary-mini span {
+    max-width: 100%;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(137, 111, 94, 0.08);
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
 @media (min-width: 1200px) {
     .tool-icon {
         width: 42px;
@@ -576,12 +620,14 @@
         grid-template-columns: 1fr;
     }
 
-    .workspace-input-group {
-        grid-template-columns: 1fr;
+
+    .openclaw-summary-header {
+        flex-direction: column;
     }
 
-    .workspace-input-group .btn-tool {
-        width: 100%;
+    .summary-note {
+        max-width: none;
+        text-align: left;
     }
 }
 

@@ -69,6 +69,9 @@ function instantiateListSessionUsage(bindings = {}) {
         parseGeminiSessionSummary() {
             throw new Error('should not parse gemini summary in this test');
         },
+        parsePiSessionSummary() {
+            throw new Error('should not parse pi summary in this test');
+        },
         ...(bindings || {})
     };
     const bindingNames = Object.keys(effectiveBindings);

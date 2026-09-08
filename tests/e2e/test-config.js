@@ -331,6 +331,15 @@ preferred_auth_method = "shadow-key"
     assert(!addedProviderTemplate.error, `get-config-template should accept add-provider model: ${addedProviderTemplate.error || ''}`);
     assert(addedProviderTemplate.template.includes('model_provider = "e2e-api"'), 'entered provider should be usable in generated config template');
     assert(addedProviderTemplate.template.includes('model = "gpt-e2e-api"'), 'entered model should be used in generated config template');
+    const configAfterAdd = fs.readFileSync(path.join(tmpHome, '.codex', 'config.toml'), 'utf-8');
+    const addedProviderBlockMatch = configAfterAdd.match(
+        /(?:^|\n)\s*\[model_providers\.(?:"e2e-api"|'e2e-api'|e2e-api)\][\s\S]*?(?=\n\s*\[|$)/
+    );
+    assert(addedProviderBlockMatch, 'config.toml should contain e2e-api provider block after add-provider');
+    assert(
+        addedProviderBlockMatch[0].includes('requires_openai_auth = true'),
+        'add-provider should write requires_openai_auth = true for non-bridge providers'
+    );
 
     const addProviderMissingModel = await api('add-provider', { name: 'test-empty-model', url: mockProviderUrl, key: 'sk-empty-model', model: '   ' });
     assert(addProviderMissingModel.error, 'add-provider should reject empty model');
@@ -1501,8 +1510,70 @@ preferred_auth_method = "shadow-key"
     const deleteProviderEmpty = await api('delete-provider', { name: '' });
     assert(deleteProviderEmpty.error, 'delete-provider should fail for empty name');
 
+    const syncedProviderCacheBeforeDelete = await api('sync-provider-cache-records');
+    assert(syncedProviderCacheBeforeDelete.success === true, 'provider cache sync before delete should succeed');
+    const cacheContainsProvider = (records, providerName) => Array.isArray(records && records.groups)
+        && records.groups.some((group) => Array.isArray(group && group.files)
+            && group.files.some((file) => Array.isArray(file && file.providers)
+                && file.providers.some((provider) => provider && provider.name === providerName)));
+    assert(cacheContainsProvider(syncedProviderCacheBeforeDelete.records, 'e2e-api'), 'provider cache should contain e2e-api before delete');
+
     const deleteProviderResult = await api('delete-provider', { name: 'e2e-api' });
     assert(deleteProviderResult.success === true, 'delete-provider failed');
+
+    for (let i = 0; i < 3; i += 1) {
+        const refreshedAfterDelete = await api('get-provider-cache-records');
+        assert(!cacheContainsProvider(refreshedAfterDelete.records, 'e2e-api'), 'deleted provider should not reappear in provider cache refresh');
+    }
+    const syncedProviderCacheAfterDelete = await api('sync-provider-cache-records');
+    assert(syncedProviderCacheAfterDelete.success === true, 'provider cache sync after delete should succeed');
+    assert(!cacheContainsProvider(syncedProviderCacheAfterDelete.records, 'e2e-api'), 'provider cache sync should prune deleted provider instead of resurrecting it');
+
+    const codexmateDir = path.join(tmpHome, '.codexmate');
+    fs.mkdirSync(codexmateDir, { recursive: true });
+    const claudeProviderCachePath = path.join(codexmateDir, 'claude-providers.json');
+    fs.writeFileSync(claudeProviderCachePath, JSON.stringify({
+        version: 1,
+        providers: {
+            'claude-cache-zombie': {
+                name: 'claude-cache-zombie',
+                baseUrl: 'https://claude-cache-zombie.example.test',
+                apiKey: 'sk-cache-zombie',
+                model: 'claude-cache-zombie-model',
+                targetApi: 'responses'
+            },
+            'claude-cache-survivor': {
+                name: 'claude-cache-survivor',
+                baseUrl: 'https://claude-cache-survivor.example.test',
+                apiKey: 'sk-cache-survivor',
+                model: 'claude-cache-survivor-model',
+                targetApi: 'responses'
+            }
+        }
+    }, null, 2));
+    const claudeCacheConfigsBeforeDelete = await api('get-claude-provider-cache-configs');
+    assert(
+        claudeCacheConfigsBeforeDelete.providers.some(provider => provider.name === 'claude-cache-zombie'),
+        'Claude provider-cache config should exist before cache delete'
+    );
+    const deniedClaudeCacheDelete = await api('delete-provider-cache-record', { name: 'claude-cache-zombie', group: 'claude' });
+    assert(deniedClaudeCacheDelete.errorCode === 'tool-config-write-disabled', 'Claude provider-cache delete should require claude write permission');
+    const enableClaudeWrites = await api('set-tool-config-permission', { target: 'claude', allowWrite: true });
+    assert(enableClaudeWrites.success === true, 'set-tool-config-permission(claude) should succeed');
+    const deleteClaudeCacheProvider = await api('delete-provider-cache-record', { name: 'claude-cache-zombie', group: 'claude' });
+    assert(deleteClaudeCacheProvider.success === true, 'delete-provider-cache-record should succeed for Claude cache');
+    assert(deleteClaudeCacheProvider.removed === true, 'delete-provider-cache-record should report removed provider');
+    const claudeCacheConfigsAfterDelete = await api('get-claude-provider-cache-configs');
+    assert(
+        !claudeCacheConfigsAfterDelete.providers.some(provider => provider.name === 'claude-cache-zombie'),
+        'deleted Claude provider-cache config should not rehydrate after refresh'
+    );
+    assert(
+        claudeCacheConfigsAfterDelete.providers.some(provider => provider.name === 'claude-cache-survivor'),
+        'delete-provider-cache-record should keep unrelated Claude cache configs'
+    );
+    const disableClaudeWritesAfterCacheDelete = await api('set-tool-config-permission', { target: 'claude', allowWrite: false });
+    assert(disableClaudeWritesAfterCacheDelete.success === true, 'test-config should restore claude write permission after provider-cache delete e2e');
 
     const deleteLocalProviderResult = await api('delete-provider', { name: 'local' });
     assert(deleteLocalProviderResult.error, 'delete-provider should reject reserved local provider');
