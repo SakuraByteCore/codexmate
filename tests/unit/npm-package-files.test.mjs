@@ -17,3 +17,10 @@ test('npm package includes plugins directory for Web UI runtime imports', () => 
     assert.ok(files.includes('plugins/'), 'package.json files must include plugins/');
 });
 
+test('npm package excludes desktop build-only sources', () => {
+    const pkg = readJson(path.join(projectRoot, 'package.json'));
+    const files = Array.isArray(pkg.files) ? pkg.files : [];
+    assert.ok(!files.includes('src-tauri/'), 'package.json files must not include src-tauri/');
+    assert.ok(!files.includes('tools/desktop/'), 'package.json files must not include tools/desktop/');
+});
+
