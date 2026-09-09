@@ -1362,7 +1362,6 @@ const en = Object.freeze({
     'pi.providers.json.previewTitle': 'Preview',
     'pi.providers.json.editTitle': 'Edit JSON',
     'pi.files.title': 'File JSON',
-    'pi.files.desc': 'View and edit Pi settings.json and models.json in full; JSON validity is checked before saving and invalid content is never written.',
     'pi.files.settingsTitle': 'settings.json (active settings)',
     'pi.files.modelsTitle': 'models.json (providers and models)',
     'pi.files.modelsHint': 'Merged automatically from the provider management above; prefer editing providers there instead.',

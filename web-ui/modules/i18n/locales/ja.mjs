@@ -1363,7 +1363,6 @@ const ja = Object.freeze({
     'pi.providers.json.previewTitle': 'プレビュー',
     'pi.providers.json.editTitle': 'JSON を編集',
     'pi.files.title': 'ファイル JSON',
-    'pi.files.desc': 'Pi の settings.json と models.json を全文表示して直接編集します。保存前に JSON の正当性を検証し、不正な内容は書き込みません。',
     'pi.files.settingsTitle': 'settings.json（有効な設定）',
     'pi.files.modelsTitle': 'models.json（プロバイダーとモデル）',
     'pi.files.modelsHint': '上のプロバイダー管理から自動的にマージされます。プロバイダーの変更は上の管理画面を優先してください。',

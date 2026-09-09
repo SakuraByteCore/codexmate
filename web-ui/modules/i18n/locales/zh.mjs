@@ -1360,7 +1360,6 @@ const zh = Object.freeze({
     'pi.providers.json.previewTitle': '预览',
     'pi.providers.json.editTitle': '编辑 JSON',
     'pi.files.title': '文件 JSON',
-    'pi.files.desc': '完整展示并直接编辑 Pi 的 settings.json 与 models.json；保存前校验 JSON 合法性，非法内容不会写入。',
     'pi.files.settingsTitle': 'settings.json（生效设置）',
     'pi.files.modelsTitle': 'models.json（供应商与模型）',
     'pi.files.modelsHint': '由上方供应商管理自动合并生成；调整供应商请优先使用上方的供应商管理。',

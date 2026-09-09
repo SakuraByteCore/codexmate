@@ -3304,7 +3304,6 @@ return function render(_ctx, _cache) {
                       }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                     ])
                   ]),
-                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.files.desc')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.targetFile', { path: '~/.pi/agent/settings.json' })), 1 /* TEXT */),
                   _withDirectives(_createElementVNode("textarea", {
                     class: "template-textarea config-json-editor",

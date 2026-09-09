@@ -1331,7 +1331,6 @@ const vi = Object.freeze({
     'pi.providers.json.previewTitle': 'Xem trước',
     'pi.providers.json.editTitle': 'Chỉnh sửa JSON',
     'pi.files.title': 'JSON tập tin',
-    'pi.files.desc': 'Hiển thị đầy đủ và chỉnh sửa trực tiếp settings.json và models.json của Pi; kiểm tra tính hợp lệ của JSON trước khi lưu, nội dung không hợp lệ sẽ không được ghi.',
     'pi.files.settingsTitle': 'settings.json (cài đặt đang dùng)',
     'pi.files.modelsTitle': 'models.json (nhà cung cấp và mô hình)',
     'pi.files.modelsHint': 'Được hợp nhất tự động từ phần quản lý nhà cung cấp phía trên; hãy ưu tiên chỉnh sửa ở đó.',

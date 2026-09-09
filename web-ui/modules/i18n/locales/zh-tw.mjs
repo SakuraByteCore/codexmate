@@ -1360,7 +1360,6 @@ const zhTw = Object.freeze({
     'pi.providers.json.previewTitle': '預覽',
     'pi.providers.json.editTitle': '編輯 JSON',
     'pi.files.title': '檔案 JSON',
-    'pi.files.desc': '完整展示並直接編輯 Pi 的 settings.json 與 models.json；儲存前校驗 JSON 合法性，非法內容不會寫入。',
     'pi.files.settingsTitle': 'settings.json（生效設定）',
     'pi.files.modelsTitle': 'models.json（供應商與模型）',
     'pi.files.modelsHint': '由上方供應商管理自動合併生成；調整供應商請優先使用上方的供應商管理。',
