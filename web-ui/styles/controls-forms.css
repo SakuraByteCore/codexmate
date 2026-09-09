@@ -104,6 +104,13 @@
     flex: 0 0 auto;
 }
 
+.selector-header .selector-actions > .btn-tool + .btn-tool,
+.selector-header .selector-actions > .btn-tool-compact + .btn-tool,
+.selector-header .selector-actions > .btn-tool + .btn-tool-compact,
+.selector-header .selector-actions > .btn-tool-compact + .btn-tool-compact {
+    margin-top: 0;
+}
+
 .selector-actions.opencode-provider-actions {
     display: inline-flex;
     align-items: stretch;
