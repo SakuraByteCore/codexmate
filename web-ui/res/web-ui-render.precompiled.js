@@ -3268,7 +3268,7 @@ return function render(_ctx, _cache) {
                                 : (_openBlock(), _createElementBlock("button", {
                                     key: 1,
                                     type: "button",
-                                    class: "btn-tool",
+                                    class: "btn-tool btn-tool-compact",
                                     onClick: _withModifiers($event => (_ctx.switchPiActiveProvider(providerId)), ["stop"]),
                                     disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving
                                   }, _toDisplayString(_ctx.t('pi.providers.setActive')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
@@ -3280,16 +3280,32 @@ return function render(_ctx, _cache) {
                   (!_ctx.piProviderIds.length)
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 1,
-                        class: "config-template-hint"
-                      }, _toDisplayString(_ctx.t('pi.providers.empty')), 1 /* TEXT */))
+                        class: "empty-state"
+                      }, [
+                        _createElementVNode("div", { class: "empty-state-title" }, _toDisplayString(_ctx.t('pi.providers.empty')), 1 /* TEXT */)
+                      ]))
                     : _createCommentVNode("v-if", true)
                 ]),
-                _createElementVNode("section", { class: "selector-section" }, [
+                _createElementVNode("section", { class: "selector-section pi-file-section" }, [
                   _createElementVNode("div", { class: "selector-header" }, [
-                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.files.title')), 1 /* TEXT */)
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.files.settingsTitle')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "selector-actions" }, [
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: $event => (_ctx.openPiConfigHistory('settings')),
+                        disabled: _ctx.piHistoryLoading
+                      }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: _ctx.savePiSettingsJson,
+                        disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piSettingsJsonError
+                      }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                    ])
                   ]),
                   _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.files.desc')), 1 /* TEXT */),
-                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.files.settingsTitle')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.targetFile', { path: '~/.pi/agent/settings.json' })), 1 /* TEXT */),
                   _withDirectives(_createElementVNode("textarea", {
                     class: "template-textarea config-json-editor",
                     "onUpdate:modelValue": $event => ((_ctx.piSettingsJsonDraft) = $event),
@@ -3307,20 +3323,6 @@ return function render(_ctx, _cache) {
                         class: "config-template-hint error-text"
                       }, _toDisplayString(_ctx.piSettingsJsonError), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true),
-                  _createElementVNode("div", { class: "settings-tab-actions" }, [
-                    _createElementVNode("button", {
-                      type: "button",
-                      class: "btn-tool",
-                      onClick: _ctx.savePiSettingsJson,
-                      disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piSettingsJsonError
-                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    _createElementVNode("button", {
-                      type: "button",
-                      class: "btn-mini",
-                      onClick: $event => (_ctx.openPiConfigHistory('settings')),
-                      disabled: _ctx.piHistoryLoading
-                    }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ]),
                   (_ctx.piHistoryTarget === 'settings')
                     ? (_openBlock(), _createElementBlock("details", {
                         key: 1,
@@ -3386,8 +3388,28 @@ return function render(_ctx, _cache) {
                             : _createCommentVNode("v-if", true)
                         ])
                       ]))
-                    : _createCommentVNode("v-if", true),
-                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('pi.files.modelsTitle')), 1 /* TEXT */),
+                    : _createCommentVNode("v-if", true)
+                ]),
+                _createElementVNode("section", { class: "selector-section pi-file-section" }, [
+                  _createElementVNode("div", { class: "selector-header" }, [
+                    _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('pi.files.modelsTitle')), 1 /* TEXT */),
+                    _createElementVNode("div", { class: "selector-actions" }, [
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: $event => (_ctx.openPiConfigHistory('models')),
+                        disabled: _ctx.piHistoryLoading
+                      }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-tool btn-tool-compact",
+                        onClick: _ctx.savePiModelsJson,
+                        disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piModelsJsonError
+                      }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.files.modelsHint')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.targetFile', { path: '~/.pi/agent/models.json' })), 1 /* TEXT */),
                   _withDirectives(_createElementVNode("textarea", {
                     class: "template-textarea config-json-editor",
                     "onUpdate:modelValue": $event => ((_ctx.piModelsJsonDraft) = $event),
@@ -3401,27 +3423,13 @@ return function render(_ctx, _cache) {
                   ]),
                   (_ctx.piModelsJsonError)
                     ? (_openBlock(), _createElementBlock("p", {
-                        key: 2,
+                        key: 0,
                         class: "config-template-hint error-text"
                       }, _toDisplayString(_ctx.piModelsJsonError), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true),
-                  _createElementVNode("div", { class: "settings-tab-actions" }, [
-                    _createElementVNode("button", {
-                      type: "button",
-                      class: "btn-tool",
-                      onClick: _ctx.savePiModelsJson,
-                      disabled: !_ctx.isToolConfigWriteAllowed('pi') || _ctx.piSaving || _ctx.piFileJsonSaving || !!_ctx.piModelsJsonError
-                    }, _toDisplayString(_ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                    _createElementVNode("button", {
-                      type: "button",
-                      class: "btn-mini",
-                      onClick: $event => (_ctx.openPiConfigHistory('models')),
-                      disabled: _ctx.piHistoryLoading
-                    }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                  ]),
                   (_ctx.piHistoryTarget === 'models')
                     ? (_openBlock(), _createElementBlock("details", {
-                        key: 3,
+                        key: 1,
                         class: "prompt-history-panel",
                         open: ""
                       }, [

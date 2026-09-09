@@ -1365,6 +1365,7 @@ const en = Object.freeze({
     'pi.files.desc': 'View and edit Pi settings.json and models.json in full; JSON validity is checked before saving and invalid content is never written.',
     'pi.files.settingsTitle': 'settings.json (active settings)',
     'pi.files.modelsTitle': 'models.json (providers and models)',
+    'pi.files.modelsHint': 'Merged automatically from the provider management above; prefer editing providers there instead.',
     'pi.history.apply': 'Apply this record',
     'pi.history.applied': 'History record applied',
     'pi.history.applyFailed': 'Failed to apply history record',

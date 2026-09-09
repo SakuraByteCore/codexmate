@@ -49,19 +49,25 @@
                                     </div>
                                     <div class="card-trailing">
                                         <span v-if="piActiveProvider === providerId" class="pill configured">{{ t('pi.providers.active') }}</span>
-                                        <button v-else type="button" class="btn-tool" @click.stop="switchPiActiveProvider(providerId)" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.setActive') }}</button>
+                                        <button v-else type="button" class="btn-tool btn-tool-compact" @click.stop="switchPiActiveProvider(providerId)" :disabled="!isToolConfigWriteAllowed('pi') || piSaving">{{ t('pi.providers.setActive') }}</button>
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="!piProviderIds.length" class="config-template-hint">{{ t('pi.providers.empty') }}</div>
+                            <div v-if="!piProviderIds.length" class="empty-state">
+                                <div class="empty-state-title">{{ t('pi.providers.empty') }}</div>
+                            </div>
                         </section>
 
-                        <section class="selector-section">
+                        <section class="selector-section pi-file-section">
                             <div class="selector-header">
-                                <span class="selector-title">{{ t('pi.files.title') }}</span>
+                                <span class="selector-title">{{ t('pi.files.settingsTitle') }}</span>
+                                <div class="selector-actions">
+                                    <button type="button" class="btn-tool btn-tool-compact" @click="openPiConfigHistory('settings')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
+                                    <button type="button" class="btn-tool btn-tool-compact" @click="savePiSettingsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piSettingsJsonError">{{ t('common.save') }}</button>
+                                </div>
                             </div>
                             <div class="config-template-hint">{{ t('pi.files.desc') }}</div>
-                            <label class="form-label">{{ t('pi.files.settingsTitle') }}</label>
+                            <div class="config-template-hint">{{ t('pi.providers.targetFile', { path: '~/.pi/agent/settings.json' }) }}</div>
                             <textarea
                                 class="template-textarea config-json-editor"
                                 v-model="piSettingsJsonDraft"
@@ -71,10 +77,6 @@
                                 @input="piSettingsJsonInput"
                                 placeholder="{}"></textarea>
                             <p v-if="piSettingsJsonError" class="config-template-hint error-text">{{ piSettingsJsonError }}</p>
-                            <div class="settings-tab-actions">
-                                <button type="button" class="btn-tool" @click="savePiSettingsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piSettingsJsonError">{{ t('common.save') }}</button>
-                                <button type="button" class="btn-mini" @click="openPiConfigHistory('settings')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
-                            </div>
                             <details v-if="piHistoryTarget === 'settings'" class="prompt-history-panel" open>
                                 <summary class="prompt-history-summary">
                                     <span>{{ t('common.history') }}</span>
@@ -96,7 +98,18 @@
                                     </div>
                                 </div>
                             </details>
-                            <label class="form-label">{{ t('pi.files.modelsTitle') }}</label>
+                        </section>
+
+                        <section class="selector-section pi-file-section">
+                            <div class="selector-header">
+                                <span class="selector-title">{{ t('pi.files.modelsTitle') }}</span>
+                                <div class="selector-actions">
+                                    <button type="button" class="btn-tool btn-tool-compact" @click="openPiConfigHistory('models')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
+                                    <button type="button" class="btn-tool btn-tool-compact" @click="savePiModelsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piModelsJsonError">{{ t('common.save') }}</button>
+                                </div>
+                            </div>
+                            <div class="config-template-hint">{{ t('pi.files.modelsHint') }}</div>
+                            <div class="config-template-hint">{{ t('pi.providers.targetFile', { path: '~/.pi/agent/models.json' }) }}</div>
                             <textarea
                                 class="template-textarea config-json-editor"
                                 v-model="piModelsJsonDraft"
@@ -106,10 +119,6 @@
                                 @input="piModelsJsonInput"
                                 placeholder="{}"></textarea>
                             <p v-if="piModelsJsonError" class="config-template-hint error-text">{{ piModelsJsonError }}</p>
-                            <div class="settings-tab-actions">
-                                <button type="button" class="btn-tool" @click="savePiModelsJson" :disabled="!isToolConfigWriteAllowed('pi') || piSaving || piFileJsonSaving || !!piModelsJsonError">{{ t('common.save') }}</button>
-                                <button type="button" class="btn-mini" @click="openPiConfigHistory('models')" :disabled="piHistoryLoading">{{ t('common.history') }}</button>
-                            </div>
                             <details v-if="piHistoryTarget === 'models'" class="prompt-history-panel" open>
                                 <summary class="prompt-history-summary">
                                     <span>{{ t('common.history') }}</span>
