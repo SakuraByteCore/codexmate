@@ -213,6 +213,7 @@ export function createPiConfigMethods({ api: apiClient }) {
         startPiProviderDraft(tpl) {
             const template = isPiPlainObject(tpl) ? tpl : {};
             this.resetPiEditorTransientState();
+            this.showAddPiProviderModal = false;
             this.editingPiProvider = {
                 id: '',
                 isNew: true,
@@ -356,6 +357,8 @@ export function createPiConfigMethods({ api: apiClient }) {
             const wasNew = !!editor.isNew;
             this.resetPiProviderEditing();
             if (wasNew) this.piSelectedProviderTemplate = '';
+            this.showAddPiProviderModal = false;
+            this.piProviderPickerQuery = '';
         },
         removePiProviderModel(index) {
             if (!this.editingPiProvider) return;
