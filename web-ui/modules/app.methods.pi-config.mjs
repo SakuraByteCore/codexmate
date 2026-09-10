@@ -55,6 +55,7 @@ export function createPiConfigMethods({ api: apiClient }) {
                 : '';
             const updates = { defaultProvider: providerId };
             if (firstModel) updates.defaultModel = firstModel;
+            else updates.defaultModel = '';
             try {
                 const result = await apiClient('write-pi-settings', updates);
                 if (result && result.error) throw new Error(result.error);
@@ -123,6 +124,11 @@ export function createPiConfigMethods({ api: apiClient }) {
                 if (!ok || !merged) {
                     this.piEditorJsonError = error || '配置 JSON 不合法';
                     this.message = this.piEditorJsonError;
+                    this.messageType = 'error';
+                    return;
+                }
+                if (!Array.isArray(merged.models) || merged.models.length === 0) {
+                    this.message = '请至少导入或输入一个模型';
                     this.messageType = 'error';
                     return;
                 }
@@ -544,7 +550,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             if (merged.baseUrl === undefined) merged.baseUrl = values.baseUrl || '';
             if (merged.api === undefined) merged.api = values.api || '';
             if (merged.apiKey === undefined) merged.apiKey = values.apiKey || '';
-            if (merged.models === undefined) merged.models = mapModels(values.models);
+            merged.models = mapModels(merged.models !== undefined ? merged.models : values.models);
             if (isPiPlainObject(orig.headers)) merged.headers = orig.headers;
             if (typeof orig.title === 'string') merged.title = orig.title;
             else if (typeof orig.name === 'string') merged.name = orig.name;
