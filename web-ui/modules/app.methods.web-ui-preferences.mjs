@@ -113,7 +113,8 @@ function normalizeNavigationSnapshot(vm, source = {}) {
             : currentSkillsTargetApp,
         promptTemplatesMode: source.promptTemplatesMode === 'manage' || source.promptTemplatesMode === 'compose'
             ? source.promptTemplatesMode
-            : currentPromptTemplatesMode
+            : currentPromptTemplatesMode,
+        pluginsActiveId: typeof source.pluginsActiveId === 'string' ? source.pluginsActiveId : (typeof vm.pluginsActiveId === 'string' ? vm.pluginsActiveId : '')
     };
 }
 
@@ -479,6 +480,7 @@ export function createWebUiPreferencesMethods(options = {}) {
                     }
                     if (nav.skillsTargetApp === 'codex' || nav.skillsTargetApp === 'claude' || nav.skillsTargetApp === 'pi') this.skillsTargetApp = nav.skillsTargetApp;
                     if (nav.promptTemplatesMode === 'compose' || nav.promptTemplatesMode === 'manage') this.promptTemplatesMode = nav.promptTemplatesMode;
+                    if (typeof nav.pluginsActiveId === 'string' && nav.pluginsActiveId) this.pluginsActiveId = nav.pluginsActiveId;
                     if (typeof this.saveNavState === 'function') this.saveNavState();
                 }
             } finally {

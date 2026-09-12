@@ -494,10 +494,10 @@ return function render(_ctx, _cache) {
                     class: "side-item-icon",
                     "aria-hidden": "true"
                   }, "◇"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.plugins.tools')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('title.plugins')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.tools.meta')), 1 /* TEXT */),
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.templatesCount', { count: _ctx.promptTemplatesList.length })), 1 /* TEXT */)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('subtitle.plugins')), 1 /* TEXT */),
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.pluginsCount', { count: _ctx.pluginsCatalog.length })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),
@@ -6845,10 +6845,128 @@ return function render(_ctx, _cache) {
                                 ])
                               ]))
                         ]))
-                      : (_openBlock(), _createElementBlock("div", {
-                          key: 3,
-                          class: "skills-empty-state"
-                        }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
+                      : (_ctx.pluginsActiveId === 'text-tools')
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 3,
+                            class: "plugins-panel"
+                          }, [
+                            _createElementVNode("div", { class: "plugins-panel-head" }, [
+                              _createElementVNode("div", null, [
+                                _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.textTools.title')), 1 /* TEXT */),
+                                (_ctx.pluginsActiveAttribution)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 0,
+                                      class: "plugins-panel-note"
+                                    }, _toDisplayString(_ctx.pluginsActiveAttribution), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true)
+                              ]),
+                              (!_ctx.pluginsSidebarVisible)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 0,
+                                    class: "settings-tab-actions"
+                                  }, [
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-tool btn-tool-compact",
+                                      onClick: $event => (_ctx.loadPluginsOverview({ forceRefresh: true, silent: false })),
+                                      disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading
+                                    }, _toDisplayString(_ctx.pluginsLoading ? _ctx.t('plugins.refreshing') : _ctx.t('plugins.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ]))
+                                : _createCommentVNode("v-if", true)
+                            ]),
+                            _createElementVNode("div", { class: "text-tools-io" }, [
+                              _createElementVNode("div", { class: "prompt-preview-block" }, [
+                                _createElementVNode("div", { class: "prompt-vars-head" }, [
+                                  _createElementVNode("div", null, [
+                                    _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.textTools.inputLabel')), 1 /* TEXT */)
+                                  ]),
+                                  _createElementVNode("div", { class: "prompt-editor-actions" }, [
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini",
+                                      onClick: _ctx.swapTextTools,
+                                      disabled: _ctx.pluginsLoading
+                                    }, _toDisplayString(_ctx.t('plugins.textTools.swap')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini",
+                                      onClick: _ctx.clearTextTools,
+                                      disabled: _ctx.pluginsLoading
+                                    }, _toDisplayString(_ctx.t('plugins.textTools.clear')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ])
+                                ]),
+                                _withDirectives(_createElementVNode("textarea", {
+                                  class: "form-input prompt-preview-textarea text-tools-input",
+                                  "onUpdate:modelValue": $event => ((_ctx.textToolsInput) = $event),
+                                  onInput: _ctx.onTextToolsInput,
+                                  rows: "8",
+                                  spellcheck: "false",
+                                  placeholder: _ctx.t('plugins.textTools.inputPlaceholder'),
+                                  "aria-label": _ctx.t('plugins.textTools.inputLabel')
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onInput", "placeholder", "aria-label"]), [
+                                  [_vModelText, _ctx.textToolsInput]
+                                ]),
+                                _createElementVNode("div", { class: "text-tools-stats" }, [
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.textToolsStats, (stat) => {
+                                    return (_openBlock(), _createElementBlock("span", {
+                                      key: 'tts-' + stat.label,
+                                      class: "plugins-panel-note"
+                                    }, [
+                                      _createTextVNode(_toDisplayString(stat.label) + ": ", 1 /* TEXT */),
+                                      _createElementVNode("strong", null, _toDisplayString(stat.value), 1 /* TEXT */)
+                                    ]))
+                                  }), 128 /* KEYED_FRAGMENT */))
+                                ])
+                              ]),
+                              _createElementVNode("div", { class: "text-tools-groups" }, [
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.textToolsGroups, (group) => {
+                                  return (_openBlock(), _createElementBlock("div", {
+                                    key: 'ttg-' + group.id,
+                                    class: "text-tools-group"
+                                  }, [
+                                    _createElementVNode("div", { class: "text-tools-group-title" }, _toDisplayString(group.label), 1 /* TEXT */),
+                                    _createElementVNode("div", { class: "text-tools-tools" }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(group.tools, (tool) => {
+                                        return (_openBlock(), _createElementBlock("button", {
+                                          key: 'tt-' + tool.id,
+                                          type: "button",
+                                          class: "btn-mini",
+                                          onClick: $event => (_ctx.applyTextTool(tool.id)),
+                                          disabled: _ctx.pluginsLoading
+                                        }, _toDisplayString(tool.label), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ])
+                                  ]))
+                                }), 128 /* KEYED_FRAGMENT */))
+                              ]),
+                              _createElementVNode("div", { class: "prompt-preview-block" }, [
+                                _createElementVNode("div", { class: "prompt-vars-head" }, [
+                                  _createElementVNode("div", null, [
+                                    _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.textTools.outputLabel')), 1 /* TEXT */)
+                                  ]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini",
+                                    onClick: _ctx.copyTextToolsOutput,
+                                    disabled: _ctx.pluginsLoading || !_ctx.textToolsOutput
+                                  }, _toDisplayString(_ctx.t('common.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                ]),
+                                _createElementVNode("textarea", {
+                                  class: "form-input prompt-preview-textarea",
+                                  value: _ctx.textToolsOutput,
+                                  rows: "8",
+                                  readonly: "",
+                                  spellcheck: "false",
+                                  placeholder: _ctx.t('plugins.textTools.outputPlaceholder'),
+                                  "aria-label": _ctx.t('plugins.textTools.outputLabel')
+                                }, null, 8 /* PROPS */, ["value", "placeholder", "aria-label"])
+                              ])
+                            ])
+                          ]))
+                        : (_openBlock(), _createElementBlock("div", {
+                            key: 4,
+                            class: "skills-empty-state"
+                          }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
               ], 8 /* PROPS */, ["aria-label"])
             ], 2 /* CLASS */)
           ], 512 /* NEED_PATCH */), [

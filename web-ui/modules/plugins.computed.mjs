@@ -1,3 +1,9 @@
-import { createPluginsComputed } from '../../plugins/prompt-templates/computed.mjs';
+import { createPluginsComputed as createPromptTemplatesComputed } from '../../plugins/prompt-templates/computed.mjs';
+import { createPluginsComputed as createTextToolsComputed } from '../../plugins/text-tools/computed.mjs';
 
-export { createPluginsComputed };
+export function createPluginsComputed() {
+    return {
+        ...createPromptTemplatesComputed(),
+        ...createTextToolsComputed()
+    };
+}

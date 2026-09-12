@@ -268,6 +268,9 @@ export function createAgentsMethods(options = {}) {
                             if (this.mainTab === 'plugins' && this.pluginsActiveId === 'prompt-templates' && this.promptTemplatesMode !== 'compose') {
                                 return '#panel-plugins .prompt-templates-toolbar input.form-input';
                             }
+                            if (this.mainTab === 'plugins' && this.pluginsActiveId === 'text-tools') {
+                                return '#panel-plugins .text-tools-input';
+                            }
                             return '';
                         })();
                         if (focusSelector) {

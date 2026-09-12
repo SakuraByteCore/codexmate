@@ -624,7 +624,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sysPromptDiffHasChangesValue',
         'sysPromptDiffFingerprint',
         '_sysPromptDiffPreviewRequestToken',
-        '_sysPromptOpenRequestToken'
+        '_sysPromptOpenRequestToken',
+        'textToolsInput',
+        'textToolsOutput',
+        'textToolsLoadedOnce'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -1004,7 +1007,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'piCheckedRemoteCount',
         'piCreateModelRecord',
         'addSelectedPiRemoteModels',
-        'fillPiModelFromCatalog'
+        'fillPiModelFromCatalog',
+        'onTextToolsInput',
+        'applyTextTool',
+        'copyTextToolsOutput',
+        'clearTextTools',
+        'swapTextTools'
     );
     const allowedMissingCurrentMethodKeys = [
         'addPiProviderFromModal',
@@ -1134,7 +1142,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isLocalProviderDisabled',
         'sessionTimelineProgressPercent',
         'activeSessionWorkspaceSummary',
-        'currentInstalledCommandCards'
+        'currentInstalledCommandCards',
+        'textToolsGroups',
+        'textToolsStats'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

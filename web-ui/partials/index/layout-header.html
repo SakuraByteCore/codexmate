@@ -351,10 +351,10 @@
                         @pointerdown="onMainTabPointerDown('plugins', $event)"
                         @click="onMainTabClick('plugins', $event)">
                         <span class="side-item-icon" aria-hidden="true">◇</span>
-                        <div class="side-item-title">{{ t('side.plugins.tools') }}</div>
+                        <div class="side-item-title">{{ t('title.plugins') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.plugins.tools.meta') }}</span>
-                            <span>{{ t('side.plugins.templatesCount', { count: promptTemplatesList.length }) }}</span>
+                            <span>{{ t('subtitle.plugins') }}</span>
+                            <span>{{ t('side.plugins.pluginsCount', { count: pluginsCatalog.length }) }}</span>
                         </div>
                     </button>
                 </div>

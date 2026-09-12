@@ -240,6 +240,57 @@
                                 </div>
                             </div>
 
+                            <div v-else-if="pluginsActiveId === 'text-tools'" class="plugins-panel">
+                                <div class="plugins-panel-head">
+                                    <div>
+                                        <div class="plugins-panel-title">{{ t('plugins.textTools.title') }}</div>
+                                        <div v-if="pluginsActiveAttribution" class="plugins-panel-note">{{ pluginsActiveAttribution }}</div>
+                                    </div>
+                                    <div v-if="!pluginsSidebarVisible" class="settings-tab-actions">
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="loadPluginsOverview({ forceRefresh: true, silent: false })" :disabled="loading || !!initError || pluginsLoading">
+                                            {{ pluginsLoading ? t('plugins.refreshing') : t('plugins.refresh') }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="text-tools-io">
+                                    <div class="prompt-preview-block">
+                                        <div class="prompt-vars-head">
+                                            <div>
+                                                <div class="prompt-vars-title">{{ t('plugins.textTools.inputLabel') }}</div>
+                                            </div>
+                                            <div class="prompt-editor-actions">
+                                                <button type="button" class="btn-mini" @click="swapTextTools" :disabled="pluginsLoading">{{ t('plugins.textTools.swap') }}</button>
+                                                <button type="button" class="btn-mini" @click="clearTextTools" :disabled="pluginsLoading">{{ t('plugins.textTools.clear') }}</button>
+                                            </div>
+                                        </div>
+                                        <textarea class="form-input prompt-preview-textarea text-tools-input" v-model="textToolsInput" @input="onTextToolsInput" rows="8" spellcheck="false" :placeholder="t('plugins.textTools.inputPlaceholder')" :aria-label="t('plugins.textTools.inputLabel')"></textarea>
+                                        <div class="text-tools-stats">
+                                            <span v-for="stat in textToolsStats" :key="'tts-' + stat.label" class="plugins-panel-note">{{ stat.label }}: <strong>{{ stat.value }}</strong></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-tools-groups">
+                                        <div v-for="group in textToolsGroups" :key="'ttg-' + group.id" class="text-tools-group">
+                                            <div class="text-tools-group-title">{{ group.label }}</div>
+                                            <div class="text-tools-tools">
+                                                <button v-for="tool in group.tools" :key="'tt-' + tool.id" type="button" class="btn-mini" @click="applyTextTool(tool.id)" :disabled="pluginsLoading">{{ tool.label }}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="prompt-preview-block">
+                                        <div class="prompt-vars-head">
+                                            <div>
+                                                <div class="prompt-vars-title">{{ t('plugins.textTools.outputLabel') }}</div>
+                                            </div>
+                                            <button type="button" class="btn-mini" @click="copyTextToolsOutput" :disabled="pluginsLoading || !textToolsOutput">{{ t('common.copy') }}</button>
+                                        </div>
+                                        <textarea class="form-input prompt-preview-textarea" :value="textToolsOutput" rows="8" readonly spellcheck="false" :placeholder="t('plugins.textTools.outputPlaceholder')" :aria-label="t('plugins.textTools.outputLabel')"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div v-else class="skills-empty-state">{{ t('plugins.promptTemplates.noPluginSelected') }}</div>
                         </section>
                     </div>

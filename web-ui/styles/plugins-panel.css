@@ -562,3 +562,11 @@
         grid-template-columns: 1fr;
     }
 }
+
+.text-tools-io { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.text-tools-stats { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: var(--spacing-xs); }
+.text-tools-stats .plugins-panel-note { margin: 0; }
+.text-tools-stats strong { color: var(--color-text-primary); }
+.text-tools-groups { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.text-tools-group-title { font-size: var(--font-size-caption); font-weight: var(--font-weight-secondary); color: var(--color-text-secondary); margin-bottom: 6px; }
+.text-tools-tools { display: flex; flex-wrap: wrap; gap: 6px; }

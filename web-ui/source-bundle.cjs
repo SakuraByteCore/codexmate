@@ -231,6 +231,128 @@ function buildRelativeImportAliasStatements(importClause, filePath) {
     return statements.join('\n');
 }
 
+function buildScopedImportStatement(importClause, targetNamespace) {
+    const clause = String(importClause || '').trim();
+    if (!clause) {
+        return `${targetNamespace};`;
+    }
+    const namespaceRe = /^\*\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+    const namespaceMatch = namespaceRe.exec(clause);
+    if (namespaceMatch) {
+        return `const ${namespaceMatch[1]} = ${targetNamespace};`;
+    }
+    const braceIndex = clause.indexOf('{');
+    if (braceIndex === -1) {
+        const defaultName = clause.trim();
+        if (!IDENTIFIER_RE.test(defaultName)) {
+            throw new Error(`Unsupported executable bundle default import: ${clause}`);
+        }
+        return `const ${defaultName} = ${targetNamespace}.default;`;
+    }
+    const defaultName = braceIndex > 0
+        ? clause.slice(0, braceIndex).replace(/,\s*$/, '').trim()
+        : '';
+    const namedPart = clause.slice(braceIndex).trim();
+    const statements = [];
+    if (defaultName) {
+        statements.push(`const ${defaultName} = ${targetNamespace}.default;`);
+    }
+    const innerClause = namedPart.slice(1, -1).trim();
+    if (innerClause) {
+        const destructured = splitCommaSeparatedSpecifiers(innerClause)
+            .map((specifier) => {
+                const parts = specifier.split(/\s+as\s+/);
+                const imported = String(parts[0] || '').trim();
+                const local = String(parts[1] || imported).trim();
+                if (!IDENTIFIER_RE.test(imported) || !IDENTIFIER_RE.test(local)) {
+                    throw new Error(`Unsupported executable bundle import specifier: ${specifier}`);
+                }
+                return local === imported ? imported : `${imported}: ${local}`;
+            })
+            .join(', ');
+        statements.push(`const { ${destructured} } = ${targetNamespace};`);
+    }
+    return statements.join('\n');
+}
+
+function transformJavaScriptModuleScoped(filePath, namespaceVar, fileToNamespace) {
+    let source = readUtf8Text(filePath);
+    const exportBindings = [];
+
+    const resolveNamespace = (specifier) => {
+        const targetPath = path.resolve(path.dirname(filePath), specifier);
+        const targetNamespace = fileToNamespace.get(targetPath);
+        if (!targetNamespace) {
+            throw new Error(`Unresolved executable bundle dependency in ${filePath}: ${specifier}`);
+        }
+        return targetNamespace;
+    };
+
+    source = source.replace(JS_RELATIVE_IMPORT_STATEMENT_RE, (_match, prefix, indent, importClause, specifier) => {
+        const targetNamespace = resolveNamespace(specifier);
+        const statement = buildScopedImportStatement(importClause, targetNamespace);
+        const indented = statement
+            .split('\n')
+            .map(line => `${indent || ''}${line}`)
+            .join('\n');
+        return `${prefix || ''}${indented}\n`;
+    });
+
+    source = source.replace(/(^|\n)[ \t]*export\s+\*\s+from\s+['"](\.?[^'"]+)['"]\s*;?[ \t]*/g, (_match, prefix, specifier) => {
+        exportBindings.push({ spread: resolveNamespace(specifier) });
+        return prefix || '';
+    });
+
+    source = source.replace(/(^|\n)[ \t]*export\s+\{([\s\S]*?)\}\s*from\s+['"](\.?[^'"]+)['"]\s*;?[ \t]*/g, (_match, prefix, innerClause, specifier) => {
+        const targetNamespace = resolveNamespace(specifier);
+        for (const spec of splitCommaSeparatedSpecifiers(innerClause)) {
+            const parts = spec.split(/\s+as\s+/);
+            const local = String(parts[0] || '').trim();
+            const exported = String(parts[1] || local).trim();
+            exportBindings.push({ exported, valueRef: `${targetNamespace}.${local}` });
+        }
+        return prefix || '';
+    });
+
+    source = source.replace(/(^|\n)[ \t]*export\s+\{([\s\S]*?)\}\s*;?[ \t]*/g, (_match, prefix, innerClause) => {
+        for (const spec of splitCommaSeparatedSpecifiers(innerClause)) {
+            const parts = spec.split(/\s+as\s+/);
+            const local = String(parts[0] || '').trim();
+            const exported = String(parts[1] || local).trim();
+            exportBindings.push({ exported, valueRef: local });
+        }
+        return prefix || '';
+    });
+
+    source = source.replace(/(^|\n)[ \t]*export\s+default\s+(?!(?:async\s+function|function|class)\b)([A-Za-z_$][\w$]*)\s*(?:;|(?=[\n\r])|$)/g, (_match, prefix, name) => {
+        exportBindings.push({ exported: 'default', valueRef: name });
+        return prefix || '';
+    });
+
+    source = source.replace(/(^|\n)([ \t]*)export\s+(async\s+function|function|class|const|let|var)\s+([A-Za-z_$][\w$]*)\b/g, (_match, prefix, indent, keyword, name) => {
+        exportBindings.push({ exported: name, valueRef: name });
+        return `${prefix || ''}${indent || ''}${keyword} ${name}`;
+    });
+
+    const returnEntries = exportBindings.map((binding) => {
+        if (binding.spread) {
+            return `...${binding.spread}`;
+        }
+        return `${binding.exported}: ${binding.valueRef}`;
+    });
+    const residualExport = /(^|\n)[ \t]*export\b/.exec(source);
+    if (residualExport) {
+        throw new Error(`Unsupported export syntax left in executable bundle module ${filePath}: ${residualExport[0].trim()}`);
+    }
+
+    return [
+        `const ${namespaceVar} = (() => {`,
+        source.trimEnd(),
+        `    return { ${returnEntries.join(', ')} };`,
+        '})();'
+    ].join('\n');
+}
+
 function transformJavaScriptModuleSource(source, options = {}) {
     const preserveExports = !!options.preserveExports;
     const sourcePath = typeof source === 'string' ? source : String(source || '');
@@ -256,9 +378,26 @@ function transformJavaScriptModuleSource(source, options = {}) {
 function bundleExecutableJavaScriptFile(entryPath, options = {}) {
     const orderedFiles = collectJavaScriptFiles(entryPath);
     const preserveExports = !!options.preserveExports;
+    if (preserveExports) {
+        const chunks = [];
+        for (const filePath of orderedFiles) {
+            const transformed = transformJavaScriptModuleSource(filePath, { preserveExports });
+            if (!transformed) {
+                continue;
+            }
+            chunks.push(transformed);
+        }
+        return chunks.join('\n\n').trimEnd() + '\n';
+    }
+
+    const fileToNamespace = new Map();
+    orderedFiles.forEach((filePath, index) => {
+        fileToNamespace.set(filePath, `__bundled_module_${index}__`);
+    });
     const chunks = [];
     for (const filePath of orderedFiles) {
-        const transformed = transformJavaScriptModuleSource(filePath, { preserveExports });
+        const namespaceVar = fileToNamespace.get(filePath);
+        const transformed = transformJavaScriptModuleScoped(filePath, namespaceVar, fileToNamespace);
         if (!transformed) {
             continue;
         }

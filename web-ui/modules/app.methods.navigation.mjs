@@ -110,12 +110,14 @@
         const settingsTab = typeof vm.settingsTab === 'string' ? vm.settingsTab.trim().toLowerCase() : 'general';
         const skillsTargetApp = typeof vm.skillsTargetApp === 'string' && (vm.skillsTargetApp === 'codex' || vm.skillsTargetApp === 'claude' || vm.skillsTargetApp === 'pi') ? vm.skillsTargetApp : 'codex';
         const promptTemplatesMode = typeof vm.promptTemplatesMode === 'string' && (vm.promptTemplatesMode === 'compose' || vm.promptTemplatesMode === 'manage') ? vm.promptTemplatesMode : 'compose';
+        const pluginsActiveId = typeof vm.pluginsActiveId === 'string' ? vm.pluginsActiveId.trim() : '';
         const snapshot = {
             settingsTab: settingsTab === 'data' ? 'data' : 'general',
             mainTab: resolveSelectableMainTab(mainTab),
             configMode: configModeSet && configModeSet.has(configMode) ? configMode : 'codex',
             skillsTargetApp,
-            promptTemplatesMode
+            promptTemplatesMode,
+            pluginsActiveId
         };
         if (typeof vm.persistWebUiPreferences === 'function') {
             vm.persistWebUiPreferences({ navigation: snapshot });

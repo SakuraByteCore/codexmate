@@ -186,7 +186,6 @@ export function switchMainTab(tab) {
         void Promise.resolve(marketOverviewLoad).catch(() => {});
     }
     if (enteringPluginsTab && typeof this.loadPluginsOverview === 'function') {
-        this.pluginsActiveId = 'prompt-templates';
         this.promptComposerPickerVisible = false;
         let pluginsLoad = null;
         try {
