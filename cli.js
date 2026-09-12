@@ -1097,7 +1097,8 @@ function normalizeWebUiPreferences(value = {}) {
             skillsTargetApp: navigation.skillsTargetApp === 'claude' || navigation.skillsTargetApp === 'pi'
                 ? navigation.skillsTargetApp
                 : 'codex',
-            promptTemplatesMode: navigation.promptTemplatesMode === 'manage' ? 'manage' : 'compose'
+            promptTemplatesMode: navigation.promptTemplatesMode === 'manage' ? 'manage' : 'compose',
+            pluginsActiveId: typeof navigation.pluginsActiveId === 'string' ? navigation.pluginsActiveId.trim() : ''
         }
     };
 }
