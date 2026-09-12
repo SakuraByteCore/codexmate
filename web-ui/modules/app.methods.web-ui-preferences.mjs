@@ -525,6 +525,8 @@ export function createWebUiPreferencesMethods(options = {}) {
                 if (legacy && legacy.found) {
                     this.applyWebUiPreferences(legacy.preferences, loadOptions);
                 }
+            } finally {
+                this.__navPreferencesReady = true;
             }
         },
 

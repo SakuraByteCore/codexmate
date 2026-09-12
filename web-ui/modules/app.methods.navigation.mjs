@@ -98,6 +98,7 @@
 
     const persistNavState = (vm, overrides = null) => {
         if (!vm || vm.__navStateRestoring) return;
+        if (!vm.__navPreferencesReady) return;
         const resolvedOverrides = overrides && typeof overrides === 'object' ? overrides : null;
         const mainTabSource = resolvedOverrides && typeof resolvedOverrides.mainTab === 'string'
             ? resolvedOverrides.mainTab
