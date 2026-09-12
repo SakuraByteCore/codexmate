@@ -282,6 +282,7 @@ export function createPluginsMethods() {
             if (!id) return;
             if (!getPluginEntry(id)) return;
             this.pluginsActiveId = id;
+            if (typeof this.saveNavState === 'function') this.saveNavState();
         },
 
         async loadPluginsOverview(options = {}) {
