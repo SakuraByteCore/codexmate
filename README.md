@@ -63,7 +63,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 - **Pi Provider Config**: Manage Pi providers from the Web UI with lossless round-trip writes to `~/.pi/agent/models.json`, auto-fetched remote model lists, and one-click default provider/model switching via `~/.pi/agent/settings.json`.
 - **Provider Health Cleanup**: Probe local Codex and Claude provider routes, surface failed configs in one modal, and bulk-clean selected broken providers without touching healthy or protected entries.
 - **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
-- **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` with auto-detection of project paths, plus a shared preset pool for reusable prompts.
+- **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` (including OpenCode's `~/.config/opencode/AGENTS.md`) with auto-detection of project paths, plus a shared preset pool for reusable prompts.
 - **Task Orchestrator**: Plan and execute complex tasks with dependency tracking.
 
 ---

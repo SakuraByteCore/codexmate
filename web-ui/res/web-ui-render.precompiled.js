@@ -6884,6 +6884,13 @@ return function render(_ctx, _cache) {
                   }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]),
                   _createElementVNode("button", {
                     type: "button",
+                    class: _normalizeClass(['prompts-md-tab', { active: _ctx.promptsSubTab === 'opencode' }]),
+                    role: "tab",
+                    "aria-selected": _ctx.promptsSubTab === 'opencode',
+                    onClick: $event => (_ctx.switchPromptsSubTab('opencode'))
+                  }, _toDisplayString(_ctx.t('prompts.subTab.opencode')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]),
+                  _createElementVNode("button", {
+                    type: "button",
                     class: _normalizeClass(['prompts-md-tab', { active: _ctx.promptsSubTab === 'claude-project' }]),
                     role: "tab",
                     "aria-selected": _ctx.promptsSubTab === 'claude-project',

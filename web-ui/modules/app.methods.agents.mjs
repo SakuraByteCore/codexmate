@@ -33,6 +33,9 @@ function resolveAgentsHistoryBucket(instance) {
         const projectPath = (instance.projectClaudeMdPath || '').trim();
         return 'claude-project_' + sanitizePromptHistoryId(projectPath || 'global');
     }
+    if (subTab === 'opencode') {
+        return 'opencode_global';
+    }
     return 'codex_global';
 }
 
@@ -214,6 +217,13 @@ export function createAgentsMethods(options = {}) {
                 this.agentsWorkspaceFileName = fileName;
                 this.agentsModalTitle = tr('modal.agents.title.openclawWorkspaceFile', `OpenClaw 工作区文件: ${fileName}`, { fileName });
                 this.agentsModalHint = tr('modal.agents.hint.openclawWorkspaceFile', `Workspace / ${fileName}`, { fileName });
+                return;
+            }
+            if (context === 'opencode') {
+                this.agentsContext = 'opencode';
+                this.agentsWorkspaceFileName = '';
+                this.agentsModalTitle = tr('modal.agents.title.opencode', 'OpenCode AGENTS.md 编辑器');
+                this.agentsModalHint = tr('modal.agents.hint.opencode', '保存后会写入 ~/.config/opencode/AGENTS.md。');
                 return;
             }
             this.agentsContext = context === 'openclaw' ? 'openclaw' : 'codex';
@@ -700,6 +710,8 @@ export function createAgentsMethods(options = {}) {
                     }
                 } else if (this.agentsContext === 'openclaw') {
                     action = 'apply-openclaw-agents-file';
+                } else if (this.agentsContext === 'opencode') {
+                    action = 'apply-opencode-agents-file';
                 } else if (this.agentsContext === 'openclaw-workspace') {
                     action = 'apply-openclaw-workspace-file';
                     params.fileName = this.agentsWorkspaceFileName;
@@ -716,7 +728,11 @@ export function createAgentsMethods(options = {}) {
                     ? this.t('toast.agents.saved.workspace', { name: this.agentsWorkspaceFileName || '' }).replace(/:\s*$/, '')
                     : (this.agentsContext === 'claude-project'
                         ? this.t('toast.agents.saved.claudeProject')
-                        : (this.agentsContext === 'openclaw' ? this.t('toast.agents.saved.openclaw') : this.t('toast.agents.saved.agents')));
+                        : (this.agentsContext === 'openclaw'
+                            ? this.t('toast.agents.saved.openclaw')
+                            : (this.agentsContext === 'opencode'
+                                ? this.t('toast.agents.saved.opencode')
+                                : this.t('toast.agents.saved.agents'))));
                 this.showMessage(successLabel, 'success');
                 if (this.mainTab === 'prompts') {
                     this.loadPromptsContent();
@@ -987,7 +1003,7 @@ export function createAgentsMethods(options = {}) {
         },
 
         switchPromptsSubTab(subTab) {
-            const normalized = subTab === 'claude-project' || subTab === 'system' ? subTab : 'codex';
+            const normalized = subTab === 'claude-project' || subTab === 'system' || subTab === 'opencode' ? subTab : 'codex';
             if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
                 this.loadProjectPathOptions();
             }
@@ -1035,6 +1051,8 @@ export function createAgentsMethods(options = {}) {
                     if (projectPath) {
                         rpcParams.baseDir = projectPath;
                     }
+                } else if (subTab === 'opencode') {
+                    action = 'get-opencode-agents-file';
                 } else {
                     action = 'get-agents-file';
                 }
@@ -1051,7 +1069,7 @@ export function createAgentsMethods(options = {}) {
                 this.agentsPath = res.path || '';
                 this.agentsExists = !!res.exists;
                 this.agentsLineEnding = res.lineEnding === '\r\n' ? '\r\n' : '\n';
-                this.agentsContext = subTab === 'claude-project' ? 'claude-project' : 'codex';
+                this.agentsContext = subTab === 'claude-project' ? 'claude-project' : (subTab === 'opencode' ? 'opencode' : 'codex');
             } catch (e) {
                 if (!isLatestRequestToken(this, '_agentsOpenRequestToken', requestToken)) {
                     return;

@@ -33,6 +33,7 @@ const testWebUiUsageInteractions = require('./test-web-ui-usage-interactions');
 const testInstallStatus = require('./test-install-status');
 const testWebhook = require('./test-webhook');
 const testKilocodeConfig = require('./test-kilocode-config');
+const testOpencodeAgentsFile = require('./test-opencode-agents-file');
 
 async function main() {
     const realHome = os.homedir();
@@ -179,6 +180,7 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         await testWebUiSessionBrowser(ctx);
         await testWebUiUsageInteractions(ctx);
         await testKilocodeConfig(ctx);
+        await testOpencodeAgentsFile(ctx);
 
     } finally {
         const waitForExit = new Promise((resolve) => {

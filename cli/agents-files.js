@@ -15,6 +15,7 @@ function createAgentsFileController(deps = {}) {
         CLAUDE_MD_FILE_NAME,
         readOpenclawAgentsFile,
         readOpenclawWorkspaceFile,
+        OPENCODE_CONFIG_DIR,
         backupPromptBeforeWrite
     } = deps;
 
@@ -33,6 +34,7 @@ function createAgentsFileController(deps = {}) {
     if (typeof CLAUDE_MD_FILE_NAME !== 'string' || !CLAUDE_MD_FILE_NAME) throw new Error('createAgentsFileController 缺少 CLAUDE_MD_FILE_NAME');
     if (typeof readOpenclawAgentsFile !== 'function') throw new Error('createAgentsFileController 缺少 readOpenclawAgentsFile');
     if (typeof readOpenclawWorkspaceFile !== 'function') throw new Error('createAgentsFileController 缺少 readOpenclawWorkspaceFile');
+    if (typeof OPENCODE_CONFIG_DIR !== 'string' || !OPENCODE_CONFIG_DIR) throw new Error('createAgentsFileController 缺少 OPENCODE_CONFIG_DIR');
     if (typeof backupPromptBeforeWrite !== 'function' && typeof backupPromptBeforeWrite !== 'undefined') throw new Error('createAgentsFileController 备份回调无效');
 
     function resolveAgentsFilePath(params = {}) {
@@ -236,7 +238,9 @@ function createAgentsFileController(deps = {}) {
         }
         let agentsHistoryBucket = '';
         if (typeof backupPromptBeforeWrite === 'function') {
-            const bucket = 'codex_' + sanitizeHistoryId(String(params.baseDir || '').trim() || 'global');
+            const explicitBucket = typeof params.historyBucket === 'string' ? params.historyBucket.trim() : '';
+            const bucket = explicitBucket
+                || ('codex_' + sanitizeHistoryId(String(params.baseDir || '').trim() || 'global'));
             backupPromptBeforeWrite(bucket, filePath);
             agentsHistoryBucket = bucket;
         }
@@ -254,6 +258,43 @@ function createAgentsFileController(deps = {}) {
         }
     }
 
+
+    function readOpencodeAgentsFile(params = {}) {
+        const baseDir = OPENCODE_CONFIG_DIR;
+        const filePath = path.join(baseDir, AGENTS_FILE_NAME);
+        const lineEndingFallback = os.EOL === '\r\n' ? '\r\n' : '\n';
+
+        if (!fs.existsSync(baseDir)) {
+            return {
+                exists: false,
+                path: filePath,
+                content: '',
+                lineEnding: lineEndingFallback,
+                configDir: baseDir,
+                baseDirMissing: true
+            };
+        }
+
+        const readResult = readAgentsFile({ baseDir, metaOnly: !!params.metaOnly });
+        return {
+            ...readResult,
+            configDir: baseDir
+        };
+    }
+
+    function applyOpencodeAgentsFile(params = {}) {
+        const baseDir = OPENCODE_CONFIG_DIR;
+        ensureDir(baseDir);
+        const result = applyAgentsFile({
+            ...params,
+            baseDir,
+            historyBucket: 'opencode_global'
+        });
+        return {
+            ...result,
+            configDir: baseDir
+        };
+    }
     function normalizeDiffText(input) {
         const safe = typeof input === 'string' ? input : '';
         return normalizeLineEnding(stripUtf8Bom(safe), '\n');
@@ -273,6 +314,8 @@ function createAgentsFileController(deps = {}) {
             readResult = readOpenclawAgentsFile({ metaOnly });
         } else if (context === 'openclaw-workspace') {
             readResult = readOpenclawWorkspaceFile({ ...params, metaOnly });
+        } else if (context === 'opencode') {
+            readResult = readOpencodeAgentsFile({ metaOnly });
         } else if (context === 'codex') {
             readResult = readAgentsFile({ ...params, metaOnly });
         } else {
@@ -310,6 +353,8 @@ function createAgentsFileController(deps = {}) {
         applyClaudeMdFile,
         readAgentsFile,
         applyAgentsFile,
+        readOpencodeAgentsFile,
+        applyOpencodeAgentsFile,
         normalizeDiffText,
         buildAgentsDiff
     };

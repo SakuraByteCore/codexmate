@@ -18,7 +18,7 @@
 | KiloCode 配置桥 | ✅ | `codexmate kilo config` 或 Web UI 写 `~/.config/kilo/kilo.jsonc`,保留已有 Key |
 | Provider 健康检查 | ✅ | 探测 Codex/Claude 本地路由,高亮失败项并批量安全清理 |
 | Prompt 模板 | ✅ | 带变量复用提示词插件 |
-| Prompt 文件编辑器 | ✅ | 编辑全局/项目级 `CLAUDE.md`/`AGENTS.md`,自动检测项目路径,应用 preset 仅更新编辑器,保存才写盘 |
+| Prompt 文件编辑器 | ✅ | 编辑全局/项目级 `CLAUDE.md`/`AGENTS.md` 与 OpenCode `~/.config/opencode/AGENTS.md`,自动检测项目路径,应用 preset 仅更新编辑器,保存才写盘 |
 | MCP 集成 | ✅ | MCP stdio 暴露本地工具与资源 |
 | 自动更新 | ✅ | `codexmate update` 一键升级 CLI |
 

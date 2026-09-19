@@ -1190,7 +1190,8 @@ function getApiToolConfigWriteTarget(action) {
     ]);
     const opencodeWriteActions = new Set([
         'apply-opencode-config',
-        'update-opencode-selection'
+        'update-opencode-selection',
+        'apply-opencode-agents-file'
     ]);
     const kilocodeWriteActions = new Set([
         'apply-kilocode-config',
@@ -2372,6 +2373,8 @@ const {
     applyClaudeMdFile,
     readAgentsFile,
     applyAgentsFile,
+    readOpencodeAgentsFile,
+    applyOpencodeAgentsFile,
     normalizeDiffText,
     buildAgentsDiff
 } = createAgentsFileController({
@@ -2394,7 +2397,8 @@ const {
     },
     readOpenclawWorkspaceFile() {
         return readOpenclawWorkspaceFile(...arguments);
-    }
+    },
+    OPENCODE_CONFIG_DIR
 });
 
 const {
@@ -13693,6 +13697,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'get-openclaw-agents-file':
                             result = readOpenclawAgentsFile();
+                            break;
+                        case 'get-opencode-agents-file':
+                            result = readOpencodeAgentsFile(params || {});
+                            break;
+                        case 'apply-opencode-agents-file':
+                            result = applyOpencodeAgentsFile(params || {});
                             break;
                         case 'apply-openclaw-agents-file':
                             result = applyOpenclawAgentsFile(params || {});

@@ -7,6 +7,7 @@
                     aria-labelledby="tab-prompts">
                 <div class="prompts-md-tabs" role="tablist" :aria-label="t('tab.prompts')">
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'codex' }]" role="tab" :aria-selected="promptsSubTab === 'codex'" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'opencode' }]" role="tab" :aria-selected="promptsSubTab === 'opencode'" @click="switchPromptsSubTab('opencode')">{{ t('prompts.subTab.opencode') }}</button>
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'claude-project' }]" role="tab" :aria-selected="promptsSubTab === 'claude-project'" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'system' }]" role="tab" :aria-selected="promptsSubTab === 'system'" @click="switchPromptsSubTab('system')">{{ t('prompts.subTab.system') }}</button>
                 </div>

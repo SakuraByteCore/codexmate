@@ -63,6 +63,7 @@ function normalizePromptsSubTab(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
     if (normalized === 'claude-project') return normalized;
     if (normalized === 'system') return normalized;
+    if (normalized === 'opencode') return normalized;
     return 'codex';
 }
 

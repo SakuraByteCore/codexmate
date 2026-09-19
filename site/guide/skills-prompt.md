@@ -10,6 +10,7 @@
 
 编辑全局与项目级 `CLAUDE.md` / `AGENTS.md`:
 - 自动检测项目路径并切换路径。
+- Codex 的 `AGENTS.md` 与 OpenCode 的 `~/.config/opencode/AGENTS.md` 分页签独立编辑。
 - 共享 preset 池复用提示词。
 - 应用 preset 仅更新编辑器内容,**保存才写文件**——不会未经确认改盘。
 

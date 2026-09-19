@@ -34,7 +34,8 @@ function createTestController(overrides = {}) {
             CLAUDE_DIR: tmpDir,
             CLAUDE_MD_FILE_NAME: 'CLAUDE.md',
             readOpenclawAgentsFile: overrides.readOpenclawAgentsFile || noop,
-            readOpenclawWorkspaceFile: overrides.readOpenclawWorkspaceFile || noop
+            readOpenclawWorkspaceFile: overrides.readOpenclawWorkspaceFile || noop,
+            OPENCODE_CONFIG_DIR: overrides.OPENCODE_CONFIG_DIR || path.join(tmpDir, 'opencode')
         })
     };
 }
