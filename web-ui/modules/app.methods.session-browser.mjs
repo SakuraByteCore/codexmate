@@ -877,68 +877,12 @@ export function createSessionBrowserMethods(options = {}) {
                     this.sessionsUsageLoadedOnce = true;
                     this.sessionsUsageLoadedLimit = limit;
                     this.sessionsUsageLastLoadedRange = range;
-                    this.loadSessionsCodeStats({});
                     if (!this.sessionsUsageSelectedDayKey && Array.isArray(this.sessionUsageDailyTableRows) && this.sessionUsageDailyTableRows.length > 0) {
                         const dayKeys = this.sessionUsageDailyTableRows.map((row) => row.key).filter(Boolean).sort((a, b) => b.localeCompare(a, 'en-US'));
                         this.sessionsUsageSelectedDayKey = dayKeys[0] || this.sessionUsageDailyTableRows[this.sessionUsageDailyTableRows.length - 1].key;
                         this.scrollSessionsUsageDayIntoView({ behavior: 'auto' });
                     }
                 }
-            }
-        },
-
-        async loadSessionsCodeStats(options = {}) {
-            if (this.sessionsCodeStatsLoading) return;
-            const normalizedRange = typeof options.range === 'string'
-                ? options.range.trim().toLowerCase()
-                : (typeof this.sessionsUsageTimeRange === 'string' ? this.sessionsUsageTimeRange.trim().toLowerCase() : '');
-            const range = normalizedRange === 'all' ? 'all' : (normalizedRange === '30d' ? '30d' : '7d');
-            const rawLimit = Number(options.limit);
-            const limit = Number.isFinite(rawLimit)
-                ? Math.max(1, Math.min(rawLimit, 2000))
-                : (range === 'all' ? 2000 : (range === '30d' ? 1200 : 600));
-            const round = Number(options.round) > 0 ? Math.floor(Number(options.round)) : 1;
-            const maxRounds = 4;
-            this.sessionsCodeStatsLoading = true;
-            try {
-                const res = await api('list-sessions-code-stats', {
-                    source: 'all',
-                    limit,
-                    range,
-                    forceRefresh: !!options.forceRefresh
-                });
-                if (res.error) {
-                    this.sessionsCodeStatsError = res.error;
-                    this.sessionsCodeStats = {};
-                    return;
-                }
-                this.sessionsCodeStatsError = '';
-                const statsMap = {};
-                const statsList = Array.isArray(res.stats) ? res.stats : [];
-                for (const item of statsList) {
-                    if (!item || typeof item.key !== 'string' || !item.key) continue;
-                    statsMap[item.key] = {
-                        filesChanged: Math.max(0, Math.floor(Number(item.filesChanged) || 0)),
-                        linesAdded: Math.max(0, Math.floor(Number(item.linesAdded) || 0)),
-                        linesRemoved: Math.max(0, Math.floor(Number(item.linesRemoved) || 0))
-                    };
-                }
-                this.sessionsCodeStats = statsMap;
-                const computed = Number(res.computed) || 0;
-                const total = Number(res.total) || 0;
-                if (computed < total && round < maxRounds) {
-                    const retryDelayMs = 1200;
-                    const retryRange = range;
-                    const retryLimit = limit;
-                    const retryRound = round + 1;
-                    setTimeout(() => {
-                        this.loadSessionsCodeStats({ range: retryRange, limit: retryLimit, round: retryRound });
-                    }, retryDelayMs);
-                }
-            } catch (_) {
-                this.sessionsCodeStatsError = '加载代码变更统计失败';
-            } finally {
-                this.sessionsCodeStatsLoading = false;
             }
         },
 

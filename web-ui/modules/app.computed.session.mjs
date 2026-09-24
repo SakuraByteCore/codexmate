@@ -896,44 +896,6 @@ export function createSessionComputed() {
             };
         },
 
-        usageCodeStatsSummary() {
-            const charts = this.sessionUsageCharts;
-            const filtered = charts && Array.isArray(charts.filteredSessions)
-                ? charts.filteredSessions
-                : [];
-            const statsMap = this.sessionsCodeStats && typeof this.sessionsCodeStats === 'object'
-                ? this.sessionsCodeStats
-                : null;
-            let filesChanged = 0;
-            let linesAdded = 0;
-            let linesRemoved = 0;
-            let counted = 0;
-            const seenKeys = new Set();
-            for (const session of filtered) {
-                if (!session || typeof session !== 'object') continue;
-                const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';
-                const sessionId = typeof session.sessionId === 'string' ? session.sessionId : '';
-                if (!source || !sessionId) continue;
-                const key = `${source}:${sessionId}`;
-                if (seenKeys.has(key)) continue;
-                seenKeys.add(key);
-                const entry = statsMap ? statsMap[key] : null;
-                if (!entry) continue;
-                counted += 1;
-                filesChanged += Math.max(0, Math.floor(Number(entry.filesChanged) || 0));
-                linesAdded += Math.max(0, Math.floor(Number(entry.linesAdded) || 0));
-                linesRemoved += Math.max(0, Math.floor(Number(entry.linesRemoved) || 0));
-            }
-            return {
-                filesChanged,
-                linesAdded,
-                linesRemoved,
-                counted,
-                total: seenKeys.size,
-                loading: !!this.sessionsCodeStatsLoading,
-                error: typeof this.sessionsCodeStatsError === 'string' ? this.sessionsCodeStatsError : ''
-            };
-        },
         usageKpiCards() {
             const summary = this.sessionUsageCharts && this.sessionUsageCharts.summary
                 ? this.sessionUsageCharts.summary
@@ -945,11 +907,6 @@ export function createSessionComputed() {
             const dailyAvgTokens = activeDays > 0 ? Math.round(totalTokens / activeDays) : 0;
             const noneLabel = t ? t('common.none') : '暂无';
             const busiestDay = summary.busiestDay;
-            const codeStats = this.usageCodeStatsSummary || { filesChanged: 0, linesAdded: 0, linesRemoved: 0, counted: 0, total: 0, loading: false, error: '' };
-            const codeStatsErrorLabel = codeStats.error ? (t ? t('usage.kpi.statsUnavailable') : '统计不可用') : '';
-            const codeStatsDelta = codeStatsErrorLabel || (codeStats.counted < codeStats.total
-                ? (t ? t('usage.kpi.statsCoverage', { computed: codeStats.counted, total: codeStats.total }) : `已统计 ${codeStats.counted}/${codeStats.total}`)
-                : '');
             return [
                 {
                     key: 'tokens',
@@ -981,30 +938,6 @@ export function createSessionComputed() {
                     value: busiestDay && busiestDay.totalSessions > 0
                         ? `${busiestDay.label} · ${busiestDay.totalSessions}`
                         : noneLabel
-                },
-                {
-                    key: 'files-changed',
-                    label: t ? t('usage.kpi.filesChanged') : '修改文件',
-                    value: codeStatsErrorLabel
-                        ? codeStatsErrorLabel
-                        : (codeStats.loading && codeStats.counted === 0 ? '…' : formatUsageSummaryNumber(codeStats.filesChanged)),
-                    title: codeStatsErrorLabel || formatUsageSummaryNumber(codeStats.filesChanged),
-                    delta: codeStatsDelta,
-                    deltaClass: 'delta-neutral'
-                },
-                {
-                    key: 'lines-changed',
-                    label: t ? t('usage.kpi.linesChanged') : '代码行数',
-                    value: codeStatsErrorLabel
-                        ? codeStatsErrorLabel
-                        : (codeStats.loading && codeStats.counted === 0
-                            ? '…'
-                            : `+${formatCompactUsageSummaryNumber(codeStats.linesAdded)} / -${formatCompactUsageSummaryNumber(codeStats.linesRemoved)}`),
-                    title: codeStatsErrorLabel
-                        ? codeStatsErrorLabel
-                        : `+${formatUsageSummaryNumber(codeStats.linesAdded)} / -${formatUsageSummaryNumber(codeStats.linesRemoved)}`,
-                    delta: codeStatsDelta,
-                    deltaClass: 'delta-neutral'
                 }
             ];
         },
