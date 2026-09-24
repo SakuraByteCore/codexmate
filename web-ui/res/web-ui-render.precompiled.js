@@ -7443,29 +7443,7 @@ return function render(_ctx, _cache) {
                                     onClick: $event => (_ctx.setPromptsMobileView('preview'))
                                   }, _toDisplayString(_ctx.t('prompts.editor.preview')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"])
                                 ], 8 /* PROPS */, ["aria-label"]))
-                              : _createCommentVNode("v-if", true),
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: _normalizeClass(["btn-mini", { 'prompts-md-btn--active': _ctx.promptsPreviewEnabled }]),
-                              title: _ctx.t('prompts.editor.previewToggle'),
-                              "aria-label": _ctx.t('prompts.editor.previewToggle'),
-                              onClick: _ctx.togglePromptsPreview
-                            }, [
-                              (_openBlock(), _createElementBlock("svg", {
-                                class: "btn-icon-sm",
-                                viewBox: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2"
-                              }, [
-                                _createElementVNode("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
-                                _createElementVNode("circle", {
-                                  cx: "12",
-                                  cy: "12",
-                                  r: "3"
-                                })
-                              ]))
-                            ], 10 /* CLASS, PROPS */, ["title", "aria-label", "onClick"])
+                              : _createCommentVNode("v-if", true)
                           ])
                         ], 8 /* PROPS */, ["aria-label"]),
                         _createElementVNode("div", {
@@ -7971,29 +7949,7 @@ return function render(_ctx, _cache) {
                                       onClick: $event => (_ctx.setPromptsMobileView('preview'))
                                     }, _toDisplayString(_ctx.t('prompts.editor.preview')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"])
                                   ], 8 /* PROPS */, ["aria-label"]))
-                                : _createCommentVNode("v-if", true),
-                              _createElementVNode("button", {
-                                type: "button",
-                                class: _normalizeClass(["btn-mini", { 'prompts-md-btn--active': _ctx.promptsPreviewEnabled }]),
-                                title: _ctx.t('prompts.editor.previewToggle'),
-                                "aria-label": _ctx.t('prompts.editor.previewToggle'),
-                                onClick: _ctx.togglePromptsPreview
-                              }, [
-                                (_openBlock(), _createElementBlock("svg", {
-                                  class: "btn-icon-sm",
-                                  viewBox: "0 0 24 24",
-                                  fill: "none",
-                                  stroke: "currentColor",
-                                  "stroke-width": "2"
-                                }, [
-                                  _createElementVNode("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
-                                  _createElementVNode("circle", {
-                                    cx: "12",
-                                    cy: "12",
-                                    r: "3"
-                                  })
-                                ]))
-                              ], 10 /* CLASS, PROPS */, ["title", "aria-label", "onClick"])
+                                : _createCommentVNode("v-if", true)
                             ])
                           ], 8 /* PROPS */, ["aria-label"]),
                           _createElementVNode("div", {

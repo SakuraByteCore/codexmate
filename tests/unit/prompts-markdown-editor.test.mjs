@@ -218,7 +218,7 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.match(template, /applyPromptsToolbarAction\('agents', 'bold'\)/);
     assert.match(template, /applyPromptsToolbarAction\('sys', 'code'\)/);
     assert.match(template, /promptsUndo\('agents'\)/);
-    assert.match(template, /togglePromptsPreview/);
+    assert.doesNotMatch(template, /togglePromptsPreview/, 'live preview toggle eye button was removed per user request');
     assert.match(template, /setPromptsMobileView\('preview'\)/);
     assert.match(template, /t\('prompts\.editor\.previewUnavailable'\)/);
     // Existing readonly contract must stay intact for the diff flow.

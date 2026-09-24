@@ -157,14 +157,6 @@ export function createPromptsEditorMethods() {
             this.schedulePromptsPreview(key);
         },
 
-        togglePromptsPreview() {
-            this.promptsPreviewEnabled = !this.promptsPreviewEnabled;
-            if (this.promptsPreviewEnabled) {
-                this.refreshPromptsPreview('agents');
-                this.refreshPromptsPreview('sys');
-            }
-        },
-
         setPromptsMobileView(view) {
             if (view === 'edit' || view === 'preview') {
                 this.promptsMobileView = view;

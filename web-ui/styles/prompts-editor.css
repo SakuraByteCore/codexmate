@@ -30,12 +30,6 @@
     display: block;
 }
 
-.prompts-md-btn--active {
-    color: var(--color-brand);
-    border-color: var(--color-brand-subtle);
-    background: var(--color-brand-light);
-}
-
 .prompts-mobile-view-switch {
     display: none;
     gap: 4px;

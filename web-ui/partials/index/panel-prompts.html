@@ -221,9 +221,6 @@
                                     <button type="button" role="tab" :aria-selected="promptsMobileView === 'edit'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'edit' }]" @click="setPromptsMobileView('edit')">{{ t('prompts.editor.edit') }}</button>
                                     <button type="button" role="tab" :aria-selected="promptsMobileView === 'preview'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'preview' }]" @click="setPromptsMobileView('preview')">{{ t('prompts.editor.preview') }}</button>
                                 </div>
-                                <button type="button" class="btn-mini" :class="{ 'prompts-md-btn--active': promptsPreviewEnabled }" :title="t('prompts.editor.previewToggle')" :aria-label="t('prompts.editor.previewToggle')" @click="togglePromptsPreview">
-                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
                             </div>
                         </div>
                         <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': agentsLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
@@ -377,9 +374,6 @@
                                         <button type="button" role="tab" :aria-selected="promptsMobileView === 'edit'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'edit' }]" @click="setPromptsMobileView('edit')">{{ t('prompts.editor.edit') }}</button>
                                         <button type="button" role="tab" :aria-selected="promptsMobileView === 'preview'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'preview' }]" @click="setPromptsMobileView('preview')">{{ t('prompts.editor.preview') }}</button>
                                     </div>
-                                    <button type="button" class="btn-mini" :class="{ 'prompts-md-btn--active': promptsPreviewEnabled }" :title="t('prompts.editor.previewToggle')" :aria-label="t('prompts.editor.previewToggle')" @click="togglePromptsPreview">
-                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    </button>
                                 </div>
                             </div>
                             <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': sysPromptLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
