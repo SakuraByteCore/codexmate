@@ -201,17 +201,54 @@
                                 </div>
                             </div>
                         </div>
-                        <div :class="['editor-frame', { 'editor-frame--loading': agentsLoading }]">
+                        <div class="prompts-md-toolbar" role="toolbar" :aria-label="t('prompts.editor.toolbar')">
+                            <div class="prompts-md-toolbar-group" role="group" :aria-label="t('prompts.editor.toolbar')">
+                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.bold')" :aria-label="t('prompts.editor.bold')" @click="applyPromptsToolbarAction('agents', 'bold')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5h6a3.5 3.5 0 010 7H7z"/><path d="M7 12h7a3.5 3.5 0 010 7H7z"/></svg>
+                                </button>
+                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.list')" :aria-label="t('prompts.editor.list')" @click="applyPromptsToolbarAction('agents', 'list')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
+                                </button>
+                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.code')" :aria-label="t('prompts.editor.code')" @click="applyPromptsToolbarAction('agents', 'code')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+                                </button>
+                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('agents')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L3 10"/></svg>
+                                </button>
+                            </div>
+                            <div class="prompts-md-toolbar-group prompts-md-toolbar-group--view">
+                                <div v-if="promptsPreviewEnabled" class="prompts-mobile-view-switch" role="tablist" :aria-label="t('prompts.editor.previewToggle')">
+                                    <button type="button" role="tab" :aria-selected="promptsMobileView === 'edit'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'edit' }]" @click="setPromptsMobileView('edit')">{{ t('prompts.editor.edit') }}</button>
+                                    <button type="button" role="tab" :aria-selected="promptsMobileView === 'preview'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'preview' }]" @click="setPromptsMobileView('preview')">{{ t('prompts.editor.preview') }}</button>
+                                </div>
+                                <button type="button" class="btn-mini" :class="{ 'prompts-md-btn--active': promptsPreviewEnabled }" :title="t('prompts.editor.previewToggle')" :aria-label="t('prompts.editor.previewToggle')" @click="togglePromptsPreview">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': agentsLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
                             <div v-if="agentsLoading" class="editor-skeleton">
                                 <div class="skeleton-line" v-for="i in 6" :key="i"></div>
                             </div>
-                            <textarea
-                                v-model="agentsContent"
-                                class="form-input template-editor"
-                                spellcheck="false"
-                                :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
-                                @input="onAgentsContentInput"
-                                :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
+                            <div class="prompts-editor-columns">
+                                <div class="prompts-edit-pane">
+                                    <pre ref="promptsAgentsHighlight" class="prompts-highlight-backdrop" aria-hidden="true" v-html="agentsHighlightHtml"></pre>
+                                    <textarea
+                                        ref="promptsAgentsTextarea"
+                                        v-model="agentsContent"
+                                        class="form-input template-editor"
+                                        spellcheck="false"
+                                        :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
+                                        @input="onAgentsContentInput"
+                                        @scroll="syncPromptsOverlayScroll('agents')"
+                                        :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
+                                </div>
+                                <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
+                                    <div v-if="promptsPreviewLibsMissing" class="state-message error">{{ t('prompts.editor.previewUnavailable') }}</div>
+                                    <div v-else-if="!agentsPreviewHtml" class="state-message">{{ t('prompts.editor.previewEmpty') }}</div>
+                                    <div v-else class="prompts-preview-body" v-html="agentsPreviewHtml"></div>
+                                </div>
+                            </div>
                         </div>
                         <div v-if="promptsContextHint" :class="['prompts-context-hint', { 'prompts-context-hint--warn': promptsContextHint.warn }]">
                             {{ promptsContextHint.text }}
@@ -320,16 +357,53 @@
                                     </div>
                                 </div>
                             </div>
-                            <div :class="['editor-frame', { 'editor-frame--loading': sysPromptLoading }]">
+                            <div class="prompts-md-toolbar" role="toolbar" :aria-label="t('prompts.editor.toolbar')">
+                                <div class="prompts-md-toolbar-group" role="group" :aria-label="t('prompts.editor.toolbar')">
+                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.bold')" :aria-label="t('prompts.editor.bold')" @click="applyPromptsToolbarAction('sys', 'bold')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5h6a3.5 3.5 0 010 7H7z"/><path d="M7 12h7a3.5 3.5 0 010 7H7z"/></svg>
+                                    </button>
+                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.list')" :aria-label="t('prompts.editor.list')" @click="applyPromptsToolbarAction('sys', 'list')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
+                                    </button>
+                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.code')" :aria-label="t('prompts.editor.code')" @click="applyPromptsToolbarAction('sys', 'code')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+                                    </button>
+                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('sys')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L3 10"/></svg>
+                                    </button>
+                                </div>
+                                <div class="prompts-md-toolbar-group prompts-md-toolbar-group--view">
+                                    <div v-if="promptsPreviewEnabled" class="prompts-mobile-view-switch" role="tablist" :aria-label="t('prompts.editor.previewToggle')">
+                                        <button type="button" role="tab" :aria-selected="promptsMobileView === 'edit'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'edit' }]" @click="setPromptsMobileView('edit')">{{ t('prompts.editor.edit') }}</button>
+                                        <button type="button" role="tab" :aria-selected="promptsMobileView === 'preview'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'preview' }]" @click="setPromptsMobileView('preview')">{{ t('prompts.editor.preview') }}</button>
+                                    </div>
+                                    <button type="button" class="btn-mini" :class="{ 'prompts-md-btn--active': promptsPreviewEnabled }" :title="t('prompts.editor.previewToggle')" :aria-label="t('prompts.editor.previewToggle')" @click="togglePromptsPreview">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': sysPromptLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
                                 <div v-if="sysPromptLoading" class="editor-skeleton">
                                     <div class="skeleton-line" v-for="i in 6" :key="i"></div>
                                 </div>
-                                <textarea
-                                    v-model="sysPromptContent"
-                                    class="form-input template-editor"
-                                    spellcheck="false"
-                                    :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
-                                    :placeholder="t('sysPrompt.placeholder')"></textarea>
+                                <div class="prompts-editor-columns">
+                                    <div class="prompts-edit-pane">
+                                        <pre ref="promptsSysHighlight" class="prompts-highlight-backdrop" aria-hidden="true" v-html="sysPromptHighlightHtml"></pre>
+                                        <textarea
+                                            ref="promptsSysTextarea"
+                                            v-model="sysPromptContent"
+                                            class="form-input template-editor"
+                                            spellcheck="false"
+                                            :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
+                                            @scroll="syncPromptsOverlayScroll('sys')"
+                                            :placeholder="t('sysPrompt.placeholder')"></textarea>
+                                    </div>
+                                    <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
+                                        <div v-if="promptsPreviewLibsMissing" class="state-message error">{{ t('prompts.editor.previewUnavailable') }}</div>
+                                        <div v-else-if="!sysPromptPreviewHtml" class="state-message">{{ t('prompts.editor.previewEmpty') }}</div>
+                                        <div v-else class="prompts-preview-body" v-html="sysPromptPreviewHtml"></div>
+                                    </div>
+                                </div>
                             </div>
                             <div v-if="sysPromptContextHint()" :class="['prompts-context-hint', { 'prompts-context-hint--warn': sysPromptContextHint().warn }]">
                                 {{ sysPromptContextHint().text }}

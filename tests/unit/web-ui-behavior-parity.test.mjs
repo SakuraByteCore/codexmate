@@ -624,7 +624,14 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sysPromptDiffHasChangesValue',
         'sysPromptDiffFingerprint',
         '_sysPromptDiffPreviewRequestToken',
-        '_sysPromptOpenRequestToken'
+        '_sysPromptOpenRequestToken',
+        'promptsPreviewEnabled',
+        'promptsMobileView',
+        'promptsPreviewLibsMissing',
+        'agentsHighlightHtml',
+        'sysPromptHighlightHtml',
+        'agentsPreviewHtml',
+        'sysPromptPreviewHtml'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -748,6 +755,19 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'renamePromptPreset',
         'saveCurrentPromptAsPreset',
         'setPromptPresetRenameDraft',
+        'promptsEditorMeta',
+        'promptsEditorUndoStack',
+        'refreshPromptsHighlight',
+        'schedulePromptsHighlight',
+        'syncPromptsOverlayScroll',
+        'refreshPromptsPreview',
+        'schedulePromptsPreview',
+        'schedulePromptsEditorRefresh',
+        'togglePromptsPreview',
+        'setPromptsMobileView',
+        'applyPromptsToolbarAction',
+        'promptsUndo',
+        'clearPromptsEditorUndoStack',
         'switchPromptsSubTab',
         'loadPromptsContent',
         'loadPromptsTabContent',

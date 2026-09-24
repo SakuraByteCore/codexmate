@@ -51,6 +51,7 @@ await import(pathToFileURL(path.join(__dirname, 'session-detail-preview-fast.tes
 await import(pathToFileURL(path.join(__dirname, 'session-usage.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage-backend.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'agents-diff-ui.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'prompts-markdown-editor.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'text-diff.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'claude-settings-sync.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'unzip-ext.test.mjs')));

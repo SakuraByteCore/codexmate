@@ -102,6 +102,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 showConfigTemplateModal: false,
                 showAgentsModal: false,
                 promptsSubTab: 'codex',
+                promptsPreviewEnabled: true,
+                promptsMobileView: 'edit',
+                promptsPreviewLibsMissing: false,
+                agentsHighlightHtml: '',
+                sysPromptHighlightHtml: '',
+                agentsPreviewHtml: '',
+                sysPromptPreviewHtml: '',
                 projectClaudeMdPath: '',
                 promptHistoryVisible: false,
                 promptHistoryLoading: false,
@@ -811,6 +818,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (this.mainTab === 'prompts') {
                     if (typeof this.loadPromptsTabContent === 'function') this.loadPromptsTabContent();
                 }
+            },
+            agentsContent() {
+                if (typeof this.schedulePromptsEditorRefresh === 'function') this.schedulePromptsEditorRefresh('agents');
+            },
+            sysPromptContent() {
+                if (typeof this.schedulePromptsEditorRefresh === 'function') this.schedulePromptsEditorRefresh('sys');
             },
             projectClaudeMdPath(newPath) {
                 if (typeof this.persistWebUiPreferences === 'function') {

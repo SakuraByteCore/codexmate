@@ -7315,7 +7315,161 @@ return function render(_ctx, _cache) {
                             ]))
                           : _createCommentVNode("v-if", true),
                         _createElementVNode("div", {
-                          class: _normalizeClass(['editor-frame', { 'editor-frame--loading': _ctx.agentsLoading }])
+                          class: "prompts-md-toolbar",
+                          role: "toolbar",
+                          "aria-label": _ctx.t('prompts.editor.toolbar')
+                        }, [
+                          _createElementVNode("div", {
+                            class: "prompts-md-toolbar-group",
+                            role: "group",
+                            "aria-label": _ctx.t('prompts.editor.toolbar')
+                          }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-mini prompts-md-btn",
+                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                              title: _ctx.t('prompts.editor.bold'),
+                              "aria-label": _ctx.t('prompts.editor.bold'),
+                              onClick: $event => (_ctx.applyPromptsToolbarAction('agents', 'bold'))
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "btn-icon-sm",
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M7 5h6a3.5 3.5 0 010 7H7z" }),
+                                _createElementVNode("path", { d: "M7 12h7a3.5 3.5 0 010 7H7z" })
+                              ]))
+                            ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-mini prompts-md-btn",
+                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                              title: _ctx.t('prompts.editor.list'),
+                              "aria-label": _ctx.t('prompts.editor.list'),
+                              onClick: $event => (_ctx.applyPromptsToolbarAction('agents', 'list'))
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "btn-icon-sm",
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M9 6h12M9 12h12M9 18h12" }),
+                                _createElementVNode("circle", {
+                                  cx: "4.5",
+                                  cy: "6",
+                                  r: "1",
+                                  fill: "currentColor",
+                                  stroke: "none"
+                                }),
+                                _createElementVNode("circle", {
+                                  cx: "4.5",
+                                  cy: "12",
+                                  r: "1",
+                                  fill: "currentColor",
+                                  stroke: "none"
+                                }),
+                                _createElementVNode("circle", {
+                                  cx: "4.5",
+                                  cy: "18",
+                                  r: "1",
+                                  fill: "currentColor",
+                                  stroke: "none"
+                                })
+                              ]))
+                            ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-mini prompts-md-btn",
+                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                              title: _ctx.t('prompts.editor.code'),
+                              "aria-label": _ctx.t('prompts.editor.code'),
+                              onClick: $event => (_ctx.applyPromptsToolbarAction('agents', 'code'))
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "btn-icon-sm",
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M16 18l6-6-6-6M8 6l-6 6 6 6" })
+                              ]))
+                            ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-mini prompts-md-btn",
+                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                              title: _ctx.t('prompts.editor.undo'),
+                              "aria-label": _ctx.t('prompts.editor.undo'),
+                              onClick: $event => (_ctx.promptsUndo('agents'))
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "btn-icon-sm",
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M3 4v6h6" }),
+                                _createElementVNode("path", { d: "M3.5 15a9 9 0 102.1-9.4L3 10" })
+                              ]))
+                            ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"])
+                          ], 8 /* PROPS */, ["aria-label"]),
+                          _createElementVNode("div", { class: "prompts-md-toolbar-group prompts-md-toolbar-group--view" }, [
+                            (_ctx.promptsPreviewEnabled)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 0,
+                                  class: "prompts-mobile-view-switch",
+                                  role: "tablist",
+                                  "aria-label": _ctx.t('prompts.editor.previewToggle')
+                                }, [
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    role: "tab",
+                                    "aria-selected": _ctx.promptsMobileView === 'edit',
+                                    class: _normalizeClass(['prompts-mobile-view-btn', { active: _ctx.promptsMobileView === 'edit' }]),
+                                    onClick: $event => (_ctx.setPromptsMobileView('edit'))
+                                  }, _toDisplayString(_ctx.t('prompts.editor.edit')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    role: "tab",
+                                    "aria-selected": _ctx.promptsMobileView === 'preview',
+                                    class: _normalizeClass(['prompts-mobile-view-btn', { active: _ctx.promptsMobileView === 'preview' }]),
+                                    onClick: $event => (_ctx.setPromptsMobileView('preview'))
+                                  }, _toDisplayString(_ctx.t('prompts.editor.preview')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"])
+                                ], 8 /* PROPS */, ["aria-label"]))
+                              : _createCommentVNode("v-if", true),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: _normalizeClass(["btn-mini", { 'prompts-md-btn--active': _ctx.promptsPreviewEnabled }]),
+                              title: _ctx.t('prompts.editor.previewToggle'),
+                              "aria-label": _ctx.t('prompts.editor.previewToggle'),
+                              onClick: _ctx.togglePromptsPreview
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "btn-icon-sm",
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
+                                _createElementVNode("circle", {
+                                  cx: "12",
+                                  cy: "12",
+                                  r: "3"
+                                })
+                              ]))
+                            ], 10 /* CLASS, PROPS */, ["title", "aria-label", "onClick"])
+                          ])
+                        ], 8 /* PROPS */, ["aria-label"]),
+                        _createElementVNode("div", {
+                          class: _normalizeClass(['editor-frame prompts-editor-frame', { 'editor-frame--loading': _ctx.agentsLoading, 'prompts-editor-frame--split': _ctx.promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': _ctx.promptsPreviewEnabled && _ctx.promptsMobileView === 'preview' }])
                         }, [
                           (_ctx.agentsLoading)
                             ? (_openBlock(), _createElementBlock("div", {
@@ -7330,15 +7484,49 @@ return function render(_ctx, _cache) {
                                 }), 64 /* STABLE_FRAGMENT */))
                               ]))
                             : _createCommentVNode("v-if", true),
-                          _withDirectives(_createElementVNode("textarea", {
-                            "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
-                            class: "form-input template-editor",
-                            spellcheck: "false",
-                            readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
-                            onInput: _ctx.onAgentsContentInput,
-                            placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')
-                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
-                            [_vModelText, _ctx.agentsContent]
+                          _createElementVNode("div", { class: "prompts-editor-columns" }, [
+                            _createElementVNode("div", { class: "prompts-edit-pane" }, [
+                              _createElementVNode("pre", {
+                                ref: "promptsAgentsHighlight",
+                                class: "prompts-highlight-backdrop",
+                                "aria-hidden": "true",
+                                innerHTML: _ctx.agentsHighlightHtml
+                              }, null, 8 /* PROPS */, ["innerHTML"]),
+                              _withDirectives(_createElementVNode("textarea", {
+                                ref: "promptsAgentsTextarea",
+                                "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
+                                class: "form-input template-editor",
+                                spellcheck: "false",
+                                readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                                onInput: _ctx.onAgentsContentInput,
+                                onScroll: $event => (_ctx.syncPromptsOverlayScroll('agents')),
+                                placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')
+                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "onScroll", "placeholder"]), [
+                                [_vModelText, _ctx.agentsContent]
+                              ])
+                            ]),
+                            (_ctx.promptsPreviewEnabled)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 0,
+                                  class: "prompts-preview-pane"
+                                }, [
+                                  (_ctx.promptsPreviewLibsMissing)
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 0,
+                                        class: "state-message error"
+                                      }, _toDisplayString(_ctx.t('prompts.editor.previewUnavailable')), 1 /* TEXT */))
+                                    : (!_ctx.agentsPreviewHtml)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 1,
+                                          class: "state-message"
+                                        }, _toDisplayString(_ctx.t('prompts.editor.previewEmpty')), 1 /* TEXT */))
+                                      : (_openBlock(), _createElementBlock("div", {
+                                          key: 2,
+                                          class: "prompts-preview-body",
+                                          innerHTML: _ctx.agentsPreviewHtml
+                                        }, null, 8 /* PROPS */, ["innerHTML"]))
+                                ]))
+                              : _createCommentVNode("v-if", true)
                           ])
                         ], 2 /* CLASS */),
                         (_ctx.promptsContextHint)
@@ -7655,7 +7843,161 @@ return function render(_ctx, _cache) {
                               ]))
                             : _createCommentVNode("v-if", true),
                           _createElementVNode("div", {
-                            class: _normalizeClass(['editor-frame', { 'editor-frame--loading': _ctx.sysPromptLoading }])
+                            class: "prompts-md-toolbar",
+                            role: "toolbar",
+                            "aria-label": _ctx.t('prompts.editor.toolbar')
+                          }, [
+                            _createElementVNode("div", {
+                              class: "prompts-md-toolbar-group",
+                              role: "group",
+                              "aria-label": _ctx.t('prompts.editor.toolbar')
+                            }, [
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini prompts-md-btn",
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                title: _ctx.t('prompts.editor.bold'),
+                                "aria-label": _ctx.t('prompts.editor.bold'),
+                                onClick: $event => (_ctx.applyPromptsToolbarAction('sys', 'bold'))
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "btn-icon-sm",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M7 5h6a3.5 3.5 0 010 7H7z" }),
+                                  _createElementVNode("path", { d: "M7 12h7a3.5 3.5 0 010 7H7z" })
+                                ]))
+                              ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini prompts-md-btn",
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                title: _ctx.t('prompts.editor.list'),
+                                "aria-label": _ctx.t('prompts.editor.list'),
+                                onClick: $event => (_ctx.applyPromptsToolbarAction('sys', 'list'))
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "btn-icon-sm",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M9 6h12M9 12h12M9 18h12" }),
+                                  _createElementVNode("circle", {
+                                    cx: "4.5",
+                                    cy: "6",
+                                    r: "1",
+                                    fill: "currentColor",
+                                    stroke: "none"
+                                  }),
+                                  _createElementVNode("circle", {
+                                    cx: "4.5",
+                                    cy: "12",
+                                    r: "1",
+                                    fill: "currentColor",
+                                    stroke: "none"
+                                  }),
+                                  _createElementVNode("circle", {
+                                    cx: "4.5",
+                                    cy: "18",
+                                    r: "1",
+                                    fill: "currentColor",
+                                    stroke: "none"
+                                  })
+                                ]))
+                              ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini prompts-md-btn",
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                title: _ctx.t('prompts.editor.code'),
+                                "aria-label": _ctx.t('prompts.editor.code'),
+                                onClick: $event => (_ctx.applyPromptsToolbarAction('sys', 'code'))
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "btn-icon-sm",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M16 18l6-6-6-6M8 6l-6 6 6 6" })
+                                ]))
+                              ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini prompts-md-btn",
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                title: _ctx.t('prompts.editor.undo'),
+                                "aria-label": _ctx.t('prompts.editor.undo'),
+                                onClick: $event => (_ctx.promptsUndo('sys'))
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "btn-icon-sm",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M3 4v6h6" }),
+                                  _createElementVNode("path", { d: "M3.5 15a9 9 0 102.1-9.4L3 10" })
+                                ]))
+                              ], 8 /* PROPS */, ["disabled", "title", "aria-label", "onClick"])
+                            ], 8 /* PROPS */, ["aria-label"]),
+                            _createElementVNode("div", { class: "prompts-md-toolbar-group prompts-md-toolbar-group--view" }, [
+                              (_ctx.promptsPreviewEnabled)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 0,
+                                    class: "prompts-mobile-view-switch",
+                                    role: "tablist",
+                                    "aria-label": _ctx.t('prompts.editor.previewToggle')
+                                  }, [
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      role: "tab",
+                                      "aria-selected": _ctx.promptsMobileView === 'edit',
+                                      class: _normalizeClass(['prompts-mobile-view-btn', { active: _ctx.promptsMobileView === 'edit' }]),
+                                      onClick: $event => (_ctx.setPromptsMobileView('edit'))
+                                    }, _toDisplayString(_ctx.t('prompts.editor.edit')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      role: "tab",
+                                      "aria-selected": _ctx.promptsMobileView === 'preview',
+                                      class: _normalizeClass(['prompts-mobile-view-btn', { active: _ctx.promptsMobileView === 'preview' }]),
+                                      onClick: $event => (_ctx.setPromptsMobileView('preview'))
+                                    }, _toDisplayString(_ctx.t('prompts.editor.preview')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"])
+                                  ], 8 /* PROPS */, ["aria-label"]))
+                                : _createCommentVNode("v-if", true),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: _normalizeClass(["btn-mini", { 'prompts-md-btn--active': _ctx.promptsPreviewEnabled }]),
+                                title: _ctx.t('prompts.editor.previewToggle'),
+                                "aria-label": _ctx.t('prompts.editor.previewToggle'),
+                                onClick: _ctx.togglePromptsPreview
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "btn-icon-sm",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
+                                  _createElementVNode("circle", {
+                                    cx: "12",
+                                    cy: "12",
+                                    r: "3"
+                                  })
+                                ]))
+                              ], 10 /* CLASS, PROPS */, ["title", "aria-label", "onClick"])
+                            ])
+                          ], 8 /* PROPS */, ["aria-label"]),
+                          _createElementVNode("div", {
+                            class: _normalizeClass(['editor-frame prompts-editor-frame', { 'editor-frame--loading': _ctx.sysPromptLoading, 'prompts-editor-frame--split': _ctx.promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': _ctx.promptsPreviewEnabled && _ctx.promptsMobileView === 'preview' }])
                           }, [
                             (_ctx.sysPromptLoading)
                               ? (_openBlock(), _createElementBlock("div", {
@@ -7670,14 +8012,48 @@ return function render(_ctx, _cache) {
                                   }), 64 /* STABLE_FRAGMENT */))
                                 ]))
                               : _createCommentVNode("v-if", true),
-                            _withDirectives(_createElementVNode("textarea", {
-                              "onUpdate:modelValue": $event => ((_ctx.sysPromptContent) = $event),
-                              class: "form-input template-editor",
-                              spellcheck: "false",
-                              readonly: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
-                              placeholder: _ctx.t('sysPrompt.placeholder')
-                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly", "placeholder"]), [
-                              [_vModelText, _ctx.sysPromptContent]
+                            _createElementVNode("div", { class: "prompts-editor-columns" }, [
+                              _createElementVNode("div", { class: "prompts-edit-pane" }, [
+                                _createElementVNode("pre", {
+                                  ref: "promptsSysHighlight",
+                                  class: "prompts-highlight-backdrop",
+                                  "aria-hidden": "true",
+                                  innerHTML: _ctx.sysPromptHighlightHtml
+                                }, null, 8 /* PROPS */, ["innerHTML"]),
+                                _withDirectives(_createElementVNode("textarea", {
+                                  ref: "promptsSysTextarea",
+                                  "onUpdate:modelValue": $event => ((_ctx.sysPromptContent) = $event),
+                                  class: "form-input template-editor",
+                                  spellcheck: "false",
+                                  readonly: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                  onScroll: $event => (_ctx.syncPromptsOverlayScroll('sys')),
+                                  placeholder: _ctx.t('sysPrompt.placeholder')
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onScroll", "placeholder"]), [
+                                  [_vModelText, _ctx.sysPromptContent]
+                                ])
+                              ]),
+                              (_ctx.promptsPreviewEnabled)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 0,
+                                    class: "prompts-preview-pane"
+                                  }, [
+                                    (_ctx.promptsPreviewLibsMissing)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 0,
+                                          class: "state-message error"
+                                        }, _toDisplayString(_ctx.t('prompts.editor.previewUnavailable')), 1 /* TEXT */))
+                                      : (!_ctx.sysPromptPreviewHtml)
+                                        ? (_openBlock(), _createElementBlock("div", {
+                                            key: 1,
+                                            class: "state-message"
+                                          }, _toDisplayString(_ctx.t('prompts.editor.previewEmpty')), 1 /* TEXT */))
+                                        : (_openBlock(), _createElementBlock("div", {
+                                            key: 2,
+                                            class: "prompts-preview-body",
+                                            innerHTML: _ctx.sysPromptPreviewHtml
+                                          }, null, 8 /* PROPS */, ["innerHTML"]))
+                                  ]))
+                                : _createCommentVNode("v-if", true)
                             ])
                           ], 2 /* CLASS */),
                           (_ctx.sysPromptContextHint())

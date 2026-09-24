@@ -1,0 +1,274 @@
+/*
+ * Prompts-panel Markdown editor: syntax-highlight overlay, toolbar,
+ * split live preview (desktop) and edit/preview switch (mobile).
+ * Overlay alignment contract: the backdrop <pre> must mirror the
+ * textarea's font, font-size, line-height, padding and white-space
+ * exactly (.form-input padding 13px var(--spacing-sm), .template-editor
+ * mono font 13px / 1.45, white-space pre).
+ */
+
+.prompts-md-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.prompts-md-toolbar-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.prompts-md-toolbar-group--view {
+    margin-left: auto;
+}
+
+.prompts-md-btn svg {
+    display: block;
+}
+
+.prompts-md-btn--active {
+    color: var(--color-brand);
+    border-color: var(--color-brand-subtle);
+    background: var(--color-brand-light);
+}
+
+.prompts-mobile-view-switch {
+    display: none;
+    gap: 4px;
+    padding: 2px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-soft);
+}
+
+.prompts-mobile-view-btn {
+    padding: 3px 10px;
+    border: none;
+    border-radius: calc(var(--radius-sm) - 2px);
+    background: transparent;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-caption);
+    cursor: pointer;
+}
+
+.prompts-mobile-view-btn.active {
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    font-weight: var(--font-weight-secondary);
+}
+
+.prompts-editor-frame {
+    display: flex;
+    flex-direction: column;
+}
+
+.prompts-editor-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+}
+
+.prompts-editor-frame--split .prompts-editor-columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.prompts-edit-pane {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 75vh;
+    min-width: 0;
+}
+
+.prompts-edit-pane .template-editor {
+    flex: 1;
+    width: 100%;
+    min-height: 75vh;
+    max-height: none;
+    color: transparent;
+    caret-color: var(--color-text-primary);
+    background: transparent;
+    position: relative;
+    z-index: 2;
+}
+
+.prompts-edit-pane .template-editor::selection {
+    color: transparent;
+    background: var(--color-brand-subtle);
+}
+
+.prompts-highlight-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 13px var(--spacing-sm);
+    border: none;
+    overflow: hidden;
+    white-space: pre;
+    font-family: var(--font-family-mono);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-primary);
+    pointer-events: none;
+}
+
+/* highlight.js markdown token colors (light theme) */
+.prompts-highlight-backdrop .hljs-section {
+    color: var(--color-brand-dark);
+    font-weight: var(--font-weight-secondary);
+}
+
+.prompts-highlight-backdrop .hljs-strong {
+    color: var(--color-text-primary);
+    font-weight: 700;
+}
+
+.prompts-highlight-backdrop .hljs-emphasis {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.prompts-highlight-backdrop .hljs-bullet {
+    color: var(--color-brand);
+}
+
+.prompts-highlight-backdrop .hljs-code {
+    color: #7C5CBF;
+}
+
+.prompts-highlight-backdrop .hljs-quote {
+    color: var(--color-text-tertiary);
+    font-style: italic;
+}
+
+.prompts-highlight-backdrop .hljs-link,
+.prompts-highlight-backdrop .hljs-symbol {
+    color: #3B7EA1;
+}
+
+.prompts-preview-pane {
+    position: relative;
+    min-height: 75vh;
+    min-width: 0;
+    padding: 14px 16px;
+    overflow-y: auto;
+    border-left: 1.5px solid var(--color-border-soft);
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.prompts-preview-pane .state-message {
+    padding: 12px 4px;
+}
+
+.prompts-preview-body {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-text-primary);
+    word-break: break-word;
+}
+
+.prompts-preview-body h1,
+.prompts-preview-body h2,
+.prompts-preview-body h3,
+.prompts-preview-body h4 {
+    margin: 1em 0 0.4em;
+    line-height: 1.3;
+    color: var(--color-text-primary);
+}
+
+.prompts-preview-body h1 { font-size: 1.5em; }
+.prompts-preview-body h2 { font-size: 1.3em; }
+.prompts-preview-body h3 { font-size: 1.15em; }
+.prompts-preview-body h4 { font-size: 1em; }
+
+.prompts-preview-body p {
+    margin: 0.5em 0;
+}
+
+.prompts-preview-body ul,
+.prompts-preview-body ol {
+    margin: 0.5em 0;
+    padding-left: 1.6em;
+}
+
+.prompts-preview-body li {
+    margin: 0.2em 0;
+}
+
+.prompts-preview-body blockquote {
+    margin: 0.6em 0;
+    padding: 2px 12px;
+    border-left: 3px solid var(--color-brand-subtle);
+    color: var(--color-text-secondary);
+    background: var(--color-brand-light);
+}
+
+.prompts-preview-body code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(137, 111, 94, 0.12);
+    font-family: var(--font-family-mono);
+    font-size: 0.92em;
+}
+
+.prompts-preview-body pre {
+    margin: 0.6em 0;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(137, 111, 94, 0.12);
+    overflow-x: auto;
+}
+
+.prompts-preview-body pre code {
+    padding: 0;
+    background: transparent;
+}
+
+.prompts-preview-body table {
+    border-collapse: collapse;
+    margin: 0.6em 0;
+}
+
+.prompts-preview-body th,
+.prompts-preview-body td {
+    border: 1px solid var(--color-border-soft);
+    padding: 4px 8px;
+}
+
+.prompts-preview-body hr {
+    border: none;
+    border-top: 1.5px solid var(--color-border-soft);
+    margin: 1em 0;
+}
+
+.prompts-preview-body a {
+    color: var(--color-brand-dark);
+}
+
+.prompts-preview-body img {
+    max-width: 100%;
+}
+
+/* Mobile: force single column and edit/preview tab switching */
+@media (max-width: 767.98px) {
+    .prompts-mobile-view-switch {
+        display: inline-flex;
+    }
+
+    .prompts-editor-frame--split .prompts-editor-columns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .prompts-editor-frame--split.prompts-editor-frame--mobile-preview .prompts-edit-pane {
+        display: none;
+    }
+
+    .prompts-editor-frame--split:not(.prompts-editor-frame--mobile-preview) .prompts-preview-pane {
+        display: none;
+    }
+}

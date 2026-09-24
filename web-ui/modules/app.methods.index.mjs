@@ -13,6 +13,7 @@ import {
 } from './app.constants.mjs';
 import { createAgentsMethods } from './app.methods.agents.mjs';
 import { createSystemPromptMethods } from './app.methods.system-prompt.mjs';
+import { createPromptsEditorMethods } from './app.methods.prompts-editor.mjs';
 import { createClaudeConfigMethods } from './app.methods.claude-config.mjs';
 import { createCodexConfigMethods } from './app.methods.codex-config.mjs';
 import { createInstallMethods } from './app.methods.install.mjs';
@@ -51,6 +52,7 @@ import {
 export function createAppMethods() {
     return {
         ...createI18nMethods(),
+        ...createPromptsEditorMethods(),
         ...createWebhookMethods(),
         ...createStartupClaudeMethods({
             api,
