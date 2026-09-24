@@ -944,6 +944,7 @@ export function createSessionComputed() {
             const activeDays = summary.activeDays || 0;
             const dailyAvgTokens = activeDays > 0 ? Math.round(totalTokens / activeDays) : 0;
             const noneLabel = t ? t('common.none') : '暂无';
+            const busiestDay = summary.busiestDay;
             const codeStats = this.usageCodeStatsSummary || { filesChanged: 0, linesAdded: 0, linesRemoved: 0, counted: 0, total: 0, loading: false, error: '' };
             const codeStatsErrorLabel = codeStats.error ? (t ? t('usage.kpi.statsUnavailable') : '统计不可用') : '';
             const codeStatsDelta = codeStatsErrorLabel || (codeStats.counted < codeStats.total

@@ -323,3 +323,64 @@ test('usageCodeStatsSummary joins filtered sessions with stats and reports cover
     assert.strictEqual(empty.counted, 0);
     assert.strictEqual(empty.loading, true);
 });
+
+test('usageKpiCards renders all six cards without scope errors (busiestDay regression)', async () => {
+    const logic = await import(pathToFileURL(path.join(__dirname, '..', '..', 'web-ui', 'logic.mjs')));
+    const computed = computedFactory.createSessionComputed();
+    const sessions = [
+        {
+            source: 'claude',
+            model: 'claude-sonnet-4',
+            createdAt: '2026-09-24T08:00:00.000Z',
+            updatedAt: '2026-09-24T09:00:00.000Z',
+            messageCount: 5,
+            totalTokens: 120,
+            contextWindow: 32000,
+            cwd: '/a',
+            sessionId: 'a'
+        }
+    ];
+    const charts = logic.buildUsageChartGroups(sessions, { range: '7d' });
+    const vm = {
+        t: (key, params) => (params ? `${key}:${JSON.stringify(params)}` : key),
+        lang: 'zh',
+        sessionsUsageTimeRange: '7d',
+        sessionUsageCharts: charts,
+        sessionUsageDaily: { rows: [{ key: '09-24', tokenTotal: 120 }] },
+        sessionsUsageList: sessions,
+        sessionsCodeStats: { 'claude:a': { filesChanged: 2, linesAdded: 10, linesRemoved: 4 } },
+        sessionsCodeStatsLoading: false,
+        sessionsCodeStatsError: ''
+    };
+
+    // The whole usage render chain must execute without ReferenceError.
+    const summary = computed.usageCodeStatsSummary.call(vm);
+    // Vue resolves usageCodeStatsSummary on `this`; emulate that channel for the bare vm.
+    vm.usageCodeStatsSummary = summary;
+    assert.strictEqual(summary.counted, 1);
+    assert.strictEqual(summary.total, 1);
+
+    const cards = computed.usageKpiCards.call(vm);
+    assert.strictEqual(cards.length, 7);
+    const busiest = cards.find((card) => card.key === 'busiest-day');
+    assert.ok(busiest, 'busiest-day card missing');
+    assert.ok(busiest.value.includes('·'), `busiest-day value broken: ${busiest.value}`);
+    const files = cards.find((card) => card.key === 'files-changed');
+    assert.ok(files && files.value === '2', `files-changed card broken: ${files && files.value}`);
+    const lines = cards.find((card) => card.key === 'lines-changed');
+    assert.ok(lines && lines.value.includes('10') && lines.value.includes('4'), `lines-changed card broken: ${lines && lines.value}`);
+    assert.strictEqual(files.delta, '');
+
+    for (const name of ['usageCurrentSessionStats', 'usageWaveHeaderSummary', 'usageRankedLists', 'usageHeroDelta', 'usageHeroDeltaClass', 'usageKpiCards']) {
+        assert.strictEqual(typeof computed[name], 'function', `missing computed ${name}`);
+        computed[name].call(vm);
+    }
+
+    // Partial coverage must surface the counted/total delta instead of fake completeness.
+    const partialVm = { ...vm, sessionsCodeStats: {} };
+    partialVm.usageCodeStatsSummary = computed.usageCodeStatsSummary.call(partialVm);
+    const partialCards = computed.usageKpiCards.call(partialVm);
+    const partialFiles = partialCards.find((card) => card.key === 'files-changed');
+    assert.ok(partialFiles.delta.includes('0') && partialFiles.delta.includes('1'), `coverage delta broken: ${partialFiles.delta}`);
+    assert.strictEqual(partialFiles.deltaClass, 'delta-neutral');
+});
