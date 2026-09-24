@@ -238,6 +238,11 @@
     background: linear-gradient(135deg, rgba(196, 69, 54, 0.15), rgba(196, 69, 54, 0.08));
 }
 
+.usage-hero-delta.delta-neutral {
+    color: var(--color-text-secondary);
+    background: linear-gradient(135deg, rgba(130, 116, 106, 0.15), rgba(130, 116, 106, 0.08));
+}
+
 /* ---- 波浪图 (流体动画) ---- */
 .usage-wave-section {
     position: relative;

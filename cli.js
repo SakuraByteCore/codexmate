@@ -155,6 +155,7 @@ const {
     extractSessionDetailPreviewFromFileFast
 } = require('./lib/cli-sessions');
 const { listSessionUsageCore, exportSessionUsageCore } = require('./cli/session-usage');
+const { listSessionCodeStatsCore } = require('./cli/session-code-stats');
 const { parseAnalyticsExportArgs } = require('./cli/analytics-export-args');
 const {
     readBundledWebUiCss,
@@ -6848,6 +6849,16 @@ async function listSessionUsage(params = {}) {
         parsePiSessionSummary,
         MAX_SESSION_USAGE_LIST_SIZE,
         SESSION_BROWSE_SUMMARY_READ_BYTES
+    });
+}
+
+async function listSessionCodeStats(params = {}) {
+    return listSessionCodeStatsCore(params, {
+        fs,
+        path,
+        readline,
+        listSessionBrowse,
+        cacheDir: CODEXMATE_DIR
     });
 }
 
@@ -13903,6 +13914,24 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                         }),
                                         source: source || 'all'
                                     };
+                                }
+                            }
+                            break;
+                        case 'list-sessions-code-stats':
+                            {
+                                const statsParams = isPlainObject(params) ? params : {};
+                                const source = typeof statsParams.source === 'string' ? statsParams.source.trim().toLowerCase() : '';
+                                const range = typeof statsParams.range === 'string' ? statsParams.range.trim().toLowerCase() : '';
+                                if (source && source !== 'codex' && source !== 'claude' && source !== 'all') {
+                                    result = { error: 'Invalid source. Must be codex, claude, or all' };
+                                } else if (range && range !== '7d' && range !== '30d' && range !== 'all') {
+                                    result = { error: 'Invalid range. Must be 7d, 30d, or all' };
+                                } else {
+                                    result = await listSessionCodeStats({
+                                        ...statsParams,
+                                        source: source || 'all',
+                                        range: range || '7d'
+                                    });
                                 }
                             }
                             break;
