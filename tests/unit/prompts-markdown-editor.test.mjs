@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import { readBundledWebUiHtml, readBundledWebUiCss, readProjectFile, projectRoot } from './helpers/web-ui-source.mjs';
 import {
-    applyMarkdownToolbarAction,
     buildMarkdownPreviewHtml,
     escapeHtmlText,
     highlightMarkdownText
@@ -38,7 +37,6 @@ function makeEditorContext() {
     return {
         promptsPreviewEnabled: true,
         promptsMobileView: 'edit',
-        promptsUndoStackDepths: { agents: 0, sys: 0 },
         promptsPreviewLibsMissing: false,
         agentsContent: 'hello',
         sysPromptContent: 'sys body',
@@ -56,51 +54,9 @@ function makeEditorContext() {
     };
 }
 
-test('markdown toolbar bold action wraps selection and restores caret', () => {
-    const wrapped = applyMarkdownToolbarAction('hello world', 0, 5, 'bold');
-    assert.strictEqual(wrapped.text, '**hello** world');
-    assert.strictEqual(wrapped.selStart, 2);
-    assert.strictEqual(wrapped.selEnd, 7);
 
-    const empty = applyMarkdownToolbarAction('hello world', 6, 6, 'bold');
-    assert.strictEqual(empty.text, 'hello ****world');
-    assert.strictEqual(empty.selStart, 8);
-    assert.strictEqual(empty.selEnd, 8);
-});
 
-test('markdown toolbar list action toggles line prefixes', () => {
-    const added = applyMarkdownToolbarAction('a\nb\nc', 0, 5, 'list');
-    assert.strictEqual(added.text, '- a\n- b\n- c');
 
-    const removed = applyMarkdownToolbarAction('- a\n- b', 0, 6, 'list');
-    assert.strictEqual(removed.text, 'a\nb');
-
-    const mixed = applyMarkdownToolbarAction('- a\nb', 0, 5, 'list');
-    assert.strictEqual(mixed.text, '- a\n- b');
-});
-
-test('markdown toolbar code action wraps selection in fences', () => {
-    const wrapped = applyMarkdownToolbarAction('x=1', 0, 3, 'code');
-    assert.strictEqual(wrapped.text, '```\nx=1\n```');
-    assert.strictEqual(wrapped.selStart, 4);
-    assert.strictEqual(wrapped.selEnd, 7);
-
-    const empty = applyMarkdownToolbarAction('ab', 1, 1, 'code');
-    assert.strictEqual(empty.text, 'a```\n\n```b');
-    assert.strictEqual(empty.selStart, 5);
-    assert.strictEqual(empty.selEnd, 5);
-});
-
-test('markdown toolbar clamps invalid selection and ignores unknown actions', () => {
-    const clamped = applyMarkdownToolbarAction('abc', 99, 99, 'bold');
-    assert.strictEqual(clamped.text, 'abc****');
-    assert.strictEqual(clamped.selStart, 5);
-
-    const ignored = applyMarkdownToolbarAction('abc', 1, 2, 'nope');
-    assert.strictEqual(ignored.text, 'abc');
-    assert.strictEqual(ignored.selStart, 1);
-    assert.strictEqual(ignored.selEnd, 2);
-});
 
 test('escapeHtmlText produces HTML entities', () => {
     const escaped = escapeHtmlText('<b class="x">&</b>');
@@ -150,48 +106,7 @@ test('buildMarkdownPreviewHtml reports empty, missing libs, and sanitized output
     assert.ok(clean.html.indexOf('onerror') === -1);
 });
 
-test('prompts editor methods apply toolbar actions and undo via refs', () => {
-    const methods = createPromptsEditorMethods();
-    const ctx = makeEditorContext();
-    const bound = {};
-    for (const [name, fn] of Object.entries(methods)) {
-        bound[name] = fn.bind(ctx);
-    }
-    Object.assign(ctx, bound);
 
-    ctx.$refs.promptsAgentsTextarea.setSelectionRange(0, 5);
-    ctx.applyPromptsToolbarAction('agents', 'bold');
-    assert.strictEqual(ctx.agentsContent, '**hello**');
-    assert.strictEqual(ctx.$refs.promptsAgentsTextarea.selectionStart, 2);
-    assert.strictEqual(ctx.$refs.promptsAgentsTextarea.selectionEnd, 7);
-    assert.ok(ctx.agentsHighlightHtml.length > 0, 'highlight layer should refresh');
-    assert.strictEqual(ctx.promptsUndoStackDepths.agents, 1, 'toolbar action should expose undo availability');
-
-    ctx.promptsUndo('agents');
-    assert.strictEqual(ctx.agentsContent, 'hello');
-    assert.strictEqual(ctx.$refs.promptsAgentsTextarea.selectionStart, 0);
-    assert.strictEqual(ctx.promptsUndoStackDepths.agents, 0, 'undo should drain the reactive stack depth');
-
-    ctx.promptsUndo('agents');
-    assert.strictEqual(ctx.agentsContent, 'hello', 'undo stack should be empty now');
-
-    ctx.applyPromptsToolbarAction('agents', 'bold');
-    ctx.clearPromptsEditorUndoStack('agents');
-    assert.strictEqual(ctx.promptsUndoStackDepths.agents, 0, 'clearing the stack should reset the reactive depth');
-});
-
-test('prompts editor methods skip toolbar actions when textarea is readonly', () => {
-    const methods = createPromptsEditorMethods();
-    const ctx = makeEditorContext();
-    const bound = {};
-    for (const [name, fn] of Object.entries(methods)) {
-        bound[name] = fn.bind(ctx);
-    }
-    Object.assign(ctx, bound);
-    ctx.$refs.promptsAgentsTextarea.readOnly = true;
-    ctx.applyPromptsToolbarAction('agents', 'bold');
-    assert.strictEqual(ctx.agentsContent, 'hello');
-});
 
 test('prompts editor methods expose explicit lib-missing and empty preview states', () => {
     const methods = createPromptsEditorMethods();
@@ -222,18 +137,16 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.match(template, /v-html="sysPromptPreviewHtml"/);
     assert.match(template, /v-html="agentsHighlightHtml"/);
     assert.match(template, /v-html="sysPromptHighlightHtml"/);
-    assert.match(template, /applyPromptsToolbarAction\('agents', 'bold'\)/);
-    assert.match(template, /applyPromptsToolbarAction\('sys', 'code'\)/);
-    assert.match(template, /promptsUndo\('agents'\)/);
     assert.doesNotMatch(template, /togglePromptsPreview/, 'live preview toggle eye button was removed per user request');
     assert.match(template, /setPromptsMobileView\('preview'\)/);
     assert.match(template, /t\('prompts\.editor\.previewUnavailable'\)/);
     // Existing readonly contract must stay intact for the diff flow.
     assert.match(template, /:readonly="agentsLoading \|\| agentsSaving \|\| agentsDiffVisible"/);
     assert.match(template, /:readonly="sysPromptLoading \|\| sysPromptSaving \|\| sysPromptDiffVisible"/);
-    // Toolbar buttons must expose a visible disabled state; undo additionally tracks stack depth.
-    assert.match(template, /:disabled="agentsLoading \|\| agentsSaving \|\| agentsDiffVisible \|\| !promptsUndoStackDepths\.agents"/);
-    assert.match(template, /:disabled="sysPromptLoading \|\| sysPromptSaving \|\| sysPromptDiffVisible \|\| !promptsUndoStackDepths\.sys"/);
+    // Toolbar icon buttons (bold / list / code / undo) were removed per user request.
+    assert.doesNotMatch(template, /prompts-md-btn/, 'toolbar icon buttons were removed per user request');
+    assert.doesNotMatch(template, /applyPromptsToolbarAction/, 'toolbar action wiring was removed per user request');
+    assert.doesNotMatch(template, /promptsUndo/, 'undo wiring was removed per user request');
 });
 
 test('web ui entry loads vendored highlight.js, marked and DOMPurify from res/', () => {
@@ -269,10 +182,6 @@ test('prompts editor styles and app wiring are in place', () => {
 test('prompts editor i18n keys are localized in every locale', () => {
     const keys = [
         'prompts.editor.toolbar',
-        'prompts.editor.bold',
-        'prompts.editor.list',
-        'prompts.editor.code',
-        'prompts.editor.undo',
         'prompts.editor.previewToggle',
         'prompts.editor.edit',
         'prompts.editor.preview',

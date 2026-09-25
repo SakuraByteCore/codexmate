@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 promptsSubTab: 'codex',
                 promptsPreviewEnabled: true,
                 promptsMobileView: 'edit',
-                promptsUndoStackDepths: { agents: 0, sys: 0 },
                 promptsPreviewLibsMissing: false,
                 agentsHighlightHtml: '',
                 sysPromptHighlightHtml: '',

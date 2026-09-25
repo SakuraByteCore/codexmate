@@ -202,20 +202,6 @@
                             </div>
                         </div>
                         <div class="prompts-md-toolbar" role="toolbar" :aria-label="t('prompts.editor.toolbar')">
-                            <div class="prompts-md-toolbar-group" role="group" :aria-label="t('prompts.editor.toolbar')">
-                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.bold')" :aria-label="t('prompts.editor.bold')" @click="applyPromptsToolbarAction('agents', 'bold')">
-                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5h6a3.5 3.5 0 010 7H7z"/><path d="M7 12h7a3.5 3.5 0 010 7H7z"/></svg>
-                                </button>
-                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.list')" :aria-label="t('prompts.editor.list')" @click="applyPromptsToolbarAction('agents', 'list')">
-                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
-                                </button>
-                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.code')" :aria-label="t('prompts.editor.code')" @click="applyPromptsToolbarAction('agents', 'code')">
-                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-                                </button>
-                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible || !promptsUndoStackDepths.agents" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('agents')">
-                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L3 10"/></svg>
-                                </button>
-                            </div>
                             <div class="prompts-md-toolbar-group prompts-md-toolbar-group--view">
                                 <div v-if="promptsPreviewEnabled" class="prompts-mobile-view-switch" role="tablist" :aria-label="t('prompts.editor.previewToggle')">
                                     <button type="button" role="tab" :aria-selected="promptsMobileView === 'edit'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'edit' }]" @click="setPromptsMobileView('edit')">{{ t('prompts.editor.edit') }}</button>
@@ -355,20 +341,6 @@
                                 </div>
                             </div>
                             <div class="prompts-md-toolbar" role="toolbar" :aria-label="t('prompts.editor.toolbar')">
-                                <div class="prompts-md-toolbar-group" role="group" :aria-label="t('prompts.editor.toolbar')">
-                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.bold')" :aria-label="t('prompts.editor.bold')" @click="applyPromptsToolbarAction('sys', 'bold')">
-                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5h6a3.5 3.5 0 010 7H7z"/><path d="M7 12h7a3.5 3.5 0 010 7H7z"/></svg>
-                                    </button>
-                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.list')" :aria-label="t('prompts.editor.list')" @click="applyPromptsToolbarAction('sys', 'list')">
-                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
-                                    </button>
-                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.code')" :aria-label="t('prompts.editor.code')" @click="applyPromptsToolbarAction('sys', 'code')">
-                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-                                    </button>
-                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible || !promptsUndoStackDepths.sys" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('sys')">
-                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L3 10"/></svg>
-                                    </button>
-                                </div>
                                 <div class="prompts-md-toolbar-group prompts-md-toolbar-group--view">
                                     <div v-if="promptsPreviewEnabled" class="prompts-mobile-view-switch" role="tablist" :aria-label="t('prompts.editor.previewToggle')">
                                         <button type="button" role="tab" :aria-selected="promptsMobileView === 'edit'" :class="['prompts-mobile-view-btn', { active: promptsMobileView === 'edit' }]" @click="setPromptsMobileView('edit')">{{ t('prompts.editor.edit') }}</button>

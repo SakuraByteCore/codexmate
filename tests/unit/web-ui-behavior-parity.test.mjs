@@ -383,8 +383,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectedPromptPresetId',
         'projectClaudeMdPath',
         'projectPathOptions',
-        'projectPathOptionsLoading',
-        'promptsUndoStackDepths'
+        'projectPathOptionsLoading'
     ] : [
         'appVersion',
         'appLatestVersion',
@@ -458,6 +457,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionListLoadStep',
         'sessionListVisibleCount',
         'showHealthCheckDialog',
+        'promptsUndoStackDepths',
         'sessionResumeWithYolo',
         'healthCheckDialogLastResult',
         'healthCheckDialogLockedProvider',
@@ -1028,6 +1028,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     );
     const allowedMissingCurrentMethodKeys = [
         'addPiProviderFromModal',
+        'promptsEditorUndoStack',
+        'applyPromptsToolbarAction',
+        'promptsUndo',
+        'clearPromptsEditorUndoStack',
         'fetchAddingPiRemoteModels',
         'onAddingPiEndpointChange',
         'piFilteredAddingRemoteModels',

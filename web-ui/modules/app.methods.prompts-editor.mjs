@@ -1,8 +1,8 @@
 /**
  * Prompts-panel Markdown editor methods: overlay highlight sync,
- * mobile-friendly toolbar actions (bold / list / code / undo), and the
- * live split preview (marked + DOMPurify, debounced). One implementation
- * is shared by the agentsContent editor and the sysPromptContent editor.
+ * mobile view switching, and the live split preview (marked + DOMPurify,
+ * debounced). One implementation is shared by the agentsContent editor
+ * and the sysPromptContent editor.
  *
  * State contract (declared in app.js data()):
  *   promptsPreviewEnabled, promptsMobileView, promptsPreviewLibsMissing,
@@ -14,14 +14,12 @@
  */
 
 import {
-    applyMarkdownToolbarAction,
     buildMarkdownPreviewHtml,
     highlightMarkdownText
 } from '../logic.markdown-editor.mjs';
 
 const PROMPTS_HIGHLIGHT_DEBOUNCE_MS = 150;
 const PROMPTS_PREVIEW_DEBOUNCE_MS = 300;
-const PROMPTS_UNDO_STACK_LIMIT = 50;
 
 const PROMPTS_EDITOR_META = {
     agents: {
@@ -29,16 +27,14 @@ const PROMPTS_EDITOR_META = {
         highlightField: 'agentsHighlightHtml',
         previewField: 'agentsPreviewHtml',
         textareaRef: 'promptsAgentsTextarea',
-        highlightRef: 'promptsAgentsHighlight',
-        undoStackKey: 'agents'
+        highlightRef: 'promptsAgentsHighlight'
     },
     sys: {
         contentField: 'sysPromptContent',
         highlightField: 'sysPromptHighlightHtml',
         previewField: 'sysPromptPreviewHtml',
         textareaRef: 'promptsSysTextarea',
-        highlightRef: 'promptsSysHighlight',
-        undoStackKey: 'sys'
+        highlightRef: 'promptsSysHighlight'
     }
 };
 
@@ -62,19 +58,6 @@ export function createPromptsEditorMethods() {
             return PROMPTS_EDITOR_META[key] || null;
         },
 
-        promptsEditorUndoStack(key) {
-            const meta = this.promptsEditorMeta(key);
-            if (!meta) {
-                return null;
-            }
-            if (!this._promptsEditorUndoStacks) {
-                this._promptsEditorUndoStacks = {};
-            }
-            if (!Array.isArray(this._promptsEditorUndoStacks[meta.undoStackKey])) {
-                this._promptsEditorUndoStacks[meta.undoStackKey] = [];
-            }
-            return this._promptsEditorUndoStacks[meta.undoStackKey];
-        },
 
         refreshPromptsHighlight(key) {
             const meta = this.promptsEditorMeta(key);
@@ -161,68 +144,6 @@ export function createPromptsEditorMethods() {
             if (view === 'edit' || view === 'preview') {
                 this.promptsMobileView = view;
             }
-        },
-
-        applyPromptsToolbarAction(key, action) {
-            const meta = this.promptsEditorMeta(key);
-            if (!meta || !this.$refs || !this.$refs[meta.textareaRef]) {
-                return;
-            }
-            const textarea = this.$refs[meta.textareaRef];
-            if (textarea.readOnly) {
-                return;
-            }
-            const stack = this.promptsEditorUndoStack(key);
-            stack.push({
-                text: this[meta.contentField],
-                selStart: textarea.selectionStart,
-                selEnd: textarea.selectionEnd
-            });
-            if (stack.length > PROMPTS_UNDO_STACK_LIMIT) {
-                stack.shift();
-            }
-            this.promptsUndoStackDepths[meta.undoStackKey] = stack.length;
-            const result = applyMarkdownToolbarAction(
-                this[meta.contentField],
-                textarea.selectionStart,
-                textarea.selectionEnd,
-                action
-            );
-            this[meta.contentField] = result.text;
-            this.$nextTick(() => {
-                textarea.focus();
-                textarea.setSelectionRange(result.selStart, result.selEnd);
-                this.refreshPromptsHighlight(key);
-            });
-            this.schedulePromptsPreview(key);
-        },
-
-        promptsUndo(key) {
-            const meta = this.promptsEditorMeta(key);
-            const stack = this.promptsEditorUndoStack(key);
-            if (!meta || !stack || !stack.length || !this.$refs || !this.$refs[meta.textareaRef]) {
-                return;
-            }
-            const snapshot = stack.pop();
-            this.promptsUndoStackDepths[meta.undoStackKey] = stack.length;
-            const textarea = this.$refs[meta.textareaRef];
-            this[meta.contentField] = snapshot.text;
-            this.$nextTick(() => {
-                textarea.focus();
-                textarea.setSelectionRange(snapshot.selStart, snapshot.selEnd);
-                this.refreshPromptsHighlight(key);
-            });
-            this.schedulePromptsPreview(key);
-        },
-
-        clearPromptsEditorUndoStack(key) {
-            const meta = this.promptsEditorMeta(key);
-            const stack = this.promptsEditorUndoStack(key);
-            if (!meta || !stack) {
-                return;
-            }
-            stack.length = 0;
-            this.promptsUndoStackDepths[meta.undoStackKey] = 0;
         }
     };
 }
