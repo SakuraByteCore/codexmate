@@ -38,6 +38,7 @@ function makeEditorContext() {
     return {
         promptsPreviewEnabled: true,
         promptsMobileView: 'edit',
+        promptsUndoStackDepths: { agents: 0, sys: 0 },
         promptsPreviewLibsMissing: false,
         agentsContent: 'hello',
         sysPromptContent: 'sys body',
@@ -164,13 +165,19 @@ test('prompts editor methods apply toolbar actions and undo via refs', () => {
     assert.strictEqual(ctx.$refs.promptsAgentsTextarea.selectionStart, 2);
     assert.strictEqual(ctx.$refs.promptsAgentsTextarea.selectionEnd, 7);
     assert.ok(ctx.agentsHighlightHtml.length > 0, 'highlight layer should refresh');
+    assert.strictEqual(ctx.promptsUndoStackDepths.agents, 1, 'toolbar action should expose undo availability');
 
     ctx.promptsUndo('agents');
     assert.strictEqual(ctx.agentsContent, 'hello');
     assert.strictEqual(ctx.$refs.promptsAgentsTextarea.selectionStart, 0);
+    assert.strictEqual(ctx.promptsUndoStackDepths.agents, 0, 'undo should drain the reactive stack depth');
 
     ctx.promptsUndo('agents');
     assert.strictEqual(ctx.agentsContent, 'hello', 'undo stack should be empty now');
+
+    ctx.applyPromptsToolbarAction('agents', 'bold');
+    ctx.clearPromptsEditorUndoStack('agents');
+    assert.strictEqual(ctx.promptsUndoStackDepths.agents, 0, 'clearing the stack should reset the reactive depth');
 });
 
 test('prompts editor methods skip toolbar actions when textarea is readonly', () => {
@@ -224,6 +231,9 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     // Existing readonly contract must stay intact for the diff flow.
     assert.match(template, /:readonly="agentsLoading \|\| agentsSaving \|\| agentsDiffVisible"/);
     assert.match(template, /:readonly="sysPromptLoading \|\| sysPromptSaving \|\| sysPromptDiffVisible"/);
+    // Toolbar buttons must expose a visible disabled state; undo additionally tracks stack depth.
+    assert.match(template, /:disabled="agentsLoading \|\| agentsSaving \|\| agentsDiffVisible \|\| !promptsUndoStackDepths\.agents"/);
+    assert.match(template, /:disabled="sysPromptLoading \|\| sysPromptSaving \|\| sysPromptDiffVisible \|\| !promptsUndoStackDepths\.sys"/);
 });
 
 test('web ui entry loads vendored highlight.js, marked and DOMPurify from res/', () => {

@@ -383,7 +383,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectedPromptPresetId',
         'projectClaudeMdPath',
         'projectPathOptions',
-        'projectPathOptionsLoading'
+        'projectPathOptionsLoading',
+        'promptsUndoStackDepths'
     ] : [
         'appVersion',
         'appLatestVersion',

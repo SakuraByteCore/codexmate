@@ -7403,7 +7403,7 @@ return function render(_ctx, _cache) {
                             _createElementVNode("button", {
                               type: "button",
                               class: "btn-mini prompts-md-btn",
-                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible || !_ctx.promptsUndoStackDepths.agents,
                               title: _ctx.t('prompts.editor.undo'),
                               "aria-label": _ctx.t('prompts.editor.undo'),
                               onClick: $event => (_ctx.promptsUndo('agents'))
@@ -7909,7 +7909,7 @@ return function render(_ctx, _cache) {
                               _createElementVNode("button", {
                                 type: "button",
                                 class: "btn-mini prompts-md-btn",
-                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible || !_ctx.promptsUndoStackDepths.sys,
                                 title: _ctx.t('prompts.editor.undo'),
                                 "aria-label": _ctx.t('prompts.editor.undo'),
                                 onClick: $event => (_ctx.promptsUndo('sys'))

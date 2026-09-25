@@ -212,7 +212,7 @@
                                 <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.code')" :aria-label="t('prompts.editor.code')" @click="applyPromptsToolbarAction('agents', 'code')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
                                 </button>
-                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('agents')">
+                                <button type="button" class="btn-mini prompts-md-btn" :disabled="agentsLoading || agentsSaving || agentsDiffVisible || !promptsUndoStackDepths.agents" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('agents')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L3 10"/></svg>
                                 </button>
                             </div>
@@ -365,7 +365,7 @@
                                     <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.code')" :aria-label="t('prompts.editor.code')" @click="applyPromptsToolbarAction('sys', 'code')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
                                     </button>
-                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('sys')">
+                                    <button type="button" class="btn-mini prompts-md-btn" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible || !promptsUndoStackDepths.sys" :title="t('prompts.editor.undo')" :aria-label="t('prompts.editor.undo')" @click="promptsUndo('sys')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L3 10"/></svg>
                                     </button>
                                 </div>

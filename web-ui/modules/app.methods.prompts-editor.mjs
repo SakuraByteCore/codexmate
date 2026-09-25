@@ -181,6 +181,7 @@ export function createPromptsEditorMethods() {
             if (stack.length > PROMPTS_UNDO_STACK_LIMIT) {
                 stack.shift();
             }
+            this.promptsUndoStackDepths[meta.undoStackKey] = stack.length;
             const result = applyMarkdownToolbarAction(
                 this[meta.contentField],
                 textarea.selectionStart,
@@ -203,6 +204,7 @@ export function createPromptsEditorMethods() {
                 return;
             }
             const snapshot = stack.pop();
+            this.promptsUndoStackDepths[meta.undoStackKey] = stack.length;
             const textarea = this.$refs[meta.textareaRef];
             this[meta.contentField] = snapshot.text;
             this.$nextTick(() => {
@@ -214,10 +216,13 @@ export function createPromptsEditorMethods() {
         },
 
         clearPromptsEditorUndoStack(key) {
+            const meta = this.promptsEditorMeta(key);
             const stack = this.promptsEditorUndoStack(key);
-            if (stack) {
-                stack.length = 0;
+            if (!meta || !stack) {
+                return;
             }
+            stack.length = 0;
+            this.promptsUndoStackDepths[meta.undoStackKey] = 0;
         }
     };
 }
