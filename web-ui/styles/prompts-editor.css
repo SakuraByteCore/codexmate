@@ -152,7 +152,8 @@
 
 .prompts-preview-pane {
     position: relative;
-    min-height: 75vh;
+    height: 0;
+    min-height: 100%;
     min-width: 0;
     padding: 14px 16px;
     overflow-y: auto;
@@ -269,5 +270,10 @@
 
     .prompts-editor-frame--split:not(.prompts-editor-frame--mobile-preview) .prompts-preview-pane {
         display: none;
+    }
+
+    .prompts-editor-frame--split.prompts-editor-frame--mobile-preview .prompts-preview-pane {
+        height: auto;
+        min-height: 75vh;
     }
 }
