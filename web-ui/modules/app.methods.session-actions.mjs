@@ -174,26 +174,59 @@ export function createSessionActionMethods(options = {}) {
 
         async copySessionWorkspaceBrief() {
             const summary = this.activeSessionWorkspaceSummary;
-            const text = summary && typeof summary.briefText === 'string'
+            const brief = summary && typeof summary.briefText === 'string'
                 ? summary.briefText.trim()
                 : '';
-            if (!text) {
+            if (!brief) {
                 this.showMessage(this.t('sessions.workspace.copy.empty'), 'error');
                 return;
             }
+            const session = this.activeSession;
+            let exported;
+            let exportResult;
+            try {
+                const res = await api('export-session', {
+                    source: session.source,
+                    sessionId: session.sessionId,
+                    filePath: session.filePath
+                });
+                if (!res || typeof res !== 'object' || (typeof res.error === 'string' && res.error.trim())) {
+                    this.showMessage((res && res.error) || this.t('toast.copy.fail'), 'error');
+                    return;
+                }
+                exported = typeof res.content === 'string' ? res.content.trim() : '';
+                if (!exported) {
+                    this.showMessage(this.t('toast.copy.fail'), 'error');
+                    return;
+                }
+                exportResult = res;
+            } catch (e) {
+                this.showMessage(this.t('toast.copy.fail'), 'error');
+                return;
+            }
+            const text = `${brief}\n\n---\n\n${exported}`;
             const ok = this.fallbackCopyText(text);
             if (ok) {
-                this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
+                this.notifyBriefCopied(exportResult);
                 return;
             }
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(text);
-                    this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
+                    this.notifyBriefCopied(exportResult);
                     return;
                 }
             } catch (_) {}
             this.showMessage(this.t('toast.copy.fail'), 'error');
+        },
+
+        notifyBriefCopied(exportResult) {
+            if (exportResult && exportResult.truncated) {
+                const maxLabel = exportResult.maxMessages === 'all' ? 'all' : exportResult.maxMessages;
+                this.showMessage(`已复制工作简报（会话全文已截断：最多 ${maxLabel} 条消息）`, 'info');
+                return;
+            }
+            this.showMessage(this.t('sessions.workspace.copy.success'), 'success');
         },
 
         getSessionExportKey(session) {

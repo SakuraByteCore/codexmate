@@ -112,30 +112,39 @@ function extractWorkspaceArtifacts(line, target) {
     }
 }
 
-function buildWorkspaceBriefText(summary, labels = {}) {
+function buildWorkspaceBriefText(summary, labels = {}, metricLabels = {}) {
     if (!summary || !summary.available) return '';
     const label = (key, fallback) => (labels && labels[key]) || fallback;
+    const metricLabel = (key, fallback) => (metricLabels && metricLabels[key]) || fallback;
     const lines = [
         `# ${label('title', 'Session workspace brief')}`,
         '',
         `${label('source', 'Source')}: ${summary.sourceLabel || summary.source || '-'}`,
         `${label('messages', 'Messages')}: ${summary.messageCount}`,
+        `${metricLabel('userLabel', 'User')}: ${summary.roleCounts.user}`,
+        `${metricLabel('assistantLabel', 'Assistant')}: ${summary.roleCounts.assistant}`,
+        `${metricLabel('commandsLabel', 'Commands')}: ${summary.commands.length}`,
+        `${metricLabel('artifactsLabel', 'Artifacts')}: ${summary.files.length + summary.links.length}`,
+        `${metricLabel('risksLabel', 'Risks')}: ${summary.risks.length + summary.nextSteps.length}`,
         `${label('path', 'Path')}: ${summary.cwd || '-'}`,
         ''
     ];
     const sections = [
-        ['signals', label('signals', 'Signals'), summary.signals],
-        ['commands', label('commands', 'Reusable commands'), summary.commands],
-        ['files', label('files', 'Files'), summary.files],
-        ['links', label('links', 'Links'), summary.links],
-        ['risks', label('risks', 'Risks / blockers'), summary.risks],
-        ['nextSteps', label('nextSteps', 'Next steps'), summary.nextSteps]
+        ['signals', label('signals', 'Signals'), summary.signals, label('noneSignals', 'No strong signals yet')],
+        ['commands', label('commands', 'Reusable commands'), summary.commands, label('noneCommands', 'No command signals')],
+        ['files', label('files', 'Files'), summary.files, label('noneFiles', 'No file signals')],
+        ['links', label('links', 'Links'), summary.links, label('noneLinks', 'No link signals')],
+        ['risks', label('risks', 'Risks / blockers'), summary.risks, label('noneRisks', 'No risks or todos detected')],
+        ['nextSteps', label('nextSteps', 'Next steps'), summary.nextSteps, label('noneRisks', 'No risks or todos detected')]
     ];
-    for (const [, sectionTitle, items] of sections) {
-        if (!Array.isArray(items) || !items.length) continue;
+    for (const [, sectionTitle, items, emptyText] of sections) {
         lines.push(`## ${sectionTitle}`);
-        for (const item of items) {
-            lines.push(`- ${item}`);
+        if (Array.isArray(items) && items.length) {
+            for (const item of items) {
+                lines.push(`- ${item}`);
+            }
+        } else {
+            lines.push(`- ${emptyText}`);
         }
         lines.push('');
     }
@@ -231,7 +240,13 @@ export function buildSessionWorkspaceSummary(session, messages, options = {}) {
         risks,
         nextSteps
     };
-    summary.briefText = buildWorkspaceBriefText(summary, options.briefLabels || {});
+    summary.briefText = buildWorkspaceBriefText(summary, options.briefLabels || {}, {
+        userLabel: options.userLabel,
+        assistantLabel: options.assistantLabel,
+        commandsLabel: options.commandsLabel,
+        artifactsLabel: options.artifactsLabel,
+        risksLabel: options.risksLabel
+    });
     return summary;
 }
 
@@ -474,7 +489,12 @@ export function createSessionComputed() {
                     files: t ? t('sessions.workspace.files') : 'Files',
                     links: t ? t('sessions.workspace.links') : 'Links',
                     risks: t ? t('sessions.workspace.risks') : 'Risks / blockers',
-                    nextSteps: t ? t('sessions.workspace.nextSteps') : 'Next steps'
+                    nextSteps: t ? t('sessions.workspace.nextSteps') : 'Next steps',
+                    noneSignals: t ? t('sessions.workspace.empty') : 'No strong signals yet',
+                    noneCommands: t ? t('sessions.workspace.noneCommands') : 'No command signals',
+                    noneFiles: t ? t('sessions.workspace.noneFiles') : 'No file signals',
+                    noneLinks: t ? t('sessions.workspace.noneLinks') : 'No link signals',
+                    noneRisks: t ? t('sessions.workspace.noneRisks') : 'No risks or todos detected'
                 }
             });
         },

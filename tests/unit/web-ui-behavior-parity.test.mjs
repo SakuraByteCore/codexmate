@@ -938,6 +938,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'persistWebUiPreferences',
         'toggleSidebarCollapsed',
         'copySessionWorkspaceBrief',
+        'notifyBriefCopied',
         'formatTaskNodeOutputText',
         'openTaskOpenAiChatConfig',
         'selectTaskWorkspace',

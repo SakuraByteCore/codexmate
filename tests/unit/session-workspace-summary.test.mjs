@@ -58,6 +58,11 @@ test('buildSessionWorkspaceSummary extracts reusable project memory signals', ()
     assert(summary.risks.some(item => item.includes('风险')));
     assert(summary.nextSteps.some(item => item.includes('后续')));
     assert.match(summary.briefText, /Session workspace brief|会话工作简报|Messages/);
+    assert.match(summary.briefText, /User: 1/);
+    assert.match(summary.briefText, /Assistant: 1/);
+    assert.match(summary.briefText, /Commands: 1/);
+    assert.match(summary.briefText, /Artifacts: 8/);
+    assert.match(summary.briefText, /Risks: 3/);
 });
 
 test('session workspace locale labels are translated for changed locales', () => {
@@ -94,11 +99,13 @@ test('activeSessionWorkspaceSummary computed stays empty without an active sessi
     assert.strictEqual(summary.messageCount, 0);
 });
 
-test('copySessionWorkspaceBrief copies the structured brief text', async () => {
-    const methods = createSessionActionMethods({ api: async () => ({}) });
+test('copySessionWorkspaceBrief appends the full exported transcript', async () => {
+    const exportContent = '# AI Session Export\n\n## Messages\n\n### 1. User\n\n优化会话浏览 tab';
+    const methods = createSessionActionMethods({ api: async () => ({ content: exportContent }) });
     const copied = [];
     const messages = [];
     const context = {
+        activeSession: { source: 'codex', sessionId: 's1', filePath: '/sessions/s1.jsonl' },
         activeSessionWorkspaceSummary: {
             briefText: '# Brief\n\n- web-ui/partials/index/panel-sessions.html'
         },
@@ -111,9 +118,63 @@ test('copySessionWorkspaceBrief copies the structured brief text', async () => {
         },
         t(key) { return key; }
     };
+    context.notifyBriefCopied = (exportResult) => methods.notifyBriefCopied.call(context, exportResult);
 
     await methods.copySessionWorkspaceBrief.call(context);
 
-    assert.deepStrictEqual(copied, ['# Brief\n\n- web-ui/partials/index/panel-sessions.html']);
+    assert.deepStrictEqual(copied, [
+        '# Brief\n\n- web-ui/partials/index/panel-sessions.html\n\n---\n\n' + exportContent
+    ]);
     assert.deepStrictEqual(messages, [{ message: 'sessions.workspace.copy.success', type: 'success' }]);
+});
+
+test('copySessionWorkspaceBrief aborts loudly when the export backend fails', async () => {
+    const methods = createSessionActionMethods({ api: async () => ({ error: 'Session file not found' }) });
+    const copied = [];
+    const messages = [];
+    const context = {
+        activeSession: { source: 'codex', sessionId: 's1', filePath: '/sessions/s1.jsonl' },
+        activeSessionWorkspaceSummary: {
+            briefText: '# Brief\n\n- item'
+        },
+        fallbackCopyText(text) {
+            copied.push(text);
+            return true;
+        },
+        showMessage(message, type) {
+            messages.push({ message, type });
+        },
+        t(key) { return key; }
+    };
+    context.notifyBriefCopied = (exportResult) => methods.notifyBriefCopied.call(context, exportResult);
+
+    await methods.copySessionWorkspaceBrief.call(context);
+
+    assert.deepStrictEqual(copied, []);
+    assert.deepStrictEqual(messages, [{ message: 'Session file not found', type: 'error' }]);
+});
+
+test('workspace brief text keeps empty sections with explicit placeholders', () => {
+    const summary = buildSessionWorkspaceSummary(
+        { source: 'codex', sourceLabel: 'Codex', cwd: '/repo/codexmate' },
+        [
+            {
+                normalizedRole: 'user',
+                timestamp: '',
+                text: '随便聊聊'
+            }
+        ]
+    );
+
+    assert.match(summary.briefText, /User: 1/);
+    assert.match(summary.briefText, /Assistant: 0/);
+    assert.match(summary.briefText, /Commands: 0/);
+    assert.match(summary.briefText, /Artifacts: 0/);
+    assert.match(summary.briefText, /Risks: 0/);
+    assert.match(summary.briefText, /## Signals\n- 随便聊聊/);
+    assert.match(summary.briefText, /## Reusable commands\n- No command signals/);
+    assert.match(summary.briefText, /## Files\n- No file signals/);
+    assert.match(summary.briefText, /## Links\n- No link signals/);
+    assert.match(summary.briefText, /## Risks \/ blockers\n- No risks or todos detected/);
+    assert.match(summary.briefText, /## Next steps\n- No risks or todos detected/);
 });
