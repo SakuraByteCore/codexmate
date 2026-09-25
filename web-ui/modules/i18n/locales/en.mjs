@@ -234,6 +234,8 @@ const en = Object.freeze({
     'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': 'Preset pool',
     'prompts.editor.toolbar': 'Markdown toolbar',
+    'prompts.editor.collapsePreview': 'Collapse preview',
+    'prompts.editor.expandPreview': 'Expand preview',
     'prompts.editor.previewToggle': 'Live preview',
     'prompts.editor.edit': 'Edit',
     'prompts.editor.preview': 'Preview',

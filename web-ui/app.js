@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAgentsModal: false,
                 promptsSubTab: 'codex',
                 promptsPreviewEnabled: true,
+                promptsPreviewCollapsed: false,
                 promptsMobileView: 'edit',
                 promptsPreviewLibsMissing: false,
                 agentsHighlightHtml: '',

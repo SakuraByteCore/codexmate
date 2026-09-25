@@ -67,6 +67,51 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.prompts-editor-frame--split.prompts-editor-frame--preview-collapsed .prompts-editor-columns {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.prompts-editor-frame--split.prompts-editor-frame--preview-collapsed .prompts-preview-pane {
+    display: none;
+}
+
+.prompts-split-collapse-btn {
+    position: absolute;
+    top: 10px;
+    left: calc(50% - 13px);
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.prompts-split-collapse-btn:hover {
+    color: var(--color-text-primary);
+}
+
+.prompts-split-collapse-icon {
+    display: block;
+    width: 14px;
+    height: 14px;
+}
+
+.prompts-split-collapse-btn--collapsed {
+    left: auto;
+    right: 8px;
+}
+
+.prompts-split-collapse-btn--collapsed .prompts-split-collapse-icon {
+    transform: rotate(180deg);
+}
+
 .prompts-edit-pane {
     position: relative;
     display: flex;
@@ -267,5 +312,9 @@
     .prompts-editor-frame--split.prompts-editor-frame--mobile-preview .prompts-preview-pane {
         height: auto;
         min-height: 75vh;
+    }
+
+    .prompts-split-collapse-btn {
+        display: none;
     }
 }

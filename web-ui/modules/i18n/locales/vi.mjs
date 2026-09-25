@@ -252,6 +252,8 @@ const vi = Object.freeze({
     'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': 'Kho preset',
     'prompts.editor.toolbar': 'Thanh công cụ Markdown',
+    'prompts.editor.collapsePreview': 'Thu gọn bản xem trước',
+    'prompts.editor.expandPreview': 'Mở rộng bản xem trước',
     'prompts.editor.previewToggle': 'Xem trước trực tiếp',
     'prompts.editor.edit': 'Chỉnh sửa',
     'prompts.editor.preview': 'Xem trước',

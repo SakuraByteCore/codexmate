@@ -36,6 +36,7 @@ function makeEditorContext() {
     };
     return {
         promptsPreviewEnabled: true,
+        promptsPreviewCollapsed: false,
         promptsMobileView: 'edit',
         promptsPreviewLibsMissing: false,
         agentsContent: 'hello',
@@ -108,6 +109,22 @@ test('buildMarkdownPreviewHtml reports empty, missing libs, and sanitized output
 
 
 
+test('prompts editor methods toggle split preview collapse state', () => {
+    const methods = createPromptsEditorMethods();
+    const ctx = makeEditorContext();
+    const bound = {};
+    for (const [name, fn] of Object.entries(methods)) {
+        bound[name] = fn.bind(ctx);
+    }
+    Object.assign(ctx, bound);
+
+    assert.strictEqual(ctx.promptsPreviewCollapsed, false, 'split preview defaults to expanded');
+    ctx.togglePromptsPreviewCollapsed();
+    assert.strictEqual(ctx.promptsPreviewCollapsed, true, 'first click collapses the preview column');
+    ctx.togglePromptsPreviewCollapsed();
+    assert.strictEqual(ctx.promptsPreviewCollapsed, false, 'second click restores the split view');
+});
+
 test('prompts editor methods expose explicit lib-missing and empty preview states', () => {
     const methods = createPromptsEditorMethods();
     const ctx = makeEditorContext();
@@ -137,7 +154,7 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.match(template, /v-html="sysPromptPreviewHtml"/);
     assert.match(template, /v-html="agentsHighlightHtml"/);
     assert.match(template, /v-html="sysPromptHighlightHtml"/);
-    assert.doesNotMatch(template, /togglePromptsPreview/, 'live preview toggle eye button was removed per user request');
+    assert.doesNotMatch(template, /togglePromptsPreview\b/, 'live preview toggle eye button was removed per user request');
     assert.match(template, /setPromptsMobileView\('preview'\)/);
     assert.match(template, /t\('prompts\.editor\.previewUnavailable'\)/);
     // Existing readonly contract must stay intact for the diff flow.
@@ -147,6 +164,11 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.doesNotMatch(template, /prompts-md-btn/, 'toolbar icon buttons were removed per user request');
     assert.doesNotMatch(template, /applyPromptsToolbarAction/, 'toolbar action wiring was removed per user request');
     assert.doesNotMatch(template, /promptsUndo/, 'undo wiring was removed per user request');
+    // Split preview collapse button sits at the column boundary; default expanded.
+    assert.match(template, /prompts-split-collapse-btn/);
+    assert.match(template, /togglePromptsPreviewCollapsed\(\)/);
+    assert.match(template, /'prompts-editor-frame--preview-collapsed': promptsPreviewCollapsed/);
+    assert.match(template, /t\('prompts\.editor\.collapsePreview'\)/);
 });
 
 test('web ui entry loads vendored highlight.js, marked and DOMPurify from res/', () => {
@@ -166,11 +188,14 @@ test('prompts editor styles and app wiring are in place', () => {
     assert.match(css, /prompts-highlight-backdrop/);
     assert.match(css, /prompts-preview-body/);
     assert.match(css, /prompts-mobile-view-switch/);
+    assert.match(css, /prompts-split-collapse-btn/);
+    assert.match(css, /prompts-editor-frame--preview-collapsed/);
     assert.match(css, /max-width: 767\.98px/);
 
     const appJs = readProjectFile('web-ui/app.js');
     assert.match(appJs, /promptsPreviewEnabled: true/);
     assert.match(appJs, /promptsMobileView: 'edit'/);
+    assert.match(appJs, /promptsPreviewCollapsed: false/);
     assert.match(appJs, /agentsContent\(\) \{\s*\n\s*if \(typeof this\.schedulePromptsEditorRefresh === 'function'\) this\.schedulePromptsEditorRefresh\('agents'\);/);
     assert.match(appJs, /sysPromptContent\(\) \{\s*\n\s*if \(typeof this\.schedulePromptsEditorRefresh === 'function'\) this\.schedulePromptsEditorRefresh\('sys'\);/);
 
@@ -183,6 +208,8 @@ test('prompts editor i18n keys are localized in every locale', () => {
     const keys = [
         'prompts.editor.toolbar',
         'prompts.editor.previewToggle',
+        'prompts.editor.collapsePreview',
+        'prompts.editor.expandPreview',
         'prompts.editor.edit',
         'prompts.editor.preview',
         'prompts.editor.previewUnavailable',

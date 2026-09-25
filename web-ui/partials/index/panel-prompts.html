@@ -209,7 +209,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': agentsLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
+                        <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': agentsLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--preview-collapsed': promptsPreviewCollapsed, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
+                            <button v-if="promptsPreviewEnabled" type="button" class="prompts-split-collapse-btn" :class="{ 'prompts-split-collapse-btn--collapsed': promptsPreviewCollapsed }" :title="promptsPreviewCollapsed ? t('prompts.editor.expandPreview') : t('prompts.editor.collapsePreview')" :aria-label="promptsPreviewCollapsed ? t('prompts.editor.expandPreview') : t('prompts.editor.collapsePreview')" @click="togglePromptsPreviewCollapsed()">
+                                <svg class="prompts-split-collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                            </button>
                             <div v-if="agentsLoading" class="editor-skeleton">
                                 <div class="skeleton-line" v-for="i in 6" :key="i"></div>
                             </div>
@@ -348,7 +351,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': sysPromptLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
+                            <div :class="['editor-frame prompts-editor-frame', { 'editor-frame--loading': sysPromptLoading, 'prompts-editor-frame--split': promptsPreviewEnabled, 'prompts-editor-frame--preview-collapsed': promptsPreviewCollapsed, 'prompts-editor-frame--mobile-preview': promptsPreviewEnabled && promptsMobileView === 'preview' }]">
+                                <button v-if="promptsPreviewEnabled" type="button" class="prompts-split-collapse-btn" :class="{ 'prompts-split-collapse-btn--collapsed': promptsPreviewCollapsed }" :title="promptsPreviewCollapsed ? t('prompts.editor.expandPreview') : t('prompts.editor.collapsePreview')" :aria-label="promptsPreviewCollapsed ? t('prompts.editor.expandPreview') : t('prompts.editor.collapsePreview')" @click="togglePromptsPreviewCollapsed()">
+                                    <svg class="prompts-split-collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                                </button>
                                 <div v-if="sysPromptLoading" class="editor-skeleton">
                                     <div class="skeleton-line" v-for="i in 6" :key="i"></div>
                                 </div>

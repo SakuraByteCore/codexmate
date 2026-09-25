@@ -235,6 +235,8 @@ const ja = Object.freeze({
     'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': 'プリセット',
     'prompts.editor.toolbar': 'Markdown ツールバー',
+    'prompts.editor.collapsePreview': 'プレビューを折りたたむ',
+    'prompts.editor.expandPreview': 'プレビューを展開',
     'prompts.editor.previewToggle': 'ライブプレビュー',
     'prompts.editor.edit': '編集',
     'prompts.editor.preview': 'プレビュー',

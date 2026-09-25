@@ -234,6 +234,8 @@ const zh = Object.freeze({
     'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': '预设池',
     'prompts.editor.toolbar': 'Markdown 工具栏',
+    'prompts.editor.collapsePreview': '收起预览',
+    'prompts.editor.expandPreview': '展开预览',
     'prompts.editor.previewToggle': '实时预览',
     'prompts.editor.edit': '编辑',
     'prompts.editor.preview': '预览',

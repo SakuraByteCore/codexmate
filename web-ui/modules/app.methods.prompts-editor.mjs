@@ -5,8 +5,8 @@
  * and the sysPromptContent editor.
  *
  * State contract (declared in app.js data()):
- *   promptsPreviewEnabled, promptsMobileView, promptsPreviewLibsMissing,
- *   agentsHighlightHtml, sysPromptHighlightHtml,
+ *   promptsPreviewEnabled, promptsPreviewCollapsed, promptsMobileView,
+ *   promptsPreviewLibsMissing, agentsHighlightHtml, sysPromptHighlightHtml,
  *   agentsPreviewHtml, sysPromptPreviewHtml
  * Template contract:
  *   refs promptsAgentsTextarea / promptsSysTextarea on the two textareas,
@@ -144,6 +144,10 @@ export function createPromptsEditorMethods() {
             if (view === 'edit' || view === 'preview') {
                 this.promptsMobileView = view;
             }
+        },
+
+        togglePromptsPreviewCollapsed() {
+            this.promptsPreviewCollapsed = !this.promptsPreviewCollapsed;
         }
     };
 }

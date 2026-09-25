@@ -7346,11 +7346,31 @@ return function render(_ctx, _cache) {
                           ])
                         ], 8 /* PROPS */, ["aria-label"]),
                         _createElementVNode("div", {
-                          class: _normalizeClass(['editor-frame prompts-editor-frame', { 'editor-frame--loading': _ctx.agentsLoading, 'prompts-editor-frame--split': _ctx.promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': _ctx.promptsPreviewEnabled && _ctx.promptsMobileView === 'preview' }])
+                          class: _normalizeClass(['editor-frame prompts-editor-frame', { 'editor-frame--loading': _ctx.agentsLoading, 'prompts-editor-frame--split': _ctx.promptsPreviewEnabled, 'prompts-editor-frame--preview-collapsed': _ctx.promptsPreviewCollapsed, 'prompts-editor-frame--mobile-preview': _ctx.promptsPreviewEnabled && _ctx.promptsMobileView === 'preview' }])
                         }, [
+                          (_ctx.promptsPreviewEnabled)
+                            ? (_openBlock(), _createElementBlock("button", {
+                                key: 0,
+                                type: "button",
+                                class: _normalizeClass(["prompts-split-collapse-btn", { 'prompts-split-collapse-btn--collapsed': _ctx.promptsPreviewCollapsed }]),
+                                title: _ctx.promptsPreviewCollapsed ? _ctx.t('prompts.editor.expandPreview') : _ctx.t('prompts.editor.collapsePreview'),
+                                "aria-label": _ctx.promptsPreviewCollapsed ? _ctx.t('prompts.editor.expandPreview') : _ctx.t('prompts.editor.collapsePreview'),
+                                onClick: $event => (_ctx.togglePromptsPreviewCollapsed())
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "prompts-split-collapse-icon",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M9 6l6 6-6 6" })
+                                ]))
+                              ], 10 /* CLASS, PROPS */, ["title", "aria-label", "onClick"]))
+                            : _createCommentVNode("v-if", true),
                           (_ctx.agentsLoading)
                             ? (_openBlock(), _createElementBlock("div", {
-                                key: 0,
+                                key: 1,
                                 class: "editor-skeleton"
                               }, [
                                 (_openBlock(), _createElementBlock(_Fragment, null, _renderList(6, (i) => {
@@ -7751,11 +7771,31 @@ return function render(_ctx, _cache) {
                             ])
                           ], 8 /* PROPS */, ["aria-label"]),
                           _createElementVNode("div", {
-                            class: _normalizeClass(['editor-frame prompts-editor-frame', { 'editor-frame--loading': _ctx.sysPromptLoading, 'prompts-editor-frame--split': _ctx.promptsPreviewEnabled, 'prompts-editor-frame--mobile-preview': _ctx.promptsPreviewEnabled && _ctx.promptsMobileView === 'preview' }])
+                            class: _normalizeClass(['editor-frame prompts-editor-frame', { 'editor-frame--loading': _ctx.sysPromptLoading, 'prompts-editor-frame--split': _ctx.promptsPreviewEnabled, 'prompts-editor-frame--preview-collapsed': _ctx.promptsPreviewCollapsed, 'prompts-editor-frame--mobile-preview': _ctx.promptsPreviewEnabled && _ctx.promptsMobileView === 'preview' }])
                           }, [
+                            (_ctx.promptsPreviewEnabled)
+                              ? (_openBlock(), _createElementBlock("button", {
+                                  key: 0,
+                                  type: "button",
+                                  class: _normalizeClass(["prompts-split-collapse-btn", { 'prompts-split-collapse-btn--collapsed': _ctx.promptsPreviewCollapsed }]),
+                                  title: _ctx.promptsPreviewCollapsed ? _ctx.t('prompts.editor.expandPreview') : _ctx.t('prompts.editor.collapsePreview'),
+                                  "aria-label": _ctx.promptsPreviewCollapsed ? _ctx.t('prompts.editor.expandPreview') : _ctx.t('prompts.editor.collapsePreview'),
+                                  onClick: $event => (_ctx.togglePromptsPreviewCollapsed())
+                                }, [
+                                  (_openBlock(), _createElementBlock("svg", {
+                                    class: "prompts-split-collapse-icon",
+                                    viewBox: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2"
+                                  }, [
+                                    _createElementVNode("path", { d: "M9 6l6 6-6 6" })
+                                  ]))
+                                ], 10 /* CLASS, PROPS */, ["title", "aria-label", "onClick"]))
+                              : _createCommentVNode("v-if", true),
                             (_ctx.sysPromptLoading)
                               ? (_openBlock(), _createElementBlock("div", {
-                                  key: 0,
+                                  key: 1,
                                   class: "editor-skeleton"
                                 }, [
                                   (_openBlock(), _createElementBlock(_Fragment, null, _renderList(6, (i) => {
