@@ -26,8 +26,6 @@
 
 <br />
 
-<img src="site/.vitepress/public/images/readme-hero.png" alt="Giao diện Codex Mate" width="100%" />
-
 </div>
 
 ---

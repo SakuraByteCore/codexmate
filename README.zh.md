@@ -25,16 +25,6 @@
 
 <br />
 
-<p>
-  <img src="site/.vitepress/public/images/readme/config-codex.png" alt="Codex Mate Codex Provider 配置" width="100%" />
-</p>
-<p>
-  <img src="site/.vitepress/public/images/readme/config-opencode.png" alt="Codex Mate OpenCode Provider 配置" width="100%" />
-</p>
-<p>
-  <img src="site/.vitepress/public/images/readme/sessions.png" alt="Codex Mate 统一会话浏览器" width="100%" />
-</p>
-
 </div>
 
 ---
