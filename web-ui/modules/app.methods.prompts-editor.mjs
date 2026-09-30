@@ -38,6 +38,10 @@ const PROMPTS_EDITOR_META = {
         diffLinesField: 'agentsDiffLines',
         diffStatsField: 'agentsDiffStats',
         diffVisibleField: 'agentsDiffVisible',
+        loadingField: 'agentsLoading',
+        savingField: 'agentsSaving',
+        diffLoadingField: 'agentsDiffLoading',
+        prepareDiffMethod: 'prepareAgentsDiff',
         textareaRef: 'promptsAgentsTextarea',
         highlightRef: 'promptsAgentsHighlight',
         diffViewRef: 'promptsAgentsDiffView'
@@ -51,6 +55,10 @@ const PROMPTS_EDITOR_META = {
         diffLinesField: 'sysPromptDiffLines',
         diffStatsField: 'sysPromptDiffStats',
         diffVisibleField: 'sysPromptDiffVisible',
+        loadingField: 'sysPromptLoading',
+        savingField: 'sysPromptSaving',
+        diffLoadingField: 'sysPromptDiffLoading',
+        prepareDiffMethod: 'prepareSysPromptDiff',
         textareaRef: 'promptsSysTextarea',
         highlightRef: 'promptsSysHighlight',
         diffViewRef: 'promptsSysDiffView'
@@ -180,8 +188,10 @@ export function createPromptsEditorMethods() {
                     added: Number(stats && stats.added) || 0,
                     removed: Number(stats && stats.removed) || 0
                 };
+                this.consumePromptsAxisPendingJump(key);
                 return;
             }
+            this.clearPromptsAxisPendingJump(key);
             const current = this[meta.contentField];
             const original = this[meta.originalField];
             if (typeof current !== 'string' || current === original) {
@@ -231,6 +241,23 @@ export function createPromptsEditorMethods() {
                 }
                 return;
             }
+            // Edit mode: a tick click opens the red/green comparison view
+            // focused on this hunk, so the user sees WHAT changed (old vs new),
+            // not just where. prepareAgentsDiff / prepareSysPromptDiff are the
+            // same preview entry the save/eye button uses; both settle their
+            // own error state internally and never reject.
+            const canOpenDiff = typeof this[meta.prepareDiffMethod] === 'function'
+                && !this[meta.loadingField]
+                && !this[meta.savingField]
+                && !this[meta.diffLoadingField];
+            if (canOpenDiff) {
+                this._promptsAxisPendingJump = { key, startLine: tick.startLine };
+                this[meta.prepareDiffMethod]();
+                return;
+            }
+            // Fallback when the diff flow is not wired on the context (isolated
+            // method usage): keep the legacy proportional editor scroll so the
+            // click still produces an observable move instead of a silent no-op.
             const textarea = this.$refs && this.$refs[meta.textareaRef];
             if (!textarea || typeof textarea.scrollTop !== 'number') {
                 return;
@@ -242,6 +269,45 @@ export function createPromptsEditorMethods() {
                 axis.totalLines
             );
             this.syncPromptsOverlayScroll(key);
+        },
+
+        clearPromptsAxisPendingJump(key) {
+            if (this._promptsAxisPendingJump && this._promptsAxisPendingJump.key === key) {
+                this._promptsAxisPendingJump = null;
+            }
+        },
+
+        consumePromptsAxisPendingJump(key) {
+            const pending = this._promptsAxisPendingJump;
+            if (!pending || pending.key !== key) {
+                return;
+            }
+            const meta = this.promptsEditorMeta(key);
+            if (!meta) {
+                this._promptsAxisPendingJump = null;
+                return;
+            }
+            const axis = this[meta.axisField];
+            if (!axis || axis.mode !== 'diff' || !axis.ticks.length) {
+                return;
+            }
+            this._promptsAxisPendingJump = null;
+            const target = axis.ticks.find((tick) => tick.startLine === pending.startLine)
+                || axis.ticks.find((tick) => tick.startLine >= pending.startLine)
+                || axis.ticks[axis.ticks.length - 1];
+            const applyScroll = () => {
+                const view = this.$refs && this.$refs[meta.diffViewRef];
+                const rows = view && view.children ? Array.prototype.slice.call(view.children) : [];
+                const row = rows[target.rowIndex];
+                if (row && typeof row.scrollIntoView === 'function') {
+                    row.scrollIntoView({ block: 'center' });
+                }
+            };
+            if (typeof this.$nextTick === 'function') {
+                this.$nextTick(applyScroll);
+            } else {
+                applyScroll();
+            }
         },
 
         setPromptsMobileView(view) {

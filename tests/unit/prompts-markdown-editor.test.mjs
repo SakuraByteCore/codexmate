@@ -234,6 +234,7 @@ test('prompts editor styles and app wiring are in place', () => {
     assert.match(css, /prompts-change-axis/);
     assert.match(css, /prompts-change-tick--add/);
     assert.match(css, /prompts-diff-frame/);
+    assert.doesNotMatch(css, /\.prompts-change-axis\s*\{\s*display:\s*none/, 'change axis must stay visible on mobile (touch ticks instead)');
     assert.match(css, /max-width: 767\.98px/);
 
     const appJs = readProjectFile('web-ui/app.js');
@@ -387,7 +388,7 @@ test('refreshPromptsChangeAxis switches to row-indexed diff ticks in diff mode',
     assert.strictEqual(ctx.agentsChangeAxis.ticks[0].kind, 'mixed');
 });
 
-test('jumpToPromptsChangeTick scrolls the editor and the diff view to the tick', () => {
+test('jumpToPromptsChangeTick opens the diff comparison and scrolls both views', () => {
     const methods = createPromptsEditorMethods();
     const ctx = makeEditorContext();
     const bound = {};
@@ -396,14 +397,29 @@ test('jumpToPromptsChangeTick scrolls the editor and the diff view to the tick',
     }
     Object.assign(ctx, bound);
 
+    // Edit mode WITHOUT the diff flow wired: legacy proportional editor scroll.
     ctx.agentsChangeAxis = { mode: 'edit', ticks: [], truncated: false, totalLines: 101, added: 1, removed: 0 };
     const textarea = ctx.$refs.promptsAgentsTextarea;
     textarea.scrollHeight = 2000;
     textarea.clientHeight = 500;
     ctx.jumpToPromptsChangeTick('agents', { startLine: 51, added: 1, removed: 0 });
-    assert.strictEqual(textarea.scrollTop, 750, 'edit-mode jump scrolls the textarea proportionally');
-    assert.strictEqual(ctx.$refs.promptsAgentsHighlight.scrollTop, 750, 'backdrop overlay stays in sync after the jump');
+    assert.strictEqual(textarea.scrollTop, 750, 'fallback jump scrolls the textarea proportionally');
+    assert.strictEqual(ctx.$refs.promptsAgentsHighlight.scrollTop, 750, 'backdrop overlay stays in sync after the fallback jump');
 
+    // Edit mode WITH the diff flow wired: the tick click must open the
+    // red/green comparison (same entry the save/eye button uses) instead of
+    // only scrolling, so the user sees WHAT changed.
+    const prepareCalls = [];
+    ctx.prepareAgentsDiff = () => {
+        prepareCalls.push('agents');
+    };
+    textarea.scrollTop = 0;
+    ctx.jumpToPromptsChangeTick('agents', { startLine: 51, added: 1, removed: 0 });
+    assert.deepStrictEqual(prepareCalls, ['agents'], 'edit-mode tick opens the diff preview flow');
+    assert.deepStrictEqual(ctx._promptsAxisPendingJump, { key: 'agents', startLine: 51 }, 'the clicked hunk is remembered for the post-load jump');
+    assert.strictEqual(textarea.scrollTop, 0, 'primary path does not scroll the editor');
+
+    // Diff mode: clicking a tick centers the matching rendered row.
     const scrollCalls = [];
     ctx.agentsChangeAxis = { mode: 'diff', ticks: [], truncated: false, totalLines: 4, added: 2, removed: 1 };
     ctx.$refs.promptsAgentsDiffView = {
@@ -421,4 +437,44 @@ test('jumpToPromptsChangeTick scrolls the editor and the diff view to the tick',
     ctx.jumpToPromptsChangeTick('agents', { rowIndex: 9, startLine: 3, added: 1, removed: 0 });
     ctx.jumpToPromptsChangeTick('agents', null);
     assert.strictEqual(scrollCalls.length, 1, 'missing refs or ticks must not throw');
+});
+
+test('consumePromptsAxisPendingJump centers the diff view on the clicked hunk', () => {
+    const methods = createPromptsEditorMethods();
+    const ctx = makeEditorContext();
+    const bound = {};
+    for (const [name, fn] of Object.entries(methods)) {
+        bound[name] = fn.bind(ctx);
+    }
+    Object.assign(ctx, bound);
+
+    const scrollCalls = [];
+    ctx.$refs.promptsAgentsDiffView = {
+        children: [
+            {},
+            { scrollIntoView(options) { scrollCalls.push(options); } },
+            {}
+        ]
+    };
+    ctx._promptsAxisPendingJump = { key: 'agents', startLine: 2 };
+    ctx.agentsDiffVisible = true;
+    ctx.agentsDiffStats = { added: 1, removed: 1, unchanged: 1 };
+    ctx.agentsDiffLines = [
+        { type: 'context', value: 'a', oldNumber: 1, newNumber: 1 },
+        { type: 'del', value: 'b', oldNumber: 2, newNumber: null },
+        { type: 'add', value: 'B', oldNumber: null, newNumber: 2 }
+    ];
+    ctx.refreshPromptsChangeAxis('agents');
+    assert.strictEqual(scrollCalls.length, 1, 'refresh consumes the pending jump once diff ticks exist');
+    assert.deepStrictEqual(scrollCalls[0], { block: 'center' });
+    assert.strictEqual(ctx._promptsAxisPendingJump, null, 'pending jump is cleared after consumption');
+
+    ctx._promptsAxisPendingJump = { key: 'sys', startLine: 2 };
+    ctx.refreshPromptsChangeAxis('agents');
+    assert.notStrictEqual(ctx._promptsAxisPendingJump, null, 'a pending jump keyed to another editor is not consumed');
+
+    ctx._promptsAxisPendingJump = { key: 'agents', startLine: 2 };
+    ctx.agentsDiffVisible = false;
+    ctx.refreshPromptsChangeAxis('agents');
+    assert.strictEqual(ctx._promptsAxisPendingJump, null, 'leaving diff mode clears the stale pending jump');
 });

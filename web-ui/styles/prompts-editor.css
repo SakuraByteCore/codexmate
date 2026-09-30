@@ -416,7 +416,7 @@
         display: none;
     }
 
-    .prompts-change-axis {
-        display: none;
+    .prompts-change-tick {
+        min-height: 12px;
     }
 }
