@@ -103,7 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAgentsModal: false,
                 promptsSubTab: 'codex',
                 promptsPreviewEnabled: true,
-                promptsPreviewCollapsed: false,
+                promptsPreviewCollapsed: true,
+                agentsChangeAxis: { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 },
+                sysChangeAxis: { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 },
                 promptsMobileView: 'edit',
                 promptsPreviewLibsMissing: false,
                 agentsHighlightHtml: '',
@@ -825,6 +827,24 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             sysPromptContent() {
                 if (typeof this.schedulePromptsEditorRefresh === 'function') this.schedulePromptsEditorRefresh('sys');
+            },
+            agentsOriginalContent() {
+                if (typeof this.schedulePromptsChangeAxis === 'function') this.schedulePromptsChangeAxis('agents');
+            },
+            sysPromptOriginalContent() {
+                if (typeof this.schedulePromptsChangeAxis === 'function') this.schedulePromptsChangeAxis('sys');
+            },
+            agentsDiffVisible() {
+                if (typeof this.refreshPromptsChangeAxis === 'function') this.refreshPromptsChangeAxis('agents');
+            },
+            sysPromptDiffVisible() {
+                if (typeof this.refreshPromptsChangeAxis === 'function') this.refreshPromptsChangeAxis('sys');
+            },
+            agentsDiffLines() {
+                if (this.agentsDiffVisible && typeof this.refreshPromptsChangeAxis === 'function') this.refreshPromptsChangeAxis('agents');
+            },
+            sysPromptDiffLines() {
+                if (this.sysPromptDiffVisible && typeof this.refreshPromptsChangeAxis === 'function') this.refreshPromptsChangeAxis('sys');
             },
             projectClaudeMdPath(newPath) {
                 if (typeof this.persistWebUiPreferences === 'function') {

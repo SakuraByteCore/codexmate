@@ -341,6 +341,7 @@ export function createWebUiPreferencesMethods(options = {}) {
                     : this.configTemplateDiffConfirmEnabled !== false,
                 sessionsUsageTimeRange: normalizeUsageTimeRange(hasOwn(source, 'sessionsUsageTimeRange') ? source.sessionsUsageTimeRange : this.sessionsUsageTimeRange),
                 promptsSubTab: normalizePromptsSubTab(hasOwn(source, 'promptsSubTab') ? source.promptsSubTab : this.promptsSubTab),
+                promptsPreviewCollapsed: normalizeBoolean(hasOwn(source, 'promptsPreviewCollapsed') ? source.promptsPreviewCollapsed : this.promptsPreviewCollapsed, true),
                 sysPromptScope: normalizeSysPromptScope(hasOwn(source, 'sysPromptScope') ? source.sysPromptScope : this.sysPromptScope),
                 sysPromptMode: normalizeSysPromptMode(hasOwn(source, 'sysPromptMode') ? source.sysPromptMode : this.sysPromptMode),
                 promptPresets: normalizePromptPresets(hasOwn(source, 'promptPresets') ? source.promptPresets : this.promptPresets),
@@ -397,6 +398,9 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (typeof source.promptsSubTab === 'string') {
                     this.promptsSubTab = normalizePromptsSubTab(source.promptsSubTab);
+                }
+                if (hasOwn(source, 'promptsPreviewCollapsed')) {
+                    this.promptsPreviewCollapsed = normalizeBoolean(source.promptsPreviewCollapsed, true);
                 }
                 if (typeof source.sysPromptScope === 'string') {
                     this.sysPromptScope = normalizeSysPromptScope(source.sysPromptScope);

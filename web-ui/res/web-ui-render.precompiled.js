@@ -7300,17 +7300,41 @@ return function render(_ctx, _cache) {
                                         }, _toDisplayString(_ctx.t('diff.noChanges')), 1 /* TEXT */))
                                       : (_openBlock(), _createElementBlock("div", {
                                           key: 5,
-                                          class: "agents-diff-view agents-diff-editor"
+                                          class: "prompts-diff-frame"
                                         }, [
-                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.agentsDiffLines, (line, index) => {
-                                            return (_openBlock(), _createElementBlock("div", {
-                                              key: line.key || (line.type + '-' + index),
-                                              class: _normalizeClass(['agents-diff-line', line.type])
-                                            }, [
-                                              _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ')), 1 /* TEXT */),
-                                              _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
-                                            ], 2 /* CLASS */))
-                                          }), 128 /* KEYED_FRAGMENT */))
+                                          (_ctx.agentsChangeAxis.ticks.length)
+                                            ? (_openBlock(), _createElementBlock("div", {
+                                                key: 0,
+                                                class: "prompts-change-axis prompts-change-axis--diff",
+                                                role: "navigation",
+                                                "aria-label": _ctx.t('prompts.editor.changeAxis')
+                                              }, [
+                                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.agentsChangeAxis.ticks, (tick, index) => {
+                                                  return (_openBlock(), _createElementBlock("button", {
+                                                    key: 'agents-diff-axis-' + index,
+                                                    type: "button",
+                                                    class: _normalizeClass(["prompts-change-tick", 'prompts-change-tick--' + tick.kind]),
+                                                    style: _normalizeStyle({ top: tick.top + '%', height: tick.height + '%' }),
+                                                    title: _ctx.t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed }),
+                                                    onClick: $event => (_ctx.jumpToPromptsChangeTick('agents', tick))
+                                                  }, null, 14 /* CLASS, STYLE, PROPS */, ["title", "onClick"]))
+                                                }), 128 /* KEYED_FRAGMENT */))
+                                              ], 8 /* PROPS */, ["aria-label"]))
+                                            : _createCommentVNode("v-if", true),
+                                          _createElementVNode("div", {
+                                            class: "agents-diff-view agents-diff-editor",
+                                            ref: "promptsAgentsDiffView"
+                                          }, [
+                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.agentsDiffLines, (line, index) => {
+                                              return (_openBlock(), _createElementBlock("div", {
+                                                key: line.key || (line.type + '-' + index),
+                                                class: _normalizeClass(['agents-diff-line', line.type])
+                                              }, [
+                                                _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ')), 1 /* TEXT */),
+                                                _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
+                                              ], 2 /* CLASS */))
+                                            }), 128 /* KEYED_FRAGMENT */))
+                                          ], 512 /* NEED_PATCH */)
                                         ]))
                             ]))
                           : _createCommentVNode("v-if", true),
@@ -7400,7 +7424,35 @@ return function render(_ctx, _cache) {
                                 placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')
                               }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "onScroll", "placeholder"]), [
                                 [_vModelText, _ctx.agentsContent]
-                              ])
+                              ]),
+                              (!_ctx.agentsDiffVisible && _ctx.agentsChangeAxis.ticks.length)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 0,
+                                    class: "prompts-change-axis",
+                                    role: "navigation",
+                                    "aria-label": _ctx.t('prompts.editor.changeAxis')
+                                  }, [
+                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.agentsChangeAxis.ticks, (tick, index) => {
+                                      return (_openBlock(), _createElementBlock("button", {
+                                        key: 'agents-change-axis-' + index,
+                                        type: "button",
+                                        class: _normalizeClass(["prompts-change-tick", 'prompts-change-tick--' + tick.kind]),
+                                        style: _normalizeStyle({ top: tick.top + '%', height: tick.height + '%' }),
+                                        title: _ctx.t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed }),
+                                        onClick: $event => (_ctx.jumpToPromptsChangeTick('agents', tick))
+                                      }, null, 14 /* CLASS, STYLE, PROPS */, ["title", "onClick"]))
+                                    }), 128 /* KEYED_FRAGMENT */))
+                                  ], 8 /* PROPS */, ["aria-label"]))
+                                : (!_ctx.agentsDiffVisible && _ctx.agentsChangeAxis.truncated)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 1,
+                                      class: "prompts-change-axis prompts-change-axis--summary",
+                                      title: _ctx.t('prompts.editor.changeAxisTruncated')
+                                    }, [
+                                      _createElementVNode("span", { class: "prompts-change-summary add" }, "+" + _toDisplayString(_ctx.agentsChangeAxis.added), 1 /* TEXT */),
+                                      _createElementVNode("span", { class: "prompts-change-summary del" }, "-" + _toDisplayString(_ctx.agentsChangeAxis.removed), 1 /* TEXT */)
+                                    ], 8 /* PROPS */, ["title"]))
+                                  : _createCommentVNode("v-if", true)
                             ]),
                             (_ctx.promptsPreviewEnabled)
                               ? (_openBlock(), _createElementBlock("div", {
@@ -7725,17 +7777,41 @@ return function render(_ctx, _cache) {
                                           }, _toDisplayString(_ctx.t('diff.noChanges')), 1 /* TEXT */))
                                         : (_openBlock(), _createElementBlock("div", {
                                             key: 5,
-                                            class: "agents-diff-view agents-diff-editor"
+                                            class: "prompts-diff-frame"
                                           }, [
-                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysPromptDiffLines, (line, index) => {
-                                              return (_openBlock(), _createElementBlock("div", {
-                                                key: 'sys-prompt-diff-' + index,
-                                                class: _normalizeClass(['agents-diff-line', line.type])
-                                              }, [
-                                                _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ')), 1 /* TEXT */),
-                                                _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
-                                              ], 2 /* CLASS */))
-                                            }), 128 /* KEYED_FRAGMENT */))
+                                            (_ctx.sysChangeAxis.ticks.length)
+                                              ? (_openBlock(), _createElementBlock("div", {
+                                                  key: 0,
+                                                  class: "prompts-change-axis prompts-change-axis--diff",
+                                                  role: "navigation",
+                                                  "aria-label": _ctx.t('prompts.editor.changeAxis')
+                                                }, [
+                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysChangeAxis.ticks, (tick, index) => {
+                                                    return (_openBlock(), _createElementBlock("button", {
+                                                      key: 'sys-diff-axis-' + index,
+                                                      type: "button",
+                                                      class: _normalizeClass(["prompts-change-tick", 'prompts-change-tick--' + tick.kind]),
+                                                      style: _normalizeStyle({ top: tick.top + '%', height: tick.height + '%' }),
+                                                      title: _ctx.t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed }),
+                                                      onClick: $event => (_ctx.jumpToPromptsChangeTick('sys', tick))
+                                                    }, null, 14 /* CLASS, STYLE, PROPS */, ["title", "onClick"]))
+                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                ], 8 /* PROPS */, ["aria-label"]))
+                                              : _createCommentVNode("v-if", true),
+                                            _createElementVNode("div", {
+                                              class: "agents-diff-view agents-diff-editor",
+                                              ref: "promptsSysDiffView"
+                                            }, [
+                                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysPromptDiffLines, (line, index) => {
+                                                return (_openBlock(), _createElementBlock("div", {
+                                                  key: 'sys-prompt-diff-' + index,
+                                                  class: _normalizeClass(['agents-diff-line', line.type])
+                                                }, [
+                                                  _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ')), 1 /* TEXT */),
+                                                  _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
+                                                ], 2 /* CLASS */))
+                                              }), 128 /* KEYED_FRAGMENT */))
+                                            ], 512 /* NEED_PATCH */)
                                           ]))
                               ]))
                             : _createCommentVNode("v-if", true),
@@ -7824,7 +7900,35 @@ return function render(_ctx, _cache) {
                                   placeholder: _ctx.t('sysPrompt.placeholder')
                                 }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onScroll", "placeholder"]), [
                                   [_vModelText, _ctx.sysPromptContent]
-                                ])
+                                ]),
+                                (!_ctx.sysPromptDiffVisible && _ctx.sysChangeAxis.ticks.length)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 0,
+                                      class: "prompts-change-axis",
+                                      role: "navigation",
+                                      "aria-label": _ctx.t('prompts.editor.changeAxis')
+                                    }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysChangeAxis.ticks, (tick, index) => {
+                                        return (_openBlock(), _createElementBlock("button", {
+                                          key: 'sys-change-axis-' + index,
+                                          type: "button",
+                                          class: _normalizeClass(["prompts-change-tick", 'prompts-change-tick--' + tick.kind]),
+                                          style: _normalizeStyle({ top: tick.top + '%', height: tick.height + '%' }),
+                                          title: _ctx.t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed }),
+                                          onClick: $event => (_ctx.jumpToPromptsChangeTick('sys', tick))
+                                        }, null, 14 /* CLASS, STYLE, PROPS */, ["title", "onClick"]))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ], 8 /* PROPS */, ["aria-label"]))
+                                  : (!_ctx.sysPromptDiffVisible && _ctx.sysChangeAxis.truncated)
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 1,
+                                        class: "prompts-change-axis prompts-change-axis--summary",
+                                        title: _ctx.t('prompts.editor.changeAxisTruncated')
+                                      }, [
+                                        _createElementVNode("span", { class: "prompts-change-summary add" }, "+" + _toDisplayString(_ctx.sysChangeAxis.added), 1 /* TEXT */),
+                                        _createElementVNode("span", { class: "prompts-change-summary del" }, "-" + _toDisplayString(_ctx.sysChangeAxis.removed), 1 /* TEXT */)
+                                      ], 8 /* PROPS */, ["title"]))
+                                    : _createCommentVNode("v-if", true)
                               ]),
                               (_ctx.promptsPreviewEnabled)
                                 ? (_openBlock(), _createElementBlock("div", {

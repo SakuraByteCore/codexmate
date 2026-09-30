@@ -189,15 +189,20 @@
                             <div v-else-if="agentsDiffError" class="state-message error">{{ agentsDiffError }}</div>
                             <div v-else-if="agentsDiffTruncated" class="agents-diff-empty">{{ t('diff.tooLargeSkip') }}</div>
                             <div v-else-if="!agentsDiffHasChanges" class="agents-diff-empty">{{ t('diff.noChanges') }}</div>
-                            <div v-else class="agents-diff-view agents-diff-editor">
-                                <div
-                                    v-for="(line, index) in agentsDiffLines"
-                                    :key="line.key || (line.type + '-' + index)"
-                                    :class="['agents-diff-line', line.type]">
-                                    <span class="agents-diff-line-sign">
-                                        {{ line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ') }}
-                                    </span>
-                                    <span class="agents-diff-line-text">{{ line.value }}</span>
+                            <div v-else class="prompts-diff-frame">
+                                <div v-if="agentsChangeAxis.ticks.length" class="prompts-change-axis prompts-change-axis--diff" role="navigation" :aria-label="t('prompts.editor.changeAxis')">
+                                    <button v-for="(tick, index) in agentsChangeAxis.ticks" :key="'agents-diff-axis-' + index" type="button" class="prompts-change-tick" :class="'prompts-change-tick--' + tick.kind" :style="{ top: tick.top + '%', height: tick.height + '%' }" :title="t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed })" @click="jumpToPromptsChangeTick('agents', tick)"></button>
+                                </div>
+                                <div class="agents-diff-view agents-diff-editor" ref="promptsAgentsDiffView">
+                                    <div
+                                        v-for="(line, index) in agentsDiffLines"
+                                        :key="line.key || (line.type + '-' + index)"
+                                        :class="['agents-diff-line', line.type]">
+                                        <span class="agents-diff-line-sign">
+                                            {{ line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ') }}
+                                        </span>
+                                        <span class="agents-diff-line-text">{{ line.value }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -228,6 +233,13 @@
                                         @input="onAgentsContentInput"
                                         @scroll="syncPromptsOverlayScroll('agents')"
                                         :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
+                                    <div v-if="!agentsDiffVisible && agentsChangeAxis.ticks.length" class="prompts-change-axis" role="navigation" :aria-label="t('prompts.editor.changeAxis')">
+                                        <button v-for="(tick, index) in agentsChangeAxis.ticks" :key="'agents-change-axis-' + index" type="button" class="prompts-change-tick" :class="'prompts-change-tick--' + tick.kind" :style="{ top: tick.top + '%', height: tick.height + '%' }" :title="t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed })" @click="jumpToPromptsChangeTick('agents', tick)"></button>
+                                    </div>
+                                    <div v-else-if="!agentsDiffVisible && agentsChangeAxis.truncated" class="prompts-change-axis prompts-change-axis--summary" :title="t('prompts.editor.changeAxisTruncated')">
+                                        <span class="prompts-change-summary add">+{{ agentsChangeAxis.added }}</span>
+                                        <span class="prompts-change-summary del">-{{ agentsChangeAxis.removed }}</span>
+                                    </div>
                                 </div>
                                 <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
                                     <div v-if="promptsPreviewLibsMissing" class="state-message error">{{ t('prompts.editor.previewUnavailable') }}</div>
@@ -331,7 +343,11 @@
                                 <div v-else-if="sysPromptDiffError" class="state-message error">{{ sysPromptDiffError }}</div>
                                 <div v-else-if="sysPromptDiffTruncated" class="agents-diff-empty">{{ t('diff.tooLargeSkip') }}</div>
                                 <div v-else-if="!sysPromptDiffHasChangesValue" class="agents-diff-empty">{{ t('diff.noChanges') }}</div>
-                                <div v-else class="agents-diff-view agents-diff-editor">
+                            <div v-else class="prompts-diff-frame">
+                                <div v-if="sysChangeAxis.ticks.length" class="prompts-change-axis prompts-change-axis--diff" role="navigation" :aria-label="t('prompts.editor.changeAxis')">
+                                    <button v-for="(tick, index) in sysChangeAxis.ticks" :key="'sys-diff-axis-' + index" type="button" class="prompts-change-tick" :class="'prompts-change-tick--' + tick.kind" :style="{ top: tick.top + '%', height: tick.height + '%' }" :title="t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed })" @click="jumpToPromptsChangeTick('sys', tick)"></button>
+                                </div>
+                                <div class="agents-diff-view agents-diff-editor" ref="promptsSysDiffView">
                                     <div
                                         v-for="(line, index) in sysPromptDiffLines"
                                         :key="'sys-prompt-diff-' + index"
@@ -343,6 +359,7 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
                             <div class="prompts-md-toolbar" role="toolbar" :aria-label="t('prompts.editor.toolbar')">
                                 <div class="prompts-md-toolbar-group prompts-md-toolbar-group--view">
                                     <div v-if="promptsPreviewEnabled" class="prompts-mobile-view-switch" role="tablist" :aria-label="t('prompts.editor.previewToggle')">
@@ -369,6 +386,13 @@
                                             :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
                                             @scroll="syncPromptsOverlayScroll('sys')"
                                             :placeholder="t('sysPrompt.placeholder')"></textarea>
+                                        <div v-if="!sysPromptDiffVisible && sysChangeAxis.ticks.length" class="prompts-change-axis" role="navigation" :aria-label="t('prompts.editor.changeAxis')">
+                                            <button v-for="(tick, index) in sysChangeAxis.ticks" :key="'sys-change-axis-' + index" type="button" class="prompts-change-tick" :class="'prompts-change-tick--' + tick.kind" :style="{ top: tick.top + '%', height: tick.height + '%' }" :title="t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed })" @click="jumpToPromptsChangeTick('sys', tick)"></button>
+                                        </div>
+                                        <div v-else-if="!sysPromptDiffVisible && sysChangeAxis.truncated" class="prompts-change-axis prompts-change-axis--summary" :title="t('prompts.editor.changeAxisTruncated')">
+                                            <span class="prompts-change-summary add">+{{ sysChangeAxis.added }}</span>
+                                            <span class="prompts-change-summary del">-{{ sysChangeAxis.removed }}</span>
+                                        </div>
                                     </div>
                                     <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
                                         <div v-if="promptsPreviewLibsMissing" class="state-message error">{{ t('prompts.editor.previewUnavailable') }}</div>

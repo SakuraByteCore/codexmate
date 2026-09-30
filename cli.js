@@ -1076,6 +1076,7 @@ function normalizeWebUiPreferences(value = {}) {
         configTemplateDiffConfirmEnabled: normalizeBooleanPreference(source.configTemplateDiffConfirmEnabled, true),
         sessionsUsageTimeRange: normalizeUsageTimeRangePreference(source.sessionsUsageTimeRange),
         promptsSubTab: normalizePromptsSubTabPreference(source.promptsSubTab),
+        promptsPreviewCollapsed: normalizeBooleanPreference(source.promptsPreviewCollapsed, true),
         sysPromptScope: normalizeSysPromptScopePreference(source.sysPromptScope),
         sysPromptMode: normalizeSysPromptModePreference(source.sysPromptMode),
         projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',

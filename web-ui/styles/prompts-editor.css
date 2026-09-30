@@ -291,6 +291,104 @@
     max-width: 100%;
 }
 
+
+/*
+ * Change axis: clickable per-hunk navigation strip rendered on the
+ * right edge of the edit pane (edit mode) and of the diff frame
+ * (diff preview mode). Ticks are positioned by percentage of the
+ * content line space (edit) or of the rendered rows (diff).
+ */
+.prompts-change-axis {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    right: 2px;
+    width: 10px;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.prompts-change-tick {
+    position: absolute;
+    left: 0;
+    right: 0;
+    min-height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.prompts-change-tick:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 1px;
+}
+
+.prompts-change-tick--add {
+    background: rgba(57, 181, 97, 0.5);
+}
+
+.prompts-change-tick--add:hover,
+.prompts-change-tick--add:focus-visible {
+    background: rgba(57, 181, 97, 0.85);
+}
+
+.prompts-change-tick--del {
+    background: rgba(220, 95, 108, 0.5);
+}
+
+.prompts-change-tick--del:hover,
+.prompts-change-tick--del:focus-visible {
+    background: rgba(220, 95, 108, 0.85);
+}
+
+.prompts-change-tick--mixed {
+    background: linear-gradient(180deg,
+        rgba(220, 95, 108, 0.5) 0%,
+        rgba(220, 95, 108, 0.5) 50%,
+        rgba(57, 181, 97, 0.5) 50%,
+        rgba(57, 181, 97, 0.5) 100%);
+}
+
+.prompts-change-tick--mixed:hover,
+.prompts-change-tick--mixed:focus-visible {
+    background: linear-gradient(180deg,
+        rgba(220, 95, 108, 0.85) 0%,
+        rgba(220, 95, 108, 0.85) 50%,
+        rgba(57, 181, 97, 0.85) 50%,
+        rgba(57, 181, 97, 0.85) 100%);
+}
+
+.prompts-diff-frame {
+    position: relative;
+}
+
+.prompts-change-axis--summary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    width: auto;
+    font-size: 10px;
+    font-weight: var(--font-weight-secondary);
+}
+
+.prompts-change-summary {
+    padding: 0 6px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.prompts-change-summary.add {
+    color: #2b6a3b;
+    background: rgba(57, 181, 97, 0.12);
+}
+
+.prompts-change-summary.del {
+    color: #8a2f36;
+    background: rgba(220, 95, 108, 0.12);
+}
 /* Mobile: force single column and edit/preview tab switching */
 @media (max-width: 767.98px) {
     .prompts-mobile-view-switch {
@@ -315,6 +413,10 @@
     }
 
     .prompts-split-collapse-btn {
+        display: none;
+    }
+
+    .prompts-change-axis {
         display: none;
     }
 }
