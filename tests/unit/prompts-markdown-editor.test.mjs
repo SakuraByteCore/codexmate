@@ -8,11 +8,7 @@ import {
     highlightMarkdownText
 } from '../../web-ui/logic.markdown-editor.mjs';
 import { createPromptsEditorMethods } from '../../web-ui/modules/app.methods.prompts-editor.mjs';
-import {
-    buildPromptsChangeAxis,
-    buildPromptsDiffAxis,
-    computePromptsAxisScrollTop
-} from '../../web-ui/logic.prompts-change-axis.mjs';
+import { buildPromptsDiffAxis } from '../../web-ui/logic.prompts-change-axis.mjs';
 import { DICT } from '../../web-ui/modules/i18n.dict.mjs';
 
 const AMP = String.fromCharCode(38);
@@ -202,9 +198,12 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.match(template, /togglePromptsPreviewCollapsed\(\)/);
     assert.match(template, /'prompts-editor-frame--preview-collapsed': promptsPreviewCollapsed/);
     assert.match(template, /t\('prompts\.editor\.collapsePreview'\)/);
-    // Change axis wiring (edit pane + diff frame) for both editors.
+    // Change axis wiring (diff preview frame only) for both editors; the
+    // edit pane must no longer render an axis.
     assert.match(template, /prompts-change-axis/);
     assert.match(template, /prompts-diff-frame/);
+    assert.doesNotMatch(template, /!agentsDiffVisible && agentsChangeAxis/, 'edit-mode axis must stay removed (agents)');
+    assert.doesNotMatch(template, /!sysPromptDiffVisible && sysChangeAxis/, 'edit-mode axis must stay removed (sys)');
     assert.match(template, /jumpToPromptsChangeTick\('agents', tick\)/);
     assert.match(template, /jumpToPromptsChangeTick\('sys', tick\)/);
     assert.match(template, /ref="promptsAgentsDiffView"/);
@@ -268,8 +267,7 @@ test('prompts editor i18n keys are localized in every locale', () => {
         'prompts.editor.previewUnavailable',
         'prompts.editor.previewEmpty',
         'prompts.editor.changeAxis',
-        'prompts.editor.changeAxisTick',
-        'prompts.editor.changeAxisTruncated'
+        'prompts.editor.changeAxisTick'
     ];
     for (const code of ['zh', 'zh-tw', 'en', 'ja', 'vi']) {
         for (const key of keys) {
@@ -279,37 +277,7 @@ test('prompts editor i18n keys are localized in every locale', () => {
     }
 });
 
-test('buildPromptsChangeAxis groups diff hunks into positioned ticks', () => {
-    const base = ['a', 'b', 'c', 'd', 'e'].join('\n');
-    const current = ['a', 'B', 'c', 'd', 'e', 'f'].join('\n');
-    const axis = buildPromptsChangeAxis(base, current);
-    assert.strictEqual(axis.totalLines, 6);
-    assert.strictEqual(axis.truncated, false);
-    assert.strictEqual(axis.ticks.length, 2, 'one modify hunk plus one append hunk');
-    const [modifyTick, appendTick] = axis.ticks;
-    assert.strictEqual(modifyTick.kind, 'mixed');
-    assert.strictEqual(modifyTick.startLine, 2);
-    assert.strictEqual(modifyTick.added, 1);
-    assert.strictEqual(modifyTick.removed, 1);
-    assert.ok(modifyTick.top >= 0 && modifyTick.top <= 100, 'tick position must be a percentage');
-    assert.ok(modifyTick.height >= 1.2, 'tick height must respect the visibility minimum');
-    assert.strictEqual(appendTick.kind, 'add');
-    assert.strictEqual(appendTick.startLine, 6);
-    assert.strictEqual(axis.stats.added, 2);
-    assert.strictEqual(axis.stats.removed, 1);
-});
 
-test('buildPromptsChangeAxis degrades to truncated summary beyond the tick cap', () => {
-    const lines = [];
-    for (let i = 0; i < 500; i += 1) {
-        lines.push(i % 2 === 0 ? `changed-${i}` : `same-${i}`);
-    }
-    const base = lines.map((value, i) => (i % 2 === 0 ? `orig-${i}` : value)).join('\n');
-    const current = lines.join('\n');
-    const axis = buildPromptsChangeAxis(base, current);
-    assert.strictEqual(axis.truncated, true, '250 separate hunks must trip the cap');
-    assert.strictEqual(axis.ticks.length, 200);
-});
 
 test('buildPromptsDiffAxis maps ticks to rendered row indexes', () => {
     const rows = [
@@ -327,14 +295,8 @@ test('buildPromptsDiffAxis maps ticks to rendered row indexes', () => {
     assert.strictEqual(axis.ticks[0].top, 25);
 });
 
-test('computePromptsAxisScrollTop maps line indexes proportionally and clamps', () => {
-    assert.strictEqual(computePromptsAxisScrollTop(500, 500, 10, 100), 0, 'no scrollable space means zero');
-    assert.strictEqual(computePromptsAxisScrollTop(2000, 500, 51, 101), 750);
-    assert.strictEqual(computePromptsAxisScrollTop(2000, 500, 1, 101), 0);
-    assert.strictEqual(computePromptsAxisScrollTop(2000, 500, 999, 101), 1500, 'clamped to max scroll');
-});
 
-test('refreshPromptsChangeAxis builds edit-mode ticks only when content differs', () => {
+test('refreshPromptsChangeAxis keeps the axis empty in edit mode', () => {
     const methods = createPromptsEditorMethods();
     const ctx = makeEditorContext();
     const bound = {};
@@ -343,22 +305,12 @@ test('refreshPromptsChangeAxis builds edit-mode ticks only when content differs'
     }
     Object.assign(ctx, bound);
 
-    ctx.refreshPromptsChangeAxis('agents');
-    assert.deepStrictEqual(ctx.agentsChangeAxis.ticks, [], 'no unsaved changes means no ticks');
-    assert.strictEqual(ctx.agentsChangeAxis.mode, 'edit');
-
     ctx.agentsContent = 'hello\nworld';
-    ctx.refreshPromptsChangeAxis('agents');
-    assert.strictEqual(ctx.agentsChangeAxis.mode, 'edit');
-    assert.strictEqual(ctx.agentsChangeAxis.ticks.length, 1);
-    assert.strictEqual(ctx.agentsChangeAxis.ticks[0].kind, 'add');
-    assert.strictEqual(ctx.agentsChangeAxis.totalLines, 2);
-    assert.strictEqual(ctx.agentsChangeAxis.added, 1);
-    assert.strictEqual(ctx.agentsChangeAxis.removed, 0);
-
     ctx.sysPromptContent = 'sys body\nnew tail';
+    ctx.refreshPromptsChangeAxis('agents');
     ctx.refreshPromptsChangeAxis('sys');
-    assert.strictEqual(ctx.sysChangeAxis.ticks.length, 1, 'sys editor shares the axis implementation');
+    assert.deepStrictEqual(ctx.agentsChangeAxis, { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 }, 'edit mode renders no axis even with unsaved changes');
+    assert.deepStrictEqual(ctx.sysChangeAxis, { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 }, 'sys editor shares the empty-axis contract');
 });
 
 test('refreshPromptsChangeAxis switches to row-indexed diff ticks in diff mode', () => {
@@ -388,7 +340,7 @@ test('refreshPromptsChangeAxis switches to row-indexed diff ticks in diff mode',
     assert.strictEqual(ctx.agentsChangeAxis.ticks[0].kind, 'mixed');
 });
 
-test('jumpToPromptsChangeTick opens the diff comparison and scrolls both views', () => {
+test('jumpToPromptsChangeTick centers the diff row and no-ops in edit mode', () => {
     const methods = createPromptsEditorMethods();
     const ctx = makeEditorContext();
     const bound = {};
@@ -396,28 +348,6 @@ test('jumpToPromptsChangeTick opens the diff comparison and scrolls both views',
         bound[name] = fn.bind(ctx);
     }
     Object.assign(ctx, bound);
-
-    // Edit mode WITHOUT the diff flow wired: legacy proportional editor scroll.
-    ctx.agentsChangeAxis = { mode: 'edit', ticks: [], truncated: false, totalLines: 101, added: 1, removed: 0 };
-    const textarea = ctx.$refs.promptsAgentsTextarea;
-    textarea.scrollHeight = 2000;
-    textarea.clientHeight = 500;
-    ctx.jumpToPromptsChangeTick('agents', { startLine: 51, added: 1, removed: 0 });
-    assert.strictEqual(textarea.scrollTop, 750, 'fallback jump scrolls the textarea proportionally');
-    assert.strictEqual(ctx.$refs.promptsAgentsHighlight.scrollTop, 750, 'backdrop overlay stays in sync after the fallback jump');
-
-    // Edit mode WITH the diff flow wired: the tick click must open the
-    // red/green comparison (same entry the save/eye button uses) instead of
-    // only scrolling, so the user sees WHAT changed.
-    const prepareCalls = [];
-    ctx.prepareAgentsDiff = () => {
-        prepareCalls.push('agents');
-    };
-    textarea.scrollTop = 0;
-    ctx.jumpToPromptsChangeTick('agents', { startLine: 51, added: 1, removed: 0 });
-    assert.deepStrictEqual(prepareCalls, ['agents'], 'edit-mode tick opens the diff preview flow');
-    assert.deepStrictEqual(ctx._promptsAxisPendingJump, { key: 'agents', startLine: 51 }, 'the clicked hunk is remembered for the post-load jump');
-    assert.strictEqual(textarea.scrollTop, 0, 'primary path does not scroll the editor');
 
     // Diff mode: clicking a tick centers the matching rendered row.
     const scrollCalls = [];
@@ -437,44 +367,17 @@ test('jumpToPromptsChangeTick opens the diff comparison and scrolls both views',
     ctx.jumpToPromptsChangeTick('agents', { rowIndex: 9, startLine: 3, added: 1, removed: 0 });
     ctx.jumpToPromptsChangeTick('agents', null);
     assert.strictEqual(scrollCalls.length, 1, 'missing refs or ticks must not throw');
-});
 
-test('consumePromptsAxisPendingJump centers the diff view on the clicked hunk', () => {
-    const methods = createPromptsEditorMethods();
-    const ctx = makeEditorContext();
-    const bound = {};
-    for (const [name, fn] of Object.entries(methods)) {
-        bound[name] = fn.bind(ctx);
-    }
-    Object.assign(ctx, bound);
-
-    const scrollCalls = [];
-    ctx.$refs.promptsAgentsDiffView = {
-        children: [
-            {},
-            { scrollIntoView(options) { scrollCalls.push(options); } },
-            {}
-        ]
+    // Edit mode has no axis UI any more: a stray jump call must be a silent
+    // no-op, never re-opening the diff flow or scrolling the editor.
+    const prepareCalls = [];
+    ctx.prepareAgentsDiff = () => {
+        prepareCalls.push('agents');
     };
-    ctx._promptsAxisPendingJump = { key: 'agents', startLine: 2 };
-    ctx.agentsDiffVisible = true;
-    ctx.agentsDiffStats = { added: 1, removed: 1, unchanged: 1 };
-    ctx.agentsDiffLines = [
-        { type: 'context', value: 'a', oldNumber: 1, newNumber: 1 },
-        { type: 'del', value: 'b', oldNumber: 2, newNumber: null },
-        { type: 'add', value: 'B', oldNumber: null, newNumber: 2 }
-    ];
-    ctx.refreshPromptsChangeAxis('agents');
-    assert.strictEqual(scrollCalls.length, 1, 'refresh consumes the pending jump once diff ticks exist');
-    assert.deepStrictEqual(scrollCalls[0], { block: 'center' });
-    assert.strictEqual(ctx._promptsAxisPendingJump, null, 'pending jump is cleared after consumption');
-
-    ctx._promptsAxisPendingJump = { key: 'sys', startLine: 2 };
-    ctx.refreshPromptsChangeAxis('agents');
-    assert.notStrictEqual(ctx._promptsAxisPendingJump, null, 'a pending jump keyed to another editor is not consumed');
-
-    ctx._promptsAxisPendingJump = { key: 'agents', startLine: 2 };
-    ctx.agentsDiffVisible = false;
-    ctx.refreshPromptsChangeAxis('agents');
-    assert.strictEqual(ctx._promptsAxisPendingJump, null, 'leaving diff mode clears the stale pending jump');
+    const textarea = ctx.$refs.promptsAgentsTextarea;
+    textarea.scrollTop = 0;
+    ctx.agentsChangeAxis = { mode: 'edit', ticks: [], truncated: false, totalLines: 101, added: 1, removed: 0 };
+    ctx.jumpToPromptsChangeTick('agents', { startLine: 51, added: 1, removed: 0 });
+    assert.deepStrictEqual(prepareCalls, [], 'edit-mode jump must not open the diff flow');
+    assert.strictEqual(textarea.scrollTop, 0, 'edit-mode jump must not scroll the editor');
 });

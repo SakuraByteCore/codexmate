@@ -255,7 +255,6 @@ const ja = Object.freeze({
     'prompts.editor.previewEmpty': 'プレビューする内容がありません',
     'prompts.editor.changeAxis': '変更ナビゲーション軸',
     'prompts.editor.changeAxisTick': '{line} 行目（+{added} / -{removed}）',
-    'prompts.editor.changeAxisTruncated': '変更領域が多すぎるため、統計に折りたたまれました',
     'prompts.presets.title': 'プリセット',
     'prompts.presets.hint': 'プリセットを管理します。',
     'prompts.presets.namePlaceholder': 'プリセット名',

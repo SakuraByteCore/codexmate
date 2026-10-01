@@ -777,9 +777,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'togglePromptsPreviewCollapsed',
         'refreshPromptsChangeAxis',
         'schedulePromptsChangeAxis',
-        'jumpToPromptsChangeTick',
-        'clearPromptsAxisPendingJump',
-        'consumePromptsAxisPendingJump',
+        'jumpToPromptsChangeTick',,
         'applyPromptsToolbarAction',
         'promptsUndo',
         'clearPromptsEditorUndoStack',
@@ -1047,6 +1045,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'insertPromptPathReference'
     );
     const allowedMissingCurrentMethodKeys = [
+        'clearPromptsAxisPendingJump',
+        'consumePromptsAxisPendingJump',
         'addPiProviderFromModal',
         'promptsEditorUndoStack',
         'applyPromptsToolbarAction',

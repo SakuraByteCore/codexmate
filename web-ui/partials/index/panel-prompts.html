@@ -244,13 +244,6 @@
                                         @input="onAgentsContentInput"
                                         @scroll="syncPromptsOverlayScroll('agents')"
                                         :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
-                                    <div v-if="!agentsDiffVisible && agentsChangeAxis.ticks.length" class="prompts-change-axis" role="navigation" :aria-label="t('prompts.editor.changeAxis')">
-                                        <button v-for="(tick, index) in agentsChangeAxis.ticks" :key="'agents-change-axis-' + index" type="button" class="prompts-change-tick" :class="'prompts-change-tick--' + tick.kind" :style="{ top: tick.top + '%', height: tick.height + '%' }" :title="t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed })" @click="jumpToPromptsChangeTick('agents', tick)"></button>
-                                    </div>
-                                    <div v-else-if="!agentsDiffVisible && agentsChangeAxis.truncated" class="prompts-change-axis prompts-change-axis--summary" :title="t('prompts.editor.changeAxisTruncated')">
-                                        <span class="prompts-change-summary add">+{{ agentsChangeAxis.added }}</span>
-                                        <span class="prompts-change-summary del">-{{ agentsChangeAxis.removed }}</span>
-                                    </div>
                                 </div>
                                 <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
                                     <div v-if="promptsPreviewLibsMissing" class="state-message error">{{ t('prompts.editor.previewUnavailable') }}</div>
@@ -408,13 +401,6 @@
                                             :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
                                             @scroll="syncPromptsOverlayScroll('sys')"
                                             :placeholder="t('sysPrompt.placeholder')"></textarea>
-                                        <div v-if="!sysPromptDiffVisible && sysChangeAxis.ticks.length" class="prompts-change-axis" role="navigation" :aria-label="t('prompts.editor.changeAxis')">
-                                            <button v-for="(tick, index) in sysChangeAxis.ticks" :key="'sys-change-axis-' + index" type="button" class="prompts-change-tick" :class="'prompts-change-tick--' + tick.kind" :style="{ top: tick.top + '%', height: tick.height + '%' }" :title="t('prompts.editor.changeAxisTick', { line: tick.startLine, added: tick.added, removed: tick.removed })" @click="jumpToPromptsChangeTick('sys', tick)"></button>
-                                        </div>
-                                        <div v-else-if="!sysPromptDiffVisible && sysChangeAxis.truncated" class="prompts-change-axis prompts-change-axis--summary" :title="t('prompts.editor.changeAxisTruncated')">
-                                            <span class="prompts-change-summary add">+{{ sysChangeAxis.added }}</span>
-                                            <span class="prompts-change-summary del">-{{ sysChangeAxis.removed }}</span>
-                                        </div>
                                     </div>
                                     <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
                                         <div v-if="promptsPreviewLibsMissing" class="state-message error">{{ t('prompts.editor.previewUnavailable') }}</div>

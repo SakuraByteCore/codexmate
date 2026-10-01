@@ -364,31 +364,6 @@
     position: relative;
 }
 
-.prompts-change-axis--summary {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-    width: auto;
-    font-size: 10px;
-    font-weight: var(--font-weight-secondary);
-}
-
-.prompts-change-summary {
-    padding: 0 6px;
-    border-radius: 999px;
-    white-space: nowrap;
-}
-
-.prompts-change-summary.add {
-    color: #2b6a3b;
-    background: rgba(57, 181, 97, 0.12);
-}
-
-.prompts-change-summary.del {
-    color: #8a2f36;
-    background: rgba(220, 95, 108, 0.12);
-}
 /* Mobile: force single column and edit/preview tab switching */
 @media (max-width: 767.98px) {
     .prompts-mobile-view-switch {
