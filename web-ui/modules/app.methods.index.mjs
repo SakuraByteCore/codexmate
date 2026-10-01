@@ -52,7 +52,7 @@ import {
 export function createAppMethods() {
     return {
         ...createI18nMethods(),
-        ...createPromptsEditorMethods(),
+        ...createPromptsEditorMethods({ api }),
         ...createWebhookMethods(),
         ...createStartupClaudeMethods({
             api,

@@ -7,7 +7,9 @@
  * State contract (declared in app.js data()):
  *   promptsPreviewEnabled, promptsPreviewCollapsed, promptsMobileView,
  *   promptsPreviewLibsMissing, agentsHighlightHtml, sysPromptHighlightHtml,
- *   agentsPreviewHtml, sysPromptPreviewHtml, agentsChangeAxis, sysChangeAxis
+ *   agentsPreviewHtml, sysPromptPreviewHtml, agentsChangeAxis, sysChangeAxis,
+ *   promptsPathReferencePaths, promptsPathReferenceLoading,
+ *   promptsPathReferenceCacheKey (path-reference dropdown)
  * Template contract:
  *   refs promptsAgentsTextarea / promptsSysTextarea on the two textareas,
  *   refs promptsAgentsHighlight / promptsSysHighlight on the backdrop <pre>,
@@ -18,6 +20,11 @@ import {
     buildMarkdownPreviewHtml,
     highlightMarkdownText
 } from '../logic.markdown-editor.mjs';
+import {
+    buildPromptPathReferenceOptions as buildPromptPathReferenceOptionList,
+    buildPromptPathReferenceSentence,
+    insertPromptPathReferenceText
+} from '../logic.prompts-path-reference.mjs';
 import {
     buildPromptsChangeAxis,
     buildPromptsDiffAxis,
@@ -83,7 +90,9 @@ function resolvePromptsPreviewLibs() {
     return { marked: window.marked || null, purify: window.DOMPurify || null };
 }
 
-export function createPromptsEditorMethods() {
+export function createPromptsEditorMethods(options = {}) {
+    const { api } = options;
+
     return {
         promptsEditorMeta(key) {
             return PROMPTS_EDITOR_META[key] || null;
@@ -320,6 +329,132 @@ export function createPromptsEditorMethods() {
             this.promptsPreviewCollapsed = !this.promptsPreviewCollapsed;
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ promptsPreviewCollapsed: this.promptsPreviewCollapsed });
+            }
+        },
+
+        buildPromptsPathReferenceCacheKey() {
+            return [
+                (this.projectClaudeMdPath || '').trim(),
+                this.sysPromptScope || 'global',
+                this.sysPromptMode || 'system'
+            ].join('|');
+        },
+
+        // Lazy loader for the path-reference dropdown. Fetches the OTHER tabs'
+        // real absolute paths via the existing metaOnly RPC contracts
+        // (get-agents-file / get-opencode-agents-file / get-claude-md-file
+        // return path + exists without content; get-system-prompt returns
+        // path + a small SYSTEM.md/APPEND_SYSTEM.md read). Cache key covers the
+        // only inputs that change a resolved path: project baseDir, sysPrompt
+        // scope and mode. Idempotent per key; concurrent callers share the
+        // in-flight promise.
+        loadPromptsPathReferences() {
+            const cacheKey = this.buildPromptsPathReferenceCacheKey();
+            if (this.promptsPathReferenceCacheKey === cacheKey && !this.promptsPathReferenceLoading) {
+                return Promise.resolve();
+            }
+            if (this.promptsPathReferenceLoading && this._promptsPathReferencePromise) {
+                return this._promptsPathReferencePromise;
+            }
+            if (typeof api !== 'function') {
+                return Promise.resolve();
+            }
+            const projectPath = (this.projectClaudeMdPath || '').trim();
+            const scope = this.sysPromptScope || 'global';
+            const mode = this.sysPromptMode || 'system';
+            const fetchEntry = async (action, params) => {
+                try {
+                    const res = await api(action, params);
+                    if (res && res.error) {
+                        return { path: '', exists: false, error: String(res.error) };
+                    }
+                    return { path: (res && res.path) || '', exists: !!(res && res.exists) };
+                } catch (e) {
+                    return {
+                        path: '',
+                        exists: false,
+                        error: typeof this.t === 'function' ? this.t('prompts.pathReference.loadFailed') : 'load failed'
+                    };
+                }
+            };
+            this.promptsPathReferenceLoading = true;
+            const promise = Promise.all([
+                fetchEntry('get-agents-file', { metaOnly: true }),
+                fetchEntry('get-opencode-agents-file', { metaOnly: true }),
+                fetchEntry('get-claude-md-file', { metaOnly: true }),
+                projectPath
+                    ? fetchEntry('get-claude-md-file', { baseDir: projectPath, metaOnly: true })
+                    : Promise.resolve(null),
+                fetchEntry('get-system-prompt', { scope, mode })
+            ]).then((results) => {
+                this.promptsPathReferencePaths = {
+                    codex: results[0],
+                    opencode: results[1],
+                    claudeGlobal: results[2],
+                    claudeProject: results[3] || { path: '', exists: false, error: '' },
+                    system: results[4]
+                };
+                this.promptsPathReferenceCacheKey = cacheKey;
+            }).finally(() => {
+                this.promptsPathReferenceLoading = false;
+                this._promptsPathReferencePromise = null;
+            });
+            this._promptsPathReferencePromise = promise;
+            return promise;
+        },
+
+        promptsPathReferenceOptionList() {
+            return buildPromptPathReferenceOptionList({
+                currentTab: this.promptsSubTab,
+                paths: this.promptsPathReferencePaths || {},
+                t: (key, params) => (typeof this.t === 'function' ? this.t(key, params) : key),
+                systemFile: (this.sysPromptMode || 'system') === 'append' ? 'APPEND_SYSTEM.md' : 'SYSTEM.md'
+            });
+        },
+
+        insertPromptPathReference(entryId, key, event) {
+            const select = event && event.target;
+            if (select && typeof select.value === 'string') {
+                select.value = '';
+            }
+            const meta = this.promptsEditorMeta(key);
+            const entry = (this.promptsPathReferencePaths || {})[entryId];
+            if (!meta || !entry || !entry.path || entry.error) {
+                return;
+            }
+            if (this[meta.loadingField] || this[meta.savingField] || this[meta.diffVisibleField]) {
+                return;
+            }
+            const sentence = buildPromptPathReferenceSentence(entry.path);
+            if (!sentence) {
+                return;
+            }
+            const textarea = typeof this.$refs === 'object' && this.$refs
+                ? this.$refs[meta.textareaRef]
+                : null;
+            const content = typeof this[meta.contentField] === 'string' ? this[meta.contentField] : '';
+            let start = content.length;
+            let end = content.length;
+            if (textarea && typeof textarea.selectionStart === 'number') {
+                start = textarea.selectionStart;
+                end = textarea.selectionEnd;
+            }
+            const result = insertPromptPathReferenceText(content, start, end, sentence);
+            this[meta.contentField] = result.content;
+            this.schedulePromptsEditorRefresh(key);
+            const restoreCaret = () => {
+                if (textarea && typeof textarea.setSelectionRange === 'function') {
+                    textarea.setSelectionRange(result.caret, result.caret);
+                    textarea.focus();
+                }
+            };
+            if (typeof this.$nextTick === 'function') {
+                this.$nextTick(restoreCaret);
+            } else {
+                restoreCaret();
+            }
+            if (typeof this.showMessage === 'function') {
+                this.showMessage(this.t('prompts.pathReference.toast.inserted'), 'success');
             }
         }
     };

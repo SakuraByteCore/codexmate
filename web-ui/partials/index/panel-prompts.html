@@ -44,6 +44,17 @@
                             </span>
                         </div>
                         <div class="prompts-editor-actions">
+                            <div class="prompts-editor-group prompts-editor-group--pathref">
+                                <select
+                                    class="form-input prompts-path-reference-select"
+                                    :disabled="agentsLoading || agentsSaving || agentsDiffVisible || promptsPathReferenceLoading"
+                                    :title="t('prompts.pathReference.title')"
+                                    @focus="loadPromptsPathReferences()"
+                                    @change="insertPromptPathReference($event.target.value, 'agents', $event)">
+                                    <option value="">{{ t('prompts.pathReference.placeholder') }}</option>
+                                    <option v-for="opt in promptsPathReferenceOptionList()" :key="opt.id" :value="opt.id" :disabled="opt.disabled">{{ opt.label }}</option>
+                                </select>
+                            </div>
                             <div class="prompts-editor-group prompts-editor-group--secondary">
                                 <button
                                     class="btn-mini"
@@ -282,6 +293,17 @@
                                 </span>
                             </div>
                             <div class="prompts-editor-actions">
+                                <div class="prompts-editor-group prompts-editor-group--pathref">
+                                    <select
+                                        class="form-input prompts-path-reference-select"
+                                        :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible || promptsPathReferenceLoading"
+                                        :title="t('prompts.pathReference.title')"
+                                        @focus="loadPromptsPathReferences()"
+                                        @change="insertPromptPathReference($event.target.value, 'sys', $event)">
+                                        <option value="">{{ t('prompts.pathReference.placeholder') }}</option>
+                                        <option v-for="opt in promptsPathReferenceOptionList()" :key="opt.id" :value="opt.id" :disabled="opt.disabled">{{ opt.label }}</option>
+                                    </select>
+                                </div>
                                 <div class="prompts-editor-group prompts-editor-group--secondary">
                                     <button class="btn-mini" @click="exportSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || !sysPromptContent" :title="t('modal.agents.export')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 17v2h16v-2"/></svg>

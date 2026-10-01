@@ -383,7 +383,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectedPromptPresetId',
         'projectClaudeMdPath',
         'projectPathOptions',
-        'projectPathOptionsLoading'
+        'projectPathOptionsLoading',
+        'promptsPathReferencePaths',
+        'promptsPathReferenceLoading',
+        'promptsPathReferenceCacheKey'
     ] : [
         'appVersion',
         'appLatestVersion',
@@ -435,7 +438,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectedPromptPresetId',
         'projectClaudeMdPath',
         'projectPathOptions',
-        'projectPathOptionsLoading'
+        'projectPathOptionsLoading',
+        'promptsPathReferencePaths',
+        'promptsPathReferenceLoading',
+        'promptsPathReferenceCacheKey'
     ];
     const allowedMissingCurrentKeys = [
         'addingPiProviderApi',
@@ -1034,7 +1040,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'piCheckedRemoteCount',
         'piCreateModelRecord',
         'addSelectedPiRemoteModels',
-        'fillPiModelFromCatalog'
+        'fillPiModelFromCatalog',
+        'buildPromptsPathReferenceCacheKey',
+        'loadPromptsPathReferences',
+        'promptsPathReferenceOptionList',
+        'insertPromptPathReference'
     );
     const allowedMissingCurrentMethodKeys = [
         'addPiProviderFromModal',

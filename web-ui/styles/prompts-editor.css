@@ -420,3 +420,20 @@
         min-height: 12px;
     }
 }
+
+
+.prompts-editor-group--pathref .prompts-path-reference-select {
+    width: auto;
+    max-width: 190px;
+    min-width: 120px;
+    padding: 5px 8px;
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    flex-shrink: 1;
+}
+
+.prompts-editor-group--pathref .prompts-path-reference-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

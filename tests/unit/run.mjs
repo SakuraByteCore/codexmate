@@ -79,6 +79,7 @@ await import(pathToFileURL(path.join(__dirname, 'web-ui-behavior-parity.test.mjs
 await import(pathToFileURL(path.join(__dirname, 'i18n-locales.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-run-host.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'opencode-agents-file.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'prompts-path-reference.test.mjs')));
 
 let failures = 0;
 for (const { name, fn } of tests) {

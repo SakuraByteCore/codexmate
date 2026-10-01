@@ -254,7 +254,7 @@ test('prompts editor styles and app wiring are in place', () => {
 
     const methodsIndex = readProjectFile('web-ui/modules/app.methods.index.mjs');
     assert.match(methodsIndex, /import \{ createPromptsEditorMethods \} from '\.\/app\.methods\.prompts-editor\.mjs';/);
-    assert.match(methodsIndex, /\.\.\.createPromptsEditorMethods\(\),/);
+    assert.match(methodsIndex, /\.\.\.createPromptsEditorMethods\(\{ api \}\),/);
 });
 
 test('prompts editor i18n keys are localized in every locale', () => {

@@ -1020,6 +1020,7 @@ export function createAgentsMethods(options = {}) {
         },
 
         loadPromptsTabContent() {
+            if (typeof this.loadPromptsPathReferences === "function") this.loadPromptsPathReferences();
             if (this.promptsSubTab === 'system') {
                 if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
             } else {

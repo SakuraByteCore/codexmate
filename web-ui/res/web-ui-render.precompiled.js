@@ -6953,6 +6953,24 @@ return function render(_ctx, _cache) {
                             : _createCommentVNode("v-if", true)
                         ]),
                         _createElementVNode("div", { class: "prompts-editor-actions" }, [
+                          _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--pathref" }, [
+                            _createElementVNode("select", {
+                              class: "form-input prompts-path-reference-select",
+                              disabled: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible || _ctx.promptsPathReferenceLoading,
+                              title: _ctx.t('prompts.pathReference.title'),
+                              onFocus: $event => (_ctx.loadPromptsPathReferences()),
+                              onChange: $event => (_ctx.insertPromptPathReference($event.target.value, 'agents', $event))
+                            }, [
+                              _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('prompts.pathReference.placeholder')), 1 /* TEXT */),
+                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptsPathReferenceOptionList(), (opt) => {
+                                return (_openBlock(), _createElementBlock("option", {
+                                  key: opt.id,
+                                  value: opt.id,
+                                  disabled: opt.disabled
+                                }, _toDisplayString(opt.label), 9 /* TEXT, PROPS */, ["value", "disabled"]))
+                              }), 128 /* KEYED_FRAGMENT */))
+                            ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onFocus", "onChange"])
+                          ]),
                           _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
                             _createElementVNode("button", {
                               class: "btn-mini",
@@ -7524,6 +7542,24 @@ return function render(_ctx, _cache) {
                               : _createCommentVNode("v-if", true)
                           ]),
                           _createElementVNode("div", { class: "prompts-editor-actions" }, [
+                            _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--pathref" }, [
+                              _createElementVNode("select", {
+                                class: "form-input prompts-path-reference-select",
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible || _ctx.promptsPathReferenceLoading,
+                                title: _ctx.t('prompts.pathReference.title'),
+                                onFocus: $event => (_ctx.loadPromptsPathReferences()),
+                                onChange: $event => (_ctx.insertPromptPathReference($event.target.value, 'sys', $event))
+                              }, [
+                                _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('prompts.pathReference.placeholder')), 1 /* TEXT */),
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptsPathReferenceOptionList(), (opt) => {
+                                  return (_openBlock(), _createElementBlock("option", {
+                                    key: opt.id,
+                                    value: opt.id,
+                                    disabled: opt.disabled
+                                  }, _toDisplayString(opt.label), 9 /* TEXT, PROPS */, ["value", "disabled"]))
+                                }), 128 /* KEYED_FRAGMENT */))
+                              ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onFocus", "onChange"])
+                            ]),
                             _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
                               _createElementVNode("button", {
                                 class: "btn-mini",
