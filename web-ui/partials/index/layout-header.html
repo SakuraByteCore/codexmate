@@ -346,15 +346,30 @@
                     <button
                         id="side-tab-plugins"
                         data-main-tab="plugins"
-                        :aria-current="mainTab === 'plugins' ? 'page' : null"
-                        :class="['side-item', { active: isMainTabNavActive('plugins') }]"
-                        @pointerdown="onMainTabPointerDown('plugins', $event)"
-                        @click="onMainTabClick('plugins', $event)">
+                        data-plugins-id="prompt-templates"
+                        :aria-current="mainTab === 'plugins' && pluginsActiveId === 'prompt-templates' ? 'page' : null"
+                        :class="['side-item', { active: isPluginsIdNavActive('prompt-templates') }]"
+                        @pointerdown="onPluginsTabPointerDown('prompt-templates', $event)"
+                        @click="onPluginsTabClick('prompt-templates', $event)">
                         <span class="side-item-icon" aria-hidden="true">◇</span>
                         <div class="side-item-title">{{ t('side.plugins.tools') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.plugins.tools.meta') }}</span>
                             <span>{{ t('side.plugins.templatesCount', { count: promptTemplatesList.length }) }}</span>
+                        </div>
+                    </button>
+                    <button
+                        id="side-tab-plugins-text-tools"
+                        data-main-tab="plugins"
+                        data-plugins-id="text-tools"
+                        :aria-current="mainTab === 'plugins' && pluginsActiveId === 'text-tools' ? 'page' : null"
+                        :class="['side-item', { active: isPluginsIdNavActive('text-tools') }]"
+                        @pointerdown="onPluginsTabPointerDown('text-tools', $event)"
+                        @click="onPluginsTabClick('text-tools', $event)">
+                        <span class="side-item-icon" aria-hidden="true">▤</span>
+                        <div class="side-item-title">{{ t('plugins.catalog.textTools.title') }}</div>
+                        <div class="side-item-meta">
+                            <span>{{ t('plugins.textTools.tools.compress') }}</span>
                         </div>
                     </button>
                 </div>

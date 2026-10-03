@@ -110,12 +110,17 @@
         const settingsTab = typeof vm.settingsTab === 'string' ? vm.settingsTab.trim().toLowerCase() : 'general';
         const skillsTargetApp = typeof vm.skillsTargetApp === 'string' && (vm.skillsTargetApp === 'codex' || vm.skillsTargetApp === 'claude' || vm.skillsTargetApp === 'pi') ? vm.skillsTargetApp : 'codex';
         const promptTemplatesMode = typeof vm.promptTemplatesMode === 'string' && (vm.promptTemplatesMode === 'compose' || vm.promptTemplatesMode === 'manage') ? vm.promptTemplatesMode : 'compose';
+        const pluginsActiveIdSource = resolvedOverrides && typeof resolvedOverrides.pluginsActiveId === 'string'
+            ? resolvedOverrides.pluginsActiveId
+            : vm.pluginsActiveId;
+        const pluginsActiveId = typeof pluginsActiveIdSource === 'string' ? pluginsActiveIdSource.trim() : '';
         const snapshot = {
             settingsTab: settingsTab === 'data' ? 'data' : 'general',
             mainTab: resolveSelectableMainTab(mainTab),
             configMode: configModeSet && configModeSet.has(configMode) ? configMode : 'codex',
             skillsTargetApp,
-            promptTemplatesMode
+            promptTemplatesMode,
+            pluginsActiveId: pluginsActiveId || 'prompt-templates'
         };
         if (typeof vm.persistWebUiPreferences === 'function') {
             vm.persistWebUiPreferences({ navigation: snapshot });
@@ -192,6 +197,7 @@
                 intent: '',
                 pendingTarget: '',
                 pendingConfigMode: '',
+                pendingPluginsId: '',
                 ticket: 0
             };
             return this.__mainTabSwitchState;
@@ -242,7 +248,7 @@
             if (!normalizedKind || !normalizedValue) {
                 return;
             }
-            const expectedIntent = normalizedKind === 'config' ? 'config' : normalizedValue;
+            const expectedIntent = normalizedKind === 'config' || normalizedKind === 'plugins' ? normalizedKind : normalizedValue;
             this.cancelTouchNavIntentReset();
             const token = (Number(this.__touchNavIntentResetToken) || 0) + 1;
             this.__touchNavIntentResetToken = token;
@@ -259,20 +265,25 @@
                 this.clearMainTabSwitchIntent(expectedIntent);
             }, 1000);
         },
-        applyImmediateNavIntent(tab, configMode = '') {
+        applyImmediateNavIntent(tab, configMode = '', pluginsId = '') {
             if (typeof document === 'undefined') return;
             const normalizedTab = typeof tab === 'string' ? tab.trim().toLowerCase() : '';
             if (!normalizedTab) return;
             const normalizedMode = typeof configMode === 'string' ? configMode.trim().toLowerCase() : '';
+            const normalizedPluginId = typeof pluginsId === 'string' ? pluginsId.trim().toLowerCase() : '';
             const domState = this.ensureImmediateNavDomState();
             const nodes = Array.isArray(domState.navNodes) ? domState.navNodes : [];
             for (const node of nodes) {
                 if (!node || !node.classList) continue;
                 const nodeTab = String(node.getAttribute('data-main-tab') || '').trim().toLowerCase();
                 const nodeMode = String(node.getAttribute('data-config-mode') || '').trim().toLowerCase();
+                const nodePluginId = String(node.getAttribute('data-plugins-id') || '').trim().toLowerCase();
                 let shouldActivate = nodeTab === normalizedTab;
                 if (shouldActivate && normalizedTab === 'config') {
                     shouldActivate = nodeMode ? nodeMode === normalizedMode : false;
+                }
+                if (shouldActivate && normalizedTab === 'plugins') {
+                    shouldActivate = nodePluginId ? nodePluginId === normalizedPluginId : !normalizedPluginId;
                 }
                 node.classList.toggle('nav-intent-active', !!shouldActivate);
                 node.classList.toggle('nav-intent-inactive', !shouldActivate);
@@ -395,6 +406,67 @@
             if (this.consumePointerNavCommit('config', normalizedMode)) return;
             this.switchConfigMode(normalizedMode);
         },
+
+        switchPluginsTab(pluginId) {
+            const normalizedId = typeof pluginId === 'string' ? pluginId.trim().toLowerCase() : '';
+            if (!normalizedId) return;
+            if (typeof this.selectPlugin === 'function') {
+                this.selectPlugin(normalizedId);
+            } else {
+                this.pluginsActiveId = normalizedId;
+            }
+            this.switchMainTab('plugins');
+        },
+
+        onPluginsTabPointerDown(pluginId) {
+            const event = arguments.length > 1 ? arguments[1] : null;
+            if (event && typeof event.button === 'number' && event.button !== 0) {
+                return;
+            }
+            const normalizedId = typeof pluginId === 'string' ? pluginId.trim().toLowerCase() : '';
+            if (!normalizedId) return;
+            persistNavState(this, { mainTab: 'plugins', pluginsActiveId: normalizedId });
+            this.setMainTabSwitchIntent('plugins');
+            if (typeof this.ensureMainTabSwitchState === 'function') {
+                this.ensureMainTabSwitchState().pendingPluginsId = normalizedId;
+            }
+            this.applyImmediateNavIntent('plugins', '', normalizedId);
+            const shouldHideSessionPanel = this.mainTab === 'sessions';
+            this.setSessionPanelFastHidden(shouldHideSessionPanel);
+            const pointerType = event && typeof event.pointerType === 'string'
+                ? event.pointerType.trim().toLowerCase()
+                : '';
+            if (pointerType === 'touch') {
+                this.scheduleTouchNavIntentReset('plugins', normalizedId);
+                return;
+            }
+            this.recordPointerNavCommit('plugins', normalizedId);
+            this.switchPluginsTab(normalizedId);
+        },
+
+        onPluginsTabClick(pluginId) {
+            const normalizedId = typeof pluginId === 'string' ? pluginId.trim().toLowerCase() : '';
+            if (!normalizedId) return;
+            if (this.consumePointerNavCommit('plugins', normalizedId)) return;
+            this.switchPluginsTab(normalizedId);
+        },
+
+        isPluginsIdNavActive(pluginId) {
+            const normalizedId = typeof pluginId === 'string' ? pluginId.trim().toLowerCase() : '';
+            if (!normalizedId) return false;
+            if (!this.isMainTabNavActive('plugins')) return false;
+            const state = this.ensureMainTabSwitchState();
+            const pendingId = typeof state.pendingPluginsId === 'string'
+                ? state.pendingPluginsId.trim().toLowerCase()
+                : '';
+            if (state.intent === 'plugins' && pendingId) {
+                return pendingId === normalizedId;
+            }
+            const currentId = typeof this.pluginsActiveId === 'string'
+                ? this.pluginsActiveId.trim().toLowerCase()
+                : '';
+            return currentId === normalizedId;
+        },
         clearMainTabSwitchIntent(expectedTab = '') {
             const state = this.ensureMainTabSwitchState();
             if (expectedTab && state.intent && state.intent !== expectedTab) {
@@ -404,6 +476,7 @@
             state.intent = '';
             state.pendingTarget = '';
             state.pendingConfigMode = '';
+            state.pendingPluginsId = '';
             this.clearImmediateNavIntent();
             this.setSessionPanelFastHidden(false);
         },
@@ -462,6 +535,9 @@
             const switchState = this.ensureMainTabSwitchState();
             if (targetTab !== 'config') {
                 switchState.pendingConfigMode = '';
+            }
+            if (targetTab !== 'plugins') {
+                switchState.pendingPluginsId = '';
             }
             if (targetTab === previousTab) {
                 switchState.ticket += 1;

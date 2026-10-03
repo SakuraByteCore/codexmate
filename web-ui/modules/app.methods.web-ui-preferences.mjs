@@ -114,7 +114,10 @@ function normalizeNavigationSnapshot(vm, source = {}) {
             : currentSkillsTargetApp,
         promptTemplatesMode: source.promptTemplatesMode === 'manage' || source.promptTemplatesMode === 'compose'
             ? source.promptTemplatesMode
-            : currentPromptTemplatesMode
+            : currentPromptTemplatesMode,
+        pluginsActiveId: typeof source.pluginsActiveId === 'string'
+            ? source.pluginsActiveId
+            : (typeof vm.pluginsActiveId === 'string' ? vm.pluginsActiveId : '')
     };
 }
 
@@ -475,6 +478,9 @@ export function createWebUiPreferencesMethods(options = {}) {
                         this.settingsTab = this.normalizeSettingsTab(nav.settingsTab);
                     }
                     if (typeof nav.configMode === 'string') this.configMode = nav.configMode;
+                    if (typeof nav.pluginsActiveId === 'string' && nav.pluginsActiveId.trim()) {
+                        this.pluginsActiveId = nav.pluginsActiveId.trim();
+                    }
                     if (typeof nav.mainTab === 'string') {
                         if (typeof this.switchMainTab === 'function') {
                             this.switchMainTab(nav.mainTab);

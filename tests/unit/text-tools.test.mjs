@@ -13,6 +13,7 @@ import {
 import { loadTextToolsOverview } from '../../plugins/text-tools/overview.mjs';
 import { createTextToolsMethods } from '../../plugins/text-tools/methods.mjs';
 import { createTextToolsComputed } from '../../plugins/text-tools/computed.mjs';
+import { createNavigationMethods } from '../../web-ui/modules/app.methods.navigation.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -167,6 +168,61 @@ test('panel-plugins template wires the text-tools branch', () => {
     assert.ok(src.includes('v-for="tool in textToolsList"'), 'tool bar must iterate textToolsList');
     assert.ok(src.includes("textToolsActiveToolId = tool.id"), 'tool buttons must set the active tool id');
     assert.ok(src.includes("t('plugins.textTools.title')"), 'panel title must be localized');
+});
+
+test('layout-header sidebar wires text-tools and prompt-templates plugin sub-tabs', () => {
+    const src = fs.readFileSync(path.join(root, 'web-ui', 'partials', 'index', 'layout-header.html'), 'utf8');
+    assert.ok(src.includes('id="side-tab-plugins-text-tools"'), 'text-tools sidebar entry must exist');
+    assert.ok(src.includes('data-plugins-id="text-tools"'), 'text-tools entry must carry data-plugins-id');
+    assert.ok(src.includes("onPluginsTabPointerDown('text-tools', $event)"), 'text-tools entry must bind pointerdown');
+    assert.ok(src.includes("onPluginsTabClick('text-tools', $event)"), 'text-tools entry must bind click');
+    assert.ok(src.includes("isPluginsIdNavActive('text-tools')"), 'text-tools entry must use per-plugin active state');
+    assert.ok(src.includes("data-plugins-id=\"prompt-templates\""), 'generic plugins entry must bind prompt-templates');
+    assert.ok(src.includes("onPluginsTabPointerDown('prompt-templates', $event)"), 'prompt-templates entry must bind pointerdown');
+    assert.ok(src.includes("isPluginsIdNavActive('prompt-templates')"), 'prompt-templates entry must use per-plugin active state');
+});
+
+test('sidebar plugin sub-tab handlers select the plugin and persist the cached id', () => {
+    const persisted = [];
+    const calls = [];
+    const methods = createNavigationMethods({
+        configModeSet: new Set(['codex', 'claude', 'openclaw', 'opencode']),
+        switchMainTabHelper(tab) { calls.push(['helper', tab]); },
+        loadMoreSessionMessagesHelper() {}
+    });
+    const context = {
+        ...methods,
+        mainTab: 'sessions',
+        pluginsActiveId: 'prompt-templates',
+        switchMainTab(tab) { this.mainTab = tab; },
+        selectPlugin(id) { calls.push(['selectPlugin', id]); this.pluginsActiveId = id; },
+        persistWebUiPreferences(payload) { persisted.push(payload); },
+        setSessionPanelFastHidden() {}
+    };
+
+    assert.strictEqual(context.isPluginsIdNavActive('text-tools'), false, 'inactive before interaction');
+    assert.strictEqual(context.isPluginsIdNavActive('prompt-templates'), false, 'plugins tab is not current yet');
+
+    context.onPluginsTabPointerDown('text-tools', { button: 0, pointerType: 'mouse' });
+
+    assert.strictEqual(persisted.length, 1, 'pointerdown must persist the nav state');
+    assert.strictEqual(persisted[0].navigation.mainTab, 'plugins');
+    assert.strictEqual(persisted[0].navigation.pluginsActiveId, 'text-tools');
+    assert.ok(calls.some(([name, arg]) => name === 'selectPlugin' && arg === 'text-tools'), 'must select text-tools');
+    assert.strictEqual(context.mainTab, 'plugins', 'must switch to the plugins tab');
+    assert.strictEqual(context.pluginsActiveId, 'text-tools', 'active plugin must be cached in state');
+    assert.strictEqual(context.isPluginsIdNavActive('text-tools'), true, 'text-tools entry must highlight');
+
+    const callsBeforeClick = calls.length;
+    context.onPluginsTabClick('text-tools');
+    assert.strictEqual(calls.length, callsBeforeClick, 'click after pointer commit must not double-switch');
+
+    context.onPluginsTabPointerDown('prompt-templates', { button: 0, pointerType: 'mouse' });
+    context.onPluginsTabClick('prompt-templates');
+    assert.strictEqual(context.pluginsActiveId, 'prompt-templates', 'clicking prompt-templates entry must switch back');
+    assert.strictEqual(persisted[persisted.length - 1].navigation.pluginsActiveId, 'prompt-templates');
+    assert.strictEqual(context.isPluginsIdNavActive('prompt-templates'), true, 'prompt-templates entry must highlight');
+    assert.strictEqual(context.isPluginsIdNavActive('text-tools'), false, 'text-tools entry must stop highlighting');
 });
 
 test('app.js exposes textTools data fields', () => {

@@ -457,7 +457,7 @@ test('web ui script defines provider mode metadata for codex only', () => {
     assert.match(appScript, /setMainTabSwitchIntent\(tab\)/);
     assert.match(appScript, /ensureMainTabSwitchState\(\)/);
     assert.match(appScript, /ensureImmediateNavDomState\(\)/);
-    assert.match(appScript, /applyImmediateNavIntent\(tab,\s*configMode = ''\)/);
+    assert.match(appScript, /applyImmediateNavIntent\(tab,\s*configMode = '',\s*pluginsId = ''\)/);
     assert.match(appScript, /clearImmediateNavIntent\(\)/);
     assert.match(appScript, /setSessionPanelFastHidden\(hidden\)/);
     assert.match(appScript, /isSessionPanelFastHidden\(\)/);

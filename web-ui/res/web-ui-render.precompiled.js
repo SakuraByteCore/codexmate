@@ -485,10 +485,11 @@ return function render(_ctx, _cache) {
                 _createElementVNode("button", {
                   id: "side-tab-plugins",
                   "data-main-tab": "plugins",
-                  "aria-current": _ctx.mainTab === 'plugins' ? 'page' : null,
-                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('plugins') }]),
-                  onPointerdown: $event => (_ctx.onMainTabPointerDown('plugins', $event)),
-                  onClick: $event => (_ctx.onMainTabClick('plugins', $event))
+                  "data-plugins-id": "prompt-templates",
+                  "aria-current": _ctx.mainTab === 'plugins' && _ctx.pluginsActiveId === 'prompt-templates' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isPluginsIdNavActive('prompt-templates') }]),
+                  onPointerdown: $event => (_ctx.onPluginsTabPointerDown('prompt-templates', $event)),
+                  onClick: $event => (_ctx.onPluginsTabClick('prompt-templates', $event))
                 }, [
                   _createElementVNode("span", {
                     class: "side-item-icon",
@@ -498,6 +499,24 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.tools.meta')), 1 /* TEXT */),
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.templatesCount', { count: _ctx.promptTemplatesList.length })), 1 /* TEXT */)
+                  ])
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
+                _createElementVNode("button", {
+                  id: "side-tab-plugins-text-tools",
+                  "data-main-tab": "plugins",
+                  "data-plugins-id": "text-tools",
+                  "aria-current": _ctx.mainTab === 'plugins' && _ctx.pluginsActiveId === 'text-tools' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isPluginsIdNavActive('text-tools') }]),
+                  onPointerdown: $event => (_ctx.onPluginsTabPointerDown('text-tools', $event)),
+                  onClick: $event => (_ctx.onPluginsTabClick('text-tools', $event))
+                }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "▤"),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('plugins.catalog.textTools.title')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-meta" }, [
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('plugins.textTools.tools.compress')), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),

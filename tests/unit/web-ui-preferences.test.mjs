@@ -193,12 +193,43 @@ test('web UI preference snapshots preserve unrelated navigation sub-state', asyn
     const context = createContext(apiCalls, createMemoryStorage());
     context.skillsTargetApp = 'claude';
     context.promptTemplatesMode = 'manage';
+    context.pluginsActiveId = 'text-tools';
     context.setShareCommandPrefix('codexmate');
 
     const writeCall = await waitForApiCall(apiCalls, 'set-web-ui-preferences');
     assert.ok(writeCall, 'setter must persist web UI preferences');
     assert.strictEqual(writeCall.params.preferences.navigation.skillsTargetApp, 'claude');
     assert.strictEqual(writeCall.params.preferences.navigation.promptTemplatesMode, 'manage');
+    assert.strictEqual(writeCall.params.preferences.navigation.pluginsActiveId, 'text-tools');
+});
+
+test('web UI preferences load restores the cached plugins active id', async () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+    context.pluginsActiveId = 'prompt-templates';
+    apiCalls.length = 0;
+    const navigationMethods = createNavigationMethods({
+        configModeSet: new Set(['codex', 'claude', 'openclaw', 'opencode']),
+        switchMainTabHelper: () => {},
+        loadMoreSessionMessagesHelper: () => {}
+    });
+    Object.assign(context, navigationMethods, {
+        async showMessage() {}
+    });
+    context.loadWebUiPreferences = createWebUiPreferencesMethods({
+        storage: createMemoryStorage(),
+        api: async (action) => {
+            if (action !== 'get-web-ui-preferences') return { success: true };
+            return {
+                preferences: {
+                    navigation: { pluginsActiveId: 'text-tools' }
+                }
+            };
+        }
+    }).loadWebUiPreferences;
+    await context.loadWebUiPreferences();
+
+    assert.strictEqual(context.pluginsActiveId, 'text-tools');
 });
 
 test('web UI preferences load applies the pi skills target from navigation', async () => {
