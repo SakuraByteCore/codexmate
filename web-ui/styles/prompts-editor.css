@@ -1,10 +1,7 @@
 /*
- * Prompts-panel Markdown editor: syntax-highlight overlay, toolbar,
- * split live preview (desktop) and edit/preview switch (mobile).
- * Overlay alignment contract: the backdrop <pre> must mirror the
- * textarea's font, font-size, line-height, padding and white-space
- * exactly (.form-input padding 13px var(--spacing-sm), .template-editor
- * mono font 13px / 1.45, white-space pre).
+ * Prompts-panel Markdown editor: split live preview (desktop) and
+ * edit/preview switch (mobile). The editor pane itself is a plain
+ * textarea without any syntax-highlight overlay.
  */
 
 .prompts-md-toolbar {
@@ -125,66 +122,6 @@
     width: 100%;
     min-height: 75vh;
     max-height: none;
-    color: transparent;
-    caret-color: var(--color-text-primary);
-    background: transparent;
-    position: relative;
-    z-index: 2;
-}
-
-.prompts-edit-pane .template-editor::selection {
-    color: transparent;
-    background: var(--color-brand-subtle);
-}
-
-.prompts-highlight-backdrop {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    margin: 0;
-    padding: 13px var(--spacing-sm);
-    border: none;
-    overflow: hidden;
-    white-space: pre;
-    font-family: var(--font-family-mono);
-    font-size: 13px;
-    line-height: 1.45;
-    color: var(--color-text-primary);
-    pointer-events: none;
-}
-
-/* highlight.js markdown token colors (light theme) */
-.prompts-highlight-backdrop .hljs-section {
-    color: var(--color-brand-dark);
-    font-weight: var(--font-weight-secondary);
-}
-
-.prompts-highlight-backdrop .hljs-strong {
-    color: var(--color-text-primary);
-    font-weight: 700;
-}
-
-.prompts-highlight-backdrop .hljs-emphasis {
-    color: var(--color-text-secondary);
-    font-style: italic;
-}
-
-.prompts-highlight-backdrop .hljs-bullet {
-    color: var(--color-brand);
-}
-
-.prompts-highlight-backdrop .hljs-code {
-    color: #7C5CBF;
-}
-
-.prompts-highlight-backdrop .hljs-quote {
-    color: var(--color-text-tertiary);
-    font-style: italic;
-}
-
-.prompts-highlight-backdrop .hljs-link,
-.prompts-highlight-backdrop .hljs-symbol {
-    color: #3B7EA1;
 }
 
 .prompts-preview-pane {

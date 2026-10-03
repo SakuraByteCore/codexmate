@@ -7425,12 +7425,6 @@ return function render(_ctx, _cache) {
                             : _createCommentVNode("v-if", true),
                           _createElementVNode("div", { class: "prompts-editor-columns" }, [
                             _createElementVNode("div", { class: "prompts-edit-pane" }, [
-                              _createElementVNode("pre", {
-                                ref: "promptsAgentsHighlight",
-                                class: "prompts-highlight-backdrop",
-                                "aria-hidden": "true",
-                                innerHTML: _ctx.agentsHighlightHtml
-                              }, null, 8 /* PROPS */, ["innerHTML"]),
                               _withDirectives(_createElementVNode("textarea", {
                                 ref: "promptsAgentsTextarea",
                                 "onUpdate:modelValue": $event => ((_ctx.agentsContent) = $event),
@@ -7438,9 +7432,8 @@ return function render(_ctx, _cache) {
                                 spellcheck: "false",
                                 readonly: _ctx.agentsLoading || _ctx.agentsSaving || _ctx.agentsDiffVisible,
                                 onInput: _ctx.onAgentsContentInput,
-                                onScroll: $event => (_ctx.syncPromptsOverlayScroll('agents')),
                                 placeholder: _ctx.t(_ctx.promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')
-                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "onScroll", "placeholder"]), [
+                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onInput", "placeholder"]), [
                                 [_vModelText, _ctx.agentsContent]
                               ])
                             ]),
@@ -7892,21 +7885,14 @@ return function render(_ctx, _cache) {
                               : _createCommentVNode("v-if", true),
                             _createElementVNode("div", { class: "prompts-editor-columns" }, [
                               _createElementVNode("div", { class: "prompts-edit-pane" }, [
-                                _createElementVNode("pre", {
-                                  ref: "promptsSysHighlight",
-                                  class: "prompts-highlight-backdrop",
-                                  "aria-hidden": "true",
-                                  innerHTML: _ctx.sysPromptHighlightHtml
-                                }, null, 8 /* PROPS */, ["innerHTML"]),
                                 _withDirectives(_createElementVNode("textarea", {
                                   ref: "promptsSysTextarea",
                                   "onUpdate:modelValue": $event => ((_ctx.sysPromptContent) = $event),
                                   class: "form-input template-editor",
                                   spellcheck: "false",
                                   readonly: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
-                                  onScroll: $event => (_ctx.syncPromptsOverlayScroll('sys')),
                                   placeholder: _ctx.t('sysPrompt.placeholder')
-                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "readonly", "onScroll", "placeholder"]), [
+                                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly", "placeholder"]), [
                                   [_vModelText, _ctx.sysPromptContent]
                                 ])
                               ]),

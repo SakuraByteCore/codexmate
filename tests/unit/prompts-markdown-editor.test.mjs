@@ -2,16 +2,10 @@ import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import { readBundledWebUiHtml, readBundledWebUiCss, readProjectFile, projectRoot } from './helpers/web-ui-source.mjs';
-import {
-    buildMarkdownPreviewHtml,
-    escapeHtmlText,
-    highlightMarkdownText
-} from '../../web-ui/logic.markdown-editor.mjs';
+import { buildMarkdownPreviewHtml } from '../../web-ui/logic.markdown-editor.mjs';
 import { createPromptsEditorMethods } from '../../web-ui/modules/app.methods.prompts-editor.mjs';
 import { buildPromptsDiffAxis } from '../../web-ui/logic.prompts-change-axis.mjs';
 import { DICT } from '../../web-ui/modules/i18n.dict.mjs';
-
-const AMP = String.fromCharCode(38);
 
 function loadUmdCommonJs(relativePath) {
     const source = fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
@@ -48,8 +42,6 @@ function makeEditorContext() {
         agentsOriginalContent: 'hello',
         sysPromptContent: 'sys body',
         sysPromptOriginalContent: 'sys body',
-        agentsHighlightHtml: '',
-        sysPromptHighlightHtml: '',
         agentsPreviewHtml: '',
         sysPromptPreviewHtml: '',
         agentsChangeAxis: emptyAxis(),
@@ -67,8 +59,6 @@ function makeEditorContext() {
         $refs: {
             promptsAgentsTextarea: textarea,
             promptsSysTextarea: sysTextarea,
-            promptsAgentsHighlight: {},
-            promptsSysHighlight: {},
             promptsAgentsDiffView: null,
             promptsSysDiffView: null
         },
@@ -81,37 +71,6 @@ function makeEditorContext() {
 
 
 
-
-test('escapeHtmlText produces HTML entities', () => {
-    const escaped = escapeHtmlText('<b class="x">&</b>');
-    assert.ok(escaped.indexOf(AMP + 'lt;b') >= 0, 'should escape <');
-    assert.ok(escaped.indexOf(AMP + 'amp;') >= 0, 'should escape &');
-    assert.ok(escaped.indexOf(AMP + 'quot;x' + AMP + 'quot;') >= 0, 'should escape "');
-    assert.strictEqual(escapeHtmlText('plain'), 'plain');
-});
-
-test('highlightMarkdownText uses vendored highlight.js markdown grammar and escapes HTML', () => {
-    const hljs = loadUmdCommonJs('web-ui/res/highlight.min.js');
-    assert.strictEqual(typeof hljs.highlight, 'function');
-    assert.ok(hljs.getLanguage('markdown'), 'vendored common build must ship the markdown grammar');
-
-    const out = highlightMarkdownText('# Title\n\n**bold** and `code`', hljs);
-    assert.ok(out.indexOf('hljs-section') >= 0, 'headings should be highlighted');
-    assert.ok(out.indexOf('hljs-strong') >= 0, 'bold should be highlighted');
-    assert.ok(out.indexOf('hljs-code') >= 0, 'inline code should be highlighted');
-    assert.ok(out.endsWith('\n'), 'backdrop layer must end with newline to align with textarea');
-
-    const escaped = highlightMarkdownText('<img src=x onerror=alert(1)>', hljs);
-    assert.ok(escaped.indexOf('<img') === -1, 'raw HTML must not survive');
-    assert.ok(escaped.indexOf(AMP + 'lt;') >= 0, 'HTML must be escaped');
-});
-
-test('highlightMarkdownText degrades to escaped plain text without highlight.js', () => {
-    const out = highlightMarkdownText('# hi <b>', null);
-    assert.ok(out.indexOf('<b>') === -1);
-    assert.ok(out.indexOf(AMP + 'lt;b') >= 0);
-    assert.ok(out.endsWith('\n'));
-});
 
 test('buildMarkdownPreviewHtml reports empty, missing libs, and sanitized output', () => {
     assert.deepStrictEqual(buildMarkdownPreviewHtml('   ', {}, {}), { empty: true, html: '' });
@@ -176,13 +135,11 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     const template = readBundledWebUiHtml();
     assert.match(template, /prompts-md-toolbar/);
     assert.match(template, /ref="promptsAgentsTextarea"/);
-    assert.match(template, /ref="promptsAgentsHighlight"/);
     assert.match(template, /ref="promptsSysTextarea"/);
-    assert.match(template, /ref="promptsSysHighlight"/);
     assert.match(template, /v-html="agentsPreviewHtml"/);
     assert.match(template, /v-html="sysPromptPreviewHtml"/);
-    assert.match(template, /v-html="agentsHighlightHtml"/);
-    assert.match(template, /v-html="sysPromptHighlightHtml"/);
+    assert.doesNotMatch(template, /prompts-highlight-backdrop/, 'left edit pane must stay plain text without a highlight overlay');
+    assert.doesNotMatch(template, /HighlightHtml/, 'highlight state must stay unwired');
     assert.doesNotMatch(template, /togglePromptsPreview\b/, 'live preview toggle eye button was removed per user request');
     assert.match(template, /setPromptsMobileView\('preview'\)/);
     assert.match(template, /t\('prompts\.editor\.previewUnavailable'\)/);
@@ -211,13 +168,13 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.match(template, /t\('prompts\.editor\.changeAxis'\)/);
 });
 
-test('web ui entry loads vendored highlight.js, marked and DOMPurify from res/', () => {
+test('web ui entry loads vendored marked and DOMPurify from res/ without highlight.js', () => {
     const indexHtml = readProjectFile('web-ui/index.html');
-    assert.match(indexHtml, /<script src="\/res\/highlight\.min\.js"><\/script>/);
     assert.match(indexHtml, /<script src="\/res\/marked\.min\.js"><\/script>/);
     assert.match(indexHtml, /<script src="\/res\/purify\.min\.js"><\/script>/);
+    assert.doesNotMatch(indexHtml, /highlight\.min\.js/, 'the editor no longer highlights, so highlight.js must not be loaded');
 
-    for (const asset of ['web-ui/res/highlight.min.js', 'web-ui/res/marked.min.js', 'web-ui/res/purify.min.js']) {
+    for (const asset of ['web-ui/res/marked.min.js', 'web-ui/res/purify.min.js']) {
         const size = fs.statSync(path.join(projectRoot, asset)).size;
         assert.ok(size > 10000, `${asset} should be the real vendored build`);
     }
@@ -225,7 +182,7 @@ test('web ui entry loads vendored highlight.js, marked and DOMPurify from res/',
 
 test('prompts editor styles and app wiring are in place', () => {
     const css = readBundledWebUiCss();
-    assert.match(css, /prompts-highlight-backdrop/);
+    assert.doesNotMatch(css, /prompts-highlight-backdrop/, 'the plain-text editor pane must not keep overlay styles');
     assert.match(css, /prompts-preview-body/);
     assert.match(css, /prompts-mobile-view-switch/);
     assert.match(css, /prompts-split-collapse-btn/);

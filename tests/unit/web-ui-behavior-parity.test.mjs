@@ -479,6 +479,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'brandHovered',
         'promptsHint',
         'currentInstalledCommandCards',
+        'agentsHighlightHtml',
+        'sysPromptHighlightHtml'
     ];
     allowedExtraCurrentKeys.push(
         'lang',
@@ -638,8 +640,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sysChangeAxis',
         'promptsMobileView',
         'promptsPreviewLibsMissing',
-        'agentsHighlightHtml',
-        'sysPromptHighlightHtml',
         'agentsPreviewHtml',
         'sysPromptPreviewHtml'
     );
@@ -767,9 +767,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'setPromptPresetRenameDraft',
         'promptsEditorMeta',
         'promptsEditorUndoStack',
-        'refreshPromptsHighlight',
-        'schedulePromptsHighlight',
-        'syncPromptsOverlayScroll',
         'refreshPromptsPreview',
         'schedulePromptsPreview',
         'schedulePromptsEditorRefresh',
@@ -1089,7 +1086,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'addPromptTemplateVariable',
         'closePromptTemplateVarModal',
         'confirmAddPromptTemplateVariable',
-        'onSessionResumeYoloChange'
+        'onSessionResumeYoloChange',
+        'refreshPromptsHighlight',
+        'schedulePromptsHighlight',
+        'syncPromptsOverlayScroll'
     ];
     if (parityAgainstHead) {
         const allowedExtraMethodKeySet = new Set(allowedExtraCurrentMethodKeys);

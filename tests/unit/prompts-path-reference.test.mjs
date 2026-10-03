@@ -156,7 +156,6 @@ function createPathRefVm(overrides = {}) {
         sysPromptLoading: false,
         sysPromptSaving: false,
         sysPromptDiffVisible: false,
-        sysPromptHighlightHtml: '',
         sysPromptPreviewHtml: '',
         sysChangeAxis: { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 },
         promptsPreviewEnabled: false,
@@ -252,7 +251,6 @@ test('insert works for the agents editor meta as well', async () => {
         agentsLoading: false,
         agentsSaving: false,
         agentsDiffVisible: false,
-        agentsHighlightHtml: '',
         agentsPreviewHtml: '',
         agentsChangeAxis: { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 },
         $refs: {

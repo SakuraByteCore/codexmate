@@ -234,7 +234,6 @@
                             </div>
                             <div class="prompts-editor-columns">
                                 <div class="prompts-edit-pane">
-                                    <pre ref="promptsAgentsHighlight" class="prompts-highlight-backdrop" aria-hidden="true" v-html="agentsHighlightHtml"></pre>
                                     <textarea
                                         ref="promptsAgentsTextarea"
                                         v-model="agentsContent"
@@ -242,7 +241,6 @@
                                         spellcheck="false"
                                         :readonly="agentsLoading || agentsSaving || agentsDiffVisible"
                                         @input="onAgentsContentInput"
-                                        @scroll="syncPromptsOverlayScroll('agents')"
                                         :placeholder="t(promptsSubTab === 'claude-project' ? 'modal.agents.placeholder.claudeProject' : 'modal.agents.placeholder')"></textarea>
                                 </div>
                                 <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">
@@ -392,14 +390,12 @@
                                 </div>
                                 <div class="prompts-editor-columns">
                                     <div class="prompts-edit-pane">
-                                        <pre ref="promptsSysHighlight" class="prompts-highlight-backdrop" aria-hidden="true" v-html="sysPromptHighlightHtml"></pre>
                                         <textarea
                                             ref="promptsSysTextarea"
                                             v-model="sysPromptContent"
                                             class="form-input template-editor"
                                             spellcheck="false"
                                             :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
-                                            @scroll="syncPromptsOverlayScroll('sys')"
                                             :placeholder="t('sysPrompt.placeholder')"></textarea>
                                     </div>
                                     <div v-if="promptsPreviewEnabled" class="prompts-preview-pane">

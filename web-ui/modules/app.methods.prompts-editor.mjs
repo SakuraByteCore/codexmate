@@ -1,25 +1,20 @@
 /**
- * Prompts-panel Markdown editor methods: overlay highlight sync,
- * mobile view switching, and the live split preview (marked + DOMPurify,
- * debounced). One implementation is shared by the agentsContent editor
- * and the sysPromptContent editor.
+ * Prompts-panel Markdown editor methods: mobile view switching and the
+ * live split preview (marked + DOMPurify, debounced). One implementation
+ * is shared by the agentsContent editor and the sysPromptContent editor.
  *
  * State contract (declared in app.js data()):
  *   promptsPreviewEnabled, promptsPreviewCollapsed, promptsMobileView,
- *   promptsPreviewLibsMissing, agentsHighlightHtml, sysPromptHighlightHtml,
- *   agentsPreviewHtml, sysPromptPreviewHtml, agentsChangeAxis, sysChangeAxis,
+ *   promptsPreviewLibsMissing, agentsPreviewHtml, sysPromptPreviewHtml,
+ *   agentsChangeAxis, sysChangeAxis,
  *   promptsPathReferencePaths, promptsPathReferenceLoading,
  *   promptsPathReferenceCacheKey (path-reference dropdown)
  * Template contract:
  *   refs promptsAgentsTextarea / promptsSysTextarea on the two textareas,
- *   refs promptsAgentsHighlight / promptsSysHighlight on the backdrop <pre>,
  *   refs promptsAgentsDiffView / promptsSysDiffView on the two diff row containers.
  */
 
-import {
-    buildMarkdownPreviewHtml,
-    highlightMarkdownText
-} from '../logic.markdown-editor.mjs';
+import { buildMarkdownPreviewHtml } from '../logic.markdown-editor.mjs';
 import {
     buildPromptPathReferenceOptions as buildPromptPathReferenceOptionList,
     buildPromptPathReferenceSentence,
@@ -29,7 +24,6 @@ import {
     buildPromptsDiffAxis
 } from '../logic.prompts-change-axis.mjs';
 
-const PROMPTS_HIGHLIGHT_DEBOUNCE_MS = 150;
 const PROMPTS_PREVIEW_DEBOUNCE_MS = 300;
 const PROMPTS_AXIS_DEBOUNCE_MS = 300;
 
@@ -37,7 +31,6 @@ const PROMPTS_EDITOR_META = {
     agents: {
         contentField: 'agentsContent',
         originalField: 'agentsOriginalContent',
-        highlightField: 'agentsHighlightHtml',
         previewField: 'agentsPreviewHtml',
         axisField: 'agentsChangeAxis',
         diffLinesField: 'agentsDiffLines',
@@ -48,13 +41,11 @@ const PROMPTS_EDITOR_META = {
         diffLoadingField: 'agentsDiffLoading',
         prepareDiffMethod: 'prepareAgentsDiff',
         textareaRef: 'promptsAgentsTextarea',
-        highlightRef: 'promptsAgentsHighlight',
         diffViewRef: 'promptsAgentsDiffView'
     },
     sys: {
         contentField: 'sysPromptContent',
         originalField: 'sysPromptOriginalContent',
-        highlightField: 'sysPromptHighlightHtml',
         previewField: 'sysPromptPreviewHtml',
         axisField: 'sysChangeAxis',
         diffLinesField: 'sysPromptDiffLines',
@@ -65,20 +56,12 @@ const PROMPTS_EDITOR_META = {
         diffLoadingField: 'sysPromptDiffLoading',
         prepareDiffMethod: 'prepareSysPromptDiff',
         textareaRef: 'promptsSysTextarea',
-        highlightRef: 'promptsSysHighlight',
         diffViewRef: 'promptsSysDiffView'
     }
 };
 
 function emptyPromptsChangeAxis() {
     return { mode: 'edit', ticks: [], truncated: false, totalLines: 0, added: 0, removed: 0 };
-}
-
-function resolvePromptsHljs() {
-    if (typeof window !== 'undefined' && window.hljs) {
-        return window.hljs;
-    }
-    return null;
 }
 
 function resolvePromptsPreviewLibs() {
@@ -96,46 +79,6 @@ export function createPromptsEditorMethods(options = {}) {
             return PROMPTS_EDITOR_META[key] || null;
         },
 
-
-        refreshPromptsHighlight(key) {
-            const meta = this.promptsEditorMeta(key);
-            if (!meta) {
-                return;
-            }
-            this[meta.highlightField] = highlightMarkdownText(this[meta.contentField], resolvePromptsHljs());
-            this.syncPromptsOverlayScroll(key);
-        },
-
-        schedulePromptsHighlight(key) {
-            const meta = this.promptsEditorMeta(key);
-            if (!meta) {
-                return;
-            }
-            if (!this._promptsHighlightTimers) {
-                this._promptsHighlightTimers = {};
-            }
-            if (this._promptsHighlightTimers[key]) {
-                clearTimeout(this._promptsHighlightTimers[key]);
-            }
-            this._promptsHighlightTimers[key] = setTimeout(() => {
-                this._promptsHighlightTimers[key] = null;
-                this.refreshPromptsHighlight(key);
-            }, PROMPTS_HIGHLIGHT_DEBOUNCE_MS);
-        },
-
-        syncPromptsOverlayScroll(key) {
-            const meta = this.promptsEditorMeta(key);
-            if (!meta || typeof this.$refs !== 'object' || !this.$refs) {
-                return;
-            }
-            const textarea = this.$refs[meta.textareaRef];
-            const backdrop = this.$refs[meta.highlightRef];
-            if (!textarea || !backdrop) {
-                return;
-            }
-            backdrop.scrollTop = textarea.scrollTop;
-            backdrop.scrollLeft = textarea.scrollLeft;
-        },
 
         refreshPromptsPreview(key) {
             const meta = this.promptsEditorMeta(key);
@@ -174,7 +117,6 @@ export function createPromptsEditorMethods(options = {}) {
         },
 
         schedulePromptsEditorRefresh(key) {
-            this.schedulePromptsHighlight(key);
             this.schedulePromptsPreview(key);
             this.schedulePromptsChangeAxis(key);
         },

@@ -111,8 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 promptsPathReferencePaths: {},
                 promptsPathReferenceLoading: false,
                 promptsPathReferenceCacheKey: '',
-                agentsHighlightHtml: '',
-                sysPromptHighlightHtml: '',
                 agentsPreviewHtml: '',
                 sysPromptPreviewHtml: '',
                 projectClaudeMdPath: '',
