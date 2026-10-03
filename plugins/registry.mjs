@@ -1,8 +1,11 @@
-import { pluginMeta as promptTemplatesMeta } from './prompt-templates/manifest.mjs';
+import { promptTemplatesPluginMeta } from './prompt-templates/manifest.mjs';
 import { loadPromptTemplatesOverview } from './prompt-templates/overview.mjs';
+import { textToolsPluginMeta } from './text-tools/manifest.mjs';
+import { loadTextToolsOverview } from './text-tools/overview.mjs';
 
 export const pluginsRegistry = [
-    { id: promptTemplatesMeta.id, meta: promptTemplatesMeta, loadOverview: loadPromptTemplatesOverview }
+    { id: promptTemplatesPluginMeta.id, meta: promptTemplatesPluginMeta, loadOverview: loadPromptTemplatesOverview },
+    { id: textToolsPluginMeta.id, meta: textToolsPluginMeta, loadOverview: loadTextToolsOverview }
 ];
 
 export function getFirstPluginId() {

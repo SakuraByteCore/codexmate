@@ -158,7 +158,7 @@ function localizeBuiltinPromptTemplate(item, t) {
 
 import { pluginsRegistry } from '../registry.mjs';
 
-export function createPluginsComputed() {
+export function createPromptTemplatesComputed() {
     return {
         pluginsCatalog() {
             return pluginsRegistry

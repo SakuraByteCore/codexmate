@@ -170,6 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 pluginsActiveId: 'prompt-templates',
                 pluginsLoading: false,
                 pluginsError: '',
+                textToolsActiveToolId: '',
+                textToolsInput: '',
                 promptTemplatesListRaw: [],
                 promptTemplatesLoadedOnce: false,
                 promptTemplatesKeyword: '',

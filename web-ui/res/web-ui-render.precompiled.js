@@ -6845,10 +6845,84 @@ return function render(_ctx, _cache) {
                                 ])
                               ]))
                         ]))
-                      : (_openBlock(), _createElementBlock("div", {
-                          key: 3,
-                          class: "skills-empty-state"
-                        }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
+                      : (_ctx.pluginsActiveId === 'text-tools')
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 3,
+                            class: "plugins-panel"
+                          }, [
+                            _createElementVNode("div", { class: "plugins-panel-head" }, [
+                              _createElementVNode("div", null, [
+                                _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.textTools.title')), 1 /* TEXT */),
+                                (_ctx.pluginsActiveAttribution)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 0,
+                                      class: "plugins-panel-note"
+                                    }, _toDisplayString(_ctx.pluginsActiveAttribution), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true)
+                              ])
+                            ]),
+                            _createElementVNode("div", {
+                              class: "prompt-templates-modebar",
+                              role: "tablist",
+                              "aria-label": _ctx.t('plugins.textTools.tools.aria')
+                            }, [
+                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.textToolsList, (tool) => {
+                                return (_openBlock(), _createElementBlock("button", {
+                                  key: 'text-tool-' + tool.id,
+                                  type: "button",
+                                  role: "tab",
+                                  "aria-selected": _ctx.textToolsActiveToolId === tool.id,
+                                  class: _normalizeClass(['mode-pill', { active: _ctx.textToolsActiveToolId === tool.id }]),
+                                  onClick: $event => (_ctx.textToolsActiveToolId = tool.id)
+                                }, _toDisplayString(tool.label), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]))
+                              }), 128 /* KEYED_FRAGMENT */))
+                            ], 8 /* PROPS */, ["aria-label"]),
+                            _createElementVNode("div", { class: "prompt-compose" }, [
+                              _createElementVNode("div", { class: "prompt-compose-workspace" }, [
+                                _createElementVNode("div", { class: "prompt-compose-main" }, [
+                                  _createElementVNode("div", { class: "prompt-compose-form" }, [
+                                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('plugins.textTools.compress.inputLabel')), 1 /* TEXT */),
+                                    _withDirectives(_createElementVNode("textarea", {
+                                      class: "form-input prompt-editor-textarea",
+                                      "onUpdate:modelValue": $event => ((_ctx.textToolsInput) = $event),
+                                      rows: "10",
+                                      spellcheck: "false",
+                                      placeholder: _ctx.t('plugins.textTools.compress.inputPlaceholder'),
+                                      "aria-label": _ctx.t('plugins.textTools.compress.inputAria')
+                                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder", "aria-label"]), [
+                                      [_vModelText, _ctx.textToolsInput]
+                                    ])
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "prompt-preview-block prompt-compose-preview" }, [
+                                  _createElementVNode("div", { class: "prompt-vars-head" }, [
+                                    _createElementVNode("div", null, [
+                                      _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.textTools.compress.outputTitle')), 1 /* TEXT */),
+                                      _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.textTools.compress.outputHint')), 1 /* TEXT */)
+                                    ]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini",
+                                      onClick: _ctx.copyTextToolsOutput,
+                                      disabled: !_ctx.textToolsOutput
+                                    }, _toDisplayString(_ctx.t('plugins.textTools.compress.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ]),
+                                  _createElementVNode("textarea", {
+                                    class: "form-input prompt-preview-textarea",
+                                    value: _ctx.textToolsOutput,
+                                    rows: "10",
+                                    readonly: "",
+                                    spellcheck: "false",
+                                    "aria-label": _ctx.t('plugins.textTools.compress.outputAria')
+                                  }, null, 8 /* PROPS */, ["value", "aria-label"])
+                                ])
+                              ])
+                            ])
+                          ]))
+                        : (_openBlock(), _createElementBlock("div", {
+                            key: 4,
+                            class: "skills-empty-state"
+                          }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
               ], 8 /* PROPS */, ["aria-label"])
             ], 2 /* CLASS */)
           ], 512 /* NEED_PATCH */), [

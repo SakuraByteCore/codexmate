@@ -239,6 +239,52 @@
                                     </div>
                                 </div>
                             </div>
+                            <div v-else-if="pluginsActiveId === 'text-tools'" class="plugins-panel">
+                                <div class="plugins-panel-head">
+                                    <div>
+                                        <div class="plugins-panel-title">{{ t('plugins.textTools.title') }}</div>
+                                        <div v-if="pluginsActiveAttribution" class="plugins-panel-note">{{ pluginsActiveAttribution }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="prompt-templates-modebar" role="tablist" :aria-label="t('plugins.textTools.tools.aria')">
+                                    <button
+                                        v-for="tool in textToolsList"
+                                        :key="'text-tool-' + tool.id"
+                                        type="button"
+                                        role="tab"
+                                        :aria-selected="textToolsActiveToolId === tool.id"
+                                        :class="['mode-pill', { active: textToolsActiveToolId === tool.id }]"
+                                        @click="textToolsActiveToolId = tool.id">{{ tool.label }}</button>
+                                </div>
+
+                                <div class="prompt-compose">
+                                    <div class="prompt-compose-workspace">
+                                        <div class="prompt-compose-main">
+                                            <div class="prompt-compose-form">
+                                                <label class="form-label">{{ t('plugins.textTools.compress.inputLabel') }}</label>
+                                                <textarea
+                                                    class="form-input prompt-editor-textarea"
+                                                    v-model="textToolsInput"
+                                                    rows="10"
+                                                    spellcheck="false"
+                                                    :placeholder="t('plugins.textTools.compress.inputPlaceholder')"
+                                                    :aria-label="t('plugins.textTools.compress.inputAria')"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="prompt-preview-block prompt-compose-preview">
+                                            <div class="prompt-vars-head">
+                                                <div>
+                                                    <div class="prompt-vars-title">{{ t('plugins.textTools.compress.outputTitle') }}</div>
+                                                    <div class="plugins-panel-note">{{ t('plugins.textTools.compress.outputHint') }}</div>
+                                                </div>
+                                                <button type="button" class="btn-mini" @click="copyTextToolsOutput" :disabled="!textToolsOutput">{{ t('plugins.textTools.compress.copy') }}</button>
+                                            </div>
+                                            <textarea class="form-input prompt-preview-textarea" :value="textToolsOutput" rows="10" readonly spellcheck="false" :aria-label="t('plugins.textTools.compress.outputAria')"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div v-else class="skills-empty-state">{{ t('plugins.promptTemplates.noPluginSelected') }}</div>
                         </section>

@@ -248,6 +248,7 @@ function transformJavaScriptModuleSource(source, options = {}) {
     });
     transformed = transformed.replace(/^[ \t]*export\s+\*\s+from\s+['"]\.[^'"]+['"]\s*;?\s*$/gm, '');
     if (!preserveExports) {
+        transformed = transformed.replace(/^[ \t]*export\s*\{[^{}\n]*\}\s*;?\s*$/gm, '');
         transformed = transformed.replace(/(^|\n)([ \t]*)export\s+(?=(?:async\s+function|const|let|class|function)\b)/g, '$1$2');
     }
     return transformed.trimEnd();

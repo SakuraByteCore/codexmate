@@ -258,8 +258,8 @@ test("task orchestration chat composer copy is localized in every locale [skippe
 
 
 test('plugins catalog metadata is localized from i18n dictionaries', async () => {
-    const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');
-    const computed = createPluginsComputed();
+    const { createPromptTemplatesComputed } = await import('../../plugins/prompt-templates/computed.mjs');
+    const computed = createPromptTemplatesComputed();
     const catalog = computed.pluginsCatalog.call({ t: makeT('ja') });
     assert(catalog.length > 0, 'plugins catalog should not be empty');
     const promptTemplates = catalog.find((item) => item && item.id === 'prompt-templates');
@@ -270,8 +270,8 @@ test('plugins catalog metadata is localized from i18n dictionaries', async () =>
 });
 
 test('builtin prompt templates re-localize when language changes', async () => {
-    const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');
-    const computed = createPluginsComputed();
+    const { createPromptTemplatesComputed } = await import('../../plugins/prompt-templates/computed.mjs');
+    const computed = createPromptTemplatesComputed();
     const rawBuiltin = [{
         id: 'builtin_comment_polish',
         name: '代码注释润色',

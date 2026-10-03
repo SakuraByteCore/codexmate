@@ -79,7 +79,7 @@ function normalizePromptTemplateDraft(draft) {
     };
 }
 
-export function createPluginsMethods() {
+export function createPromptTemplatesMethods() {
     return {
         resetPromptComposerVarValues() {
             this.promptComposerVarValuesRaw = {};
@@ -280,8 +280,12 @@ export function createPluginsMethods() {
         selectPlugin(pluginId) {
             const id = typeof pluginId === 'string' ? pluginId.trim() : '';
             if (!id) return;
-            if (!getPluginEntry(id)) return;
+            const entry = getPluginEntry(id);
+            if (!entry) return;
             this.pluginsActiveId = id;
+            if (typeof entry.loadOverview === 'function' && typeof this.loadPluginsOverview === 'function') {
+                void Promise.resolve(this.loadPluginsOverview({ silent: true })).catch(() => {});
+            }
         },
 
         async loadPluginsOverview(options = {}) {
