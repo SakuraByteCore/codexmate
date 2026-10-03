@@ -514,10 +514,7 @@ return function render(_ctx, _cache) {
                     class: "side-item-icon",
                     "aria-hidden": "true"
                   }, "▤"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('plugins.catalog.textTools.title')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('plugins.textTools.tools.compress')), 1 /* TEXT */)
-                  ])
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('plugins.catalog.textTools.title')), 1 /* TEXT */)
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),
               _createElementVNode("div", {
@@ -6916,8 +6913,7 @@ return function render(_ctx, _cache) {
                                 _createElementVNode("div", { class: "prompt-preview-block prompt-compose-preview" }, [
                                   _createElementVNode("div", { class: "prompt-vars-head" }, [
                                     _createElementVNode("div", null, [
-                                      _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.textTools.compress.outputTitle')), 1 /* TEXT */),
-                                      _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.textTools.compress.outputHint')), 1 /* TEXT */)
+                                      _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.textTools.compress.outputTitle')), 1 /* TEXT */)
                                     ]),
                                     _createElementVNode("button", {
                                       type: "button",

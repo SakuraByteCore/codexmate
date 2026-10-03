@@ -393,7 +393,6 @@ const en = Object.freeze({
     'plugins.textTools.compress.inputPlaceholder': 'Paste or type the text to compress…',
     'plugins.textTools.compress.inputAria': 'Text to compress',
     'plugins.textTools.compress.outputTitle': 'Compressed result',
-    'plugins.textTools.compress.outputHint': 'All line breaks and extra whitespace are collapsed into single spaces.',
     'plugins.textTools.compress.outputAria': 'Compressed text result',
     'plugins.textTools.compress.copy': 'Copy',
     'plugins.main.ariaWorkspace': 'Plugin workspace',

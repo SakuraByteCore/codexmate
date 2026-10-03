@@ -261,7 +261,6 @@ test('text-tools i18n keys exist and are non-empty in every locale', () => {
         'plugins.textTools.compress.inputPlaceholder',
         'plugins.textTools.compress.inputAria',
         'plugins.textTools.compress.outputTitle',
-        'plugins.textTools.compress.outputHint',
         'plugins.textTools.compress.outputAria',
         'plugins.textTools.compress.copy'
     ];

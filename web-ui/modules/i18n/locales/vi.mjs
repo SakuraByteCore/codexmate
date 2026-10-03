@@ -11,7 +11,6 @@ const vi = Object.freeze({
     'plugins.textTools.compress.inputPlaceholder': 'Dán hoặc nhập văn bản cần nén…',
     'plugins.textTools.compress.inputAria': 'Văn bản cần nén',
     'plugins.textTools.compress.outputTitle': 'Kết quả nén',
-    'plugins.textTools.compress.outputHint': 'Mọi ký tự xuống dòng và khoảng trắng thừa được gộp thành một khoảng trắng.',
     'plugins.textTools.compress.outputAria': 'Kết quả văn bản đã nén',
     'plugins.textTools.compress.copy': 'Sao chép',
     'plugins.builtin.commentPolish.name': 'Chỉnh chú thích mã',

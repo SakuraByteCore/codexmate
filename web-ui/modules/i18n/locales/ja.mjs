@@ -395,7 +395,6 @@ const ja = Object.freeze({
     'plugins.textTools.compress.inputPlaceholder': '圧縮するテキストを貼り付けまたは入力…',
     'plugins.textTools.compress.inputAria': '圧縮するテキスト',
     'plugins.textTools.compress.outputTitle': '圧縮結果',
-    'plugins.textTools.compress.outputHint': 'すべての改行と余分な空白は 1 つのスペースに折りたたまれます。',
     'plugins.textTools.compress.outputAria': '圧縮後のテキスト結果',
     'plugins.textTools.compress.copy': 'コピー',
     'plugins.main.ariaWorkspace': 'プラグインワークスペース',

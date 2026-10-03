@@ -393,7 +393,6 @@ const zhTw = Object.freeze({
     'plugins.textTools.compress.inputPlaceholder': '貼上或輸入需要壓縮的文字…',
     'plugins.textTools.compress.inputAria': '輸入需要壓縮的文字',
     'plugins.textTools.compress.outputTitle': '壓縮結果',
-    'plugins.textTools.compress.outputHint': '所有換行與多餘空白被折疊為單一空格。',
     'plugins.textTools.compress.outputAria': '壓縮後的文字結果',
     'plugins.textTools.compress.copy': '複製',
     'plugins.main.ariaWorkspace': '插件工作區',
