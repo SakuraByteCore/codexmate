@@ -283,6 +283,9 @@ export function createPromptTemplatesMethods() {
             const entry = getPluginEntry(id);
             if (!entry) return;
             this.pluginsActiveId = id;
+            if (typeof this.saveNavState === 'function') {
+                this.saveNavState();
+            }
             if (typeof entry.loadOverview === 'function' && typeof this.loadPluginsOverview === 'function') {
                 void Promise.resolve(this.loadPluginsOverview({ silent: true })).catch(() => {});
             }

@@ -14,6 +14,7 @@ import { loadTextToolsOverview } from '../../plugins/text-tools/overview.mjs';
 import { createTextToolsMethods } from '../../plugins/text-tools/methods.mjs';
 import { createTextToolsComputed } from '../../plugins/text-tools/computed.mjs';
 import { createNavigationMethods } from '../../web-ui/modules/app.methods.navigation.mjs';
+import { createPromptTemplatesMethods } from '../../plugins/prompt-templates/methods.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -223,6 +224,30 @@ test('sidebar plugin sub-tab handlers select the plugin and persist the cached i
     assert.strictEqual(persisted[persisted.length - 1].navigation.pluginsActiveId, 'prompt-templates');
     assert.strictEqual(context.isPluginsIdNavActive('prompt-templates'), true, 'prompt-templates entry must highlight');
     assert.strictEqual(context.isPluginsIdNavActive('text-tools'), false, 'text-tools entry must stop highlighting');
+});
+
+test('selecting a plugin from the panel catalog persists the cached active id', () => {
+    const persisted = [];
+    const methods = createNavigationMethods({
+        configModeSet: new Set(['codex', 'claude', 'openclaw', 'opencode']),
+        switchMainTabHelper() {},
+        loadMoreSessionMessagesHelper() {}
+    });
+    const context = {
+        ...methods,
+        ...createPromptTemplatesMethods(),
+        mainTab: 'plugins',
+        pluginsActiveId: 'prompt-templates',
+        loadPluginsOverview() { return true; },
+        persistWebUiPreferences(payload) { persisted.push(payload); }
+    };
+
+    assert.strictEqual(persisted.length, 0, 'nothing persisted before selection');
+    context.selectPlugin('text-tools');
+    assert.strictEqual(context.pluginsActiveId, 'text-tools', 'selection must change in state');
+    assert.strictEqual(persisted.length, 1, 'catalog selection must persist the nav state');
+    assert.strictEqual(persisted[0].navigation.mainTab, 'plugins');
+    assert.strictEqual(persisted[0].navigation.pluginsActiveId, 'text-tools');
 });
 
 test('app.js exposes textTools data fields', () => {
