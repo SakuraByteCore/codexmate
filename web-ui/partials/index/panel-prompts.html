@@ -86,16 +86,8 @@
                                 </button>
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
-                                <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
+                                <button class="btn-mini" @click="agentsDiffVisible ? resetAgentsDiffState() : loadPromptsContent()" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                </button>
-                                <button
-                                    v-if="agentsDiffVisible"
-                                    class="btn-mini"
-                                    @click="resetAgentsDiffState"
-                                    :disabled="agentsSaving || agentsDiffLoading"
-                                    :title="t('common.backToEdit')">
-                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                 </button>
                                 <button class="btn-mini btn-confirm-mini" @click="applyAgentsContent" :disabled="agentsSaving || agentsLoading || agentsDiffLoading || (!agentsDiffVisible && !hasAgentsContentChanged()) || (agentsDiffVisible && !agentsDiffHasChanges)" :title="agentsDiffVisible ? t('common.save') : t('common.preview')">
                                     <svg v-if="agentsDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
@@ -310,11 +302,8 @@
                                     </button>
                                 </div>
                                 <div class="prompts-editor-group prompts-editor-group--workflow">
-                                    <button class="btn-mini" @click="cancelSysPromptEdit" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
+                                    <button class="btn-mini" @click="sysPromptDiffVisible ? resetSysPromptDiffState() : cancelSysPromptEdit()" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                    </button>
-                                    <button v-if="sysPromptDiffVisible" class="btn-mini" @click="resetSysPromptDiffState" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.backToEdit')">
-                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                     </button>
                                     <button class="btn-mini btn-confirm-mini" @click="applySystemPrompt" :disabled="sysPromptSaving || sysPromptLoading || sysPromptDiffLoading || (!sysPromptDiffVisible && !hasSysPromptContentChanged()) || (sysPromptDiffVisible && !sysPromptDiffHasChangesValue)" :title="sysPromptDiffVisible ? t('common.save') : t('common.preview')">
                                         <svg v-if="sysPromptDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>

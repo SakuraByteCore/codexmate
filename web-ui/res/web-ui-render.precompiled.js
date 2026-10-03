@@ -7055,7 +7055,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
                             _createElementVNode("button", {
                               class: "btn-mini",
-                              onClick: _ctx.loadPromptsContent,
+                              onClick: $event => (_ctx.agentsDiffVisible ? _ctx.resetAgentsDiffState() : _ctx.loadPromptsContent()),
                               disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading,
                               title: _ctx.t('common.cancel')
                             }, [
@@ -7069,25 +7069,6 @@ return function render(_ctx, _cache) {
                                 _createElementVNode("path", { d: "M18 6L6 18M6 6l12 12" })
                               ]))
                             ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
-                            (_ctx.agentsDiffVisible)
-                              ? (_openBlock(), _createElementBlock("button", {
-                                  key: 0,
-                                  class: "btn-mini",
-                                  onClick: _ctx.resetAgentsDiffState,
-                                  disabled: _ctx.agentsSaving || _ctx.agentsDiffLoading,
-                                  title: _ctx.t('common.backToEdit')
-                                }, [
-                                  (_openBlock(), _createElementBlock("svg", {
-                                    class: "btn-icon-sm",
-                                    viewBox: "0 0 24 24",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    "stroke-width": "2"
-                                  }, [
-                                    _createElementVNode("path", { d: "M19 12H5M12 19l-7-7 7-7" })
-                                  ]))
-                                ], 8 /* PROPS */, ["onClick", "disabled", "title"]))
-                              : _createCommentVNode("v-if", true),
                             _createElementVNode("button", {
                               class: "btn-mini btn-confirm-mini",
                               onClick: _ctx.applyAgentsContent,
@@ -7609,7 +7590,7 @@ return function render(_ctx, _cache) {
                             _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
                               _createElementVNode("button", {
                                 class: "btn-mini",
-                                onClick: _ctx.cancelSysPromptEdit,
+                                onClick: $event => (_ctx.sysPromptDiffVisible ? _ctx.resetSysPromptDiffState() : _ctx.cancelSysPromptEdit()),
                                 disabled: _ctx.sysPromptSaving || _ctx.sysPromptDiffLoading,
                                 title: _ctx.t('common.cancel')
                               }, [
@@ -7623,25 +7604,6 @@ return function render(_ctx, _cache) {
                                   _createElementVNode("path", { d: "M18 6L6 18M6 6l12 12" })
                                 ]))
                               ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
-                              (_ctx.sysPromptDiffVisible)
-                                ? (_openBlock(), _createElementBlock("button", {
-                                    key: 0,
-                                    class: "btn-mini",
-                                    onClick: _ctx.resetSysPromptDiffState,
-                                    disabled: _ctx.sysPromptSaving || _ctx.sysPromptDiffLoading,
-                                    title: _ctx.t('common.backToEdit')
-                                  }, [
-                                    (_openBlock(), _createElementBlock("svg", {
-                                      class: "btn-icon-sm",
-                                      viewBox: "0 0 24 24",
-                                      fill: "none",
-                                      stroke: "currentColor",
-                                      "stroke-width": "2"
-                                    }, [
-                                      _createElementVNode("path", { d: "M19 12H5M12 19l-7-7 7-7" })
-                                    ]))
-                                  ], 8 /* PROPS */, ["onClick", "disabled", "title"]))
-                                : _createCommentVNode("v-if", true),
                               _createElementVNode("button", {
                                 class: "btn-mini btn-confirm-mini",
                                 onClick: _ctx.applySystemPrompt,

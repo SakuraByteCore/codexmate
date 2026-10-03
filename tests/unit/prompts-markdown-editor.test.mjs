@@ -166,6 +166,14 @@ test('prompts panel template wires toolbar, overlay refs and split preview for b
     assert.match(template, /ref="promptsAgentsDiffView"/);
     assert.match(template, /ref="promptsSysDiffView"/);
     assert.match(template, /t\('prompts\.editor\.changeAxis'\)/);
+    // Workflow group: the back-to-edit arrow was removed; the cancel X now
+    // branches by diff state so leaving the preview keeps the draft.
+    const panelHtml = readProjectFile('web-ui/partials/index/panel-prompts.html');
+    assert.doesNotMatch(panelHtml, /common\.backToEdit/, 'back-to-edit arrow button was removed from the prompts panel toolbar (the config-template modal keeps its own)');
+    assert.doesNotMatch(panelHtml, /@click="resetAgentsDiffState"/, 'agents back-to-edit arrow button was removed per user request');
+    assert.doesNotMatch(panelHtml, /@click="resetSysPromptDiffState"/, 'sys back-to-edit arrow button was removed per user request');
+    assert.match(template, /agentsDiffVisible \? resetAgentsDiffState\(\) : loadPromptsContent\(\)/, 'agents cancel X must exit diff state without reloading');
+    assert.match(template, /sysPromptDiffVisible \? resetSysPromptDiffState\(\) : cancelSysPromptEdit\(\)/, 'sys cancel X must exit diff state without reloading');
 });
 
 test('web ui entry loads vendored marked and DOMPurify from res/ without highlight.js', () => {
