@@ -317,6 +317,8 @@ test('web UI preferences backend actions and startup hook are wired', () => {
 
     assert.match(cli, /CODEXMATE_PREFERENCES_FILE/);
     assert.match(cli, /function normalizeWebUiPreferences/);
+    assert.match(cli, /pluginsActiveId:\s*typeof navigation\.pluginsActiveId === 'string' && navigation\.pluginsActiveId\.trim\(\)/,
+        'server navigation whitelist must keep the cached plugins active id');
     assert.match(cli, /case 'get-web-ui-preferences'/);
     assert.match(cli, /case 'set-web-ui-preferences'/);
     assert.match(app, /loadWebUiPreferences\(\{ applyNavigation: applyPreferenceNavigation \}\)/);
