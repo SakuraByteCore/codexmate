@@ -6349,14 +6349,6 @@ return function render(_ctx, _cache) {
                       _createElementVNode("div", null, [
                         _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('plugins.sidebar.title')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.sidebar.note')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("div", { class: "settings-tab-actions" }, [
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool btn-tool-compact",
-                          onClick: $event => (_ctx.loadPluginsOverview({ forceRefresh: true, silent: false })),
-                          disabled: _ctx.loading || !!_ctx.initError || _ctx.pluginsLoading
-                        }, _toDisplayString(_ctx.pluginsLoading ? _ctx.t('plugins.refreshing') : _ctx.t('plugins.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                       ])
                     ]),
                     _createElementVNode("div", {
