@@ -308,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionMatchNavIndex: 0,
                 sessionMatchNavBlocked: false,
                 sessionMatchHighlightStamp: 0,
+                sessionPreviewScrollAtTop: true,
                 sessionRoleFilter: 'all',
                 sessionTimePreset: 'all',
                 sessionSortMode: 'time',

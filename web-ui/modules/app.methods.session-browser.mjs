@@ -596,14 +596,22 @@ export function createSessionBrowserMethods(options = {}) {
 
         scrollSessionPreviewToTop() {
             const scrollEl = this.getSessionPreviewScrollContainer();
-            if (!scrollEl || typeof scrollEl.scrollTo !== 'function') return;
-            scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+            if (!scrollEl) return;
+            if (typeof scrollEl.scrollTo === 'function') {
+                scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                scrollEl.scrollTop = 0;
+            }
         },
 
         scrollSessionPreviewToBottom() {
             const scrollEl = this.getSessionPreviewScrollContainer();
-            if (!scrollEl || typeof scrollEl.scrollTo !== 'function') return;
-            scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+            if (!scrollEl) return;
+            if (typeof scrollEl.scrollTo === 'function') {
+                scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+            } else {
+                scrollEl.scrollTop = scrollEl.scrollHeight;
+            }
         },
 
         async onSessionSourceChange(event) {
@@ -1074,6 +1082,7 @@ export function createSessionBrowserMethods(options = {}) {
             }
             this.activeSession = session;
             this.resetSessionPreviewSearchNav();
+            this.sessionPreviewScrollAtTop = true;
             emitSessionLoadNativeDialog(this, 'selectSession:activate', `sessionId=${session.sessionId || ''}`);
             if (typeof this.expandVisibleSessionList === 'function') {
                 this.expandVisibleSessionList(0, { ensureActive: true });

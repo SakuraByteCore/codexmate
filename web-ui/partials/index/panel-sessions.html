@@ -481,20 +481,22 @@
                             </div>
                             <div class="session-preview-jump">
                                 <button
-                                    type="button"
-                                    class="session-match-nav-btn"
-                                    @click="scrollSessionPreviewToTop"
-                                    :title="t('sessions.preview.scrollTop')"
-                                    :aria-label="t('sessions.preview.scrollTop')">
-                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 10 8 5 13 10"/></svg>
-                                </button>
-                                <button
+                                    v-if="sessionPreviewScrollAtTop"
                                     type="button"
                                     class="session-match-nav-btn"
                                     @click="scrollSessionPreviewToBottom"
                                     :title="t('sessions.preview.scrollBottom')"
                                     :aria-label="t('sessions.preview.scrollBottom')">
                                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 8 11 13 6"/></svg>
+                                </button>
+                                <button
+                                    v-else
+                                    type="button"
+                                    class="session-match-nav-btn"
+                                    @click="scrollSessionPreviewToTop"
+                                    :title="t('sessions.preview.scrollTop')"
+                                    :aria-label="t('sessions.preview.scrollTop')">
+                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 10 8 5 13 10"/></svg>
                                 </button>
                             </div>
                             <aside v-if="sessionPreviewRenderEnabled && sessionTimelineNodes.length" :class="['session-timeline', 'session-timeline-' + sessionTimelineStyle]" :aria-label="t('sessions.timeline.aria')">

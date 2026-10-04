@@ -262,6 +262,7 @@ export function createSessionTimelineMethods() {
             ) return;
             const scrollEl = this.sessionPreviewScrollEl || this.$refs.sessionPreviewScroll;
             if (!scrollEl) return;
+            this.sessionPreviewScrollAtTop = Number(scrollEl.scrollTop || 0) <= 8;
 
             if (
                 this.canLoadMoreSessionMessages

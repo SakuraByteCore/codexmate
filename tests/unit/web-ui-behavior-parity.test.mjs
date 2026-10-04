@@ -532,6 +532,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionMatchNavIndex',
         'sessionMatchNavBlocked',
         'sessionMatchHighlightStamp',
+        'sessionPreviewScrollAtTop',
         'preserveSessionRenderOnTabLeave',
         'sidebarCollapsed',
         'starPrompted',
