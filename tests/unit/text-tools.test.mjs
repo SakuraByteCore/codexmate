@@ -178,6 +178,7 @@ test('layout-header sidebar wires text-tools and prompt-templates plugin sub-tab
     assert.ok(src.includes("onPluginsTabPointerDown('text-tools', $event)"), 'text-tools entry must bind pointerdown');
     assert.ok(src.includes("onPluginsTabClick('text-tools', $event)"), 'text-tools entry must bind click');
     assert.ok(src.includes("isPluginsIdNavActive('text-tools')"), 'text-tools entry must use per-plugin active state');
+    assert.ok(src.includes("{{ t('plugins.textTools.tools.compress') }}"), 'text-tools entry must keep a meta description line');
     assert.ok(src.includes("data-plugins-id=\"prompt-templates\""), 'generic plugins entry must bind prompt-templates');
     assert.ok(src.includes("onPluginsTabPointerDown('prompt-templates', $event)"), 'prompt-templates entry must bind pointerdown');
     assert.ok(src.includes("isPluginsIdNavActive('prompt-templates')"), 'prompt-templates entry must use per-plugin active state');

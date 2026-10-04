@@ -514,7 +514,10 @@ return function render(_ctx, _cache) {
                     class: "side-item-icon",
                     "aria-hidden": "true"
                   }, "▤"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('plugins.catalog.textTools.title')), 1 /* TEXT */)
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('plugins.catalog.textTools.title')), 1 /* TEXT */),
+                  _createElementVNode("div", { class: "side-item-meta" }, [
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('plugins.textTools.tools.compress')), 1 /* TEXT */)
+                  ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),
               _createElementVNode("div", {
