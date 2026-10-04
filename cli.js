@@ -271,6 +271,7 @@ const SESSION_LIST_CACHE_TTL_MS = 4000;
 const SESSION_SUMMARY_READ_BYTES = 256 * 1024;
 const SESSION_CONTENT_READ_BYTES = SESSION_SUMMARY_READ_BYTES;
 const SESSION_PREVIEW_MESSAGE_TEXT_MAX_LENGTH = 4000;
+const SESSION_QUERY_MATCH_POSITIONS_LIMIT = 500;
 const EXACT_MESSAGE_COUNT_CACHE_MAX_ENTRIES = 800;
 const DEFAULT_CONTENT_SCAN_LIMIT = 50;
 const SESSION_SCAN_FACTOR = 4;
@@ -4573,6 +4574,10 @@ function createSessionQueryScanState(tokens, options = {}) {
     const snippetLimit = Number.isFinite(Number(options.snippetLimit))
         ? Math.max(0, Number(options.snippetLimit))
         : 0;
+    const positionsLimitRaw = Number(options.positionsLimit);
+    const positionsLimit = Number.isFinite(positionsLimitRaw) && positionsLimitRaw > 0
+        ? Math.floor(positionsLimitRaw)
+        : 0;
 
     return {
         tokens,
@@ -4580,8 +4585,10 @@ function createSessionQueryScanState(tokens, options = {}) {
         roleFilter,
         maxMatches,
         snippetLimit,
+        positionsLimit,
         count: 0,
         snippets: [],
+        positions: [],
         leadingSystem: roleFilter !== 'system'
     };
 }
@@ -4613,6 +4620,13 @@ function consumeSessionQueryMessage(state, message) {
     if (state.snippetLimit > 0 && state.snippets.length < state.snippetLimit) {
         state.snippets.push(truncateText(text));
     }
+    if (state.positionsLimit > 0 && state.positions.length < state.positionsLimit) {
+        state.positions.push({
+            lineIndex: Number.isInteger(message.recordLineIndex) ? message.recordLineIndex : -1,
+            role,
+            timestamp: typeof message.timestamp === 'string' ? message.timestamp : ''
+        });
+    }
     return state.count >= state.maxMatches;
 }
 
@@ -4620,7 +4634,8 @@ function buildSessionQueryScanResult(state) {
     return {
         hit: !!(state && state.count > 0),
         count: state && Number.isFinite(state.count) ? state.count : 0,
-        snippets: state && Array.isArray(state.snippets) ? state.snippets : []
+        snippets: state && Array.isArray(state.snippets) ? state.snippets : [],
+        positions: state && Array.isArray(state.positions) ? state.positions : []
     };
 }
 
@@ -4628,12 +4643,14 @@ function scanSessionContentForQueryInRecords(records, source, state) {
     if (!Array.isArray(records) || !state) {
         return buildSessionQueryScanResult(state);
     }
-
-    for (const record of records) {
+    for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
+        const record = records[recordIndex];
         const message = extractMessageFromRecord(record, source);
         if (!message) {
             continue;
         }
+        message.recordLineIndex = recordIndex;
+        message.timestamp = toIsoTime(record && record.timestamp, '');
         if (consumeSessionQueryMessage(state, message)) {
             break;
         }
@@ -4644,12 +4661,12 @@ function scanSessionContentForQueryInRecords(records, source, state) {
 
 async function scanSessionContentForQuery(session, tokens, options = {}) {
     if (!session || !Array.isArray(tokens) || tokens.length === 0) {
-        return { hit: false, count: 0, snippets: [] };
+        return { hit: false, count: 0, snippets: [], positions: [] };
     }
 
     const filePath = resolveSessionFilePath(session.source, session.filePath, session.sessionId);
     if (!filePath) {
-        return { hit: false, count: 0, snippets: [] };
+        return { hit: false, count: 0, snippets: [], positions: [] };
     }
 
     const rawMaxBytes = Number(options.maxBytes);
@@ -4658,7 +4675,7 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
         : 0;
     const state = createSessionQueryScanState(tokens, options);
     if (session.source === 'gemini') {
-        if (state.roleFilter !== 'all') {
+        if (state.roleFilter !== 'all' || state.positionsLimit > 0) {
             let json;
             try {
                 json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
@@ -4672,7 +4689,12 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
                 if (!role) continue;
                 const text = extractMessageText(extractGeminiMessageText(entry.content ?? entry.message ?? entry.text));
                 if (!text) continue;
-                if (consumeSessionQueryMessage(state, { role, text })) {
+                if (consumeSessionQueryMessage(state, {
+                    role,
+                    text,
+                    timestamp: toIsoTime(entry.timestamp ?? entry.time ?? entry.at, ''),
+                    recordLineIndex: -1
+                })) {
                     break;
                 }
             }
@@ -4712,7 +4734,10 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
         rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
 
         let bytesRead = 0;
+        let lineIndex = 0;
         for await (const line of rl) {
+            const currentLineIndex = lineIndex;
+            lineIndex += 1;
             if (maxBytes > 0 && bytesRead >= maxBytes) {
                 break;
             }
@@ -4734,6 +4759,8 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
             if (!message) {
                 continue;
             }
+            message.recordLineIndex = currentLineIndex;
+            message.timestamp = toIsoTime(record.timestamp, '');
             if (consumeSessionQueryMessage(state, message)) {
                 break;
             }
@@ -8904,6 +8931,21 @@ async function readSessionDetail(params = {}) {
         ? Math.max(1, Math.min(rawLimit, MAX_SESSION_DETAIL_MESSAGES))
         : DEFAULT_SESSION_DETAIL_MESSAGES;
     const preview = params.preview === true || params.preview === 'true';
+    const rawSessionQuery = typeof params.query === 'string' ? params.query.trim() : '';
+    const sessionQueryTokens = rawSessionQuery
+        ? expandSessionQueryTokens(normalizeQueryTokens(rawSessionQuery))
+        : [];
+    let sessionQueryMatch = null;
+    if (sessionQueryTokens.length > 0) {
+        sessionQueryMatch = await scanSessionContentForQuery(
+            { source, filePath, sessionId: params.sessionId },
+            sessionQueryTokens,
+            {
+                maxMatches: Number.MAX_SAFE_INTEGER,
+                positionsLimit: SESSION_QUERY_MATCH_POSITIONS_LIMIT
+            }
+        );
+    }
 
     let extracted;
     if (source === 'gemini') {
@@ -8996,6 +9038,13 @@ async function readSessionDetail(params = {}) {
             ? extracted.clipped
             : (hasExactTotalMessages ? extracted.totalMessages > indexedMessages.length : false),
         messageLimit,
+        ...(sessionQueryMatch ? {
+            match: {
+                hit: !!sessionQueryMatch.hit,
+                count: Number.isFinite(sessionQueryMatch.count) ? sessionQueryMatch.count : 0,
+                positions: Array.isArray(sessionQueryMatch.positions) ? sessionQueryMatch.positions : []
+            }
+        } : {}),
         messages: indexedMessages,
         filePath,
         ...(typeof buildSessionNativeStatus === 'function'

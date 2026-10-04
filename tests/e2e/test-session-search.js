@@ -22,7 +22,7 @@ async function fetchHtml(port) {
 }
 
 module.exports = async function testSessionSearch(ctx) {
-    const { api, sessionId, claudeSessionId, daudeSessionId, lateKeywordSessionId, lateKeywordMessage } = ctx;
+    const { api, sessionId, claudeSessionId, daudeSessionId, geminiSessionId, lateKeywordSessionId, lateKeywordMessage } = ctx;
 
     // ========== Basic Query Tests ==========
     const claudeSearch = await api('list-sessions', { source: 'claude', query: 'claudecode', limit: 20, forceRefresh: true });
@@ -125,6 +125,55 @@ module.exports = async function testSessionSearch(ctx) {
     assert(Array.isArray(lateKeywordHit.match.snippets) && lateKeywordHit.match.snippets.some(
         snippet => typeof snippet === 'string' && snippet.includes('提示') && snippet.includes('通过')
     ), 'late keyword query snippets should include the tail message');
+
+    // ========== In-session Search Positions Tests ==========
+    const detailWithQuery = await api('session-detail', {
+        source: 'codex',
+        sessionId,
+        query: 'hello'
+    });
+    assert(Array.isArray(detailWithQuery.messages), 'session-detail with query missing messages');
+    assert(detailWithQuery.match && detailWithQuery.match.hit === true, 'session-detail query missing match metadata');
+    assert(detailWithQuery.match.count === 1, 'session-detail query match count should be 1');
+    assert(Array.isArray(detailWithQuery.match.positions) && detailWithQuery.match.positions.length === 1,
+        'session-detail query missing positions');
+    const helloPosition = detailWithQuery.match.positions[0];
+    assert(helloPosition && helloPosition.lineIndex === 1, 'session-detail position lineIndex should be 1');
+    assert(helloPosition.role === 'user', 'session-detail position role should be user');
+    assert(helloPosition.timestamp === '2025-01-01T00:00:01.000Z', 'session-detail position timestamp mismatch');
+    const helloMessage = detailWithQuery.messages.find(
+        message => message && typeof message.text === 'string' && message.text.includes('hello')
+    );
+    assert(helloMessage && helloMessage.recordLineIndex === helloPosition.lineIndex,
+        'session-detail position lineIndex should match the message recordLineIndex');
+
+    const detailWithoutQuery = await api('session-detail', {
+        source: 'codex',
+        sessionId
+    });
+    assert(!detailWithoutQuery.match, 'session-detail without query should not include match metadata');
+
+    const geminiDetailWithQuery = await api('session-detail', {
+        source: 'gemini',
+        sessionId: geminiSessionId,
+        query: 'hello from codexmate'
+    });
+    assert(geminiDetailWithQuery.match && geminiDetailWithQuery.match.hit === true,
+        'gemini session-detail query missing match metadata');
+    assert(Array.isArray(geminiDetailWithQuery.match.positions) && geminiDetailWithQuery.match.positions.length === 1,
+        'gemini session-detail query missing positions');
+    const geminiPosition = geminiDetailWithQuery.match.positions[0];
+    assert(geminiPosition.role === 'assistant', 'gemini session-detail position role mismatch');
+    assert(geminiPosition.timestamp === '2025-02-15T00:00:02.000Z', 'gemini session-detail position timestamp mismatch');
+
+    const noHitDetail = await api('session-detail', {
+        source: 'codex',
+        sessionId,
+        query: 'zzz-no-such-token-e2e'
+    });
+    assert(noHitDetail.match && noHitDetail.match.hit === false, 'no-hit session-detail match.hit should be false');
+    assert(Array.isArray(noHitDetail.match.positions) && noHitDetail.match.positions.length === 0,
+        'no-hit session-detail positions should be empty');
 
     // ========== Pagination Tests ==========
     const paged = await api('list-sessions', {

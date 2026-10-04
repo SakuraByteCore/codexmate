@@ -456,7 +456,7 @@ export function createSessionBrowserMethods(options = {}) {
 
         highlightQueryText(text) {
             if (typeof text !== 'string' || !text) return text;
-            var tokens = this.queryTokens;
+            var tokens = this.sessionMatchTokens;
             if (!tokens || tokens.length === 0) return text;
             var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             for (var i = 0; i < tokens.length; i++) {
@@ -465,6 +465,129 @@ export function createSessionBrowserMethods(options = {}) {
                 escaped = escaped.replace(re, '<mark>$1</mark>');
             }
             return escaped;
+        },
+
+        buildSessionPreviewQueryTokens(query) {
+            if (typeof query !== 'string') return [];
+            return query
+                .split(/\s+/)
+                .map(item => item.trim())
+                .map(item => item.toLowerCase())
+                .filter(Boolean);
+        },
+
+        submitSessionPreviewSearch() {
+            const query = typeof this.sessionPreviewQuery === 'string'
+                ? this.sessionPreviewQuery.trim()
+                : '';
+            if (!query) {
+                this.clearSessionPreviewSearch();
+                return;
+            }
+            if (!this.activeSession || this.sessionDetailLoading) return;
+            this.sessionMatchPendingJump = true;
+            void this.loadActiveSessionDetail();
+        },
+
+        clearSessionPreviewSearch() {
+            this.sessionPreviewQuery = '';
+            this.resetSessionPreviewSearchNav();
+        },
+
+        resetSessionPreviewSearchNav() {
+            this.sessionMatchTokens = [];
+            this.sessionMatchPositions = [];
+            this.sessionMatchTotalCount = 0;
+            this.sessionMatchNavIndex = 0;
+            this.sessionMatchNavBlocked = false;
+            this.sessionMatchSearched = false;
+            this.sessionMatchPendingJump = false;
+            this.sessionMatchHighlightStamp = (Number(this.sessionMatchHighlightStamp) || 0) + 1;
+        },
+
+        findSessionMatchMessageIndex(position) {
+            const list = Array.isArray(this.activeSessionMessages) ? this.activeSessionMessages : [];
+            if (!position || typeof position !== 'object' || !list.length) return -1;
+            const lineIndex = Number.isInteger(position.lineIndex) ? position.lineIndex : -1;
+            if (lineIndex >= 0) {
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i] && list[i].recordLineIndex === lineIndex) return i;
+                }
+            }
+            const timestamp = typeof position.timestamp === 'string' ? position.timestamp : '';
+            if (timestamp) {
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i] && list[i].timestamp === timestamp) return i;
+                }
+            }
+            return -1;
+        },
+
+        scrollSessionMessageIntoView(messageKey) {
+            const scrollEl = this.sessionPreviewScrollEl || (this.$refs && this.$refs.sessionPreviewScroll);
+            if (!scrollEl) return false;
+            const messageEl = this.sessionMessageRefMap && this.sessionMessageRefMap[messageKey];
+            if (!messageEl) return false;
+            const headerEl = this.sessionPreviewHeaderEl
+                || (typeof scrollEl.querySelector === 'function' ? scrollEl.querySelector('.session-preview-header') : null);
+            const headerHeight = headerEl && typeof headerEl.getBoundingClientRect === 'function'
+                ? Math.ceil(headerEl.getBoundingClientRect().height)
+                : 0;
+            const stickyOffset = headerHeight > 0 ? (headerHeight + 12) : 72;
+            const scrollRect = scrollEl.getBoundingClientRect();
+            const messageRect = messageEl.getBoundingClientRect();
+            const targetScrollTop = scrollEl.scrollTop + (messageRect.top - scrollRect.top) - stickyOffset;
+            if (typeof scrollEl.scrollTo === 'function') {
+                scrollEl.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+            } else if (typeof messageEl.scrollIntoView === 'function') {
+                messageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            return true;
+        },
+
+        flashSessionMessageKey(messageKey) {
+            const messageEl = this.sessionMessageRefMap && this.sessionMessageRefMap[messageKey];
+            if (!messageEl || !messageEl.classList || typeof messageEl.classList.remove !== 'function') return;
+            messageEl.classList.remove('session-msg-hit-flash');
+            void messageEl.offsetWidth;
+            messageEl.classList.add('session-msg-hit-flash');
+        },
+
+        revealSessionMatchPosition(index) {
+            const positions = Array.isArray(this.sessionMatchPositions) ? this.sessionMatchPositions : [];
+            if (!positions.length) return false;
+            const total = positions.length;
+            const rawIndex = Math.floor(Number(index));
+            const wrapped = ((Number.isFinite(rawIndex) ? rawIndex : 0) + total) % total;
+            this.sessionMatchNavIndex = wrapped;
+            const position = positions[wrapped];
+            const messages = Array.isArray(this.activeSessionMessages) ? this.activeSessionMessages : [];
+            const messageIndex = this.findSessionMatchMessageIndex(position);
+            if (messageIndex < 0 || !messages[messageIndex]) {
+                this.sessionMatchNavBlocked = true;
+                return false;
+            }
+            this.sessionMatchNavBlocked = false;
+            const message = messages[messageIndex];
+            const visibleCount = Number(this.sessionPreviewVisibleCount);
+            const currentVisible = Number.isFinite(visibleCount) ? Math.max(0, Math.floor(visibleCount)) : 0;
+            if (messageIndex >= currentVisible) {
+                this.sessionPreviewVisibleCount = Math.min(messages.length, messageIndex + 1);
+            }
+            const messageKey = this.getRecordRenderKey(message, messageIndex);
+            this.$nextTick(() => {
+                if (this.mainTab !== 'sessions' && !this.sessionStandalone) return;
+                this.scrollSessionMessageIntoView(messageKey);
+                this.flashSessionMessageKey(messageKey);
+            });
+            return true;
+        },
+
+        stepSessionMatchNav(direction) {
+            const positions = Array.isArray(this.sessionMatchPositions) ? this.sessionMatchPositions : [];
+            if (!positions.length) return;
+            const delta = direction < 0 ? -1 : 1;
+            this.revealSessionMatchPosition(this.sessionMatchNavIndex + delta);
         },
 
         async onSessionSourceChange(event) {
@@ -934,6 +1057,7 @@ export function createSessionBrowserMethods(options = {}) {
                 return;
             }
             this.activeSession = session;
+            this.resetSessionPreviewSearchNav();
             emitSessionLoadNativeDialog(this, 'selectSession:activate', `sessionId=${session.sessionId || ''}`);
             if (typeof this.expandVisibleSessionList === 'function') {
                 this.expandVisibleSessionList(0, { ensureActive: true });

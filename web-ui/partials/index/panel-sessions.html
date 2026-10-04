@@ -246,6 +246,54 @@
                                         <div class="session-preview-meta" v-if="activeSession.cwd">
                                             <span class="session-preview-meta-item">{{ activeSession.cwd }}</span>
                                         </div>
+                                        <div class="session-preview-search">
+                                            <input
+                                                class="session-preview-search-input"
+                                                type="text"
+                                                v-model="sessionPreviewQuery"
+                                                @keyup.enter="submitSessionPreviewSearch"
+                                                :disabled="sessionDetailLoading || !activeSession"
+                                                :placeholder="t('sessions.preview.searchInSession')"
+                                                :aria-label="t('sessions.preview.searchInSession')">
+                                            <button
+                                                type="button"
+                                                class="session-preview-search-go"
+                                                @click="submitSessionPreviewSearch"
+                                                :disabled="sessionDetailLoading || !activeSession"
+                                                :title="t('sessions.preview.searchGo')"
+                                                :aria-label="t('sessions.preview.searchGo')">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+                                            </button>
+                                            <button
+                                                v-if="sessionPreviewQuery"
+                                                type="button"
+                                                class="session-preview-search-clear"
+                                                @click="clearSessionPreviewSearch"
+                                                :title="t('sessions.preview.searchClear')"
+                                                :aria-label="t('sessions.preview.searchClear')">&times;</button>
+                                            <template v-if="sessionMatchPositions.length">
+                                                <span class="session-match-nav-count">{{ t('sessions.preview.matchCount', { count: sessionMatchTotalCount || sessionMatchPositions.length }) }}</span>
+                                                <button
+                                                    type="button"
+                                                    class="session-match-nav-btn"
+                                                    @click="stepSessionMatchNav(-1)"
+                                                    :title="t('sessions.preview.matchPrev')"
+                                                    :aria-label="t('sessions.preview.matchPrev')">
+                                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+                                                </button>
+                                                <span class="session-match-nav-index">{{ sessionMatchNavIndex + 1 }}/{{ sessionMatchPositions.length }}</span>
+                                                <button
+                                                    type="button"
+                                                    class="session-match-nav-btn"
+                                                    @click="stepSessionMatchNav(1)"
+                                                    :title="t('sessions.preview.matchNext')"
+                                                    :aria-label="t('sessions.preview.matchNext')">
+                                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 3 11 8 6 13"/></svg>
+                                                </button>
+                                            </template>
+                                            <span v-else-if="sessionMatchSearched && !sessionDetailLoading" class="session-match-nav-empty">{{ t('sessions.preview.noMatch') }}</span>
+                                            <span v-if="sessionMatchNavBlocked" class="session-match-nav-blocked">{{ t('sessions.preview.matchUnavailable') }}</span>
+                                        </div>
                                     </div>
                                     <div class="session-actions">
                                         <button class="btn-session-refresh has-label" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
@@ -399,7 +447,7 @@
                                         <div
                                             v-for="(msg, idx) in activeSessionVisibleMessages"
                                             :key="getRecordRenderKey(msg, idx)"
-                                            v-memo="[msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole]"
+                                            v-memo="[msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole, sessionMatchHighlightStamp]"
                                             :data-message-key="getRecordRenderKey(msg, idx)"
                                             :ref="getSessionMessageRefBinder(getRecordRenderKey(msg, idx))"
                                             :class="['session-msg', msg.normalizedRole === 'user' ? 'user' : (msg.normalizedRole === 'system' ? 'system' : 'assistant')]">
