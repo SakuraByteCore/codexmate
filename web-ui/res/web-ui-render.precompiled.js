@@ -4413,47 +4413,7 @@ return function render(_ctx, _cache) {
                                                   key: 2,
                                                   class: "session-match-nav-empty"
                                                 }, _toDisplayString(_ctx.t('sessions.preview.noMatch')), 1 /* TEXT */))
-                                              : _createCommentVNode("v-if", true),
-                                          _createElementVNode("div", { class: "session-preview-jump" }, [
-                                            _createElementVNode("button", {
-                                              type: "button",
-                                              class: "session-match-nav-btn",
-                                              onClick: _ctx.scrollSessionPreviewToTop,
-                                              disabled: !_ctx.activeSession,
-                                              title: _ctx.t('sessions.preview.scrollTop'),
-                                              "aria-label": _ctx.t('sessions.preview.scrollTop')
-                                            }, [
-                                              (_openBlock(), _createElementBlock("svg", {
-                                                viewBox: "0 0 16 16",
-                                                fill: "none",
-                                                stroke: "currentColor",
-                                                "stroke-width": "1.8",
-                                                "stroke-linecap": "round",
-                                                "stroke-linejoin": "round"
-                                              }, [
-                                                _createElementVNode("polyline", { points: "3 10 8 5 13 10" })
-                                              ]))
-                                            ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
-                                            _createElementVNode("button", {
-                                              type: "button",
-                                              class: "session-match-nav-btn",
-                                              onClick: _ctx.scrollSessionPreviewToBottom,
-                                              disabled: !_ctx.activeSession,
-                                              title: _ctx.t('sessions.preview.scrollBottom'),
-                                              "aria-label": _ctx.t('sessions.preview.scrollBottom')
-                                            }, [
-                                              (_openBlock(), _createElementBlock("svg", {
-                                                viewBox: "0 0 16 16",
-                                                fill: "none",
-                                                stroke: "currentColor",
-                                                "stroke-width": "1.8",
-                                                "stroke-linecap": "round",
-                                                "stroke-linejoin": "round"
-                                              }, [
-                                                _createElementVNode("polyline", { points: "3 6 8 11 13 6" })
-                                              ]))
-                                            ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
-                                          ])
+                                              : _createCommentVNode("v-if", true)
                                         ])
                                       ]),
                                       _createElementVNode("div", { class: "session-actions" }, [
@@ -4830,6 +4790,44 @@ return function render(_ctx, _cache) {
                                                   ])
                                                 ]))
                                   ], 40 /* PROPS, NEED_HYDRATION */, ["onScroll"]),
+                                  _createElementVNode("div", { class: "session-preview-jump" }, [
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "session-match-nav-btn",
+                                      onClick: _ctx.scrollSessionPreviewToTop,
+                                      title: _ctx.t('sessions.preview.scrollTop'),
+                                      "aria-label": _ctx.t('sessions.preview.scrollTop')
+                                    }, [
+                                      (_openBlock(), _createElementBlock("svg", {
+                                        viewBox: "0 0 16 16",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        "stroke-width": "1.8",
+                                        "stroke-linecap": "round",
+                                        "stroke-linejoin": "round"
+                                      }, [
+                                        _createElementVNode("polyline", { points: "3 10 8 5 13 10" })
+                                      ]))
+                                    ], 8 /* PROPS */, ["onClick", "title", "aria-label"]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "session-match-nav-btn",
+                                      onClick: _ctx.scrollSessionPreviewToBottom,
+                                      title: _ctx.t('sessions.preview.scrollBottom'),
+                                      "aria-label": _ctx.t('sessions.preview.scrollBottom')
+                                    }, [
+                                      (_openBlock(), _createElementBlock("svg", {
+                                        viewBox: "0 0 16 16",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        "stroke-width": "1.8",
+                                        "stroke-linecap": "round",
+                                        "stroke-linejoin": "round"
+                                      }, [
+                                        _createElementVNode("polyline", { points: "3 6 8 11 13 6" })
+                                      ]))
+                                    ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
+                                  ]),
                                   (_ctx.sessionPreviewRenderEnabled && _ctx.sessionTimelineNodes.length)
                                     ? (_openBlock(), _createElementBlock("aside", {
                                         key: 0,

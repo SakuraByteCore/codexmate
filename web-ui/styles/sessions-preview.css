@@ -819,10 +819,29 @@
     }
 }
 
-/* Session preview jump buttons (top/bottom) */
+/* Session preview jump buttons (floating bottom-right) */
 .session-preview-jump {
-    display: inline-flex;
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin-left: auto;
+    gap: 8px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.session-preview-jump .session-match-nav-btn {
+    pointer-events: auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-surface-elevated, rgba(255, 255, 255, 0.92));
+    box-shadow: var(--shadow-float, 0 4px 16px rgba(0, 0, 0, 0.16));
+}
+
+.session-preview-jump .session-match-nav-btn svg {
+    width: 16px;
+    height: 16px;
 }
