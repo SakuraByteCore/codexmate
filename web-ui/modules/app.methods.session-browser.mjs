@@ -590,6 +590,22 @@ export function createSessionBrowserMethods(options = {}) {
             this.revealSessionMatchPosition(this.sessionMatchNavIndex + delta);
         },
 
+        getSessionPreviewScrollContainer() {
+            return this.sessionPreviewScrollEl || (this.$refs && this.$refs.sessionPreviewScroll) || null;
+        },
+
+        scrollSessionPreviewToTop() {
+            const scrollEl = this.getSessionPreviewScrollContainer();
+            if (!scrollEl || typeof scrollEl.scrollTo !== 'function') return;
+            scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        scrollSessionPreviewToBottom() {
+            const scrollEl = this.getSessionPreviewScrollContainer();
+            if (!scrollEl || typeof scrollEl.scrollTo !== 'function') return;
+            scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+        },
+
         async onSessionSourceChange(event) {
             const rawValue = event && event.target && typeof event.target.value === 'string'
                 ? event.target.value

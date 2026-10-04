@@ -695,6 +695,8 @@ const en = Object.freeze({
     'sessions.copyResume': 'Copy resume command',
     'sessions.preview.refresh': 'Refresh content',
     'sessions.preview.searchInSession': 'Search in this session',
+    'sessions.preview.scrollTop': 'Back to top',
+    'sessions.preview.scrollBottom': 'Jump to bottom',
     'sessions.preview.searchGo': 'Search',
     'sessions.preview.searchClear': 'Clear search',
     'sessions.preview.matchCount': '{count} matches',

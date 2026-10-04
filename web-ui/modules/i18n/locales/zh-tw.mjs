@@ -694,6 +694,8 @@ const zhTw = Object.freeze({
     'sessions.copyResume': '複製恢復命令',
     'sessions.preview.refresh': '重新整理內容',
     'sessions.preview.searchInSession': '在此會話中搜尋',
+    'sessions.preview.scrollTop': '回到頂部',
+    'sessions.preview.scrollBottom': '跳到底部',
     'sessions.preview.searchGo': '搜尋',
     'sessions.preview.searchClear': '清除搜尋',
     'sessions.preview.matchCount': '命中 {count} 條',

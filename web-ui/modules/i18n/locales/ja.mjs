@@ -697,6 +697,8 @@ const ja = Object.freeze({
     'sessions.copyResume': '再開コマンドをコピー',
     'sessions.preview.refresh': '更新',
     'sessions.preview.searchInSession': 'このセッション内を検索',
+    'sessions.preview.scrollTop': '先頭へ',
+    'sessions.preview.scrollBottom': '末尾へ',
     'sessions.preview.searchGo': '検索',
     'sessions.preview.searchClear': '検索をクリア',
     'sessions.preview.matchCount': '{count} 件ヒット',

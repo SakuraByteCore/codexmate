@@ -870,6 +870,8 @@ const vi = Object.freeze({
     'sessions.copyResume': 'Sao chép lệnh tiếp tục',
     'sessions.preview.refresh': 'Làm mới nội dung',
     'sessions.preview.searchInSession': 'Tìm trong phiên này',
+    'sessions.preview.scrollTop': 'Về đầu',
+    'sessions.preview.scrollBottom': 'Xuống cuối',
     'sessions.preview.searchGo': 'Tìm',
     'sessions.preview.searchClear': 'Xóa tìm kiếm',
     'sessions.preview.matchCount': '{count} kết quả',

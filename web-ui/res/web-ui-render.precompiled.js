@@ -4414,12 +4414,46 @@ return function render(_ctx, _cache) {
                                                   class: "session-match-nav-empty"
                                                 }, _toDisplayString(_ctx.t('sessions.preview.noMatch')), 1 /* TEXT */))
                                               : _createCommentVNode("v-if", true),
-                                          (_ctx.sessionMatchNavBlocked)
-                                            ? (_openBlock(), _createElementBlock("span", {
-                                                key: 3,
-                                                class: "session-match-nav-blocked"
-                                              }, _toDisplayString(_ctx.t('sessions.preview.matchUnavailable')), 1 /* TEXT */))
-                                            : _createCommentVNode("v-if", true)
+                                          _createElementVNode("div", { class: "session-preview-jump" }, [
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "session-match-nav-btn",
+                                              onClick: _ctx.scrollSessionPreviewToTop,
+                                              disabled: !_ctx.activeSession,
+                                              title: _ctx.t('sessions.preview.scrollTop'),
+                                              "aria-label": _ctx.t('sessions.preview.scrollTop')
+                                            }, [
+                                              (_openBlock(), _createElementBlock("svg", {
+                                                viewBox: "0 0 16 16",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                "stroke-width": "1.8",
+                                                "stroke-linecap": "round",
+                                                "stroke-linejoin": "round"
+                                              }, [
+                                                _createElementVNode("polyline", { points: "3 10 8 5 13 10" })
+                                              ]))
+                                            ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "session-match-nav-btn",
+                                              onClick: _ctx.scrollSessionPreviewToBottom,
+                                              disabled: !_ctx.activeSession,
+                                              title: _ctx.t('sessions.preview.scrollBottom'),
+                                              "aria-label": _ctx.t('sessions.preview.scrollBottom')
+                                            }, [
+                                              (_openBlock(), _createElementBlock("svg", {
+                                                viewBox: "0 0 16 16",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                "stroke-width": "1.8",
+                                                "stroke-linecap": "round",
+                                                "stroke-linejoin": "round"
+                                              }, [
+                                                _createElementVNode("polyline", { points: "3 6 8 11 13 6" })
+                                              ]))
+                                            ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
+                                          ])
                                         ])
                                       ]),
                                       _createElementVNode("div", { class: "session-actions" }, [

@@ -694,6 +694,8 @@ const zh = Object.freeze({
     'sessions.copyResume': '复制恢复命令',
     'sessions.preview.refresh': '刷新内容',
     'sessions.preview.searchInSession': '在此会话中搜索',
+    'sessions.preview.scrollTop': '回到顶部',
+    'sessions.preview.scrollBottom': '跳到底部',
     'sessions.preview.searchGo': '搜索',
     'sessions.preview.searchClear': '清除搜索',
     'sessions.preview.matchCount': '命中 {count} 条',

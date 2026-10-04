@@ -818,3 +818,11 @@
         box-shadow: none;
     }
 }
+
+/* Session preview jump buttons (top/bottom) */
+.session-preview-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
