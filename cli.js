@@ -1196,7 +1196,6 @@ function getApiToolConfigWriteTarget(action) {
     const opencodeWriteActions = new Set([
         'apply-opencode-config',
         'update-opencode-selection',
-        'apply-opencode-agents-file'
     ]);
     const kilocodeWriteActions = new Set([
         'apply-kilocode-config',

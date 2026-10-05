@@ -17,13 +17,10 @@ module.exports = async function testOpencodeAgentsFile(ctx) {
     assert('lineEnding' in before, 'get-opencode-agents-file missing lineEnding');
     assert(!fs.existsSync(opencodeDir), 'reading must not create the opencode config dir');
 
-    // ========== Write is gated by the opencode tool permission ==========
-    const writeDenied = await api('apply-opencode-agents-file', { content: 'should-not-write', lineEnding: '\n' });
-    assert(writeDenied.error || writeDenied.success !== true, 'apply-opencode-agents-file must be blocked without opencode write permission');
-    assert(!fs.existsSync(agentsFilePath), 'no file may be written while the opencode permission is off');
-
-    const enableWrites = await api('set-tool-config-permission', { target: 'opencode', allowWrite: true });
-    assert(enableWrites.success === true, 'set-tool-config-permission(opencode) should succeed');
+    // ========== AGENTS.md writes are instruction-file edits, not tool-config writes ==========
+    const ungated = await api('apply-opencode-agents-file', { content: 'ungated-write', lineEnding: '\n' });
+    assert(ungated.success === true, `apply-opencode-agents-file should succeed without the opencode write permission${ungated && ungated.error ? `: ${ungated.error}` : ''}`);
+    assert(fs.existsSync(agentsFilePath), 'AGENTS.md must be written even while the opencode permission is off');
 
     // ========== Apply then read back ==========
     const apply = await api('apply-opencode-agents-file', { content: '# OpenCode\nkeep it simple\n', lineEnding: '\n' });
