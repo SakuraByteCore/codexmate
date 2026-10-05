@@ -4,7 +4,7 @@
   "description": "Codex/Claude Code/OpenClaw 配置、会话与任务编排 CLI + Web 工具",
   "main": "cli.js",
   "bin": {
-    "codexmate": "./cli.js"
+    "codexmate": "./tools/dev/launch.js"
   },
   "files": [
     "cli.js",
@@ -26,7 +26,7 @@
     "./res/*": "./web-ui/res/*"
   },
   "scripts": {
-    "dev": "node cli.js run",
+    "dev": "node tools/dev/launch.js run",
     "start": "node cli.js",
     "reset": "node tools/dev/reset-main.js",
     "release:npm": "node tools/release/publish-npm.js",
