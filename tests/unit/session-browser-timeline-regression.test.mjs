@@ -149,7 +149,6 @@ test('selectSession defers detail loading until the next frame when a scheduler 
         },
         resetSessionDetailPagination() {},
         resetSessionPreviewMessageRender() {},
-        resetSessionPreviewSearchNav() {},
         cancelSessionTimelineSync() {},
         clearSessionTimelineRefs() {},
         scheduleAfterFrame(task) {
