@@ -11361,7 +11361,8 @@ function runKilocodeCommand(args = [], options = {}) {
         const child = spawn(bin, finalArgs, {
             detached: true,
             stdio: 'ignore',
-            windowsHide: true
+            windowsHide: true,
+            shell: process.platform === 'win32'
         });
         child.unref();
         return { success: true, bin, args: finalArgs, pid: child.pid };
@@ -11369,7 +11370,8 @@ function runKilocodeCommand(args = [], options = {}) {
     return new Promise((resolve, reject) => {
         const child = spawn(bin, finalArgs, {
             stdio: 'inherit',
-            windowsHide: false
+            windowsHide: false,
+            shell: process.platform === 'win32'
         });
         child.on('error', reject);
         child.on('exit', (code, signal) => {

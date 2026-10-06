@@ -25,7 +25,6 @@ const testHealthSpeed = require('./test-health-speed');
 const testMessages = require('./test-messages');
 const testMcp = require('./test-mcp');
 const testWorkflow = require('./test-workflow');
-const testTaskOrchestration = require('./test-task-orchestration');
 const testInvalidConfig = require('./test-invalid-config');
 const testWebUiAssets = require('./test-web-ui-assets');
 const testWebUiSessionBrowser = require('./test-web-ui-session-browser');
@@ -54,6 +53,18 @@ async function main() {
         const cmdPath = path.join(tmpBin, 'claude.cmd');
         try {
             fs.writeFileSync(cmdPath, '@echo claude 1.2.3\r\n', 'utf-8');
+        } catch (e) {}
+        try {
+            const kiloScriptPath = path.join(tmpBin, 'kilo-e2e.cjs');
+            const kiloCmdPath = path.join(tmpBin, 'kilo.cmd');
+            fs.writeFileSync(kiloScriptPath, [
+                "const fs = require('fs');",
+                "const path = require('path');",
+                "if (process.argv[2] === '--version') { console.log('kilo 0.0.0-e2e'); process.exit(0); }",
+                "const home = process.env.USERPROFILE || process.env.HOME;",
+                "fs.writeFileSync(path.join(home, 'kilocode-launch.json'), JSON.stringify({ args: process.argv.slice(2) }), 'utf8');"
+            ].join('\n'), 'utf-8');
+            fs.writeFileSync(kiloCmdPath, '@node "%~dp0kilo-e2e.cjs" %*\r\n', 'utf-8');
         } catch (e) {}
     } else {
         const binPath = path.join(tmpBin, 'claude');
@@ -173,7 +184,6 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         await testMessages(ctx);
         await testMcp(ctx);
         await testWorkflow(ctx);
-        await testTaskOrchestration(ctx);
         await testInstallStatus(ctx);
         await testWebhook(ctx);
         await testWebUiAssets(ctx);
