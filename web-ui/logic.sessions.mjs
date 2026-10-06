@@ -29,14 +29,14 @@ function shouldUseFastSessionBrowseLimit(options = {}) {
 
 export function isSessionQueryEnabled(source) {
     const normalized = normalizeSessionSource(source, '');
-    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'all';
+    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all';
 }
 
 export function normalizeSessionSource(source, fallback = 'all') {
     const normalized = typeof source === 'string'
         ? source.trim().toLowerCase()
         : '';
-    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'all') {
+    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all') {
         return normalized;
     }
     return fallback;
@@ -56,6 +56,17 @@ function isConcreteSessionModelName(value) {
     }
     return normalized.toLowerCase() !== '<synthetic>';
 }
+
+function getSessionSourceLabel(source) {
+    if (source === 'claude') return 'Claude Code';
+    if (source === 'gemini') return 'Gemini CLI';
+    if (source === 'codebuddy') return 'CodeBuddy Code';
+    if (source === 'pi') return 'Pi';
+    if (source === 'opencode') return 'OpenCode';
+    return 'Codex';
+}
+
+const SESSION_USAGE_SOURCE_ORDER = ['codex', 'claude', 'gemini', 'codebuddy', 'pi', 'opencode'];
 
 function collectSessionModelNames(session) {
     if (!session || typeof session !== 'object') {
@@ -209,7 +220,7 @@ export function buildUsageHeatmap(sessions = [], options = {}) {
     for (const session of list) {
         if (!session || typeof session !== 'object') continue;
         const source = normalizeSessionSource(session.source, '');
-        if (source !== 'codex' && source !== 'claude' && source !== 'pi') continue;
+        if (!SESSION_USAGE_SOURCE_ORDER.includes(source)) continue;
         const updatedAtMs = Date.parse(session.updatedAt || '');
         if (!Number.isFinite(updatedAtMs)) continue;
         normalized.push({
@@ -309,7 +320,7 @@ export function buildUsageHourlyHeatmap(sessions = [], options = {}) {
     for (const session of list) {
         if (!session || typeof session !== 'object') continue;
         const source = normalizeSessionSource(session.source, '');
-        if (source !== 'codex' && source !== 'claude' && source !== 'pi') continue;
+        if (!SESSION_USAGE_SOURCE_ORDER.includes(source)) continue;
         const updatedAtMs = Date.parse(session.updatedAt || '');
         if (!Number.isFinite(updatedAtMs)) continue;
         const dayStart = toUtcDayStartMs(updatedAtMs);
@@ -402,7 +413,7 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
     for (const [sessionIndex, session] of list.entries()) {
         if (!session || typeof session !== 'object') continue;
         const source = normalizeSessionSource(session.source, '');
-        if (source !== 'codex' && source !== 'claude' && source !== 'pi') continue;
+        if (!SESSION_USAGE_SOURCE_ORDER.includes(source)) continue;
         const updatedAtMs = Date.parse(session.updatedAt || '');
         if (!Number.isFinite(updatedAtMs)) continue;
         const createdAtMs = Date.parse(session.createdAt || '');
@@ -437,6 +448,7 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
             return ns.updatedAtMs >= rangeStartMs && ns.updatedAtMs <= rangeEndMs;
         });
 
+    const sourceSessionTotals = Object.fromEntries(SESSION_USAGE_SOURCE_ORDER.map((source) => [source, 0]));
     let codexTotal = 0;
     let claudeTotal = 0;
     let messageTotal = 0;
@@ -449,8 +461,8 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
     const modelMap = new Map();
     const missingModelProviderMap = new Map();
     const missingModelSessionMap = new Map();
-    const sourceMessageTotals = { codex: 0, claude: 0 };
-    const missingModelSourceTotals = { codex: 0, claude: 0 };
+    const sourceMessageTotals = Object.fromEntries(SESSION_USAGE_SOURCE_ORDER.map((source) => [source, 0]));
+    const missingModelSourceTotals = Object.fromEntries(SESSION_USAGE_SOURCE_ORDER.map((source) => [source, 0]));
     let missingModelSessions = 0;
     let providerOnlySessions = 0;
     const hourCounts = Array.from({ length: 24 }, (_, hour) => ({
@@ -485,10 +497,11 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
             : 0;
         bucket.totalSessions += 1;
         bucket.totalMessages += messageCount;
+        sourceSessionTotals[source] = (sourceSessionTotals[source] || 0) + 1;
         if (source === 'codex') {
             bucket.codex += 1;
             codexTotal += 1;
-        } else {
+        } else if (source === 'claude') {
             bucket.claude += 1;
             claudeTotal += 1;
         }
@@ -519,7 +532,7 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
             });
         }
 
-        const sourceLabel = source === 'codex' ? 'Codex' : 'Claude Code';
+        const sourceLabel = getSessionSourceLabel(source);
         const normalizedTitle = typeof session.title === 'string' && session.title.trim()
             ? session.title.trim()
             : (typeof session.sessionId === 'string' && session.sessionId.trim() ? session.sessionId.trim() : '未命名会话');
@@ -564,11 +577,12 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
         topSessionsByMessages.push({ ...sessionEntry });
     }
 
-    const totalSessions = codexTotal + claudeTotal;
-    const sourceShare = [
-        { key: 'codex', label: 'Codex', value: codexTotal },
-        { key: 'claude', label: 'Claude', value: claudeTotal }
-    ].map((item) => ({
+    const totalSessions = SESSION_USAGE_SOURCE_ORDER.reduce((sum, source) => sum + (sourceSessionTotals[source] || 0), 0);
+    const sourceShare = SESSION_USAGE_SOURCE_ORDER.map((source) => ({
+        key: source,
+        label: getSessionSourceLabel(source),
+        value: sourceSessionTotals[source] || 0
+    })).map((item) => ({
         ...item,
         percent: totalSessions > 0 ? Math.round((item.value / totalSessions) * 100) : 0,
         messageTotal: sourceMessageTotals[item.key] || 0,
@@ -591,7 +605,7 @@ export function buildUsageChartGroups(sessions = [], options = {}) {
         .map(([modelId, meta]) => {
             const sourceLabels = [...meta.sources]
                 .sort((a, b) => a.localeCompare(b, 'en-US'))
-                .map((source) => (source === 'codex' ? 'Codex' : 'Claude Code'));
+                .map((source) => getSessionSourceLabel(source));
             return {
                 key: modelId,
                 model: modelId,

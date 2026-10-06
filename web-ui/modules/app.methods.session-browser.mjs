@@ -2,7 +2,8 @@ import {
     buildSessionFilterCacheState,
     isSessionQueryEnabled,
     normalizeSessionMessageRole,
-    normalizeSessionPathFilter
+    normalizeSessionPathFilter,
+    normalizeSessionSource
 } from '../logic.mjs';
 import {
     applySessionsFilterUrlState,
@@ -118,9 +119,7 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         syncSessionPathOptionsForSource(source, nextOptions, mergeWithExisting = false) {
-            const targetSource = source === 'claude'
-                ? 'claude'
-                : (source === 'gemini' ? 'gemini' : (source === 'pi' ? 'pi' : (source === 'all' ? 'all' : 'codex')));
+            const targetSource = normalizeSessionSource(source, 'all');
             const current = Array.isArray(this.sessionPathOptionsMap[targetSource])
                 ? this.sessionPathOptionsMap[targetSource]
                 : [];
@@ -135,9 +134,7 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         refreshSessionPathOptions(source) {
-            const targetSource = source === 'claude'
-                ? 'claude'
-                : (source === 'gemini' ? 'gemini' : (source === 'pi' ? 'pi' : (source === 'all' ? 'all' : 'codex')));
+            const targetSource = normalizeSessionSource(source, 'all');
             const base = Array.isArray(this.sessionPathOptionsMap[targetSource])
                 ? [...this.sessionPathOptionsMap[targetSource]]
                 : [];
@@ -159,9 +156,7 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         async loadSessionPathOptions(options = {}) {
-            const source = options.source === 'claude'
-                ? 'claude'
-                : (options.source === 'gemini' ? 'gemini' : (options.source === 'pi' ? 'pi' : (options.source === 'all' ? 'all' : 'codex')));
+            const source = normalizeSessionSource(options.source, 'all');
             const forceRefresh = !!options.forceRefresh;
             const loaded = !!this.sessionPathOptionsLoadedMap[source];
             if (!forceRefresh && loaded) {
@@ -526,7 +521,9 @@ export function createSessionBrowserMethods(options = {}) {
                                 ? this.t('sessions.source.codebuddy')
                                 : (this.sessionFilterSource === 'pi'
                                     ? this.t('sessions.source.pi')
-                                    : this.sessionFilterSource))));
+                                    : (this.sessionFilterSource === 'opencode'
+                                        ? this.t('sessions.source.opencode')
+                                        : this.sessionFilterSource)))));
                 chips.push({ key: 'source', title: this.t('sessions.filters.source'), value: label });
             }
             if (this.sessionPathFilter) {

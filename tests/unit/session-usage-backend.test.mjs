@@ -24,6 +24,8 @@ function extractFunction(content, funcName) {
 }
 
 const listSessionUsageSrc = extractFunction(cliContent, 'listSessionUsage');
+const normalizeSessionSourceNameSrc = extractFunction(cliContent, 'normalizeSessionSourceName');
+const isSessionSourceOrAllSrc = extractFunction(cliContent, 'isSessionSourceOrAll');
 const listSessionBrowseSrc = extractFunction(cliContent, 'listSessionBrowse');
 const sortSessionsByUpdatedAtSrc = extractFunction(cliContent, 'sortSessionsByUpdatedAt');
 const mergeAndLimitSessionsSrc = extractFunction(cliContent, 'mergeAndLimitSessions');
@@ -86,9 +88,14 @@ function instantiateListSessionBrowse(bindings = {}) {
 }
 
 function instantiateFunctionBundle(sources, exportName, bindings = {}) {
+    const uniqueSources = [...new Set([
+        normalizeSessionSourceNameSrc,
+        isSessionSourceOrAllSrc,
+        ...(Array.isArray(sources) ? sources : [])
+    ])];
     const bindingNames = Object.keys(bindings);
     const bindingValues = Object.values(bindings);
-    return Function(...bindingNames, `${sources.join('\n\n')}\nreturn ${exportName};`)(...bindingValues);
+    return Function(...bindingNames, `${uniqueSources.join('\n\n')}\nreturn ${exportName};`)(...bindingValues);
 }
 
 test('listSessionBrowse uses lightweight session listing without exact hydration', async () => {
@@ -254,6 +261,52 @@ test('listSessionUsage normalizes source and default limit for lightweight usage
     ]);
 });
 
+
+test('listSessionUsage preserves OpenCode DB-backed sessions without file hydration', async () => {
+    const listSessionUsage = instantiateListSessionUsage({
+        fs,
+        MAX_SESSION_USAGE_LIST_SIZE: 2000,
+        SESSION_BROWSE_SUMMARY_READ_BYTES: 65536,
+        async listSessionBrowse(params) {
+            assert.deepStrictEqual(params, {
+                source: 'opencode',
+                limit: 25,
+                forceRefresh: false
+            });
+            return [{
+                source: 'opencode',
+                sessionId: 'ses_open_code_1',
+                filePath: '/virtual/opencode/ses_open_code_1.jsonl',
+                sourceLabel: 'OpenCode',
+                provider: 'opencode',
+                messageCount: 3,
+                totalTokens: 99,
+                updatedAt: '2026-05-01T10:00:00.000Z'
+            }];
+        },
+        parseCodexSessionSummary() {
+            throw new Error('should not parse virtual OpenCode file as Codex');
+        },
+        parseClaudeSessionSummary() {
+            throw new Error('should not parse virtual OpenCode file as Claude');
+        },
+        listAllSessionsData: async () => {
+            throw new Error('should not call listAllSessionsData');
+        }
+    });
+
+    const result = await listSessionUsage({ source: 'opencode', limit: 25 });
+    assert.deepStrictEqual(result, [{
+        source: 'opencode',
+        sessionId: 'ses_open_code_1',
+        filePath: '/virtual/opencode/ses_open_code_1.jsonl',
+        sourceLabel: 'OpenCode',
+        provider: 'opencode',
+        messageCount: 3,
+        totalTokens: 99,
+        updatedAt: '2026-05-01T10:00:00.000Z'
+    }]);
+});
 test('exportSessionUsageCore exports filtered usage rows as csv and json', async () => {
     const sessions = [
         { model: 'gpt-5.3-codex', models: ['gpt-5.3-codex'], updatedAt: '2026-05-01T10:00:00.000Z', totalTokens: 120 },
@@ -963,6 +1016,7 @@ test('listSessionInventoryBySource reuses cached summaries and registers session
     };
     const listSessionInventoryBySource = instantiateFunctionBundle(
         [
+            normalizeSessionSourceNameSrc,
             buildSessionInventoryCacheKeySrc,
             cloneSessionInventoryCacheValueSrc,
             getSessionInventoryCacheSrc,
@@ -1010,6 +1064,7 @@ test('listSessionInventoryBySource returns cloned cache entries so UI-side mutat
     };
     const listSessionInventoryBySource = instantiateFunctionBundle(
         [
+            normalizeSessionSourceNameSrc,
             buildSessionInventoryCacheKeySrc,
             cloneSessionInventoryCacheValueSrc,
             getSessionInventoryCacheSrc,
@@ -1058,7 +1113,10 @@ test('listSessionInventoryBySource returns cloned cache entries so UI-side mutat
 
 test('listSessionInventoryBySource discards invalid non-array cache entries and rebuilds from source', () => {
     const buildSessionInventoryCacheKey = instantiateFunctionBundle(
-        [buildSessionInventoryCacheKeySrc],
+        [
+            normalizeSessionSourceNameSrc,
+            buildSessionInventoryCacheKeySrc
+        ],
         'buildSessionInventoryCacheKey',
         { Number, Math }
     );
@@ -1077,6 +1135,7 @@ test('listSessionInventoryBySource discards invalid non-array cache entries and 
     let codexCalls = 0;
     const listSessionInventoryBySource = instantiateFunctionBundle(
         [
+            normalizeSessionSourceNameSrc,
             buildSessionInventoryCacheKeySrc,
             cloneSessionInventoryCacheValueSrc,
             getSessionInventoryCacheSrc,
@@ -1123,7 +1182,11 @@ test('listSessionPaths reuses cached lightweight inventory and dedupes cwd value
     const cachedResults = new Map();
     const helperCalls = [];
     const listSessionPaths = instantiateFunctionBundle(
-        [listSessionPathsSrc],
+        [
+            normalizeSessionSourceNameSrc,
+            isSessionSourceOrAllSrc,
+            listSessionPathsSrc
+        ],
         'listSessionPaths',
         {
             MAX_SESSION_PATH_LIST_SIZE: 2000,
@@ -1171,7 +1234,10 @@ test('listSessionPaths reuses cached lightweight inventory and dedupes cwd value
 test('resolveSessionFilePath prefers cached session lookup before full filesystem scan', () => {
     let collectCalls = 0;
     const resolveSessionFilePath = instantiateFunctionBundle(
-        [resolveSessionFilePathSrc],
+        [
+            normalizeSessionSourceNameSrc,
+            resolveSessionFilePathSrc
+        ],
         'resolveSessionFilePath',
         {
             g_sessionFileLookupCache: {

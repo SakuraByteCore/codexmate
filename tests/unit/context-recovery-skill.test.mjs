@@ -22,8 +22,11 @@ function hasPython3() {
 
 function runSearch(args, tempHome) {
     return execFileSync('python3', [searchScript, ...args], {
-        cwd: projectRoot,
-        env: { ...process.env, HOME: tempHome },
+        env: {
+            ...process.env,
+            HOME: tempHome,
+            ...(process.platform === 'win32' ? { USERPROFILE: tempHome } : {})
+        },
         encoding: 'utf8'
     });
 }

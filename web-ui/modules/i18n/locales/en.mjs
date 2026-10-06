@@ -683,6 +683,7 @@ const en = Object.freeze({
     'sessions.source.gemini': 'Gemini CLI',
     'sessions.source.codebuddy': 'CodeBuddy Code',
     'sessions.source.pi': 'Pi',
+    'sessions.source.opencode': 'OpenCode',
     'sessions.loadingList': 'Loading sessions...',
     'sessions.empty': 'No sessions found',
     'sessions.unknownTime': 'unknown time',

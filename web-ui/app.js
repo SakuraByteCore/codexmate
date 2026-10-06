@@ -309,19 +309,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     all: [],
                     codex: [],
                     claude: [],
-                    gemini: []
+                    gemini: [],
+                    codebuddy: [],
+                    pi: [],
+                    opencode: []
                 },
                 sessionPathOptionsLoadedMap: {
                     all: false,
                     codex: false,
                     claude: false,
-                    gemini: false
+                    gemini: false,
+                    codebuddy: false,
+                    pi: false,
+                    opencode: false
                 },
                 sessionPathRequestSeqMap: {
                     all: 0,
                     codex: 0,
                     claude: 0,
-                    gemini: 0
+                    gemini: 0,
+                    codebuddy: 0,
+                    pi: 0,
+                    opencode: 0
                 },
                 sessionExporting: {},
                 sessionConverting: {},

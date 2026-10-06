@@ -37,6 +37,15 @@ const {
     shouldForceCompactLayoutMode
 } = logic;
 
+const ZERO_SESSION_SOURCE_TOTALS = {
+    codex: 0,
+    claude: 0,
+    gemini: 0,
+    codebuddy: 0,
+    pi: 0,
+    opencode: 0
+};
+
 test('normalizeClaudeValue trims strings and ignores non-string', () => {
     assert.strictEqual(normalizeClaudeValue('  abc  '), 'abc');
     assert.strictEqual(normalizeClaudeValue(123), '');
@@ -593,11 +602,10 @@ test('shouldForceCompactLayoutMode requires touch points for non-mobile UA compa
     assert.strictEqual(enabled, false);
 });
 
-test('isSessionQueryEnabled supports codex/claude/all', () => {
-    assert.strictEqual(isSessionQueryEnabled('codex'), true);
-    assert.strictEqual(isSessionQueryEnabled('CODEX'), true);
-    assert.strictEqual(isSessionQueryEnabled('claude'), true);
-    assert.strictEqual(isSessionQueryEnabled('ALL'), true);
+test('isSessionQueryEnabled supports every session browser source', () => {
+    for (const source of ['codex', 'CODEX', 'claude', 'gemini', 'codebuddy', 'pi', 'opencode', 'ALL']) {
+        assert.strictEqual(isSessionQueryEnabled(source), true, `${source} should support session query`);
+    }
     assert.strictEqual(isSessionQueryEnabled('openai'), false);
     assert.strictEqual(isSessionQueryEnabled(''), false);
 });
@@ -605,10 +613,33 @@ test('isSessionQueryEnabled supports codex/claude/all', () => {
 test('normalizeSessionSource returns safe source value for session filters', () => {
     assert.strictEqual(normalizeSessionSource('codex'), 'codex');
     assert.strictEqual(normalizeSessionSource('CLAUDE'), 'claude');
+    assert.strictEqual(normalizeSessionSource('OpenCode'), 'opencode');
     assert.strictEqual(normalizeSessionSource('all'), 'all');
     assert.strictEqual(normalizeSessionSource('unknown'), 'all');
     assert.strictEqual(normalizeSessionSource(''), 'all');
     assert.strictEqual(normalizeSessionSource(null), 'all');
+});
+
+test('sessionSourceOptions exposes OpenCode with localized label', () => {
+    const computed = createSessionComputed();
+    const labels = {
+        'common.all': 'All',
+        'sessions.source.codex': 'Codex',
+        'sessions.source.claudeCode': 'Claude Code',
+        'sessions.source.gemini': 'Gemini CLI',
+        'sessions.source.codebuddy': 'CodeBuddy Code',
+        'sessions.source.pi': 'Pi',
+        'sessions.source.opencode': 'OpenCode'
+    };
+    assert.deepStrictEqual(computed.sessionSourceOptions.call({ t: (key) => labels[key] || key }), [
+        { value: 'all', label: 'All' },
+        { value: 'codex', label: 'Codex' },
+        { value: 'claude', label: 'Claude Code' },
+        { value: 'gemini', label: 'Gemini CLI' },
+        { value: 'codebuddy', label: 'CodeBuddy Code' },
+        { value: 'pi', label: 'Pi' },
+        { value: 'opencode', label: 'OpenCode' }
+    ]);
 });
 
 test('normalizeSessionPathFilter trims path and handles non-string', () => {
@@ -662,6 +693,16 @@ test('buildSessionListParams keeps query for enabled sources', () => {
     assert.strictEqual(paramsClaude.source, 'claude');
     assert.strictEqual(paramsClaude.roleFilter, 'user');
     assert.strictEqual(paramsClaude.limit, DEFAULT_SESSION_LIST_LIMIT);
+
+    const paramsOpencode = buildSessionListParams({
+        source: 'opencode',
+        query: 'db backed session',
+        roleFilter: 'assistant'
+    });
+    assert.strictEqual(paramsOpencode.query, 'db backed session');
+    assert.strictEqual(paramsOpencode.source, 'opencode');
+    assert.strictEqual(paramsOpencode.roleFilter, 'assistant');
+    assert.strictEqual(paramsOpencode.limit, DEFAULT_SESSION_LIST_LIMIT);
 
     const paramsAll = buildSessionListParams({
         source: 'all',
@@ -867,9 +908,45 @@ test('buildUsageChartGroups keeps all used model names for the selected range an
     assert.strictEqual(result.modelCoverage.missingModelSessions, 0);
     assert.strictEqual(result.modelCoverage.providerOnlySessions, 0);
     assert.strictEqual(result.modelCoverage.coveragePercent, 100);
-    assert.deepStrictEqual(result.modelCoverage.missingModelSourceTotals, { codex: 0, claude: 0 });
+    assert.deepStrictEqual(result.modelCoverage.missingModelSourceTotals, ZERO_SESSION_SOURCE_TOTALS);
     assert.deepStrictEqual(result.modelCoverage.missingModelProviders, []);
     assert.deepStrictEqual(result.modelCoverage.missingModelSessionsPreview, []);
+});
+
+test('buildUsageChartGroups includes OpenCode in source share and model labels', () => {
+    const result = buildUsageChartGroups([
+        {
+            source: 'opencode',
+            model: 'anthropic/claude-sonnet-4',
+            createdAt: '2026-04-10T07:30:00.000Z',
+            updatedAt: '2026-04-10T08:00:00.000Z',
+            messageCount: 5,
+            totalTokens: 1234,
+            contextWindow: 200000
+        },
+        {
+            source: 'pi',
+            model: 'gpt-5.3-codex',
+            createdAt: '2026-04-10T08:30:00.000Z',
+            updatedAt: '2026-04-10T09:00:00.000Z',
+            messageCount: 2,
+            totalTokens: 500,
+            contextWindow: 128000
+        }
+    ], {
+        range: 'all',
+        now: Date.UTC(2026, 3, 12, 12, 0, 0)
+    });
+
+    const shareByKey = Object.fromEntries(result.sourceShare.map((item) => [item.key, item]));
+    assert.strictEqual(shareByKey.opencode.label, 'OpenCode');
+    assert.strictEqual(shareByKey.opencode.value, 1);
+    assert.strictEqual(shareByKey.opencode.messageTotal, 5);
+    assert.strictEqual(shareByKey.pi.label, 'Pi');
+    assert.strictEqual(shareByKey.pi.value, 1);
+    assert.deepStrictEqual(result.usedModels[0].sourceLabels, ['OpenCode']);
+    assert.strictEqual(result.recentSessions[0].sourceLabel, 'Pi');
+    assert.strictEqual(result.recentSessions[1].sourceLabel, 'OpenCode');
 });
 
 test('buildUsageChartGroups ignores provider-only and <synthetic> records', () => {
@@ -903,7 +980,7 @@ test('buildUsageChartGroups ignores provider-only and <synthetic> records', () =
     assert.strictEqual(result.modelCoverage.missingModelSessions, 0);
     assert.strictEqual(result.modelCoverage.providerOnlySessions, 0);
     assert.strictEqual(result.modelCoverage.coveragePercent, 0);
-    assert.deepStrictEqual(result.modelCoverage.missingModelSourceTotals, { codex: 0, claude: 0 });
+    assert.deepStrictEqual(result.modelCoverage.missingModelSourceTotals, ZERO_SESSION_SOURCE_TOTALS);
     assert.deepStrictEqual(result.modelCoverage.missingModelProviders, []);
     assert.deepStrictEqual(result.modelCoverage.missingModelSessionsPreview, []);
 });
@@ -943,7 +1020,7 @@ test('buildUsageChartGroups collects every model name from session model arrays 
     assert.strictEqual(result.modelCoverage.missingModelSessions, 0);
     assert.strictEqual(result.modelCoverage.providerOnlySessions, 0);
     assert.strictEqual(result.modelCoverage.coveragePercent, 100);
-    assert.deepStrictEqual(result.modelCoverage.missingModelSourceTotals, { codex: 0, claude: 0 });
+    assert.deepStrictEqual(result.modelCoverage.missingModelSourceTotals, ZERO_SESSION_SOURCE_TOTALS);
     assert.deepStrictEqual(result.modelCoverage.missingModelProviders, []);
     assert.deepStrictEqual(result.modelCoverage.missingModelSessionsPreview, []);
 });

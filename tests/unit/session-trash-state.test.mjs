@@ -17,6 +17,18 @@ const { createI18nMethods } = await import(
 
 const appSource = readBundledWebUiScript();
 const cliSource = readProjectFile('cli.js');
+const normalizeSessionSourceNameSource = extractFunctionBySignature(
+    cliSource,
+    'function normalizeSessionSourceName(value, fallback = \'\') {',
+    'normalizeSessionSourceName'
+);
+const normalizeSessionSourceName = Function(normalizeSessionSourceNameSource)();
+const getSessionSourceLabelSource = extractFunctionBySignature(
+    cliSource,
+    'function getSessionSourceLabel(source) {',
+    'getSessionSourceLabel'
+);
+const getSessionSourceLabel = Function(getSessionSourceLabelSource)();
 const indexHtmlSource = readBundledWebUiHtml();
 const stylesSource = readBundledWebUiCss();
 
@@ -195,8 +207,13 @@ function extractFunctionBySignature(source, signature, funcName) {
 }
 
 function instantiateFunction(funcSource, funcName, bindings = {}) {
-    const bindingNames = Object.keys(bindings);
-    const bindingValues = Object.values(bindings);
+    const allBindings = {
+        normalizeSessionSourceName,
+        getSessionSourceLabel,
+        ...bindings
+    };
+    const bindingNames = Object.keys(allBindings);
+    const bindingValues = Object.values(allBindings);
     return Function(...bindingNames, `${funcSource}\nreturn ${funcName};`)(...bindingValues);
 }
 

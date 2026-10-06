@@ -683,6 +683,7 @@ const zh = Object.freeze({
     'sessions.source.gemini': 'Gemini CLI',
     'sessions.source.codebuddy': 'CodeBuddy Code',
     'sessions.source.pi': 'Pi',
+    'sessions.source.opencode': 'OpenCode',
     'sessions.loadingList': '会话加载中...',
     'sessions.empty': '暂无可用会话记录',
     'sessions.unknownTime': '未知时间',

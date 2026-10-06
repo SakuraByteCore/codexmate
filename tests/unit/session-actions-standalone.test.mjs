@@ -34,6 +34,20 @@ test('buildSessionStandaloneUrl returns empty when neither origin nor apiBase is
     assert.strictEqual(url, '');
 });
 
+test('buildSessionStandaloneUrl accepts OpenCode DB-backed session source', () => {
+    const methods = createSessionActionMethods({ apiBase: '' });
+    const url = withWindow({
+        location: {
+            origin: 'http://127.0.0.1:3210'
+        }
+    }, () => methods.buildSessionStandaloneUrl.call({}, {
+        source: 'opencode',
+        sessionId: 'ses_open_code_1'
+    }));
+
+    assert.strictEqual(url, 'http://127.0.0.1:3210/session?source=opencode&sessionId=ses_open_code_1');
+});
+
 test('copySessionLink shows an error when url cannot be built', async () => {
     const methods = createSessionActionMethods({ apiBase: '' });
     const context = {
