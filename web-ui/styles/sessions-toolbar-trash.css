@@ -587,6 +587,7 @@
     font-weight: 600;
     line-height: 1;
     flex-shrink: 0;
+    cursor: pointer;
 }
 
 .session-match-snippets {
@@ -611,3 +612,10 @@
     max-width: 100%;
 }
 
+/* ===== Session preview match highlight ===== */
+.session-msg-content mark {
+    background: rgba(200, 121, 99, 0.18);
+    color: var(--color-brand-dark);
+    border-radius: 2px;
+    padding: 0 1px;
+}

@@ -444,15 +444,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptsPathReferenceCacheKey'
     ];
     const allowedMissingCurrentKeys = [
-        'sessionPreviewQuery',
-        'sessionMatchSearched',
-        'sessionMatchPendingJump',
-        'sessionMatchTokens',
-        'sessionMatchPositions',
-        'sessionMatchTotalCount',
-        'sessionMatchNavIndex',
-        'sessionMatchNavBlocked',
-        'sessionMatchHighlightStamp',
         'addingPiProviderApi',
         'addingPiProviderApiKey',
         'addingPiProviderBaseUrl',
@@ -930,6 +921,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'runProvidersHealthCheck',
         'setSessionSource',
         'highlightQueryText',
+        'onSessionPreviewSearchInput',
+        'cancelSessionPreviewSearchDebounce',
+        'ensureSessionMatchPositionVisible',
+        'openSessionFromListMatch',
         'pasteConfigTemplateContent',
         'pasteAgentsContent',
         'importSingleSkill',
@@ -1080,16 +1075,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'insertPromptPathReference'
     );
     const allowedMissingCurrentMethodKeys = [
-        'highlightQueryText',
-        'buildSessionPreviewQueryTokens',
-        'submitSessionPreviewSearch',
-        'clearSessionPreviewSearch',
-        'resetSessionPreviewSearchNav',
-        'findSessionMatchMessageIndex',
-        'scrollSessionMessageIntoView',
-        'flashSessionMessageKey',
-        'revealSessionMatchPosition',
-        'stepSessionMatchNav',
         'clearPromptsAxisPendingJump',
         'consumePromptsAxisPendingJump',
         'addPiProviderFromModal',

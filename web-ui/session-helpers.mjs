@@ -384,6 +384,7 @@ export async function loadActiveSessionDetail(api, options = {}) {
             filePath: this.activeSession.filePath,
             messageLimit,
             preview,
+            query: typeof this.sessionPreviewQuery === 'string' ? this.sessionPreviewQuery.trim() : ''
         });
 
         if (requestSeq !== this.sessionDetailRequestSeq) {
@@ -419,6 +420,35 @@ export async function loadActiveSessionDetail(api, options = {}) {
             this.invalidateSessionTimelineMeasurementCache(true);
         }
         this.activeSessionDetailClipped = !!res.clipped;
+        const rawMatch = res.match && typeof res.match === 'object' ? res.match : null;
+        const freshSessionSearch = !!this.sessionMatchPendingJump;
+        this.sessionMatchPendingJump = false;
+        if (rawMatch) {
+            const rawPositions = Array.isArray(rawMatch.positions) ? rawMatch.positions : [];
+            this.sessionMatchPositions = rawPositions.filter(item => item && typeof item === 'object');
+            const rawCount = Number(rawMatch.count);
+            this.sessionMatchTotalCount = Number.isFinite(rawCount)
+                ? Math.max(0, Math.floor(rawCount))
+                : this.sessionMatchPositions.length;
+            this.sessionMatchTokens = this.buildSessionPreviewQueryTokens(this.sessionPreviewQuery);
+            this.sessionMatchHighlightStamp = (Number(this.sessionMatchHighlightStamp) || 0) + 1;
+            this.sessionMatchSearched = true;
+            if (freshSessionSearch) {
+                this.sessionMatchNavIndex = 0;
+                this.sessionMatchNavBlocked = false;
+            }
+        } else if (freshSessionSearch) {
+            this.sessionMatchSearched = true;
+        }
+        if (freshSessionSearch) {
+            const autoRevealSession = currentActiveSession;
+            this.$nextTick(() => {
+                if (this.activeSession !== autoRevealSession) return;
+                if (this.mainTab !== 'sessions' && !this.sessionStandalone) return;
+                if (!Array.isArray(this.sessionMatchPositions) || !this.sessionMatchPositions.length) return;
+                this.revealSessionMatchPosition(this.sessionMatchNavIndex);
+            });
+        }
         const responseLimitRaw = Number(res.messageLimit);
         this.sessionDetailMessageLimit = Number.isFinite(responseLimitRaw)
             ? Math.max(1, Math.floor(responseLimitRaw))

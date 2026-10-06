@@ -4178,8 +4178,14 @@ return function render(_ctx, _cache) {
                                         (session.match && session.match.hit)
                                           ? (_openBlock(), _createElementBlock("span", {
                                               key: 0,
-                                              class: "session-match-badge"
-                                            }, _toDisplayString(session.match.count), 1 /* TEXT */))
+                                              class: "session-match-badge",
+                                              role: "button",
+                                              tabindex: "0",
+                                              onClick: _withModifiers($event => (_ctx.openSessionFromListMatch(session)), ["stop"]),
+                                              onKeydown: _withKeys(_withModifiers($event => (_ctx.openSessionFromListMatch(session)), ["stop","prevent"]), ["enter"]),
+                                              title: _ctx.t('sessions.preview.searchInSession'),
+                                              "aria-label": _ctx.t('sessions.preview.searchInSession')
+                                            }, _toDisplayString(session.match.count), 41 /* TEXT, PROPS, NEED_HYDRATION */, ["onClick", "onKeydown", "title", "aria-label"]))
                                           : _createCommentVNode("v-if", true),
                                         (_ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)] && _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent > 0)
                                           ? (_openBlock(), _createElementBlock("span", {
@@ -4320,7 +4326,108 @@ return function render(_ctx, _cache) {
                                             }, [
                                               _createElementVNode("span", { class: "session-preview-meta-item" }, _toDisplayString(_ctx.activeSession.cwd), 1 /* TEXT */)
                                             ]))
-                                          : _createCommentVNode("v-if", true)
+                                          : _createCommentVNode("v-if", true),
+                                        _createElementVNode("div", { class: "session-preview-search" }, [
+                                          _withDirectives(_createElementVNode("input", {
+                                            class: "session-preview-search-input",
+                                            type: "text",
+                                            "onUpdate:modelValue": $event => ((_ctx.sessionPreviewQuery) = $event),
+                                            onInput: _ctx.onSessionPreviewSearchInput,
+                                            onKeyup: _withKeys(_ctx.submitSessionPreviewSearch, ["enter"]),
+                                            disabled: _ctx.sessionDetailLoading || !_ctx.activeSession,
+                                            placeholder: _ctx.t('sessions.preview.searchInSession'),
+                                            "aria-label": _ctx.t('sessions.preview.searchInSession')
+                                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onInput", "onKeyup", "disabled", "placeholder", "aria-label"]), [
+                                            [_vModelText, _ctx.sessionPreviewQuery]
+                                          ]),
+                                          _createElementVNode("button", {
+                                            type: "button",
+                                            class: "session-preview-search-go",
+                                            onClick: _ctx.submitSessionPreviewSearch,
+                                            disabled: _ctx.sessionDetailLoading || !_ctx.activeSession,
+                                            title: _ctx.t('sessions.preview.searchGo'),
+                                            "aria-label": _ctx.t('sessions.preview.searchGo')
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 16 16",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "1.8",
+                                              "stroke-linecap": "round",
+                                              "stroke-linejoin": "round"
+                                            }, [
+                                              _createElementVNode("circle", {
+                                                cx: "7",
+                                                cy: "7",
+                                                r: "4.5"
+                                              }),
+                                              _createElementVNode("path", { d: "M10.5 10.5L14 14" })
+                                            ]))
+                                          ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
+                                          (_ctx.sessionPreviewQuery)
+                                            ? (_openBlock(), _createElementBlock("button", {
+                                                key: 0,
+                                                type: "button",
+                                                class: "session-preview-search-clear",
+                                                onClick: _ctx.clearSessionPreviewSearch,
+                                                title: _ctx.t('sessions.preview.searchClear'),
+                                                "aria-label": _ctx.t('sessions.preview.searchClear')
+                                              }, "×", 8 /* PROPS */, ["onClick", "title", "aria-label"]))
+                                            : _createCommentVNode("v-if", true),
+                                          (_ctx.sessionMatchPositions.length)
+                                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                                                _createElementVNode("span", { class: "session-match-nav-count" }, _toDisplayString(_ctx.t('sessions.preview.matchCount', { count: _ctx.sessionMatchTotalCount || _ctx.sessionMatchPositions.length })), 1 /* TEXT */),
+                                                _createElementVNode("button", {
+                                                  type: "button",
+                                                  class: "session-match-nav-btn",
+                                                  onClick: $event => (_ctx.stepSessionMatchNav(-1)),
+                                                  title: _ctx.t('sessions.preview.matchPrev'),
+                                                  "aria-label": _ctx.t('sessions.preview.matchPrev')
+                                                }, [
+                                                  (_openBlock(), _createElementBlock("svg", {
+                                                    viewBox: "0 0 16 16",
+                                                    fill: "none",
+                                                    stroke: "currentColor",
+                                                    "stroke-width": "1.8",
+                                                    "stroke-linecap": "round",
+                                                    "stroke-linejoin": "round"
+                                                  }, [
+                                                    _createElementVNode("polyline", { points: "10 3 5 8 10 13" })
+                                                  ]))
+                                                ], 8 /* PROPS */, ["onClick", "title", "aria-label"]),
+                                                _createElementVNode("span", { class: "session-match-nav-index" }, _toDisplayString(_ctx.sessionMatchNavIndex + 1) + "/" + _toDisplayString(_ctx.sessionMatchPositions.length), 1 /* TEXT */),
+                                                _createElementVNode("button", {
+                                                  type: "button",
+                                                  class: "session-match-nav-btn",
+                                                  onClick: $event => (_ctx.stepSessionMatchNav(1)),
+                                                  title: _ctx.t('sessions.preview.matchNext'),
+                                                  "aria-label": _ctx.t('sessions.preview.matchNext')
+                                                }, [
+                                                  (_openBlock(), _createElementBlock("svg", {
+                                                    viewBox: "0 0 16 16",
+                                                    fill: "none",
+                                                    stroke: "currentColor",
+                                                    "stroke-width": "1.8",
+                                                    "stroke-linecap": "round",
+                                                    "stroke-linejoin": "round"
+                                                  }, [
+                                                    _createElementVNode("polyline", { points: "6 3 11 8 6 13" })
+                                                  ]))
+                                                ], 8 /* PROPS */, ["onClick", "title", "aria-label"]),
+                                                (_ctx.sessionMatchNavBlocked)
+                                                  ? (_openBlock(), _createElementBlock("span", {
+                                                      key: 0,
+                                                      class: "session-match-nav-blocked"
+                                                    }, _toDisplayString(_ctx.t('sessions.preview.matchUnavailable')), 1 /* TEXT */))
+                                                  : _createCommentVNode("v-if", true)
+                                              ], 64 /* STABLE_FRAGMENT */))
+                                            : (_ctx.sessionMatchSearched && !_ctx.sessionDetailLoading)
+                                              ? (_openBlock(), _createElementBlock("span", {
+                                                  key: 2,
+                                                  class: "session-match-nav-empty"
+                                                }, _toDisplayString(_ctx.t('sessions.preview.noMatch')), 1 /* TEXT */))
+                                              : _createCommentVNode("v-if", true)
+                                        ])
                                       ]),
                                       _createElementVNode("div", { class: "session-actions" }, [
                                         _createElementVNode("button", {
@@ -4630,7 +4737,7 @@ return function render(_ctx, _cache) {
                                                         }, _toDisplayString(_ctx.t('sessions.preview.clipped', { count: _ctx.activeSessionMessages.length })), 1 /* TEXT */))
                                                       : _createCommentVNode("v-if", true),
                                                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionVisibleMessages, (msg, idx, ___, _cached) => {
-                                                      const _memo = ([msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole])
+                                                      const _memo = ([msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole, _ctx.sessionMatchHighlightStamp])
                                                       if (_cached && _cached.el && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
                                                       const _item = (_openBlock(), _createElementBlock("div", {
                                                         key: _ctx.getRecordRenderKey(msg, idx),
@@ -4647,7 +4754,7 @@ return function render(_ctx, _cache) {
                                                         ]),
                                                         _createElementVNode("div", {
                                                           class: "session-msg-content",
-                                                          innerHTML: msg.text || ''
+                                                          innerHTML: _ctx.highlightQueryText(msg.text) || ''
                                                         }, null, 8 /* PROPS */, ["innerHTML"]),
                                                         (msg.normalizedRole === 'user')
                                                           ? (_openBlock(), _createElementBlock("button", {

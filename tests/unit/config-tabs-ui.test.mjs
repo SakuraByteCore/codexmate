@@ -358,7 +358,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /v-memo="\[activeSessionExportKey === getSessionExportKey\(session\)/);
     assert.match(html, /v-for="\(msg, idx\) in activeSessionVisibleMessages"/);
     assert.match(html, /canLoadMoreSessionMessages/);
-    assert.match(html, /v-memo="\[msg\.text,\s*msg\.timestamp,\s*msg\.roleLabel,\s*msg\.normalizedRole\]"/);
+    assert.match(html, /v-memo="\[msg\.text,\s*msg\.timestamp,\s*msg\.roleLabel,\s*msg\.normalizedRole,\s*sessionMatchHighlightStamp\]"/);
     assert.match(html, /v-memo="\[sessionTimelineActiveKey === node\.key,\s*node\.safePercent,\s*node\.title\]"/);
     const providerShareButton = html.match(
         /<button[\s\S]*?@click="copyProviderShareCommand\(provider\)"[\s\S]*?:aria-label="t\('config\.shareCommand\.aria'\)">/
