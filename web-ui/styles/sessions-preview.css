@@ -741,9 +741,9 @@
 
 /* Session preview jump buttons (floating bottom-right, persistent top/bottom pair) */
 .session-preview-jump {
-    position: absolute;
+    position: fixed;
     right: 12px;
-    bottom: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     z-index: 5;
     display: flex;
     flex-direction: column;
