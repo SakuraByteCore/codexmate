@@ -289,7 +289,7 @@
                         <div class="side-item-title">{{ t('side.sessions.browser') }}</div>
                         <div class="side-item-meta">
                             <span>{{ t('side.sessions.browser.meta') }}</span>
-                            <span>{{ t('sessions.sourceLabel', { value: (sessionFilterSource === 'all' ? t('sessions.source.all') : (sessionFilterSource === 'claude' ? 'Claude Code' : (sessionFilterSource === 'gemini' ? 'Gemini CLI' : (sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))) }) }}</span>
+                            <span>{{ t('sessions.sourceLabel', { value: (sessionFilterSource === 'all' ? t('sessions.source.all') : (sessionFilterSource === 'claude' ? 'Claude Code' : (sessionFilterSource === 'gemini' ? 'Gemini CLI' : (sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : (sessionFilterSource === 'workbuddy' ? 'WorkBuddy AI' : 'Codex'))))) }) }}</span>
                         </div>
                     </button>
                     <button
@@ -527,7 +527,9 @@
                                                 ? t('sessions.source.gemini')
                                                 : (sessionFilterSource === 'codebuddy'
                                                     ? t('sessions.source.codebuddy')
-                                                    : t('sessions.source.codex'))))) }}
+                                                    : (sessionFilterSource === 'workbuddy'
+                                                        ? t('sessions.source.workbuddy')
+                                                        : t('sessions.source.codex')))))) }}
                             </span>
                         </div>
                         <div class="status-chip">

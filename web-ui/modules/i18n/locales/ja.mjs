@@ -352,6 +352,8 @@ const ja = Object.freeze({
     'dashboard.sessionSource.claude': 'Claude Code',
     'dashboard.sessionSource.gemini': 'Gemini CLI',
     'dashboard.sessionSource.codebuddy': 'CodeBuddy Code',
+
+    'dashboard.sessionSource.workbuddy': 'WorkBuddy AI',
     'dashboard.sessionSource.all': 'すべて',
     'dashboard.sessionPath.all': 'すべてのパス',
     'dashboard.sessionQuery.unsupported': '現在のソースは非対応',
@@ -684,6 +686,8 @@ const ja = Object.freeze({
     'sessions.source.claudeCode': 'Claude Code',
     'sessions.source.gemini': 'Gemini',
     'sessions.source.codebuddy': 'CodeBuddy',
+
+    'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
     'sessions.loadingList': 'セッション一覧を読み込み中...',

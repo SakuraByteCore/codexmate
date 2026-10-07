@@ -633,6 +633,8 @@ const vi = Object.freeze({
     'dashboard.sessionSource.claude': 'Claude Code',
     'dashboard.sessionSource.gemini': 'Gemini CLI',
     'dashboard.sessionSource.codebuddy': 'CodeBuddy Code',
+
+    'dashboard.sessionSource.workbuddy': 'WorkBuddy AI',
     'dashboard.sessionSource.all': 'Tất cả',
     'dashboard.sessionPath.all': 'Tất cả đường dẫn',
     'dashboard.sessionQuery.unsupported': 'Nguồn không được hỗ trợ',
@@ -859,6 +861,8 @@ const vi = Object.freeze({
     'sessions.source.claudeCode': 'Claude Code',
     'sessions.source.gemini': 'Gemini CLI',
     'sessions.source.codebuddy': 'CodeBuddy Code',
+
+    'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
     'sessions.loadingList': 'Đang tải phiên làm việc...',

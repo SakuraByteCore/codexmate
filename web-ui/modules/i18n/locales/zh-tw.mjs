@@ -350,6 +350,8 @@ const zhTw = Object.freeze({
     'dashboard.sessionSource.claude': 'Claude Code',
     'dashboard.sessionSource.gemini': 'Gemini CLI',
     'dashboard.sessionSource.codebuddy': 'CodeBuddy Code',
+
+    'dashboard.sessionSource.workbuddy': 'WorkBuddy AI',
     'dashboard.sessionSource.all': '全部',
     'dashboard.sessionPath.all': '全部路徑',
     'dashboard.sessionQuery.unsupported': '目前來源不支持',
@@ -682,6 +684,8 @@ const zhTw = Object.freeze({
     'sessions.source.claudeCode': 'Claude Code',
     'sessions.source.gemini': 'Gemini CLI',
     'sessions.source.codebuddy': 'CodeBuddy Code',
+
+    'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
     'sessions.loadingList': '會話載入中...',

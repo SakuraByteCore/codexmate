@@ -412,7 +412,7 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.sessions.browser')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.sessions.browser.meta')), 1 /* TEXT */),
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.sourceLabel', { value: (_ctx.sessionFilterSource === 'all' ? _ctx.t('sessions.source.all') : (_ctx.sessionFilterSource === 'claude' ? 'Claude Code' : (_ctx.sessionFilterSource === 'gemini' ? 'Gemini CLI' : (_ctx.sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : 'Codex')))) })), 1 /* TEXT */)
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.sourceLabel', { value: (_ctx.sessionFilterSource === 'all' ? _ctx.t('sessions.source.all') : (_ctx.sessionFilterSource === 'claude' ? 'Claude Code' : (_ctx.sessionFilterSource === 'gemini' ? 'Gemini CLI' : (_ctx.sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : (_ctx.sessionFilterSource === 'workbuddy' ? 'WorkBuddy AI' : 'Codex'))))) })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
@@ -727,7 +727,9 @@ return function render(_ctx, _cache) {
                                                 ? _ctx.t('sessions.source.gemini')
                                                 : (_ctx.sessionFilterSource === 'codebuddy'
                                                     ? _ctx.t('sessions.source.codebuddy')
-                                                    : _ctx.t('sessions.source.codex')))))), 1 /* TEXT */)
+                                                    : (_ctx.sessionFilterSource === 'workbuddy'
+                                                        ? _ctx.t('sessions.source.workbuddy')
+                                                        : _ctx.t('sessions.source.codex'))))))), 1 /* TEXT */)
                   ]),
                   _createElementVNode("div", { class: "status-chip" }, [
                     _createElementVNode("span", { class: "label" }, _toDisplayString(_ctx.t('status.sessionCount')), 1 /* TEXT */),

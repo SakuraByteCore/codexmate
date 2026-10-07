@@ -68,6 +68,9 @@ function instantiateListSessionUsage(bindings = {}) {
         parseCodeBuddySessionSummary() {
             throw new Error('should not parse codebuddy summary in this test');
         },
+        parseWorkBuddySessionSummary() {
+            throw new Error('should not parse workbuddy summary in this test');
+        },
         parseGeminiSessionSummary() {
             throw new Error('should not parse gemini summary in this test');
         },

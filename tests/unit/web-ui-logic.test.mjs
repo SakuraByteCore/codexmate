@@ -42,6 +42,7 @@ const ZERO_SESSION_SOURCE_TOTALS = {
     claude: 0,
     gemini: 0,
     codebuddy: 0,
+    workbuddy: 0,
     pi: 0,
     opencode: 0
 };
@@ -603,7 +604,7 @@ test('shouldForceCompactLayoutMode requires touch points for non-mobile UA compa
 });
 
 test('isSessionQueryEnabled supports every session browser source', () => {
-    for (const source of ['codex', 'CODEX', 'claude', 'gemini', 'codebuddy', 'pi', 'opencode', 'ALL']) {
+    for (const source of ['codex', 'CODEX', 'claude', 'gemini', 'codebuddy', 'workbuddy', 'pi', 'opencode', 'ALL']) {
         assert.strictEqual(isSessionQueryEnabled(source), true, `${source} should support session query`);
     }
     assert.strictEqual(isSessionQueryEnabled('openai'), false);
@@ -614,6 +615,7 @@ test('normalizeSessionSource returns safe source value for session filters', () 
     assert.strictEqual(normalizeSessionSource('codex'), 'codex');
     assert.strictEqual(normalizeSessionSource('CLAUDE'), 'claude');
     assert.strictEqual(normalizeSessionSource('OpenCode'), 'opencode');
+    assert.strictEqual(normalizeSessionSource('WorkBuddy'), 'workbuddy');
     assert.strictEqual(normalizeSessionSource('all'), 'all');
     assert.strictEqual(normalizeSessionSource('unknown'), 'all');
     assert.strictEqual(normalizeSessionSource(''), 'all');
@@ -628,6 +630,7 @@ test('sessionSourceOptions exposes OpenCode with localized label', () => {
         'sessions.source.claudeCode': 'Claude Code',
         'sessions.source.gemini': 'Gemini CLI',
         'sessions.source.codebuddy': 'CodeBuddy Code',
+        'sessions.source.workbuddy': 'WorkBuddy AI',
         'sessions.source.pi': 'Pi',
         'sessions.source.opencode': 'OpenCode'
     };
@@ -637,6 +640,7 @@ test('sessionSourceOptions exposes OpenCode with localized label', () => {
         { value: 'claude', label: 'Claude Code' },
         { value: 'gemini', label: 'Gemini CLI' },
         { value: 'codebuddy', label: 'CodeBuddy Code' },
+        { value: 'workbuddy', label: 'WorkBuddy AI' },
         { value: 'pi', label: 'Pi' },
         { value: 'opencode', label: 'OpenCode' }
     ]);

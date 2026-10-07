@@ -29,14 +29,14 @@ function shouldUseFastSessionBrowseLimit(options = {}) {
 
 export function isSessionQueryEnabled(source) {
     const normalized = normalizeSessionSource(source, '');
-    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all';
+    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all';
 }
 
 export function normalizeSessionSource(source, fallback = 'all') {
     const normalized = typeof source === 'string'
         ? source.trim().toLowerCase()
         : '';
-    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all') {
+    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all') {
         return normalized;
     }
     return fallback;
@@ -61,12 +61,13 @@ function getSessionSourceLabel(source) {
     if (source === 'claude') return 'Claude Code';
     if (source === 'gemini') return 'Gemini CLI';
     if (source === 'codebuddy') return 'CodeBuddy Code';
+    if (source === 'workbuddy') return 'WorkBuddy AI';
     if (source === 'pi') return 'Pi';
     if (source === 'opencode') return 'OpenCode';
     return 'Codex';
 }
 
-const SESSION_USAGE_SOURCE_ORDER = ['codex', 'claude', 'gemini', 'codebuddy', 'pi', 'opencode'];
+const SESSION_USAGE_SOURCE_ORDER = ['codex', 'claude', 'gemini', 'codebuddy', 'workbuddy', 'pi', 'opencode'];
 
 function collectSessionModelNames(session) {
     if (!session || typeof session !== 'object') {

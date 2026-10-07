@@ -519,11 +519,13 @@ export function createSessionBrowserMethods(options = {}) {
                             ? this.t('sessions.source.gemini')
                             : (this.sessionFilterSource === 'codebuddy'
                                 ? this.t('sessions.source.codebuddy')
-                                : (this.sessionFilterSource === 'pi'
-                                    ? this.t('sessions.source.pi')
-                                    : (this.sessionFilterSource === 'opencode'
-                                        ? this.t('sessions.source.opencode')
-                                        : this.sessionFilterSource)))));
+                                : (this.sessionFilterSource === 'workbuddy'
+                                    ? this.t('sessions.source.workbuddy')
+                                    : (this.sessionFilterSource === 'pi'
+                                        ? this.t('sessions.source.pi')
+                                        : (this.sessionFilterSource === 'opencode'
+                                            ? this.t('sessions.source.opencode')
+                                            : this.sessionFilterSource))))));
                 chips.push({ key: 'source', title: this.t('sessions.filters.source'), value: label });
             }
             if (this.sessionPathFilter) {

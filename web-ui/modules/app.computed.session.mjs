@@ -323,6 +323,7 @@ export function createSessionComputed() {
                 { value: "claude", label: this.t("sessions.source.claudeCode") },
                 { value: "gemini", label: this.t("sessions.source.gemini") },
                 { value: "codebuddy", label: this.t("sessions.source.codebuddy") },
+                { value: "workbuddy", label: this.t("sessions.source.workbuddy") },
                 { value: "pi", label: this.t("sessions.source.pi") },
                 { value: "opencode", label: this.t("sessions.source.opencode") }
             ];

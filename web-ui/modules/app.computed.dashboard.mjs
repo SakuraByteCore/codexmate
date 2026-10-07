@@ -196,6 +196,7 @@ export function createDashboardComputed() {
             if (this.sessionFilterSource === 'claude') return this.t('dashboard.sessionSource.claude');
             if (this.sessionFilterSource === 'gemini') return this.t('dashboard.sessionSource.gemini');
             if (this.sessionFilterSource === 'codebuddy') return this.t('dashboard.sessionSource.codebuddy');
+            if (this.sessionFilterSource === 'workbuddy') return this.t('dashboard.sessionSource.workbuddy');
             return this.t('dashboard.sessionSource.all');
         },
         inspectorSessionPathLabel() {
