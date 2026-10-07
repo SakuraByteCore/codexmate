@@ -739,12 +739,16 @@
     cursor: not-allowed;
 }
 
-/* Session preview jump button (floating bottom-right, single, alternating) */
+/* Session preview jump buttons (floating bottom-right, persistent top/bottom pair) */
 .session-preview-jump {
     position: absolute;
     right: 12px;
     bottom: 16px;
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     pointer-events: none;
 }
 
