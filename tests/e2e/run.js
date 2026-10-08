@@ -33,6 +33,9 @@ const testInstallStatus = require('./test-install-status');
 const testWebhook = require('./test-webhook');
 const testKilocodeConfig = require('./test-kilocode-config');
 const testOpencodeAgentsFile = require('./test-opencode-agents-file');
+const runRecentHealthE2E = require('./recent-health.e2e');
+const testWebUiSessionTab = require('./test-web-ui-session-tab');
+const testWebUiUrlRouting = require('./test-web-ui-url-routing');
 
 async function main() {
     const realHome = os.homedir();
@@ -147,6 +150,18 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         }
         await testInvalidConfig(ctx);
 
+        // recent-health 自带独立服务器与临时 HOME，置于主 Web 服务器启动前避免 18000 段端口重叠
+        debug('recent health e2e');
+        try {
+            await runRecentHealthE2E();
+        } catch (err) {
+            if (err && err.code === 'EPERM') {
+                console.warn('E2E skipped: child_process spawn blocked (EPERM) when starting recent-health server');
+            } else {
+                throw err;
+            }
+        }
+
         const port = 18000 + Math.floor(Math.random() * 1000);
         debug('start web server');
         const { CODEXMATE_NO_BROWSER: _noBrowserFlag, ...serverEnvBase } = env;
@@ -189,6 +204,8 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         await testWebUiAssets(ctx);
         await testWebUiSessionBrowser(ctx);
         await testWebUiUsageInteractions(ctx);
+        await testWebUiUrlRouting(ctx);
+        await testWebUiSessionTab();
         await testKilocodeConfig(ctx);
         await testOpencodeAgentsFile(ctx);
 

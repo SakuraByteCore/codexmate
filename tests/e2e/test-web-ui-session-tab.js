@@ -186,10 +186,10 @@ module.exports = async function testWebUiSessionTab() {
                 configMode: 'codex'
             }
         });
-        assert(vm3.mainTab === 'dashboard', 'preference navigation restore should fall back when the task tab is disabled');
+        assert(vm3.mainTab === 'usage', 'preference navigation restore should ignore removed tabs and keep the current tab');
 
         vm3.switchMainTab('orchestration');
-        assert(vm3.mainTab === 'dashboard', 'programmatic task tab selection should fall back to the first selectable tab');
+        assert(vm3.mainTab === 'usage', 'programmatic selection of a removed tab should be ignored');
 
         vm3.mainTab = 'usage';
         vm3.switchMainTab('');

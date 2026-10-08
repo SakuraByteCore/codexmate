@@ -7,7 +7,7 @@ const { spawn } = require('child_process');
 let g_port = 3737;
 
 function getApiUrl() {
-    return `http://localhost:${g_port}/api`;
+    return `http://127.0.0.1:${g_port}/api`;
 }
 
 function delay(ms) {
@@ -93,8 +93,13 @@ async function run() {
         stdio: ['ignore', 'pipe', 'pipe']
     });
 
+    let probeServer = null;
+
     try {
         await waitForServer();
+
+        // 工具配置写入门禁默认仅浏览，先按产品正规流程开启 codex 写入权限
+        await request('set-tool-config-permission', { target: 'codex', allowWrite: true });
 
         await request('apply-config-template', { template: buildTemplate('alpha', 'm-alpha', 'https://example.com', 'sk-alpha') });
         await request('apply-config-template', { template: buildTemplate('beta', 'm-beta', 'https://example.com', 'sk-beta') });
@@ -124,8 +129,16 @@ async function run() {
         assert(codes.has('api-key-missing'), 'health check should flag missing key');
         assert(codes.has('model-unavailable'), 'health check should flag missing model');
 
+        // 远程探活 POST ${base_url}/responses，CLI 服务器自身没有该端点，这里内联起一个 mock 模型端点
+        probeServer = http.createServer((req, res) => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"data":[]}');
+        });
+        await new Promise(resolve => probeServer.listen(0, '127.0.0.1', resolve));
+        const probePort = probeServer.address().port;
+
         await request('apply-config-template', {
-            template: buildTemplate('local', 'm-local', `http://127.0.0.1:${g_port}`, 'sk-local')
+            template: buildTemplate('local', 'm-local', `http://127.0.0.1:${probePort}`, 'sk-local')
         });
         const remoteHealth = await request('config-health-check', { remote: true, timeoutMs: 2000 });
         assert(remoteHealth && Array.isArray(remoteHealth.issues), 'remote health issues should be array');
@@ -142,12 +155,19 @@ async function run() {
         if (child && !child.killed) {
             child.kill('SIGINT');
         }
+        if (probeServer && probeServer.listening) {
+            probeServer.close();
+        }
         await delay(300);
         fs.rmSync(tempHome, { recursive: true, force: true });
     }
 }
 
-run().catch((err) => {
-    console.error(err);
-    process.exit(1);
-});
+module.exports = run;
+
+if (require.main === module) {
+    run().catch((err) => {
+        console.error(err);
+        process.exit(1);
+    });
+}
