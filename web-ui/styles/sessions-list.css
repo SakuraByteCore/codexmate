@@ -375,7 +375,7 @@
     grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
     gap: var(--spacing-md);
     align-items: start;
-    height: min(72vh, 760px);
+    height: min(760px, calc(100dvh - 340px));
     min-height: 360px;
 }
 
