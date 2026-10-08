@@ -97,9 +97,6 @@
                             <button class="btn-tool btn-tool-compact" type="button" @click="switchMainTab('dashboard')" :title="t('dashboard.doctor.title')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                             </button>
-                            <button class="btn-tool btn-tool-compact" type="button" @click="copySessionsFilterShareUrl" :disabled="sessionsLoading">
-                                {{ t('sessions.filters.copyLink') }}
-                            </button>
                             <button class="btn-tool btn-tool-compact" type="button" @click="clearSessionFilters" :disabled="sessionsLoading">
                                 {{ t('common.resetFilters') }}
                             </button>

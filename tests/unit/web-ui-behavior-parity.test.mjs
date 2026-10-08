@@ -1081,6 +1081,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     );
     const allowedMissingCurrentMethodKeys = [
         'highlightQueryText',
+        'copySessionsFilterShareUrl',
         'buildSessionPreviewQueryTokens',
         'submitSessionPreviewSearch',
         'clearSessionPreviewSearch',

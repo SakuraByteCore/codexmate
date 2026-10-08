@@ -790,7 +790,6 @@ const zhTw = Object.freeze({
     'sessions.sort.hot': '按熱度',
     'sessions.sort.hotBadge': '熱',
     'sessions.filters.copyLink': '複製篩選鏈接',
-    'sessions.filters.urlBuildFail': '無法生成鏈接',
     'sessions.filters.source': '來源',
     'sessions.filters.path': '路徑',
     'sessions.filters.keyword': '關鍵詞',

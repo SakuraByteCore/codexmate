@@ -4022,12 +4022,6 @@ return function render(_ctx, _cache) {
                         _createElementVNode("button", {
                           class: "btn-tool btn-tool-compact",
                           type: "button",
-                          onClick: _ctx.copySessionsFilterShareUrl,
-                          disabled: _ctx.sessionsLoading
-                        }, _toDisplayString(_ctx.t('sessions.filters.copyLink')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                        _createElementVNode("button", {
-                          class: "btn-tool btn-tool-compact",
-                          type: "button",
                           onClick: _ctx.clearSessionFilters,
                           disabled: _ctx.sessionsLoading
                         }, _toDisplayString(_ctx.t('common.resetFilters')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),

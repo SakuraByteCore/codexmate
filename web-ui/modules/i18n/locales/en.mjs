@@ -791,7 +791,6 @@ const en = Object.freeze({
     'sessions.sort.hot': 'Sort: hot',
     'sessions.sort.hotBadge': 'Hot',
     'sessions.filters.copyLink': 'Copy filter link',
-    'sessions.filters.urlBuildFail': 'Failed to build link',
     'sessions.filters.source': 'Source',
     'sessions.filters.path': 'Path',
     'sessions.filters.keyword': 'Keyword',

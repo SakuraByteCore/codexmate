@@ -965,7 +965,6 @@ const vi = Object.freeze({
     'sessions.sort.hot': 'Sắp xếp: hot',
     'sessions.sort.hotBadge': 'Hot',
     'sessions.filters.copyLink': 'Sao chép link bộ lọc',
-    'sessions.filters.urlBuildFail': 'Tạo link thất bại',
     'sessions.filters.source': 'Nguồn',
     'sessions.filters.path': 'Đường dẫn',
     'sessions.filters.keyword': 'Từ khóa',

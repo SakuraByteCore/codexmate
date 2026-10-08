@@ -790,7 +790,6 @@ const zh = Object.freeze({
     'sessions.sort.hot': '按热度',
     'sessions.sort.hotBadge': '热',
     'sessions.filters.copyLink': '复制筛选链接',
-    'sessions.filters.urlBuildFail': '无法生成链接',
     'sessions.filters.source': '来源',
     'sessions.filters.path': '路径',
     'sessions.filters.keyword': '关键词',

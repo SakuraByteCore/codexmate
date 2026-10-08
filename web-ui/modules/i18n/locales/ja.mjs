@@ -794,7 +794,6 @@ const ja = Object.freeze({
     'sessions.sort.hot': '話題順',
     'sessions.sort.hotBadge': '話題',
     'sessions.filters.copyLink': 'リンクをコピー',
-    'sessions.filters.urlBuildFail': 'リンク生成失敗',
     'sessions.filters.source': 'ソース',
     'sessions.filters.path': 'パス',
     'sessions.filters.keyword': 'キーワード',
