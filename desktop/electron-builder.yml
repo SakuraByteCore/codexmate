@@ -1,0 +1,36 @@
+appId: io.github.sakurabytecore.codexmate
+productName: Codex Mate
+copyright: Copyright © SakuraByteCore
+directories:
+  output: dist
+  buildResources: build
+files:
+  - electron.js
+  - preload.js
+  - error.html
+  - build/icon.png
+  # npm file: 目录依赖为整仓原始拷贝，按 codexmate npm files 清单反向排除
+  - "!node_modules/codexmate/{site,tests,tools,scripts,docs,desktop,.github}/**"
+  - "!node_modules/codexmate/{pnpm-lock.yaml,pnpm-workspace.yaml,package-lock.json,.gitattributes,.coderabbit.yaml}"
+asarUnpack:
+  - "node_modules/codexmate/**"
+win:
+  icon: build/icon.png
+  target:
+    - nsis
+nsis:
+  oneClick: true
+  perMachine: false
+  artifactName: codexmate-setup-${version}.${ext}
+mac:
+  icon: build/icon.png
+  category: public.app-category.developer-tools
+  identity: null
+  target:
+    - dmg
+linux:
+  icon: build/icon.png
+  category: Development
+  target:
+    - AppImage
+  artifactName: codexmate-${version}.${ext}

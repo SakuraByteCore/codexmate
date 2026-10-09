@@ -1,0 +1,23 @@
+{
+  "name": "codexmate-desktop",
+  "version": "0.1.26",
+  "description": "Codex Mate 桌面启动器（Electron 壳，内嵌 codexmate Web UI）",
+  "main": "electron.js",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "ymkiux",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:linux": "electron-builder --linux --publish never"
+  },
+  "dependencies": {
+    "codexmate": "file:.."
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}
