@@ -1,0 +1,36 @@
+name: desktop-release
+run-name: "desktop ${{ github.ref_name }}"
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch: {}
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Backend contract self-check
+        working-directory: desktop
+        run: node selfcheck.cjs
+      - name: Build & publish
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --publish always
