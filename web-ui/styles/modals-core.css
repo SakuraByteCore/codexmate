@@ -456,6 +456,54 @@
     font-weight: var(--font-weight-secondary);
 }
 
+.agents-diff-token-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: var(--font-size-caption);
+    color: var(--color-text-tertiary);
+}
+
+.agents-diff-token-label {
+    display: inline-flex;
+    align-items: center;
+}
+
+.agents-diff-token-delta {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-weight: var(--font-weight-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.agents-diff-token-delta--add {
+    color: #2b6a3b;
+    background: rgba(57, 181, 97, 0.12);
+    border-color: rgba(57, 181, 97, 0.2);
+}
+
+.agents-diff-token-delta--del {
+    color: #8a2f36;
+    background: rgba(220, 95, 108, 0.12);
+    border-color: rgba(220, 95, 108, 0.2);
+}
+
+.agents-diff-token-delta--same {
+    color: var(--color-text-tertiary);
+    background: rgba(127, 127, 127, 0.1);
+    border-color: rgba(127, 127, 127, 0.2);
+}
+
+.prompts-token-hint {
+    margin-left: 4px;
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
 .agents-diff-summary {
     display: flex;
     align-items: center;

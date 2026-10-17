@@ -42,6 +42,7 @@
                             <span v-if="agentsPath">
                                 （{{ agentsExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
                             </span>
+                            <span v-if="agentsPath" class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: agentsTokenCount }) }}</span>
                         </div>
                         <div class="prompts-editor-actions">
                             <div class="prompts-editor-group prompts-editor-group--pathref">
@@ -183,6 +184,12 @@
                     <div class="form-group">
                         <div v-if="agentsDiffVisible">
                             <div
+                                v-if="!agentsDiffLoading && !agentsDiffError"
+                                class="agents-diff-token-summary">
+                                <span class="agents-diff-token-label">{{ t('prompts.tokenCount.diff', { before: agentsDiffTokenStats.before, current: agentsDiffTokenStats.current }) }}</span>
+                                <span :class="['agents-diff-token-delta', 'agents-diff-token-delta--' + agentsDiffTokenStats.deltaKind]">{{ agentsDiffTokenStats.deltaLabel }}</span>
+                            </div>
+                            <div
                                 v-if="!agentsDiffLoading && !agentsDiffError && !agentsDiffTruncated && (agentsDiffStats.added || agentsDiffStats.removed)"
                                 class="agents-diff-summary">
                                 <span class="agents-diff-stat add">+{{ agentsDiffStats.added }}</span>
@@ -274,6 +281,7 @@
                                 <span v-if="sysPromptPath">
                                     （{{ sysPromptExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
                                 </span>
+                                <span v-if="sysPromptPath" class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: sysPromptTokenCount }) }}</span>
                             </div>
                             <div class="prompts-editor-actions">
                                 <div class="prompts-editor-group prompts-editor-group--pathref">
@@ -335,6 +343,12 @@
                         </details>
                         <div class="form-group">
                             <div v-if="sysPromptDiffVisible">
+                                <div
+                                    v-if="!sysPromptDiffLoading && !sysPromptDiffError"
+                                    class="agents-diff-token-summary">
+                                    <span class="agents-diff-token-label">{{ t('prompts.tokenCount.diff', { before: sysPromptDiffTokenStats.before, current: sysPromptDiffTokenStats.current }) }}</span>
+                                    <span :class="['agents-diff-token-delta', 'agents-diff-token-delta--' + sysPromptDiffTokenStats.deltaKind]">{{ sysPromptDiffTokenStats.deltaLabel }}</span>
+                                </div>
                                 <div
                                     v-if="!sysPromptDiffLoading && !sysPromptDiffError && !sysPromptDiffTruncated && (sysPromptDiffStats.added || sysPromptDiffStats.removed)"
                                     class="agents-diff-summary">

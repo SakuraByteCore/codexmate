@@ -283,6 +283,8 @@ const vi = Object.freeze({
     'prompts.editor.previewEmpty': 'Chưa có nội dung để xem trước',
     'prompts.editor.changeAxis': 'Trục điều hướng thay đổi',
     'prompts.editor.changeAxisTick': 'Dòng {line} (+{added} / -{removed})',
+    'prompts.tokenCount.hint': '~{count} token',
+    'prompts.tokenCount.diff': 'Token: trước {before} → hiện tại {current}',
     'prompts.presets.title': 'Preset',
     'prompts.presets.hint': 'Quản lý preset.',
     'prompts.presets.namePlaceholder': 'Tên preset',

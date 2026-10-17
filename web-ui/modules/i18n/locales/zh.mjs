@@ -254,6 +254,8 @@ const zh = Object.freeze({
     'prompts.editor.previewEmpty': '暂无内容可预览',
     'prompts.editor.changeAxis': '改动导航轴',
     'prompts.editor.changeAxisTick': '第 {line} 行（+{added} / -{removed}）',
+    'prompts.tokenCount.hint': '约 {count} tokens',
+    'prompts.tokenCount.diff': 'Tokens：修改前 {before} → 当前 {current}',
     'prompts.presets.title': '预设池',
     'prompts.presets.hint': '管理预设。',
     'prompts.presets.namePlaceholder': '预设名称',

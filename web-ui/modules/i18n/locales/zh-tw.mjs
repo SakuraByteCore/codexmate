@@ -254,6 +254,8 @@ const zhTw = Object.freeze({
     'prompts.editor.previewEmpty': '尚無內容可預覽',
     'prompts.editor.changeAxis': '改動導覽軸',
     'prompts.editor.changeAxisTick': '第 {line} 行（+{added} / -{removed}）',
+    'prompts.tokenCount.hint': '約 {count} tokens',
+    'prompts.tokenCount.diff': 'Tokens：修改前 {before} → 目前 {current}',
     'prompts.presets.title': '預設池',
     'prompts.presets.hint': '管理預設。',
     'prompts.presets.namePlaceholder': '預設名稱',

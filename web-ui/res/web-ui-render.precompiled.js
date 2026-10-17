@@ -7068,6 +7068,12 @@ return function render(_ctx, _cache) {
                           _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
                           (_ctx.agentsPath)
                             ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.agentsPath)
+                            ? (_openBlock(), _createElementBlock("span", {
+                                key: 1,
+                                class: "prompts-token-hint"
+                              }, "· " + _toDisplayString(_ctx.t('prompts.tokenCount.hint', { count: _ctx.agentsTokenCount })), 1 /* TEXT */))
                             : _createCommentVNode("v-if", true)
                         ]),
                         _createElementVNode("div", { class: "prompts-editor-actions" }, [
@@ -7386,9 +7392,20 @@ return function render(_ctx, _cache) {
                       _createElementVNode("div", { class: "form-group" }, [
                         (_ctx.agentsDiffVisible)
                           ? (_openBlock(), _createElementBlock("div", { key: 0 }, [
-                              (!_ctx.agentsDiffLoading && !_ctx.agentsDiffError && !_ctx.agentsDiffTruncated && (_ctx.agentsDiffStats.added || _ctx.agentsDiffStats.removed))
+                              (!_ctx.agentsDiffLoading && !_ctx.agentsDiffError)
                                 ? (_openBlock(), _createElementBlock("div", {
                                     key: 0,
+                                    class: "agents-diff-token-summary"
+                                  }, [
+                                    _createElementVNode("span", { class: "agents-diff-token-label" }, _toDisplayString(_ctx.t('prompts.tokenCount.diff', { before: _ctx.agentsDiffTokenStats.before, current: _ctx.agentsDiffTokenStats.current })), 1 /* TEXT */),
+                                    _createElementVNode("span", {
+                                      class: _normalizeClass(['agents-diff-token-delta', 'agents-diff-token-delta--' + _ctx.agentsDiffTokenStats.deltaKind])
+                                    }, _toDisplayString(_ctx.agentsDiffTokenStats.deltaLabel), 3 /* TEXT, CLASS */)
+                                  ]))
+                                : _createCommentVNode("v-if", true),
+                              (!_ctx.agentsDiffLoading && !_ctx.agentsDiffError && !_ctx.agentsDiffTruncated && (_ctx.agentsDiffStats.added || _ctx.agentsDiffStats.removed))
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 1,
                                     class: "agents-diff-summary"
                                   }, [
                                     _createElementVNode("span", { class: "agents-diff-stat add" }, "+" + _toDisplayString(_ctx.agentsDiffStats.added), 1 /* TEXT */),
@@ -7397,26 +7414,26 @@ return function render(_ctx, _cache) {
                                 : _createCommentVNode("v-if", true),
                               (_ctx.agentsDiffLoading)
                                 ? (_openBlock(), _createElementBlock("div", {
-                                    key: 1,
+                                    key: 2,
                                     class: "state-message"
                                   }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
                                 : (_ctx.agentsDiffError)
                                   ? (_openBlock(), _createElementBlock("div", {
-                                      key: 2,
+                                      key: 3,
                                       class: "state-message error"
                                     }, _toDisplayString(_ctx.agentsDiffError), 1 /* TEXT */))
                                   : (_ctx.agentsDiffTruncated)
                                     ? (_openBlock(), _createElementBlock("div", {
-                                        key: 3,
+                                        key: 4,
                                         class: "agents-diff-empty"
                                       }, _toDisplayString(_ctx.t('diff.tooLargeSkip')), 1 /* TEXT */))
                                     : (!_ctx.agentsDiffHasChanges)
                                       ? (_openBlock(), _createElementBlock("div", {
-                                          key: 4,
+                                          key: 5,
                                           class: "agents-diff-empty"
                                         }, _toDisplayString(_ctx.t('diff.noChanges')), 1 /* TEXT */))
                                       : (_openBlock(), _createElementBlock("div", {
-                                          key: 5,
+                                          key: 6,
                                           class: "prompts-diff-frame"
                                         }, [
                                           (_ctx.agentsChangeAxis.ticks.length)
@@ -7603,6 +7620,12 @@ return function render(_ctx, _cache) {
                             _createTextVNode(_toDisplayString(_ctx.sysPromptPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
                             (_ctx.sysPromptPath)
                               ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.sysPromptExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true),
+                            (_ctx.sysPromptPath)
+                              ? (_openBlock(), _createElementBlock("span", {
+                                  key: 1,
+                                  class: "prompts-token-hint"
+                                }, "· " + _toDisplayString(_ctx.t('prompts.tokenCount.hint', { count: _ctx.sysPromptTokenCount })), 1 /* TEXT */))
                               : _createCommentVNode("v-if", true)
                           ]),
                           _createElementVNode("div", { class: "prompts-editor-actions" }, [
@@ -7827,9 +7850,20 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "form-group" }, [
                           (_ctx.sysPromptDiffVisible)
                             ? (_openBlock(), _createElementBlock("div", { key: 0 }, [
-                                (!_ctx.sysPromptDiffLoading && !_ctx.sysPromptDiffError && !_ctx.sysPromptDiffTruncated && (_ctx.sysPromptDiffStats.added || _ctx.sysPromptDiffStats.removed))
+                                (!_ctx.sysPromptDiffLoading && !_ctx.sysPromptDiffError)
                                   ? (_openBlock(), _createElementBlock("div", {
                                       key: 0,
+                                      class: "agents-diff-token-summary"
+                                    }, [
+                                      _createElementVNode("span", { class: "agents-diff-token-label" }, _toDisplayString(_ctx.t('prompts.tokenCount.diff', { before: _ctx.sysPromptDiffTokenStats.before, current: _ctx.sysPromptDiffTokenStats.current })), 1 /* TEXT */),
+                                      _createElementVNode("span", {
+                                        class: _normalizeClass(['agents-diff-token-delta', 'agents-diff-token-delta--' + _ctx.sysPromptDiffTokenStats.deltaKind])
+                                      }, _toDisplayString(_ctx.sysPromptDiffTokenStats.deltaLabel), 3 /* TEXT, CLASS */)
+                                    ]))
+                                  : _createCommentVNode("v-if", true),
+                                (!_ctx.sysPromptDiffLoading && !_ctx.sysPromptDiffError && !_ctx.sysPromptDiffTruncated && (_ctx.sysPromptDiffStats.added || _ctx.sysPromptDiffStats.removed))
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 1,
                                       class: "agents-diff-summary"
                                     }, [
                                       _createElementVNode("span", { class: "agents-diff-stat add" }, "+" + _toDisplayString(_ctx.sysPromptDiffStats.added), 1 /* TEXT */),
@@ -7838,26 +7872,26 @@ return function render(_ctx, _cache) {
                                   : _createCommentVNode("v-if", true),
                                 (_ctx.sysPromptDiffLoading)
                                   ? (_openBlock(), _createElementBlock("div", {
-                                      key: 1,
+                                      key: 2,
                                       class: "state-message"
                                     }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
                                   : (_ctx.sysPromptDiffError)
                                     ? (_openBlock(), _createElementBlock("div", {
-                                        key: 2,
+                                        key: 3,
                                         class: "state-message error"
                                       }, _toDisplayString(_ctx.sysPromptDiffError), 1 /* TEXT */))
                                     : (_ctx.sysPromptDiffTruncated)
                                       ? (_openBlock(), _createElementBlock("div", {
-                                          key: 3,
+                                          key: 4,
                                           class: "agents-diff-empty"
                                         }, _toDisplayString(_ctx.t('diff.tooLargeSkip')), 1 /* TEXT */))
                                       : (!_ctx.sysPromptDiffHasChangesValue)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 4,
+                                            key: 5,
                                             class: "agents-diff-empty"
                                           }, _toDisplayString(_ctx.t('diff.noChanges')), 1 /* TEXT */))
                                         : (_openBlock(), _createElementBlock("div", {
-                                            key: 5,
+                                            key: 6,
                                             class: "prompts-diff-frame"
                                           }, [
                                             (_ctx.sysChangeAxis.ticks.length)

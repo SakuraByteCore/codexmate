@@ -254,6 +254,8 @@ const en = Object.freeze({
     'prompts.editor.previewEmpty': 'Nothing to preview yet',
     'prompts.editor.changeAxis': 'Change navigation axis',
     'prompts.editor.changeAxisTick': 'Line {line} (+{added} / -{removed})',
+    'prompts.tokenCount.hint': '~{count} tokens',
+    'prompts.tokenCount.diff': 'Tokens: {before} before → {current} now',
     'prompts.presets.title': 'Presets',
     'prompts.presets.hint': 'Manage presets.',
     'prompts.presets.namePlaceholder': 'Preset name',

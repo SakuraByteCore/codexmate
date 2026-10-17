@@ -1,5 +1,23 @@
+import { estimatePromptTokenCount, buildPromptTokenDiffStats } from '../logic.prompts-token-count.mjs';
+
 export function createPromptsComputed() {
     return {
+        agentsTokenCount() {
+            return estimatePromptTokenCount(this.agentsContent);
+        },
+
+        sysPromptTokenCount() {
+            return estimatePromptTokenCount(this.sysPromptContent);
+        },
+
+        agentsDiffTokenStats() {
+            return buildPromptTokenDiffStats(this.agentsOriginalContent, this.agentsContent);
+        },
+
+        sysPromptDiffTokenStats() {
+            return buildPromptTokenDiffStats(this.sysPromptOriginalContent, this.sysPromptContent);
+        },
+
         promptsContextHint() {
             if (!this.agentsLoading && !this.agentsDiffVisible && this.hasAgentsContentChanged()) {
                 return { text: this.t('modal.agents.unsaved.detectedHint'), warn: true };
