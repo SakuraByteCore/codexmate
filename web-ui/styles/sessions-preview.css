@@ -632,13 +632,6 @@
 
     .session-source-pills {
         max-width: 100%;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        scrollbar-width: none;
-    }
-
-    .session-source-pills::-webkit-scrollbar {
-        display: none;
     }
 
     .session-path-select,
