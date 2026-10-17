@@ -708,7 +708,7 @@ const ja = Object.freeze({
     'sessions.preview.loading': 'プレビュー読み込み中...',
     'sessions.batch.select': '一括削除',
     'sessions.batch.exit': '選択を終了',
-    'sessions.batch.selectAll': 'すべて選択',
+    'sessions.batch.selectAllVisibleN': '表示中の {count} 件を選択',
     'sessions.batch.unselectAll': '選択を解除',
     'sessions.batch.deleteSelected': '選択を削除',
     'sessions.batch.deleteSelectedN': '選択を削除（{count}）',

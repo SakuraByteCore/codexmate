@@ -881,7 +881,7 @@ const vi = Object.freeze({
     'sessions.preview.loading': 'Đang tải...',
     'sessions.batch.select': 'Xóa hàng loạt',
     'sessions.batch.exit': 'Thoát chọn',
-    'sessions.batch.selectAll': 'Chọn tất cả',
+    'sessions.batch.selectAllVisibleN': 'Chọn {count} mục hiển thị',
     'sessions.batch.unselectAll': 'Bỏ chọn tất cả',
     'sessions.batch.deleteSelected': 'Xóa đã chọn',
     'sessions.batch.deleteSelectedN': 'Xóa đã chọn ({count})',

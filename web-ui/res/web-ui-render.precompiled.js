@@ -4052,8 +4052,8 @@ return function render(_ctx, _cache) {
                                 type: "button",
                                 onClick: _ctx.toggleSelectAllVisibleForBatch,
                                 disabled: _ctx.sessionsLoading,
-                                title: _ctx.isAllVisibleBatchSelected() ? _ctx.t('sessions.batch.unselectAll') : _ctx.t('sessions.batch.selectAll')
-                              }, _toDisplayString(_ctx.isAllVisibleBatchSelected() ? _ctx.t('sessions.batch.unselectAll') : _ctx.t('sessions.batch.selectAll')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
+                                title: _ctx.isAllVisibleBatchSelected() ? _ctx.t('sessions.batch.unselectAll') : _ctx.t('sessions.batch.selectAllVisibleN', { count: _ctx.getVisibleBatchSelectableCount() })
+                              }, _toDisplayString(_ctx.isAllVisibleBatchSelected() ? _ctx.t('sessions.batch.unselectAll') : _ctx.t('sessions.batch.selectAllVisibleN', { count: _ctx.getVisibleBatchSelectableCount() })), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
                               _createElementVNode("button", {
                                 class: "btn-tool btn-tool-compact btn-tool-batch-delete",
                                 type: "button",

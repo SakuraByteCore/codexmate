@@ -706,7 +706,7 @@ const en = Object.freeze({
     'sessions.preview.loading': 'Loading...',
     'sessions.batch.select': 'Batch delete',
     'sessions.batch.exit': 'Exit selection',
-    'sessions.batch.selectAll': 'Select all',
+    'sessions.batch.selectAllVisibleN': 'Select {count} visible',
     'sessions.batch.unselectAll': 'Clear selection',
     'sessions.batch.deleteSelected': 'Delete selected',
     'sessions.batch.deleteSelectedN': 'Delete selected ({count})',

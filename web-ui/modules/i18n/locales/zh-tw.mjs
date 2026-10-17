@@ -705,7 +705,7 @@ const zhTw = Object.freeze({
     'sessions.preview.loading': '載入中...',
     'sessions.batch.select': '批次刪除',
     'sessions.batch.exit': '退出選擇',
-    'sessions.batch.selectAll': '全選',
+    'sessions.batch.selectAllVisibleN': '全選可見 {count} 項',
     'sessions.batch.unselectAll': '取消全選',
     'sessions.batch.deleteSelected': '刪除選中',
     'sessions.batch.deleteSelectedN': '刪除選中（{count}）',

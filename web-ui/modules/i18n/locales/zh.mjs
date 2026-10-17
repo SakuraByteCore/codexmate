@@ -705,7 +705,7 @@ const zh = Object.freeze({
     'sessions.preview.loading': '加载中...',
     'sessions.batch.select': '批量删除',
     'sessions.batch.exit': '退出选择',
-    'sessions.batch.selectAll': '全选',
+    'sessions.batch.selectAllVisibleN': '全选可见 {count} 项',
     'sessions.batch.unselectAll': '取消全选',
     'sessions.batch.deleteSelected': '删除选中',
     'sessions.batch.deleteSelectedN': '删除选中（{count}）',
