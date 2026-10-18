@@ -124,8 +124,8 @@ const MANUAL_MAP = {
     '#82746a': '#958A80',
     '#a99b91': '#857A72',
     '#8e8e93': '#A6A6AB',
-    '#1d1d1f': KEEP,
-    '#2d2d2f': KEEP,
+    '#1d1d1f': '#ECE8E4', // brand-kicker text; only used as text color
+    '#2d2d2f': '#D8D3CE', // brand-kicker gradient tail; only used as text color
     '#c87963': '#D68F79',
     '#d97757': '#E08A6F',
     '#d26b5a': '#DE8370',
@@ -165,7 +165,8 @@ function mapColorChannels(c, prop) {
         if (kind2 === 'background') {
             if (a >= 1) return '#202124';
             if (a >= 0.5) return rgbaText(30, 31, 34, a);
-            return KEEP; // subtle white highlight overlays work on dark too
+            // translucent white surfaces become subtle dark-mode tints, not bright grey
+            return rgbaText(255, 255, 255, a === 0 ? 0 : Math.max(0.02, a * 0.15));
         }
         return KEEP;
     }
@@ -212,9 +213,12 @@ function mapColorChannels(c, prop) {
     return rgbaText(mapped.r, mapped.g, mapped.b, a);
 }
 
-const COLOR_RE = /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?:0?\.\d+|1|0)\s*)?\)/g;
+const COLOR_RE = /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?:0?\.\d+|1|0)\s*)?\)|\bwhite\b/g;
 const URL_STROKE_RE = /%23([0-9a-fA-F]{6})\b/g;
 
+// CSS named colors actually used by the light stylesheets; parsed as full-alpha
+// channels so they flow through the same dark mapping as hex literals.
+const NAMED_CHANNELS = { white: { r: 255, g: 255, b: 255, a: 1 } };
 function normalizeLiteral(text) {
     return text.replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -230,6 +234,7 @@ function mapLiteral(raw) {
     }
     let c;
     if (raw.startsWith('#')) c = parseHexChannels(raw);
+    else if (NAMED_CHANNELS[raw]) c = NAMED_CHANNELS[raw];
     else {
         const parts = raw.replace(/rgba?\(|\)/g, '').split(',').map((part) => part.trim());
         c = {
