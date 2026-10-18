@@ -157,7 +157,7 @@
     line-height: 1 !important;
     border-radius: var(--radius-sm) !important;
     border: 1px solid var(--color-border-soft) !important;
-    background: rgba(255, 255, 255, 0.76) !important;
+    background: var(--color-surface-chip) !important;
     font-size: 12px !important;
     font-weight: var(--font-weight-secondary) !important;
     color: var(--color-text-secondary) !important;

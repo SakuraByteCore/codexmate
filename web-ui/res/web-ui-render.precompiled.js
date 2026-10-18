@@ -5537,6 +5537,30 @@ return function render(_ctx, _cache) {
                 ], 8 /* PROPS */, ["aria-label"]),
                 _createElementVNode("section", {
                   class: "settings-card",
+                  "aria-label": _ctx.t('settings.theme.title')
+                }, [
+                  _createElementVNode("div", { class: "settings-card-main" }, [
+                    _createElementVNode("div", { class: "settings-card-content" }, [
+                      _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.theme.title')), 1 /* TEXT */),
+                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.theme.meta')), 1 /* TEXT */),
+                      _createElementVNode("div", { class: "settings-toggle-group" }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: _normalizeClass(['toggle-btn', { active: _ctx.theme === 'light' }]),
+                          onClick: $event => (_ctx.setTheme('light'))
+                        }, _toDisplayString(_ctx.t('settings.theme.light')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: _normalizeClass(['toggle-btn', { active: _ctx.theme === 'dark' }]),
+                          onClick: $event => (_ctx.setTheme('dark'))
+                        }, _toDisplayString(_ctx.t('settings.theme.dark')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
+                      ]),
+                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.theme.hint')), 1 /* TEXT */)
+                    ])
+                  ])
+                ], 8 /* PROPS */, ["aria-label"]),
+                _createElementVNode("section", {
+                  class: "settings-card",
                   "aria-label": _ctx.t('settings.sharePrefix.title')
                 }, [
                   _createElementVNode("div", { class: "settings-card-main" }, [

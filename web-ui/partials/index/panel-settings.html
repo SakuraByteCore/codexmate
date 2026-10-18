@@ -61,6 +61,30 @@
                                 </div>
                             </section>
 
+                            <section class="settings-card" :aria-label="t('settings.theme.title')">
+                                <div class="settings-card-main">
+                                    <div class="settings-card-content">
+                                        <div class="settings-card-title">{{ t('settings.theme.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.theme.meta') }}</p>
+                                        <div class="settings-toggle-group">
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: theme === 'light' }]"
+                                                @click="setTheme('light')">
+                                                {{ t('settings.theme.light') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: theme === 'dark' }]"
+                                                @click="setTheme('dark')">
+                                                {{ t('settings.theme.dark') }}
+                                            </button>
+                                        </div>
+                                        <p class="settings-card-hint">{{ t('settings.theme.hint') }}</p>
+                                    </div>
+                                </div>
+                            </section>
+
                             <section class="settings-card" :aria-label="t('settings.sharePrefix.title')">
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">

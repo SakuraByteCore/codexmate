@@ -575,6 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 kilocodeAutoSaveSignature: '',
                 forceCompactLayout: false,
                 sidebarCollapsed: false,
+                theme: 'light',
                 sessionLoadNativeDialog: false,
                 starPrompted: false,
                 webhookConfig: { enabled: false, url: '', events: ['provider-switch', 'claude-md-edit'] },
@@ -603,6 +604,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (typeof this.initI18n === 'function') {
                 this.initI18n();
+            }
+            if (typeof this.applyDocumentTheme === 'function') {
+                this.applyDocumentTheme();
             }
             if (typeof this.loadWebhookSettings === 'function') {
                 this.loadWebhookSettings();

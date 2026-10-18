@@ -1029,6 +1029,10 @@ function normalizeSidebarCollapsedPreference(value) {
     return normalizeBooleanPreference(value, false);
 }
 
+function normalizeThemePreference(value) {
+    return value === 'dark' ? 'dark' : 'light';
+}
+
 function normalizeSessionFilterSourcePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
     if (normalized === 'all' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi') return normalized;
@@ -1100,6 +1104,7 @@ function normalizeWebUiPreferences(value = {}) {
         sysPromptMode: normalizeSysPromptModePreference(source.sysPromptMode),
         projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',
         sidebarCollapsed: normalizeSidebarCollapsedPreference(source.sidebarCollapsed),
+        theme: normalizeThemePreference(source.theme),
         starPrompted: normalizeBooleanPreference(source.starPrompted, false),
         sessionLoadNativeDialog: normalizeBooleanPreference(source.sessionLoadNativeDialog, false),
         language: typeof source.language === 'string' ? source.language : '',

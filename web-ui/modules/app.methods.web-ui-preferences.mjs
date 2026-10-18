@@ -352,6 +352,9 @@ export function createWebUiPreferencesMethods(options = {}) {
                     ? source.projectClaudeMdPath
                     : (typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath : ''),
                 sidebarCollapsed: normalizeBoolean(hasOwn(source, 'sidebarCollapsed') ? source.sidebarCollapsed : this.sidebarCollapsed, false),
+                theme: typeof this.normalizeTheme === 'function'
+                    ? this.normalizeTheme(hasOwn(source, 'theme') ? source.theme : this.theme)
+                    : 'light',
                 configModeVisibility: typeof this.normalizeConfigModeVisibility === 'function'
                     ? this.normalizeConfigModeVisibility(hasOwn(source, 'configModeVisibility') ? source.configModeVisibility : this.configModeVisibility)
                     : { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true },
@@ -422,6 +425,12 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (hasOwn(source, 'sidebarCollapsed')) {
                     this.sidebarCollapsed = normalizeBoolean(source.sidebarCollapsed, false);
+                }
+                if (typeof source.theme === 'string') {
+                    this.theme = typeof this.normalizeTheme === 'function'
+                        ? this.normalizeTheme(source.theme)
+                        : 'light';
+                    if (typeof this.applyDocumentTheme === 'function') this.applyDocumentTheme();
                 }
                 if (hasOwn(source, 'configModeVisibility') && typeof this.normalizeConfigModeVisibility === 'function') {
                     this.configModeVisibility = this.normalizeConfigModeVisibility(source.configModeVisibility);

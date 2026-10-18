@@ -11,6 +11,17 @@
     <script src="/res/marked.min.js"></script>
     <script src="/res/purify.min.js"></script>
     <link rel="stylesheet" href="/web-ui/styles.css">
+    <script>
+        // Render hint: skip the light flash for dark-theme users before the
+        // server preference store loads. Kept in sync by applyDocumentTheme().
+        (function () {
+            try {
+                if (localStorage.getItem('codexmateThemeCache') === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (_) {}
+        })();
+    </script>
 </head>
 <body>
     <!-- @include ./partials/index/layout-header.html -->

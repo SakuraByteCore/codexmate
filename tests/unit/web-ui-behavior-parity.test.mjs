@@ -545,6 +545,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'preserveSessionRenderOnTabLeave',
         'sidebarCollapsed',
         'starPrompted',
+        'theme',
         'sessionSortMode',
         'sessionsUsageCompareEnabled',
         'sessionsUsageSelectedDayKey',
@@ -687,6 +688,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const extraCurrentMethodKeys = currentMethodKeys.filter((key) => !headMethodKeys.includes(key)).sort();
     const missingCurrentMethodKeys = headMethodKeys.filter((key) => !currentMethodKeys.includes(key)).sort();
     const allowedExtraCurrentMethodKeys = [
+        'normalizeTheme',
+        'setTheme',
+        'applyDocumentTheme',
         'initI18n',
         'normalizeLang',
         'setLang',

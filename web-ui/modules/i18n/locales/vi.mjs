@@ -397,6 +397,11 @@ const vi = Object.freeze({
     'settings.language.meta': 'Chọn ngôn ngữ hiển thị cho Web UI',
     'settings.language.label': 'Ngôn ngữ giao diện',
     'settings.language.hint': 'Tùy chọn ngôn ngữ được lưu trong trình duyệt này.',
+    'settings.theme.title': 'Chủ đề giao diện',
+    'settings.theme.meta': 'Chọn chủ đề màu cho Web UI',
+    'settings.theme.light': 'Sáng',
+    'settings.theme.dark': 'Tối',
+    'settings.theme.hint': 'Tùy chọn chủ đề được tự động lưu và giữ nguyên sau khi tải lại.',
 
     'settings.webhook.title': 'Webhook',
     'settings.webhook.meta': 'Gửi thông báo sự kiện tới dịch vụ bên ngoài',

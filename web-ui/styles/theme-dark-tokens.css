@@ -1,0 +1,83 @@
+/* ============================================
+   Codex Mate Web UI - 暗色主题令牌覆盖
+   作用于 <html data-theme="dark">；浅色默认值见 base-theme.css
+   ============================================ */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* 品牌色：保留暖橙 accent，提亮适配暗底 */
+    --color-brand: #D68F79;
+    --color-brand-dark: #C07A63;
+    --color-brand-light: rgba(214, 143, 121, 0.16);
+    --color-brand-subtle: rgba(214, 143, 121, 0.24);
+
+    /* 中性灰层级底色 */
+    --color-bg: #17181A;
+    --color-surface: #1E1F22;
+    --color-surface-alt: #232427;
+    --color-surface-elevated: #26272B;
+    --color-surface-tint: rgba(30, 31, 34, 0.86);
+    --color-surface-chip: rgba(30, 31, 34, 0.76);
+    --color-text-primary: #ECE8E4;
+    --color-text-secondary: #B5ABA4;
+    --color-text-tertiary: #8F847D;
+    --color-text-muted: #6E6259;
+    --color-border: rgba(255, 255, 255, 0.09);
+    --color-border-soft: rgba(255, 255, 255, 0.06);
+    --color-border-strong: rgba(255, 255, 255, 0.2);
+
+    --color-success: #6DB08E;
+    --color-error: #D6766B;
+
+    /* Delta 指示色 */
+    --color-delta-up: #6FBE7C;
+    --color-delta-down: #EE7B6E;
+
+    /* 热力图色阶：品牌橙 alpha 阶梯 */
+    --color-heatmap-1: rgba(214, 143, 121, 0.18);
+    --color-heatmap-2: rgba(214, 143, 121, 0.38);
+    --color-heatmap-3: rgba(214, 143, 121, 0.58);
+    --color-heatmap-4: rgba(214, 143, 121, 0.85);
+
+    --bg-warm-gradient:
+        radial-gradient(circle at 14% 8%, rgba(214, 143, 121, 0.05) 0%, rgba(214, 143, 121, 0) 32%),
+        radial-gradient(circle at 88% 0%, rgba(120, 132, 158, 0.05) 0%, rgba(120, 132, 158, 0) 30%),
+        linear-gradient(135deg, #1A1B1E 0%, #17181A 46%, #141517 100%);
+
+    --color-bg-topbar-strong: rgba(23, 24, 26, 0.96);
+    --color-bg-topbar-soft: rgba(23, 24, 26, 0.86);
+    --color-bg-topbar-clear: rgba(23, 24, 26, 0);
+
+    /* 阴影：黑色系浮层 */
+    --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 12px 30px rgba(0, 0, 0, 0.35);
+    --shadow-card-hover: 0 18px 44px rgba(0, 0, 0, 0.45);
+    --shadow-float: 0 22px 56px rgba(0, 0, 0, 0.5);
+    --shadow-raised: 0 14px 30px rgba(0, 0, 0, 0.4);
+    --shadow-modal:
+        0 16px 42px rgba(0, 0, 0, 0.45),
+        0 34px 84px rgba(0, 0, 0, 0.45);
+    --shadow-input-focus:
+        0 0 0 3px var(--color-brand-light),
+        0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* 全局背景光斑：暗色下收敛为微弱冷光 */
+:root[data-theme="dark"] body::before {
+    background:
+        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 26%),
+        radial-gradient(circle at 86% 18%, rgba(214, 143, 121, 0.04), rgba(214, 143, 121, 0) 30%);
+}
+
+/* 滚动条 */
+:root[data-theme="dark"] * {
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.34);
+}

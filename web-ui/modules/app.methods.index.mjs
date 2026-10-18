@@ -38,6 +38,7 @@ import { createPluginsMethods } from './plugins.methods.mjs';
 import { createI18nMethods } from './i18n.mjs';
 import { createWebhookMethods } from './app.methods.webhook.mjs';
 import { createWebUiPreferencesMethods } from './app.methods.web-ui-preferences.mjs';
+import { createThemeMethods } from './app.methods.theme.mjs';
 import {
     CONFIG_MODE_SET,
     getProviderConfigModeMeta
@@ -92,6 +93,7 @@ export function createAppMethods() {
         ...createProvidersMethods({ api }),
         ...createProviderCacheMethods({ api }),
         ...createWebUiPreferencesMethods({ api }),
+        ...createThemeMethods(),
         ...createClaudeConfigMethods({ api }),
         ...createToolConfigPermissionMethods({ api }),
         ...createOpenclawCoreMethods(),

@@ -1,5 +1,6 @@
 import assert from 'assert';
 import { createWebUiPreferencesMethods } from '../../web-ui/modules/app.methods.web-ui-preferences.mjs';
+import { createThemeMethods } from '../../web-ui/modules/app.methods.theme.mjs';
 import { createSessionActionMethods } from '../../web-ui/modules/app.methods.session-actions.mjs';
 import { createSessionTrashMethods } from '../../web-ui/modules/app.methods.session-trash.mjs';
 import { createNavigationMethods } from '../../web-ui/modules/app.methods.navigation.mjs';
@@ -105,6 +106,7 @@ function createContext(apiCalls = [], storage = null, backendPreferences = null)
         ...sessionActionMethods,
         ...sessionTrashMethods,
         ...navigationMethods,
+        ...createThemeMethods(),
         switchMainTab(tab) {
             this.switchMainTabCalls.push(tab);
             this.mainTab = tab;
@@ -201,6 +203,24 @@ test('web UI preference snapshots preserve unrelated navigation sub-state', asyn
     assert.strictEqual(writeCall.params.preferences.navigation.skillsTargetApp, 'claude');
     assert.strictEqual(writeCall.params.preferences.navigation.promptTemplatesMode, 'manage');
     assert.strictEqual(writeCall.params.preferences.navigation.pluginsActiveId, 'text-tools');
+});
+
+test('theme preference round-trips through the backend preference store', async () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+    context.setTheme('dark');
+
+    let writeCall = await waitForApiCall(apiCalls, 'set-web-ui-preferences');
+    assert.ok(writeCall, 'setTheme must persist the theme preference');
+    assert.strictEqual(writeCall.params.preferences.theme, 'dark');
+
+    apiCalls.length = 0;
+    const restored = createContext(apiCalls, createMemoryStorage());
+    restored.applyWebUiPreferences({ theme: 'dark' });
+    assert.strictEqual(restored.theme, 'dark');
+    restored.setTheme('bogus');
+    writeCall = await waitForApiCall(apiCalls, 'set-web-ui-preferences');
+    assert.strictEqual(writeCall.params.preferences.theme, 'light');
 });
 
 test('web UI preferences load restores the cached plugins active id', async () => {
