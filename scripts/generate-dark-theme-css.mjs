@@ -280,9 +280,49 @@ function mapDeclaration(decl) {
             return _raw;
         });
     if (!changed) return null;
-    return `${currentProp.trim()}:${mappedValue.trim()}`;
+    return emitDeclaration(currentProp, mappedValue);
 }
 
+
+/* Mirroring a `background:` shorthand under a higher-specificity dark selector
+ * resets longhands (repeat/position/size/clip) that light rules declare separately
+ * (e.g. select chevrons tile into a wavy row; background-clip:text is lost).
+ * Emit pure-color values as background-color and pure-image values as
+ * background-image so the light longhands keep applying in dark mode. */
+function stripImageSegments(value) {
+    let out = '';
+    let i = 0;
+    while (i < value.length) {
+        const m = /url\(|gradient\(/.exec(value.slice(i));
+        if (!m) {
+            out += value.slice(i);
+            break;
+        }
+        const start = i + m.index;
+        out += value.slice(i, start);
+        let depth = 1;
+        let j = start + m[0].length;
+        while (j < value.length && depth > 0) {
+            if (value[j] === '(') depth += 1;
+            else if (value[j] === ')') depth -= 1;
+            j += 1;
+        }
+        i = j;
+    }
+    return out;
+}
+
+function emitDeclaration(prop, mappedValue) {
+    const trimmedProp = prop.trim();
+    const trimmedValue = mappedValue.trim();
+    if (trimmedProp !== 'background') return `${trimmedProp}:${trimmedValue}`;
+    const residue = stripImageSegments(trimmedValue);
+    const hasImage = residue !== trimmedValue;
+    const hasStandaloneColor = /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b|rgba?\(|\bwhite\b/.test(residue);
+    if (hasImage && !hasStandaloneColor) return `background-image:${trimmedValue}`;
+    if (!hasImage) return `background-color:${trimmedValue}`;
+    return `${trimmedProp}:${trimmedValue}`;
+}
 /* ---------- minimal CSS rule walker ---------- */
 
 function stripComments(css) {
