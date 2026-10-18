@@ -720,7 +720,7 @@
     border:1px solid rgba(255, 255, 255, 0.06);
     box-shadow:0 2px 12px rgba(0, 0, 0, 0.14);
 }
-[data-theme="dark"] .usage-range-btn:hover:not(:disabled) {
+[data-theme="dark"] .usage-range-btn:hover:not(:disabled):not(.active) {
     background-color:rgba(255, 255, 255, 0.06);
 }
 [data-theme="dark"] .usage-range-btn.active {

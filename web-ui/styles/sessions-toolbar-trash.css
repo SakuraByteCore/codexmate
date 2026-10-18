@@ -179,7 +179,7 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.session-source-pill:hover:not(:disabled) {
+.session-source-pill:hover:not(:disabled):not(.active) {
     color: var(--color-text-secondary);
     background: var(--color-surface);
 }

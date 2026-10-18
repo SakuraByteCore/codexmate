@@ -229,7 +229,7 @@
     flex: 1;
 }
 
-.settings-toggle-group .toggle-btn:hover:not(:disabled) {
+.settings-toggle-group .toggle-btn:hover:not(:disabled):not(.active) {
     color: var(--color-text-secondary);
     background: var(--color-surface);
 }

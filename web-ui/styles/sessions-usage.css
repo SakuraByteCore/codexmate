@@ -46,7 +46,7 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.usage-range-btn:hover:not(:disabled) {
+.usage-range-btn:hover:not(:disabled):not(.active) {
     color: var(--color-text-secondary);
     background: rgba(200, 121, 99, 0.08);
 }
