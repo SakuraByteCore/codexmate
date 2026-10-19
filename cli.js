@@ -757,6 +757,7 @@ base_url = "http://127.0.0.1:3737/bridge/local/v1"
 wire_api = "responses"
 requires_openai_auth = true
 preferred_auth_method = "codexmate"
+experimental_bearer_token = "codexmate"
 codexmate_bridge = "local"
 request_max_retries = 4
 stream_max_retries = 10
@@ -893,17 +894,27 @@ function writeCurrentModels(data) {
     fs.writeFileSync(CURRENT_MODELS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-function updateAuthJson(apiKey) {
-    assertToolConfigWriteAllowed('codex');
-    let authData = {};
-    if (fs.existsSync(AUTH_FILE)) {
-        try {
-            const content = fs.readFileSync(AUTH_FILE, 'utf-8');
-            if (content.trim()) authData = JSON.parse(content);
-        } catch (e) { }
+function ensureActiveProviderBearerToken(content, providerName, providerSegments = null) {
+    // 单文件认证：auth.json 不再写入，激活 provider 块缺 experimental_bearer_token 时
+    // 从 preferred_auth_method（内部键仓）惰性补写，保证 codex 仅凭 config.toml 取到密钥。
+    const ranges = findProviderSectionRanges(content, providerName, providerSegments);
+    if (!ranges.length) return content;
+    let updated = content;
+    const sorted = [...ranges].sort((a, b) => b.start - a.start);
+    for (const range of sorted) {
+        const block = updated.slice(range.start, range.end);
+        if (/(^|\n)\s*experimental_bearer_token\s*=/.test(block)) continue;
+        const prefMatch = block.match(/^(\s*)preferred_auth_method\s*=\s*"((?:\\.|[^"\\\n])*)"\s*(?:#.*)?$/m);
+        if (!prefMatch || !prefMatch[2].trim()) continue;
+        const insertLine = `${prefMatch[1]}experimental_bearer_token = "${prefMatch[2]}"`;
+        const lineEndIndex = block.indexOf('\n', prefMatch.index + prefMatch[0].length);
+        const insertAt = lineEndIndex === -1
+            ? range.start + block.length
+            : range.start + lineEndIndex + 1;
+        const prefix = lineEndIndex === -1 ? '\n' : '';
+        updated = updated.slice(0, insertAt) + prefix + insertLine + '\n' + updated.slice(insertAt);
     }
-    authData['OPENAI_API_KEY'] = apiKey;
-    fs.writeFileSync(AUTH_FILE, JSON.stringify(authData, null, 2), { encoding: 'utf-8', mode: 0o600 });
+    return updated;
 }
 
 function isPlainObject(value) {
@@ -1554,6 +1565,7 @@ const PROVIDER_CONFIG_KEYS = new Set([
     'wire_api',
     'requires_openai_auth',
     'preferred_auth_method',
+    'experimental_bearer_token',
     'request_max_retries',
     'stream_max_retries',
     'stream_idle_timeout_ms'
@@ -2758,7 +2770,6 @@ const {
     writeModels,
     readCurrentModels,
     writeCurrentModels,
-    updateAuthJson,
     CONFIG_DIR,
     CONFIG_FILE,
     AUTH_FILE,
@@ -3076,8 +3087,8 @@ function applyConfigTemplate(params = {}) {
         return { error: `模板中找不到当前 provider: ${activeProvider}` };
     }
 
-    writeConfig(template.trim() + '\n');
-    updateAuthJson(activeProviderBlock.preferred_auth_method || '');
+    const ensuredTemplate = ensureActiveProviderBearerToken(template.trim(), activeProvider);
+    writeConfig(ensuredTemplate + '\n');
 
     const models = readModels();
     if (!models.includes(parsed.model)) {
@@ -3315,6 +3326,7 @@ function addProviderToConfig(params = {}) {
         `wire_api = "responses"`,
         `requires_openai_auth = true`,
         `preferred_auth_method = "${safeKey}"`,
+        `experimental_bearer_token = "${safeKey}"`,
         `models = [{ id = "${escapeTomlBasicString(model)}", name = "${escapeTomlBasicString(model)}" }]`,
         ...extraLines,
         `request_max_retries = 4`,
@@ -10926,17 +10938,16 @@ function cmdSwitch(providerName, silent = false) {
         throw new Error('提供商不存在');
     }
 
-    // 切换提供商
+    // 切换提供商（单文件认证：同步确保目标块含 experimental_bearer_token）
     const content = fs.readFileSync(CONFIG_FILE, 'utf-8');
-    const newContent = content.replace(
+    const switchedContent = content.replace(
         /^(model_provider\s*=\s*)(["']).*?(["'])/m,
         `$1$2${providerName}$3`
     );
-    writeConfig(newContent);
-
-    // 更新认证信息
-    const apiKey = providers[providerName].preferred_auth_method || '';
-    updateAuthJson(apiKey);
+    const providerSegments = providers[providerName] && Array.isArray(providers[providerName].__codexmate_legacy_segments)
+        ? providers[providerName].__codexmate_legacy_segments
+        : null;
+    writeConfig(ensureActiveProviderBearerToken(switchedContent, providerName, providerSegments));
 
     // 切换到该提供商的模型
     const currentModels = readCurrentModels();
@@ -11077,6 +11088,7 @@ base_url = "${safeBaseUrl}"
 wire_api = "responses"
 requires_openai_auth = true
 preferred_auth_method = "${safeApiKey}"
+experimental_bearer_token = "${safeApiKey}"
 request_max_retries = 4
 stream_max_retries = 10
 stream_idle_timeout_ms = 300000
@@ -11378,6 +11390,7 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
             updatedBlock = replaceTomlStringField(updatedBlock, 'base_url', computeLocalOpenaiBridgeBaseUrl());
             updatedBlock = replaceTomlBooleanField(updatedBlock, 'requires_openai_auth', true);
             updatedBlock = replaceTomlStringField(updatedBlock, 'preferred_auth_method', 'codexmate');
+            updatedBlock = replaceTomlStringField(updatedBlock, 'experimental_bearer_token', 'codexmate');
             updatedBlock = replaceTomlStringField(updatedBlock, 'codexmate_bridge', 'openai');
             if (hasOpenaiBridgeMaxRetries) {
                 updatedBlock = replaceTomlNumberField(updatedBlock, 'codexmate_bridge_max_retries', openaiBridgeMaxRetries);
@@ -11388,6 +11401,7 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
             }
             if (apiKey !== undefined) {
                 updatedBlock = replaceTomlStringField(updatedBlock, 'preferred_auth_method', apiKey);
+                updatedBlock = replaceTomlStringField(updatedBlock, 'experimental_bearer_token', apiKey);
             }
         }
 
@@ -11401,12 +11415,6 @@ function cmdUpdate(name, baseUrl, apiKey, silent = false, options = {}) {
         throw new Error(`更新后的 config.toml 无效: ${e.message}`);
     }
     writeConfig(finalContent);
-
-    // 如果更新了 API Key 且该提供商是当前激活的，同步更新 auth.json
-    const currentProvider = config.model_provider;
-    if (apiKey !== undefined && name === currentProvider) {
-        updateAuthJson(apiKey);
-    }
 
     if (!silent) {
         console.log('✓ 已更新提供商:', name);

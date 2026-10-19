@@ -1547,3 +1547,93 @@ test('applyCodexConfigDirect applies provider config without local proxy indirec
         'apply-config-template'
     ]);
 });
+
+test('ensureActiveProviderBearerToken lazily mirrors preferred_auth_method into the block', () => {
+    const helperSource = extractBlockBySignature(
+        cliSource,
+        'function ensureActiveProviderBearerToken(content, providerName, providerSegments = null) {'
+    );
+    const fakeFindRanges = (content) => {
+        const start = content.indexOf('[model_providers.alpha]');
+        if (start === -1) return [];
+        let end = content.length;
+        const next = content.indexOf('\n[', start + 1);
+        if (next !== -1) end = next + 1;
+        return [{ start, end }];
+    };
+    const ensure = instantiateFunction(helperSource, 'ensureActiveProviderBearerToken', {
+        findProviderSectionRanges: fakeFindRanges
+    });
+
+    const missing = ensure([
+        '[model_providers.alpha]',
+        'name = "alpha"',
+        'preferred_auth_method = "sk-test"'
+    ].join('\n'), 'alpha');
+    assert.match(missing, /preferred_auth_method = "sk-test"\nexperimental_bearer_token = "sk-test"/);
+
+    const present = '[model_providers.alpha]\npreferred_auth_method = "sk-a"\nexperimental_bearer_token = "sk-b"\n';
+    assert.strictEqual(ensure(present, 'alpha'), present);
+
+    const emptyKey = '[model_providers.alpha]\npreferred_auth_method = ""\n';
+    assert.strictEqual(ensure(emptyKey, 'alpha'), emptyKey);
+});
+
+test('applyConfigTemplate writes template with bearer token ensured and never touches auth.json', () => {
+    const normalizePositiveIntegerParamSource = extractBlockBySignature(
+        cliSource,
+        'function normalizePositiveIntegerParam(value) {'
+    );
+    const normalizePositiveIntegerParam = instantiateFunction(
+        normalizePositiveIntegerParamSource,
+        'normalizePositiveIntegerParam'
+    );
+    const helperSource = extractBlockBySignature(
+        cliSource,
+        'function ensureActiveProviderBearerToken(content, providerName, providerSegments = null) {'
+    );
+    const ensureActiveProviderBearerToken = instantiateFunction(helperSource, 'ensureActiveProviderBearerToken', {
+        findProviderSectionRanges: (content, name) => {
+            const start = content.indexOf(`[model_providers.${name}]`);
+            if (start === -1) return [];
+            return [{ start, end: content.length }];
+        }
+    });
+    const written = [];
+    const applyConfigTemplateSource = extractBlockBySignature(cliSource, 'function applyConfigTemplate(params = {}) {');
+    const applyConfigTemplate = instantiateFunction(applyConfigTemplateSource, 'applyConfigTemplate', {
+        toml: require('@iarna/toml'),
+        normalizePositiveIntegerParam,
+        ensureActiveProviderBearerToken,
+        writeConfig(content) {
+            written.push(content);
+        },
+        updateAuthJson() {
+            throw new Error('should not update auth');
+        },
+        readModels() {
+            return [];
+        },
+        writeModels() {},
+        readCurrentModels() {
+            return {};
+        },
+        writeCurrentModels() {},
+        recordRecentConfig() {}
+    });
+
+    const result = applyConfigTemplate({
+        template: [
+            'model_provider = "alpha"',
+            'model = "alpha-model"',
+            '',
+            '[model_providers.alpha]',
+            'name = "alpha"',
+            'preferred_auth_method = "sk-live"'
+        ].join('\n')
+    });
+
+    assert.deepStrictEqual(result, { success: true });
+    assert.strictEqual(written.length, 1);
+    assert.match(written[0], /preferred_auth_method = "sk-live"\nexperimental_bearer_token = "sk-live"/);
+});

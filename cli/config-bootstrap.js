@@ -17,10 +17,8 @@ function createConfigBootstrapController(deps = {}) {
         writeModels,
         readCurrentModels,
         writeCurrentModels,
-        updateAuthJson,
         CONFIG_DIR,
         CONFIG_FILE,
-        AUTH_FILE,
         MODELS_FILE,
         RECENT_CONFIGS_FILE,
         INIT_MARK_FILE,
@@ -49,10 +47,8 @@ function createConfigBootstrapController(deps = {}) {
     if (typeof writeModels !== 'function') throw new Error('createConfigBootstrapController 缺少 writeModels');
     if (typeof readCurrentModels !== 'function') throw new Error('createConfigBootstrapController 缺少 readCurrentModels');
     if (typeof writeCurrentModels !== 'function') throw new Error('createConfigBootstrapController 缺少 writeCurrentModels');
-    if (typeof updateAuthJson !== 'function') throw new Error('createConfigBootstrapController 缺少 updateAuthJson');
     if (!CONFIG_DIR) throw new Error('createConfigBootstrapController 缺少 CONFIG_DIR');
     if (!CONFIG_FILE) throw new Error('createConfigBootstrapController 缺少 CONFIG_FILE');
-    if (!AUTH_FILE) throw new Error('createConfigBootstrapController 缺少 AUTH_FILE');
     if (!MODELS_FILE) throw new Error('createConfigBootstrapController 缺少 MODELS_FILE');
     if (!RECENT_CONFIGS_FILE) throw new Error('createConfigBootstrapController 缺少 RECENT_CONFIGS_FILE');
     if (!INIT_MARK_FILE) throw new Error('createConfigBootstrapController 缺少 INIT_MARK_FILE');
@@ -131,6 +127,7 @@ base_url = "http://127.0.0.1:3737/bridge/local/v1"
 wire_api = "responses"
 requires_openai_auth = true
 preferred_auth_method = "codexmate"
+experimental_bearer_token = "codexmate"
 codexmate_bridge = "local"
 request_max_retries = 4
 stream_max_retries = 10
@@ -181,7 +178,7 @@ stream_idle_timeout_ms = 300000
         // Check if [model_providers.local] section already exists
         if (/\[model_providers\.local\]/.test(content)) return;
 
-        const localSection = `\n[model_providers.local]\nname = "local"\nbase_url = "http://127.0.0.1:3737/bridge/local/v1"\nwire_api = "responses"\nrequires_openai_auth = true\npreferred_auth_method = "codexmate"\ncodexmate_bridge = "local"\nrequest_max_retries = 4\nstream_max_retries = 10\nstream_idle_timeout_ms = 300000\n`;
+        const localSection = `\n[model_providers.local]\nname = "local"\nbase_url = "http://127.0.0.1:3737/bridge/local/v1"\nwire_api = "responses"\nrequires_openai_auth = true\npreferred_auth_method = "codexmate"\nexperimental_bearer_token = "codexmate"\ncodexmate_bridge = "local"\nrequest_max_retries = 4\nstream_max_retries = 10\nstream_idle_timeout_ms = 300000\n`;
         fs.appendFileSync(CONFIG_FILE, localSection, 'utf-8');
     }
 
@@ -262,10 +259,6 @@ stream_idle_timeout_ms = 300000
         if (!currentModels[defaultProvider]) {
             currentModels[defaultProvider] = defaultModel;
             writeCurrentModels(currentModels);
-        }
-
-        if (!fs.existsSync(AUTH_FILE)) {
-            updateAuthJson('');
         }
     }
 
