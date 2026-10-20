@@ -1,6 +1,6 @@
 {
   "name": "codexmate-desktop",
-  "version": "0.1.26",
+  "version": "0.1.28",
   "description": "Codex Mate 桌面启动器（Electron 壳，内嵌 codexmate Web UI）",
   "main": "electron.js",
   "private": true,
