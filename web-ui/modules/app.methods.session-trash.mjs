@@ -292,7 +292,7 @@ export function createSessionTrashMethods(options = {}) {
                 this.sessionTrashCountLoadedOnce = true;
             } catch (e) {
                 if (this.isLatestSessionTrashCountRequestToken(requestToken) && options.silent !== true) {
-                    this.showMessage('加载回收站数量失败', 'error');
+                    this.showMessage(this.t('settings.trash.loadCountFail'), 'error');
                 }
             } finally {
                 this.sessionTrashCountLoading = false;
@@ -365,7 +365,7 @@ export function createSessionTrashMethods(options = {}) {
             } catch (e) {
                 if (this.isLatestSessionTrashListRequestToken(requestToken)) {
                     this.sessionTrashLastLoadFailed = true;
-                    this.showMessage('加载回收站失败', 'error');
+                    this.showMessage(this.t('settings.trash.loadFail'), 'error');
                 }
             } finally {
                 this.sessionTrashLoading = false;
@@ -392,7 +392,7 @@ export function createSessionTrashMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
-                this.showMessage('会话已恢复', 'success');
+                this.showMessage(this.t('settings.trash.restored'), 'success');
                 if (typeof this.invalidateSessionsUsageData === 'function') {
                     this.invalidateSessionsUsageData({ preserveList: true });
                 }
@@ -402,7 +402,7 @@ export function createSessionTrashMethods(options = {}) {
                     await this.loadSessions();
                 }
             } catch (e) {
-                this.showMessage('恢复失败', 'error');
+                this.showMessage(this.t('settings.trash.restoreFail'), 'error');
             } finally {
                 this.sessionTrashRestoring[key] = false;
             }
@@ -414,10 +414,10 @@ export function createSessionTrashMethods(options = {}) {
                 return;
             }
             const confirmed = await this.requestConfirmDialog({
-                title: '彻底删除回收站记录',
-                message: '该会话将从回收站永久删除，且无法恢复。',
-                confirmText: '彻底删除',
-                cancelText: '取消',
+                title: this.t('settings.trash.purgeConfirmTitle'),
+                message: this.t('settings.trash.purgeConfirmMessage'),
+                confirmText: this.t('settings.trash.purge'),
+                cancelText: this.t('confirm.cancel'),
                 danger: true
             });
             if (!confirmed) {
@@ -430,11 +430,11 @@ export function createSessionTrashMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
-                this.showMessage('已彻底删除', 'success');
+                this.showMessage(this.t('settings.trash.purged'), 'success');
                 this.invalidateSessionTrashRequests();
                 await this.loadSessionTrash({ forceRefresh: true });
             } catch (e) {
-                this.showMessage('彻底删除失败', 'error');
+                this.showMessage(this.t('settings.trash.purgeFail'), 'error');
             } finally {
                 this.sessionTrashPurging[key] = false;
             }
@@ -446,10 +446,10 @@ export function createSessionTrashMethods(options = {}) {
                 return;
             }
             const confirmed = await this.requestConfirmDialog({
-                title: '清空回收站',
-                message: '该操作会永久删除回收站中的全部会话，且无法恢复。',
-                confirmText: '全部清空',
-                cancelText: '取消',
+                title: this.t('settings.trash.clearConfirmTitle'),
+                message: this.t('settings.trash.clearConfirmMessage'),
+                confirmText: this.t('settings.trash.clearConfirmButton'),
+                cancelText: this.t('confirm.cancel'),
                 danger: true
             });
             if (!confirmed) {
@@ -462,11 +462,11 @@ export function createSessionTrashMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
-                this.showMessage('回收站已清空', 'success');
+                this.showMessage(this.t('settings.trash.cleared'), 'success');
                 this.invalidateSessionTrashRequests();
                 await this.loadSessionTrash({ forceRefresh: true });
             } catch (e) {
-                this.showMessage('清空回收站失败', 'error');
+                this.showMessage(this.t('settings.trash.clearFail'), 'error');
             } finally {
                 this.sessionTrashClearing = false;
             }

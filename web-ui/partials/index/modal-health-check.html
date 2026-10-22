@@ -7,7 +7,7 @@
                     <template v-else>
                     <div class="form-hint">
                         {{ healthCheckResult.ok ? t('config.health.ok') : t('config.health.fail') }}
-                        <span v-if="healthCheckResult.issues">（{{ t('config.health.issues', { count: healthCheckResult.issues.length }) }}）</span>
+                        <span v-if="healthCheckResult.issues">{{ paren(t('config.health.issues', { count: healthCheckResult.issues.length })) }}</span>
                     </div>
 
                     <div v-if="healthCheckResult.remote && healthCheckResult.remote.type === 'remote-health-check'" class="form-hint">

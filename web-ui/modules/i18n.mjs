@@ -57,6 +57,13 @@ export function createI18nMethods() {
         languageOptions() {
             return getAvailableLanguages();
         },
+        paren(text) {
+            const value = String(text);
+            const lang = normalizeLang(this.lang);
+            return (lang === 'zh' || lang === 'zh-tw' || lang === 'ja')
+                ? `（${value}）`
+                : ` (${value})`;
+        },
         currentLanguageLabel() {
             return getLanguageMeta(this.lang).nativeName || '中文';
         },

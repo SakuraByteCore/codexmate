@@ -40,7 +40,7 @@
                         <div class="form-hint">
                             {{ agentsPath || t('common.notLoaded') }}
                             <span v-if="agentsPath">
-                                （{{ agentsExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
+                                {{ paren(agentsExists ? t('common.exists') : t('common.notExistsWillCreateOnSave')) }}
                             </span>
                             <span v-if="agentsPath" class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: agentsTokenCount }) }}</span>
                         </div>
@@ -279,7 +279,7 @@
                             <div class="form-hint">
                                 {{ sysPromptPath || t('common.notLoaded') }}
                                 <span v-if="sysPromptPath">
-                                    （{{ sysPromptExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
+                                    {{ paren(sysPromptExists ? t('common.exists') : t('common.notExistsWillCreateOnSave')) }}
                                 </span>
                                 <span v-if="sysPromptPath" class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: sysPromptTokenCount }) }}</span>
                             </div>

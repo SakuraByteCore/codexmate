@@ -12,7 +12,7 @@
                     <div class="form-hint">
                         {{ openclawConfigPath || t('common.notLoaded') }}
                         <span v-if="openclawConfigPath">
-                            （{{ openclawConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnApply') }}）
+                            {{ paren(openclawConfigExists ? t('common.exists') : t('common.notExistsWillCreateOnApply')) }}
                         </span>
                     </div>
                     <div class="btn-group" style="justify-content:flex-start;">
@@ -52,7 +52,7 @@
                             <div class="accordion-content" v-show="openclawAccordionStep === 1">
                                 <div class="form-group">
                                     <label class="form-label">{{ t('field.providerName') }}</label>
-                                    <input v-model="openclawQuick.providerName" class="form-input" placeholder="例如: custom-myapi" @input="validateProviderName">
+                                    <input v-model="openclawQuick.providerName" class="form-input" :placeholder="t('modal.openclaw.quick.providerNamePlaceholder')" @input="validateProviderName">
                                     <div class="form-hint" :class="{ 'hint-error': !openclawValidation.providerName.valid }">
                                         {{ openclawValidation.providerName.message || t('modal.openclaw.quick.providerHint') }}
                                     </div>
@@ -87,7 +87,7 @@
                                 </div>
                                 <div class="accordion-actions">
                                     <button class="btn btn-confirm btn-sm" @click="nextAccordionStep" :disabled="!openclawQuick.providerName">
-                                        下一步 →
+                                        {{ t('modal.openclaw.next') }}
                                     </button>
                                 </div>
                             </div>
@@ -111,13 +111,13 @@
                                     <label class="form-label">{{ t('field.modelId') }}</label>
                                     <input v-model="openclawQuick.modelId" class="form-input" :placeholder="t('placeholder.modelIdExample')" @input="validateModelId">
                                     <div class="form-hint" :class="{ 'hint-error': !openclawValidation.modelId.valid }">
-                                        {{ openclawValidation.modelId.message || '必填，例如: gpt-4' }}
+                                        {{ openclawValidation.modelId.message || t('modal.openclaw.quick.modelIdHint') }}
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">{{ t('field.displayName') }}</label>
                                     <input v-model="openclawQuick.modelName" class="form-input" :placeholder="t('placeholder.modelNameOptional')">
-                                    <div class="form-hint">可选，用于显示</div>
+                                    <div class="form-hint">{{ t('modal.openclaw.quick.modelNameHint') }}</div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">{{ t('field.contextAndMaxOutput') }}</label>
@@ -129,10 +129,10 @@
                                 </div>
                                 <div class="accordion-actions">
                                     <button class="btn btn-cancel btn-sm" @click="prevAccordionStep">
-                                        ← 上一步
+                                        {{ t('modal.openclaw.prev') }}
                                     </button>
                                     <button class="btn btn-confirm btn-sm" @click="nextAccordionStep" :disabled="!openclawQuick.modelId">
-                                        下一步 →
+                                        {{ t('modal.openclaw.next') }}
                                     </button>
                                 </div>
                             </div>
@@ -146,7 +146,7 @@
                                     <template v-else>3</template>
                                 </span>
                                 <span class="accordion-title">{{ t('modal.openclaw.quick.optionsTitle') }}</span>
-                                <span class="accordion-status">高级选项</span>
+                                <span class="accordion-status">{{ t('modal.openclaw.quick.advancedOptions') }}</span>
                                 <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M6 9l6 6 6-6"/>
                                 </svg>
@@ -167,10 +167,10 @@
                                 <div class="form-hint">{{ t('modal.openclaw.quick.optionsHint') }}</div>
                                 <div class="accordion-actions">
                                     <button class="btn btn-cancel btn-sm" @click="prevAccordionStep">
-                                        ← 上一步
+                                        {{ t('modal.openclaw.prev') }}
                                     </button>
                                     <button class="btn btn-confirm btn-sm" @click="finishAccordionStep">
-                                        完成 ✓
+                                        {{ t('modal.openclaw.finish') }}
                                     </button>
                                 </div>
                             </div>
@@ -184,55 +184,55 @@
 
                 <div class="structured-section">
                     <div class="structured-header">
-                        <span class="structured-title">结构化配置（高级）</span>
+                        <span class="structured-title">{{ t('modal.openclaw.structured.title') }}</span>
                         <span class="form-hint">{{ t('modal.openclaw.structured.writeHint') }}</span>
                     </div>
                     <div class="structured-grid">
                         <div class="structured-card">
                             <div class="structured-card-title">Agents Defaults</div>
                             <div class="form-group">
-                                <label class="form-label">主模型</label>
-                                <input v-model="openclawStructured.agentPrimary" class="form-input" placeholder="例如: provider/model">
+                                <label class="form-label">{{ t('modal.openclaw.structured.primaryModel') }}</label>
+                                <input v-model="openclawStructured.agentPrimary" class="form-input" :placeholder="t('modal.openclaw.structured.providerModelPlaceholder')">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">备选模型</label>
+                                <label class="form-label">{{ t('modal.openclaw.structured.fallbackModels') }}</label>
                                 <div class="list-row" v-for="(item, index) in openclawStructured.agentFallbacks" :key="'fallback-' + index">
-                                    <input v-model="openclawStructured.agentFallbacks[index]" class="form-input" placeholder="例如: provider/model">
-                                    <button class="btn-mini delete" @click="removeOpenclawFallback(index)">删除</button>
+                                    <input v-model="openclawStructured.agentFallbacks[index]" class="form-input" :placeholder="t('modal.openclaw.structured.providerModelPlaceholder')">
+                                    <button class="btn-mini delete" @click="removeOpenclawFallback(index)">{{ t('common.delete') }}</button>
                                 </div>
-                                <button class="btn-mini" @click="addOpenclawFallback">添加备选</button>
+                                <button class="btn-mini" @click="addOpenclawFallback">{{ t('modal.openclaw.structured.addFallback') }}</button>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Workspace</label>
-                                <input v-model="openclawStructured.workspace" class="form-input" placeholder="例如: ~/.openclaw/workspace">
+                                <input v-model="openclawStructured.workspace" class="form-input" :placeholder="t('modal.openclaw.structured.workspacePlaceholder')">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Timeout(s)</label>
-                                <input v-model="openclawStructured.timeout" class="form-input" placeholder="例如: 600">
+                                <input v-model="openclawStructured.timeout" class="form-input" :placeholder="t('modal.openclaw.structured.timeoutPlaceholder')">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Context Tokens</label>
-                                <input v-model="openclawStructured.contextTokens" class="form-input" placeholder="例如: 4096">
+                                <input v-model="openclawStructured.contextTokens" class="form-input" :placeholder="t('modal.openclaw.structured.contextTokensPlaceholder')">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Max Concurrent</label>
-                                <input v-model="openclawStructured.maxConcurrent" class="form-input" placeholder="例如: 2">
+                                <input v-model="openclawStructured.maxConcurrent" class="form-input" :placeholder="t('modal.openclaw.structured.maxConcurrentPlaceholder')">
                             </div>
                         </div>
 
                         <div class="structured-card">
                             <div class="structured-card-title">Env</div>
                             <div class="form-group">
-                                <label class="form-label">环境变量</label>
+                                <label class="form-label">{{ t('modal.openclaw.structured.envVars') }}</label>
                                 <div class="list-row" v-for="(item, index) in openclawStructured.envItems" :key="'env-' + index">
                                     <input v-model="item.key" class="form-input" placeholder="KEY">
                                     <input v-model="item.value" class="form-input" :type="item.show ? 'text' : 'password'" placeholder="VALUE">
                                     <button class="btn-mini" @click="toggleOpenclawEnvItem(index)">
-                                        {{ item.show ? '隐藏' : '显示' }}
+                                        {{ item.show ? t('common.hide') : t('common.show') }}
                                     </button>
-                                    <button class="btn-mini delete" @click="removeOpenclawEnvItem(index)">删除</button>
+                                    <button class="btn-mini delete" @click="removeOpenclawEnvItem(index)">{{ t('common.delete') }}</button>
                                 </div>
-                                <button class="btn-mini" @click="addOpenclawEnvItem">添加变量</button>
+                                <button class="btn-mini" @click="addOpenclawEnvItem">{{ t('modal.openclaw.structured.addEnvVar') }}</button>
                             </div>
                         </div>
 
@@ -250,34 +250,34 @@
                             <div class="form-group">
                                 <label class="form-label">Allow</label>
                                 <div class="list-row" v-for="(item, index) in openclawStructured.toolsAllow" :key="'allow-' + index">
-                                    <input v-model="openclawStructured.toolsAllow[index]" class="form-input" placeholder="例如: fs.read*">
-                                    <button class="btn-mini delete" @click="removeOpenclawToolsAllow(index)">删除</button>
+                                    <input v-model="openclawStructured.toolsAllow[index]" class="form-input" :placeholder="t('modal.openclaw.structured.allowPlaceholder')">
+                                    <button class="btn-mini delete" @click="removeOpenclawToolsAllow(index)">{{ t('common.delete') }}</button>
                                 </div>
-                                <button class="btn-mini" @click="addOpenclawToolsAllow">添加 allow</button>
+                                <button class="btn-mini" @click="addOpenclawToolsAllow">{{ t('modal.openclaw.structured.addAllow') }}</button>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Deny</label>
                                 <div class="list-row" v-for="(item, index) in openclawStructured.toolsDeny" :key="'deny-' + index">
-                                    <input v-model="openclawStructured.toolsDeny[index]" class="form-input" placeholder="例如: net.*">
-                                    <button class="btn-mini delete" @click="removeOpenclawToolsDeny(index)">删除</button>
+                                    <input v-model="openclawStructured.toolsDeny[index]" class="form-input" :placeholder="t('modal.openclaw.structured.denyPlaceholder')">
+                                    <button class="btn-mini delete" @click="removeOpenclawToolsDeny(index)">{{ t('common.delete') }}</button>
                                 </div>
-                                <button class="btn-mini" @click="addOpenclawToolsDeny">添加 deny</button>
+                                <button class="btn-mini" @click="addOpenclawToolsDeny">{{ t('modal.openclaw.structured.addDeny') }}</button>
                             </div>
                         </div>
 
                         <div class="structured-card">
-                            <div class="structured-card-title">Providers（只读）</div>
+                            <div class="structured-card-title">{{ t('modal.openclaw.structured.providersTitle') }}</div>
                             <div v-if="openclawProviders.length === 0" class="form-hint">
-                                未发现 providers 配置（可能使用环境变量或外部配置）。
+                                {{ t('modal.openclaw.structured.noProviders') }}
                             </div>
                             <div v-else class="provider-list">
                                 <div class="provider-item" v-for="(provider, index) in openclawProviders" :key="provider.key + '-' + provider.source + '-' + index">
                                     <div class="provider-header">
                                         <span class="provider-name">{{ provider.key }}</span>
-                                        <span class="provider-source">来源: {{ provider.source }}</span>
-                                        <span v-if="provider.isActive" class="pill configured">使用中</span>
+                                        <span class="provider-source">{{ t('modal.openclaw.structured.sourceLabel') }}: {{ provider.source }}</span>
+                                        <span v-if="provider.isActive" class="pill configured">{{ t('modal.openclaw.structured.active') }}</span>
                                     </div>
-                                    <div v-if="provider.fields.length === 0" class="form-hint">未配置字段</div>
+                                    <div v-if="provider.fields.length === 0" class="form-hint">{{ t('modal.openclaw.structured.noFields') }}</div>
                                     <div v-else class="provider-fields">
                                         <div class="provider-field" v-for="field in provider.fields" :key="provider.key + '-' + field.key">
                                             <span class="provider-field-key">{{ field.key }}</span>
@@ -287,14 +287,14 @@
                                 </div>
                             </div>
                             <div v-if="openclawMissingProviders.length" class="form-hint">
-                                使用中的 provider 未在配置中显示：{{ openclawMissingProviders.join(', ') }}。
+                                {{ t('modal.openclaw.structured.missingProviders', { list: openclawMissingProviders.join(', ') }) }}
                             </div>
                         </div>
 
                         <div class="structured-card">
-                            <div class="structured-card-title">Agents（只读）</div>
+                            <div class="structured-card-title">{{ t('modal.openclaw.structured.agentsTitle') }}</div>
                             <div v-if="openclawAgentsList.length === 0" class="form-hint">
-                                未发现 agents.list 配置。
+                                {{ t('modal.openclaw.structured.noAgents') }}
                             </div>
                             <div v-else class="agent-list">
                                 <div class="agent-item" v-for="(agent, index) in openclawAgentsList" :key="agent.key + '-' + index">
@@ -303,41 +303,41 @@
                                         <span class="agent-id">ID: {{ agent.id }}</span>
                                     </div>
                                     <div class="agent-meta" v-if="agent.theme || agent.emoji || agent.avatar">
-                                        <span v-if="agent.theme">主题: {{ agent.theme }}</span>
-                                        <span v-if="agent.emoji">表情: {{ agent.emoji }}</span>
-                                        <span v-if="agent.avatar">头像: {{ agent.avatar }}</span>
+                                        <span v-if="agent.theme">{{ t('modal.openclaw.structured.themeLabel') }}: {{ agent.theme }}</span>
+                                        <span v-if="agent.emoji">{{ t('modal.openclaw.structured.emojiLabel') }}: {{ agent.emoji }}</span>
+                                        <span v-if="agent.avatar">{{ t('modal.openclaw.structured.avatarLabel') }}: {{ agent.avatar }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-confirm secondary" @click="syncOpenclawStructuredFromText">从文本刷新</button>
+                        <button class="btn btn-confirm secondary" @click="syncOpenclawStructuredFromText">{{ t('common.refreshFromText') }}</button>
                         <button class="btn btn-confirm" @click="applyOpenclawStructuredToText">{{ t('common.writeToEditor') }}</button>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">OpenClaw 配置（JSON5）</label>
+                    <label class="form-label">{{ t('modal.openclaw.editorLabel') }}</label>
                     <textarea
                         v-model="openclawEditing.content"
                         class="form-input template-editor"
                         spellcheck="false"
                         :readonly="openclawSaving || openclawApplying"
-                        placeholder="在这里编辑 OpenClaw 配置（JSON5）"></textarea>
+                        :placeholder="t('modal.openclaw.editorPlaceholder')"></textarea>
                     <div class="template-editor-warning">
-                        <span v-if="openclawEditing.lockName && isDefaultOpenclawConfig(openclawEditing.name)">默认配置始终映射当前 openclaw.json，请直接使用“保存并应用”。</span>
-                        <span v-else>保存仅写入本地配置库。点击“保存并应用”后会写入 openclaw.json。</span>
+                        <span v-if="openclawEditing.lockName && isDefaultOpenclawConfig(openclawEditing.name)">{{ t('modal.openclaw.defaultConfigHint') }}</span>
+                        <span v-else>{{ t('modal.openclaw.saveOnlyHint') }}</span>
                     </div>
                 </div>
 
                 <div class="btn-group">
-                    <button class="btn btn-cancel" @click="closeOpenclawConfigModal" :disabled="openclawSaving || openclawApplying">取消</button>
+                    <button class="btn btn-cancel" @click="closeOpenclawConfigModal" :disabled="openclawSaving || openclawApplying">{{ t('common.cancel') }}</button>
                     <button class="btn btn-confirm" @click="saveOpenclawConfig" :disabled="openclawSaving || openclawApplying || (openclawEditing.lockName && isDefaultOpenclawConfig(openclawEditing.name))">
-                        {{ openclawSaving ? '保存中...' : '保存' }}
+                        {{ openclawSaving ? t('common.saving') : t('common.save') }}
                     </button>
                     <button class="btn btn-confirm secondary" @click="saveAndApplyOpenclawConfig" :disabled="openclawSaving || openclawApplying">
-                        {{ openclawApplying ? '应用中...' : '保存并应用' }}
+                        {{ openclawApplying ? t('common.applying') : t('common.saveApply') }}
                     </button>
                 </div>
             </div>

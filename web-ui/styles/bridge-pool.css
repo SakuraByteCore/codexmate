@@ -32,7 +32,7 @@
 
 /* ---- 轮询池触发按钮 ---- */
 .bridge-pool-trigger {
-    color: var(--color-brand);
+    color: var(--color-brand-dark);
     background: rgba(200, 121, 99, 0.08);
 }
 

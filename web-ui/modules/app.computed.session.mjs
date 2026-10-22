@@ -250,48 +250,65 @@ export function buildSessionWorkspaceSummary(session, messages, options = {}) {
     return summary;
 }
 
+const DURATION_UNIT_TABLES = {
+    en: {
+        zero: '0m',
+        underOne: '<1m',
+        spaced: true,
+        spaceCompact: false,
+        compact: [['d', 1440], ['h', 60], ['m', 1]],
+        long: [['day', 1440], ['hr', 60], ['min', 1]]
+    },
+    ja: {
+        zero: '0分',
+        underOne: '<1分',
+        spaced: false,
+        spaceCompact: false,
+        compact: [['日', 1440], ['時間', 60], ['分', 1]],
+        long: [['日', 1440], ['時間', 60], ['分', 1]]
+    },
+    vi: {
+        zero: '0 phút',
+        underOne: '<1 phút',
+        spaced: true,
+        spaceCompact: true,
+        compact: [['ngày', 1440], ['giờ', 60], ['phút', 1]],
+        long: [['ngày', 1440], ['giờ', 60], ['phút', 1]]
+    },
+    zh: {
+        zero: '0分',
+        underOne: '<1分',
+        spaced: false,
+        spaceCompact: false,
+        compact: [['天', 1440], ['时', 60], ['分', 1]],
+        long: [['天', 1440], ['小时', 60], ['分', 1]]
+    },
+    'zh-tw': {
+        zero: '0分',
+        underOne: '<1分',
+        spaced: false,
+        spaceCompact: false,
+        compact: [['天', 1440], ['時', 60], ['分', 1]],
+        long: [['天', 1440], ['小時', 60], ['分', 1]]
+    }
+};
+
 function formatUsageDuration(value, options = {}) {
     const normalizedLang = typeof options.lang === 'string' ? options.lang.trim().toLowerCase() : '';
-    const isEn = normalizedLang === 'en';
+    const unitSet = DURATION_UNIT_TABLES[normalizedLang] || DURATION_UNIT_TABLES.zh;
     const numeric = Number(value);
     if (!Number.isFinite(numeric) || numeric <= 0) {
-        return isEn ? '0m' : '0分';
+        return unitSet.zero;
     }
     const totalMinutes = Math.floor(numeric / 60000);
     if (totalMinutes <= 0) {
-        return isEn ? '<1m' : '<1分';
+        return unitSet.underOne;
     }
     const maxParts = Number.isFinite(Number(options.maxParts))
         ? Math.max(1, Math.floor(Number(options.maxParts)))
         : 2;
     const compact = options.compact !== false;
-    const units = compact
-        ? (
-            isEn
-                ? [
-                    { label: 'd', value: 24 * 60 },
-                    { label: 'h', value: 60 },
-                    { label: 'm', value: 1 }
-                ]
-                : [
-                    { label: '天', value: 24 * 60 },
-                    { label: '时', value: 60 },
-                    { label: '分', value: 1 }
-                ]
-        )
-        : (
-            isEn
-                ? [
-                    { label: 'day', value: 24 * 60 },
-                    { label: 'hr', value: 60 },
-                    { label: 'min', value: 1 }
-                ]
-                : [
-                    { label: '天', value: 24 * 60 },
-                    { label: '小时', value: 60 },
-                    { label: '分', value: 1 }
-                ]
-        );
+    const units = (compact ? unitSet.compact : unitSet.long).map(([label, minutes]) => ({ label, value: minutes }));
     let remainingMinutes = totalMinutes;
     const parts = [];
     for (const unit of units) {
@@ -302,13 +319,14 @@ function formatUsageDuration(value, options = {}) {
         if (count <= 0) {
             continue;
         }
-        parts.push(compact ? `${count}${unit.label}` : (isEn ? `${count} ${unit.label}` : `${count}${unit.label}`));
+        parts.push((compact ? unitSet.spaceCompact : unitSet.spaced) ? `${count} ${unit.label}` : `${count}${unit.label}`);
         remainingMinutes -= count * unit.value;
         if (parts.length >= maxParts) {
             break;
         }
     }
-    return parts.length ? parts.join(compact ? '' : ' ') : (isEn ? '0m' : '0分');
+    const separator = compact ? (unitSet.spaceCompact ? ' ' : '') : ' ';
+    return parts.length ? parts.join(separator) : unitSet.zero;
 }
 
 export function createSessionComputed() {

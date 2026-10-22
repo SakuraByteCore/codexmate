@@ -252,6 +252,38 @@ export function createAgentsMethods(options = {}) {
             this.agentsDiffFingerprint = '';
             this._agentsDiffPreviewRequestToken = null;
         },
+        trapModalFocus(event) {
+            const overlays = typeof document !== 'undefined' && typeof document.querySelectorAll === 'function'
+                ? Array.from(document.querySelectorAll('.modal-overlay'))
+                : [];
+            if (!overlays.length) {
+                return;
+            }
+            const modal = overlays[overlays.length - 1];
+            const focusableSelector = 'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+            const focusables = Array.from(modal.querySelectorAll(focusableSelector))
+                .filter((el) => el.offsetParent !== null || el === document.activeElement);
+            if (!focusables.length) {
+                return;
+            }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (!modal.contains(active)) {
+                event.preventDefault();
+                first.focus();
+                return;
+            }
+            if (event.shiftKey && active === first) {
+                event.preventDefault();
+                last.focus();
+                return;
+            }
+            if (!event.shiftKey && active === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        },
         handleGlobalKeydown(event) {
             if (!event) {
                 return;
@@ -291,6 +323,10 @@ export function createAgentsMethods(options = {}) {
                         }
                     } catch (_) {}
                 }
+                return;
+            }
+            if (key === 'Tab') {
+                this.trapModalFocus(event);
                 return;
             }
             if (key !== 'Escape') {

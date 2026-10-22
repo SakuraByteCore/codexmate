@@ -479,6 +479,14 @@ export function createProvidersMethods(options = {}) {
 
         async resetConfig() {
             if (this.resetConfigLoading) return;
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('settings.reset.confirmTitle'),
+                message: this.t('settings.reset.confirmMessage'),
+                confirmText: this.t('settings.reset.button'),
+                cancelText: this.t('confirm.cancel'),
+                danger: true
+            });
+            if (!confirmed) return;
             this.resetConfigLoading = true;
             try {
                 const res = await api('reset-config');
@@ -486,7 +494,7 @@ export function createProvidersMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
-                const backup = res.backupFile ? `（已备份: ${res.backupFile}）` : '';
+                const backup = res.backupFile ? this.t('toast.provider.resetBackup', { file: res.backupFile }) : '';
                 this.showMessage(this.t('toast.provider.resetSuccess', { backup }), 'success');
                 await this.loadAll();
             } catch (e) {
@@ -498,7 +506,7 @@ export function createProvidersMethods(options = {}) {
 
         async addModel() {
             if (!this.newModelName || !this.newModelName.trim()) {
-                return this.showMessage('请输入模型', 'error');
+                return this.showMessage(this.t('toast.provider.modelRequired'), 'error');
             }
             try {
                 const modelName = this.newModelName.trim();
@@ -523,7 +531,7 @@ export function createProvidersMethods(options = {}) {
                     this.closeModelModal();
                 }
             } catch (_) {
-                this.showMessage('新增模型失败', 'error');
+                this.showMessage(this.t('toast.provider.addModelFail'), 'error');
             }
         },
 
@@ -546,7 +554,7 @@ export function createProvidersMethods(options = {}) {
                     this.showMessage(this.t('toast.operation.success'), 'success');
                 }
             } catch (_) {
-                this.showMessage('删除模型失败', 'error');
+                this.showMessage(this.t('toast.provider.deleteModelFail'), 'error');
             }
         },
 

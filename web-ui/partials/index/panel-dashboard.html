@@ -35,7 +35,7 @@
                                 <div class="doctor-health-result" :class="healthCheckResult.ok ? 'ok' : 'error'">
                                     <div class="doctor-health-title">
                                         {{ healthCheckResult.ok ? t('dashboard.health.ok') : t('dashboard.health.fail') }}
-                                        <span v-if="healthCheckResult.issues && healthCheckResult.issues.length">（{{ t('dashboard.health.issues', { count: healthCheckResult.issues.length }) }}）</span>
+                                        <span v-if="healthCheckResult.issues && healthCheckResult.issues.length">{{ paren(t('dashboard.health.issues', { count: healthCheckResult.issues.length })) }}</span>
                                     </div>
                                 </div>
                                 <div v-if="healthCheckResult.report" class="doctor-action-list">
