@@ -45,7 +45,7 @@ Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent c�
 ### Điểm nổi bật
 
 Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Agent Bridge cục bộ**:
-- **Trình duyệt phiên thống nhất**: Tìm kiếm, xem trước, lọc và xuất phiên làm việc từ Codex, Claude Code, Gemini CLI, CodeBuddy Code và Pi trong một nơi duy nhất.
+- **Trình duyệt phiên thống nhất**: Tìm kiếm, xem trước, lọc và xuất phiên làm việc từ Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode và Zed trong một nơi duy nhất.
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
 - **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
@@ -60,7 +60,7 @@ Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Ag
 | **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode, OpenClaw và Pi |
 | **Cấu hình Provider Pi** | ✅ | Quản lý provider Pi trong Web UI, ghi vào `~/.pi/agent/models.json` (giữ nguyên các trường không nhận dạng được) và chuyển đổi provider/model mặc định trong `~/.pi/agent/settings.json` |
 | **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
-| **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/Pi) |
+| **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/WorkBuddy/Pi/OpenCode/Zed) |
 | **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
 | **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
 | **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |
@@ -119,6 +119,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **OpenCode**: xem [tài liệu chính thức OpenCode](https://opencode.ai/)
 - **OpenClaw**: xem [kho lưu trữ OpenClaw](https://github.com/moeru-ai/openclaw)
 - **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`; cấu hình provider nằm ở `~/.pi/agent/models.json`, provider/model mặc định nằm ở `~/.pi/agent/settings.json`
+- **Zed**: phiên agent được đọc chỉ-đọc từ cơ sở dữ liệu cục bộ của Zed (`threads/threads.db` trong thư mục dữ liệu) và hiển thị trong trình duyệt phiên
 
 ---
 

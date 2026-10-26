@@ -45,7 +45,7 @@ Have you ever felt overwhelmed by managing multiple local AI agents? Each has it
 ### What's So Special?
 
 Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
-- **Unified Session Browser**: Search, inspect, filter, and export local sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, and Pi from one place.
+- **Unified Session Browser**: Search, inspect, filter, and export local sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed from one place.
 - **OpenAI-Compatible Bridge**: Use Codex with any OpenAI-compatible UI by normalizing the Responses API; the built-in Codex conversion also fills and normalizes Codex fingerprint headers such as `User-Agent`, `Version`, `OpenAI-Beta`, and `Originator` so upstream providers see an official Codex CLI-shaped request.
 - **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
 - **OpenCode Provider Control**: Manage OpenCode provider/model selection with a CodexMate-owned provider store under `~/.codexmate`, projecting only the active provider into native OpenCode config to avoid polluting or deleting user-owned settings.
@@ -64,7 +64,7 @@ Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
 | --- | --- | --- |
 | **Provider Management** | ✅ | Switch providers/models for Codex, Claude, OpenCode, KiloCode, OpenClaw, and Pi |
 | **Live Agent Sync** | ✅ | Real-time monitoring of Codex/Claude config & status |
-| **Session Browser** | ✅ | Search, preview, filter, and export sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, and Pi |
+| **Session Browser** | ✅ | Search, preview, filter, and export sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed |
 | **Usage Analytics** | ✅ | Visualize message trends and top projects |
 | **Local Skills Market** | ✅ | Cross-app import/export of agent skills |
 | **Task Queue** | ✅ | DAG-based task execution and logs |
@@ -127,6 +127,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **OpenCode**: install from the [official OpenCode docs](https://opencode.ai/)
 - **OpenClaw**: see the [OpenClaw repository](https://github.com/moeru-ai/openclaw)
 - **Pi**: sessions are discovered from `~/.pi/agent/sessions`; provider config lives in `~/.pi/agent/models.json` and the default provider/model in `~/.pi/agent/settings.json`
+- **Zed**: agent sessions are read from Zed's local database (`threads/threads.db` under its data directory) and listed in the session browser (read-only)
 
 ---
 
