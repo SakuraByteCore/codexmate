@@ -875,7 +875,7 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "doctor-health-title" }, [
                           _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('dashboard.health.ok') : _ctx.t('dashboard.health.fail')) + " ", 1 /* TEXT */),
                           (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
-                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('dashboard.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
+                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.t('dashboard.health.issues', { count: _ctx.healthCheckResult.issues.length }))), 1 /* TEXT */))
                             : _createCommentVNode("v-if", true)
                         ])
                       ], 2 /* CLASS */),
@@ -5553,7 +5553,12 @@ return function render(_ctx, _cache) {
                           type: "button",
                           class: _normalizeClass(['toggle-btn', { active: _ctx.theme === 'dark' }]),
                           onClick: $event => (_ctx.setTheme('dark'))
-                        }, _toDisplayString(_ctx.t('settings.theme.dark')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
+                        }, _toDisplayString(_ctx.t('settings.theme.dark')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: _normalizeClass(['toggle-btn', { active: _ctx.theme === 'ocean' }]),
+                          onClick: $event => (_ctx.setTheme('ocean'))
+                        }, _toDisplayString(_ctx.t('settings.theme.ocean')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
                       ]),
                       _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.theme.hint')), 1 /* TEXT */)
                     ])
@@ -7091,7 +7096,7 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "form-hint" }, [
                           _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
                           (_ctx.agentsPath)
-                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
+                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave'))), 1 /* TEXT */))
                             : _createCommentVNode("v-if", true),
                           (_ctx.agentsPath)
                             ? (_openBlock(), _createElementBlock("span", {
@@ -7643,7 +7648,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("div", { class: "form-hint" }, [
                             _createTextVNode(_toDisplayString(_ctx.sysPromptPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
                             (_ctx.sysPromptPath)
-                              ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.sysPromptExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
+                              ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.sysPromptExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave'))), 1 /* TEXT */))
                               : _createCommentVNode("v-if", true),
                             (_ctx.sysPromptPath)
                               ? (_openBlock(), _createElementBlock("span", {
@@ -9353,7 +9358,7 @@ return function render(_ctx, _cache) {
               _createElementVNode("div", { class: "form-hint" }, [
                 _createTextVNode(_toDisplayString(_ctx.openclawConfigPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
                 (_ctx.openclawConfigPath)
-                  ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.openclawConfigExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnApply')) + "） ", 1 /* TEXT */))
+                  ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.openclawConfigExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnApply'))), 1 /* TEXT */))
                   : _createCommentVNode("v-if", true)
               ]),
               _createElementVNode("div", {
@@ -9427,9 +9432,9 @@ return function render(_ctx, _cache) {
                       _withDirectives(_createElementVNode("input", {
                         "onUpdate:modelValue": $event => ((_ctx.openclawQuick.providerName) = $event),
                         class: "form-input",
-                        placeholder: "例如: custom-myapi",
+                        placeholder: _ctx.t('modal.openclaw.quick.providerNamePlaceholder'),
                         onInput: _ctx.validateProviderName
-                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onInput"]), [
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onInput"]), [
                         [_vModelText, _ctx.openclawQuick.providerName]
                       ]),
                       _createElementVNode("div", {
@@ -9515,7 +9520,7 @@ return function render(_ctx, _cache) {
                         class: "btn btn-confirm btn-sm",
                         onClick: _ctx.nextAccordionStep,
                         disabled: !_ctx.openclawQuick.providerName
-                      }, " 下一步 → ", 8 /* PROPS */, ["onClick", "disabled"])
+                      }, _toDisplayString(_ctx.t('modal.openclaw.next')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                     ])
                   ], 512 /* NEED_PATCH */), [
                     [_vShow, _ctx.openclawAccordionStep === 1]
@@ -9569,7 +9574,7 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("div", {
                         class: _normalizeClass(["form-hint", { 'hint-error': !_ctx.openclawValidation.modelId.valid }])
-                      }, _toDisplayString(_ctx.openclawValidation.modelId.message || '必填，例如: gpt-4'), 3 /* TEXT, CLASS */)
+                      }, _toDisplayString(_ctx.openclawValidation.modelId.message || _ctx.t('modal.openclaw.quick.modelIdHint')), 3 /* TEXT, CLASS */)
                     ]),
                     _createElementVNode("div", { class: "form-group" }, [
                       _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.displayName')), 1 /* TEXT */),
@@ -9580,7 +9585,7 @@ return function render(_ctx, _cache) {
                       }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                         [_vModelText, _ctx.openclawQuick.modelName]
                       ]),
-                      _createElementVNode("div", { class: "form-hint" }, "可选，用于显示")
+                      _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.quick.modelNameHint')), 1 /* TEXT */)
                     ]),
                     _createElementVNode("div", { class: "form-group" }, [
                       _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.contextAndMaxOutput')), 1 /* TEXT */),
@@ -9606,12 +9611,12 @@ return function render(_ctx, _cache) {
                       _createElementVNode("button", {
                         class: "btn btn-cancel btn-sm",
                         onClick: _ctx.prevAccordionStep
-                      }, " ← 上一步 ", 8 /* PROPS */, ["onClick"]),
+                      }, _toDisplayString(_ctx.t('modal.openclaw.prev')), 9 /* TEXT, PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         class: "btn btn-confirm btn-sm",
                         onClick: _ctx.nextAccordionStep,
                         disabled: !_ctx.openclawQuick.modelId
-                      }, " 下一步 → ", 8 /* PROPS */, ["onClick", "disabled"])
+                      }, _toDisplayString(_ctx.t('modal.openclaw.next')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                     ])
                   ], 512 /* NEED_PATCH */), [
                     [_vShow, _ctx.openclawAccordionStep === 2]
@@ -9636,7 +9641,7 @@ return function render(_ctx, _cache) {
                           ], 64 /* STABLE_FRAGMENT */))
                     ]),
                     _createElementVNode("span", { class: "accordion-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.optionsTitle')), 1 /* TEXT */),
-                    _createElementVNode("span", { class: "accordion-status" }, "高级选项"),
+                    _createElementVNode("span", { class: "accordion-status" }, _toDisplayString(_ctx.t('modal.openclaw.quick.advancedOptions')), 1 /* TEXT */),
                     (_openBlock(), _createElementBlock("svg", {
                       class: "accordion-chevron",
                       viewBox: "0 0 24 24",
@@ -9680,11 +9685,11 @@ return function render(_ctx, _cache) {
                       _createElementVNode("button", {
                         class: "btn btn-cancel btn-sm",
                         onClick: _ctx.prevAccordionStep
-                      }, " ← 上一步 ", 8 /* PROPS */, ["onClick"]),
+                      }, _toDisplayString(_ctx.t('modal.openclaw.prev')), 9 /* TEXT, PROPS */, ["onClick"]),
                       _createElementVNode("button", {
                         class: "btn btn-confirm btn-sm",
                         onClick: _ctx.finishAccordionStep
-                      }, " 完成 ✓ ", 8 /* PROPS */, ["onClick"])
+                      }, _toDisplayString(_ctx.t('modal.openclaw.finish')), 9 /* TEXT, PROPS */, ["onClick"])
                     ])
                   ], 512 /* NEED_PATCH */), [
                     [_vShow, _ctx.openclawAccordionStep === 3]
@@ -9700,24 +9705,24 @@ return function render(_ctx, _cache) {
             ]),
             _createElementVNode("div", { class: "structured-section" }, [
               _createElementVNode("div", { class: "structured-header" }, [
-                _createElementVNode("span", { class: "structured-title" }, "结构化配置（高级）"),
+                _createElementVNode("span", { class: "structured-title" }, _toDisplayString(_ctx.t('modal.openclaw.structured.title')), 1 /* TEXT */),
                 _createElementVNode("span", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.structured.writeHint')), 1 /* TEXT */)
               ]),
               _createElementVNode("div", { class: "structured-grid" }, [
                 _createElementVNode("div", { class: "structured-card" }, [
                   _createElementVNode("div", { class: "structured-card-title" }, "Agents Defaults"),
                   _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, "主模型"),
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('modal.openclaw.structured.primaryModel')), 1 /* TEXT */),
                     _withDirectives(_createElementVNode("input", {
                       "onUpdate:modelValue": $event => ((_ctx.openclawStructured.agentPrimary) = $event),
                       class: "form-input",
-                      placeholder: "例如: provider/model"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      placeholder: _ctx.t('modal.openclaw.structured.providerModelPlaceholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                       [_vModelText, _ctx.openclawStructured.agentPrimary]
                     ])
                   ]),
                   _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, "备选模型"),
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('modal.openclaw.structured.fallbackModels')), 1 /* TEXT */),
                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawStructured.agentFallbacks, (item, index) => {
                       return (_openBlock(), _createElementBlock("div", {
                         class: "list-row",
@@ -9726,28 +9731,28 @@ return function render(_ctx, _cache) {
                         _withDirectives(_createElementVNode("input", {
                           "onUpdate:modelValue": $event => ((_ctx.openclawStructured.agentFallbacks[index]) = $event),
                           class: "form-input",
-                          placeholder: "例如: provider/model"
-                        }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                          placeholder: _ctx.t('modal.openclaw.structured.providerModelPlaceholder')
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                           [_vModelText, _ctx.openclawStructured.agentFallbacks[index]]
                         ]),
                         _createElementVNode("button", {
                           class: "btn-mini delete",
                           onClick: $event => (_ctx.removeOpenclawFallback(index))
-                        }, "删除", 8 /* PROPS */, ["onClick"])
+                        }, _toDisplayString(_ctx.t('common.delete')), 9 /* TEXT, PROPS */, ["onClick"])
                       ]))
                     }), 128 /* KEYED_FRAGMENT */)),
                     _createElementVNode("button", {
                       class: "btn-mini",
                       onClick: _ctx.addOpenclawFallback
-                    }, "添加备选", 8 /* PROPS */, ["onClick"])
+                    }, _toDisplayString(_ctx.t('modal.openclaw.structured.addFallback')), 9 /* TEXT, PROPS */, ["onClick"])
                   ]),
                   _createElementVNode("div", { class: "form-group" }, [
                     _createElementVNode("label", { class: "form-label" }, "Workspace"),
                     _withDirectives(_createElementVNode("input", {
                       "onUpdate:modelValue": $event => ((_ctx.openclawStructured.workspace) = $event),
                       class: "form-input",
-                      placeholder: "例如: ~/.openclaw/workspace"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      placeholder: _ctx.t('modal.openclaw.structured.workspacePlaceholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                       [_vModelText, _ctx.openclawStructured.workspace]
                     ])
                   ]),
@@ -9756,8 +9761,8 @@ return function render(_ctx, _cache) {
                     _withDirectives(_createElementVNode("input", {
                       "onUpdate:modelValue": $event => ((_ctx.openclawStructured.timeout) = $event),
                       class: "form-input",
-                      placeholder: "例如: 600"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      placeholder: _ctx.t('modal.openclaw.structured.timeoutPlaceholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                       [_vModelText, _ctx.openclawStructured.timeout]
                     ])
                   ]),
@@ -9766,8 +9771,8 @@ return function render(_ctx, _cache) {
                     _withDirectives(_createElementVNode("input", {
                       "onUpdate:modelValue": $event => ((_ctx.openclawStructured.contextTokens) = $event),
                       class: "form-input",
-                      placeholder: "例如: 4096"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      placeholder: _ctx.t('modal.openclaw.structured.contextTokensPlaceholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                       [_vModelText, _ctx.openclawStructured.contextTokens]
                     ])
                   ]),
@@ -9776,8 +9781,8 @@ return function render(_ctx, _cache) {
                     _withDirectives(_createElementVNode("input", {
                       "onUpdate:modelValue": $event => ((_ctx.openclawStructured.maxConcurrent) = $event),
                       class: "form-input",
-                      placeholder: "例如: 2"
-                    }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                      placeholder: _ctx.t('modal.openclaw.structured.maxConcurrentPlaceholder')
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                       [_vModelText, _ctx.openclawStructured.maxConcurrent]
                     ])
                   ])
@@ -9785,7 +9790,7 @@ return function render(_ctx, _cache) {
                 _createElementVNode("div", { class: "structured-card" }, [
                   _createElementVNode("div", { class: "structured-card-title" }, "Env"),
                   _createElementVNode("div", { class: "form-group" }, [
-                    _createElementVNode("label", { class: "form-label" }, "环境变量"),
+                    _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('modal.openclaw.structured.envVars')), 1 /* TEXT */),
                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawStructured.envItems, (item, index) => {
                       return (_openBlock(), _createElementBlock("div", {
                         class: "list-row",
@@ -9809,17 +9814,17 @@ return function render(_ctx, _cache) {
                         _createElementVNode("button", {
                           class: "btn-mini",
                           onClick: $event => (_ctx.toggleOpenclawEnvItem(index))
-                        }, _toDisplayString(item.show ? '隐藏' : '显示'), 9 /* TEXT, PROPS */, ["onClick"]),
+                        }, _toDisplayString(item.show ? _ctx.t('common.hide') : _ctx.t('common.show')), 9 /* TEXT, PROPS */, ["onClick"]),
                         _createElementVNode("button", {
                           class: "btn-mini delete",
                           onClick: $event => (_ctx.removeOpenclawEnvItem(index))
-                        }, "删除", 8 /* PROPS */, ["onClick"])
+                        }, _toDisplayString(_ctx.t('common.delete')), 9 /* TEXT, PROPS */, ["onClick"])
                       ]))
                     }), 128 /* KEYED_FRAGMENT */)),
                     _createElementVNode("button", {
                       class: "btn-mini",
                       onClick: _ctx.addOpenclawEnvItem
-                    }, "添加变量", 8 /* PROPS */, ["onClick"])
+                    }, _toDisplayString(_ctx.t('modal.openclaw.structured.addEnvVar')), 9 /* TEXT, PROPS */, ["onClick"])
                   ])
                 ]),
                 _createElementVNode("div", { class: "structured-card" }, [
@@ -9848,20 +9853,20 @@ return function render(_ctx, _cache) {
                         _withDirectives(_createElementVNode("input", {
                           "onUpdate:modelValue": $event => ((_ctx.openclawStructured.toolsAllow[index]) = $event),
                           class: "form-input",
-                          placeholder: "例如: fs.read*"
-                        }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                          placeholder: _ctx.t('modal.openclaw.structured.allowPlaceholder')
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                           [_vModelText, _ctx.openclawStructured.toolsAllow[index]]
                         ]),
                         _createElementVNode("button", {
                           class: "btn-mini delete",
                           onClick: $event => (_ctx.removeOpenclawToolsAllow(index))
-                        }, "删除", 8 /* PROPS */, ["onClick"])
+                        }, _toDisplayString(_ctx.t('common.delete')), 9 /* TEXT, PROPS */, ["onClick"])
                       ]))
                     }), 128 /* KEYED_FRAGMENT */)),
                     _createElementVNode("button", {
                       class: "btn-mini",
                       onClick: _ctx.addOpenclawToolsAllow
-                    }, "添加 allow", 8 /* PROPS */, ["onClick"])
+                    }, _toDisplayString(_ctx.t('modal.openclaw.structured.addAllow')), 9 /* TEXT, PROPS */, ["onClick"])
                   ]),
                   _createElementVNode("div", { class: "form-group" }, [
                     _createElementVNode("label", { class: "form-label" }, "Deny"),
@@ -9873,29 +9878,29 @@ return function render(_ctx, _cache) {
                         _withDirectives(_createElementVNode("input", {
                           "onUpdate:modelValue": $event => ((_ctx.openclawStructured.toolsDeny[index]) = $event),
                           class: "form-input",
-                          placeholder: "例如: net.*"
-                        }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                          placeholder: _ctx.t('modal.openclaw.structured.denyPlaceholder')
+                        }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                           [_vModelText, _ctx.openclawStructured.toolsDeny[index]]
                         ]),
                         _createElementVNode("button", {
                           class: "btn-mini delete",
                           onClick: $event => (_ctx.removeOpenclawToolsDeny(index))
-                        }, "删除", 8 /* PROPS */, ["onClick"])
+                        }, _toDisplayString(_ctx.t('common.delete')), 9 /* TEXT, PROPS */, ["onClick"])
                       ]))
                     }), 128 /* KEYED_FRAGMENT */)),
                     _createElementVNode("button", {
                       class: "btn-mini",
                       onClick: _ctx.addOpenclawToolsDeny
-                    }, "添加 deny", 8 /* PROPS */, ["onClick"])
+                    }, _toDisplayString(_ctx.t('modal.openclaw.structured.addDeny')), 9 /* TEXT, PROPS */, ["onClick"])
                   ])
                 ]),
                 _createElementVNode("div", { class: "structured-card" }, [
-                  _createElementVNode("div", { class: "structured-card-title" }, "Providers（只读）"),
+                  _createElementVNode("div", { class: "structured-card-title" }, _toDisplayString(_ctx.t('modal.openclaw.structured.providersTitle')), 1 /* TEXT */),
                   (_ctx.openclawProviders.length === 0)
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 0,
                         class: "form-hint"
-                      }, " 未发现 providers 配置（可能使用环境变量或外部配置）。 "))
+                      }, _toDisplayString(_ctx.t('modal.openclaw.structured.noProviders')), 1 /* TEXT */))
                     : (_openBlock(), _createElementBlock("div", {
                         key: 1,
                         class: "provider-list"
@@ -9907,19 +9912,19 @@ return function render(_ctx, _cache) {
                           }, [
                             _createElementVNode("div", { class: "provider-header" }, [
                               _createElementVNode("span", { class: "provider-name" }, _toDisplayString(provider.key), 1 /* TEXT */),
-                              _createElementVNode("span", { class: "provider-source" }, "来源: " + _toDisplayString(provider.source), 1 /* TEXT */),
+                              _createElementVNode("span", { class: "provider-source" }, _toDisplayString(_ctx.t('modal.openclaw.structured.sourceLabel')) + ": " + _toDisplayString(provider.source), 1 /* TEXT */),
                               (provider.isActive)
                                 ? (_openBlock(), _createElementBlock("span", {
                                     key: 0,
                                     class: "pill configured"
-                                  }, "使用中"))
+                                  }, _toDisplayString(_ctx.t('modal.openclaw.structured.active')), 1 /* TEXT */))
                                 : _createCommentVNode("v-if", true)
                             ]),
                             (provider.fields.length === 0)
                               ? (_openBlock(), _createElementBlock("div", {
                                   key: 0,
                                   class: "form-hint"
-                                }, "未配置字段"))
+                                }, _toDisplayString(_ctx.t('modal.openclaw.structured.noFields')), 1 /* TEXT */))
                               : (_openBlock(), _createElementBlock("div", {
                                   key: 1,
                                   class: "provider-fields"
@@ -9941,16 +9946,16 @@ return function render(_ctx, _cache) {
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 2,
                         class: "form-hint"
-                      }, " 使用中的 provider 未在配置中显示：" + _toDisplayString(_ctx.openclawMissingProviders.join(', ')) + "。 ", 1 /* TEXT */))
+                      }, _toDisplayString(_ctx.t('modal.openclaw.structured.missingProviders', { list: _ctx.openclawMissingProviders.join(', ') })), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true)
                 ]),
                 _createElementVNode("div", { class: "structured-card" }, [
-                  _createElementVNode("div", { class: "structured-card-title" }, "Agents（只读）"),
+                  _createElementVNode("div", { class: "structured-card-title" }, _toDisplayString(_ctx.t('modal.openclaw.structured.agentsTitle')), 1 /* TEXT */),
                   (_ctx.openclawAgentsList.length === 0)
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 0,
                         class: "form-hint"
-                      }, " 未发现 agents.list 配置。 "))
+                      }, _toDisplayString(_ctx.t('modal.openclaw.structured.noAgents')), 1 /* TEXT */))
                     : (_openBlock(), _createElementBlock("div", {
                         key: 1,
                         class: "agent-list"
@@ -9970,13 +9975,13 @@ return function render(_ctx, _cache) {
                                   class: "agent-meta"
                                 }, [
                                   (agent.theme)
-                                    ? (_openBlock(), _createElementBlock("span", { key: 0 }, "主题: " + _toDisplayString(agent.theme), 1 /* TEXT */))
+                                    ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('modal.openclaw.structured.themeLabel')) + ": " + _toDisplayString(agent.theme), 1 /* TEXT */))
                                     : _createCommentVNode("v-if", true),
                                   (agent.emoji)
-                                    ? (_openBlock(), _createElementBlock("span", { key: 1 }, "表情: " + _toDisplayString(agent.emoji), 1 /* TEXT */))
+                                    ? (_openBlock(), _createElementBlock("span", { key: 1 }, _toDisplayString(_ctx.t('modal.openclaw.structured.emojiLabel')) + ": " + _toDisplayString(agent.emoji), 1 /* TEXT */))
                                     : _createCommentVNode("v-if", true),
                                   (agent.avatar)
-                                    ? (_openBlock(), _createElementBlock("span", { key: 2 }, "头像: " + _toDisplayString(agent.avatar), 1 /* TEXT */))
+                                    ? (_openBlock(), _createElementBlock("span", { key: 2 }, _toDisplayString(_ctx.t('modal.openclaw.structured.avatarLabel')) + ": " + _toDisplayString(agent.avatar), 1 /* TEXT */))
                                     : _createCommentVNode("v-if", true)
                                 ]))
                               : _createCommentVNode("v-if", true)
@@ -9989,7 +9994,7 @@ return function render(_ctx, _cache) {
                 _createElementVNode("button", {
                   class: "btn btn-confirm secondary",
                   onClick: _ctx.syncOpenclawStructuredFromText
-                }, "从文本刷新", 8 /* PROPS */, ["onClick"]),
+                }, _toDisplayString(_ctx.t('common.refreshFromText')), 9 /* TEXT, PROPS */, ["onClick"]),
                 _createElementVNode("button", {
                   class: "btn btn-confirm",
                   onClick: _ctx.applyOpenclawStructuredToText
@@ -9997,20 +10002,20 @@ return function render(_ctx, _cache) {
               ])
             ]),
             _createElementVNode("div", { class: "form-group" }, [
-              _createElementVNode("label", { class: "form-label" }, "OpenClaw 配置（JSON5）"),
+              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('modal.openclaw.editorLabel')), 1 /* TEXT */),
               _withDirectives(_createElementVNode("textarea", {
                 "onUpdate:modelValue": $event => ((_ctx.openclawEditing.content) = $event),
                 class: "form-input template-editor",
                 spellcheck: "false",
                 readonly: _ctx.openclawSaving || _ctx.openclawApplying,
-                placeholder: "在这里编辑 OpenClaw 配置（JSON5）"
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly"]), [
+                placeholder: _ctx.t('modal.openclaw.editorPlaceholder')
+              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "readonly", "placeholder"]), [
                 [_vModelText, _ctx.openclawEditing.content]
               ]),
               _createElementVNode("div", { class: "template-editor-warning" }, [
                 (_ctx.openclawEditing.lockName && _ctx.isDefaultOpenclawConfig(_ctx.openclawEditing.name))
-                  ? (_openBlock(), _createElementBlock("span", { key: 0 }, "默认配置始终映射当前 openclaw.json，请直接使用“保存并应用”。"))
-                  : (_openBlock(), _createElementBlock("span", { key: 1 }, "保存仅写入本地配置库。点击“保存并应用”后会写入 openclaw.json。"))
+                  ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('modal.openclaw.defaultConfigHint')), 1 /* TEXT */))
+                  : (_openBlock(), _createElementBlock("span", { key: 1 }, _toDisplayString(_ctx.t('modal.openclaw.saveOnlyHint')), 1 /* TEXT */))
               ])
             ]),
             _createElementVNode("div", { class: "btn-group" }, [
@@ -10018,17 +10023,17 @@ return function render(_ctx, _cache) {
                 class: "btn btn-cancel",
                 onClick: _ctx.closeOpenclawConfigModal,
                 disabled: _ctx.openclawSaving || _ctx.openclawApplying
-              }, "取消", 8 /* PROPS */, ["onClick", "disabled"]),
+              }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
               _createElementVNode("button", {
                 class: "btn btn-confirm",
                 onClick: _ctx.saveOpenclawConfig,
                 disabled: _ctx.openclawSaving || _ctx.openclawApplying || (_ctx.openclawEditing.lockName && _ctx.isDefaultOpenclawConfig(_ctx.openclawEditing.name))
-              }, _toDisplayString(_ctx.openclawSaving ? '保存中...' : '保存'), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+              }, _toDisplayString(_ctx.openclawSaving ? _ctx.t('common.saving') : _ctx.t('common.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
               _createElementVNode("button", {
                 class: "btn btn-confirm secondary",
                 onClick: _ctx.saveAndApplyOpenclawConfig,
                 disabled: _ctx.openclawSaving || _ctx.openclawApplying
-              }, _toDisplayString(_ctx.openclawApplying ? '应用中...' : '保存并应用'), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+              }, _toDisplayString(_ctx.openclawApplying ? _ctx.t('common.applying') : _ctx.t('common.saveApply')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
             ])
           ])
         ], 8 /* PROPS */, ["onClick"]))
@@ -10240,7 +10245,7 @@ return function render(_ctx, _cache) {
                 _createElementVNode("div", { class: "form-hint" }, [
                   _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
                   (_ctx.agentsPath)
-                    ? (_openBlock(), _createElementBlock("span", { key: 0 }, " （" + _toDisplayString(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave')) + "） ", 1 /* TEXT */))
+                    ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave'))), 1 /* TEXT */))
                     : _createCommentVNode("v-if", true)
                 ])
               ]),
@@ -10680,7 +10685,7 @@ return function render(_ctx, _cache) {
                     _createElementVNode("div", { class: "form-hint" }, [
                       _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('config.health.ok') : _ctx.t('config.health.fail')) + " ", 1 /* TEXT */),
                       (_ctx.healthCheckResult.issues)
-                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('config.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
+                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.t('config.health.issues', { count: _ctx.healthCheckResult.issues.length }))), 1 /* TEXT */))
                         : _createCommentVNode("v-if", true)
                     ]),
                     (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'remote-health-check')
