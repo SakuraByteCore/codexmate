@@ -695,6 +695,7 @@ const zhTw = Object.freeze({
     'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
+    'sessions.source.zed': 'Zed',
     'sessions.loadingList': '會話載入中...',
     'sessions.empty': '暫無可用會話記錄',
     'sessions.unknownTime': '未知時間',

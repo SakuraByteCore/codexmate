@@ -28,8 +28,8 @@ export function createSessionActionMethods(options = {}) {
                 let error = '';
                 if (!source) {
                     error = '缺少 source 参数';
-                } else if (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'workbuddy' && source !== 'pi' && source !== 'opencode') {
-                    error = 'source 仅支持 codex、claude、gemini、codebuddy、workbuddy、pi 或 opencode';
+                } else if (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'workbuddy' && source !== 'pi' && source !== 'opencode' && source !== 'zed') {
+                    error = 'source 仅支持 codex、claude、gemini、codebuddy、workbuddy、pi、opencode 或 zed';
                 }
                 if (!sessionId && !filePath) {
                     error = error ? `${error}，还缺少 sessionId 或 filePath` : '缺少 sessionId 或 filePath 参数';
@@ -77,11 +77,13 @@ export function createSessionActionMethods(options = {}) {
                             ? 'Pi'
                             : (context.params.source === 'opencode'
                                 ? 'OpenCode'
-                                : (context.params.source === 'codebuddy'
-                                    ? 'CodeBuddy Code'
-                                    : (context.params.source === 'workbuddy'
-                                        ? 'WorkBuddy AI'
-                                        : context.params.source))))));
+                                : (context.params.source === 'zed'
+                                    ? 'Zed'
+                                    : (context.params.source === 'codebuddy'
+                                        ? 'CodeBuddy Code'
+                                        : (context.params.source === 'workbuddy'
+                                            ? 'WorkBuddy AI'
+                                            : context.params.source)))))))
             this.activeSession = {
                 source: context.params.source,
                 sourceLabel,
@@ -110,7 +112,7 @@ export function createSessionActionMethods(options = {}) {
         buildSessionStandaloneUrl(session) {
             if (!session) return '';
             const source = typeof session.source === 'string' ? session.source.trim().toLowerCase() : '';
-            if (!source || (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'workbuddy' && source !== 'pi' && source !== 'opencode')) return '';
+            if (!source || (source !== 'codex' && source !== 'claude' && source !== 'gemini' && source !== 'codebuddy' && source !== 'workbuddy' && source !== 'pi' && source !== 'opencode' && source !== 'zed')) return '';
             const sessionId = typeof session.sessionId === 'string' ? session.sessionId.trim() : '';
             const filePath = typeof session.filePath === 'string' ? session.filePath.trim() : '';
             if (!sessionId && !filePath) return '';

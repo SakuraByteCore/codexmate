@@ -878,6 +878,7 @@ const vi = Object.freeze({
     'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
+    'sessions.source.zed': 'Zed',
     'sessions.loadingList': 'Đang tải phiên làm việc...',
     'sessions.empty': 'Không tìm thấy phiên nào',
     'sessions.unknownTime': 'thời gian không rõ',

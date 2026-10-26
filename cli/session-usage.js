@@ -15,7 +15,7 @@ async function listSessionUsageCore(params = {}, deps = {}) {
         SESSION_BROWSE_SUMMARY_READ_BYTES
     } = deps;
 
-    const source = params.source === 'codex' || params.source === 'claude' || params.source === 'gemini' || params.source === 'codebuddy' || params.source === 'workbuddy' || params.source === 'pi' || params.source === 'opencode'
+    const source = params.source === 'codex' || params.source === 'claude' || params.source === 'gemini' || params.source === 'codebuddy' || params.source === 'workbuddy' || params.source === 'pi' || params.source === 'opencode' || params.source === 'zed'
         ? params.source
         : 'all';
     const rawLimit = Number(params.limit);
@@ -63,7 +63,7 @@ async function listSessionUsageCore(params = {}, deps = {}) {
                 return normalized;
             }
 
-            if (normalized.source === 'opencode') {
+            if (normalized.source === 'opencode' || normalized.source === 'zed') {
                 return normalized;
             }
             const filePath = typeof normalized.filePath === 'string' ? normalized.filePath.trim() : '';

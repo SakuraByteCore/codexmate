@@ -7,6 +7,7 @@ const toml = require('@iarna/toml');
 const JSON5 = require('json5');
 const zipLib = require('zip-lib');
 const yauzl = require('yauzl');
+const zlib = require('node:zlib');
 const { exec, execSync, execFileSync, spawn, spawnSync } = require('child_process');
 const http = require('http');
 const https = require('https');
@@ -264,6 +265,20 @@ const PI_SESSIONS_DIR = path.join(PI_DIR, 'agent', 'sessions');
 const OPENCODE_DATA_DIR = path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), 'opencode');
 const OPENCODE_DB_VIRTUAL_ROOT = path.join(OPENCODE_DATA_DIR, 'sessions');
 const OPENCODE_DB_READ_LIMIT = 2000;
+function resolveZedDataDir() {
+    if (process.env.ZED_DATA_DIR) return process.env.ZED_DATA_DIR;
+    if (process.platform === 'win32') {
+        return process.env.LOCALAPPDATA
+            ? path.join(process.env.LOCALAPPDATA, 'Zed')
+            : path.join(os.homedir(), 'AppData', 'Local', 'Zed');
+    }
+    if (process.platform === 'darwin') return path.join(os.homedir(), '.zed');
+    return path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), 'zed');
+}
+const ZED_DATA_DIR = resolveZedDataDir();
+const ZED_THREADS_DB_FILE = path.join(ZED_DATA_DIR, 'threads', 'threads.db');
+const ZED_DB_VIRTUAL_ROOT = path.join(ZED_DATA_DIR, 'threads', 'sessions');
+const ZED_SESSION_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const RECENT_CONFIGS_FILE = path.join(CONFIG_DIR, 'recent-configs.json');
 const WORKFLOW_DEFINITIONS_FILE = path.join(CONFIG_DIR, 'codexmate-workflows.json');
 const WORKFLOW_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-workflow-runs.jsonl');
@@ -772,7 +787,8 @@ let g_sessionFileLookupCache = {
     gemini: new Map(),
     codebuddy: new Map(),
     workbuddy: new Map(),
-    pi: new Map()
+    pi: new Map(),
+    zed: new Map()
 };
 let g_exactMessageCountCache = new Map();
 let g_modelsCache = new Map();
@@ -2418,6 +2434,260 @@ function listOpencodeSessions(limit, options = {}) {
     }, []);
 }
 
+
+function isZedThreadsDbAvailable() {
+    const Database = getNodeSqliteDatabaseSync();
+    return !!(Database && ZED_THREADS_DB_FILE && fs.existsSync(ZED_THREADS_DB_FILE));
+}
+
+function withZedThreadsDb(callback, fallback = null) {
+    const Database = getNodeSqliteDatabaseSync();
+    if (!Database || !ZED_THREADS_DB_FILE || !fs.existsSync(ZED_THREADS_DB_FILE)) {
+        return fallback;
+    }
+    let db;
+    try {
+        db = new Database(ZED_THREADS_DB_FILE, { readOnly: true });
+        return callback(db);
+    } catch (_) {
+        return fallback;
+    } finally {
+        if (db) {
+            try { db.close(); } catch (_) { }
+        }
+    }
+}
+
+function buildZedVirtualSessionPath(sessionId) {
+    const id = typeof sessionId === 'string' ? sessionId.trim() : '';
+    if (!id) return '';
+    return path.join(ZED_DB_VIRTUAL_ROOT, `${id}.zed.jsonl`);
+}
+
+function parseZedVirtualSessionId(filePath) {
+    const raw = typeof filePath === 'string' ? filePath.trim() : '';
+    if (!raw) return '';
+    const base = path.basename(raw, path.extname(raw));
+    return ZED_SESSION_ID_RE.test(base) ? base.toLowerCase() : '';
+}
+
+/* Zed 会话文档存于 threads.db 的 threads.data 列（zstd 压缩 JSON）。
+ * 版本 0.3.0 结构：{ title, messages: [{User:{content:[{Text}]}} | {Agent:{content:[{Text}|{Thinking:{text}}], tool_results, reasoning_details}}],
+ * model: {provider, model}, cumulative_token_usage, initial_project_snapshot } */
+function parseZedThreadDocument(row) {
+    if (!row || typeof row !== 'object') return null;
+    const dataType = typeof row.data_type === 'string' ? row.data_type.trim().toLowerCase() : '';
+    let text = '';
+    try {
+        if (dataType === 'zstd') {
+            text = zlib.zstdDecompressSync(Buffer.from(row.data)).toString('utf8');
+        } else if (!dataType || dataType === 'json' || dataType === 'utf8' || dataType === 'text') {
+            text = Buffer.from(row.data).toString('utf8');
+        } else {
+            return null;
+        }
+        const parsed = JSON.parse(text);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function extractZedTextFromContentBlocks(blocks) {
+    if (!Array.isArray(blocks)) return '';
+    const parts = [];
+    for (const block of blocks) {
+        if (!block || typeof block !== 'object') continue;
+        if (typeof block.Text === 'string' && block.Text.trim()) {
+            parts.push(block.Text.trim());
+        } else if (block.Thinking && typeof block.Thinking === 'object'
+            && typeof block.Thinking.text === 'string' && block.Thinking.text.trim()) {
+            parts.push(block.Thinking.text.trim());
+        }
+    }
+    return parts.join('\n').trim();
+}
+
+function readZedThreadModelInfo(doc) {
+    const model = doc && doc.model && typeof doc.model === 'object' ? doc.model : null;
+    return {
+        model: model && typeof model.model === 'string' ? model.model.trim() : '',
+        provider: model && typeof model.provider === 'string' && model.provider.trim() ? model.provider.trim() : 'zed'
+    };
+}
+
+function normalizeZedThreadMessage(entry, modelInfo) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (entry.User && typeof entry.User === 'object') {
+        const text = extractZedTextFromContentBlocks(entry.User.content);
+        if (!text) return null;
+        return { role: 'user', text, timestamp: '', model: modelInfo.model, provider: modelInfo.provider };
+    }
+    if (entry.Agent && typeof entry.Agent === 'object') {
+        const text = extractZedTextFromContentBlocks(entry.Agent.content);
+        if (!text) return null;
+        return { role: 'assistant', text, timestamp: '', model: modelInfo.model, provider: modelInfo.provider };
+    }
+    return null;
+}
+
+function countZedThreadMessages(doc, modelInfo) {
+    const rawMessages = doc && Array.isArray(doc.messages) ? doc.messages : [];
+    return rawMessages.map(entry => normalizeZedThreadMessage(entry, modelInfo)).filter(Boolean).length;
+}
+
+function readZedThreadUsage(doc) {
+    const usage = doc && doc.cumulative_token_usage && typeof doc.cumulative_token_usage === 'object'
+        ? doc.cumulative_token_usage
+        : {};
+    const inputTokens = readNonNegativeInteger(usage.input_tokens) || 0;
+    const cachedInputTokens = readNonNegativeInteger(usage.cache_read_input_tokens) || 0;
+    const cacheCreationInputTokens = readNonNegativeInteger(usage.cache_creation_input_tokens) || 0;
+    const outputTokens = readNonNegativeInteger(usage.output_tokens) || 0;
+    const reasoningOutputTokens = readNonNegativeInteger(usage.reasoning_output_tokens) || 0;
+    return {
+        inputTokens,
+        cachedInputTokens,
+        cacheCreationInputTokens,
+        outputTokens,
+        reasoningOutputTokens,
+        totalTokens: inputTokens + outputTokens + reasoningOutputTokens + cachedInputTokens + cacheCreationInputTokens
+    };
+}
+
+function readZedThreadCwd(row, doc) {
+    const raw = typeof row.folder_paths === 'string' ? row.folder_paths.trim() : '';
+    if (raw && !raw.startsWith('[')) {
+        return raw;
+    }
+    if (raw.startsWith('[')) {
+        try {
+            const parsed = JSON.parse(raw);
+            const first = Array.isArray(parsed) ? parsed.find(item => typeof item === 'string' && item.trim()) : null;
+            if (first) return first;
+        } catch (_) { }
+    }
+    const snapshot = doc && doc.initial_project_snapshot && Array.isArray(doc.initial_project_snapshot.worktree_snapshots)
+        ? doc.initial_project_snapshot.worktree_snapshots.find(item => item && typeof item.worktree_path === 'string' && item.worktree_path.trim())
+        : null;
+    return snapshot ? snapshot.worktree_path : '';
+}
+
+function queryZedSessionMessages(sessionId, options = {}) {
+    const id = typeof sessionId === 'string' ? sessionId.trim().toLowerCase() : '';
+    if (!id) return null;
+    const maxMessages = resolveMaxMessagesValue(options.maxMessages, DEFAULT_SESSION_DETAIL_MESSAGES);
+    return withZedThreadsDb((db) => {
+        const row = db.prepare('select data, data_type, folder_paths, updated_at from threads where id = ?').get(id) || null;
+        const doc = parseZedThreadDocument(row);
+        const modelInfo = readZedThreadModelInfo(doc);
+        const all = (doc && Array.isArray(doc.messages) ? doc.messages : [])
+            .map(entry => normalizeZedThreadMessage(entry, modelInfo))
+            .filter(Boolean);
+        const totalMessages = all.length;
+        const limit = maxMessages === Infinity
+            ? totalMessages
+            : Math.min(totalMessages, Math.max(1, Math.floor(maxMessages)));
+        const messages = limit < totalMessages ? all.slice(totalMessages - limit) : all;
+        return {
+            sessionId: id,
+            cwd: doc ? readZedThreadCwd(row, doc) : '',
+            updatedAt: row ? toIsoTime(row.updated_at, '') : '',
+            messages,
+            totalMessages,
+            clipped: maxMessages !== Infinity && totalMessages > messages.length,
+            truncated: maxMessages !== Infinity && totalMessages > messages.length
+        };
+    }, null);
+}
+
+function countZedMessages(sessionId) {
+    const id = typeof sessionId === 'string' ? sessionId.trim().toLowerCase() : '';
+    if (!id) return null;
+    return withZedThreadsDb((db) => {
+        const row = db.prepare('select data, data_type from threads where id = ?').get(id) || null;
+        const doc = parseZedThreadDocument(row);
+        if (!doc) return null;
+        return countZedThreadMessages(doc, readZedThreadModelInfo(doc));
+    }, null);
+}
+
+function parseZedSessionSummaryRow(row) {
+    if (!row || typeof row !== 'object') return null;
+    const sessionId = typeof row.id === 'string' ? row.id.trim().toLowerCase() : '';
+    if (!sessionId) return null;
+    const doc = parseZedThreadDocument(row);
+    if (!doc) return null;
+    const modelInfo = readZedThreadModelInfo(doc);
+    const usage = readZedThreadUsage(doc);
+    let title = typeof row.summary === 'string' ? row.summary.trim() : '';
+    if (!title && typeof doc.title === 'string') title = doc.title.trim();
+    if (!title) {
+        const firstUser = (Array.isArray(doc.messages) ? doc.messages : [])
+            .map(entry => normalizeZedThreadMessage(entry, modelInfo))
+            .find(item => item && item.role === 'user' && item.text);
+        if (firstUser) title = truncateText(firstUser.text, 120);
+    }
+    if (!title) title = sessionId;
+    return {
+        source: 'zed',
+        sourceLabel: 'Zed',
+        provider: modelInfo.provider,
+        model: modelInfo.model,
+        models: modelInfo.model ? [modelInfo.model] : [],
+        sessionId,
+        title,
+        cwd: readZedThreadCwd(row, doc),
+        createdAt: toIsoTime(row.created_at, ''),
+        updatedAt: toIsoTime(row.updated_at, ''),
+        messageCount: countZedThreadMessages(doc, modelInfo),
+        totalTokens: usage.totalTokens,
+        contextWindow: 0,
+        inputTokens: usage.inputTokens,
+        cachedInputTokens: usage.cachedInputTokens,
+        cacheCreationInputTokens: usage.cacheCreationInputTokens,
+        outputTokens: usage.outputTokens,
+        reasoningOutputTokens: usage.reasoningOutputTokens,
+        __messageCountExact: true,
+        filePath: buildZedVirtualSessionPath(sessionId),
+        keywords: [],
+        capabilities: { code: true }
+    };
+}
+
+function parseZedSessionSummary(sessionId) {
+    const id = typeof sessionId === 'string' ? sessionId.trim().toLowerCase() : '';
+    if (!id) return null;
+    return withZedThreadsDb((db) => {
+        const row = db.prepare(`
+            select id, summary, folder_paths, created_at, updated_at, data, data_type
+            from threads where id = ?
+        `).get(id) || null;
+        return parseZedSessionSummaryRow(row);
+    }, null);
+}
+
+function listZedSessions(limit, options = {}) {
+    if (!isZedThreadsDbAvailable()) return [];
+    const scanFactor = Number.isFinite(Number(options.scanFactor)) ? Math.max(1, Number(options.scanFactor)) : SESSION_SCAN_FACTOR;
+    const targetCount = Number.isFinite(Number(options.targetCount)) ? Math.max(1, Math.floor(Number(options.targetCount))) : Math.max(1, Math.floor(limit * scanFactor));
+    const scanCount = Number.isFinite(Number(options.scanCount)) ? Math.max(targetCount, Math.floor(Number(options.scanCount))) : Math.max(targetCount, Math.min(SESSION_SCAN_MIN_FILES, MAX_SESSION_LIST_SIZE * SESSION_SCAN_FACTOR));
+    return withZedThreadsDb((db) => {
+        const rows = db.prepare(`
+            select id, summary, folder_paths, created_at, updated_at, data, data_type
+            from threads
+            order by updated_at desc
+            limit ?
+        `).all(Math.min(OPENCODE_DB_READ_LIMIT, Math.max(scanCount, targetCount)));
+        const sessions = [];
+        for (const row of rows) {
+            const summary = parseZedSessionSummaryRow(row);
+            if (summary) sessions.push(summary);
+            if (sessions.length >= targetCount) break;
+        }
+        return mergeAndLimitSessions(sessions, limit);
+    }, []);
+}
 function getCodexmateDerivedSessionsRoot(target) {
     if (target === 'claude') {
         return CODEXMATE_DERIVED_CLAUDE_DIR;
@@ -4690,7 +4960,7 @@ async function hydrateSessionItemsExactMessageCount(items) {
 
 function normalizeSessionSourceName(value, fallback = '') {
     const source = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'pi' || source === 'opencode') {
+    if (source === 'codex' || source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'pi' || source === 'opencode' || source === 'zed') {
         return source;
     }
     return fallback;
@@ -4708,6 +4978,7 @@ function getSessionSourceLabel(source) {
     if (source === 'workbuddy') return 'WorkBuddy AI';
     if (source === 'pi') return 'Pi';
     if (source === 'opencode') return 'OpenCode';
+    if (source === 'zed') return 'Zed';
     return 'Codex';
 }
 
@@ -4718,6 +4989,7 @@ function getSessionSourceProvider(source) {
     if (source === 'workbuddy') return 'workbuddy';
     if (source === 'pi') return 'pi';
     if (source === 'opencode') return 'opencode';
+    if (source === 'zed') return 'zed';
     return 'codex';
 }
 
@@ -4747,6 +5019,9 @@ async function readSessionMessageCounts(params = {}) {
         if (source === 'opencode') {
             const opencodeSessionId = item.sessionId || parseOpencodeVirtualSessionId(filePath);
             exactMessageCount = countOpencodeMessages(opencodeSessionId);
+        } else if (source === 'zed') {
+            const zedSessionId = item.sessionId || parseZedVirtualSessionId(filePath);
+            exactMessageCount = countZedMessages(zedSessionId);
         } else {
             if (!filePath || !fs.existsSync(filePath)) {
                 return { key };
@@ -4987,6 +5262,15 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
         const messages = extracted && Array.isArray(extracted.messages) ? extracted.messages : [];
         for (let i = 0; i < messages.length; i += 1) {
             const message = { ...messages[i], recordLineIndex: i };
+            if (consumeSessionQueryMessage(state, message)) break;
+        }
+        return buildSessionQueryScanResult(state);
+    }
+    if (session.source === 'zed') {
+        const zedExtracted = queryZedSessionMessages(session.sessionId || parseZedVirtualSessionId(filePath), { maxMessages: Infinity });
+        const zedMessages = zedExtracted && Array.isArray(zedExtracted.messages) ? zedExtracted.messages : [];
+        for (let i = 0; i < zedMessages.length; i += 1) {
+            const message = { ...zedMessages[i], recordLineIndex: i };
             if (consumeSessionQueryMessage(state, message)) break;
         }
         return buildSessionQueryScanResult(state);
@@ -5382,7 +5666,7 @@ function getSessionInventoryCache(cacheKey, forceRefresh = false) {
 }
 
 function registerSessionFileLookupEntries(source, sessions = []) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'pi' || source === 'opencode'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'pi' || source === 'opencode' || source === 'zed'
         ? source
         : 'codex';
     const store = g_sessionFileLookupCache[normalizedSource];
@@ -5423,7 +5707,7 @@ function setSessionInventoryCache(cacheKey, source, value) {
 }
 
 function listSessionInventoryBySource(source, limit, scanOptions = {}, options = {}) {
-    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'pi' || source === 'opencode'
+    const normalizedSource = source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'pi' || source === 'opencode' || source === 'zed'
         ? source
         : 'codex';
     const forceRefresh = !!options.forceRefresh;
@@ -5445,7 +5729,9 @@ function listSessionInventoryBySource(source, limit, scanOptions = {}, options =
                         ? listPiSessions(limit, scanOptions)
                         : (normalizedSource === 'opencode'
                             ? listOpencodeSessions(limit, scanOptions)
-                            : listCodexSessions(limit, scanOptions))))));
+                            : (normalizedSource === 'zed'
+                                ? listZedSessions(limit, scanOptions)
+                                : listCodexSessions(limit, scanOptions)))))));
     setSessionInventoryCache(cacheKey, normalizedSource, sessions);
     return sessions;
 }
@@ -5460,7 +5746,8 @@ function invalidateSessionListCache() {
         codebuddy: new Map(),
         workbuddy: new Map(),
         pi: new Map(),
-        opencode: new Map()
+        opencode: new Map(),
+        zed: new Map()
     };
 }
 
@@ -7326,6 +7613,9 @@ async function listAllSessions(params = {}) {
     if (source === 'all' || source === 'opencode') {
         sessions = sessions.concat(listSessionInventoryBySource('opencode', limit, scanOptions, { forceRefresh }));
     }
+    if (source === 'all' || source === 'zed') {
+        sessions = sessions.concat(listSessionInventoryBySource('zed', limit, scanOptions, { forceRefresh }));
+    }
 
     if (hasPathFilter) {
         sessions = sessions.filter(item => matchesSessionPathFilter(item, normalizedPathFilter));
@@ -7467,6 +7757,9 @@ function listSessionPaths(params = {}) {
     if (validSource === 'all' || validSource === 'opencode') {
         sessions = sessions.concat(listSessionInventoryBySource('opencode', gatherLimit, scanOptions, { forceRefresh }));
     }
+    if (validSource === 'all' || validSource === 'zed') {
+        sessions = sessions.concat(listSessionInventoryBySource('zed', gatherLimit, scanOptions, { forceRefresh }));
+    }
 
     const dedupedPaths = [];
     const seen = new Set();
@@ -7493,6 +7786,12 @@ function listSessionPaths(params = {}) {
 
 function resolveSessionFilePath(source, filePath, sessionId) {
     const normalizedSource = normalizeSessionSourceName(source, 'codex');
+    if (normalizedSource === 'zed') {
+        const zedId = typeof sessionId === 'string' && sessionId.trim()
+            ? sessionId.trim()
+            : parseZedVirtualSessionId(filePath);
+        return zedId && parseZedSessionSummary(zedId) ? buildZedVirtualSessionPath(zedId) : '';
+    }
     if (normalizedSource === 'opencode') {
         const id = typeof sessionId === 'string' && sessionId.trim()
             ? sessionId.trim()
@@ -8073,7 +8372,7 @@ function buildSessionSummaryFallback(source, filePath, sessionId = '') {
         contextWindow: 0,
         filePath,
         keywords: [],
-        capabilities: source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'opencode' ? { code: true } : {}
+        capabilities: source === 'claude' || source === 'gemini' || source === 'codebuddy' || source === 'workbuddy' || source === 'opencode' || source === 'zed' ? { code: true } : {}
     };
 }
 
@@ -8660,6 +8959,9 @@ async function trashSessionData(params = {}) {
     if (source === 'opencode') {
         return { error: 'OpenCode DB-backed sessions cannot be deleted from CodexMate' };
     }
+    if (source === 'zed') {
+        return { error: 'Zed DB-backed sessions cannot be deleted from CodexMate' };
+    }
 
     const filePath = resolveSessionFilePath(source, getSessionFileArg(params), params.sessionId);
     if (!filePath) {
@@ -8771,6 +9073,9 @@ async function deleteSessionData(params = {}) {
     }
     if (source === 'opencode') {
         return { error: 'OpenCode DB-backed sessions cannot be deleted from CodexMate' };
+    }
+    if (source === 'zed') {
+        return { error: 'Zed DB-backed sessions cannot be deleted from CodexMate' };
     }
 
     const filePath = resolveSessionFilePath(source, getSessionFileArg(params), params.sessionId);
@@ -9471,6 +9776,13 @@ async function readSessionDetail(params = {}) {
         if (!extracted) {
             return { error: 'Failed to parse session file' };
         }
+    }
+    if (source === 'zed') {
+        const zedSessionId = params.sessionId || parseZedVirtualSessionId(filePath);
+        extracted = queryZedSessionMessages(zedSessionId, { maxMessages: messageLimit });
+        if (!extracted) {
+            return { error: 'Failed to parse session file' };
+        }
     } else if (source === 'gemini') {
         let json;
         try {
@@ -9605,6 +9917,13 @@ async function readSessionPlain(params = {}) {
         if (!extracted) {
             return { error: 'Failed to parse session file' };
         }
+    }
+    if (source === 'zed') {
+        const zedSessionId = params.sessionId || parseZedVirtualSessionId(filePath);
+        extracted = queryZedSessionMessages(zedSessionId, { maxMessages });
+        if (!extracted) {
+            return { error: 'Failed to parse session file' };
+        }
     } else if (source === 'gemini') {
         let json;
         try {
@@ -9686,6 +10005,13 @@ async function exportSessionData(params = {}) {
     if (source === 'opencode') {
         const opencodeSessionId = params.sessionId || parseOpencodeVirtualSessionId(filePath);
         extracted = queryOpencodeSessionMessages(opencodeSessionId, { maxMessages });
+        if (!extracted) {
+            return { error: 'Failed to parse session file' };
+        }
+    }
+    if (source === 'zed') {
+        const zedSessionId = params.sessionId || parseZedVirtualSessionId(filePath);
+        extracted = queryZedSessionMessages(zedSessionId, { maxMessages });
         if (!extracted) {
             return { error: 'Failed to parse session file' };
         }
@@ -12930,7 +13256,7 @@ function resolveExportOutputPath(outputPath, defaultFileName) {
 }
 
 function printExportSessionUsage() {
-    console.log('\n用法: codexmate export-session --source <codex|claude|gemini|codebuddy|workbuddy|pi|opencode> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
+    console.log('\n用法: codexmate export-session --source <codex|claude|gemini|codebuddy|workbuddy|pi|opencode|zed> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('\n示例:');
     console.log('  codexmate export-session --source codex --session-id 123456');
     console.log('  codexmate export-session --source claude --file "~/.claude/projects/demo/session.jsonl"');
@@ -13003,7 +13329,7 @@ function parseExportSessionArgs(args = []) {
 
     const normalizedSource = options.source.trim().toLowerCase();
     if (normalizedSource && !isSessionSourceOrAll(normalizedSource)) {
-        errors.push('参数 --source 仅支持 codex、claude、gemini、codebuddy、workbuddy、pi 或 opencode');
+        errors.push('参数 --source 仅支持 codex、claude、gemini、codebuddy、workbuddy、pi、opencode 或 zed');
     }
     options.source = normalizedSource;
 
@@ -17375,7 +17701,7 @@ function printMainHelp() {
     console.log('    注: follow-up 自动排队仅支持 linux/android/netbsd/openbsd/darwin/freebsd 且 stdin 必须是 TTY，其他平台会报错');
     console.log('  codexmate qwen [参数...]   等同于 qwen --yolo');
     console.log('  codexmate mcp [serve] [--transport stdio] [--allow-write|--read-only]');
-    console.log('  codexmate export-session --source <codex|claude|gemini|codebuddy|workbuddy|pi|opencode> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
+    console.log('  codexmate export-session --source <codex|claude|gemini|codebuddy|workbuddy|pi|opencode|zed> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('  codexmate convert-session --from <codex|claude> --to <codex|claude> (--session-id <ID>|--file <PATH>) [--output <PATH>] [--max-messages <N|all|Infinity>]');
     console.log('  codexmate zip <路径> [--max:级别]  压缩（系统 zip 优先，其次 zip-lib）');
     console.log('  codexmate unzip <zip文件> [输出目录]  解压（zip-lib）');

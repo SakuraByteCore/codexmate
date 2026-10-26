@@ -695,6 +695,7 @@ const en = Object.freeze({
     'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
+    'sessions.source.zed': 'Zed',
     'sessions.loadingList': 'Loading sessions...',
     'sessions.empty': 'No sessions found',
     'sessions.unknownTime': 'unknown time',

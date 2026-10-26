@@ -697,6 +697,7 @@ const ja = Object.freeze({
     'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
+    'sessions.source.zed': 'Zed',
     'sessions.loadingList': 'セッション一覧を読み込み中...',
     'sessions.empty': 'セッションがありません',
     'sessions.unknownTime': '不明な時間',

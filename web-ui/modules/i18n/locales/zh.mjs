@@ -695,6 +695,7 @@ const zh = Object.freeze({
     'sessions.source.workbuddy': 'WorkBuddy AI',
     'sessions.source.pi': 'Pi',
     'sessions.source.opencode': 'OpenCode',
+    'sessions.source.zed': 'Zed',
     'sessions.loadingList': '会话加载中...',
     'sessions.empty': '暂无可用会话记录',
     'sessions.unknownTime': '未知时间',

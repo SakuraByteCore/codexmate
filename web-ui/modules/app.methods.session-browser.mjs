@@ -524,7 +524,9 @@ export function createSessionBrowserMethods(options = {}) {
                                         ? this.t('sessions.source.pi')
                                         : (this.sessionFilterSource === 'opencode'
                                             ? this.t('sessions.source.opencode')
-                                            : this.sessionFilterSource))))));
+                                            : (this.sessionFilterSource === 'zed'
+                                                ? this.t('sessions.source.zed')
+                                                : this.sessionFilterSource)))))));
                 chips.push({ key: 'source', title: this.t('sessions.filters.source'), value: label });
             }
             if (this.sessionPathFilter) {

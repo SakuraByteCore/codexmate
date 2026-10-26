@@ -29,14 +29,14 @@ function shouldUseFastSessionBrowseLimit(options = {}) {
 
 export function isSessionQueryEnabled(source) {
     const normalized = normalizeSessionSource(source, '');
-    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all';
+    return normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'zed' || normalized === 'all';
 }
 
 export function normalizeSessionSource(source, fallback = 'all') {
     const normalized = typeof source === 'string'
         ? source.trim().toLowerCase()
         : '';
-    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'all') {
+    if (normalized === 'codex' || normalized === 'claude' || normalized === 'gemini' || normalized === 'codebuddy' || normalized === 'workbuddy' || normalized === 'pi' || normalized === 'opencode' || normalized === 'zed' || normalized === 'all') {
         return normalized;
     }
     return fallback;
@@ -64,10 +64,11 @@ function getSessionSourceLabel(source) {
     if (source === 'workbuddy') return 'WorkBuddy AI';
     if (source === 'pi') return 'Pi';
     if (source === 'opencode') return 'OpenCode';
+    if (source === 'zed') return 'Zed';
     return 'Codex';
 }
 
-const SESSION_USAGE_SOURCE_ORDER = ['codex', 'claude', 'gemini', 'codebuddy', 'workbuddy', 'pi', 'opencode'];
+const SESSION_USAGE_SOURCE_ORDER = ['codex', 'claude', 'gemini', 'codebuddy', 'workbuddy', 'pi', 'opencode', 'zed'];
 
 function collectSessionModelNames(session) {
     if (!session || typeof session !== 'object') {
