@@ -3,14 +3,15 @@ const THEME_STORAGE_CACHE_KEY = 'codexmateThemeCache';
 export function createThemeMethods() {
     return {
         normalizeTheme(value) {
-            return value === 'dark' ? 'dark' : 'light';
+            const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+            return normalized === 'dark' || normalized === 'ocean' ? normalized : 'light';
         },
         applyDocumentTheme() {
             try {
                 if (typeof document === 'undefined' || !document.documentElement) return;
                 const next = this.normalizeTheme(this.theme);
-                if (next === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
+                if (next === 'dark' || next === 'ocean') {
+                    document.documentElement.setAttribute('data-theme', next);
                 } else {
                     document.documentElement.removeAttribute('data-theme');
                 }
@@ -19,7 +20,7 @@ export function createThemeMethods() {
                 // the server-side webUi preference store.
                 const storage = typeof globalThis !== 'undefined' ? globalThis.localStorage : null;
                 if (storage && typeof storage.setItem === 'function' && typeof storage.removeItem === 'function') {
-                    if (next === 'dark') storage.setItem(THEME_STORAGE_CACHE_KEY, 'dark');
+                    if (next === 'dark' || next === 'ocean') storage.setItem(THEME_STORAGE_CACHE_KEY, next);
                     else storage.removeItem(THEME_STORAGE_CACHE_KEY);
                 }
             } catch (_) {}

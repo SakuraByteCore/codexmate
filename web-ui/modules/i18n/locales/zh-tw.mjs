@@ -1141,6 +1141,7 @@ const zhTw = Object.freeze({
     'settings.theme.meta': '選擇 Web UI 的配色主題',
     'settings.theme.light': '淺色',
     'settings.theme.dark': '深色',
+    'settings.theme.ocean': '海洋藍',
     'settings.theme.hint': '主題偏好會自動儲存，重新整理後保持不變。',
     'settings.sharePrefix.title': '分享命令前綴',
     'settings.sharePrefix.meta': '影響 Web UI 裡“複製分享命令”的前綴',

@@ -1041,7 +1041,8 @@ function normalizeSidebarCollapsedPreference(value) {
 }
 
 function normalizeThemePreference(value) {
-    return value === 'dark' ? 'dark' : 'light';
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'dark' || normalized === 'ocean' ? normalized : 'light';
 }
 
 function normalizeSessionFilterSourcePreference(value) {

@@ -79,6 +79,12 @@
                                                 @click="setTheme('dark')">
                                                 {{ t('settings.theme.dark') }}
                                             </button>
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: theme === 'ocean' }]"
+                                                @click="setTheme('ocean')">
+                                                {{ t('settings.theme.ocean') }}
+                                            </button>
                                         </div>
                                         <p class="settings-card-hint">{{ t('settings.theme.hint') }}</p>
                                     </div>

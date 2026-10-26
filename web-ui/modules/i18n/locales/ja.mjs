@@ -1145,6 +1145,7 @@ const ja = Object.freeze({
     'settings.theme.meta': 'Web UI のカラーテーマを選択します',
     'settings.theme.light': 'ライト',
     'settings.theme.dark': 'ダーク',
+    'settings.theme.ocean': 'オーシャン',
     'settings.theme.hint': 'テーマ設定は自動保存され、再読み込み後も保持されます。',
     'settings.sharePrefix.title': '共有コマンドプレフィックス',
     'settings.sharePrefix.meta': 'Web UI の「共有コマンドをコピー」のプレフィックスに影響',

@@ -1,0 +1,88 @@
+/*
+ * Codex Mate Web UI - ocean light theme tokens (hand maintained).
+ *
+ * Background layer adapted from the "dafy-whale-theme" project
+ * (https://github.com/DViridescent/dafy-whale-theme, MIT licensed).
+ * Only the static background layer (the ocean wash gradients) is reused:
+ * no mascot, no fish swarm, no bubble animation, no plugin dependency.
+ *
+ * The component section of theme-ocean.css is GENERATED - do not edit by hand.
+ * Regenerate after changing any stylesheet:
+ *   node scripts/generate-ocean-theme-css.mjs
+ */
+:root[data-theme="ocean"] {
+    color-scheme: light;
+
+    /* 品牌色：海洋蓝（源自 dafy-whale-theme 的 --dsw-alias-brand-primary） */
+    --color-brand: #3B62F6;
+    --color-brand-dark: #2B4BD0;
+    --color-brand-light: rgba(59, 98, 246, 0.13);
+    --color-brand-subtle: rgba(59, 98, 246, 0.2);
+
+    /* 中性蓝层级底色 */
+    --color-bg: #E9F3FC;
+    --color-surface: #F3F9FE;
+    --color-surface-alt: #E0EDF9;
+    --color-surface-elevated: #FFFFFF;
+    --color-surface-tint: rgba(243, 249, 254, 0.86);
+    --color-surface-chip: rgba(255, 255, 255, 0.76);
+    --color-text-primary: #0E2A5C;
+    --color-text-secondary: #3B5C85;
+    --color-text-tertiary: #45678F;
+    --color-text-muted: #476A90;
+    --color-border: rgba(31, 86, 150, 0.18);
+    --color-border-soft: rgba(31, 86, 150, 0.13);
+    --color-border-strong: rgba(31, 86, 150, 0.34);
+
+    --color-success: #127450;
+    --color-error: #B92A50;
+
+    /* Delta 指示色 */
+    --color-delta-up: #127450;
+    --color-delta-down: #B92A50;
+
+    /* 热力图色阶：海洋蓝 alpha 阶梯 */
+    --color-heatmap-1: rgba(59, 98, 246, 0.2);
+    --color-heatmap-2: rgba(59, 98, 246, 0.4);
+    --color-heatmap-3: rgba(59, 98, 246, 0.6);
+    --color-heatmap-4: rgba(59, 98, 246, 0.85);
+
+    /*
+     * 背景海面光晕：取自 dafy-whale-theme 的 .dafy-wash 三层径向渐变，
+     * 仅保留静态渐变层，颜色全部由下方 wash token 承载。
+     */
+    --color-ocean-wash-brand: rgba(59, 98, 246, 0.30);
+    --color-ocean-wash-cyan: rgba(87, 199, 232, 0.26);
+    --color-ocean-wash-teal: rgba(47, 208, 181, 0.14);
+
+    --bg-warm-gradient:
+        radial-gradient(circle at 14% 8%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 26%),
+        radial-gradient(circle at 86% 18%, rgba(214, 236, 255, 0.55), rgba(214, 236, 255, 0) 30%),
+        linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface-alt) 100%);
+
+    --color-bg-topbar-strong: rgba(233, 243, 252, 0.96);
+    --color-bg-topbar-soft: rgba(233, 243, 252, 0.86);
+    --color-bg-topbar-clear: rgba(233, 243, 252, 0);
+
+    /* 阴影系统：冷色蓝调 */
+    --shadow-subtle: 0 1px 2px rgba(16, 48, 92, 0.05);
+    --shadow-card: 0 12px 30px rgba(16, 48, 92, 0.08);
+    --shadow-card-hover: 0 18px 44px rgba(16, 48, 92, 0.14);
+    --shadow-float: 0 22px 56px rgba(12, 40, 80, 0.18);
+    --shadow-raised: 0 14px 30px rgba(16, 48, 92, 0.14);
+    --shadow-modal:
+        0 16px 42px rgba(12, 40, 80, 0.16),
+        0 34px 84px rgba(12, 40, 80, 0.16);
+    --shadow-input-focus:
+        0 0 0 3px var(--color-brand-light),
+        0 1px 2px rgba(16, 48, 92, 0.06);
+}
+
+/* 背景海面光晕：固定层，不参与滚动，避免长页面拉伸与错位 */
+:root[data-theme="ocean"] body::before {
+    background:
+        radial-gradient(1100px 620px at 88% -8%, var(--color-ocean-wash-brand), transparent 62%),
+        radial-gradient(900px 560px at -6% 108%, var(--color-ocean-wash-cyan), transparent 58%),
+        radial-gradient(520px 340px at 50% 46%, var(--color-ocean-wash-teal), transparent 70%);
+    mix-blend-mode: soft-light;
+}

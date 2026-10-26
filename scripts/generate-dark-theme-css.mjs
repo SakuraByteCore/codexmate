@@ -21,7 +21,7 @@ const ENTRY = path.join(ROOT, 'web-ui', 'styles.css');
 const OUTPUT = path.join(STYLES_DIR, 'theme-dark.css');
 const HAND_TOKENS_FILE = path.join(STYLES_DIR, 'theme-dark-tokens.css');
 
-const SKIP_FILES = new Set(['base-theme.css', 'theme-dark.css']);
+const SKIP_FILES = new Set(['base-theme.css', 'theme-dark.css', 'theme-dark-tokens.css', 'theme-ocean.css', 'theme-ocean-tokens.css']);
 
 // Selectors under contract tests that forbid duplication in other stylesheets
 // (e.g. tests/unit/session-header-actions-layout.test.mjs). Their hardcoded

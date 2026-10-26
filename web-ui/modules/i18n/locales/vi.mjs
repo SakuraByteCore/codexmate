@@ -401,6 +401,7 @@ const vi = Object.freeze({
     'settings.theme.meta': 'Chọn chủ đề màu cho Web UI',
     'settings.theme.light': 'Sáng',
     'settings.theme.dark': 'Tối',
+    'settings.theme.ocean': 'Đại dương',
     'settings.theme.hint': 'Tùy chọn chủ đề được tự động lưu và giữ nguyên sau khi tải lại.',
 
     'settings.webhook.title': 'Webhook',

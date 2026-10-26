@@ -16,8 +16,9 @@
         // server preference store loads. Kept in sync by applyDocumentTheme().
         (function () {
             try {
-                if (localStorage.getItem('codexmateThemeCache') === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
+                var cachedTheme = localStorage.getItem('codexmateThemeCache');
+                if (cachedTheme === 'dark' || cachedTheme === 'ocean') {
+                    document.documentElement.setAttribute('data-theme', cachedTheme);
                 }
             } catch (_) {}
         })();

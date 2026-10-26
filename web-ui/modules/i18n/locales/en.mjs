@@ -1142,6 +1142,7 @@ const en = Object.freeze({
     'settings.theme.meta': 'Choose the Web UI color theme',
     'settings.theme.light': 'Light',
     'settings.theme.dark': 'Dark',
+    'settings.theme.ocean': 'Ocean',
     'settings.theme.hint': 'Theme preference is saved automatically and persists across reloads.',
     'settings.sharePrefix.title': 'Share command prefix',
     'settings.sharePrefix.meta': 'Used as the prefix for “Copy share command” in the Web UI',

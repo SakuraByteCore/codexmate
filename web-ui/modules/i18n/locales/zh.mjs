@@ -1141,6 +1141,7 @@ const zh = Object.freeze({
     'settings.theme.meta': '选择 Web UI 的配色主题',
     'settings.theme.light': '浅色',
     'settings.theme.dark': '深色',
+    'settings.theme.ocean': '海洋蓝',
     'settings.theme.hint': '主题偏好会自动保存，刷新后保持不变。',
     'settings.sharePrefix.title': '分享命令前缀',
     'settings.sharePrefix.meta': '影响 Web UI 里“复制分享命令”的前缀',
