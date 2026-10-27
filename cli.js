@@ -5423,7 +5423,7 @@ async function applySessionQueryFilter(sessions, options = {}) {
         let contentHit = false;
         let contentInfo = null;
 
-        const shouldScanContent = scope !== 'summary' && !summaryHit;
+        const shouldScanContent = scope === 'content' || scope === 'all' || !summaryHit;
         if (shouldScanContent && scanned < contentScanLimit) {
             scanned += 1;
             contentInfo = await scanSessionContentForQuery(session, tokens, {

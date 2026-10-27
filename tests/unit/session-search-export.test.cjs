@@ -16,7 +16,7 @@ vm.runInContext(names.map(name => { const m = source.match(new RegExp('^(?:async
   const summary = await ctx.applySessionQueryFilter(sessions, { tokens: ['needle'], queryScope: 'summary' });
   assert.equal(summary.searchInfo.scanned, 0); assert.equal(summary.length, 3);
   const all = await ctx.applySessionQueryFilter(sessions, { tokens: ['needle'], queryScope: 'all', contentScanLimit: 1 });
-  assert.equal(all.searchInfo.complete, true); assert.equal(all.searchInfo.scanned, 0);
+  assert.equal(all.searchInfo.complete, false); assert.equal(all.searchInfo.scanned, 1);
   ctx.setSessionListCache('query', result); assert.equal(ctx.getSessionListCache('query'), result); assert.equal(ctx.getSessionListCache('query').searchInfo, result.searchInfo);
   assert.equal(Object.keys(result).includes('searchInfo'), false); assert.ok(Array.isArray(result)); assert.equal(JSON.parse(JSON.stringify(result)).length, 2);
   ctx.listAllSessions = async () => result; const browse = await ctx.listSessionBrowse(); assert.equal(browse.searchInfo, result.searchInfo);
