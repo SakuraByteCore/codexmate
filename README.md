@@ -4,7 +4,9 @@
 
 # Codex Mate
 
-**One dashboard for all your local AI coding agents. Switch providers, manage sessions, and orchestrate tasks across Codex, Claude Code, Gemini CLI, CodeBuddy Code, Pi, OpenCode, KiloCode, and OpenClaw. Zero cloud, local-first control plane.**
+**Find the conversations scattered across your AI coding tools.**
+
+Codex Mate is a locally running CLI + Web tool for browsing, filtering, and exporting existing sessions in one place, with Provider, Skills, and task management when you need them.
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[Documentation]</a>
@@ -31,57 +33,21 @@
 ---
 
 > [!TIP]
-> **Local First**: All configurations and sessions are stored in your home directory. No telemetry, no cloud accounts required.
-
-> [!IMPORTANT]
-> This project is currently in early stage. We are seeking developers to help build the local agent ecosystem!
+> **Local First**: Read existing sessions and manage configuration on your machine. No telemetry or Codex Mate cloud account required. Model requests still go to your configured provider; running locally does not mean models run offline.
 
 ## What is Codex Mate?
 
-Have you ever felt overwhelmed by managing multiple local AI agents? Each has its own config format, session storage, and skills directory.
+Was last week's solution discussed in Codex or Claude Code? Narrow down your local sessions by source, project, or time, open the conversation, and export it as Markdown for reference.
 
-**Codex Mate** offers a unified control plane to bring order to the chaos. It's a local-first CLI + Web UI designed to manage [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode, [OpenClaw](https://github.com/moeru-ai/openclaw), and Pi seamlessly.
+Codex Mate manages existing tools and local records. It is not a new AI model or a replacement for your coding assistant. Start by finding one useful conversation, without configuring every tool first.
 
-### What's So Special?
-
-Unlike simple wrappers, Codex Mate acts as a **Local Agent Bridge**:
-- **Unified Session Browser**: Search, inspect, filter, and export local sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed from one place.
-- **OpenAI-Compatible Bridge**: Use Codex with any OpenAI-compatible UI by normalizing the Responses API; the built-in Codex conversion also fills and normalizes Codex fingerprint headers such as `User-Agent`, `Version`, `OpenAI-Beta`, and `Originator` so upstream providers see an official Codex CLI-shaped request.
-- **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
-- **OpenCode Provider Control**: Manage OpenCode provider/model selection with a CodexMate-owned provider store under `~/.codexmate`, projecting only the active provider into native OpenCode config to avoid polluting or deleting user-owned settings.
-- **KiloCode Config Bridge**: Configure KiloCode providers from the CLI or Web UI, writing to `~/.config/kilo/kilo.jsonc` while preserving stored API keys.
-- **Pi Provider Config**: Manage Pi providers from the Web UI with lossless round-trip writes to `~/.pi/agent/models.json`, auto-fetched remote model lists, and one-click default provider/model switching via `~/.pi/agent/settings.json`.
-- **Provider Health Cleanup**: Probe local Codex and Claude provider routes, surface failed configs in one modal, and bulk-clean selected broken providers without touching healthy or protected entries.
-- **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
-- **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` (including OpenCode's `~/.config/opencode/AGENTS.md`) with auto-detection of project paths, plus a shared preset pool for reusable prompts.
-- **Task Orchestrator**: Plan and execute complex tasks with dependency tracking.
-
----
-
-## Current Progress
-
-| Feature | Status | Description |
-| --- | --- | --- |
-| **Provider Management** | ✅ | Switch providers/models for Codex, Claude, OpenCode, KiloCode, OpenClaw, and Pi |
-| **Live Agent Sync** | ✅ | Real-time monitoring of Codex/Claude config & status |
-| **Session Browser** | ✅ | Search, preview, filter, and export sessions across Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed |
-| **Usage Analytics** | ✅ | Visualize message trends and top projects |
-| **Local Skills Market** | ✅ | Cross-app import/export of agent skills |
-| **Task Queue** | ✅ | DAG-based task execution and logs |
-| **OpenAI Bridge** | ✅ | Convert Codex Responses API to standard OpenAI format and attach/normalize Codex fingerprints in the built-in conversion |
-| **Claude Provider Bridge** | ✅ | Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama via the built-in Claude-compatible proxy |
-| **OpenCode Provider Store** | ✅ | Keep multiple OpenCode providers in `~/.codexmate` while projecting only the selected provider to native OpenCode config |
-| **KiloCode Config Bridge** | ✅ | Configure KiloCode through `codexmate kilo config` or the Web UI, writing provider URL/model/API key data to `~/.config/kilo/kilo.jsonc` |
-| **Pi Provider Config** | ✅ | Manage Pi providers in the Web UI writing to `~/.pi/agent/models.json` (unknown fields preserved) and switch the default provider/model in `~/.pi/agent/settings.json` |
-| **Provider Health Check** | ✅ | Probe local Codex/Claude provider routes, highlight failed configs, and bulk-remove selected broken providers safely |
-| **Prompt Templates** | ✅ | Reusable prompt plugins with variables |
-| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with auto-detect, path switching, and a shared preset pool. Applying a preset only updates the editor; save manually to write the file. |
-| **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
-| **Auto Update** | ✅ | Quick update CLI via `codexmate update` |
-
----
+[Get started](#quick-start) · [Session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions)
 
 ## Quick Start
+
+Install using one option below, then run `codexmate run`. Open the address printed in your terminal, select a source with existing records in the session browser, open a conversation, and use its export action. If there are no local records, create a conversation in the original tool first.
+
+Exports are for reading and archiving, not restoring complete agent state in another tool. Use `codexmate setup` when you need to configure a provider. See the [quick-start guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/quick-start) for details.
 
 ### Install via Homebrew (macOS / Linux)
 
@@ -131,6 +97,45 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 
 ---
 
+## What's So Special?
+
+After finding your conversations, manage the configuration, skills, and tasks used in your daily work:
+- **Unified Session Browser**: Browse local sessions from Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed in one place. Search, export, and deletion availability varies by source; see the [session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions).
+- **OpenAI-Compatible Bridge**: Use Codex with any OpenAI-compatible UI by normalizing the Responses API; the built-in Codex conversion also fills and normalizes Codex fingerprint headers such as `User-Agent`, `Version`, `OpenAI-Beta`, and `Originator` so upstream providers see an official Codex CLI-shaped request.
+- **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
+- **OpenCode Provider Control**: Manage OpenCode provider/model selection with a CodexMate-owned provider store under `~/.codexmate`, projecting only the active provider into native OpenCode config to avoid polluting or deleting user-owned settings.
+- **KiloCode Config Bridge**: Configure KiloCode providers from the CLI or Web UI, writing to `~/.config/kilo/kilo.jsonc` while preserving stored API keys.
+- **Pi Provider Config**: Manage Pi providers from the Web UI with lossless round-trip writes to `~/.pi/agent/models.json`, auto-fetched remote model lists, and one-click default provider/model switching via `~/.pi/agent/settings.json`.
+- **Provider Health Cleanup**: Probe local Codex and Claude provider routes, surface failed configs in one modal, and bulk-clean selected broken providers without touching healthy or protected entries.
+- **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
+- **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` (including OpenCode's `~/.config/opencode/AGENTS.md`) with auto-detection of project paths, plus a shared preset pool for reusable prompts.
+- **Task Orchestrator**: Plan and execute complex tasks with dependency tracking.
+
+---
+
+## Current Progress
+
+| Feature | Status | Description |
+| --- | --- | --- |
+| **Provider Management** | ✅ | Switch providers/models for Codex, Claude, OpenCode, KiloCode, OpenClaw, and Pi |
+| **Live Agent Sync** | ✅ | Real-time monitoring of Codex/Claude config & status |
+| **Session Browser** | ✅ | Browse and filter local sessions; search and Markdown export depend on the source. See the session guide |
+| **Usage Analytics** | ✅ | Visualize message trends and top projects |
+| **Local Skills Market** | ✅ | Cross-app import/export of agent skills |
+| **Task Queue** | ✅ | DAG-based task execution and logs |
+| **OpenAI Bridge** | ✅ | Convert Codex Responses API to standard OpenAI format and attach/normalize Codex fingerprints in the built-in conversion |
+| **Claude Provider Bridge** | ✅ | Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama via the built-in Claude-compatible proxy |
+| **OpenCode Provider Store** | ✅ | Keep multiple OpenCode providers in `~/.codexmate` while projecting only the selected provider to native OpenCode config |
+| **KiloCode Config Bridge** | ✅ | Configure KiloCode through `codexmate kilo config` or the Web UI, writing provider URL/model/API key data to `~/.config/kilo/kilo.jsonc` |
+| **Pi Provider Config** | ✅ | Manage Pi providers in the Web UI writing to `~/.pi/agent/models.json` (unknown fields preserved) and switch the default provider/model in `~/.pi/agent/settings.json` |
+| **Provider Health Check** | ✅ | Probe local Codex/Claude provider routes, highlight failed configs, and bulk-remove selected broken providers safely |
+| **Prompt Templates** | ✅ | Reusable prompt plugins with variables |
+| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with auto-detect, path switching, and a shared preset pool. Applying a preset only updates the editor; save manually to write the file. |
+| **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
+| **Auto Update** | ✅ | Quick update CLI via `codexmate update` |
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -171,6 +176,9 @@ flowchart TD
 ---
 
 ## Special Thanks
+
+> [!IMPORTANT]
+> This project is currently in early stage. We are seeking developers to help build the local agent ecosystem!
 
 Special thanks to all contributors for their contributions to Codex Mate ❤️
 

@@ -1,6 +1,6 @@
 # 它能做什么
 
-完整能力按四块组织:provider 管理、会话浏览、Skills 与提示词、任务编排。下面的状态表来自仓库 README,各项都已在 CLI / Web UI 落地。
+先从[找回并导出一段对话](/guide/quick-start)获得第一次成果，需要时再使用 Provider、Skills 与任务管理。下面的状态表汇总仓库 README 声明的能力，不代表每项能力在所有来源、CLI 版本和界面入口上都已验收。
 
 ## 功能进度
 
@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | Provider 管理 | ✅ | Codex / Claude / OpenCode / KiloCode / OpenClaw 的 provider/model 切换 |
 | 实时同步 | ✅ | Codex / Claude 配置与状态实时监控 |
-| 会话浏览 | ✅ | Codex / Claude Code / Gemini CLI / CodeBuddy Code / Pi 会话统一搜索、预览、筛选、导出 |
+| 会话浏览 | ✅ | 集中浏览 Codex / Claude Code / Gemini CLI / CodeBuddy Code / WorkBuddy / Pi / OpenCode / Zed 的本地会话；操作差异与验证边界见[会话指南](/guide/sessions) |
 | 用量分析 | ✅ | 消息趋势与项目排行可视化 |
 | 本地 Skills Market | ✅ | 跨 agent 应用导入导出 skills |
 | 任务队列 | ✅ | 基于 DAG 的任务执行与日志 |
@@ -28,7 +28,7 @@
 统一切换多个 agent 的 provider/model;每个工具的配置写入路径隔离,首轮接管有备份,可回滚。
 
 ### 会话浏览
-把散落在各工具目录的会话拉到同一视图:搜索、筛选、预览、导出为 Markdown、单条删除与批量清理。
+把散落在各工具目录的对话放到同一视图，按来源、项目或时间查找，预览后导出为 Markdown。导出不等于跨工具恢复完整状态；删除是独立的写入操作，来源限制和回收站设置见[会话指南](/guide/sessions)。
 
 ### Skills 与提示词
 本地优先的 Skills Market 做跨应用导入导出;Prompt 文件编辑器管 `CLAUDE.md`/`AGENTS.md`,带可复用 preset 池。
