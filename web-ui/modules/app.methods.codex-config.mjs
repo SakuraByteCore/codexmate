@@ -75,7 +75,8 @@ export function createCodexConfigMethods(options = {}) {
                 const res = await api('export-session', {
                     source: session.source,
                     sessionId: session.sessionId,
-                    filePath: session.filePath
+                    filePath: session.filePath,
+                    ...(this.sessionExportRange === 'all' ? { maxMessages: 'all' } : {})
                 });
                 if (res.error) {
                     this.showMessage(res.error, 'error');
@@ -84,6 +85,7 @@ export function createCodexConfigMethods(options = {}) {
 
                 const fileName = res.fileName || `${session.source || 'session'}-${session.sessionId || Date.now()}.md`;
                 this.downloadTextFile(fileName, res.content || '');
+                this.sessionExportNotice = res.truncated ? { key } : null;
                 if (res.truncated) {
                     const maxLabel = res.maxMessages === 'all' ? 'all' : res.maxMessages;
                     this.showMessage(`会话导出完成（已截断：最多 ${maxLabel} 条消息）`, 'info');

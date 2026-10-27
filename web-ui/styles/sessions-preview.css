@@ -758,3 +758,80 @@
     width: 14px;
     height: 14px;
 }
+
+/* Refined session workspace: preserve the list/detail structure and action contracts. */
+#panel-sessions.session-browser-refined .session-preview-header {
+    padding: 12px 16px 8px; gap: 8px 16px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title export" "actions actions";
+    background: var(--color-surface); backdrop-filter: none;
+}
+#panel-sessions.session-browser-refined .session-preview-title {
+    font-size: 17px; line-height: 1.5; letter-spacing: -.015em;
+}
+#panel-sessions.session-browser-refined .session-preview-header > div:first-child { grid-area: title; min-width: 0; }
+#panel-sessions .session-preview-actions { grid-area: actions; gap: 10px; justify-content: flex-start; margin-top: 0; }
+#panel-sessions .session-export-control {
+    grid-area: export; justify-self: end; align-self: start;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 2px; border: 1px solid var(--color-border-soft); border-radius: var(--radius-md);
+    background: var(--color-surface-alt); max-width: 100%;
+}
+#panel-sessions .session-export-label { font-size: 12px; line-height: 1; color: var(--color-text-secondary); padding-inline: 6px 0; margin-block: 0; }
+#panel-sessions #session-export-range {
+    min-height: 44px; min-width: 0; max-width: 100%; padding: 8px 28px 8px 10px;
+    border: 0; border-radius: var(--radius-sm); background: var(--color-surface);
+    color: var(--color-text-primary); font: inherit; font-size: 14px; cursor: pointer;
+}
+#panel-sessions .session-preview-actions button {
+    min-width: 44px; min-height: 44px; height: auto; width: auto; padding: 9px 12px;
+    border-radius: var(--radius-sm); box-shadow: none;
+    transition: background-color 120ms ease-out, transform 100ms ease-out, color 120ms ease-out;
+    touch-action: manipulation;
+}
+#panel-sessions .session-export-control .btn-session-export {
+    background: var(--color-text-primary); color: var(--color-surface);
+    border-color: transparent; font-weight: 600;
+}
+#panel-sessions .session-secondary-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+#panel-sessions .session-secondary-actions button { background: transparent; border-color: transparent; color: var(--color-text-secondary); }
+#panel-sessions .session-secondary-actions .session-link-group { display: inline-flex; gap: 2px; }
+#panel-sessions .session-danger-action { margin-inline-start: auto; padding-inline-start: 12px; border-inline-start: 1px solid var(--color-border-soft); }
+#panel-sessions .session-danger-action button { background: transparent; border-color: transparent; }
+#panel-sessions .session-preview-actions button:hover:not(:disabled) { transform: none; background: var(--color-surface-alt); }
+#panel-sessions .session-export-control .btn-session-export:hover:not(:disabled) { background: var(--color-text-secondary); }
+#panel-sessions .session-preview-actions button:active:not(:disabled) { transform: scale(.97); }
+#panel-sessions .session-preview-actions :is(button, select):focus-visible,
+#panel-sessions .session-empty-refined button:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 3px; }
+#panel-sessions .session-preview-actions :disabled { opacity: .5; cursor: not-allowed; }
+#panel-sessions .session-export-feedback { padding: 0 16px 16px; color: var(--color-text-secondary); line-height: 1.6; }
+#panel-sessions .session-export-feedback small { display: block; font-size: 12px; }
+#panel-sessions .session-export-notice {
+    margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm); background: var(--color-surface-alt); font-size: 13px;
+}
+#panel-sessions .session-search-status {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px;
+    padding: 10px 2px 14px; font-size: 12px; line-height: 1.6; color: var(--color-text-secondary);
+}
+#panel-sessions .session-search-count { font-weight: 600; color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
+#panel-sessions .session-search-partial { color: var(--color-text-secondary); }
+#panel-sessions .session-search-scope { font-size: inherit; margin-inline-start: auto; }
+#panel-sessions .session-empty-refined { padding: 40px 20px; border: 1px dashed var(--color-border-soft); background: transparent; }
+#panel-sessions .session-empty-refined::before { display: none; }
+#panel-sessions .session-empty-refined p { margin: 0 0 16px; line-height: 1.65; }
+#panel-sessions .session-empty-refined button { min-height: 44px; padding-inline: 16px; }
+@media (max-width: 640px) {
+    #panel-sessions .session-preview-actions { flex-direction: row; align-items: center; gap: 10px; }
+    #panel-sessions .session-export-control { justify-self: stretch; }
+    #panel-sessions #session-export-range { flex: 1 1 120px; }
+    #panel-sessions .session-secondary-actions { flex: 1 1 180px; }
+    #panel-sessions .session-preview-actions button { width: auto; }
+    #panel-sessions .session-search-scope { flex-basis: 100%; margin-inline-start: 0; }
+    #panel-sessions.session-browser-refined .session-preview-header { padding: 12px 12px 8px; gap: 8px; grid-template-columns: 1fr; grid-template-areas: "title" "export" "actions"; }
+    #panel-sessions .session-export-feedback { padding-inline: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #panel-sessions .session-preview-actions button { transition: none; }
+    #panel-sessions .session-preview-actions button:active:not(:disabled) { transform: none; }
+}

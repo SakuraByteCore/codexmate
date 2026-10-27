@@ -222,6 +222,7 @@ export async function loadSessions(api, options = {}) {
     const normalizedOptions = normalizeSessionLoadOptions(options);
     const includeActiveDetail = shouldIncludeActiveSessionDetail(this, normalizedOptions);
     this.sessionsLoading = true;
+    this.sessionSearchInfo = null;
     this.activeSessionDetailError = '';
     let loadSucceeded = false;
     const params = buildSessionListParams({
@@ -257,6 +258,7 @@ export async function loadSessions(api, options = {}) {
             clearSessionTimelineRefs(this);
         } else {
             loadSucceeded = true;
+            this.sessionSearchInfo = res.searchInfo || null;
             const rawSessions = Array.isArray(res.sessions) ? res.sessions : [];
             this.sessionsList = rawSessions.filter(s => s && typeof s === 'object');
             if (typeof this.clearSessionBatchSelection === 'function') {
@@ -313,6 +315,7 @@ export async function loadSessions(api, options = {}) {
             }
         }
     } catch (e) {
+        this.sessionSearchInfo = null;
         emitSessionLoadDebug(this, 'loadSessions:exception', e && e.message ? e.message : String(e));
         this.sessionsList = [];
         if (typeof this.primeSessionListRender === 'function') {
