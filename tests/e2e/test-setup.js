@@ -36,8 +36,8 @@ module.exports = async function testSetup(ctx) {
     assert(configContent.includes(`base_url = "${mockProviderUrl}"`), 'base_url missing or mismatched');
 
     const authPath = path.join(tmpHome, '.codex', 'auth.json');
-    const auth = JSON.parse(fs.readFileSync(authPath, 'utf-8'));
-    assert(auth.OPENAI_API_KEY === 'sk-test', 'auth api_key mismatch');
+    assert(!fs.existsSync(authPath), 'auth.json should not be written in single-file auth mode');
+    assert(configContent.includes('experimental_bearer_token = "sk-test"'), 'bearer token missing from config.toml');
 
     const modelsPath = path.join(tmpHome, '.codex', 'models.json');
     const models = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'));

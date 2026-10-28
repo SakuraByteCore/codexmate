@@ -5172,6 +5172,7 @@ function createSessionQueryScanState(tokens, options = {}) {
         count: 0,
         snippets: [],
         positions: [],
+        complete: true,
         leadingSystem: roleFilter !== 'system'
     };
 }
@@ -5210,11 +5211,13 @@ function consumeSessionQueryMessage(state, message) {
             timestamp: typeof message.timestamp === 'string' ? message.timestamp : ''
         });
     }
+    if (state.count >= state.maxMatches) state.complete = false;
     return state.count >= state.maxMatches;
 }
 
 function buildSessionQueryScanResult(state) {
     return {
+        complete: !!(state && state.complete),
         hit: !!(state && state.count > 0),
         count: state && Number.isFinite(state.count) ? state.count : 0,
         snippets: state && Array.isArray(state.snippets) ? state.snippets : [],
@@ -5259,6 +5262,7 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
     const state = createSessionQueryScanState(tokens, options);
     if (session.source === 'opencode') {
         const extracted = queryOpencodeSessionMessages(session.sessionId || parseOpencodeVirtualSessionId(filePath), { maxMessages: Infinity });
+        state.complete = !!extracted && !extracted.truncated;
         const messages = extracted && Array.isArray(extracted.messages) ? extracted.messages : [];
         for (let i = 0; i < messages.length; i += 1) {
             const message = { ...messages[i], recordLineIndex: i };
@@ -5268,6 +5272,7 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
     }
     if (session.source === 'zed') {
         const zedExtracted = queryZedSessionMessages(session.sessionId || parseZedVirtualSessionId(filePath), { maxMessages: Infinity });
+        state.complete = !!zedExtracted && !zedExtracted.truncated;
         const zedMessages = zedExtracted && Array.isArray(zedExtracted.messages) ? zedExtracted.messages : [];
         for (let i = 0; i < zedMessages.length; i += 1) {
             const message = { ...zedMessages[i], recordLineIndex: i };
@@ -5283,6 +5288,7 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
             } catch (_) {
                 json = null;
             }
+            state.complete = !!json;
             const rawMessages = json && Array.isArray(json.messages) ? json.messages : [];
             for (const entry of rawMessages) {
                 if (!entry || typeof entry !== 'object') continue;
@@ -5310,12 +5316,14 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
             const buf = Buffer.alloc(targetBytes);
             const bytes = fs.readSync(fd, buf, 0, targetBytes, 0);
             fs.closeSync(fd);
+            state.complete = bytes >= stat.size;
             text = bytes > 0 ? buf.slice(0, bytes).toString('utf-8') : '';
         } catch (_) {
             try {
                 text = fs.readFileSync(filePath, 'utf-8');
             } catch (_) {
                 text = '';
+                state.complete = false;
             }
         }
 
@@ -5340,6 +5348,7 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
             const currentLineIndex = lineIndex;
             lineIndex += 1;
             if (maxBytes > 0 && bytesRead >= maxBytes) {
+                state.complete = false;
                 break;
             }
 
@@ -5369,6 +5378,7 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
 
         return buildSessionQueryScanResult(state);
     } catch (e) {
+        state.complete = false;
         return scanSessionContentForQueryInRecords(readJsonlRecords(filePath), session.source, state);
     } finally {
         if (rl) {
@@ -5383,7 +5393,9 @@ async function scanSessionContentForQuery(session, tokens, options = {}) {
 async function applySessionQueryFilter(sessions, options = {}) {
     const tokens = Array.isArray(options.tokens) ? options.tokens : [];
     if (tokens.length === 0) {
-        return sessions;
+        const result = sessions.slice();
+        Object.defineProperty(result, 'searchInfo', { value: null });
+        return result;
     }
 
     const mode = normalizeQueryMode(options.queryMode);
@@ -5397,10 +5409,12 @@ async function applySessionQueryFilter(sessions, options = {}) {
         : 0;
 
     let scanned = 0;
+    let complete = true;
     const results = [];
 
     for (const session of sessions) {
         if (scope === 'content' && scanned >= contentScanLimit) {
+            complete = false;
             break;
         }
 
@@ -5420,6 +5434,10 @@ async function applySessionQueryFilter(sessions, options = {}) {
                 snippetLimit: 2
             });
             contentHit = contentInfo.hit;
+            // 命中已完成候选的存在性判定，无需穷尽匹配或消息。
+            if (!contentHit && !contentInfo.complete) complete = false;
+        } else if (shouldScanContent) {
+            complete = false;
         }
 
         const hit = scope === 'summary'
@@ -5441,6 +5459,9 @@ async function applySessionQueryFilter(sessions, options = {}) {
         results.push(session);
     }
 
+    Object.defineProperty(results, 'searchInfo', {
+        value: { scanned, candidates: sessions.length, complete }
+    });
     return results;
 }
 function collectRecentJsonlFiles(rootDir, options = {}) {
@@ -7632,7 +7653,9 @@ async function listAllSessions(params = {}) {
             contentScanBytes: params.contentScanBytes
         });
     }
+    const searchInfo = hasQuery ? result.searchInfo : null;
     result = mergeAndLimitSessions(result, limit);
+    Object.defineProperty(result, 'searchInfo', { value: searchInfo });
     setSessionListCache(cacheKey, result);
     return result;
 }
@@ -7665,6 +7688,7 @@ async function listAllSessionsData(params = {}) {
         delete normalized.__messageCountExact;
         return normalized;
     });
+    Object.defineProperty(result, 'searchInfo', { value: sessions.searchInfo || null });
     if (!hasQuery) {
         setSessionListCache(cacheKey, result);
     }
@@ -7676,7 +7700,7 @@ async function listSessionBrowse(params = {}) {
         ...params,
         browseLightweight: true
     });
-    return Array.isArray(sessions)
+    const result = Array.isArray(sessions)
         ? sessions.map((item) => {
             if (!item || typeof item !== 'object' || Array.isArray(item)) {
                 return item;
@@ -7686,6 +7710,8 @@ async function listSessionBrowse(params = {}) {
             return normalized;
         })
         : [];
+    Object.defineProperty(result, 'searchInfo', { value: sessions.searchInfo || null });
+    return result;
 }
 
 async function listSessionUsage(params = {}) {
@@ -10008,8 +10034,7 @@ async function exportSessionData(params = {}) {
         if (!extracted) {
             return { error: 'Failed to parse session file' };
         }
-    }
-    if (source === 'zed') {
+    } else if (source === 'zed') {
         const zedSessionId = params.sessionId || parseZedVirtualSessionId(filePath);
         extracted = queryZedSessionMessages(zedSessionId, { maxMessages });
         if (!extracted) {
@@ -14760,9 +14785,11 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 if (source && !isSessionSourceOrAll(source)) {
                                     result = { error: 'Invalid source. Must be codex, claude, gemini, codebuddy, workbuddy, pi, opencode, or all' };
                                 } else {
+                                    const sessions = await listSessionBrowse(params);
                                     result = {
-                                        sessions: await listSessionBrowse(params),
-                                        source: source || 'all'
+                                        sessions,
+                                        source: source || 'all',
+                                        searchInfo: sessions.searchInfo
                                     };
                                 }
                             }

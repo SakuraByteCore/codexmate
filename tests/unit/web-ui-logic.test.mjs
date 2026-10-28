@@ -44,7 +44,8 @@ const ZERO_SESSION_SOURCE_TOTALS = {
     codebuddy: 0,
     workbuddy: 0,
     pi: 0,
-    opencode: 0
+    opencode: 0,
+    zed: 0
 };
 
 test('normalizeClaudeValue trims strings and ignores non-string', () => {
@@ -604,7 +605,7 @@ test('shouldForceCompactLayoutMode requires touch points for non-mobile UA compa
 });
 
 test('isSessionQueryEnabled supports every session browser source', () => {
-    for (const source of ['codex', 'CODEX', 'claude', 'gemini', 'codebuddy', 'workbuddy', 'pi', 'opencode', 'ALL']) {
+    for (const source of ['codex', 'CODEX', 'claude', 'gemini', 'codebuddy', 'workbuddy', 'pi', 'opencode', 'zed', 'ALL']) {
         assert.strictEqual(isSessionQueryEnabled(source), true, `${source} should support session query`);
     }
     assert.strictEqual(isSessionQueryEnabled('openai'), false);
@@ -615,6 +616,7 @@ test('normalizeSessionSource returns safe source value for session filters', () 
     assert.strictEqual(normalizeSessionSource('codex'), 'codex');
     assert.strictEqual(normalizeSessionSource('CLAUDE'), 'claude');
     assert.strictEqual(normalizeSessionSource('OpenCode'), 'opencode');
+    assert.strictEqual(normalizeSessionSource('Zed'), 'zed');
     assert.strictEqual(normalizeSessionSource('WorkBuddy'), 'workbuddy');
     assert.strictEqual(normalizeSessionSource('all'), 'all');
     assert.strictEqual(normalizeSessionSource('unknown'), 'all');
@@ -632,7 +634,8 @@ test('sessionSourceOptions exposes OpenCode with localized label', () => {
         'sessions.source.codebuddy': 'CodeBuddy Code',
         'sessions.source.workbuddy': 'WorkBuddy AI',
         'sessions.source.pi': 'Pi',
-        'sessions.source.opencode': 'OpenCode'
+        'sessions.source.opencode': 'OpenCode',
+        'sessions.source.zed': 'Zed'
     };
     assert.deepStrictEqual(computed.sessionSourceOptions.call({ t: (key) => labels[key] || key }), [
         { value: 'all', label: 'All' },
@@ -642,7 +645,8 @@ test('sessionSourceOptions exposes OpenCode with localized label', () => {
         { value: 'codebuddy', label: 'CodeBuddy Code' },
         { value: 'workbuddy', label: 'WorkBuddy AI' },
         { value: 'pi', label: 'Pi' },
-        { value: 'opencode', label: 'OpenCode' }
+        { value: 'opencode', label: 'OpenCode' },
+        { value: 'zed', label: 'Zed' }
     ]);
 });
 

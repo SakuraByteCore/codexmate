@@ -4,7 +4,9 @@
 
 # Codex Mate
 
-**Một dashboard duy nhất cho tất cả AI coding agent cục bộ của bạn. Chuyển đổi provider, quản lý phiên làm việc và điều phối tác vụ giữa Codex, Claude Code, Gemini CLI, CodeBuddy Code, Pi, OpenCode, KiloCode và OpenClaw. Không cloud, trung tâm điều khiển agent hoàn toàn cục bộ.**
+**Tìm lại những cuộc trò chuyện nằm rải rác trong các công cụ lập trình AI.**
+
+Codex Mate là công cụ CLI + Web chạy cục bộ, giúp xem, lọc và xuất các phiên đã có tại một nơi, đồng thời quản lý Provider, Skills và tác vụ khi cần.
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[Tài liệu]</a>
@@ -31,49 +33,21 @@
 ---
 
 > [!TIP]
-> **Ưu tiên cục bộ**: Toàn bộ cấu hình và phiên làm việc được lưu trong thư mục home của bạn. Không có telemetry, không cần tài khoản cloud.
-
-> [!IMPORTANT]
-> Dự án đang ở giai đoạn đầu. Chúng tôi đang tìm kiếm các nhà phát triển để cùng xây dựng hệ sinh thái agent cục bộ!
+> **Ưu tiên cục bộ**: Đọc các phiên đã có và quản lý cấu hình trên máy của bạn. Không có telemetry, không cần tài khoản cloud của Codex Mate. Yêu cầu tới mô hình vẫn được gửi đến provider đã cấu hình; chạy cục bộ không có nghĩa là mô hình chạy ngoại tuyến.
 
 ## Codex Mate là gì?
 
-Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent cục bộ? Mỗi tool lại có định dạng cấu hình, nơi lưu phiên và thư mục skill riêng.
+Giải pháp tuần trước được thảo luận trong Codex hay Claude Code? Lọc phiên theo nguồn, dự án hoặc thời gian, mở cuộc trò chuyện để xem lại, rồi xuất thành Markdown để tham khảo.
 
-**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode, [OpenClaw](https://github.com/moeru-ai/openclaw) và Pi một cách liền mạch.
+Codex Mate quản lý công cụ và dữ liệu cục bộ đã có. Đây không phải mô hình AI mới và không thay thế trợ lý lập trình của bạn. Hãy bắt đầu bằng việc tìm lại một cuộc trò chuyện hữu ích, không cần cấu hình mọi công cụ trước.
 
-### Điểm nổi bật
-
-Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Agent Bridge cục bộ**:
-- **Trình duyệt phiên thống nhất**: Tìm kiếm, xem trước, lọc và xuất phiên làm việc từ Codex, Claude Code, Gemini CLI, CodeBuddy Code và Pi trong một nơi duy nhất.
-- **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
-- **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
-- **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
-- **Điều phối tác vụ**: Lập kế hoạch và thực thi tác vụ phức tạp với theo dõi phụ thuộc.
-
----
-
-## Tiến độ hiện tại
-
-| Tính năng | Trạng thái | Mô tả |
-| --- | --- | --- |
-| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode, OpenClaw và Pi |
-| **Cấu hình Provider Pi** | ✅ | Quản lý provider Pi trong Web UI, ghi vào `~/.pi/agent/models.json` (giữ nguyên các trường không nhận dạng được) và chuyển đổi provider/model mặc định trong `~/.pi/agent/settings.json` |
-| **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
-| **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/Pi) |
-| **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
-| **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
-| **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |
-| **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
-| **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
-| **Mẫu Prompt** | ✅ | Plugin prompt tái sử dụng được với hỗ trợ biến |
-| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md (bao gồm `~/.config/opencode/AGENTS.md` của OpenCode) và dùng kho preset chung. Áp dụng preset chỉ cập nhật editor; cần lưu thủ công để ghi vào tệp. |
-| **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
-| **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
-
----
+[Bắt đầu sử dụng](#bắt-đầu-nhanh) · [Hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions)
 
 ## Bắt đầu nhanh
+
+Chọn một cách cài đặt bên dưới, rồi chạy `codexmate run`. Mở địa chỉ được in trong terminal, chọn nguồn có dữ liệu trong trình duyệt phiên, mở cuộc trò chuyện và dùng chức năng xuất. Nếu chưa có dữ liệu cục bộ, hãy tạo cuộc trò chuyện trong công cụ gốc trước.
+
+Bản xuất dùng để đọc và lưu trữ, không phải khôi phục toàn bộ trạng thái agent trong công cụ khác. Dùng `codexmate setup` khi cần cấu hình provider. Xem [hướng dẫn bắt đầu nhanh (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/quick-start) để biết chi tiết.
 
 ### Cài đặt qua Homebrew (macOS / Linux)
 
@@ -119,6 +93,38 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **OpenCode**: xem [tài liệu chính thức OpenCode](https://opencode.ai/)
 - **OpenClaw**: xem [kho lưu trữ OpenClaw](https://github.com/moeru-ai/openclaw)
 - **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`; cấu hình provider nằm ở `~/.pi/agent/models.json`, provider/model mặc định nằm ở `~/.pi/agent/settings.json`
+- **Zed**: phiên agent được đọc chỉ-đọc từ cơ sở dữ liệu cục bộ của Zed (`threads/threads.db` trong thư mục dữ liệu) và hiển thị trong trình duyệt phiên
+
+---
+
+## Điểm nổi bật
+
+Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình, skill và tác vụ phục vụ công việc hằng ngày:
+- **Trình duyệt phiên thống nhất**: Xem phiên cục bộ từ Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode và Zed tại một nơi. Khả năng tìm kiếm, xuất và xóa tùy thuộc nguồn; xem [hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions).
+- **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
+- **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
+- **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
+- **Điều phối tác vụ**: Lập kế hoạch và thực thi tác vụ phức tạp với theo dõi phụ thuộc.
+
+---
+
+## Tiến độ hiện tại
+
+| Tính năng | Trạng thái | Mô tả |
+| --- | --- | --- |
+| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode, OpenClaw và Pi |
+| **Cấu hình Provider Pi** | ✅ | Quản lý provider Pi trong Web UI, ghi vào `~/.pi/agent/models.json` (giữ nguyên các trường không nhận dạng được) và chuyển đổi provider/model mặc định trong `~/.pi/agent/settings.json` |
+| **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
+| **Trình duyệt phiên** | ✅ | Xem và lọc phiên cục bộ; khả năng tìm kiếm và xuất Markdown tùy thuộc nguồn. Xem hướng dẫn phiên |
+| **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
+| **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
+| **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |
+| **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
+| **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
+| **Mẫu Prompt** | ✅ | Plugin prompt tái sử dụng được với hỗ trợ biến |
+| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md (bao gồm `~/.config/opencode/AGENTS.md` của OpenCode) và dùng kho preset chung. Áp dụng preset chỉ cập nhật editor; cần lưu thủ công để ghi vào tệp. |
+| **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
+| **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
 
 ---
 
@@ -160,6 +166,9 @@ flowchart TD
 ---
 
 ## Lời cảm ơn
+
+> [!IMPORTANT]
+> Dự án đang ở giai đoạn đầu. Chúng tôi đang tìm kiếm các nhà phát triển để cùng xây dựng hệ sinh thái agent cục bộ!
 
 Cảm ơn tất cả những người đóng góp cho Codex Mate ❤️
 

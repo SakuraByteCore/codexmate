@@ -1,0 +1,27 @@
+const assert = require('node:assert/strict'), vm = require('node:vm'), fs = require('node:fs');
+const source = fs.readFileSync(require('node:path').join(__dirname, '../../cli.js'), 'utf8');
+const names = ['normalizeQueryMode','normalizeQueryScope','normalizeRoleFilter','buildSessionSummaryText','createSessionQueryScanState','consumeSessionQueryMessage','buildSessionQueryScanResult','scanSessionContentForQueryInRecords','scanSessionContentForQuery','applySessionQueryFilter','getSessionListCache','setSessionListCache','listSessionBrowse','exportSessionData'];
+let generic = 0, specialized = 0;
+const messages = [{ role: 'user', text: 'needle' }];
+const ctx = vm.createContext({ ...require('../../lib/cli-sessions'), ...require('../../lib/cli-session-utils'), Buffer, path: require('node:path'), readline: require('node:readline'), DEFAULT_CONTENT_SCAN_LIMIT: 10, MAX_EXPORT_MESSAGES: 100, SESSION_LIST_CACHE_TTL_MS: 1000, g_sessionListCache: new Map(), normalizeSessionSourceName: x => x, resolveSessionFilePath: () => '/memory', getSessionFileArg: () => '', queryOpencodeSessionMessages: () => { specialized++; return { messages: [...messages] }; }, extractMessagesFromFile: async () => { generic++; return { messages: [...messages] }; }, normalizeGeminiMessageRole: () => 'user', extractGeminiMessageText: x => x, getSessionSourceLabel: x => x, buildSessionMarkdown: x => x.messages.map(m => m.text).join(''), fs: { readFileSync: () => JSON.stringify({ messages: [{ type: 'user', content: 'needle' }] }), createReadStream: () => require('node:stream').Readable.from([JSON.stringify({ type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'needle' }] } }) + '\n']) } });
+vm.runInContext(names.map(name => { const m = source.match(new RegExp('^(?:async )?function ' + name + '\\([^]*?^}', 'm')); assert.ok(m, name); return m[0]; }).join('\n'), ctx);
+(async () => {
+  for (const kind of ['opencode', 'codex', 'gemini']) assert.equal((await ctx.exportSessionData({ source: kind, sessionId: 's' })).content, 'needle');
+  assert.equal(specialized, 1); assert.equal(generic, 1);
+  const sessions = [1, 2, 3].map(sessionId => ({ sessionId, source: 'codex', title: 'needle' }));
+  const result = await ctx.applySessionQueryFilter(sessions, { tokens: ['needle'], queryScope: 'content', contentScanLimit: 2 });
+  assert.equal(result.length, 2); assert.equal(JSON.stringify(result.searchInfo), '{"scanned":2,"candidates":3,"complete":false}');
+  const full = await ctx.applySessionQueryFilter(sessions, { tokens: ['needle'], queryScope: 'content', contentScanLimit: 3 });
+  assert.equal(full.searchInfo.complete, true); assert.equal(full.searchInfo.scanned, 3);
+  const summary = await ctx.applySessionQueryFilter(sessions, { tokens: ['needle'], queryScope: 'summary' });
+  assert.equal(summary.searchInfo.scanned, 0); assert.equal(summary.length, 3);
+  const all = await ctx.applySessionQueryFilter(sessions, { tokens: ['needle'], queryScope: 'all', contentScanLimit: 1 });
+  assert.equal(all.searchInfo.complete, false); assert.equal(all.searchInfo.scanned, 1);
+  ctx.setSessionListCache('query', result); assert.equal(ctx.getSessionListCache('query'), result); assert.equal(ctx.getSessionListCache('query').searchInfo, result.searchInfo);
+  assert.equal(Object.keys(result).includes('searchInfo'), false); assert.ok(Array.isArray(result)); assert.equal(JSON.parse(JSON.stringify(result)).length, 2);
+  ctx.listAllSessions = async () => result; const browse = await ctx.listSessionBrowse(); assert.equal(browse.searchInfo, result.searchInfo);
+  const empty = await ctx.applySessionQueryFilter(result, { tokens: [] }); assert.equal(empty.searchInfo, null); assert.equal(empty.length, 2);
+  ctx.setSessionListCache('empty', empty); assert.equal(ctx.getSessionListCache('empty').searchInfo, null);
+  assert.equal(ctx.getSessionListCache('query', true), null);
+  console.log('通过：真实函数 VM 隔离；OpenCode/Codex/Gemini 导出；JSONL 实扫计数；早停完成性；摘要免扫描；缓存与浏览元数据；空查询及数组兼容。');
+})().catch(error => { console.error(error); process.exitCode = 1; });

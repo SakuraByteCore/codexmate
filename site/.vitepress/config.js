@@ -2,7 +2,7 @@
 
 export default {
   title: "Codex Mate",
-  description: "Codex / Claude / OpenClaw configuration and local session management toolkit",
+  description: "找回散落在不同 AI 编程工具里的对话。本地查看、筛选与导出会话，集中管理 Provider、Skills 与任务。",
   base,
   cleanUrls: true,
   lastUpdated: true,

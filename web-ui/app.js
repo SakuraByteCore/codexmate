@@ -333,6 +333,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     opencode: 0
                 },
                 sessionExporting: {},
+                sessionExportRange: 'default',
+                sessionExportNotice: null,
+                sessionSearchInfo: null,
                 sessionConverting: {},
                 sessionImportingNative: {},
                 sessionCloning: {},

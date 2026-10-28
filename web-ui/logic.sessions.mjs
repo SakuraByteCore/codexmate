@@ -1,3 +1,4 @@
+export const DEFAULT_SESSION_CONTENT_SCAN_LIMIT = 50;
 export const DEFAULT_SESSION_LIST_LIMIT = 200;
 export const DEFAULT_SESSION_LIST_FAST_LIMIT = 20;
 
@@ -155,7 +156,7 @@ export function buildSessionListParams(options = {}) {
         query: queryValue,
         queryMode: 'and',
         queryScope: 'content',
-        contentScanLimit: 50,
+        contentScanLimit: DEFAULT_SESSION_CONTENT_SCAN_LIMIT,
         roleFilter,
         timeRangePreset,
         limit,
