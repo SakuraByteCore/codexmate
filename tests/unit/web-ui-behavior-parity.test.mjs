@@ -1877,3 +1877,13 @@ test('downloadTextFile keeps parity and activeSessionVisibleMessages keeps the i
     });
     assert.deepStrictEqual(currentVisible, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]);
 });
+
+test('system prompt download uses UTF-8 BOM', async () => {
+    const env = createDownloadEnvironment();
+    await withGlobalOverrides(env.globals, () => currentMethods.exportSysPromptContent.call({
+        sysPromptContent: '中文提示词', sysPromptMode: 'system', downloadTextFile: currentMethods.downloadTextFile
+    }));
+    assert.deepStrictEqual(env.snapshot().createdBlobs, [{
+        parts: ['\uFEFF中文提示词'], type: 'text/markdown;charset=utf-8'
+    }]);
+});

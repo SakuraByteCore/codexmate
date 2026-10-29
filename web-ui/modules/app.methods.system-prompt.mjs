@@ -248,14 +248,7 @@ export function createSystemPromptMethods(options = {}) {
             const content = typeof this.sysPromptContent === 'string' ? this.sysPromptContent : '';
             if (!content) return;
             const filename = (this.sysPromptMode === 'system' ? 'SYSTEM.md' : 'APPEND_SYSTEM.md');
-            const blob = new Blob([content], { type: 'text/markdown' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(a.href);
+            this.downloadTextFile(filename, content, 'text/markdown;charset=utf-8');
         },
 
         async pasteSysPromptContent() {
