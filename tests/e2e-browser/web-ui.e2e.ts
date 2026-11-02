@@ -61,6 +61,8 @@ test('设置面板二级标签页切换', async ({ app, browser, screen }) => {
 test('语言切换后界面文案随 locale 更新', async ({ app, browser, screen }) => {
     await app.open('/');
     await navItem(browser, 'settings').tap();
+    // 二级标签页会持久化，先归一化到“通用”页，语言下拉才可见。
+    await screen.getByTestId('settings-tab-general').tap();
     const languageSelect = screen.getByTestId('settings-language-select');
     const languageTitle = browser.locator('#settings-language .settings-card-title');
     await languageSelect.selectOption('en');
