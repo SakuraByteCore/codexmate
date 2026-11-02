@@ -1,0 +1,42 @@
+name: browser-e2e
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      E2E_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install
+        run: npm run ci:install
+      - name: Install Chromium
+        run: npm run test:e2e:browser:install
+      - name: Browser E2E
+        run: npm run test:e2e:browser
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-e2e-artifacts
+          path: .e2e/
+          retention-days: 7
+          if-no-files-found: ignore

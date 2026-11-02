@@ -9,6 +9,7 @@ dist-nw/
 out/
 build/
 cache/
+.e2e/
 
 # NW.js specific
 nwjs-v0.106.1-win-x64/
