@@ -65,8 +65,9 @@ test('语言切换后界面文案随 locale 更新', async ({ app, browser, scre
     await screen.getByTestId('settings-tab-general').tap();
     const languageSelect = screen.getByTestId('settings-language-select');
     const languageTitle = browser.locator('#settings-language .settings-card-title');
-    await languageSelect.selectOption('en');
+    // 框架把字符串当 label 处理，这里按 option 的 value（语言码）选择。
+    await languageSelect.selectOption({ value: 'en' });
     await expect(languageTitle).toHaveText('Language');
-    await languageSelect.selectOption('zh');
+    await languageSelect.selectOption({ value: 'zh' });
     await expect(languageTitle).toHaveText('语言');
 });
