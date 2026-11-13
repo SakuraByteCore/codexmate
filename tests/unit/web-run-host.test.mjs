@@ -149,7 +149,7 @@ const isProtectedWebSurfacePath = instantiateFunction(
     'isProtectedWebSurfacePath'
 );
 
-test('resolveWebHost defaults to LAN host', () => {
+test('resolveWebHost defaults to loopback host', () => {
     assert.strictEqual(resolveWebHost({}), '127.0.0.1');
     assert.strictEqual(resolveWebHost(), '127.0.0.1');
 });

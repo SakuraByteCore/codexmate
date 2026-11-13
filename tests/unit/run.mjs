@@ -23,6 +23,7 @@ await import(pathToFileURL(path.join(__dirname, 'skills-market-runtime.test.mjs'
 await import(pathToFileURL(path.join(__dirname, 'skills-pi-target-backend.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'context-recovery-skill.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'readme-docs-consistency.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'lan-access-auth-docs.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'config-tabs-ui.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'opencode-config-ui.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'opencode-provider-store-backend.test.mjs')));

@@ -5,7 +5,7 @@
 ## 启动选项
 
 ```bash
-codexmate run                # 默认 0.0.0.0:3737,自动开浏览器
+codexmate run                # 默认 127.0.0.1:3737,自动开浏览器
 codexmate run --no-browser   # 仅服务,不开页面(调试 / CI)
 codexmate run --host 127.0.0.1
 CODEXMATE_PORT=8080 codexmate run
@@ -13,7 +13,24 @@ CODEXMATE_PORT=8080 codexmate run
 
 端口不可用自动顺延(`3738`/`3739`...)。
 
-> 安全提示:默认局域网暴露未鉴权界面,涉及密钥/配置/Skills 建议改 `127.0.0.1`。
+## 局域网访问
+
+默认只允许本机访问。需要从同一局域网的另一台设备访问时，先设置访问令牌，再显式监听所有网卡：
+
+```bash
+CODEXMATE_HTTP_TOKEN='<高强度随机值>' codexmate run --host 0.0.0.0
+```
+
+然后用 `http://<本机局域网IP>:<端口>` 访问。浏览器会弹出登录框，用户名可留空，密码填写访问令牌。终端会显示最终监听地址和端口。
+
+未设置 `CODEXMATE_HTTP_TOKEN` 时，远程请求会被拒绝，不会开放未鉴权界面。脚本客户端可使用以下任一种请求头：
+
+```bash
+curl -H "Authorization: Bearer <访问令牌>" http://<本机局域网IP>:<端口>/api
+curl -H "X-CodexMate-Token: <访问令牌>" http://<本机局域网IP>:<端口>/api
+```
+
+访问令牌仅从启动进程的 `CODEXMATE_HTTP_TOKEN` 环境变量读取，需在启动前设置。涉及 Key、配置或 Skills 的远程访问必须保持令牌鉴权开启。
 
 ## 能办的事
 

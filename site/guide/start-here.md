@@ -26,7 +26,7 @@ codexmate run
 
 打开终端显示的地址，在「会话来源」选择有记录的工具，打开一条会话，点击「导出记录」。没有本地记录时，先在原工具中产生一段对话。
 
-默认监听 `0.0.0.0:3737`，支持局域网访问并自动打开浏览器。仅本机访问可用 `codexmate run --host 127.0.0.1`；不开页面可用 `codexmate run --no-browser`。默认端口被占用时会尝试后续端口；显式指定不可用的 `CODEXMATE_PORT` 则会报错。
+默认仅监听 `127.0.0.1:3737`，管理界面不会自动暴露到局域网。需要局域网访问时，设置 `CODEXMATE_HTTP_TOKEN` 并使用 `codexmate run --host 0.0.0.0`；其他设备通过浏览器登录框输入令牌。不开页面可用 `codexmate run --no-browser`。默认端口被占用时会尝试后续端口；显式指定不可用的 `CODEXMATE_PORT` 则会报错。
 
 ## 需要配置 Provider：再运行向导
 

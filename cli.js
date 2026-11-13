@@ -15234,10 +15234,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         console.log('  退出: Ctrl+C\n');
         if (isAnyAddressHost(host)) {
             const tokenEnabled = typeof process.env.CODEXMATE_HTTP_TOKEN === 'string' && process.env.CODEXMATE_HTTP_TOKEN.trim().length > 0;
-            console.warn(`! 安全提示: 当前监听所有网卡（${tokenEnabled ? '已启用鉴权' : '无鉴权'}）。`);
-            if (!tokenEnabled) {
-                console.warn('  建议仅在可信网络使用，或改用 --host 127.0.0.1。');
-                console.warn('  如需远程访问，请设置 CODEXMATE_HTTP_TOKEN。');
+            if (tokenEnabled) {
+                console.warn('! 安全提示: 当前监听所有网卡，局域网访问需要访问令牌。');
+            } else {
+                console.warn('! 安全提示: 当前监听所有网卡，但未配置访问令牌，远程访问已禁用。');
+                console.warn('  如需局域网访问，请先设置 CODEXMATE_HTTP_TOKEN。');
+                console.warn('  如需仅限本机访问，请改用 --host 127.0.0.1。');
             }
         }
 
