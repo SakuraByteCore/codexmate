@@ -374,7 +374,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'toolConfigPermissionSaving',
         'toolConfigPermissions',
         'promptsHint',
-        'sessionExportRange',
         'sessionExportNotice',
         'sessionSearchInfo',
         'promptsSubTab',
@@ -432,7 +431,6 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'showEditClaudeConfigKey',
         'showEditProviderKey',
         'promptsHint',
-        'sessionExportRange',
         'sessionExportNotice',
         'sessionSearchInfo',
         'promptsSubTab',
@@ -450,6 +448,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptsPathReferenceCacheKey'
     ];
     const allowedMissingCurrentKeys = [
+        'sessionExportRange',
         'sessionPreviewQuery',
         'sessionMatchSearched',
         'sessionMatchPendingJump',
@@ -498,6 +497,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sysPromptHighlightHtml'
     ];
     allowedExtraCurrentKeys.push(
+        'languageMenuOpen',
+        'navigationReady',
+        'skillsBackingUp',
+        'skillsMarketSelectedNames',
         'lang',
         'configModeVisibility',
         'configTemplateContext',
@@ -694,6 +697,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const extraCurrentMethodKeys = currentMethodKeys.filter((key) => !headMethodKeys.includes(key)).sort();
     const missingCurrentMethodKeys = headMethodKeys.filter((key) => !currentMethodKeys.includes(key)).sort();
     const allowedExtraCurrentMethodKeys = [
+        'parseSessionTitleInfo',
         'normalizeTheme',
         'setTheme',
         'applyDocumentTheme',
@@ -1087,7 +1091,16 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'buildPromptsPathReferenceCacheKey',
         'loadPromptsPathReferences',
         'promptsPathReferenceOptionList',
-        'insertPromptPathReference'
+        'insertPromptPathReference',
+        'backupCurrentSkills',
+        'closeLanguageMenu',
+        'exportMarketSelectedSkills',
+        'exportSkillSelection',
+        'handleLanguageMenuFocusOut',
+        'selectLanguage',
+        'toggleAllSkillsMarketSelection',
+        'toggleLanguageMenu',
+        'toggleSkillsMarketSelection'
     );
     const allowedMissingCurrentMethodKeys = [
         'highlightQueryText',
@@ -1244,7 +1257,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isLocalProviderDisabled',
         'sessionTimelineProgressPercent',
         'activeSessionWorkspaceSummary',
-        'currentInstalledCommandCards'
+        'currentInstalledCommandCards',
+        'skillsMarketAllSelected',
+        'skillsMarketSelectedCount'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

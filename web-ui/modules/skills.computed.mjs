@@ -52,6 +52,10 @@
             const selected = Array.isArray(this.skillsSelectedNames) ? this.skillsSelectedNames : [];
             return Array.from(new Set(selected.map((item) => String(item || '').trim()).filter(Boolean))).length;
         },
+        skillsMarketSelectedCount() {
+            const selected = Array.isArray(this.skillsMarketSelectedNames) ? this.skillsMarketSelectedNames : [];
+            return Array.from(new Set(selected.map((item) => String(item || '').trim()).filter(Boolean))).length;
+        },
         skillsVisibleSelectedCount() {
             const selectable = this.skillsSelectableNames;
             const selectedSet = new Set(Array.isArray(this.skillsSelectedNames) ? this.skillsSelectedNames : []);
@@ -61,6 +65,12 @@
             const selectable = this.skillsSelectableNames;
             if (!selectable.length) return false;
             const selectedSet = new Set(Array.isArray(this.skillsSelectedNames) ? this.skillsSelectedNames : []);
+            return selectable.every((name) => selectedSet.has(name));
+        },
+        skillsMarketAllSelected() {
+            const selectable = this.skillsList.map((item) => item && item.name).filter(Boolean);
+            if (!selectable.length) return false;
+            const selectedSet = new Set(Array.isArray(this.skillsMarketSelectedNames) ? this.skillsMarketSelectedNames : []);
             return selectable.every((name) => selectedSet.has(name));
         },
         skillsImportSelectableKeys() {
@@ -97,6 +107,7 @@
                 || this.skillsImporting
                 || this.skillsZipImporting
                 || this.skillsExporting
+                || this.skillsBackingUp
             );
         },
         skillsMarketInstalledPreview() {

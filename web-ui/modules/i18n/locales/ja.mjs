@@ -1305,6 +1305,12 @@ const ja = Object.freeze({
     'market.summary.importableDirect': '直接インポート可',
     'market.root.fallback': 'デフォルトディレクトリ',
 
+    'market.backup.action': '現在のターゲットをバックアップ',
+    'market.backup.running': 'バックアップ中...',
+    'market.export.action': '選択をエクスポート',
+    'market.export.running': 'エクスポート中...',
+    'market.selection.all': 'すべて選択',
+    'market.selection.count': '{count} 件選択',
     'market.installed.title': 'インストール済 Skills',
     'market.installed.note': '上位 6 項目のみ表示。',
     'market.local.refresh': 'ローカルを更新',

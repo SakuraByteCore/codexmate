@@ -1301,6 +1301,12 @@ const zhTw = Object.freeze({
     'market.summary.importableDirect': '可直接匯入',
     'market.root.fallback': '預設目錄',
 
+    'market.backup.action': '備份目前目標',
+    'market.backup.running': '備份中...',
+    'market.export.action': '匯出選中',
+    'market.export.running': '匯出中...',
+    'market.selection.all': '全選',
+    'market.selection.count': '已選 {count}',
     'market.installed.title': '已安裝 Skills',
     'market.installed.note': '僅顯示前 6 項。',
     'market.local.refresh': '重新整理本地',

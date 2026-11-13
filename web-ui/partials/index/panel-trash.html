@@ -29,6 +29,8 @@
                             </div>
                         </section>
 
+                        <section class="trash-content-section" :aria-label="t('settings.trash.title')">
+
                         <!-- Disabled state -->
                         <div v-if="getSessionTrashViewState() === 'disabled'" class="trash-empty-state trash-disabled-state">
                             <svg class="trash-empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.2">
@@ -114,5 +116,6 @@
                                 </div>
                             </div>
                         </template>
+                        </section>
                     </div>
                 </div>

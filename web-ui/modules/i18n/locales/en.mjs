@@ -1303,6 +1303,12 @@ const en = Object.freeze({
     'market.summary.importableDirect': 'Direct importable',
     'market.root.fallback': 'Default path',
 
+    'market.backup.action': 'Back up current target',
+    'market.backup.running': 'Backing up...',
+    'market.export.action': 'Export selected',
+    'market.export.running': 'Exporting...',
+    'market.selection.all': 'Select all',
+    'market.selection.count': '{count} selected',
     'market.installed.title': 'Installed skills',
     'market.installed.note': 'Showing top 6 only.',
     'market.local.refresh': 'Refresh local',

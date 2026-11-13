@@ -1014,6 +1014,11 @@ body::after {
     cursor: pointer;
     transition: background-color var(--transition-fast) var(--ease-smooth), border-color var(--transition-fast) var(--ease-smooth), color var(--transition-fast) var(--ease-smooth), transform var(--transition-fast) var(--ease-smooth);
 }
+.language-settings-link > svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
 
 .language-settings-link:hover {
     border-color: rgba(200, 121, 99, 0.58);
@@ -1034,12 +1039,71 @@ body::after {
     gap: 8px;
 }
 
-.side-rail-lang .language-settings-link {
-    min-width: 0;
+.side-language-menu {
+    position: relative;
     flex: 1 1 auto;
-    box-shadow: none;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
 }
 
+.side-language-dropdown {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 8px);
+    z-index: 20;
+    width: max(100%, 176px);
+    padding: 6px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-elevated);
+    box-shadow: var(--shadow-float);
+}
+
+.side-language-option {
+    width: 100%;
+    min-height: 36px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 8px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    text-align: left;
+    cursor: pointer;
+}
+
+.side-language-option small {
+    grid-column: 1;
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+}
+
+.side-language-option svg {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 14px;
+    height: 14px;
+    color: var(--color-brand);
+}
+
+.side-language-option:hover,
+.side-language-option.active {
+    background: var(--color-brand-light);
+    color: var(--color-text-primary);
+}
+
+.side-rail-lang .language-settings-link {
+    min-width: 0;
+    width: fit-content;
+    max-width: 100%;
+    flex: 0 1 auto;
+    margin-inline: auto;
+    box-shadow: none;
+}
 .side-announcement-button {
     flex: 0 0 36px;
     width: 36px;

@@ -67,6 +67,22 @@ export function createI18nMethods() {
         currentLanguageLabel() {
             return getLanguageMeta(this.lang).nativeName || '中文';
         },
+        toggleLanguageMenu() {
+            this.languageMenuOpen = !this.languageMenuOpen;
+        },
+        closeLanguageMenu() {
+            this.languageMenuOpen = false;
+        },
+        selectLanguage(nextLang) {
+            this.setLang(nextLang);
+            this.languageMenuOpen = false;
+        },
+        handleLanguageMenuFocusOut(event) {
+            const currentTarget = event && event.currentTarget;
+            const relatedTarget = event && event.relatedTarget;
+            if (currentTarget && relatedTarget && currentTarget.contains(relatedTarget)) return;
+            this.languageMenuOpen = false;
+        },
         openLanguageSettings() {
             if (typeof this.switchMainTab === 'function') {
                 this.switchMainTab('settings');

@@ -149,6 +149,7 @@ const {
     importCodexSkillsFromZip,
     exportSkills,
     exportCodexSkills,
+    backupSkills,
     deleteSkills,
     deleteCodexSkills
 } = require('./cli/skills');
@@ -14573,6 +14574,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'export-skills':
                             result = await exportSkills(params || {});
+                            break;
+                        case 'backup-skills':
+                            result = await backupSkills(params || {});
                             break;
                         case 'list-codex-skills':
                             result = listCodexSkills();

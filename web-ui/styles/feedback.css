@@ -42,6 +42,32 @@
     letter-spacing: -0.005em;
 }
 
+.app-loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 180px);
+    text-align: center;
+}
+
+.app-navigation-loading-state {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg);
+    color: var(--color-text-tertiary);
+}
+
+.navigation-pending > .mobile-brand-bar,
+.navigation-pending > .top-tabs,
+.navigation-pending > .lang-fab,
+.navigation-pending > .app-shell {
+    visibility: hidden;
+}
+
 .state-message.error {
     color: var(--color-error);
 }

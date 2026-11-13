@@ -3,7 +3,8 @@ import {
     isSessionQueryEnabled,
     normalizeSessionMessageRole,
     normalizeSessionPathFilter,
-    normalizeSessionSource
+    normalizeSessionSource,
+    parseSessionTitleInfo
 } from '../logic.mjs';
 import {
     applySessionsFilterUrlState,
@@ -77,6 +78,9 @@ export function createSessionBrowserMethods(options = {}) {
     return {
         normalizeSessionPathValue(value) {
             return normalizeSessionPathFilter(value);
+        },
+        parseSessionTitleInfo(session) {
+            return parseSessionTitleInfo(session);
         },
 
         mergeSessionPathOptions(baseList = [], incomingList = []) {

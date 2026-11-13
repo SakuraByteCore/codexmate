@@ -91,7 +91,7 @@ test('styles keep desktop layout wide and session history readable on large scre
 
     const html = readBundledWebUiHtml();
     assert.match(html, /class="brand-logo"\s+src="\/res\/logo-pack\.webp"/);
-    assert.match(html, /class="status-strip status-strip-placeholder"/);
+    assert.doesNotMatch(html, /class="status-strip status-strip-placeholder"/);
 
     const titleBlock = styles.match(/\.session-item-title\s*\{[^}]*\}/);
     assert.ok(titleBlock, 'missing session item title style block');

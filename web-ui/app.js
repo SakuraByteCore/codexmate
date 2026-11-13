@@ -60,8 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
         data() {
             return {
                 lang: 'zh',
+                languageMenuOpen: false,
                 appVersion: '',
                 mainTab: 'dashboard',
+                navigationReady: false,
                 configMode: 'codex',
                 currentProvider: '',
                 currentModel: '',
@@ -264,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 skillsRootPath: '',
                 skillsList: [],
                 skillsSelectedNames: [],
+                skillsMarketSelectedNames: [],
                 skillsLoading: false,
                 skillsDeleting: false,
                 skillsKeyword: '',
@@ -274,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 skillsImporting: false,
                 skillsZipImporting: false,
                 skillsExporting: false,
+                skillsBackingUp: false,
                 skillsMarketLoading: false,
                 skillsMarketLocalLoadedOnce: false,
                 skillsMarketImportLoadedOnce: false,
@@ -333,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     opencode: 0
                 },
                 sessionExporting: {},
-                sessionExportRange: 'default',
                 sessionExportNotice: null,
                 sessionSearchInfo: null,
                 sessionConverting: {},
@@ -624,11 +627,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         return true;
                     }
                 })();
-                this.loadWebUiPreferences({ applyNavigation: applyPreferenceNavigation }).then(() => {
+                const preferencesReady = this.loadWebUiPreferences({ applyNavigation: applyPreferenceNavigation });
+                preferencesReady.then(() => {
                     if (this.mainTab === 'prompts' && typeof this.loadPromptsTabContent === 'function') {
                         this.loadPromptsTabContent();
                     }
+                }).finally(() => {
+                    this.navigationReady = true;
                 });
+            } else {
+                this.navigationReady = true;
             }
             if (typeof this.t === 'function') {
                 this.confirmDialogConfirmText = this.t('confirm.ok');

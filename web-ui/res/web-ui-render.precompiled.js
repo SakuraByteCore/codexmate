@@ -1,11 +1,19 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, Fragment: _Fragment, renderList: _renderList, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, withKeys: _withKeys, withModifiers: _withModifiers, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
 
 return function render(_ctx, _cache) {
   return (_openBlock(), _createElementBlock(_Fragment, null, [
-    (!_ctx.sessionStandalone)
+    (!_ctx.navigationReady)
       ? (_openBlock(), _createElementBlock("div", {
           key: 0,
+          class: "app-navigation-loading-state",
+          role: "status",
+          "aria-live": "polite"
+        }, _toDisplayString(_ctx.t('app.loadingConfig')), 1 /* TEXT */))
+      : _createCommentVNode("v-if", true),
+    (!_ctx.sessionStandalone)
+      ? (_openBlock(), _createElementBlock("div", {
+          key: 1,
           class: "mobile-brand-bar"
         }, [
           _createElementVNode("div", { class: "mobile-brand-title" }, [
@@ -33,7 +41,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (!_ctx.sessionStandalone)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 1,
+          key: 2,
           class: "top-tabs",
           role: "tablist",
           "aria-label": _ctx.t('nav.topTabs.aria')
@@ -151,7 +159,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (!_ctx.sessionStandalone)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 2,
+          key: 3,
           class: "lang-fab"
         }, [
           _createElementVNode("button", {
@@ -581,12 +589,66 @@ return function render(_ctx, _cache) {
             ]),
             _createElementVNode("div", { class: "side-rail-lang" }, [
               _createElementVNode("div", { class: "side-rail-lang-actions" }, [
-                _createElementVNode("button", {
-                  type: "button",
-                  class: "language-settings-link",
-                  "aria-label": _ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() }),
-                  onClick: _ctx.openLanguageSettings
-                }, _toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })), 9 /* TEXT, PROPS */, ["aria-label", "onClick"]),
+                _createElementVNode("div", { class: "side-language-menu" }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "language-settings-link",
+                    "aria-label": _ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() }),
+                    "aria-expanded": _ctx.languageMenuOpen ? 'true' : 'false',
+                    "aria-haspopup": "menu",
+                    onClick: _ctx.toggleLanguageMenu,
+                    onKeydown: _withKeys(_withModifiers(_ctx.closeLanguageMenu, ["prevent"]), ["esc"])
+                  }, [
+                    _createTextVNode(_toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })) + " ", 1 /* TEXT */),
+                    (_openBlock(), _createElementBlock("svg", {
+                      viewBox: "0 0 16 16",
+                      fill: "none",
+                      stroke: "currentColor",
+                      "stroke-width": "1.8",
+                      "stroke-linecap": "round",
+                      "stroke-linejoin": "round",
+                      "aria-hidden": "true"
+                    }, [
+                      _createElementVNode("path", { d: "M4 6l4 4 4-4" })
+                    ]))
+                  ], 40 /* PROPS, NEED_HYDRATION */, ["aria-label", "aria-expanded", "onClick", "onKeydown"]),
+                  (_ctx.languageMenuOpen)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "side-language-dropdown",
+                        role: "menu",
+                        onFocusout: _ctx.handleLanguageMenuFocusOut
+                      }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.languageOptions(), (option) => {
+                          return (_openBlock(), _createElementBlock("button", {
+                            key: option.code,
+                            type: "button",
+                            class: _normalizeClass(["side-language-option", { active: option.code === _ctx.lang }]),
+                            role: "menuitemradio",
+                            "aria-checked": option.code === _ctx.lang ? 'true' : 'false',
+                            onClick: $event => (_ctx.selectLanguage(option.code))
+                          }, [
+                            _createElementVNode("span", null, _toDisplayString(option.nativeName), 1 /* TEXT */),
+                            _createElementVNode("small", null, _toDisplayString(option.englishName), 1 /* TEXT */),
+                            (option.code === _ctx.lang)
+                              ? (_openBlock(), _createElementBlock("svg", {
+                                  key: 0,
+                                  viewBox: "0 0 16 16",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2",
+                                  "stroke-linecap": "round",
+                                  "stroke-linejoin": "round",
+                                  "aria-hidden": "true"
+                                }, [
+                                  _createElementVNode("path", { d: "M3.5 8.5l3 3 6-7" })
+                                ]))
+                              : _createCommentVNode("v-if", true)
+                          ], 10 /* CLASS, PROPS */, ["aria-checked", "onClick"]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ], 40 /* PROPS, NEED_HYDRATION */, ["onFocusout"]))
+                    : _createCommentVNode("v-if", true)
+                ]),
                 _createElementVNode("button", {
                   type: "button",
                   class: "side-announcement-button",
@@ -794,21 +856,10 @@ return function render(_ctx, _cache) {
                           _createElementVNode("span", { class: "value" }, _toDisplayString(_ctx.installRegistryPreview || 'npmmirror'), 1 /* TEXT */)
                         ])
                       ]))
-                    : (!_ctx.sessionStandalone)
-                      ? (_openBlock(), _createElementBlock("div", {
-                          key: 6,
-                          class: "status-strip status-strip-placeholder",
-                          "aria-hidden": "true"
-                        }, [
-                          _createElementVNode("div", { class: "status-chip" }, [
-                            _createElementVNode("span", { class: "label" }, " "),
-                            _createElementVNode("span", { class: "value" }, " ")
-                          ])
-                        ]))
-                      : _createCommentVNode("v-if", true),
+                    : _createCommentVNode("v-if", true),
           (!_ctx.sessionStandalone && _ctx.mainTab === 'config' && _ctx.isProviderConfigMode && _ctx.forceCompactLayout && !_ctx.loading && !_ctx.initError && _ctx.displayProvidersList.length > 1)
             ? (_openBlock(), _createElementBlock("div", {
-                key: 7,
+                key: 6,
                 class: "provider-fast-switch"
               }, [
                 _createElementVNode("label", {
@@ -4121,28 +4172,24 @@ return function render(_ctx, _cache) {
                         _createElementVNode("small", { class: "session-search-scope" }, _toDisplayString(_ctx.t('sessions.search.scopeHint')), 1 /* TEXT */)
                       ]))
                     : _createCommentVNode("v-if", true),
-                  (_ctx.sessionsLoading && _ctx.sessionsList.length === 0)
+                  (!_ctx.sessionsLoading && _ctx.sessionsList.length === 0)
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 1,
-                        class: "state-message"
-                      }, _toDisplayString(_ctx.t('sessions.loadingList')), 1 /* TEXT */))
-                    : (!_ctx.sessionsLoading && _ctx.sessionsList.length === 0)
+                        class: "session-empty session-empty-refined"
+                      }, [
+                        _createElementVNode("p", null, _toDisplayString(_ctx.t(_ctx.hasActiveSessionFilters() ? 'sessions.empty.filtered' : 'sessions.empty.source')), 1 /* TEXT */),
+                        (_ctx.hasActiveSessionFilters())
+                          ? (_openBlock(), _createElementBlock("button", {
+                              key: 0,
+                              class: "btn-tool btn-tool-compact",
+                              type: "button",
+                              onClick: _ctx.clearSessionFilters
+                            }, _toDisplayString(_ctx.t('sessions.empty.clearFilters')), 9 /* TEXT, PROPS */, ["onClick"]))
+                          : _createCommentVNode("v-if", true)
+                      ]))
+                    : (_ctx.sessionsList.length > 0)
                       ? (_openBlock(), _createElementBlock("div", {
                           key: 2,
-                          class: "session-empty session-empty-refined"
-                        }, [
-                          _createElementVNode("p", null, _toDisplayString(_ctx.t(_ctx.hasActiveSessionFilters() ? 'sessions.empty.filtered' : 'sessions.empty.source')), 1 /* TEXT */),
-                          (_ctx.hasActiveSessionFilters())
-                            ? (_openBlock(), _createElementBlock("button", {
-                                key: 0,
-                                class: "btn-tool btn-tool-compact",
-                                type: "button",
-                                onClick: _ctx.clearSessionFilters
-                              }, _toDisplayString(_ctx.t('sessions.empty.clearFilters')), 9 /* TEXT, PROPS */, ["onClick"]))
-                            : _createCommentVNode("v-if", true)
-                        ]))
-                      : (_openBlock(), _createElementBlock("div", {
-                          key: 3,
                           class: "session-layout"
                         }, [
                           (_ctx.sessionListRenderEnabled)
@@ -4195,7 +4242,16 @@ return function render(_ctx, _cache) {
                                           ], 8 /* PROPS */, ["onClick", "data-session-key"]))
                                         : _createCommentVNode("v-if", true),
                                       _createElementVNode("div", { class: "session-item-main" }, [
-                                        _createElementVNode("div", { class: "session-item-title" }, _toDisplayString(session.title || session.sessionId), 1 /* TEXT */),
+                                        _createElementVNode("div", { class: "session-item-heading" }, [
+                                          _createElementVNode("div", { class: "session-item-title" }, _toDisplayString(_ctx.parseSessionTitleInfo(session).title || session.sessionId), 1 /* TEXT */),
+                                          (_ctx.parseSessionTitleInfo(session).location)
+                                            ? (_openBlock(), _createElementBlock("div", {
+                                                key: 0,
+                                                class: "session-item-location",
+                                                title: _ctx.parseSessionTitleInfo(session).location
+                                              }, _toDisplayString(_ctx.parseSessionTitleInfo(session).location), 9 /* TEXT, PROPS */, ["title"]))
+                                            : _createCommentVNode("v-if", true)
+                                        ]),
                                         _createElementVNode("span", { class: "session-count-badge" }, _toDisplayString(session.messageCount == null ? '...' : session.messageCount), 1 /* TEXT */),
                                         (session.match && session.match.hit)
                                           ? (_openBlock(), _createElementBlock("span", {
@@ -4282,15 +4338,9 @@ return function render(_ctx, _cache) {
                                             class: "session-item-hot"
                                           }, _toDisplayString(_ctx.getSessionHotLabel(session)), 1 /* TEXT */))
                                         : _createCommentVNode("v-if", true),
-                                      (session.cwd)
-                                        ? (_openBlock(), _createElementBlock("span", {
-                                            key: 1,
-                                            class: "session-item-cwd session-item-sub"
-                                          }, _toDisplayString(session.cwd), 1 /* TEXT */))
-                                        : _createCommentVNode("v-if", true),
                                       (session.match && session.match.snippets && session.match.snippets.length)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 2,
+                                            key: 1,
                                             class: "session-match-snippets"
                                           }, [
                                             (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(session.match.snippets.slice(0, 2), (snip, si) => {
@@ -4344,48 +4394,10 @@ return function render(_ctx, _cache) {
                                             ]))
                                           : _createCommentVNode("v-if", true)
                                       ]),
-                                      _createElementVNode("div", { class: "session-export-control" }, [
-                                        _createElementVNode("label", {
-                                          class: "session-export-label",
-                                          for: "session-export-range"
-                                        }, _toDisplayString(_ctx.t('sessions.export.range')), 1 /* TEXT */),
-                                        _withDirectives(_createElementVNode("select", {
-                                          id: "session-export-range",
-                                          "onUpdate:modelValue": $event => ((_ctx.sessionExportRange) = $event),
-                                          disabled: _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)],
-                                          "aria-describedby": "session-export-scope"
-                                        }, [
-                                          _createElementVNode("option", { value: "default" }, _toDisplayString(_ctx.t('sessions.export.default')), 1 /* TEXT */),
-                                          _createElementVNode("option", { value: "all" }, _toDisplayString(_ctx.t('sessions.export.all')), 1 /* TEXT */)
-                                        ], 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
-                                          [_vModelSelect, _ctx.sessionExportRange]
-                                        ]),
-                                        _createElementVNode("button", {
-                                          class: "btn-session-export has-label",
-                                          onClick: $event => (_ctx.exportSession(_ctx.activeSession)),
-                                          disabled: !_ctx.activeSession || _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)],
-                                          title: (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export'),
-                                          "aria-label": (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')
-                                        }, [
-                                          (_openBlock(), _createElementBlock("svg", {
-                                            viewBox: "0 0 16 16",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            "stroke-width": "1.8",
-                                            "stroke-linecap": "round",
-                                            "stroke-linejoin": "round"
-                                          }, [
-                                            _createElementVNode("path", { d: "M8 2v8" }),
-                                            _createElementVNode("polyline", { points: "4 7 8 10.5 12 7" }),
-                                            _createElementVNode("path", { d: "M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12" })
-                                          ])),
-                                          _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')), 1 /* TEXT */)
-                                        ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
-                                      ]),
                                       _createElementVNode("div", { class: "session-actions session-preview-actions" }, [
                                         _createElementVNode("div", { class: "session-secondary-actions" }, [
                                           _createElementVNode("button", {
-                                            class: "btn-session-refresh has-label",
+                                            class: "btn-session-refresh has-label session-action-optional-label",
                                             onClick: _ctx.loadActiveSessionDetail,
                                             disabled: _ctx.sessionDetailLoading || !_ctx.activeSession,
                                             title: _ctx.sessionDetailLoading ? _ctx.t('sessions.preview.loading') : _ctx.t('sessions.preview.refresh'),
@@ -4404,7 +4416,7 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("polyline", { points: "2.5 2 2.5 5 5.5 5" }),
                                               _createElementVNode("polyline", { points: "13.5 14 13.5 11 10.5 11" })
                                             ])),
-                                            _createElementVNode("span", { class: "session-action-label" }, _toDisplayString(_ctx.t('sessions.preview.refresh')), 1 /* TEXT */)
+                                            _createElementVNode("span", { class: "session-action-label session-action-optional-text" }, _toDisplayString(_ctx.t('sessions.preview.refresh')), 1 /* TEXT */)
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                           _createElementVNode("div", { class: "session-link-group" }, [
                                             _createElementVNode("button", {
@@ -4449,7 +4461,7 @@ return function render(_ctx, _cache) {
                                             ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
                                           ]),
                                           _createElementVNode("button", {
-                                            class: "btn-session-open has-label",
+                                            class: "btn-session-open has-label session-action-optional-label",
                                             onClick: $event => (_ctx.copySessionPath(_ctx.activeSession)),
                                             disabled: !_ctx.activeSession || !_ctx.getSessionFilePath(_ctx.activeSession),
                                             title: _ctx.t('sessions.preview.copyPath'),
@@ -4465,31 +4477,40 @@ return function render(_ctx, _cache) {
                                             }, [
                                               _createElementVNode("path", { d: "M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z" })
                                             ])),
-                                            _createElementVNode("span", { class: "session-action-label" }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 1 /* TEXT */)
+                                            _createElementVNode("span", { class: "session-action-label session-action-optional-text" }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 1 /* TEXT */)
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
                                         ]),
-                                        _createElementVNode("div", { class: "session-danger-action" }, [
+                                        _createElementVNode("div", { class: "session-primary-actions" }, [
+                                          _createElementVNode("button", {
+                                            class: "btn-session-export has-label",
+                                            onClick: $event => (_ctx.exportSession(_ctx.activeSession)),
+                                            disabled: !_ctx.activeSession || _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)],
+                                            title: (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export'),
+                                            "aria-label": (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 16 16",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "1.8",
+                                              "stroke-linecap": "round",
+                                              "stroke-linejoin": "round"
+                                            }, [
+                                              _createElementVNode("path", { d: "M8 2v8" }),
+                                              _createElementVNode("polyline", { points: "4 7 8 10.5 12 7" }),
+                                              _createElementVNode("path", { d: "M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12" })
+                                            ])),
+                                            _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')), 1 /* TEXT */)
+                                          ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                           (_ctx.isDeleteAvailable(_ctx.activeSession))
                                             ? (_openBlock(), _createElementBlock("button", {
                                                 key: 0,
-                                                class: "btn-session-delete has-label",
+                                                class: "btn-session-delete has-label session-delete-text-button",
                                                 onClick: $event => (_ctx.deleteSession(_ctx.activeSession)),
                                                 disabled: !_ctx.activeSession || _ctx.sessionsLoading || _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)],
                                                 title: (_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash')),
                                                 "aria-label": (_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))
                                               }, [
-                                                (_openBlock(), _createElementBlock("svg", {
-                                                  viewBox: "0 0 16 16",
-                                                  fill: "none",
-                                                  stroke: "currentColor",
-                                                  "stroke-width": "1.8",
-                                                  "stroke-linecap": "round",
-                                                  "stroke-linejoin": "round"
-                                                }, [
-                                                  _createElementVNode("polyline", { points: "3 4 4 4 13 4" }),
-                                                  _createElementVNode("path", { d: "M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4" }),
-                                                  _createElementVNode("path", { d: "M12 4v9.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 13.5V4" })
-                                                ])),
                                                 _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))), 1 /* TEXT */)
                                               ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]))
                                             : _createCommentVNode("v-if", true)
@@ -4497,7 +4518,6 @@ return function render(_ctx, _cache) {
                                       ])
                                     ], 512 /* NEED_PATCH */),
                                     _createElementVNode("div", { class: "session-export-feedback" }, [
-                                      _createElementVNode("small", { id: "session-export-scope" }, _toDisplayString(_ctx.t('sessions.export.scopeHint')), 1 /* TEXT */),
                                       (_ctx.sessionExportNotice && _ctx.sessionExportNotice.key === _ctx.getSessionExportKey(_ctx.activeSession))
                                         ? (_openBlock(), _createElementBlock("p", {
                                             key: 0,
@@ -4865,6 +4885,7 @@ return function render(_ctx, _cache) {
                                 ]))
                           ], 2 /* CLASS */)
                         ]))
+                      : _createCommentVNode("v-if", true)
                 ]))
           ], 512 /* NEED_PATCH */), [
             [_vShow, _ctx.mainTab === 'sessions']
@@ -5965,199 +5986,204 @@ return function render(_ctx, _cache) {
                       ])
                     ])
                   ], 8 /* PROPS */, ["aria-label"]),
-                  _createCommentVNode(" Disabled state "),
-                  (_ctx.getSessionTrashViewState() === 'disabled')
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 0,
-                        class: "trash-empty-state trash-disabled-state"
-                      }, [
-                        (_openBlock(), _createElementBlock("svg", {
-                          class: "trash-empty-svg",
-                          viewBox: "0 0 64 64",
-                          fill: "none",
-                          stroke: "currentColor",
-                          "stroke-width": "1.2"
+                  _createElementVNode("section", {
+                    class: "trash-content-section",
+                    "aria-label": _ctx.t('settings.trash.title')
+                  }, [
+                    _createCommentVNode(" Disabled state "),
+                    (_ctx.getSessionTrashViewState() === 'disabled')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 0,
+                          class: "trash-empty-state trash-disabled-state"
                         }, [
-                          _createElementVNode("path", { d: "M20 22l4 32h16l4-32" }),
-                          _createElementVNode("path", { d: "M14 22h36" }),
-                          _createElementVNode("path", { d: "M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" }),
-                          _createElementVNode("path", {
-                            d: "M10 10l44 44",
-                            "stroke-width": "2",
-                            "stroke-linecap": "round"
-                          })
-                        ])),
-                        _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.disabled')), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.disabledHint')), 1 /* TEXT */)
-                      ]))
-                    : (_ctx.getSessionTrashViewState() === 'empty')
-                      ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
-                          _createCommentVNode(" Empty state "),
-                          _createElementVNode("div", { class: "trash-empty-state" }, [
-                            (_openBlock(), _createElementBlock("svg", {
-                              class: "trash-empty-svg",
-                              viewBox: "0 0 64 64",
-                              fill: "none",
-                              stroke: "currentColor",
-                              "stroke-width": "1.2"
-                            }, [
-                              _createElementVNode("path", { d: "M20 22l4 32h16l4-32" }),
-                              _createElementVNode("path", { d: "M14 22h36" }),
-                              _createElementVNode("path", { d: "M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" }),
-                              _createElementVNode("path", {
-                                d: "M28 30v16M36 30v16",
-                                "stroke-width": "1.6",
-                                "stroke-linecap": "round"
-                              })
-                            ])),
-                            _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.empty')), 1 /* TEXT */),
-                            _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.emptyHint', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
-                          ])
-                        ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
-                      : (_ctx.getSessionTrashViewState() === 'loading')
-                        ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
-                            _createCommentVNode(" Loading state "),
+                          (_openBlock(), _createElementBlock("svg", {
+                            class: "trash-empty-svg",
+                            viewBox: "0 0 64 64",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "1.2"
+                          }, [
+                            _createElementVNode("path", { d: "M20 22l4 32h16l4-32" }),
+                            _createElementVNode("path", { d: "M14 22h36" }),
+                            _createElementVNode("path", { d: "M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" }),
+                            _createElementVNode("path", {
+                              d: "M10 10l44 44",
+                              "stroke-width": "2",
+                              "stroke-linecap": "round"
+                            })
+                          ])),
+                          _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.disabled')), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.disabledHint')), 1 /* TEXT */)
+                        ]))
+                      : (_ctx.getSessionTrashViewState() === 'empty')
+                        ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                            _createCommentVNode(" Empty state "),
                             _createElementVNode("div", { class: "trash-empty-state" }, [
-                              _createElementVNode("div", { class: "trash-spinner" }),
-                              _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.loading')), 1 /* TEXT */)
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "trash-empty-svg",
+                                viewBox: "0 0 64 64",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "1.2"
+                              }, [
+                                _createElementVNode("path", { d: "M20 22l4 32h16l4-32" }),
+                                _createElementVNode("path", { d: "M14 22h36" }),
+                                _createElementVNode("path", { d: "M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" }),
+                                _createElementVNode("path", {
+                                  d: "M28 30v16M36 30v16",
+                                  "stroke-width": "1.6",
+                                  "stroke-linecap": "round"
+                                })
+                              ])),
+                              _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.empty')), 1 /* TEXT */),
+                              _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.emptyHint', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
                             ])
                           ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
-                        : (_ctx.getSessionTrashViewState() === 'retry')
-                          ? (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
-                              _createCommentVNode(" Error state "),
+                        : (_ctx.getSessionTrashViewState() === 'loading')
+                          ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
+                              _createCommentVNode(" Loading state "),
                               _createElementVNode("div", { class: "trash-empty-state" }, [
-                                (_openBlock(), _createElementBlock("svg", {
-                                  class: "trash-empty-svg",
-                                  viewBox: "0 0 64 64",
-                                  fill: "none",
-                                  stroke: "currentColor",
-                                  "stroke-width": "1.2"
-                                }, [
-                                  _createElementVNode("circle", {
-                                    cx: "32",
-                                    cy: "32",
-                                    r: "22"
-                                  }),
-                                  _createElementVNode("path", {
-                                    d: "M32 20v16M32 44v2",
-                                    "stroke-width": "2",
-                                    "stroke-linecap": "round"
-                                  })
-                                ])),
-                                _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.retry')), 1 /* TEXT */),
-                                _createElementVNode("button", {
-                                  class: "btn-tool",
-                                  onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true }))
-                                }, _toDisplayString(_ctx.t('common.retry')), 9 /* TEXT, PROPS */, ["onClick"])
+                                _createElementVNode("div", { class: "trash-spinner" }),
+                                _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.loading')), 1 /* TEXT */)
                               ])
                             ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
-                          : (_openBlock(), _createElementBlock(_Fragment, { key: 4 }, [
-                              _createCommentVNode(" List state "),
-                              _createElementVNode("div", { class: "trash-toolbar" }, [
-                                _createElementVNode("div", { class: "trash-toolbar-left" }, [
-                                  _createElementVNode("span", { class: "trash-toolbar-count" }, _toDisplayString(_ctx.t('settings.trash.count', { count: _ctx.sessionTrashCount })), 1 /* TEXT */),
-                                  _createElementVNode("span", { class: "trash-toolbar-retention" }, _toDisplayString(_ctx.t('settings.trash.retentionShort', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
-                                ]),
-                                _createElementVNode("div", { class: "trash-toolbar-right" }, [
-                                  _createElementVNode("button", {
-                                    class: "btn-mini",
-                                    onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true })),
-                                    disabled: _ctx.sessionTrashLoading,
-                                    "aria-label": _ctx.t('sessions.refresh'),
-                                    title: _ctx.t('sessions.refresh')
+                          : (_ctx.getSessionTrashViewState() === 'retry')
+                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
+                                _createCommentVNode(" Error state "),
+                                _createElementVNode("div", { class: "trash-empty-state" }, [
+                                  (_openBlock(), _createElementBlock("svg", {
+                                    class: "trash-empty-svg",
+                                    viewBox: "0 0 64 64",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "1.2"
                                   }, [
-                                    (_openBlock(), _createElementBlock("svg", {
-                                      viewBox: "0 0 24 24",
-                                      fill: "none",
-                                      stroke: "currentColor",
+                                    _createElementVNode("circle", {
+                                      cx: "32",
+                                      cy: "32",
+                                      r: "22"
+                                    }),
+                                    _createElementVNode("path", {
+                                      d: "M32 20v16M32 44v2",
                                       "stroke-width": "2",
-                                      class: "btn-icon-sm"
-                                    }, [
-                                      _createElementVNode("path", { d: "M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16" })
-                                    ]))
-                                  ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                      "stroke-linecap": "round"
+                                    })
+                                  ])),
+                                  _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.retry')), 1 /* TEXT */),
                                   _createElementVNode("button", {
-                                    class: "btn-mini delete",
-                                    onClick: _ctx.clearSessionTrash,
-                                    disabled: _ctx.sessionTrashClearing || _ctx.sessionTrashLoading || !(Number(_ctx.sessionTrashCount) > 0)
-                                  }, _toDisplayString(_ctx.sessionTrashClearing ? _ctx.t('settings.trash.clearing') : _ctx.t('settings.trash.clearShort')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                    class: "btn-tool",
+                                    onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true }))
+                                  }, _toDisplayString(_ctx.t('common.retry')), 9 /* TEXT, PROPS */, ["onClick"])
                                 ])
-                              ]),
-                              _createElementVNode("div", { class: "trash-list" }, [
-                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionTrashItems, (item) => {
-                                  return (_openBlock(), _createElementBlock("div", {
-                                    key: item.trashId,
-                                    class: "trash-item"
-                                  }, [
-                                    _createElementVNode("div", { class: "trash-item-body" }, [
-                                      _createElementVNode("div", { class: "trash-item-main" }, [
-                                        _createElementVNode("div", { class: "trash-item-title" }, _toDisplayString(item.title || item.sessionId), 1 /* TEXT */),
-                                        _createElementVNode("div", { class: "trash-item-meta" }, [
-                                          _createElementVNode("span", {
-                                            class: "session-source",
-                                            "data-source": item.source
-                                          }, _toDisplayString(item.sourceLabel), 9 /* TEXT, PROPS */, ["data-source"]),
-                                          _createElementVNode("span", { class: "trash-item-time" }, _toDisplayString(item.deletedAt || item.updatedAt || _ctx.t('sessions.unknownTime')), 1 /* TEXT */),
-                                          (item.cwd)
-                                            ? (_openBlock(), _createElementBlock("span", {
-                                                key: 0,
-                                                class: "trash-item-cwd"
-                                              }, _toDisplayString(item.cwd), 1 /* TEXT */))
-                                            : _createCommentVNode("v-if", true)
-                                        ])
-                                      ]),
-                                      _createElementVNode("div", { class: "trash-item-actions" }, [
-                                        _createElementVNode("button", {
-                                          class: "trash-action-btn restore",
-                                          onClick: $event => (_ctx.restoreSessionTrash(item)),
-                                          disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
-                                          "aria-label": _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore'),
-                                          title: _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore')
-                                        }, [
-                                          (_openBlock(), _createElementBlock("svg", {
-                                            viewBox: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            "stroke-width": "2"
-                                          }, [
-                                            _createElementVNode("path", { d: "M3 12a9 9 0 119 9" }),
-                                            _createElementVNode("path", { d: "M3 4v6h6" })
-                                          ]))
-                                        ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
-                                        _createElementVNode("button", {
-                                          class: "trash-action-btn delete",
-                                          onClick: $event => (_ctx.purgeSessionTrash(item)),
-                                          disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
-                                          "aria-label": _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge'),
-                                          title: _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge')
-                                        }, [
-                                          (_openBlock(), _createElementBlock("svg", {
-                                            viewBox: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            "stroke-width": "2"
-                                          }, [
-                                            _createElementVNode("path", { d: "M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" })
-                                          ]))
-                                        ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
-                                      ])
-                                    ])
-                                  ]))
-                                }), 128 /* KEYED_FRAGMENT */)),
-                                (_ctx.sessionTrashHasMoreItems)
-                                  ? (_openBlock(), _createElementBlock("div", {
-                                      key: 0,
-                                      class: "trash-list-footer"
+                              ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
+                            : (_openBlock(), _createElementBlock(_Fragment, { key: 4 }, [
+                                _createCommentVNode(" List state "),
+                                _createElementVNode("div", { class: "trash-toolbar" }, [
+                                  _createElementVNode("div", { class: "trash-toolbar-left" }, [
+                                    _createElementVNode("span", { class: "trash-toolbar-count" }, _toDisplayString(_ctx.t('settings.trash.count', { count: _ctx.sessionTrashCount })), 1 /* TEXT */),
+                                    _createElementVNode("span", { class: "trash-toolbar-retention" }, _toDisplayString(_ctx.t('settings.trash.retentionShort', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
+                                  ]),
+                                  _createElementVNode("div", { class: "trash-toolbar-right" }, [
+                                    _createElementVNode("button", {
+                                      class: "btn-mini",
+                                      onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true })),
+                                      disabled: _ctx.sessionTrashLoading,
+                                      "aria-label": _ctx.t('sessions.refresh'),
+                                      title: _ctx.t('sessions.refresh')
                                     }, [
-                                      _createElementVNode("button", {
-                                        class: "btn-tool btn-tool-compact",
-                                        onClick: _ctx.loadMoreSessionTrashItems,
-                                        disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing
-                                      }, _toDisplayString(_ctx.t('settings.trash.loadMoreItems', { count: _ctx.sessionTrashHiddenCount })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                      (_openBlock(), _createElementBlock("svg", {
+                                        viewBox: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        "stroke-width": "2",
+                                        class: "btn-icon-sm"
+                                      }, [
+                                        _createElementVNode("path", { d: "M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16" })
+                                      ]))
+                                    ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                    _createElementVNode("button", {
+                                      class: "btn-mini delete",
+                                      onClick: _ctx.clearSessionTrash,
+                                      disabled: _ctx.sessionTrashClearing || _ctx.sessionTrashLoading || !(Number(_ctx.sessionTrashCount) > 0)
+                                    }, _toDisplayString(_ctx.sessionTrashClearing ? _ctx.t('settings.trash.clearing') : _ctx.t('settings.trash.clearShort')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "trash-list" }, [
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionTrashItems, (item) => {
+                                    return (_openBlock(), _createElementBlock("div", {
+                                      key: item.trashId,
+                                      class: "trash-item"
+                                    }, [
+                                      _createElementVNode("div", { class: "trash-item-body" }, [
+                                        _createElementVNode("div", { class: "trash-item-main" }, [
+                                          _createElementVNode("div", { class: "trash-item-title" }, _toDisplayString(item.title || item.sessionId), 1 /* TEXT */),
+                                          _createElementVNode("div", { class: "trash-item-meta" }, [
+                                            _createElementVNode("span", {
+                                              class: "session-source",
+                                              "data-source": item.source
+                                            }, _toDisplayString(item.sourceLabel), 9 /* TEXT, PROPS */, ["data-source"]),
+                                            _createElementVNode("span", { class: "trash-item-time" }, _toDisplayString(item.deletedAt || item.updatedAt || _ctx.t('sessions.unknownTime')), 1 /* TEXT */),
+                                            (item.cwd)
+                                              ? (_openBlock(), _createElementBlock("span", {
+                                                  key: 0,
+                                                  class: "trash-item-cwd"
+                                                }, _toDisplayString(item.cwd), 1 /* TEXT */))
+                                              : _createCommentVNode("v-if", true)
+                                          ])
+                                        ]),
+                                        _createElementVNode("div", { class: "trash-item-actions" }, [
+                                          _createElementVNode("button", {
+                                            class: "trash-action-btn restore",
+                                            onClick: $event => (_ctx.restoreSessionTrash(item)),
+                                            disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
+                                            "aria-label": _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore'),
+                                            title: _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore')
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 24 24",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "2"
+                                            }, [
+                                              _createElementVNode("path", { d: "M3 12a9 9 0 119 9" }),
+                                              _createElementVNode("path", { d: "M3 4v6h6" })
+                                            ]))
+                                          ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                          _createElementVNode("button", {
+                                            class: "trash-action-btn delete",
+                                            onClick: $event => (_ctx.purgeSessionTrash(item)),
+                                            disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
+                                            "aria-label": _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge'),
+                                            title: _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge')
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 24 24",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "2"
+                                            }, [
+                                              _createElementVNode("path", { d: "M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" })
+                                            ]))
+                                          ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
+                                        ])
+                                      ])
                                     ]))
-                                  : _createCommentVNode("v-if", true)
-                              ])
-                            ], 64 /* STABLE_FRAGMENT */))
+                                  }), 128 /* KEYED_FRAGMENT */)),
+                                  (_ctx.sessionTrashHasMoreItems)
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 0,
+                                        class: "trash-list-footer"
+                                      }, [
+                                        _createElementVNode("button", {
+                                          class: "btn-tool btn-tool-compact",
+                                          onClick: _ctx.loadMoreSessionTrashItems,
+                                          disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing
+                                        }, _toDisplayString(_ctx.t('settings.trash.loadMoreItems', { count: _ctx.sessionTrashHiddenCount })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                      ]))
+                                    : _createCommentVNode("v-if", true)
+                                ])
+                              ], 64 /* STABLE_FRAGMENT */))
+                  ], 8 /* PROPS */, ["aria-label"])
                 ]))
               : _createCommentVNode("v-if", true)
           ], 512 /* NEED_PATCH */), [
@@ -6243,60 +6269,99 @@ return function render(_ctx, _cache) {
                   _createElementVNode("span", { class: "skills-flow-title" }, _toDisplayString(_ctx.t('market.installed.title')), 1 /* TEXT */),
                   _createElementVNode("span", { class: "skills-flow-count" }, _toDisplayString(_ctx.skillsList.length), 1 /* TEXT */)
                 ]),
-                _createElementVNode("button", {
-                  type: "button",
-                  class: "btn-mini",
-                  onClick: $event => (_ctx.refreshSkillsList({ silent: false })),
-                  disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy
-                }, [
-                  (!_ctx.skillsLoading)
-                    ? (_openBlock(), _createElementBlock("svg", {
-                        key: 0,
-                        viewBox: "0 0 20 20",
-                        fill: "none",
-                        stroke: "currentColor",
-                        "stroke-width": "1.8",
-                        width: "14",
-                        height: "14"
-                      }, [
-                        _createElementVNode("path", { d: "M17 1l4 4-4 4" }),
-                        _createElementVNode("path", { d: "M3 11V9a4 4 0 014-4h14" }),
-                        _createElementVNode("path", { d: "M3 19l-4-4 4-4" }),
-                        _createElementVNode("path", { d: "M17 9v2a4 4 0 01-4 4H3" })
-                      ]))
-                    : (_openBlock(), _createElementBlock("svg", {
-                        key: 1,
-                        viewBox: "0 0 20 20",
-                        fill: "none",
-                        stroke: "currentColor",
-                        "stroke-width": "1.8",
-                        width: "14",
-                        height: "14",
-                        class: "spin"
-                      }, [
-                        _createElementVNode("path", { d: "M10 2v4m0 8v4M2 10h4m8 0h4m-3.5-6.5l2.5 2.5M4 4l2.5 2.5M16 16l-2.5-2.5M4 16l2.5-2.5" })
-                      ]))
-                ], 8 /* PROPS */, ["onClick", "disabled"])
+                _createElementVNode("div", { class: "skills-flow-actions" }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "skills-action-btn",
+                    onClick: _ctx.backupCurrentSkills,
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy || _ctx.skillsList.length === 0
+                  }, _toDisplayString(_ctx.skillsBackingUp ? _ctx.t('market.backup.running') : _ctx.t('market.backup.action')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "skills-action-btn",
+                    onClick: _ctx.exportMarketSelectedSkills,
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy || _ctx.skillsMarketSelectedCount === 0
+                  }, _toDisplayString(_ctx.skillsExporting ? _ctx.t('market.export.running') : _ctx.t('market.export.action')) + " (" + _toDisplayString(_ctx.skillsMarketSelectedCount) + ") ", 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "btn-mini",
+                    onClick: $event => (_ctx.refreshSkillsList({ silent: false })),
+                    disabled: _ctx.loading || !!_ctx.initError || _ctx.skillsMarketBusy
+                  }, [
+                    (!_ctx.skillsLoading)
+                      ? (_openBlock(), _createElementBlock("svg", {
+                          key: 0,
+                          viewBox: "0 0 20 20",
+                          fill: "none",
+                          stroke: "currentColor",
+                          "stroke-width": "1.8",
+                          width: "14",
+                          height: "14"
+                        }, [
+                          _createElementVNode("path", { d: "M17 1l4 4-4 4" }),
+                          _createElementVNode("path", { d: "M3 11V9a4 4 0 014-4h14" }),
+                          _createElementVNode("path", { d: "M3 19l-4-4 4-4" }),
+                          _createElementVNode("path", { d: "M17 9v2a4 4 0 01-4 4H3" })
+                        ]))
+                      : (_openBlock(), _createElementBlock("svg", {
+                          key: 1,
+                          viewBox: "0 0 20 20",
+                          fill: "none",
+                          stroke: "currentColor",
+                          "stroke-width": "1.8",
+                          width: "14",
+                          height: "14",
+                          class: "spin"
+                        }, [
+                          _createElementVNode("path", { d: "M10 2v4m0 8v4M2 10h4m8 0h4m-3.5-6.5l2.5 2.5M4 4l2.5 2.5M16 16l-2.5-2.5M4 16l2.5-2.5" })
+                        ]))
+                  ], 8 /* PROPS */, ["onClick", "disabled"])
+                ])
               ]),
-              (_ctx.skillsLoading && !_ctx.skillsMarketLocalLoadedOnce)
+              (_ctx.skillsList.length > 0)
                 ? (_openBlock(), _createElementBlock("div", {
                     key: 0,
+                    class: "skills-market-selection-bar"
+                  }, [
+                    _createElementVNode("label", { class: "skills-market-select-all" }, [
+                      _createElementVNode("input", {
+                        type: "checkbox",
+                        checked: _ctx.skillsMarketAllSelected,
+                        onChange: _ctx.toggleAllSkillsMarketSelection,
+                        disabled: _ctx.skillsMarketBusy
+                      }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange", "disabled"]),
+                      _createElementVNode("span", null, _toDisplayString(_ctx.t('market.selection.all')), 1 /* TEXT */)
+                    ]),
+                    _createElementVNode("span", { class: "skills-market-selection-count" }, _toDisplayString(_ctx.t('market.selection.count', { count: _ctx.skillsMarketSelectedCount })), 1 /* TEXT */)
+                  ]))
+                : _createCommentVNode("v-if", true),
+              (_ctx.skillsLoading && !_ctx.skillsMarketLocalLoadedOnce)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 1,
                     class: "skills-flow-loading"
                   }, _toDisplayString(_ctx.t('market.local.loading')), 1 /* TEXT */))
                 : (_ctx.skillsList.length === 0)
                   ? (_openBlock(), _createElementBlock("div", {
-                      key: 1,
+                      key: 2,
                       class: "skills-flow-empty"
                     }, _toDisplayString(_ctx.t('market.local.empty')), 1 /* TEXT */))
                   : (_openBlock(), _createElementBlock("div", {
-                      key: 2,
+                      key: 3,
                       class: "skills-flow-list"
                     }, [
                       (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.skillsList, (skill) => {
                         return (_openBlock(), _createElementBlock("div", {
                           key: 'skill-' + skill.name,
-                          class: _normalizeClass(["skills-flow-item", { 'has-issue': !skill.hasSkillFile }])
+                          class: _normalizeClass(["skills-flow-item", { 'has-issue': !skill.hasSkillFile, selected: _ctx.skillsMarketSelectedNames.includes(skill.name) }])
                         }, [
+                          _createElementVNode("label", { class: "skills-market-item-check" }, [
+                            _createElementVNode("input", {
+                              type: "checkbox",
+                              checked: _ctx.skillsMarketSelectedNames.includes(skill.name),
+                              onChange: $event => (_ctx.toggleSkillsMarketSelection(skill.name)),
+                              disabled: _ctx.skillsMarketBusy
+                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange", "disabled"])
+                          ]),
                           _createElementVNode("div", { class: "skills-flow-main" }, [
                             _createElementVNode("span", { class: "skills-flow-name" }, _toDisplayString(skill.displayName || skill.name), 1 /* TEXT */),
                             _createElementVNode("span", { class: "skills-flow-path" }, _toDisplayString(skill.path), 1 /* TEXT */)
@@ -8137,7 +8202,7 @@ return function render(_ctx, _cache) {
           (_ctx.loading && _ctx.mainTab !== 'usage')
             ? (_openBlock(), _createElementBlock("div", {
                 key: 3,
-                class: "state-message"
+                class: "state-message app-loading-state"
               }, _toDisplayString(_ctx.t('app.loadingConfig')), 1 /* TEXT */))
             : (_ctx.initError)
               ? (_openBlock(), _createElementBlock("div", {
@@ -8154,7 +8219,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加提供商模态框 "),
     (_ctx.showAddModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 3,
+          key: 4,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAddModal, ["self"])
         }, [
@@ -8311,7 +8376,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑提供商模态框 "),
     (_ctx.showEditModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 4,
+          key: 5,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditModal, ["self"])
         }, [
@@ -8423,7 +8488,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加模型模态框 "),
     (_ctx.showModelModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 5,
+          key: 6,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeModelModal, ["self"])
         }, [
@@ -8463,7 +8528,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 模型列表模态框 "),
     (_ctx.showModelListModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 6,
+          key: 7,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showModelListModal = false), ["self"])
         }, [
@@ -8504,7 +8569,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 项目功能公告模态框 "),
     (_ctx.showProviderCacheAnnouncementModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 7,
+          key: 8,
           class: "modal-overlay project-announcement-overlay",
           onClick: _withModifiers(_ctx.closeProviderCacheAnnouncementModal, ["self"])
         }, [
@@ -8673,7 +8738,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Provider 缓存记录模态框 "),
     (_ctx.showProviderCacheModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 8,
+          key: 9,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeProviderCacheModal, ["self"])
         }, [
@@ -8821,7 +8886,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加Claude配置模态框 "),
     (_ctx.showClaudeConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 9,
+          key: 10,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeClaudeConfigModal, ["self"])
         }, [
@@ -8973,7 +9038,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑Claude配置模态框 "),
     (_ctx.showEditConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 10,
+          key: 11,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditConfigModal, ["self"])
         }, [
@@ -9126,7 +9191,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Codex bridge pool modal "),
     (_ctx.showCodexBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 11,
+          key: 12,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showCodexBridgePoolModal = false), ["self"])
         }, [
@@ -9219,7 +9284,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showClaudeBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 12,
+          key: 13,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showClaudeBridgePoolModal = false), ["self"])
         }, [
@@ -9313,7 +9378,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Webhook settings modal "),
     (_ctx.showWebhookModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 13,
+          key: 14,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeWebhookModal, ["self"])
         }, [
@@ -9386,7 +9451,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showOpenclawConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 14,
+          key: 15,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!(_ctx.openclawSaving || _ctx.openclawApplying) && _ctx.closeOpenclawConfigModal()), ["self"])
         }, [
@@ -10098,7 +10163,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfigTemplateModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 15,
+          key: 16,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!_ctx.configTemplateApplying && _ctx.closeConfigTemplateModal()), ["self"])
         }, [
@@ -10243,7 +10308,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showAgentsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 16,
+          key: 17,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAgentsModal, ["self"])
         }, [
@@ -10414,7 +10479,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showSkillsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 17,
+          key: 18,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeSkillsModal, ["self"])
         }, [
@@ -10719,7 +10784,7 @@ return function render(_ctx, _cache) {
     }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
     (_ctx.showHealthCheckModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 18,
+          key: 19,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
@@ -10892,7 +10957,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfirmDialog)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 19,
+          key: 20,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeConfirmDialog, ["self"])
         }, [
@@ -10930,7 +10995,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Toast "),
     (_ctx.message)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 20,
+          key: 21,
           class: _normalizeClass(['toast', _ctx.messageType]),
           role: "status",
           "aria-live": "polite",

@@ -1,4 +1,7 @@
-<div id="app" class="container" v-cloak>
+<div id="app" class="container" :class="{ 'navigation-pending': !navigationReady }" v-cloak>
+        <div v-if="!navigationReady" class="app-navigation-loading-state" role="status" aria-live="polite">
+            {{ t('app.loadingConfig') }}
+        </div>
         <div v-if="!sessionStandalone" class="mobile-brand-bar">
             <div class="mobile-brand-title">Codex Mate<span v-if="appVersion" class="brand-version"> v{{ appVersion }}</span></div>
             <button
@@ -412,11 +415,34 @@
 
                 <div class="side-rail-lang">
                     <div class="side-rail-lang-actions">
-                        <button
-                            type="button"
-                            class="language-settings-link"
-                            :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
-                            @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
+                        <div class="side-language-menu">
+                            <button
+                                type="button"
+                                class="language-settings-link"
+                                :aria-label="t('settings.language.sideLabel', { language: currentLanguageLabel() })"
+                                :aria-expanded="languageMenuOpen ? 'true' : 'false'"
+                                aria-haspopup="menu"
+                                @click="toggleLanguageMenu"
+                                @keydown.esc.prevent="closeLanguageMenu">
+                                {{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
+                            </button>
+                            <div v-if="languageMenuOpen" class="side-language-dropdown" role="menu" @focusout="handleLanguageMenuFocusOut">
+                                <button
+                                    v-for="option in languageOptions()"
+                                    :key="option.code"
+                                    type="button"
+                                    class="side-language-option"
+                                    :class="{ active: option.code === lang }"
+                                    role="menuitemradio"
+                                    :aria-checked="option.code === lang ? 'true' : 'false'"
+                                    @click="selectLanguage(option.code)">
+                                    <span>{{ option.nativeName }}</span>
+                                    <small>{{ option.englishName }}</small>
+                                    <svg v-if="option.code === lang" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>
+                                </button>
+                            </div>
+                        </div>
                         <button
                             type="button"
                             class="side-announcement-button"
@@ -581,12 +607,6 @@
                         <div class="status-chip">
                             <span class="label">{{ t('status.registry') }}</span>
                             <span class="value">{{ installRegistryPreview || 'npmmirror' }}</span>
-                        </div>
-                    </div>
-                    <div class="status-strip status-strip-placeholder" v-else-if="!sessionStandalone" aria-hidden="true">
-                        <div class="status-chip">
-                            <span class="label">&nbsp;</span>
-                            <span class="value">&nbsp;</span>
                         </div>
                     </div>
                     <div

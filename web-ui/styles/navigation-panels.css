@@ -38,20 +38,14 @@
     margin: 0 0 12px;
 }
 
-.status-strip-placeholder {
-    visibility: hidden;
-    pointer-events: none;
-    user-select: none;
-}
 
 /* Give the status strip a bit more breathing room under the sticky header. */
 .main-panel-topbar .status-strip {
-    margin-top: 10px;
-    margin-bottom: 16px;
+    margin-top: 8px;
+    margin-bottom: 8px;
     min-height: 36px;
     align-items: center;
 }
-
 .lang-toggle {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -189,8 +183,8 @@
     position: sticky;
     top: 0;
     z-index: 12;
-    margin: 0 -16px 18px;
-    padding: 0 16px 14px;
+    margin: 0 -16px 12px;
+    padding: 0 16px 8px;
     background: linear-gradient(180deg, var(--color-bg-topbar-strong) 0%, var(--color-bg-topbar-soft) 78%, var(--color-bg-topbar-clear) 100%);
     backdrop-filter: blur(18px) saturate(130%);
 }

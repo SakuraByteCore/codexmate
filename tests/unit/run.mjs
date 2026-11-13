@@ -30,6 +30,7 @@ await import(pathToFileURL(path.join(__dirname, 'kilocode-config-cli.test.mjs'))
 await import(pathToFileURL(path.join(__dirname, 'kilocode-config-ui.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'compact-layout-ui.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-ui-source-bundle.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'startup-navigation-flicker.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'startup-claude-star-prompt.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'toast-message-translation.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'install-methods.test.mjs')));
@@ -48,6 +49,12 @@ await import(pathToFileURL(path.join(__dirname, 'session-resume-command.test.mjs
 await import(pathToFileURL(path.join(__dirname, 'session-header-actions-layout.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-browser-timeline-regression.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-workspace-summary.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'session-list-title-export-ui.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'session-actions-layout.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'sidebar-language-dropdown.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'sidebar-tab-top-spacing.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'skills-backup-export.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'trash-panel-layout.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-detail-preview-fast.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage-backend.test.mjs')));

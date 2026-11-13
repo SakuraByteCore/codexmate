@@ -20,6 +20,7 @@ export function createSkillsMethods({ api }) {
 
         resetSkillsTargetState() {
             this.skillsSelectedNames = [];
+            this.skillsMarketSelectedNames = [];
             this.skillsKeyword = '';
             this.skillsStatusFilter = 'all';
             this.skillsRootPath = '';
@@ -38,6 +39,7 @@ export function createSkillsMethods({ api }) {
                 || this.skillsImporting
                 || this.skillsZipImporting
                 || this.skillsExporting
+                || this.skillsBackingUp
                 || this.skillsMarketLoading
             ) {
                 return false;
@@ -73,6 +75,7 @@ export function createSkillsMethods({ api }) {
                 || this.skillsImporting
                 || this.skillsZipImporting
                 || this.skillsExporting
+                || this.skillsBackingUp
                 || this.skillsMarketLoading
             ) {
                 return false;
@@ -93,6 +96,7 @@ export function createSkillsMethods({ api }) {
                 this.skillsKeyword = '';
                 this.skillsStatusFilter = 'all';
                 this.skillsImportSelectedKeys = [];
+                this.skillsMarketSelectedNames = [];
             }
             this.showSkillsModal = true;
             await this.refreshSkillsList({ silent: false });
@@ -106,6 +110,7 @@ export function createSkillsMethods({ api }) {
                 || this.skillsImporting
                 || this.skillsZipImporting
                 || this.skillsExporting
+                || this.skillsBackingUp
             );
             if (busy) return;
             this.showSkillsModal = false;
@@ -213,7 +218,7 @@ export function createSkillsMethods({ api }) {
         },
 
         async scanImportableSkills(options = {}) {
-            if (this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting) return false;
+            if (this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting || this.skillsBackingUp) return false;
             const silent = !!(options && options.silent);
             this.skillsScanningImports = true;
             try {
@@ -251,7 +256,7 @@ export function createSkillsMethods({ api }) {
         },
 
         async importSelectedSkills() {
-            if (this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting) return;
+            if (this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting || this.skillsBackingUp) return;
             const selectedSet = new Set(Array.isArray(this.skillsImportSelectedKeys) ? this.skillsImportSelectedKeys : []);
             const selectedItems = (Array.isArray(this.skillsImportList) ? this.skillsImportList : [])
                 .filter((item) => selectedSet.has(this.buildSkillImportKey(item)))
@@ -343,7 +348,7 @@ export function createSkillsMethods({ api }) {
         },
 
         async importSkillsFromZipFile(file) {
-            if (this.skillsDeleting || this.skillsScanningImports || this.skillsZipImporting || this.skillsImporting || this.skillsExporting) return;
+            if (this.skillsDeleting || this.skillsScanningImports || this.skillsZipImporting || this.skillsImporting || this.skillsExporting || this.skillsBackingUp) return;
             const maxSize = 20 * 1024 * 1024;
             if (file.size > maxSize) {
                 this.showMessage('ZIP 文件过大，限制 20MB', 'error');
@@ -378,9 +383,16 @@ export function createSkillsMethods({ api }) {
         },
 
         async exportSelectedSkills() {
-            if (this.skillsDeleting || this.skillsExporting || this.skillsZipImporting || this.skillsImporting) return;
-            const selected = Array.isArray(this.skillsSelectedNames)
-                ? Array.from(new Set(this.skillsSelectedNames.map((item) => String(item || '').trim()).filter(Boolean)))
+            if (this.skillsDeleting || this.skillsExporting || this.skillsBackingUp || this.skillsZipImporting || this.skillsImporting) return;
+            return this.exportSkillSelection(this.skillsSelectedNames);
+        },
+        async exportMarketSelectedSkills() {
+            if (this.skillsDeleting || this.skillsExporting || this.skillsBackingUp || this.skillsZipImporting || this.skillsImporting) return;
+            return this.exportSkillSelection(this.skillsMarketSelectedNames);
+        },
+        async exportSkillSelection(sourceNames) {
+            const selected = Array.isArray(sourceNames)
+                ? Array.from(new Set(sourceNames.map((item) => String(item || '').trim()).filter(Boolean)))
                 : [];
             if (!selected.length) {
                 this.showMessage('请先选择要导出的 skill', 'error');
@@ -423,6 +435,33 @@ export function createSkillsMethods({ api }) {
             }
         },
 
+        async backupCurrentSkills() {
+            if (this.skillsDeleting || this.skillsExporting || this.skillsBackingUp || this.skillsZipImporting || this.skillsImporting) return;
+            this.skillsBackingUp = true;
+            try {
+                const res = await api('backup-skills', { targetApp: this.skillsTargetApp });
+                if (res && res.error) {
+                    this.showMessage(res.error, 'error');
+                    return;
+                }
+                if (!res || !res.fileName) {
+                    this.showMessage('备份失败：未生成压缩包', 'error');
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = res.downloadPath || `/download/${encodeURIComponent(res.fileName)}`;
+                link.download = res.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                const count = Array.isArray(res.exported) ? res.exported.length : 0;
+                this.showMessage(`已备份 ${this.skillsTargetLabel} 的 ${count} 个 skill`, 'success');
+            } catch (e) {
+                this.showMessage('备份 skill 失败', 'error');
+            } finally {
+                this.skillsBackingUp = false;
+            }
+        },
         async deleteSelectedSkills() {
             if (this.skillsDeleting || this.skillsZipImporting || this.skillsExporting || this.skillsImporting) return;
             if (this.skillsScanningImports) {
@@ -479,11 +518,22 @@ export function createSkillsMethods({ api }) {
             }
         },
 
-        openSkillsMenu() {
-            // Open skills manager modal as menu
-            this.openSkillsManager();
+        toggleSkillsMarketSelection(name) {
+            const value = String(name || '').trim();
+            if (!value) return;
+            const selected = new Set(Array.isArray(this.skillsMarketSelectedNames) ? this.skillsMarketSelectedNames : []);
+            if (selected.has(value)) selected.delete(value);
+            else selected.add(value);
+            this.skillsMarketSelectedNames = Array.from(selected);
+        },
+        toggleAllSkillsMarketSelection() {
+            const names = (Array.isArray(this.skillsList) ? this.skillsList : []).map((item) => item && item.name).filter(Boolean);
+            this.skillsMarketSelectedNames = this.skillsMarketAllSelected ? [] : names;
         },
 
+        openSkillsMenu() {
+            this.openSkillsManager();
+        },
         async importSingleSkill(skill) {
             if (this.skillsImporting || this.skillsZipImporting) return;
             const key = this.buildSkillImportKey(skill);

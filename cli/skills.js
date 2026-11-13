@@ -938,16 +938,26 @@ async function exportSkills(params = {}) {
     if (!target) {
         return { error: '目标宿主不支持' };
     }
+    const includeAll = params.all === true;
     const rawNames = Array.isArray(params.names) ? params.names : [];
-    const uniqueNames = Array.from(new Set(rawNames
-        .map((item) => (typeof item === 'string' ? item.trim() : ''))
-        .filter(Boolean)));
+    const uniqueNames = includeAll
+        ? listSkills({ targetApp: target.app }).items.map((item) => item && item.name).filter(Boolean)
+        : Array.from(new Set(rawNames
+            .map((item) => (typeof item === 'string' ? item.trim() : ''))
+            .filter(Boolean)));
     if (uniqueNames.length === 0) {
-        return { error: '请先选择要导出的 skill' };
+        return { error: includeAll ? '当前目标没有可备份的 skill' : '请先选择要导出的 skill' };
     }
-
     const exported = [];
     const failed = [];
+    const manifest = {
+        format: 'codexmate-skills-backup',
+        version: 1,
+        createdAt: new Date().toISOString(),
+        targetApp: target.app,
+        targetLabel: target.label,
+        skills: []
+    };
     const stagingTempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-skills-export-'));
     const stagingRoot = path.join(stagingTempDir, 'skills');
     ensureDir(stagingRoot);
@@ -991,7 +1001,12 @@ async function exportSkills(params = {}) {
                 });
                 exported.push({
                     name: normalizedName.name,
-                    path: sourcePath
+                    path: sourcePath,
+                    hasSkillFile: fs.existsSync(path.join(targetPath, 'SKILL.md'))
+                });
+                manifest.skills.push({
+                    name: normalizedName.name,
+                    hasSkillFile: fs.existsSync(path.join(targetPath, 'SKILL.md'))
                 });
             } catch (e) {
                 failed.push({
@@ -1013,12 +1028,17 @@ async function exportSkills(params = {}) {
         }
 
         const randomToken = crypto.randomBytes(12).toString('hex');
-        const zipFileName = `${target.app}-skills-${randomToken}.zip`;
+        const zipFileName = includeAll
+            ? `${target.app}-skills-backup-${randomToken}.zip`
+            : `${target.app}-skills-${randomToken}.zip`;
         const zipFilePath = path.join(os.tmpdir(), zipFileName);
         if (fs.existsSync(zipFilePath)) {
             try {
                 fs.unlinkSync(zipFilePath);
             } catch (_) {}
+        }
+        if (includeAll) {
+            fs.writeFileSync(path.join(stagingRoot, 'codexmate-skills-backup.json'), JSON.stringify(manifest, null, 2), 'utf8');
         }
         await zipLib.archiveFolder(stagingRoot, zipFilePath);
         const artifact = registerDownloadArtifact(zipFilePath, {
@@ -1034,7 +1054,8 @@ async function exportSkills(params = {}) {
             failed,
             targetApp: target.app,
             targetLabel: target.label,
-            root: target.dir
+            root: target.dir,
+            backup: includeAll ? manifest : null
         };
     } catch (e) {
         return {
@@ -1056,6 +1077,9 @@ async function exportCodexSkills(params = {}) {
     return exportSkills({ ...(params || {}), targetApp: 'codex' });
 }
 
+async function backupSkills(params = {}) {
+    return exportSkills({ ...(params || {}), all: true });
+}
 function removeDirectoryRecursive(targetPath) {
     if (typeof fs.rmSync === 'function') {
         fs.rmSync(targetPath, { recursive: true, force: false });
@@ -1152,6 +1176,7 @@ module.exports = {
     importCodexSkillsFromZip,
     exportSkills,
     exportCodexSkills,
+    backupSkills,
     deleteSkills,
     deleteCodexSkills
 };

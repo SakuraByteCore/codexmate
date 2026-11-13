@@ -184,7 +184,7 @@ export function createDashboardComputed() {
             if (this.codexModelsLoading || this.claudeModelsLoading) tasks.push(this.t('dashboard.busy.models'));
             if (this.codexApplying || this.configTemplateApplying || this.openclawApplying) tasks.push(this.t('dashboard.busy.configApply'));
             if (this.agentsSaving) tasks.push(this.t('dashboard.busy.agents'));
-            if (this.skillsLoading || this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting) tasks.push(this.t('dashboard.busy.skills'));
+            if (this.skillsLoading || this.skillsDeleting || this.skillsScanningImports || this.skillsImporting || this.skillsZipImporting || this.skillsExporting || this.skillsBackingUp) tasks.push(this.t('dashboard.busy.skills'));
             return tasks.length ? tasks.join(' / ') : this.t('dashboard.busy.idle');
         },
         inspectorMessageSummary() {

@@ -49,15 +49,33 @@
                                 <span class="skills-flow-title">{{ t('market.installed.title') }}</span>
                                 <span class="skills-flow-count">{{ skillsList.length }}</span>
                             </div>
-                            <button type="button" class="btn-mini" @click="refreshSkillsList({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
-                                <svg v-if="!skillsLoading" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M3 19l-4-4 4-4"/><path d="M17 9v2a4 4 0 01-4 4H3"/></svg>
-                                <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" class="spin"><path d="M10 2v4m0 8v4M2 10h4m8 0h4m-3.5-6.5l2.5 2.5M4 4l2.5 2.5M16 16l-2.5-2.5M4 16l2.5-2.5"/></svg>
-                            </button>
+                            <div class="skills-flow-actions">
+                                <button type="button" class="skills-action-btn" @click="backupCurrentSkills" :disabled="loading || !!initError || skillsMarketBusy || skillsList.length === 0">
+                                    {{ skillsBackingUp ? t('market.backup.running') : t('market.backup.action') }}
+                                </button>
+                                <button type="button" class="skills-action-btn" @click="exportMarketSelectedSkills" :disabled="loading || !!initError || skillsMarketBusy || skillsMarketSelectedCount === 0">
+                                    {{ skillsExporting ? t('market.export.running') : t('market.export.action') }} ({{ skillsMarketSelectedCount }})
+                                </button>
+                                <button type="button" class="btn-mini" @click="refreshSkillsList({ silent: false })" :disabled="loading || !!initError || skillsMarketBusy">
+                                    <svg v-if="!skillsLoading" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M3 19l-4-4 4-4"/><path d="M17 9v2a4 4 0 01-4 4H3"/></svg>
+                                    <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" class="spin"><path d="M10 2v4m0 8v4M2 10h4m8 0h4m-3.5-6.5l2.5 2.5M4 4l2.5 2.5M16 16l-2.5-2.5M4 16l2.5-2.5"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div v-if="skillsList.length > 0" class="skills-market-selection-bar">
+                            <label class="skills-market-select-all">
+                                <input type="checkbox" :checked="skillsMarketAllSelected" @change="toggleAllSkillsMarketSelection" :disabled="skillsMarketBusy">
+                                <span>{{ t('market.selection.all') }}</span>
+                            </label>
+                            <span class="skills-market-selection-count">{{ t('market.selection.count', { count: skillsMarketSelectedCount }) }}</span>
                         </div>
                         <div v-if="skillsLoading && !skillsMarketLocalLoadedOnce" class="skills-flow-loading">{{ t('market.local.loading') }}</div>
                         <div v-else-if="skillsList.length === 0" class="skills-flow-empty">{{ t('market.local.empty') }}</div>
                         <div v-else class="skills-flow-list">
-                            <div v-for="skill in skillsList" :key="'skill-' + skill.name" class="skills-flow-item" :class="{ 'has-issue': !skill.hasSkillFile }">
+                            <div v-for="skill in skillsList" :key="'skill-' + skill.name" class="skills-flow-item" :class="{ 'has-issue': !skill.hasSkillFile, selected: skillsMarketSelectedNames.includes(skill.name) }">
+                                <label class="skills-market-item-check">
+                                    <input type="checkbox" :checked="skillsMarketSelectedNames.includes(skill.name)" @change="toggleSkillsMarketSelection(skill.name)" :disabled="skillsMarketBusy">
+                                </label>
                                 <div class="skills-flow-main">
                                     <span class="skills-flow-name">{{ skill.displayName || skill.name }}</span>
                                     <span class="skills-flow-path">{{ skill.path }}</span>

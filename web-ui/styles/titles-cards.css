@@ -38,7 +38,7 @@
     background: rgba(255, 255, 255, 0.48);
     border-radius: var(--radius-md);
     padding: 4px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     position: relative;
     box-shadow: var(--shadow-subtle);
     border: 1px solid var(--color-border-soft);

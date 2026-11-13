@@ -2,6 +2,30 @@ export const DEFAULT_SESSION_CONTENT_SCAN_LIMIT = 50;
 export const DEFAULT_SESSION_LIST_LIMIT = 200;
 export const DEFAULT_SESSION_LIST_FAST_LIMIT = 20;
 
+
+function decodeSessionTitleValue(value) {
+    return String(value || '')
+        .replace(/\x26quot;/gi, '"')
+        .replace(/\x26apos;/gi, "'")
+        .replace(/\x26lt;/gi, '<')
+        .replace(/\x26gt;/gi, '>')
+        .replace(/\x26amp;/gi, '&')
+        .trim();
+}
+
+export function parseSessionTitleInfo(session = {}) {
+    const rawTitle = typeof session.title === 'string' ? session.title.trim() : '';
+    const skillTag = rawTitle.match(/<skill\b([^>]*)>/i);
+    const attributes = {};
+    const attributePattern = /([\w:-]+)\s*=\s*(["'])(.*?)\2/g;
+    let match;
+    while ((match = attributePattern.exec(skillTag ? skillTag[1] : '')) !== null) {
+        attributes[match[1].toLowerCase()] = decodeSessionTitleValue(match[3]);
+    }
+    const title = attributes.name || (skillTag ? '' : rawTitle) || session.sessionId || '';
+    const location = attributes.location || (typeof session.cwd === 'string' ? session.cwd.trim() : '');
+    return { title, location };
+}
 function shouldUseFastSessionBrowseLimit(options = {}) {
     if (options.forceRefresh) {
         return false;

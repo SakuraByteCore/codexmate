@@ -107,6 +107,53 @@
     font-weight: var(--font-weight-caption);
 }
 
+.skills-flow-header > .skills-flow-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.skills-flow-header > .skills-flow-actions .skills-action-btn {
+    min-height: 32px;
+    padding: 7px 10px;
+    white-space: nowrap;
+}
+
+.skills-market-selection-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px var(--spacing-md);
+    border-bottom: 1px solid var(--color-border-soft);
+    background: rgba(255,255,255,0.22);
+}
+
+.skills-market-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-caption);
+}
+
+.skills-market-selection-count {
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-caption);
+}
+
+.skills-market-item-check {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.skills-flow-item.selected {
+    background: rgba(210, 107, 90, 0.08);
+}
 /* Flow list */
 .skills-flow-list {
     display: flex;

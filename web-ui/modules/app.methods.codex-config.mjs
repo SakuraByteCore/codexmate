@@ -76,7 +76,7 @@ export function createCodexConfigMethods(options = {}) {
                     source: session.source,
                     sessionId: session.sessionId,
                     filePath: session.filePath,
-                    ...(this.sessionExportRange === 'all' ? { maxMessages: 'all' } : {})
+                    maxMessages: 'all'
                 });
                 if (res.error) {
                     this.showMessage(res.error, 'error');

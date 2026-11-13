@@ -1,11 +1,37 @@
 /* 回收站面板 — 极简·本质 */
 
 .trash-panel-shell {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 20px 0 40px;
+    width: min(100%, 1480px);
+    max-width: none;
+    margin: 0;
+    padding: 0 0 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
+.trash-config-card {
+    display: block;
+    padding: 16px 20px;
+}
+
+.trash-config-card .settings-toggle-row {
+    justify-content: space-between;
+    margin: 10px 0 8px;
+}
+
+.trash-config-card .settings-retention {
+    width: 100%;
+    justify-content: space-between;
+    margin: 8px 0;
+}
+
+.trash-content-section {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
 /* ---- 空态 — 宁静留白 ---- */
 .trash-empty-state {
     display: flex;
@@ -13,7 +39,11 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    padding: 80px 20px;
+    min-height: 240px;
+    padding: 40px 24px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
     text-align: center;
 }
 
@@ -52,11 +82,18 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 0 0 14px;
+    padding: 0 0 12px;
     border-bottom: 1px solid var(--color-border-soft);
-    margin-bottom: 14px;
+    margin-bottom: 0;
 }
 
+.trash-list {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 8px;
+}
 .trash-toolbar-left {
     display: flex;
     align-items: baseline;
