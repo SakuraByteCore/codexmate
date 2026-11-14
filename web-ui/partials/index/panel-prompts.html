@@ -37,12 +37,18 @@
 
                 <div v-if="promptsSubTab !== 'system'" class="prompts-editor">
                     <div class="prompts-editor-toolbar">
-                        <div class="form-hint">
-                            {{ agentsPath || t('common.notLoaded') }}
-                            <span v-if="agentsPath">
-                                {{ paren(agentsExists ? t('common.exists') : t('common.notExistsWillCreateOnSave')) }}
-                            </span>
-                            <span v-if="agentsPath" class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: agentsTokenCount }) }}</span>
+                        <div class="prompts-path-summary-wrap">
+                            <details v-if="agentsPath" class="prompts-path-summary">
+                                <summary class="prompts-path-summary-trigger" :title="agentsPath">
+                                    <span class="prompts-path-summary-name">{{ promptPathFileName(agentsPath) }}</span>
+                                    <span class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: agentsTokenCount }) }}</span>
+                                </summary>
+                                <div class="prompts-path-summary-popover" role="tooltip">
+                                    <span class="prompts-path-summary-popover-label">{{ t('prompts.path.fullPath') }}</span>
+                                    <code>{{ agentsPath }}</code>
+                                </div>
+                            </details>
+                            <div v-else class="form-hint prompts-path-summary-empty">{{ t('common.notLoaded') }}</div>
                         </div>
                         <div class="prompts-editor-actions">
                             <div class="prompts-editor-group prompts-editor-group--pathref">
@@ -56,7 +62,7 @@
                                     <option v-for="opt in promptsPathReferenceOptionList()" :key="opt.id" :value="opt.id" :disabled="opt.disabled">{{ opt.label }}</option>
                                 </select>
                             </div>
-                            <div class="prompts-editor-group prompts-editor-group--secondary">
+                            <div class="prompts-editor-group prompts-editor-group--secondary prompts-editor-group--edit" role="group" :aria-label="t('prompts.actions.edit')">
                                 <button
                                     class="btn-mini"
                                     @click="exportAgentsContent"
@@ -86,7 +92,7 @@
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4"/></svg>
                                 </button>
                             </div>
-                            <div class="prompts-editor-group prompts-editor-group--workflow">
+                            <div class="prompts-editor-group prompts-editor-group--workflow prompts-editor-group--view" role="group" :aria-label="t('prompts.actions.view')">
                                 <button class="btn-mini" @click="agentsDiffVisible ? resetAgentsDiffState() : loadPromptsContent()" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                 </button>
@@ -276,12 +282,18 @@
 
                     <div class="prompts-editor">
                         <div class="prompts-editor-toolbar">
-                            <div class="form-hint">
-                                {{ sysPromptPath || t('common.notLoaded') }}
-                                <span v-if="sysPromptPath">
-                                    {{ paren(sysPromptExists ? t('common.exists') : t('common.notExistsWillCreateOnSave')) }}
-                                </span>
-                                <span v-if="sysPromptPath" class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: sysPromptTokenCount }) }}</span>
+                            <div class="prompts-path-summary-wrap">
+                                <details v-if="sysPromptPath" class="prompts-path-summary">
+                                    <summary class="prompts-path-summary-trigger" :title="sysPromptPath">
+                                        <span class="prompts-path-summary-name">{{ promptPathFileName(sysPromptPath) }}</span>
+                                        <span class="prompts-token-hint">· {{ t('prompts.tokenCount.hint', { count: sysPromptTokenCount }) }}</span>
+                                    </summary>
+                                    <div class="prompts-path-summary-popover" role="tooltip">
+                                        <span class="prompts-path-summary-popover-label">{{ t('prompts.path.fullPath') }}</span>
+                                        <code>{{ sysPromptPath }}</code>
+                                    </div>
+                                </details>
+                                <div v-else class="form-hint prompts-path-summary-empty">{{ t('common.notLoaded') }}</div>
                             </div>
                             <div class="prompts-editor-actions">
                                 <div class="prompts-editor-group prompts-editor-group--pathref">
@@ -295,7 +307,7 @@
                                         <option v-for="opt in promptsPathReferenceOptionList()" :key="opt.id" :value="opt.id" :disabled="opt.disabled">{{ opt.label }}</option>
                                     </select>
                                 </div>
-                                <div class="prompts-editor-group prompts-editor-group--secondary">
+                                <div class="prompts-editor-group prompts-editor-group--secondary prompts-editor-group--edit" role="group" :aria-label="t('prompts.actions.edit')">
                                     <button class="btn-mini" @click="exportSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || !sysPromptContent" :title="t('modal.agents.export')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 17v2h16v-2"/></svg>
                                     </button>
@@ -309,7 +321,7 @@
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4"/></svg>
                                     </button>
                                 </div>
-                                <div class="prompts-editor-group prompts-editor-group--workflow">
+                                <div class="prompts-editor-group prompts-editor-group--workflow prompts-editor-group--view" role="group" :aria-label="t('prompts.actions.view')">
                                     <button class="btn-mini" @click="sysPromptDiffVisible ? resetSysPromptDiffState() : cancelSysPromptEdit()" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                     </button>

@@ -1092,6 +1092,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'loadPromptsPathReferences',
         'promptsPathReferenceOptionList',
         'insertPromptPathReference',
+        'promptPathFileName',
         'backupCurrentSkills',
         'closeLanguageMenu',
         'exportMarketSelectedSkills',

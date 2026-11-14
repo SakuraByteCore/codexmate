@@ -7216,17 +7216,31 @@ return function render(_ctx, _cache) {
                       class: "prompts-editor"
                     }, [
                       _createElementVNode("div", { class: "prompts-editor-toolbar" }, [
-                        _createElementVNode("div", { class: "form-hint" }, [
-                          _createTextVNode(_toDisplayString(_ctx.agentsPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
+                        _createElementVNode("div", { class: "prompts-path-summary-wrap" }, [
                           (_ctx.agentsPath)
-                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.agentsExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave'))), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true),
-                          (_ctx.agentsPath)
-                            ? (_openBlock(), _createElementBlock("span", {
+                            ? (_openBlock(), _createElementBlock("details", {
+                                key: 0,
+                                class: "prompts-path-summary"
+                              }, [
+                                _createElementVNode("summary", {
+                                  class: "prompts-path-summary-trigger",
+                                  title: _ctx.agentsPath
+                                }, [
+                                  _createElementVNode("span", { class: "prompts-path-summary-name" }, _toDisplayString(_ctx.promptPathFileName(_ctx.agentsPath)), 1 /* TEXT */),
+                                  _createElementVNode("span", { class: "prompts-token-hint" }, "· " + _toDisplayString(_ctx.t('prompts.tokenCount.hint', { count: _ctx.agentsTokenCount })), 1 /* TEXT */)
+                                ], 8 /* PROPS */, ["title"]),
+                                _createElementVNode("div", {
+                                  class: "prompts-path-summary-popover",
+                                  role: "tooltip"
+                                }, [
+                                  _createElementVNode("span", { class: "prompts-path-summary-popover-label" }, _toDisplayString(_ctx.t('prompts.path.fullPath')), 1 /* TEXT */),
+                                  _createElementVNode("code", null, _toDisplayString(_ctx.agentsPath), 1 /* TEXT */)
+                                ])
+                              ]))
+                            : (_openBlock(), _createElementBlock("div", {
                                 key: 1,
-                                class: "prompts-token-hint"
-                              }, "· " + _toDisplayString(_ctx.t('prompts.tokenCount.hint', { count: _ctx.agentsTokenCount })), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true)
+                                class: "form-hint prompts-path-summary-empty"
+                              }, _toDisplayString(_ctx.t('common.notLoaded')), 1 /* TEXT */))
                         ]),
                         _createElementVNode("div", { class: "prompts-editor-actions" }, [
                           _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--pathref" }, [
@@ -7247,7 +7261,11 @@ return function render(_ctx, _cache) {
                               }), 128 /* KEYED_FRAGMENT */))
                             ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onFocus", "onChange"])
                           ]),
-                          _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
+                          _createElementVNode("div", {
+                            class: "prompts-editor-group prompts-editor-group--secondary prompts-editor-group--edit",
+                            role: "group",
+                            "aria-label": _ctx.t('prompts.actions.edit')
+                          }, [
                             _createElementVNode("button", {
                               class: "btn-mini",
                               onClick: _ctx.exportAgentsContent,
@@ -7327,8 +7345,12 @@ return function render(_ctx, _cache) {
                                 _createElementVNode("path", { d: "M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4" })
                               ]))
                             ], 8 /* PROPS */, ["onClick", "disabled", "title"])
-                          ]),
-                          _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
+                          ], 8 /* PROPS */, ["aria-label"]),
+                          _createElementVNode("div", {
+                            class: "prompts-editor-group prompts-editor-group--workflow prompts-editor-group--view",
+                            role: "group",
+                            "aria-label": _ctx.t('prompts.actions.view')
+                          }, [
                             _createElementVNode("button", {
                               class: "btn-mini",
                               onClick: $event => (_ctx.agentsDiffVisible ? _ctx.resetAgentsDiffState() : _ctx.loadPromptsContent()),
@@ -7378,7 +7400,7 @@ return function render(_ctx, _cache) {
                                     })
                                   ]))
                             ], 8 /* PROPS */, ["onClick", "disabled", "title"])
-                          ])
+                          ], 8 /* PROPS */, ["aria-label"])
                         ])
                       ]),
                       (_ctx.promptHistoryVisible)
@@ -7768,17 +7790,31 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("div", { class: "prompts-editor" }, [
                         _createElementVNode("div", { class: "prompts-editor-toolbar" }, [
-                          _createElementVNode("div", { class: "form-hint" }, [
-                            _createTextVNode(_toDisplayString(_ctx.sysPromptPath || _ctx.t('common.notLoaded')) + " ", 1 /* TEXT */),
+                          _createElementVNode("div", { class: "prompts-path-summary-wrap" }, [
                             (_ctx.sysPromptPath)
-                              ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.paren(_ctx.sysPromptExists ? _ctx.t('common.exists') : _ctx.t('common.notExistsWillCreateOnSave'))), 1 /* TEXT */))
-                              : _createCommentVNode("v-if", true),
-                            (_ctx.sysPromptPath)
-                              ? (_openBlock(), _createElementBlock("span", {
+                              ? (_openBlock(), _createElementBlock("details", {
+                                  key: 0,
+                                  class: "prompts-path-summary"
+                                }, [
+                                  _createElementVNode("summary", {
+                                    class: "prompts-path-summary-trigger",
+                                    title: _ctx.sysPromptPath
+                                  }, [
+                                    _createElementVNode("span", { class: "prompts-path-summary-name" }, _toDisplayString(_ctx.promptPathFileName(_ctx.sysPromptPath)), 1 /* TEXT */),
+                                    _createElementVNode("span", { class: "prompts-token-hint" }, "· " + _toDisplayString(_ctx.t('prompts.tokenCount.hint', { count: _ctx.sysPromptTokenCount })), 1 /* TEXT */)
+                                  ], 8 /* PROPS */, ["title"]),
+                                  _createElementVNode("div", {
+                                    class: "prompts-path-summary-popover",
+                                    role: "tooltip"
+                                  }, [
+                                    _createElementVNode("span", { class: "prompts-path-summary-popover-label" }, _toDisplayString(_ctx.t('prompts.path.fullPath')), 1 /* TEXT */),
+                                    _createElementVNode("code", null, _toDisplayString(_ctx.sysPromptPath), 1 /* TEXT */)
+                                  ])
+                                ]))
+                              : (_openBlock(), _createElementBlock("div", {
                                   key: 1,
-                                  class: "prompts-token-hint"
-                                }, "· " + _toDisplayString(_ctx.t('prompts.tokenCount.hint', { count: _ctx.sysPromptTokenCount })), 1 /* TEXT */))
-                              : _createCommentVNode("v-if", true)
+                                  class: "form-hint prompts-path-summary-empty"
+                                }, _toDisplayString(_ctx.t('common.notLoaded')), 1 /* TEXT */))
                           ]),
                           _createElementVNode("div", { class: "prompts-editor-actions" }, [
                             _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--pathref" }, [
@@ -7799,7 +7835,11 @@ return function render(_ctx, _cache) {
                                 }), 128 /* KEYED_FRAGMENT */))
                               ], 40 /* PROPS, NEED_HYDRATION */, ["disabled", "title", "onFocus", "onChange"])
                             ]),
-                            _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--secondary" }, [
+                            _createElementVNode("div", {
+                              class: "prompts-editor-group prompts-editor-group--secondary prompts-editor-group--edit",
+                              role: "group",
+                              "aria-label": _ctx.t('prompts.actions.edit')
+                            }, [
                               _createElementVNode("button", {
                                 class: "btn-mini",
                                 onClick: _ctx.exportSysPromptContent,
@@ -7879,8 +7919,12 @@ return function render(_ctx, _cache) {
                                   _createElementVNode("path", { d: "M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4" })
                                 ]))
                               ], 8 /* PROPS */, ["onClick", "disabled", "title"])
-                            ]),
-                            _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
+                            ], 8 /* PROPS */, ["aria-label"]),
+                            _createElementVNode("div", {
+                              class: "prompts-editor-group prompts-editor-group--workflow prompts-editor-group--view",
+                              role: "group",
+                              "aria-label": _ctx.t('prompts.actions.view')
+                            }, [
                               _createElementVNode("button", {
                                 class: "btn-mini",
                                 onClick: $event => (_ctx.sysPromptDiffVisible ? _ctx.resetSysPromptDiffState() : _ctx.cancelSysPromptEdit()),
@@ -7930,7 +7974,7 @@ return function render(_ctx, _cache) {
                                       })
                                     ]))
                               ], 8 /* PROPS */, ["onClick", "disabled", "title"])
-                            ])
+                            ], 8 /* PROPS */, ["aria-label"])
                           ])
                         ]),
                         (_ctx.sysHistoryVisible)

@@ -207,14 +207,15 @@ textarea:focus-visible {
     }
 
     .prompts-editor-toolbar {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
         gap: 8px;
     }
 
     .prompts-editor-actions {
-        width: 100%;
-        flex-wrap: wrap;
+        width: auto;
+        flex-wrap: nowrap;
     }
 
     .prompt-presets-inline-row {
@@ -636,19 +637,27 @@ textarea:focus-visible {
     }
 
     .prompts-editor-actions .btn-mini {
-        min-height: 40px;
-        padding: 6px 12px;
+        width: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0;
+    }
+
+    .prompts-editor-group--edit .btn-mini:nth-child(3),
+    .prompts-editor-group--edit .btn-mini:nth-child(4) {
+        display: none;
     }
 
     .prompts-editor-toolbar {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
         gap: 8px;
     }
 
     .prompts-editor-actions {
-        width: 100%;
-        flex-wrap: wrap;
+        width: auto;
+        flex-wrap: nowrap;
     }
 
     .prompt-presets-inline-row {

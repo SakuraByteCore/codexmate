@@ -221,6 +221,36 @@ test('prompts editor styles and app wiring are in place', () => {
     assert.match(methodsIndex, /\.\.\.createPromptsEditorMethods\(\{ api \}\),/);
 });
 
+test('prompt editor tab labels name Pi and Claude files', () => {
+    for (const code of ['zh', 'zh-tw', 'en', 'ja', 'vi']) {
+        assert.strictEqual(DICT[code]['prompts.subTab.system'], 'SYSTEM.md (Pi)');
+        assert.strictEqual(DICT[code]['prompts.subTab.project'], 'CLAUDE.md （Claude）');
+    }
+});
+
+test('prompt editor toolbar keeps compact single-line actions', () => {
+    const html = readProjectFile('web-ui/partials/index/panel-prompts.html');
+    const coreCss = readProjectFile('web-ui/styles/modals-core.css');
+    const editorCss = readProjectFile('web-ui/styles/prompts-editor.css');
+    const responsiveCss = readProjectFile('web-ui/styles/responsive.css');
+
+    assert.match(html, /class="prompts-path-summary"/);
+    assert.match(html, /promptPathFileName\(agentsPath\)/);
+    assert.match(html, /promptPathFileName\(sysPromptPath\)/);
+    assert.match(html, /prompts-editor-group--edit/);
+    assert.match(html, /prompts-editor-group--view/);
+    assert.match(coreCss, /\.prompts-editor-toolbar \{[^}]*flex-wrap: nowrap;/s);
+    assert.match(coreCss, /\.prompts-editor-actions \{[^}]*flex-wrap: nowrap;/s);
+    assert.match(coreCss, /\.prompts-path-summary-name \{[^}]*text-overflow: ellipsis;/s);
+    assert.match(editorCss, /\.prompts-editor-group--pathref \.prompts-path-reference-select \{[^}]*width: 180px;[^}]*flex: 0 0 180px;/s);
+    assert.match(responsiveCss, /\.prompts-editor-toolbar \{[^}]*flex-direction: row;[^}]*flex-wrap: nowrap;/s);
+
+    const methods = createPromptsEditorMethods();
+    assert.strictEqual(methods.promptPathFileName('/tmp/AGENTS.md'), 'AGENTS.md');
+    assert.strictEqual(methods.promptPathFileName('C:\\Users\\test\\CLAUDE.md'), 'CLAUDE.md');
+    assert.strictEqual(methods.promptPathFileName(''), '');
+});
+
 test('prompts editor i18n keys are localized in every locale', () => {
     const keys = [
         'prompts.editor.toolbar',

@@ -667,7 +667,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: nowrap;
     gap: 12px;
+    min-width: 0;
     margin-bottom: 8px;
 }
 
@@ -680,13 +682,98 @@
     display: flex;
     gap: 6px;
     flex-shrink: 0;
+    flex-wrap: nowrap;
     align-items: center;
+    min-width: 0;
 }
 
 .prompts-editor-group {
     display: flex;
     gap: 6px;
     align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.prompts-path-summary-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.prompts-path-summary {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.prompts-path-summary-trigger {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-caption);
+    cursor: pointer;
+    list-style: none;
+}
+
+.prompts-path-summary-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.prompts-path-summary-trigger:hover {
+    color: var(--color-brand);
+    background: var(--color-brand-light);
+}
+
+.prompts-path-summary-trigger:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+}
+
+.prompts-path-summary-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.prompts-token-hint {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.prompts-path-summary-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 40;
+    display: grid;
+    gap: 4px;
+    width: max-content;
+    max-width: min(520px, calc(100vw - 48px));
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+    box-shadow: var(--shadow-raised);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-caption);
+}
+
+.prompts-path-summary-popover-label {
+    color: var(--color-text-tertiary);
+}
+
+.prompts-path-summary-popover code {
+    color: var(--color-text);
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .prompts-editor-group--secondary .btn-mini {

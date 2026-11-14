@@ -335,16 +335,23 @@
 
 
 .prompts-editor-group--pathref .prompts-path-reference-select {
-    width: auto;
-    max-width: 190px;
-    min-width: 120px;
+    width: 180px;
+    max-width: 180px;
+    min-width: 180px;
     padding: 5px 8px;
     font-size: var(--font-size-caption);
     color: var(--color-text-secondary);
     cursor: pointer;
-    flex-shrink: 1;
+    flex: 0 0 180px;
 }
 
+@media (max-width: 540px) {
+    .prompts-editor-group--pathref .prompts-path-reference-select {
+        width: 112px;
+        min-width: 112px;
+        max-width: 112px;
+    }
+}
 .prompts-editor-group--pathref .prompts-path-reference-select:disabled {
     opacity: 0.6;
     cursor: not-allowed;

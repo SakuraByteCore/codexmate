@@ -78,6 +78,13 @@ export function createPromptsEditorMethods(options = {}) {
         promptsEditorMeta(key) {
             return PROMPTS_EDITOR_META[key] || null;
         },
+        promptPathFileName(path) {
+            const normalized = typeof path === 'string' ? path.trim() : '';
+            if (!normalized) {
+                return '';
+            }
+            return normalized.split(/[\\/]/).filter(Boolean).pop() || normalized;
+        },
 
 
         refreshPromptsPreview(key) {
