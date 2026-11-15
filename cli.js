@@ -65,6 +65,11 @@ const {
     parseMaxMessagesValue,
     resolveMaxMessagesValue
 } = require('./lib/cli-session-utils');
+const {
+    createHttpAccessControlMiddleware,
+    assertExternalTokenConfigured,
+    parseAllowedIps
+} = require('./lib/http-access-control');
 let DatabaseSync = null;
 function getNodeSqliteDatabaseSync() {
     if (DatabaseSync !== null) {
@@ -13811,6 +13816,29 @@ function readServerToken() {
     return raw;
 }
 
+function assertWebAccessControlConfigured(host) {
+    const token = readServerToken();
+    assertExternalTokenConfigured(host, token);
+    try {
+        parseAllowedIps(process.env.CODEXMATE_ALLOWED_IPS || '');
+    } catch (error) {
+        throw new Error(`CODEXMATE_ALLOWED_IPS 配置无效: ${error.message}`);
+    }
+    return token;
+}
+
+function createWebAccessControlMiddleware(host) {
+    const token = assertWebAccessControlConfigured(host);
+    return createHttpAccessControlMiddleware({
+        token,
+        bypassLoopback: true,
+        allowedIps: process.env.CODEXMATE_ALLOWED_IPS || '',
+        requiresToken(req) {
+            const requestPath = (req && req.url ? req.url : '/').split('?')[0];
+            return requestPath.startsWith('/bridge/');
+        }
+    });
+}
 function assertRequestAuthorized(req, res) {
     const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
     if (isLoopbackRemoteAddress(remoteAddr)) {
@@ -14049,6 +14077,8 @@ const PUBLIC_WEB_UI_STATIC_ASSETS = new Set([
 
 function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {
     const connections = new Set();
+    const httpToken = readServerToken();
+    const accessControlMiddleware = createWebAccessControlMiddleware(host);
     const probeWebUiReadiness = (callback) => {
         const payload = JSON.stringify({ action: 'health-check', params: {} });
         const requestOptions = {
@@ -14058,7 +14088,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
-                'Content-Length': Buffer.byteLength(payload, 'utf-8')
+                'Content-Length': Buffer.byteLength(payload, 'utf-8'),
+                ...(httpToken ? { Authorization: `Bearer ${httpToken}` } : {})
             }
         };
         let settled = false;
@@ -14087,7 +14118,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             hostname: openHost,
             port,
             path: '/web-ui/app.js',
-            method: 'GET'
+            method: 'GET',
+            headers: httpToken ? { Authorization: `Bearer ${httpToken}` } : {}
         };
         let settled = false;
         const finish = (ready) => {
@@ -14208,7 +14240,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         }
     }, RATE_LIMIT_WINDOW_MS).unref();
 
-    const server = http.createServer((req, res) => {
+    const handleRequest = (req, res) => {
         const securityHeaders = {
             'X-Content-Type-Options': 'nosniff',
             'X-Frame-Options': 'DENY',
@@ -15191,6 +15223,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                 res.end('Not Found');
             }
         }
+    };
+    const server = http.createServer((req, res) => {
+        accessControlMiddleware(req, res, () => handleRequest(req, res));
     });
 
     server.on('connection', (socket) => {
@@ -15233,13 +15268,11 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         }
         console.log('  退出: Ctrl+C\n');
         if (isAnyAddressHost(host)) {
-            const tokenEnabled = typeof process.env.CODEXMATE_HTTP_TOKEN === 'string' && process.env.CODEXMATE_HTTP_TOKEN.trim().length > 0;
-            if (tokenEnabled) {
-                console.warn('! 安全提示: 当前监听所有网卡，局域网访问需要访问令牌。');
-            } else {
-                console.warn('! 安全提示: 当前监听所有网卡，但未配置访问令牌，远程访问已禁用。');
-                console.warn('  如需局域网访问，请先设置 CODEXMATE_HTTP_TOKEN。');
-                console.warn('  如需仅限本机访问，请改用 --host 127.0.0.1。');
+            console.warn('! 安全提示: 当前监听所有网卡，局域网访问需要访问令牌。');
+            console.warn('  远程 /bridge/ 请求需携带 Authorization: Bearer <访问令牌>。');
+            const allowedIps = (process.env.CODEXMATE_ALLOWED_IPS || '').trim();
+            if (allowedIps) {
+                console.warn(`  已启用的来源 IP 白名单: ${allowedIps}`);
             }
         }
 
@@ -15350,6 +15383,16 @@ async function cmdStart(options = {}) {
     let port = resolveWebPort();
     const explicitPort = isWebPortExplicit();
     const host = resolveWebHost(options);
+    try {
+        assertWebAccessControlConfigured(host);
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        console.error(`! 启动失败: ${message}`);
+        if (message.includes('CODEXMATE_HTTP_TOKEN')) {
+            console.error('  对外监听必须设置 CODEXMATE_HTTP_TOKEN；仅本机访问请改用 --host 127.0.0.1。');
+        }
+        process.exit(1);
+    }
     releaseRunPortIfNeeded(port, host);
     const selectedPort = await resolveAvailableWebPort(port, host, { explicitPort });
     if (selectedPort.error) {

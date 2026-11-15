@@ -21,8 +21,8 @@
 ## 安全提示
 
 - 默认仅监听 `127.0.0.1:3737`，管理界面不会自动暴露到局域网。
-- 需要局域网访问时，使用 `--host 0.0.0.0` 并设置 `CODEXMATE_HTTP_TOKEN`；未设置令牌时远程请求会被拒绝。
-- 涉及 Key、配置或 Skills 的远程访问必须通过令牌鉴权，详见 [Web UI 指南](/guide/web-ui)。
+- 监听地址不是 `localhost`、`127.0.0.0/8` 或 `::1` 时，必须设置 `CODEXMATE_HTTP_TOKEN`；未设置时启动直接失败，错误信息会包含该环境变量名。
+- 远程 Web UI 需要令牌鉴权；可用 `CODEXMATE_ALLOWED_IPS` 限制允许访问的 IP，详见 [Web UI 指南](/guide/web-ui)。
 
 ## 下一步
 回 [目录](/) 重新挑章节,或看 [GitHub Pages 部署](/guide/github-pages) 把文档站发上线。

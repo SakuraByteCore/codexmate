@@ -149,6 +149,56 @@ const isProtectedWebSurfacePath = instantiateFunction(
     'isProtectedWebSurfacePath'
 );
 
+const {
+    createHttpAccessControlMiddleware,
+    assertExternalTokenConfigured,
+    parseAllowedIps
+} = require('../../lib/http-access-control.js');
+const readServerTokenSource = extractFunctionBySignature(
+    cliContent,
+    'function readServerToken() {',
+    'readServerToken'
+);
+const assertWebAccessControlConfiguredSource = extractFunctionBySignature(
+    cliContent,
+    'function assertWebAccessControlConfigured(host) {',
+    'assertWebAccessControlConfigured'
+);
+const createWebAccessControlMiddlewareSource = extractFunctionBySignature(
+    cliContent,
+    'function createWebAccessControlMiddleware(host) {',
+    'createWebAccessControlMiddleware'
+);
+
+function createAccessControlBindings(env = {}) {
+    const processMock = { env };
+    const readServerToken = instantiateFunction(readServerTokenSource, 'readServerToken', {
+        process: processMock
+    });
+    const assertWebAccessControlConfigured = instantiateFunction(
+        assertWebAccessControlConfiguredSource,
+        'assertWebAccessControlConfigured',
+        {
+            readServerToken,
+            assertExternalTokenConfigured,
+            parseAllowedIps,
+            process: processMock
+        }
+    );
+    const createWebAccessControlMiddleware = instantiateFunction(
+        createWebAccessControlMiddlewareSource,
+        'createWebAccessControlMiddleware',
+        {
+            assertWebAccessControlConfigured,
+            createHttpAccessControlMiddleware,
+            process: processMock
+        }
+    );
+    return { readServerToken, assertWebAccessControlConfigured, createWebAccessControlMiddleware };
+}
+
+const defaultAccessControl = createAccessControlBindings();
+
 test('resolveWebHost defaults to loopback host', () => {
     assert.strictEqual(resolveWebHost({}), '127.0.0.1');
     assert.strictEqual(resolveWebHost(), '127.0.0.1');
@@ -771,10 +821,14 @@ function createMockResponse() {
 function createWebServerHarness({
     htmlReader = () => '<!doctype html>',
     dynamicAssets = new Map(),
-    authorizeRequest = () => ({ ok: true })
+    authorizeRequest = () => ({ ok: true }),
+    env = {},
+    host = '127.0.0.1',
+    bridgeHandler = null
 } = {}) {
     let requestHandler = null;
     const errors = [];
+    const accessControl = createAccessControlBindings(env);
     const server = {
         listening: false,
         on() {},
@@ -828,7 +882,11 @@ function createWebServerHarness({
         assertRequestAuthorized: authorizeRequest,
         writeJsonResponse: mockWriteJsonResponse,
         isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
-        process: { env: {} },
+        process: { env },
+        readServerToken: accessControl.readServerToken,
+        createWebAccessControlMiddleware: accessControl.createWebAccessControlMiddleware,
+        localBridgeHandler: bridgeHandler,
+        openaiBridgeHandler: null,
         exec() {},
         console: {
             log() {},
@@ -853,7 +911,7 @@ function createWebServerHarness({
         htmlPath: '/repo/web-ui/index.html',
         assetsDir: '/repo/res',
         webDir: '/repo/web-ui',
-        host: '127.0.0.1',
+        host,
         port: 3737,
         openBrowser: false
     });
@@ -1198,6 +1256,8 @@ test('createWebServer prints port override guidance for EACCES listen errors', (
         assertRequestAuthorized: mockAssertRequestAuthorized,
         writeJsonResponse: mockWriteJsonResponse,
         isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
+        readServerToken: defaultAccessControl.readServerToken,
+        createWebAccessControlMiddleware: defaultAccessControl.createWebAccessControlMiddleware,
         process: {
             env: {},
             platform: 'linux',
@@ -1242,6 +1302,7 @@ test('createWebServer prints port override guidance for EACCES listen errors', (
 
 test('createWebServer waits for api readiness probe before auto-opening the browser', () => {
     let listenCallback = null;
+    const tokenAccessControl = createAccessControlBindings({ CODEXMATE_HTTP_TOKEN: 'secret-token' });
     let probeRequest = null;
     let assetRequest = null;
     let probeEndHandler = null;
@@ -1319,6 +1380,8 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
         assertRequestAuthorized: mockAssertRequestAuthorized,
         writeJsonResponse: mockWriteJsonResponse,
         isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
+        readServerToken: tokenAccessControl.readServerToken,
+        createWebAccessControlMiddleware: tokenAccessControl.createWebAccessControlMiddleware,
         process: { env: {}, platform: 'win32' },
         spawn(command, args, options) {
             spawnCalls.push({ command, args, options, unrefCalled: false });
@@ -1357,6 +1420,7 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
     assert.strictEqual(probeRequest.options.port, 3737);
     assert.strictEqual(probeRequest.options.path, '/api');
     assert.strictEqual(probeRequest.options.method, 'POST');
+    assert.strictEqual(probeRequest.options.headers.Authorization, 'Bearer secret-token');
     assert.deepStrictEqual(JSON.parse(probePayload), { action: 'health-check', params: {} });
 
     probeRequest.callback({
@@ -1376,6 +1440,7 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
     assert.strictEqual(assetRequest.options.port, 3737);
     assert.strictEqual(assetRequest.options.path, '/web-ui/app.js');
     assert.strictEqual(assetRequest.options.method, 'GET');
+    assert.strictEqual(assetRequest.options.headers.Authorization, 'Bearer secret-token');
 
     assetRequest.callback({
         statusCode: 200,
@@ -1457,6 +1522,8 @@ test('createWebServer health-check does not consume init notice before the first
         assertRequestAuthorized: mockAssertRequestAuthorized,
         writeJsonResponse: mockWriteJsonResponse,
         isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
+        readServerToken: defaultAccessControl.readServerToken,
+        createWebAccessControlMiddleware: defaultAccessControl.createWebAccessControlMiddleware,
         process: { env: {}, platform: 'linux' },
         exec() {},
         console: {
@@ -1639,6 +1706,8 @@ test('createWebServer retries readiness probe failures before auto-opening the b
         assertRequestAuthorized: mockAssertRequestAuthorized,
         writeJsonResponse: mockWriteJsonResponse,
         isProtectedWebSurfacePath: mockIsProtectedWebSurfacePath,
+        readServerToken: defaultAccessControl.readServerToken,
+        createWebAccessControlMiddleware: defaultAccessControl.createWebAccessControlMiddleware,
         process: { env: {}, platform: 'linux' },
         spawn(command, args, options) {
             spawnCalls.push({ command, args, options, unrefCalled: false });
@@ -2321,4 +2390,120 @@ test('codex-only zip upload route pins target app before request fallback resolu
         cliContent,
         /const targetApp = forcedTargetApp \|\| resolveSkillTargetAppFromRequest\(req, 'codex'\);/
     );
+});
+
+test('createWebServer rejects remote bridge requests without a Bearer token', () => {
+    let bridgeCalls = 0;
+    const { requestHandler, errors } = createWebServerHarness({
+        env: { CODEXMATE_HTTP_TOKEN: 'secret-token' },
+        bridgeHandler() {
+            bridgeCalls += 1;
+            return true;
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({
+        url: '/bridge/local/v1',
+        headers: {},
+        socket: { remoteAddress: '192.168.1.20' }
+    }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.strictEqual(response.headers['WWW-Authenticate'], 'Bearer realm="codexmate"');
+    assert.deepStrictEqual(JSON.parse(response.body), { error: 'Unauthorized' });
+    assert.strictEqual(bridgeCalls, 0);
+    assert.deepStrictEqual(errors, []);
+});
+
+test('createWebServer rejects remote bridge requests with a wrong Bearer token', () => {
+    let bridgeCalls = 0;
+    const { requestHandler } = createWebServerHarness({
+        env: { CODEXMATE_HTTP_TOKEN: 'secret-token' },
+        bridgeHandler() {
+            bridgeCalls += 1;
+            return true;
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({
+        url: '/bridge/local/v1',
+        headers: { authorization: 'Bearer wrong-token' },
+        socket: { remoteAddress: '192.168.1.20' }
+    }, response);
+
+    assert.strictEqual(response.statusCode, 401);
+    assert.strictEqual(response.headers['WWW-Authenticate'], 'Bearer realm="codexmate"');
+    assert.deepStrictEqual(JSON.parse(response.body), { error: 'Unauthorized' });
+    assert.strictEqual(bridgeCalls, 0);
+});
+
+test('createWebServer forwards remote bridge requests carrying a valid Bearer token', () => {
+    let bridgeCalls = 0;
+    const { requestHandler } = createWebServerHarness({
+        env: { CODEXMATE_HTTP_TOKEN: 'secret-token' },
+        bridgeHandler(req, res) {
+            bridgeCalls += 1;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"ok":true}');
+            return true;
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({
+        url: '/bridge/local/v1',
+        headers: { authorization: 'Bearer secret-token' },
+        socket: { remoteAddress: '192.168.1.20' }
+    }, response);
+
+    assert.strictEqual(bridgeCalls, 1);
+    assert.strictEqual(response.statusCode, 200);
+    assert.strictEqual(response.body, '{"ok":true}');
+});
+
+test('createWebServer rejects peers outside the configured IP allowlist', () => {
+    let bridgeCalls = 0;
+    const { requestHandler } = createWebServerHarness({
+        env: { CODEXMATE_ALLOWED_IPS: '192.168.1.0/24' },
+        bridgeHandler() {
+            bridgeCalls += 1;
+            return true;
+        }
+    });
+    const response = createMockResponse();
+
+    requestHandler({
+        url: '/bridge/local/v1',
+        headers: {},
+        socket: { remoteAddress: '10.0.0.5' }
+    }, response);
+
+    assert.strictEqual(response.statusCode, 403);
+    assert.deepStrictEqual(JSON.parse(response.body), { error: 'Forbidden' });
+    assert.strictEqual(bridgeCalls, 0);
+});
+
+test('createWebServer refuses to start a non-loopback listener without a token', () => {
+    assert.throws(
+        () => createWebServerHarness({ host: '0.0.0.0' }),
+        /CODEXMATE_HTTP_TOKEN/
+    );
+});
+
+test('createWebServer rejects an invalid CODEXMATE_ALLOWED_IPS value', () => {
+    assert.throws(
+        () => createWebServerHarness({ env: { CODEXMATE_ALLOWED_IPS: '10.0.0.0/99' } }),
+        /CODEXMATE_ALLOWED_IPS/
+    );
+});
+
+test('cmdStart validates the access control configuration before releasing the run port', () => {
+    const guardIndex = cmdStartSource.indexOf('assertWebAccessControlConfigured(host)');
+    const releaseIndex = cmdStartSource.indexOf('releaseRunPortIfNeeded(port, host)');
+
+    assert(guardIndex >= 0, 'cmdStart should validate the access control configuration');
+    assert(releaseIndex >= 0, 'cmdStart should release the run port');
+    assert(guardIndex < releaseIndex, 'cmdStart should validate access control before releasing the port');
 });

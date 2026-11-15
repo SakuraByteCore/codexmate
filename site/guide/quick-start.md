@@ -66,7 +66,7 @@ codexmate run
 CODEXMATE_HTTP_TOKEN='<高强度随机值>' codexmate run --host 0.0.0.0
 ```
 
-其他设备访问时，浏览器会弹出登录框；用户名可留空，密码填写访问令牌。
+其他设备访问时，浏览器会弹出 Basic Auth 登录框；用户名可留空，密码填写访问令牌。脚本可使用 `Authorization: Bearer <访问令牌>` 或 `X-CodexMate-Token: <访问令牌>`。
 
 仅起服务(测试 / CI):
 
@@ -86,7 +86,7 @@ Windows PowerShell:
 $env:CODEXMATE_PORT=8080; codexmate run
 ```
 
-默认监听地址仅允许本机访问。局域网访问必须显式设置 `--host 0.0.0.0` 和 `CODEXMATE_HTTP_TOKEN`；未设置令牌时远程请求会被拒绝。默认端口被占用时会尝试后续端口；显式指定不可用的端口则启动失败，请以终端输出为准。
+默认监听地址仅允许本机访问。局域网访问必须显式设置 `--host 0.0.0.0` 和 `CODEXMATE_HTTP_TOKEN`；监听其他非回环地址但未设置令牌时，启动直接失败并提示 `CODEXMATE_HTTP_TOKEN`。默认端口被占用时会尝试后续端口；显式指定不可用的端口则启动失败，请以终端输出为准。
 
 ## 第一次完成：找回并导出一段对话
 
