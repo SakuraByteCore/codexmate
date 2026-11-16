@@ -25,14 +25,17 @@ module.exports = async function testInvalidConfig(ctx) {
 
     try {
         const statusResult = runSync(node, [cliPath, 'status'], { env });
-        const statusOutput = `${statusResult.stdout || ''}\n${statusResult.stderr || ''}`;
         assert(statusResult.status !== 0, 'status should fail when config.toml is invalid');
-        assert(statusOutput.includes('配置文件解析失败'), 'status should surface config parse error');
+        const statusError = JSON.parse(String(statusResult.stderr || '').trim());
+        assert(statusError.error.code === 'CONFIG_TOML_PARSE_ERROR', 'status should emit structured parse error');
+        assert(statusError.error.type === 'parse', 'status error type should be parse');
+        assert(statusError.error.path, 'status error should include config path');
 
         const listResult = runSync(node, [cliPath, 'list'], { env });
-        const listOutput = `${listResult.stdout || ''}\n${listResult.stderr || ''}`;
         assert(listResult.status !== 0, 'list should fail when config.toml is invalid');
-        assert(listOutput.includes('配置文件解析失败'), 'list should surface config parse error');
+        const listError = JSON.parse(String(listResult.stderr || '').trim());
+        assert(listError.error.code === 'CONFIG_TOML_PARSE_ERROR', 'list should emit structured parse error');
+        assert(listError.error.type === 'parse', 'list error type should be parse');
     } finally {
         try {
             if (fs.rmSync) {

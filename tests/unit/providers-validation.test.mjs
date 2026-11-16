@@ -52,7 +52,7 @@ test('provider validation rejects invalid add-provider fields before submit', as
     });
 
     assert.strictEqual(context.canSubmitProvider('add'), false);
-    assert.strictEqual(context.providerFieldError('add', 'name'), '名称仅支持字母/数字/._-');
+    assert.strictEqual(context.providerFieldError('add', 'name'), '名称仅支持字母/数字/_-');
     assert.strictEqual(context.providerFieldError('add', 'url'), 'URL 仅支持 http/https');
     assert.strictEqual(context.providerFieldError('add', 'key'), 'API Key 必填');
     assert.strictEqual(context.providerFieldError('add', 'model'), '模型名称必填');
@@ -62,9 +62,50 @@ test('provider validation rejects invalid add-provider fields before submit', as
     assert.deepStrictEqual(apiCalls, []);
     assert.strictEqual(messages.length, 1);
     assert.deepStrictEqual(messages[0], {
-        text: '名称仅支持字母/数字/._-',
+        text: '名称仅支持字母/数字/_-',
         type: 'error'
     });
+});
+
+test('provider name input rejects dot, space and control characters', () => {
+    const { context } = createContext();
+
+    assert.strictEqual(context.isValidProviderNameInput('beta.provider'), false);
+    assert.strictEqual(context.isValidProviderNameInput('bad name'), false);
+    assert.strictEqual(context.isValidProviderNameInput('bad\tname'), false);
+    assert.strictEqual(context.isValidProviderNameInput('bad\nname'), false);
+    assert.strictEqual(context.isValidProviderNameInput('bad\u0007name'), false);
+
+    const { context: dotted } = createContext({
+        newProvider: {
+            name: 'beta.provider',
+            url: 'https://api.example.com/v1',
+            key: 'sk-test',
+            model: 'gpt-e2e'
+        }
+    });
+    assert.strictEqual(dotted.providerFieldError('add', 'name'), '名称仅支持字母/数字/_-');
+    assert.strictEqual(dotted.canSubmitProvider('add'), false);
+});
+
+test('provider name input accepts letters, digits, underscore and hyphen', () => {
+    const { context } = createContext();
+
+    assert.strictEqual(context.isValidProviderNameInput('Alpha'), true);
+    assert.strictEqual(context.isValidProviderNameInput('alpha123'), true);
+    assert.strictEqual(context.isValidProviderNameInput('alpha_1'), true);
+    assert.strictEqual(context.isValidProviderNameInput('alpha-1'), true);
+
+    const { context: valid } = createContext({
+        newProvider: {
+            name: 'alpha-1_x',
+            url: 'https://api.example.com/v1',
+            key: 'sk-test',
+            model: 'gpt-e2e'
+        }
+    });
+    assert.strictEqual(valid.providerFieldError('add', 'name'), '');
+    assert.strictEqual(valid.canSubmitProvider('add'), true);
 });
 
 test('addProvider normalizes trimmed values and submits sanitized payload', async () => {
@@ -72,7 +113,7 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
     const { context, messages, loadAllCalls } = createContext({
         providersList: [{ name: 'alpha', url: 'https://alpha.example.com/v1', hasKey: true }],
         newProvider: {
-            name: '  beta.provider  ',
+            name: '  beta-provider  ',
             url: ' https://api.example.com/v1/ ',
             key: ' sk-live ',
             model: ' gpt-e2e '
@@ -87,7 +128,7 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
     assert.deepStrictEqual(apiCalls, [{
         action: 'add-provider',
         params: {
-            name: 'beta.provider',
+            name: 'beta-provider',
             url: 'https://api.example.com/v1',
             key: 'sk-live',
             model: 'gpt-e2e'
@@ -98,11 +139,11 @@ test('addProvider normalizes trimmed values and submits sanitized payload', asyn
     // c3c9ee5：增删改不再触发 loadAll，改为本地 providersList 增量更新。
     assert.deepStrictEqual(loadAllCalls, []);
     assert.ok(
-        context.providersList.some((p) => p && p.name === 'beta.provider' && p.url === 'https://api.example.com/v1'),
+        context.providersList.some((p) => p && p.name === 'beta-provider' && p.url === 'https://api.example.com/v1'),
         'new provider should be appended to providersList locally'
     );
-    assert.deepStrictEqual(context.currentModels, { 'beta.provider': 'gpt-e2e' });
-    const appendedProvider = context.providersList.find((p) => p && p.name === 'beta.provider');
+    assert.deepStrictEqual(context.currentModels, { 'beta-provider': 'gpt-e2e' });
+    const appendedProvider = context.providersList.find((p) => p && p.name === 'beta-provider');
     assert.deepStrictEqual(appendedProvider.models.map((item) => item.id), ['gpt-e2e']);
     assert.strictEqual(messages.length, 1);
     assert.deepStrictEqual(messages[0], {
@@ -129,7 +170,6 @@ test('provider validation requires API key and model when adding provider', asyn
     assert.strictEqual(context.providerFieldError('add', 'model'), '模型名称必填');
 
     await context.addProvider();
-
     assert.deepStrictEqual(apiCalls, []);
     assert.deepStrictEqual(messages[0], {
         text: 'API Key 必填',
@@ -165,8 +205,6 @@ test('updateProvider blocks invalid edit URL and skips api call', async () => {
     });
 });
 
-
-
 test('provider validation rejects reserved proxy name on add', () => {
     const { context } = createContext({
         newProvider: {
@@ -197,7 +235,6 @@ test('transform provider does not expose retry count in submitted payload', asyn
     });
 
     await context.addProvider();
-
     assert.deepStrictEqual(apiCalls, [{
         action: 'add-provider',
         params: {

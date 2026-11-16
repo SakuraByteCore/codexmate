@@ -1,6 +1,6 @@
 import { nextCodexProviderName } from './provider-default-names.mjs';
 
-const PROVIDER_NAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
+const PROVIDER_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
 const RESERVED_PROXY_PROVIDER_NAME = 'codexmate-proxy';
 const RESERVED_LOCAL_PROVIDER_NAME = 'local';
 
@@ -88,7 +88,7 @@ function getProviderValidationForContext(vm, mode = 'add') {
         if (!name) {
             errors.name = '名称不能为空';
         } else if (!isValidProviderNameInputValue(name)) {
-            errors.name = '名称仅支持字母/数字/._-';
+            errors.name = '名称仅支持字母/数字/_-';
         } else if (isReservedProviderCreationNameInput(name)) {
             errors.name = 'codexmate-proxy 为保留名称，不可手动添加';
         } else if (findProviderByName(vm.providersList, name)) {

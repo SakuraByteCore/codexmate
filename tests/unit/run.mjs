@@ -69,6 +69,7 @@ await import(pathToFileURL(path.join(__dirname, 'provider-share-command.test.mjs
 await import(pathToFileURL(path.join(__dirname, 'web-ui-preferences.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'prompt-presets.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-cache-records.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'config-engine.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'providers-validation.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-default-names.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-switch-regression.test.mjs')));

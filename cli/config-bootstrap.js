@@ -175,11 +175,16 @@ stream_idle_timeout_ms = 300000
         } catch (e) {
             return;
         }
+        try {
+            toml.parse(content);
+        } catch (_) {
+            return;
+        }
         // Check if [model_providers.local] section already exists
         if (/\[model_providers\.local\]/.test(content)) return;
 
         const localSection = `\n[model_providers.local]\nname = "local"\nbase_url = "http://127.0.0.1:3737/bridge/local/v1"\nwire_api = "responses"\nrequires_openai_auth = true\npreferred_auth_method = "codexmate"\nexperimental_bearer_token = "codexmate"\ncodexmate_bridge = "local"\nrequest_max_retries = 4\nstream_max_retries = 10\nstream_idle_timeout_ms = 300000\n`;
-        fs.appendFileSync(CONFIG_FILE, localSection, 'utf-8');
+        writeConfig(content.trimEnd() + localSection);
     }
 
     function readConfigOrVirtualDefault() {
@@ -191,7 +196,8 @@ stream_idle_timeout_ms = 300000
                     isVirtual: false,
                     reason: '',
                     detail: '',
-                    errorType: ''
+                    errorType: '',
+                    path: CONFIG_FILE
                 };
             } catch (e) {
                 const errorType = typeof e.configErrorType === 'string' && e.configErrorType.trim()
@@ -210,7 +216,8 @@ stream_idle_timeout_ms = 300000
                     isVirtual: true,
                     reason: publicReason,
                     detail,
-                    errorType
+                    errorType,
+                    path: CONFIG_FILE
                 };
             }
         }
@@ -220,20 +227,27 @@ stream_idle_timeout_ms = 300000
             isVirtual: true,
             reason: '未检测到 config.toml',
             detail: `配置文件不存在: ${CONFIG_FILE}`,
-            errorType: 'missing'
+            errorType: 'missing',
+            path: CONFIG_FILE
         };
     }
 
     function printConfigLoadErrorAndMarkExit(result) {
-        const isReadError = result && result.errorType === 'read';
+        const errorType = result && result.errorType === 'read' ? 'read' : 'parse';
+        const message = errorType === 'read' ? '读取 config.toml 失败' : '配置文件解析失败';
         const detail = result && typeof result.detail === 'string' && result.detail.trim()
             ? result.detail.trim()
-            : (isReadError ? '读取配置文件失败' : '配置文件解析失败');
-        console.error(`\n错误: ${isReadError ? '读取 config.toml 失败' : '配置文件解析失败'}`);
-        console.error(`  详情: ${detail}`);
-        console.error(`  路径: ${CONFIG_FILE}`);
-        console.error(`  建议: ${isReadError ? '检查文件权限后重试' : '修复 config.toml 语法后重试'}`);
-        console.error();
+            : message;
+        const payload = {
+            error: {
+                code: errorType === 'parse' ? 'CONFIG_TOML_PARSE_ERROR' : 'CONFIG_TOML_READ_ERROR',
+                type: errorType,
+                path: CONFIG_FILE,
+                message,
+                detail
+            }
+        };
+        console.error(JSON.stringify(payload));
         process.exitCode = 1;
     }
 

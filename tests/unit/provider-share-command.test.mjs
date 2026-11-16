@@ -7,6 +7,7 @@ import {
 
 const require = createRequire(import.meta.url);
 const { createConfigBootstrapController } = require('../../cli/config-bootstrap');
+const configEngine = require('../../lib/cli-config-engine');
 const cliSource = readProjectFile('cli.js');
 const appSource = readBundledWebUiScript();
 
@@ -478,6 +479,7 @@ test('applyConfigTemplate rejects invalid positive integer context budget values
     let recordRecentConfigCalls = 0;
     const applyConfigTemplate = instantiateFunction(applyConfigTemplateSource, 'applyConfigTemplate', {
         toml: require('@iarna/toml'),
+        validateProviderNamesInParsedConfig: configEngine.validateProviderNamesInParsedConfig,
         normalizePositiveIntegerParam,
         writeConfig() {
             writeConfigCalls += 1;
@@ -1396,6 +1398,7 @@ test('applyConfigTemplate rejects missing provider blocks instead of synthesizin
     const applyConfigTemplateSource = extractBlockBySignature(cliSource, 'function applyConfigTemplate(params = {}) {');
     const applyConfigTemplate = instantiateFunction(applyConfigTemplateSource, 'applyConfigTemplate', {
         toml: require('@iarna/toml'),
+        validateProviderNamesInParsedConfig: configEngine.validateProviderNamesInParsedConfig,
         normalizePositiveIntegerParam: instantiateFunction(normalizePositiveIntegerParamSource, 'normalizePositiveIntegerParam'),
         writeConfig() {
             throw new Error('should not write config');
@@ -1603,6 +1606,7 @@ test('applyConfigTemplate writes template with bearer token ensured and never to
     const applyConfigTemplateSource = extractBlockBySignature(cliSource, 'function applyConfigTemplate(params = {}) {');
     const applyConfigTemplate = instantiateFunction(applyConfigTemplateSource, 'applyConfigTemplate', {
         toml: require('@iarna/toml'),
+        validateProviderNamesInParsedConfig: configEngine.validateProviderNamesInParsedConfig,
         normalizePositiveIntegerParam,
         ensureActiveProviderBearerToken,
         writeConfig(content) {

@@ -218,6 +218,18 @@ preferred_auth_method = "shadow-key"
 
     const applyInvalidToml = await api('apply-config-template', { template: 'invalid toml {{{' });
     assert(applyInvalidToml.error, 'apply-config-template should reject invalid toml');
+    const applyDottedProvider = await api('apply-config-template', {
+        template: 'model_provider = "foo.bar"\nmodel = "y"\n[model_providers."foo.bar"]\nbase_url = "http://example.com"\n'
+    });
+    assert(applyDottedProvider.error, 'apply-config-template should reject dotted provider names');
+    const importDottedProvider = await api('import-config', {
+        payload: {
+            providers: {
+                'new.dot': { baseUrl: 'https://api.example.com/v1', apiKey: 'sk-test' }
+            }
+        }
+    });
+    assert(importDottedProvider.error, 'import-config should reject new dotted provider names');
 
     const applyNoProvider = await api('apply-config-template', {
         template: 'model = "x"\n[model_providers.x]\nbase_url = "http://example.com"\n'
@@ -332,6 +344,20 @@ preferred_auth_method = "shadow-key"
     assert(addedProviderTemplate.template.includes('model_provider = "e2e-api"'), 'entered provider should be usable in generated config template');
     assert(addedProviderTemplate.template.includes('model = "gpt-e2e-api"'), 'entered model should be used in generated config template');
     const configAfterAdd = fs.readFileSync(path.join(tmpHome, '.codex', 'config.toml'), 'utf-8');
+    const codexConfigDir = path.join(tmpHome, '.codex');
+    const configBackupFiles = fs.readdirSync(codexConfigDir)
+        .filter(fileName => /^config\.toml\.codexmate-backup-.*\.bak$/.test(fileName));
+    assert(configBackupFiles.length > 0, 'config write should create a timestamped backup');
+    const latestConfigBackup = path.join(codexConfigDir, configBackupFiles.sort().slice(-1)[0]);
+    const latestConfigBackupContent = fs.readFileSync(latestConfigBackup, 'utf-8');
+    assert(latestConfigBackupContent !== configAfterAdd, 'backup should contain the pre-write config');
+    let backupParseError = null;
+    try {
+        toml.parse(latestConfigBackupContent);
+    } catch (error) {
+        backupParseError = error;
+    }
+    assert(!backupParseError, 'config backup should be readable TOML');
     const addedProviderBlockMatch = configAfterAdd.match(
         /(?:^|\n)\s*\[model_providers\.(?:"e2e-api"|'e2e-api'|e2e-api)\][\s\S]*?(?=\n\s*\[|$)/
     );
@@ -389,23 +415,14 @@ preferred_auth_method = "shadow-key"
 
     const dottedProviderName = 'e2e.dot';
     const cliAddDotted = runSync(node, [cliPath, 'add', dottedProviderName, mockProviderUrl, 'sk-e2e-dot'], { env });
-    assert(cliAddDotted.status === 0, `cli add dotted provider failed: ${cliAddDotted.stderr || cliAddDotted.stdout}`);
-    const cliListAfterDotAdd = runSync(node, [cliPath, 'list'], { env });
-    assert(cliListAfterDotAdd.status === 0, 'cli list failed after adding dotted provider');
-    assert(cliListAfterDotAdd.stdout.includes(dottedProviderName), 'dotted provider should be listed with original name');
-    const dottedUpdatedUrl = `${mockProviderUrl}/dot-v2`;
-    const updateDottedProvider = await api('update-provider', { name: dottedProviderName, url: dottedUpdatedUrl, key: 'sk-e2e-dot-upd' });
-    assert(updateDottedProvider.success === true, 'update-provider should support dotted provider name');
-    const apiListAfterDottedUpdate = await api('list');
-    const dottedUpdatedItem = apiListAfterDottedUpdate.providers.find((item) => item.name === dottedProviderName);
-    assert(dottedUpdatedItem && dottedUpdatedItem.url === dottedUpdatedUrl, 'dotted provider update should change url');
-    const cliSwitchDotted = runSync(node, [cliPath, 'switch', dottedProviderName], { env });
-    assert(cliSwitchDotted.status === 0, `cli switch dotted provider failed: ${cliSwitchDotted.stderr || cliSwitchDotted.stdout}`);
-    const cliSwitchBack = runSync(node, [cliPath, 'switch', 'e2e2'], { env });
-    assert(cliSwitchBack.status === 0, `cli switch back failed: ${cliSwitchBack.stderr || cliSwitchBack.stdout}`);
-    const deleteDottedProvider = await api('delete-provider', { name: dottedProviderName });
-    assert(deleteDottedProvider.success === true, 'delete-provider should remove dotted provider');
-
+    assert(cliAddDotted.status !== 0, 'cli add should reject dotted provider name');
+    const apiAddDotted = await api('add-provider', { name: dottedProviderName, url: mockProviderUrl, key: 'sk-e2e-dot' });
+    assert(apiAddDotted.error, 'api add-provider should reject dotted provider name');
+    const apiListAfterDottedAdd = await api('list');
+    assert(
+        !apiListAfterDottedAdd.providers.some((item) => item && item.name === dottedProviderName),
+        'dotted provider name should not be added'
+    );
     const legacyHome = fs.mkdtempSync(path.join(os.tmpdir(), 'codexmate-legacy-dot-'));
     const legacyEnv = {
         ...env,

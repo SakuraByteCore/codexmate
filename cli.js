@@ -31,6 +31,12 @@ const {
     joinApiUrl
 } = require('./lib/cli-utils');
 const {
+    validateProviderNamesInParsedConfig,
+    createConfigError,
+    formatConfigError,
+    writeConfigAtomicWithBackup
+} = require('./lib/cli-config-engine');
+const {
     ensureDir,
     readJsonFile,
     readJsonArrayFile,
@@ -834,8 +840,18 @@ function ensureConfigDir() {
 }
 
 function createConfigLoadError(type, message, detail) {
-    const err = new Error(detail || message);
-    err.configErrorType = type || 'read';
+    const errorType = type || 'read';
+    const code = errorType === 'parse'
+        ? 'CONFIG_TOML_PARSE_ERROR'
+        : (errorType === 'missing' ? 'CONFIG_TOML_MISSING' : 'CONFIG_TOML_READ_ERROR');
+    const err = createConfigError({
+        code,
+        type: errorType,
+        path: CONFIG_FILE,
+        message: message || '读取 config.toml 失败',
+        detail: detail || message || ''
+    });
+    err.configErrorType = errorType;
     err.configPublicReason = message || '读取 config.toml 失败';
     err.configDetail = detail || message || '';
     return err;
@@ -881,11 +897,7 @@ function readConfig() {
 
 function writeConfig(content) {
     assertToolConfigWriteAllowed('codex');
-    try {
-        fs.writeFileSync(CONFIG_FILE, content, 'utf-8');
-    } catch (e) {
-        throw new Error(`写入配置失败: ${e.message}`);
-    }
+    return writeConfigAtomicWithBackup(CONFIG_FILE, content);
 }
 
 function readModels() {
@@ -2905,7 +2917,15 @@ async function fetchModelsFromBaseUrlCore(baseUrl, apiKey) {
 }
 
 async function fetchProviderModels(providerName, overrides = {}) {
-    const { config } = readConfigOrVirtualDefault();
+    const configResult = readConfigOrVirtualDefault();
+    if (hasConfigLoadError(configResult)) {
+        throw createConfigLoadError(
+            configResult.errorType,
+            configResult.reason,
+            configResult.detail
+        );
+    }
+    const { config } = configResult;
     const targetProvider = providerName || config.model_provider || '';
     if (!targetProvider) return { error: '未设置当前提供商' };
 
@@ -3134,6 +3154,17 @@ async function buildAllProvidersHealthReport(params = {}) {
     });
 }
 
+function buildConfigLoadErrorPayload(result) {
+    const errorType = result && result.errorType === 'read' ? 'read' : 'parse';
+    return {
+        code: errorType === 'parse' ? 'CONFIG_TOML_PARSE_ERROR' : 'CONFIG_TOML_READ_ERROR',
+        type: errorType,
+        path: CONFIG_FILE,
+        message: result && result.reason ? result.reason : (errorType === 'parse' ? 'config.toml 解析失败' : '读取 config.toml 失败'),
+        detail: result && result.detail ? result.detail : ''
+    };
+}
+
 function hasConfigLoadError(result) {
     return !!(result
         && result.isVirtual
@@ -3331,6 +3362,8 @@ function applyConfigTemplate(params = {}) {
     } catch (e) {
         return { error: `模板 TOML 解析失败: ${e.message}` };
     }
+    const providerNameError = validateProviderNamesInParsedConfig(parsed);
+    if (providerNameError) return providerNameError;
 
     if (
         Object.prototype.hasOwnProperty.call(parsed, 'model_context_window')
@@ -3395,6 +3428,8 @@ function buildConfigTemplateDiff(params = {}) {
     } catch (e) {
         return { error: `模板 TOML 解析失败: ${e.message}` };
     }
+    const providerNameError = validateProviderNamesInParsedConfig(parsed);
+    if (providerNameError) return providerNameError;
 
     if (
         Object.prototype.hasOwnProperty.call(parsed, 'model_context_window')
@@ -3528,7 +3563,7 @@ function addProviderToConfig(params = {}) {
     if (!url) return { error: 'URL 不能为空' };
     if (!model) return { error: '模型名称不能为空' };
     if (!isValidProviderName(name)) {
-        return { error: '名称仅支持字母/数字/._-' };
+        return { error: '名称仅支持字母/数字/_-' };
     }
     if (!isValidHttpUrl(normalizedUrl)) {
         return { error: 'URL 仅支持 http/https' };
@@ -3655,6 +3690,7 @@ function updateProviderInConfig(params = {}) {
         cmdUpdate(name, url || undefined, key, true, { allowManaged, useTransform, ...(hasOpenaiBridgeMaxRetries ? { openaiBridgeMaxRetries } : {}) });
         return { success: true };
     } catch (e) {
+        if (e && typeof e.code === 'string' && e.code.startsWith('CONFIG_')) throw e;
         return { error: e.message || '更新失败' };
     }
 }
@@ -4204,6 +4240,7 @@ function deleteProviderFromConfig(params = {}) {
     try {
         config = readConfig();
     } catch (e) {
+        if (e && typeof e.code === 'string' && e.code.startsWith('CONFIG_')) throw e;
         return { error: `读取配置失败: ${e.message}` };
     }
 
@@ -10467,7 +10504,11 @@ async function importDerivedSessionToNative(params = {}) {
 }
 
 function buildExportPayload(includeKeys) {
-    const { config } = readConfigOrVirtualDefault();
+    const configResult = readConfigOrVirtualDefault();
+    if (hasConfigLoadError(configResult)) {
+        return { error: buildConfigLoadErrorPayload(configResult) };
+    }
+    const { config } = configResult;
     const providers = config.model_providers || {};
     const providerData = {};
     for (const [name, provider] of Object.entries(providers)) {
@@ -10515,7 +10556,19 @@ function buildProviderSharePayload(params = {}) {
         return { error: '缺少提供商名称' };
     }
 
-    const { config } = readConfigOrVirtualDefault();
+    const configResult = readConfigOrVirtualDefault();
+    if (configResult.errorType === 'parse' || configResult.errorType === 'read') {
+        return {
+            error: {
+                code: configResult.errorType === 'parse' ? 'CONFIG_TOML_PARSE_ERROR' : 'CONFIG_TOML_READ_ERROR',
+                type: configResult.errorType,
+                path: configResult.path || '',
+                message: configResult.reason || '读取 config.toml 失败',
+                detail: configResult.detail || ''
+            }
+        };
+    }
+    const { config } = configResult;
     const providers = config.model_providers || {};
     const provider = providers[name];
     if (!provider || typeof provider !== 'object') {
@@ -10575,19 +10628,21 @@ function normalizeImportPayload(payload) {
     if (Array.isArray(rawProviders)) {
         for (const item of rawProviders) {
             if (!item || typeof item !== 'object') continue;
-            const name = item.name || item.provider || '';
+            const rawName = item.name || item.provider || '';
+            const name = typeof rawName === 'string' ? rawName.trim() : '';
             const baseUrl = item.baseUrl || item.base_url || item.url || '';
             const apiKey = item.apiKey ?? item.key ?? item.preferred_auth_method ?? null;
-            if (name && baseUrl && /^[a-zA-Z0-9_\-.\s]+$/.test(name)) {
+            if (name && baseUrl) {
                 providers[name] = { baseUrl, apiKey };
             }
         }
     } else if (typeof rawProviders === 'object') {
-        for (const [name, item] of Object.entries(rawProviders)) {
+        for (const [rawName, item] of Object.entries(rawProviders)) {
             if (!item || typeof item !== 'object') continue;
+            const name = typeof rawName === 'string' ? rawName.trim() : '';
             const baseUrl = item.baseUrl || item.base_url || item.url || '';
             const apiKey = item.apiKey ?? item.key ?? item.preferred_auth_method ?? null;
-            if (name && baseUrl && /^[a-zA-Z0-9_\-.\s]+$/.test(name)) {
+            if (name && baseUrl) {
                 providers[name] = { baseUrl, apiKey };
             }
         }
@@ -10597,12 +10652,17 @@ function normalizeImportPayload(payload) {
         return { error: 'Invalid import payload' };
     }
 
+    const currentProvider = typeof payload.currentProvider === 'string' ? payload.currentProvider.trim() : '';
+    const currentModels = payload.currentModels && typeof payload.currentModels === 'object'
+        ? payload.currentModels
+        : {};
+
     return {
         providers,
         models: Array.isArray(payload.models) ? payload.models : [],
-        currentProvider: typeof payload.currentProvider === 'string' ? payload.currentProvider : '',
+        currentProvider,
         currentModel: typeof payload.currentModel === 'string' ? payload.currentModel : '',
-        currentModels: payload.currentModels && typeof payload.currentModels === 'object' ? payload.currentModels : {}
+        currentModels
     };
 }
 
@@ -10616,10 +10676,28 @@ function importConfigData(payload, options = {}) {
     const applyCurrent = !!options.applyCurrent;
     const applyCurrentModels = !!options.applyCurrentModels;
 
-    const { config: existingConfig } = readConfigOrVirtualDefault();
+    const existingConfigResult = readConfigOrVirtualDefault();
+    if (hasConfigLoadError(existingConfigResult)) {
+        return { error: buildConfigLoadErrorPayload(existingConfigResult) };
+    }
+    const existingConfig = existingConfigResult.config;
     const existingProviders = existingConfig.model_providers || {};
     let addedProviders = 0;
     let updatedProviders = 0;
+
+    for (const name of Object.keys(normalized.providers)) {
+        if (!existingProviders[name] && !isValidProviderName(name)) {
+            return { error: `provider 名称非法: ${name}（名称仅支持字母/数字/_-）` };
+        }
+    }
+    if (normalized.currentProvider && !existingProviders[normalized.currentProvider] && !isValidProviderName(normalized.currentProvider)) {
+        return { error: `当前 provider 名称非法: ${normalized.currentProvider}（名称仅支持字母/数字/_-）` };
+    }
+    for (const name of Object.keys(normalized.currentModels)) {
+        if (!existingProviders[name] && !isValidProviderName(name)) {
+            return { error: `provider 名称非法: ${name}（名称仅支持字母/数字/_-）` };
+        }
+    }
 
     for (const [name, provider] of Object.entries(normalized.providers)) {
         if (isBuiltinManagedProvider(name)) {
@@ -10746,7 +10824,11 @@ function resolveSpeedTestTarget(params) {
     }
 
     if (params.name) {
-        const { config } = readConfigOrVirtualDefault();
+        const configResult = readConfigOrVirtualDefault();
+        if (hasConfigLoadError(configResult)) {
+            return { error: buildConfigLoadErrorPayload(configResult) };
+        }
+        const { config } = configResult;
         const providers = config.model_providers || {};
         const provider = providers[params.name];
         if (!provider) {
@@ -10878,7 +10960,15 @@ async function cmdSetup() {
     let isCustomProvider = false;
 
     try {
-        const { config } = readConfigOrVirtualDefault();
+        const setupConfigResult = readConfigOrVirtualDefault();
+        if (hasConfigLoadError(setupConfigResult)) {
+            throw createConfigLoadError(
+                setupConfigResult.errorType,
+                setupConfigResult.reason,
+                setupConfigResult.detail
+            );
+        }
+        const { config } = setupConfigResult;
         const providers = config.model_providers || {};
         const providerNames = Object.keys(providers);
         const currentProvider = typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
@@ -10938,7 +11028,7 @@ async function cmdSetup() {
                 break;
             }
 
-            console.log('提示: 名称仅支持字母/数字/._-');
+            console.log('提示: 名称仅支持字母/数字/_-');
         }
 
         if (isCustomProvider && !providerName) {
@@ -10949,7 +11039,7 @@ async function cmdSetup() {
                     continue;
                 }
                 if (!isValidProviderName(nameInput)) {
-                    console.log('提示: 名称仅支持字母/数字/._-');
+                    console.log('提示: 名称仅支持字母/数字/_-');
                     continue;
                 }
                 providerName = nameInput;
@@ -11073,7 +11163,11 @@ async function cmdSetup() {
         console.log('  模型:', modelName);
         console.log();
     } catch (e) {
-        console.error('错误:', e.message || e);
+        if (e && typeof e.code === 'string' && e.code.startsWith('CONFIG_')) {
+            console.error(formatConfigError(e));
+        } else {
+            console.error('错误:', e.message || e);
+        }
         process.exitCode = 1;
     } finally {
         rl.close();
@@ -11388,8 +11482,8 @@ function cmdAdd(name, baseUrl, apiKey, silent = false, options = {}) {
         throw new Error('名称和URL必填');
     }
     if (!isValidProviderName(providerName)) {
-        if (!silent) console.error('错误: 名称仅支持字母/数字/._-');
-        throw new Error('名称仅支持字母/数字/._-');
+        if (!silent) console.error('错误: 名称仅支持字母/数字/_-');
+        throw new Error('名称仅支持字母/数字/_-');
     }
     if (isReservedProviderNameForCreation(providerName)) {
         if (!silent) console.error('错误: 提供商名称不可用');
@@ -14396,6 +14490,17 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                 modelContextWindow,
                                 modelAutoCompactTokenLimit,
                                 configReady: !statusConfigResult.isVirtual,
+                                ...(hasConfigLoadError(statusConfigResult)
+                                    ? {
+                                        error: {
+                                            code: statusConfigResult.errorType === 'parse' ? 'CONFIG_TOML_PARSE_ERROR' : 'CONFIG_TOML_READ_ERROR',
+                                            type: statusConfigResult.errorType,
+                                            path: statusConfigResult.path || '',
+                                            message: statusConfigResult.reason || '读取 config.toml 失败',
+                                            detail: statusConfigResult.detail || ''
+                                        }
+                                    }
+                                    : {}),
                                 configErrorType: statusConfigResult.errorType || '',
                                 configNotice: statusConfigResult.reason || '',
                                 initNotice: consumeInitNotice(),
@@ -14746,11 +14851,13 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'export-provider':
                             result = buildProviderSharePayload(params || {});
                             break;
-                        case 'export-config':
-                            result = {
-                                data: buildExportPayload(!!params.includeKeys)
-                            };
+                        case 'export-config': {
+                            const exportPayload = buildExportPayload(!!params.includeKeys);
+                            result = exportPayload && exportPayload.error
+                                ? exportPayload
+                                : { data: exportPayload };
                             break;
+                        }
                         case 'import-config':
                             result = importConfigData(params.payload, params.options || {});
                             break;
@@ -15066,7 +15173,21 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                     if (leaveToolConfigWriteGuard) leaveToolConfigWriteGuard();
                 } catch (e) {
                     if (leaveToolConfigWriteGuard) leaveToolConfigWriteGuard();
-                    const errorBody = JSON.stringify({ error: e.message }, null, 2);
+                    const errorPayload = e && typeof e.code === 'string' && e.code.startsWith('CONFIG_')
+                        ? {
+                            error: {
+                                code: e.code,
+                                type: e.type || 'config',
+                                path: e.path || '',
+                                message: e.publicReason || e.message || '配置操作失败',
+                                detail: e.detail || e.message || '配置操作失败',
+                                ...(e.backupPath ? { backupPath: e.backupPath } : {}),
+                                ...(typeof e.rolledBack === 'boolean' ? { rolledBack: e.rolledBack } : {}),
+                                ...(e.rollbackFailed ? { rollbackFailed: true } : {})
+                            }
+                        }
+                        : { error: e.message };
+                    const errorBody = JSON.stringify(errorPayload, null, 2);
                     res.writeHead(500, {
                         'Content-Type': 'application/json; charset=utf-8',
                         'Content-Length': Buffer.byteLength(errorBody, 'utf-8')
@@ -16295,6 +16416,17 @@ function buildMcpStatusPayload() {
         modelContextWindow,
         modelAutoCompactTokenLimit,
         configReady: !statusConfigResult.isVirtual,
+        ...(hasConfigLoadError(statusConfigResult)
+            ? {
+                error: {
+                    code: statusConfigResult.errorType === 'parse' ? 'CONFIG_TOML_PARSE_ERROR' : 'CONFIG_TOML_READ_ERROR',
+                    type: statusConfigResult.errorType,
+                    path: statusConfigResult.path || '',
+                    message: statusConfigResult.reason || '读取 config.toml 失败',
+                    detail: statusConfigResult.detail || ''
+                }
+            }
+            : {}),
         configErrorType: statusConfigResult.errorType || '',
         configNotice: statusConfigResult.reason || '',
         initNotice: consumeInitNotice()
@@ -16308,6 +16440,17 @@ function buildMcpProviderListPayload() {
     const current = listConfig.model_provider;
     return {
         configReady: !listConfigResult.isVirtual,
+        ...(listConfigResult.errorType === 'parse' || listConfigResult.errorType === 'read'
+            ? {
+                error: {
+                    code: listConfigResult.errorType === 'parse' ? 'CONFIG_TOML_PARSE_ERROR' : 'CONFIG_TOML_READ_ERROR',
+                    type: listConfigResult.errorType,
+                    path: listConfigResult.path || '',
+                    message: listConfigResult.reason || '读取 config.toml 失败',
+                    detail: listConfigResult.detail || ''
+                }
+            }
+            : {}),
         configErrorType: listConfigResult.errorType || '',
         configNotice: listConfigResult.reason || '',
         providers: Object.entries(providers).map(([name, p]) => {
@@ -17905,6 +18048,10 @@ async function main() {
 }
 
 main().catch((err) => {
-    console.error('错误:', err && err.message ? err.message : err);
+    if (err && typeof err.code === 'string' && err.code.startsWith('CONFIG_')) {
+        console.error(formatConfigError(err));
+    } else {
+        console.error('错误:', err && err.message ? err.message : err);
+    }
     process.exit(1);
 });
