@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url);
 const { createStartupAuth } = require('../../lib/web-startup-auth');
 const test = globalThis.test || (await import('node:test')).test;
 
-test('startup authentication protects loopback API, assets and bridge with no anonymous bypass', async () => {
+test('startup authentication requires an explicit token without login or cookie state', async () => {
     const auth = createStartupAuth();
     const restarted = createStartupAuth();
     assert.notEqual(auth.token, restarted.token);
@@ -14,24 +14,18 @@ test('startup authentication protects loopback API, assets and bridge with no an
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     const origin = `http://127.0.0.1:${server.address().port}`;
     try {
-        for (const route of ['/api', '/res/example.js', '/download/file']) {
-            assert.equal((await fetch(origin + route)).status, 401, route);
-        }
-        const loginPage = await fetch(origin + '/');
-        const html = await loginPage.text();
-        assert.match(html, /输入启动访问令牌/);
-        assert.ok(!html.includes(auth.token));
-        assert.equal(loginPage.headers.get('referrer-policy'), 'no-referrer');
+        assert.equal((await fetch(origin + '/api')).status, 401);
         assert.equal((await fetch(origin + '/api', { headers: { Authorization: 'Bearer wrong' } })).status, 401);
         assert.equal((await fetch(origin + '/api', { headers: { Authorization: `Bearer ${auth.token}` } })).status, 200);
-        const loggedIn = await fetch(origin + '/auth/login', { method: 'POST', headers: { Origin: origin, Authorization: `Bearer ${auth.token}` } });
-        assert.equal(loggedIn.status, 204);
-        const setCookie = loggedIn.headers.get('set-cookie');
-        assert.match(setCookie, /HttpOnly; SameSite=Strict; Path=\//);
-        const cookie = setCookie.split(';')[0];
-        assert.equal((await fetch(origin + '/api', { headers: { Cookie: cookie } })).status, 200);
-        assert.equal((await fetch(origin + '/bridge/local/v1/models', { headers: { Cookie: cookie } })).status, 200);
-        assert.equal((await fetch(origin + '/api', { method: 'POST', headers: { Cookie: cookie, Origin: 'https://attacker.test' } })).status, 403);
-        assert.equal(restarted.authorized({ url: '/api', headers: { cookie } }), false);
+        assert.equal((await fetch(origin + `/?token=${auth.token}`)).status, 200);
+        assert.equal((await fetch(origin + `/download/file?token=${auth.token}`)).status, 200);
+        assert.equal((await fetch(origin + '/web-ui/app.js')).status, 200);
+        assert.equal((await fetch(origin + '/res/vue.js')).status, 200);
+        assert.equal(restarted.authorized({ url: `/?token=${auth.token}` }), false);
+        const response = await fetch(origin + '/api', { headers: { Authorization: `Bearer ${auth.token}` } });
+        const tokenModule = await import('../../web-ui/modules/access-token.mjs');
+        assert.ok(!tokenModule.authorizationHeaders({ 'Content-Type': 'application/json' }).Authorization);
+        assert.equal(tokenModule.withAccessToken('/download/file'), '/download/file');
+        assert.equal(response.headers.get('set-cookie'), null);
     } finally { await new Promise(resolve => server.close(resolve)); }
 });

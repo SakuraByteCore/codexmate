@@ -1,3 +1,4 @@
+import { authorizationHeaders } from './access-token.mjs';
 const browserLocation = typeof location !== 'undefined' ? location : null;
 
 export const API_BASE = (browserLocation && browserLocation.origin && browserLocation.origin !== 'null')
@@ -7,7 +8,7 @@ export const API_BASE = (browserLocation && browserLocation.origin && browserLoc
 async function postApi(action, params = {}) {
     return await fetch(`${API_BASE}/api`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authorizationHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action, params })
     });
 }

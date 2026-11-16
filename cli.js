@@ -15392,7 +15392,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
     const openHost = host === '::'
         ? '::1'
         : (host === '0.0.0.0' ? DEFAULT_WEB_OPEN_HOST : host);
-    const openUrl = `http://${formatHostForUrl(openHost)}:${port}/#token=${encodeURIComponent(httpToken)}`;
+    const openUrl = `http://${formatHostForUrl(openHost)}:${port}/?token=${encodeURIComponent(httpToken)}`;
     server.listen(port, host, () => {
         console.log('\n✓ Web UI 已启动');
         const willOpenBrowser = !!openBrowser && !process.env.CODEXMATE_NO_BROWSER;

@@ -1,26 +1,27 @@
 # Web UI 强制启动鉴权技术变更
 
 ### 问题
-默认监听已为 127.0.0.1，但本机请求存在免认证路径。启动不自动提供浏览器登录凭据。
+启动鉴权曾使用登录页、HttpOnly Cookie 和会话状态。浏览器地址中的访问 token 会被清理，刷新或复制链接后无法直接复用。
 
 ### 根因
-assertRequestAuthorized 对回环来源直接放行；外层中间件只保护远程 bridge。
+早期实现把 token 只用于一次性登录交换，再以 Cookie 表示已认证状态。
 
 ### 变更
-采用 Node.js 原生 HTTP 中间件。每次启动生成独立随机 token，已有 CODEXMATE_HTTP_TOKEN 优先。令牌仅存在内存，不写配置。
-保留默认 127.0.0.1。保留外网监听必须显式配置令牌的限制。
-在已有 IP 白名单之后、所有业务路由之前检查启动鉴权，本机无例外。
-打印带 fragment token 的启动 URL。浏览器引导页读取 fragment，经同源 POST 换取 HttpOnly、SameSite=Strict 会话 cookie，随后移除 fragment。
-API 可直接携带 Bearer token。bridge 必须使用 Bearer，不使用浏览器 cookie 代替。
-拒绝跨站写请求；无凭据返回 401。认证引导页不包含业务数据。
-不改动已有用户配置、CI 或密钥文件。回滚本次命名模块与 cli.js 接入行即可。
+采用无登录态模式。启动 URL 固定携带 `?token=<访问令牌>`，访问 token 始终保留在地址栏，不再生成 Cookie、登录页或会话状态。
+API 请求从当前 URL 读取 token，并通过 `Authorization: Bearer <token>` 发送。直接下载、ZIP 上传、独立会话链接也显式携带 token。
+API、下载和根页面必须提供有效 token。静态 JS、CSS、图片不包含密钥，允许公开加载；敏感数据接口统一鉴权。
+bridge 保持既有独立鉴权边界，不与 Web UI 启动 token 合并。
+默认监听保持 127.0.0.1。外网监听继续要求显式配置 CODEXMATE_HTTP_TOKEN。
+不使用 Cookie、localStorage、sessionStorage 或登录状态。所有请求必须显式携带 token。
 
 ### 预期结果
-启动后无 token 的本机 API 请求返回 401。终端打印的登录 URL 可直接打开 UI。重启使旧 cookie 失效。
+执行 npm run dev 后，打开的 URL 始终显示 token。直接刷新、复制并打开该 URL 均能访问。
+不携带 token 的 API 返回 401。不存在登录页、登录状态或认证 Cookie。
 
 ### 验证记录
-- `node tests/unit/run.mjs`：876 项全部通过，耗时 29.373 秒。
+- `node tests/unit/run.mjs`：876 项全部通过，耗时 30.561 秒。
 - `node tests/e2e/run.js`：退出码 0。
-- 真实 CLI 启动验证：默认回环 URL、随机启动令牌、匿名 API 401、登录 cookie、认证健康检查 200、认证界面资源 200 全部通过。
+- 真实 npm run dev：URL 保留 ?token；根页面直达 UI；无登录页/Cookie；匿名 API 401；Bearer API 200。
+- 相关分组回归：88 项通过。
 - `node --check` 与 `git diff --check`：通过。
-- 旧测试客户端已显式携带 Bearer token。未恢复任何匿名访问路径。
+- 未执行真实浏览器下载交互；下载与 ZIP 上传已通过代码链路和端到端接口验证。

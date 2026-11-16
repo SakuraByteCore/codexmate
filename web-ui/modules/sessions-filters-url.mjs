@@ -1,3 +1,4 @@
+import { getAccessToken } from './access-token.mjs';
 import {
     buildSessionFilterCacheState,
     isSessionQueryEnabled
@@ -119,6 +120,8 @@ export function buildSessionsFilterShareUrl(vm) {
         // 使用干净的根路径作为基础 URL，避免把 /web-ui/index.html 或 /session 带进分享链接。
         const baseUrl = window.location.origin + '/';
         const url = canonicalizeWebUiUrl(new URL(baseUrl));
+        const accessToken = getAccessToken();
+        if (accessToken) url.searchParams.set('token', accessToken);
         url.searchParams.set('tab', 'sessions');
         url.searchParams.set('s_source', String(vm.sessionFilterSource || 'all'));
         if (vm.sessionPathFilter) url.searchParams.set('s_path', String(vm.sessionPathFilter || ''));

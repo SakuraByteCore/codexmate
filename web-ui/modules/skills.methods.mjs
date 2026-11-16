@@ -1,3 +1,4 @@
+import { authorizationHeaders, withAccessToken } from './access-token.mjs';
 ﻿function createUnsupportedSkillsTargetAppError(app) {
     return new Error(`Unsupported skills target app: ${String(app)}`);
 }
@@ -326,9 +327,9 @@ export function createSkillsMethods({ api }) {
                 : `${this.skillsTargetApp}-skills.zip`;
             const response = await fetch(`/api/import-skills-zip?targetApp=${encodeURIComponent(this.skillsTargetApp)}`, {
                 method: 'POST',
-                headers: {
+                headers: authorizationHeaders({
                     'x-codexmate-file-name': encodeURIComponent(fileName)
-                },
+                }),
                 body: file
             });
             let payload = {};
@@ -414,9 +415,9 @@ export function createSkillsMethods({ api }) {
                 }
                 const exportedCount = Array.isArray(res.exported) ? res.exported.length : 0;
                 const failedCount = Array.isArray(res.failed) ? res.failed.length : 0;
-                const downloadUrl = typeof res.downloadPath === 'string' && res.downloadPath.trim()
+                const downloadUrl = withAccessToken(typeof res.downloadPath === 'string' && res.downloadPath.trim()
                     ? res.downloadPath.trim()
-                    : `/download/${encodeURIComponent(res.fileName)}`;
+                    : `/download/${encodeURIComponent(res.fileName)}`);
                 const link = document.createElement('a');
                 link.href = downloadUrl;
                 link.download = res.fileName;
@@ -449,7 +450,7 @@ export function createSkillsMethods({ api }) {
                     return;
                 }
                 const link = document.createElement('a');
-                link.href = res.downloadPath || `/download/${encodeURIComponent(res.fileName)}`;
+                link.href = withAccessToken(res.downloadPath || `/download/${encodeURIComponent(res.fileName)}`);
                 link.download = res.fileName;
                 document.body.appendChild(link);
                 link.click();

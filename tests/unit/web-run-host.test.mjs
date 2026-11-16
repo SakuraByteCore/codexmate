@@ -1460,7 +1460,7 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
     assetEndHandler();
     assert.deepStrictEqual(spawnCalls, [{
         command: 'cmd',
-        args: ['/c', 'start', '', 'http://127.0.0.1:3737/#token=secret-token'],
+        args: ['/c', 'start', '', 'http://127.0.0.1:3737/?token=secret-token'],
         options: {
             stdio: 'ignore',
             detached: true,
@@ -1754,7 +1754,7 @@ test('createWebServer retries readiness probe failures before auto-opening the b
     timers[0].callback();
     assert.deepStrictEqual(spawnCalls, [{
         command: 'xdg-open',
-        args: ['http://127.0.0.1:3737/#token=unit-startup-token'],
+        args: ['http://127.0.0.1:3737/?token=unit-startup-token'],
         options: {
             stdio: 'ignore',
             detached: true,
