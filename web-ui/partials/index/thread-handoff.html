@@ -1,0 +1,47 @@
+                                <section v-if="activeSession" class="session-workspace thread-handoff" aria-label="会话交接">
+                                    <div class="session-workspace-header">
+                                        <div>
+                                            <h3 class="session-workspace-title">会话交接</h3>
+                                            <p class="session-workspace-subtitle">目标代理需通过 CLI ack 提交读取证据。复制卡片不代表已发送或已读取。</p>
+                                        </div>
+                                        <button class="btn-mini" type="button" @click="loadThreadHandoffs" :disabled="handoffLoading || handoffBusy">{{ handoffLoading ? '刷新中…' : '刷新交接历史' }}</button>
+                                    </div>
+                                    <form @submit.prevent="createThreadHandoff" class="session-workspace-grid">
+                                        <label class="session-workspace-card session-workspace-card-wide">
+                                            <span class="session-workspace-card-title">目标代理</span>
+                                            <input v-model="handoffDraft.target" class="session-query-input" required :disabled="handoffBusy" placeholder="填写目标代理标识">
+                                        </label>
+                                        <label v-for="field in handoffFields" :key="field.key" class="session-workspace-card">
+                                            <span class="session-workspace-card-title">{{ field.label }}</span>
+                                            <textarea v-model="handoffDraft[field.key]" class="session-query-input" rows="3" :required="field.required" :disabled="handoffBusy" :placeholder="field.key === 'goal' ? '填写本次交接目标' : '每行填写一项'"></textarea>
+                                        </label>
+                                        <div class="session-workspace-card-wide">
+                                            <button class="btn-mini" type="submit" :disabled="handoffBusy || handoffLoading || !handoffDraft.target.trim() || !handoffDraft.goal.trim()">{{ handoffBusy ? '处理中…' : '生成交接' }}</button>
+                                        </div>
+                                    </form>
+                                    <p v-if="handoffError" class="state-message error" role="alert">{{ handoffError }}</p>
+                                    <p v-if="handoffNotice" class="state-message" role="status" aria-live="polite">{{ handoffNotice }}</p>
+                                    <label v-if="handoffCopyText" class="session-workspace-card session-workspace-card-wide">
+                                        <span class="session-workspace-card-title">卡片文本（可手动复制）</span>
+                                        <textarea class="session-query-input" rows="6" readonly :value="handoffCopyText" @focus="$event.target.select()"></textarea>
+                                    </label>
+                                    <p v-if="handoffLoading" role="status">正在加载交接历史…</p>
+                                    <p v-else-if="!handoffError && !handoffRecords.length" class="session-workspace-empty">暂无交接记录</p>
+                                    <ol v-if="handoffRecords.length" class="session-workspace-list">
+                                        <li v-for="record in handoffRecords" :key="record.id" class="session-workspace-card">
+                                            <div class="session-workspace-card-title">{{ record.target }} · {{ handoffStatusLabel(record.status) }}</div>
+                                            <div>交接标识：<code>{{ record.id }}</code></div>
+                                            <div>创建时间：{{ record.createdAt }} · 投递耗时：{{ record.durationMs }} 毫秒 · 写入耗时：{{ record.writeDurationMs || 0 }} 毫秒</div>
+                                            <div>交接路径：{{ record.route === 'mcp' ? 'MCP 工具' : '文件级' }} · 文件回退：{{ record.fallback ? '是' : '否' }}</div>
+                                            <div v-if="record.mcp">服务：{{ record.mcp.server }} · 工具：{{ record.mcp.tool }}</div>
+                                            <div>写入结果：{{ record.writeResult === 'written' ? '已写入' : (record.writeResult === 'failed_or_unconfirmed' ? '失败或结果未确认（不重试）' : '未执行写入') }}</div>
+                                            <div v-if="record.filePath">文件位置：<code>{{ record.filePath }}</code></div>
+                                            <div v-if="record.reason">原因：{{ record.reason }}</div>
+                                            <div v-if="record.readConfirmation">
+                                                <div>读取代理：{{ record.readConfirmation.agent }} · 确认时间：{{ record.readConfirmation.at }}</div>
+                                                <div>读取证据：{{ record.readConfirmation.evidence }}</div>
+                                            </div>
+                                            <button class="btn-mini" type="button" @click="copyThreadHandoff(record)" :disabled="handoffBusy || handoffLoading">一键文件级注入（复制卡片）</button>
+                                        </li>
+                                    </ol>
+                                </section>

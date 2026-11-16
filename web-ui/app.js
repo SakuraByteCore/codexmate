@@ -1,3 +1,4 @@
+import { threadHandoffMixin } from './modules/thread-handoff.mjs';
 import {
     DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT,
     DEFAULT_MODEL_CONTEXT_WINDOW,
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const appOptions = {
+        mixins: [threadHandoffMixin],
         data() {
             return {
                 lang: 'zh',

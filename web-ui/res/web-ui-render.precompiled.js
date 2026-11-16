@@ -4372,6 +4372,155 @@ return function render(_ctx, _cache) {
                                     ref: _ctx.setSessionPreviewScrollRef,
                                     onScroll: _ctx.onSessionPreviewScroll
                                   }, [
+                                    (_ctx.activeSession)
+                                      ? (_openBlock(), _createElementBlock("section", {
+                                          key: 0,
+                                          class: "session-workspace thread-handoff",
+                                          "aria-label": "会话交接"
+                                        }, [
+                                          _createElementVNode("div", { class: "session-workspace-header" }, [
+                                            _createElementVNode("div", null, [
+                                              _createElementVNode("h3", { class: "session-workspace-title" }, "会话交接"),
+                                              _createElementVNode("p", { class: "session-workspace-subtitle" }, "目标代理需通过 CLI ack 提交读取证据。复制卡片不代表已发送或已读取。")
+                                            ]),
+                                            _createElementVNode("button", {
+                                              class: "btn-mini",
+                                              type: "button",
+                                              onClick: _ctx.loadThreadHandoffs,
+                                              disabled: _ctx.handoffLoading || _ctx.handoffBusy
+                                            }, _toDisplayString(_ctx.handoffLoading ? '刷新中…' : '刷新交接历史'), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                          ]),
+                                          _createElementVNode("form", {
+                                            onSubmit: _withModifiers(_ctx.createThreadHandoff, ["prevent"]),
+                                            class: "session-workspace-grid"
+                                          }, [
+                                            _createElementVNode("label", { class: "session-workspace-card session-workspace-card-wide" }, [
+                                              _createElementVNode("span", { class: "session-workspace-card-title" }, "目标代理"),
+                                              _withDirectives(_createElementVNode("input", {
+                                                "onUpdate:modelValue": $event => ((_ctx.handoffDraft.target) = $event),
+                                                class: "session-query-input",
+                                                required: "",
+                                                disabled: _ctx.handoffBusy,
+                                                placeholder: "填写目标代理标识"
+                                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                                                [_vModelText, _ctx.handoffDraft.target]
+                                              ])
+                                            ]),
+                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffFields, (field) => {
+                                              return (_openBlock(), _createElementBlock("label", {
+                                                key: field.key,
+                                                class: "session-workspace-card"
+                                              }, [
+                                                _createElementVNode("span", { class: "session-workspace-card-title" }, _toDisplayString(field.label), 1 /* TEXT */),
+                                                _withDirectives(_createElementVNode("textarea", {
+                                                  "onUpdate:modelValue": $event => ((_ctx.handoffDraft[field.key]) = $event),
+                                                  class: "session-query-input",
+                                                  rows: "3",
+                                                  required: field.required,
+                                                  disabled: _ctx.handoffBusy,
+                                                  placeholder: field.key === 'goal' ? '填写本次交接目标' : '每行填写一项'
+                                                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "required", "disabled", "placeholder"]), [
+                                                  [_vModelText, _ctx.handoffDraft[field.key]]
+                                                ])
+                                              ]))
+                                            }), 128 /* KEYED_FRAGMENT */)),
+                                            _createElementVNode("div", { class: "session-workspace-card-wide" }, [
+                                              _createElementVNode("button", {
+                                                class: "btn-mini",
+                                                type: "submit",
+                                                disabled: _ctx.handoffBusy || _ctx.handoffLoading || !_ctx.handoffDraft.target.trim() || !_ctx.handoffDraft.goal.trim()
+                                              }, _toDisplayString(_ctx.handoffBusy ? '处理中…' : '生成交接'), 9 /* TEXT, PROPS */, ["disabled"])
+                                            ])
+                                          ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
+                                          (_ctx.handoffError)
+                                            ? (_openBlock(), _createElementBlock("p", {
+                                                key: 0,
+                                                class: "state-message error",
+                                                role: "alert"
+                                              }, _toDisplayString(_ctx.handoffError), 1 /* TEXT */))
+                                            : _createCommentVNode("v-if", true),
+                                          (_ctx.handoffNotice)
+                                            ? (_openBlock(), _createElementBlock("p", {
+                                                key: 1,
+                                                class: "state-message",
+                                                role: "status",
+                                                "aria-live": "polite"
+                                              }, _toDisplayString(_ctx.handoffNotice), 1 /* TEXT */))
+                                            : _createCommentVNode("v-if", true),
+                                          (_ctx.handoffCopyText)
+                                            ? (_openBlock(), _createElementBlock("label", {
+                                                key: 2,
+                                                class: "session-workspace-card session-workspace-card-wide"
+                                              }, [
+                                                _createElementVNode("span", { class: "session-workspace-card-title" }, "卡片文本（可手动复制）"),
+                                                _createElementVNode("textarea", {
+                                                  class: "session-query-input",
+                                                  rows: "6",
+                                                  readonly: "",
+                                                  value: _ctx.handoffCopyText,
+                                                  onFocus: $event => ($event.target.select())
+                                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onFocus"])
+                                              ]))
+                                            : _createCommentVNode("v-if", true),
+                                          (_ctx.handoffLoading)
+                                            ? (_openBlock(), _createElementBlock("p", {
+                                                key: 3,
+                                                role: "status"
+                                              }, "正在加载交接历史…"))
+                                            : (!_ctx.handoffError && !_ctx.handoffRecords.length)
+                                              ? (_openBlock(), _createElementBlock("p", {
+                                                  key: 4,
+                                                  class: "session-workspace-empty"
+                                                }, "暂无交接记录"))
+                                              : _createCommentVNode("v-if", true),
+                                          (_ctx.handoffRecords.length)
+                                            ? (_openBlock(), _createElementBlock("ol", {
+                                                key: 5,
+                                                class: "session-workspace-list"
+                                              }, [
+                                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffRecords, (record) => {
+                                                  return (_openBlock(), _createElementBlock("li", {
+                                                    key: record.id,
+                                                    class: "session-workspace-card"
+                                                  }, [
+                                                    _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(record.target) + " · " + _toDisplayString(_ctx.handoffStatusLabel(record.status)), 1 /* TEXT */),
+                                                    _createElementVNode("div", null, [
+                                                      _createTextVNode("交接标识："),
+                                                      _createElementVNode("code", null, _toDisplayString(record.id), 1 /* TEXT */)
+                                                    ]),
+                                                    _createElementVNode("div", null, "创建时间：" + _toDisplayString(record.createdAt) + " · 投递耗时：" + _toDisplayString(record.durationMs) + " 毫秒 · 写入耗时：" + _toDisplayString(record.writeDurationMs || 0) + " 毫秒", 1 /* TEXT */),
+                                                    _createElementVNode("div", null, "交接路径：" + _toDisplayString(record.route === 'mcp' ? 'MCP 工具' : '文件级') + " · 文件回退：" + _toDisplayString(record.fallback ? '是' : '否'), 1 /* TEXT */),
+                                                    (record.mcp)
+                                                      ? (_openBlock(), _createElementBlock("div", { key: 0 }, "服务：" + _toDisplayString(record.mcp.server) + " · 工具：" + _toDisplayString(record.mcp.tool), 1 /* TEXT */))
+                                                      : _createCommentVNode("v-if", true),
+                                                    _createElementVNode("div", null, "写入结果：" + _toDisplayString(record.writeResult === 'written' ? '已写入' : (record.writeResult === 'failed_or_unconfirmed' ? '失败或结果未确认（不重试）' : '未执行写入')), 1 /* TEXT */),
+                                                    (record.filePath)
+                                                      ? (_openBlock(), _createElementBlock("div", { key: 1 }, [
+                                                          _createTextVNode("文件位置："),
+                                                          _createElementVNode("code", null, _toDisplayString(record.filePath), 1 /* TEXT */)
+                                                        ]))
+                                                      : _createCommentVNode("v-if", true),
+                                                    (record.reason)
+                                                      ? (_openBlock(), _createElementBlock("div", { key: 2 }, "原因：" + _toDisplayString(record.reason), 1 /* TEXT */))
+                                                      : _createCommentVNode("v-if", true),
+                                                    (record.readConfirmation)
+                                                      ? (_openBlock(), _createElementBlock("div", { key: 3 }, [
+                                                          _createElementVNode("div", null, "读取代理：" + _toDisplayString(record.readConfirmation.agent) + " · 确认时间：" + _toDisplayString(record.readConfirmation.at), 1 /* TEXT */),
+                                                          _createElementVNode("div", null, "读取证据：" + _toDisplayString(record.readConfirmation.evidence), 1 /* TEXT */)
+                                                        ]))
+                                                      : _createCommentVNode("v-if", true),
+                                                    _createElementVNode("button", {
+                                                      class: "btn-mini",
+                                                      type: "button",
+                                                      onClick: $event => (_ctx.copyThreadHandoff(record)),
+                                                      disabled: _ctx.handoffBusy || _ctx.handoffLoading
+                                                    }, "一键文件级注入（复制卡片）", 8 /* PROPS */, ["onClick", "disabled"])
+                                                  ]))
+                                                }), 128 /* KEYED_FRAGMENT */))
+                                              ]))
+                                            : _createCommentVNode("v-if", true)
+                                        ]))
+                                      : _createCommentVNode("v-if", true),
                                     _createElementVNode("div", {
                                       class: "session-preview-header",
                                       ref: _ctx.setSessionPreviewHeaderRef
@@ -4528,22 +4677,22 @@ return function render(_ctx, _cache) {
                                     ]),
                                     (_ctx.sessionDetailLoading && !_ctx.sessionPreviewLoadingMore)
                                       ? (_openBlock(), _createElementBlock("div", {
-                                          key: 0,
+                                          key: 1,
                                           class: "session-preview-empty"
                                         }, _toDisplayString(_ctx.t('sessions.preview.loadingBody')), 1 /* TEXT */))
                                       : (_ctx.activeSessionDetailError)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 1,
+                                            key: 2,
                                             class: "session-preview-empty"
                                           }, _toDisplayString(_ctx.activeSessionDetailError), 1 /* TEXT */))
                                         : (!_ctx.activeSessionMessages.length)
                                           ? (_openBlock(), _createElementBlock("div", {
-                                              key: 2,
+                                              key: 3,
                                               class: "session-preview-empty"
                                             }, _toDisplayString(_ctx.t('sessions.preview.emptyMsgs')), 1 /* TEXT */))
                                           : (_ctx.sessionPreviewRenderEnabled && !_ctx.activeSessionVisibleMessages.length)
                                             ? (_openBlock(), _createElementBlock("div", {
-                                                key: 3,
+                                                key: 4,
                                                 class: "session-preview-empty"
                                               }, [
                                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.preview.rendering')), 1 /* TEXT */),
@@ -4555,11 +4704,11 @@ return function render(_ctx, _cache) {
                                               ]))
                                             : (!_ctx.sessionPreviewRenderEnabled)
                                               ? (_openBlock(), _createElementBlock("div", {
-                                                  key: 4,
+                                                  key: 5,
                                                   class: "session-preview-empty"
                                                 }, _toDisplayString(_ctx.t('sessions.preview.preparing')), 1 /* TEXT */))
                                               : (_openBlock(), _createElementBlock("div", {
-                                                  key: 5,
+                                                  key: 6,
                                                   class: "session-preview-body"
                                                 }, [
                                                   (_ctx.activeSessionWorkspaceSummary.available)

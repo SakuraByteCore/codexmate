@@ -20,6 +20,7 @@ function request(action, params = {}) {
     const req = http.request(getApiUrl(), {
             method: 'POST',
             headers: {
+                Authorization: 'Bearer codexmate-recent-health-token',
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload)
             }
@@ -84,6 +85,7 @@ async function run() {
         USERPROFILE: tempHome,
         HOME: tempHome,
         CODEXMATE_NO_BROWSER: '1',
+        CODEXMATE_HTTP_TOKEN: 'codexmate-recent-health-token',
         CODEXMATE_PORT: String(g_port)
     };
 

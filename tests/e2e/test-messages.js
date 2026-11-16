@@ -11,6 +11,7 @@ function postBinaryJson(port, requestPath, bodyBuffer, headers = {}, timeoutMs =
             path: requestPath,
             method: 'POST',
             headers: {
+                Authorization: `Bearer ${process.env.CODEXMATE_HTTP_TOKEN || 'codexmate-e2e-token'}`,
                 'Content-Type': 'application/octet-stream',
                 'Content-Length': payload.length,
                 ...headers
@@ -45,7 +46,8 @@ function getBinary(port, requestPath, timeoutMs = 4000) {
             hostname: '127.0.0.1',
             port,
             path: requestPath,
-            method: 'GET'
+            method: 'GET',
+            headers: { Authorization: `Bearer ${process.env.CODEXMATE_HTTP_TOKEN || 'codexmate-e2e-token'}` }
         }, (res) => {
             const chunks = [];
             res.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));

@@ -109,6 +109,7 @@ function postJson(port, payload, timeoutMs = 2000) {
             path: '/api',
             method: 'POST',
             headers: {
+                Authorization: `Bearer ${process.env.CODEXMATE_HTTP_TOKEN || 'codexmate-e2e-token'}`,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(data)
             }
