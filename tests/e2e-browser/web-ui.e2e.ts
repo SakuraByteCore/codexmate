@@ -1,5 +1,6 @@
 import { test, type Browser } from '@e2e-dev/web';
 import { expect } from 'e2e';
+import accessToken from './access-token.cjs';
 
 // 桌面（≥721px）由侧栏导航，紧凑布局（≤720px）由顶栏标签页导航，
 // 两者共用同一套 mainTab 状态，这里统一用“可见的那个导航入口”定位。
@@ -23,9 +24,9 @@ const NAV_PANELS = [
 ];
 
 test('首页加载并渲染主导航', async ({ app, browser, screen }) => {
-    await app.open('/');
+    await app.open(accessToken.entryPath);
     await expect(browser).toHaveTitle('Codex Mate');
-    await expect(browser).toHaveURL('/');
+    await expect(browser).toHaveURL(accessToken.entryPath);
     // #app 带有 v-cloak，Vue 挂载后移除，元素可见即表示前端已完成水合。
     await expect(screen.getByTestId('app')).toBeVisible();
     // 导航状态会持久化，首页用例显式切回概览，不依赖上次会话的标签页。
@@ -35,16 +36,17 @@ test('首页加载并渲染主导航', async ({ app, browser, screen }) => {
 });
 
 test('导航入口逐个切换并展示对应面板', async ({ app, browser, screen }) => {
-    await app.open('/');
+    await app.open(accessToken.entryPath);
     for (const entry of NAV_PANELS) {
         await navItem(browser, entry.id).tap();
         await expect(activeNavItem(browser, entry.id)).toBeVisible();
         await expect(screen.getByTestId(entry.panel)).toBeVisible();
+        await expect(browser).toHaveURL(accessToken.entryPath);
     }
 });
 
 test('设置面板二级标签页切换', async ({ app, browser, screen }) => {
-    await app.open('/');
+    await app.open(accessToken.entryPath);
     await navItem(browser, 'settings').tap();
     // 二级标签页同样会持久化，先归一化到“通用”页再断言。
     const generalTab = screen.getByTestId('settings-tab-general');
@@ -59,7 +61,7 @@ test('设置面板二级标签页切换', async ({ app, browser, screen }) => {
 });
 
 test('语言切换后界面文案随 locale 更新', async ({ app, browser, screen }) => {
-    await app.open('/');
+    await app.open(accessToken.entryPath);
     await navItem(browser, 'settings').tap();
     // 二级标签页会持久化，先归一化到“通用”页，语言下拉才可见。
     await screen.getByTestId('settings-tab-general').tap();
@@ -70,4 +72,10 @@ test('语言切换后界面文案随 locale 更新', async ({ app, browser, scre
     await expect(languageTitle).toHaveText('Language');
     await languageSelect.selectOption({ value: 'zh' });
     await expect(languageTitle).toHaveText('语言');
+});
+
+
+test('缺少 token 的访问拒绝返回业务页面', async ({ app, browser }) => {
+    await app.open('/');
+    await expect(browser.locator('pre')).toHaveText('{"error":"Unauthorized"}');
 });

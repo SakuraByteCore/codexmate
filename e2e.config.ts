@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
+import accessToken from './tests/e2e-browser/access-token.cjs';
 
 const startAppScript = path.join('tests', 'e2e-browser', 'start-app.js');
 const desktopPort = process.env.CODEXMATE_E2E_PORT || '3939';
@@ -17,11 +18,13 @@ function browserTarget(name: string, port: string, viewport: { width: number; he
         }),
         app: {
             url: `http://127.0.0.1:${port}`,
+            readyUrl: `http://127.0.0.1:${port}${accessToken.entryPath}`,
             command: {
                 executable: process.execPath,
                 args: [startAppScript, port],
                 env: {
                     CODEXMATE_PORT: port,
+                    CODEXMATE_E2E_TOKEN: accessToken.token,
                     CODEXMATE_NO_BROWSER: '1'
                 },
                 startupTimeout: 60_000,
