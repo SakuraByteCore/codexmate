@@ -144,7 +144,9 @@ test('saveSystemPromptFile writes new file successfully', () => {
     const filePath = path.join(tmpDir, 'agent', 'APPEND_SYSTEM.md');
     assert.strictEqual(fs.readFileSync(filePath, 'utf8'), 'hello world\n');
     const stat = fs.statSync(filePath);
-    assert.strictEqual(stat.mode & 0o777, 0o600);
+    if (process.platform !== 'win32') {
+        assert.strictEqual(stat.mode & 0o777, 0o600);
+    }
 });
 
 test('saveSystemPromptFile appends trailing newline if missing', () => {
@@ -299,13 +301,20 @@ test('buildSystemPromptDiff truncated with identical texts has no changes', () =
 });
 
 test('readSystemPromptFile handles read error gracefully', () => {
-    const { tmpDir, ctrl } = createTestController();
+    const tmpDir = path.join(os.tmpdir(), 'sys-prompt-read-error-' + Date.now() + '-' + Math.random().toString(36).slice(2));
     const filePath = path.join(tmpDir, 'agent', 'APPEND_SYSTEM.md');
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, 'content', 'utf8');
-    fs.chmodSync(filePath, 0o000);
+    const failingFs = Object.create(fs);
+    failingFs.readFileSync = (targetPath, ...args) => {
+        if (targetPath === filePath) throw new Error('simulated read failure');
+        return fs.readFileSync(targetPath, ...args);
+    };
+    const { ctrl } = createTestController({
+        tmpDir,
+        controllerDeps: { fs: failingFs }
+    });
     const result = ctrl.readSystemPromptFile({ scope: 'global', mode: 'append' });
-    fs.chmodSync(filePath, 0o644);
     assert.strictEqual(result.exists, false);
     assert.strictEqual(result.content, '');
     assert.ok(result.error);
