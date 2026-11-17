@@ -11,8 +11,8 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 52px;
-    padding-bottom: 28px;
-    scroll-padding-bottom: 40px;
+    padding-bottom: 8px;
+    scroll-padding-bottom: 8px;
     display: flex;
     flex-direction: column;
     scrollbar-width: none;
@@ -877,4 +877,45 @@
     .thread-handoff-body .session-workspace-header { align-items: flex-start; }
     .thread-handoff-actions { align-items: stretch; flex-direction: column; gap: 12px; }
     .thread-handoff-optional-summary small { width: 100%; margin: 4px 0 8px; }
+}
+
+/* Keep the session tab close to the viewport edge without changing other tabs. */
+.main-panel:has(#panel-sessions:not([style*="display: none"])) {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Fill the actual remaining viewport rather than subtracting a fixed header estimate. */
+@media (min-width: 1101px) {
+    .main-panel:has(#panel-sessions:not([style*="display: none"])) {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+    }
+    .main-panel:has(#panel-sessions:not([style*="display: none"])) > .main-panel-topbar {
+        flex-shrink: 0;
+    }
+    .content-wrapper:has(#panel-sessions:not([style*="display: none"])) {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        padding-bottom: 0;
+    }
+    #panel-sessions.session-browser-refined {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+    }
+    #panel-sessions > div:has(> .session-layout) {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+    }
+    #panel-sessions > div:has(> .session-layout) > :not(.session-layout) { flex-shrink: 0; }
+    #panel-sessions .session-layout {
+        flex: 1;
+        height: auto;
+        min-height: 0;
+    }
 }

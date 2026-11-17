@@ -390,7 +390,7 @@
     border: none;
     border-radius: 0;
     box-shadow: none;
-    padding: 0 0 40px;
+    padding: 0 0 8px;
     width: min(100%, 1480px);
     max-width: none;
 }
