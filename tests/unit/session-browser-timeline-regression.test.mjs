@@ -441,3 +441,19 @@ test('updateSessionTimelineOffset writes once when timeline nodes are present an
         { name: '--session-preview-header-offset', value: '52px' }
     ]);
 });
+
+
+test('preview jump buttons use immediate scrolling in hidden tabs and reduced motion', async () => {
+    const methods = createSessionBrowserMethods({});
+    for (const state of [{ hidden: true, reduced: false }, { hidden: false, reduced: true }, { hidden: false, reduced: false }]) {
+        const calls = [];
+        const scroll = { scrollHeight: 2400, scrollTo: options => calls.push(options) };
+        const context = { getSessionPreviewScrollContainer: () => scroll };
+        await withGlobalOverrides({ document: { hidden: state.hidden }, matchMedia: () => ({ matches: state.reduced }) }, async () => {
+            methods.scrollSessionPreviewToBottom.call(context);
+            methods.scrollSessionPreviewToTop.call(context);
+        });
+        const behavior = state.hidden || state.reduced ? 'instant' : 'smooth';
+        assert.deepEqual(calls, [{ top: 2400, behavior }, { top: 0, behavior }]);
+    }
+});

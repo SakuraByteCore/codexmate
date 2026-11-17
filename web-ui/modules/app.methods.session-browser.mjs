@@ -460,7 +460,9 @@ export function createSessionBrowserMethods(options = {}) {
             const scrollEl = this.getSessionPreviewScrollContainer();
             if (!scrollEl) return;
             if (typeof scrollEl.scrollTo === 'function') {
-                scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+                const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const instant = (typeof document !== 'undefined' && document.hidden) || reduceMotion;
+                scrollEl.scrollTo({ top: 0, behavior: instant ? 'instant' : 'smooth' });
             } else {
                 scrollEl.scrollTop = 0;
             }
@@ -470,7 +472,9 @@ export function createSessionBrowserMethods(options = {}) {
             const scrollEl = this.getSessionPreviewScrollContainer();
             if (!scrollEl) return;
             if (typeof scrollEl.scrollTo === 'function') {
-                scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+                const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const instant = (typeof document !== 'undefined' && document.hidden) || reduceMotion;
+                scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: instant ? 'instant' : 'smooth' });
             } else {
                 scrollEl.scrollTop = scrollEl.scrollHeight;
             }

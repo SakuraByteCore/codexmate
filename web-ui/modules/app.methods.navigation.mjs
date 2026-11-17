@@ -612,11 +612,23 @@
 
         scheduleAfterFrame(task) {
             const callback = typeof task === 'function' ? task : () => {};
+            const fallbackDelayMs = 100;
+            let completed = false;
+            let frameId;
+            let timer;
+            const run = () => {
+                if (completed) return;
+                completed = true;
+                clearTimeout(timer);
+                if (frameId !== undefined && typeof cancelAnimationFrame === 'function') {
+                    cancelAnimationFrame(frameId);
+                }
+                callback();
+            };
+            timer = setTimeout(run, fallbackDelayMs);
             if (typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(callback);
-                return;
+                frameId = requestAnimationFrame(run);
             }
-            setTimeout(callback, 16);
         },
         scheduleIdleTask(task, timeoutMs = 160) {
             const callback = typeof task === 'function' ? task : () => {};

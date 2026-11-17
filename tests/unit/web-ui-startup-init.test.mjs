@@ -348,3 +348,28 @@ test('mounted consumes shareable sessions tab URLs before canonical cleanup', as
     assert.deepStrictEqual(context.switchedTabs, ['sessions']);
     assert.strictEqual(context.mainTab, 'sessions');
 });
+
+
+test('session startup loads readable sessions before background configuration', async () => {
+    const appOptions = await captureCurrentBundledAppOptions();
+    const calls = [];
+    const timers = [];
+    const context = createStartupMountContext({
+        mainTab: 'sessions', loading: true,
+        scheduleAfterFrame(callback) { callback(); },
+        async loadSessions() { calls.push('sessions'); },
+        async loadAll(options) {
+            assert.equal(this.loading, false);
+            assert.equal(options.preserveLoading, true);
+            calls.push('config');
+            return true;
+        }
+    });
+    const globals = createStartupMountGlobals('http://127.0.0.1:3737/?tab=sessions');
+    globals.setTimeout = callback => { timers.push(callback); return timers.length; };
+    await withGlobalOverrides(globals, async () => {
+        appOptions.mounted.call(context);
+        await timers[0]();
+    });
+    assert.deepEqual(calls, ['sessions', 'config']);
+});

@@ -255,126 +255,66 @@
     line-height: 1.45;
 }
 
+/* Reading index: retain message keys and scroll linkage without crowded markers. */
 .session-timeline {
     position: absolute;
     top: var(--session-preview-header-offset, 72px);
-    right: 4px;
+    right: 8px;
     bottom: 12px;
-    width: 44px;
-    height: auto;
-    border-radius: 12px;
-    border: 1px solid var(--color-border-soft);
-    background: var(--color-surface-elevated);
-    box-shadow: var(--shadow-card);
-    padding: 6px 4px 28px;
+    width: 144px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 8px;
     z-index: 3;
+    background: var(--color-surface);
+    border: 0;
+    border-radius: 12px;
+    box-shadow: none;
+    overflow: hidden;
 }
-
-.session-timeline-track {
-    position: absolute;
-    left: 50%;
-    top: 10px;
-    bottom: 32px;
-    width: 2px;
-    transform: translateX(-50%);
-    background: var(--color-border-soft);
-    border-radius: 999px;
-}
-
+.session-timeline-heading { display: flex; flex-direction: column; gap: 4px; padding: 0 8px; }
+.session-timeline-heading > span:first-child { font-size: 12px; font-weight: 600; color: var(--color-text-secondary); }
+.session-timeline-count { font-size: 11px; color: var(--color-text-tertiary); }
+.session-timeline-reading-progress { flex-shrink: 0; height: 2px; margin: 0 8px; background: var(--color-border-soft); border-radius: 2px; overflow: hidden; }
+.session-timeline-reading-progress > span { display: block; height: 100%; background: var(--color-brand); transition: width 180ms ease; }
+.session-timeline-index { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--color-border-soft) transparent; }
 .session-timeline-node {
-    position: absolute;
-    left: 50%;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 1px solid var(--color-border-strong);
-    background: var(--color-surface);
-    transform: translate(-50%, -50%);
-    cursor: pointer;
-    padding: 0;
-    transition: border-color var(--transition-fast) var(--ease-spring), background var(--transition-fast) var(--ease-spring), box-shadow var(--transition-fast) var(--ease-spring);
-}
-
-.session-timeline-node:hover {
-    border-color: var(--color-brand);
-    background: var(--color-surface);
-    box-shadow: 0 0 0 3px rgba(210, 107, 90, 0.15);
-}
-
-.session-timeline-node.active {
-    border-color: var(--color-brand);
-    background: var(--color-brand);
-    box-shadow: 0 0 0 3px rgba(210, 107, 90, 0.2);
-}
-
-.session-timeline-current {
-    position: absolute;
-    left: 3px;
-    right: 3px;
-    bottom: 4px;
-    font-size: 10px;
-    line-height: 1.2;
-    color: var(--color-text-tertiary);
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 条状时间线 */
-.session-timeline-bar {
-    width: 8px;
-    padding: 0;
-}
-
-.session-timeline-bar-track {
-    position: absolute;
-    left: 50%;
-    top: 10px;
-    bottom: 32px;
-    width: 6px;
-    transform: translateX(-50%);
-    background: var(--color-border-soft);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.session-timeline-bar-progress {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
     width: 100%;
-    background: var(--color-brand);
-    border-radius: 3px;
-    transition: height var(--transition-fast) var(--ease-spring);
-}
-
-.session-timeline-bar-node {
-    position: absolute;
-    left: 50%;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid var(--color-border-strong);
-    background: var(--color-surface);
-    transform: translate(-50%, -50%);
+    min-height: 48px;
+    padding: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text-tertiary);
+    text-align: left;
     cursor: pointer;
-    padding: 0;
-    transition: all var(--transition-fast) var(--ease-spring);
-    z-index: 2;
+    transition: background 160ms ease, color 160ms ease;
 }
-
-.session-timeline-bar-node:hover {
-    border-color: var(--color-brand);
-    background: var(--color-surface);
-    box-shadow: 0 0 0 3px rgba(210, 107, 90, 0.15);
+.session-timeline-number { min-width: 28px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.session-timeline-label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.session-timeline-role { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+.session-timeline-time { font-size: 11px; font-variant-numeric: tabular-nums; }
+.session-timeline-indicator { margin-left: auto; flex-shrink: 0; width: 4px; height: 16px; border-radius: 4px; background: transparent; }
+.session-timeline-node:hover { background: var(--color-surface-alt); color: var(--color-text-primary); }
+.session-timeline-node.active { background: var(--color-brand-light); color: var(--color-brand-dark); box-shadow: none; }
+.session-timeline-node.active .session-timeline-role { color: var(--color-text-primary); font-weight: 600; }
+.session-timeline-node.active .session-timeline-indicator { background: var(--color-brand); }
+.session-timeline-node:active { background: var(--color-brand-subtle); }
+.session-timeline-node:focus-visible { outline: 2px solid var(--color-brand); outline-offset: -2px; }
+.session-timeline-current { position: static; display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: auto; padding: 4px 8px 0; font-size: 11px; line-height: 1.5; color: var(--color-text-tertiary); }
+.session-timeline-status-dot { width: 5px; height: 5px; flex-shrink: 0; border-radius: 50%; background: var(--color-brand); }
+.session-timeline-bar .session-timeline-reading-progress { height: 4px; }
+@media (min-width: 1101px) {
+    .session-preview-scroll { padding-right: 164px; }
 }
-
-.session-timeline-bar-node.active {
-    border-color: var(--color-brand);
-    background: var(--color-brand);
-    box-shadow: 0 0 0 3px rgba(210, 107, 90, 0.2);
+@media (prefers-reduced-motion: reduce) {
+    .session-timeline *, .session-timeline *::before { transition: none; scroll-behavior: auto; }
 }
 
 .session-msg {
@@ -844,4 +784,97 @@
 @media (prefers-reduced-motion: reduce) {
     #panel-sessions .session-preview-actions button { transition: none; }
     #panel-sessions .session-preview-actions button:active:not(:disabled) { transform: none; }
+}
+
+
+/* Scoped handoff form: quiet surface, full-width fields, one primary action. */
+#panel-sessions .thread-handoff {
+    flex-shrink: 0;
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: var(--color-surface-alt);
+    box-shadow: none;
+    overflow: hidden;
+}
+.thread-handoff-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 12px 20px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    transition: background 160ms ease;
+}
+.thread-handoff-summary::-webkit-details-marker { display: none; }
+.thread-handoff-summary::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 160ms ease;
+}
+.thread-handoff[open] > .thread-handoff-summary::before { transform: rotate(45deg); }
+.thread-handoff-summary-hint {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-tertiary);
+}
+.thread-handoff-body { display: grid; gap: 20px; padding: 0 20px 20px; }
+.thread-handoff-body .session-workspace-header { align-items: center; }
+.thread-handoff-body .session-workspace-subtitle { margin: 0; }
+.thread-handoff-form { display: grid; gap: 20px; min-width: 0; }
+.thread-handoff-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.thread-handoff-field .session-workspace-card-title { margin: 0; font-size: 13px; }
+.thread-handoff small { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--color-text-tertiary); }
+#panel-sessions .thread-handoff .session-query-input {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--color-surface);
+}
+#panel-sessions .thread-handoff textarea.session-query-input { min-height: 96px; resize: vertical; line-height: 1.6; }
+.thread-handoff-optional-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 44px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+.thread-handoff-optional[open] .session-workspace-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    margin-top: 12px;
+    gap: 16px;
+}
+.thread-handoff-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.thread-handoff .btn-mini { min-height: 44px; padding: 8px 16px; transition: background 160ms ease, color 160ms ease; }
+#panel-sessions .thread-handoff-submit { background: var(--color-brand); color: #fff; border-color: transparent; }
+#panel-sessions .thread-handoff-submit:hover:not(:disabled) { background: var(--color-brand-dark); }
+#panel-sessions .thread-handoff-submit:disabled { opacity: .45; cursor: not-allowed; }
+.thread-handoff-summary:hover { background: var(--color-brand-light); }
+.thread-handoff-summary:active { background: var(--color-brand-subtle); }
+.thread-handoff summary:focus-visible, .thread-handoff button:focus-visible {
+    outline: 2px solid var(--color-brand); outline-offset: -2px;
+}
+@media (max-width: 640px) {
+    .thread-handoff-summary { padding: 12px 16px; }
+    .thread-handoff-body { padding: 0 16px 16px; gap: 16px; }
+    .thread-handoff-body .session-workspace-header { align-items: flex-start; }
+    .thread-handoff-actions { align-items: stretch; flex-direction: column; gap: 12px; }
+    .thread-handoff-optional-summary small { width: 100%; margin: 4px 0 8px; }
 }

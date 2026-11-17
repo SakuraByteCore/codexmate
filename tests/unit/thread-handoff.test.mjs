@@ -148,7 +148,7 @@ register('handoff UI loads route and only confirms copy, never target consumptio
     let copied = '';
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { clipboard: { writeText: async text => { copied = text; } } } });
     try {
-        const vm = { ...threadHandoffMixin.data(), activeSession: { sessionId: 'ui-thread' } };
+        const vm = { ...threadHandoffMixin.data(), handoffExpanded: true, activeSession: { sessionId: 'ui-thread' } };
         for (const [name, method] of Object.entries(threadHandoffMixin.methods)) vm[name] = method.bind(vm);
         await vm.loadThreadHandoffs();
         assert.equal(vm.handoffRecords[0].route, 'mcp');
@@ -163,4 +163,51 @@ register('handoff UI loads route and only confirms copy, never target consumptio
         if (oldNavigator) Object.defineProperty(globalThis, 'navigator', oldNavigator);
         else delete globalThis.navigator;
     }
+});
+register('handoff UI restores memory drafts by source and session without loading collapsed history', async () => {
+    const { threadHandoffMixin: mixin } = await import('../../web-ui/modules/thread-handoff.mjs');
+    const vm = { ...mixin.data(), activeSession: null };
+    for (const [name, method] of Object.entries(mixin.methods)) vm[name] = method.bind(vm);
+    const select = (source, sessionId) => {
+        const previousKey = mixin.computed.handoffSessionKey.call(vm);
+        vm.activeSession = sessionId ? { source, sessionId } : null;
+        mixin.watch.handoffSessionKey.handler.call(vm, mixin.computed.handoffSessionKey.call(vm), previousKey);
+    };
+    const oldFetch = globalThis.fetch;
+    const calls = [];
+    globalThis.fetch = async (_url, request) => {
+        calls.push(JSON.parse(request.body));
+        return { headers: { get: () => 'application/json' }, json: async () => ({ records: [] }) };
+    };
+    try {
+        select('codex', 'same-id');
+        Object.assign(vm.handoffDraft, { target: 'claude', goal: '继续任务', completed: '已定位', blockers: '待确认', nextSteps: '验证', files: 'a.mjs' });
+        const draft = { ...vm.handoffDraft };
+        select('claude', 'same-id');
+        assert.equal(vm.handoffDraft.goal, '');
+        vm.handoffDraft.goal = '另一来源';
+        select('codex', 'other-id');
+        assert.equal(vm.handoffDraft.goal, '');
+        select('codex', 'same-id');
+        assert.deepEqual(vm.handoffDraft, draft);
+        select('claude', 'same-id');
+        assert.equal(vm.handoffDraft.goal, '另一来源');
+        select('', '');
+        select('codex', 'same-id');
+        assert.deepEqual(vm.handoffDraft, draft);
+        assert.equal(vm.handoffExpanded, false);
+        await vm.loadThreadHandoffs();
+        assert.equal(calls.length, 0);
+        const details = { open: true };
+        vm.toggleThreadHandoff({ target: details, currentTarget: details });
+        await new Promise(resolve => setTimeout(resolve, 0));
+        assert.equal(vm.handoffExpanded, true);
+        assert.deepEqual(calls, [{ action: 'thread-handoff-list', params: { threadId: 'same-id' } }]);
+        vm.toggleThreadHandoff({ target: { open: true }, currentTarget: details });
+        assert.equal(calls.length, 1);
+        select('codex', 'other-id');
+        assert.equal(vm.handoffExpanded, false);
+        assert.equal(calls.length, 1);
+        assert.equal(mixin.data().handoffDrafts.size, 0);
+    } finally { globalThis.fetch = oldFetch; }
 });

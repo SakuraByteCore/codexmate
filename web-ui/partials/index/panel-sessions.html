@@ -459,9 +459,14 @@
                                 </button>
                             </div>
                             <aside v-if="sessionPreviewRenderEnabled && sessionTimelineNodes.length" :class="['session-timeline', 'session-timeline-' + sessionTimelineStyle]" :aria-label="t('sessions.timeline.aria')">
-                                <!-- 点状模式 -->
-                                <template v-if="sessionTimelineStyle === 'dots'">
-                                    <div class="session-timeline-track"></div>
+                                <header class="session-timeline-heading">
+                                    <span>阅读目录</span>
+                                    <span class="session-timeline-count">{{ sessionTimelineNodes.length }} 个定位点</span>
+                                </header>
+                                <div class="session-timeline-reading-progress" aria-hidden="true">
+                                    <span :style="{ width: sessionTimelineProgressPercent + '%' }"></span>
+                                </div>
+                                <nav class="session-timeline-index" :aria-label="t('sessions.timeline.aria')">
                                     <button
                                         v-for="node in sessionTimelineNodes"
                                         :key="'timeline-' + node.key"
@@ -469,39 +474,21 @@
                                         type="button"
                                         :class="['session-timeline-node', { active: sessionTimelineActiveKey === node.key }]"
                                         :aria-current="sessionTimelineActiveKey === node.key ? 'true' : null"
-                                        :style="{ top: `${node.safePercent}%` }"
                                         :title="node.title"
+                                        :aria-label="node.title"
                                         @click="jumpToSessionTimelineNode(node.key)">
-                                        <span class="sr-only">{{ node.title }}</span>
+                                        <span class="session-timeline-number">{{ node.title.split(' · ')[0] }}</span>
+                                        <span class="session-timeline-label">
+                                            <span class="session-timeline-role">{{ node.role === 'user' ? '提问' : node.role === 'assistant' ? '回复' : node.roleLabel }}</span>
+                                            <time class="session-timeline-time">{{ node.displayTime ? node.displayTime.slice(-5) : '无时间' }}</time>
+                                        </span>
+                                        <span class="session-timeline-indicator" aria-hidden="true"></span>
                                     </button>
-                                    <div class="session-timeline-current" v-if="sessionTimelineActiveTitle">
-                                        {{ sessionTimelineActiveTitle }}
-                                    </div>
-                                </template>
-
-                                <!-- 条状模式 -->
-                                <template v-else>
-                                    <div class="session-timeline-bar-track">
-                                        <div class="session-timeline-bar-progress"
-                                             :style="{ height: sessionTimelineProgressPercent + '%' }">
-                                        </div>
-                                    </div>
-                                    <button
-                                        v-for="node in sessionTimelineNodes"
-                                        :key="'timeline-bar-' + node.key"
-                                        v-memo="[sessionTimelineActiveKey === node.key, node.safePercent, node.title]"
-                                        type="button"
-                                        :class="['session-timeline-bar-node', { active: sessionTimelineActiveKey === node.key }]"
-                                        :aria-current="sessionTimelineActiveKey === node.key ? 'true' : null"
-                                        :style="{ top: `${node.safePercent}%` }"
-                                        :title="node.title"
-                                        @click="jumpToSessionTimelineNode(node.key)">
-                                        <span class="sr-only">{{ node.title }}</span>
-                                    </button>
-                                    <div class="session-timeline-current" v-if="sessionTimelineActiveTitle">
-                                        {{ sessionTimelineActiveTitle }}
-                                    </div>
-                                </template>
+                                </nav>
+                                <footer class="session-timeline-current" :title="sessionTimelineActiveTitle">
+                                    <span class="session-timeline-status-dot" aria-hidden="true"></span>
+                                    {{ sessionTimelineActiveTitle ? '正在阅读 ' + sessionTimelineActiveTitle.split(' · ')[0] : '选择节点定位原文' }}
+                                </footer>
                             </aside>
                         </template>
 

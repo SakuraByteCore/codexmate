@@ -733,7 +733,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const runInitialLoad = () => {
                 const triggerLoad = async () => {
                     this._initialLoadTimer = 0;
-                    const startupOk = await this.loadAll();
+                    const sessionStartup = this.mainTab === 'sessions';
+                    if (sessionStartup) {
+                        this.loading = false;
+                        if (!this.sessionsLoadedOnce && !this.sessionsLoading) {
+                            await this.loadSessions();
+                        }
+                    }
+                    const startupOk = await this.loadAll({ preserveLoading: sessionStartup });
                     if (!startupOk) {
                         return;
                     }
@@ -760,6 +767,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         void this.loadProviderCacheRecords({ background: true });
                     }
                 };
+                if (typeof this.scheduleAfterFrame === 'function') {
+                    this.scheduleAfterFrame(() => {
+                        this._initialLoadTimer = setTimeout(triggerLoad, 0);
+                    });
+                    return;
+                }
                 if (typeof requestAnimationFrame === 'function') {
                     this._initialLoadRafId = requestAnimationFrame(() => {
                         this._initialLoadRafId = 0;

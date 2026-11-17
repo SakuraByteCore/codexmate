@@ -506,3 +506,29 @@ test('importBackupFile keeps a successful import result when only the refresh fa
         type: 'error'
     }]);
 });
+
+
+test('frame scheduling runs once when background frames stall', () => {
+    const methods = createNavigationMethods({});
+    const original = { setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout,
+        requestAnimationFrame: globalThis.requestAnimationFrame, cancelAnimationFrame: globalThis.cancelAnimationFrame };
+    let frame;
+    let timer;
+    let calls = 0;
+    try {
+        globalThis.requestAnimationFrame = callback => { frame = callback; return 1; };
+        globalThis.cancelAnimationFrame = () => {};
+        globalThis.setTimeout = (callback, delay) => { assert.equal(delay, 100); timer = callback; return 2; };
+        globalThis.clearTimeout = () => {};
+        methods.scheduleAfterFrame(() => calls++);
+        timer();
+        frame();
+        assert.equal(calls, 1);
+        methods.scheduleAfterFrame(() => calls++);
+        frame();
+        timer();
+        assert.equal(calls, 2);
+    } finally {
+        Object.assign(globalThis, original);
+    }
+});
