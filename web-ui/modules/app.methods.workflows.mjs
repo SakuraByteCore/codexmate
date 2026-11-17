@@ -14,9 +14,9 @@ export function createWorkflowMethods({ api }) {
             try {
                 const input = JSON.parse(this.workflowInput);
                 const result = await api('workflow-submit', { id: this.workflowId, input, allowWrite: this.workflowAllowWrite });
-                if (result.error || result.ok === false) throw new Error(result.error || '提交失败');
+                if (result.error || result.ok === false) throw new Error(result.error || this.t('workflow.submitFailed'));
                 await this.refreshWorkflowRuns();
-            } catch (error) { this.workflowError = error.message; }
+            } catch (error) { this.workflowError = error instanceof SyntaxError ? this.t('workflow.invalidJson') : error.message; }
             finally { this.workflowBusy = false; }
         },
         async controlWorkflowRun(run, action) {
@@ -30,11 +30,12 @@ export function createWorkflowMethods({ api }) {
                 const result = await api(`workflow-${action}`, params);
                 if (result.error && !result.id) throw new Error(result.error);
                 await this.refreshWorkflowRuns();
-            } catch (error) { this.workflowError = error.message; }
+            } catch (error) { this.workflowError = error instanceof SyntaxError ? this.t('workflow.invalidJson') : error.message; }
             finally { this.workflowBusy = false; }
         },
         workflowStatusLabel(status) {
-            return { queued: '排队', running: '执行中', waiting: '需要处理', completed: '已完成', failed: '失败', cancelling: '正在取消，等待工具结束', cancelled: '已取消' }[status] || status;
+            return ['queued', 'running', 'waiting', 'completed', 'failed', 'cancelling', 'cancelled'].includes(status)
+                ? this.t(`workflow.status.${status}`) : status;
         }
     };
 }

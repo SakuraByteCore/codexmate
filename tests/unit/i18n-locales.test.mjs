@@ -385,3 +385,47 @@ test('every t() key referenced by templates and app modules exists in all locale
         }
     }
 });
+
+test('automated workflow UI has complete locale coverage and no fixed Chinese labels', () => {
+    const keys = Object.keys(DICT.zh).filter(key => key.startsWith('workflow.')).sort();
+    assert.strictEqual(keys.length, 31);
+    for (const code of expectedLocales) {
+        assert.deepStrictEqual(Object.keys(DICT[code]).filter(key => key.startsWith('workflow.')).sort(), keys);
+        for (const key of keys) assert(DICT[code][key].trim(), `${code}: ${key}`);
+    }
+    const html = fs.readFileSync(path.join(repoRoot, 'web-ui/partials/index/panel-dashboard.html'), 'utf8');
+    const panel = html.slice(html.indexOf('<section'), html.indexOf('</section>'));
+    assert(!/[\u3400-\u9fff]/u.test(panel), 'workflow UI labels must use translation keys');
+    for (const [, key] of panel.matchAll(/t\('([^']+)'\)/g)) {
+        for (const code of expectedLocales) assert.strictEqual(typeof DICT[code][key], 'string');
+    }
+    assert(panel.includes('@submit.prevent="submitWorkflowRun"'));
+    assert(panel.includes("controlWorkflowRun(run, 'resume')"));
+    assert(panel.includes("controlWorkflowRun(run, 'cancel')"));
+});
+
+test('workflow status and validation translate while preserving submission authorization', async () => {
+    const { createWorkflowMethods } = await import('../../web-ui/modules/app.methods.workflows.mjs');
+    for (const code of expectedLocales) {
+        const calls = [];
+        const methods = createWorkflowMethods({ api: async (action, params) => {
+            calls.push({ action, params });
+            return action === 'workflow-list' ? { workflows: [] } : action === 'workflow-active-runs' ? { runs: [] } : { ok: true };
+        } });
+        const vm = { t: makeT(code), workflowInput: '{invalid', workflowId: 'diagnose-config', workflowAllowWrite: true };
+        for (const [key, method] of Object.entries(methods)) vm[key] = method.bind(vm);
+        for (const status of ['queued', 'running', 'waiting', 'completed', 'failed', 'cancelling', 'cancelled']) {
+            assert.strictEqual(vm.workflowStatusLabel(status), DICT[code][`workflow.status.${status}`]);
+        }
+        assert.strictEqual(vm.workflowStatusLabel('custom'), 'custom');
+        await vm.submitWorkflowRun();
+        assert.strictEqual(vm.workflowError, DICT[code]['workflow.invalidJson']);
+        assert.strictEqual(vm.workflowBusy, false);
+        assert.strictEqual(calls.length, 0);
+        vm.workflowInput = '{"goal":"keep input"}';
+        await vm.submitWorkflowRun();
+        assert.deepStrictEqual(calls[0], { action: 'workflow-submit', params: { id: 'diagnose-config', input: { goal: 'keep input' }, allowWrite: true } });
+        await vm.controlWorkflowRun({ id: 'run-1' }, 'resume');
+        assert.deepStrictEqual(calls[3], { action: 'workflow-resume', params: { runId: 'run-1', input: { goal: 'keep input' }, allowWrite: true } });
+    }
+});

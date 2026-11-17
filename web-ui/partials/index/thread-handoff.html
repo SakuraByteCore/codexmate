@@ -51,7 +51,8 @@
                                                     <div>读取代理：{{ record.readConfirmation.agent }} · 确认时间：{{ record.readConfirmation.at }}</div>
                                                     <div>读取证据：{{ record.readConfirmation.evidence }}</div>
                                                 </div>
-                                                <button class="btn-mini" type="button" @click="copyThreadHandoff(record)" :disabled="handoffBusy || handoffLoading">复制卡片</button>
+                                                <div v-for="(warning, index) in record.discoveryWarnings || []" :key="index">探测提示：{{ warning.source }} · {{ warning.reason }}</div>
+                                                <button class="btn-mini" type="button" @click="copyThreadHandoff(record)" :disabled="handoffBusy || handoffLoading">{{ record.route === 'mcp' ? '回退文件并复制卡片' : '复制卡片' }}</button>
                                             </li>
                                         </ol>
                                     </div>

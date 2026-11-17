@@ -330,3 +330,54 @@
     }
 }
 
+
+/* Compact workflow launcher: shared controls, progressive disclosure. */
+.workflow-panel.selector-section { gap: 12px; padding: 20px; }
+.workflow-header, .workflow-launch, .workflow-run-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.workflow-heading, .workflow-field { min-width: 0; }
+.workflow-title { margin: 0; color: var(--color-text-primary); font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.workflow-description { margin: 4px 0 0; color: var(--color-text-tertiary); font-size: 12px; line-height: 1.5; }
+.workflow-refresh.btn-tool { width: auto; flex-shrink: 0; box-shadow: none; background: transparent; }
+.workflow-form { display: grid; gap: 4px; }
+.workflow-launch { align-items: flex-end; }
+.workflow-field { flex: 1; }
+.workflow-field .form-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 6px; }
+.workflow-select.model-select { max-width: none; min-height: 44px; box-sizing: border-box; }
+.workflow-submit.btn { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; gap: 20px; min-height: 44px; padding: 10px 20px; font-size: 13px; white-space: normal; }
+.workflow-submit:disabled { opacity: .5; cursor: not-allowed; }
+.workflow-options { min-width: 0; margin-top: 8px; }
+.workflow-options > summary, .workflow-history > summary { cursor: pointer; min-height: 36px; align-content: center; color: var(--color-text-secondary); font-size: 12px; }
+.workflow-option-kind { margin-inline-start: 8px; color: var(--color-text-tertiary); font-family: var(--font-family-mono); font-size: 10px; }
+.workflow-options > .workflow-field { padding-top: 8px; }
+.workflow-options .form-hint { margin: 8px 0; }
+.workflow-json { box-sizing: border-box; min-width: 0; font-family: var(--font-family-mono); font-size: 12px; line-height: 1.6; resize: vertical; }
+.workflow-authorization { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; color: var(--color-text-tertiary); font-size: 12px; cursor: pointer; }
+.workflow-authorization input { margin: 0; accent-color: var(--color-brand); flex-shrink: 0; }
+.workflow-history { border-top: 1px solid var(--color-border-soft); padding-top: 8px; min-width: 0; }
+.workflow-history-title { font-weight: 500; }
+.workflow-count { margin-inline-start: 8px; color: var(--color-text-tertiary); font-variant-numeric: tabular-nums; }
+.workflow-empty { padding: 4px 0 12px; }
+.workflow-empty .form-hint { margin: 0; }
+.workflow-run { min-width: 0; padding: 16px 0; }
+.workflow-run + .workflow-run { border-top: 1px solid var(--color-border-soft); }
+.workflow-run-header { align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.workflow-run-header h4 { margin: 0; min-width: 0; font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.workflow-status { font-size: 11px; color: var(--color-text-tertiary); overflow-wrap: anywhere; }
+.workflow-status[data-status="running"], .workflow-status[data-status="queued"] { color: var(--color-brand-dark); }
+.workflow-status[data-status="completed"] { color: var(--color-success); }
+.workflow-status[data-status="failed"], .workflow-status[data-status="waiting"] { color: var(--color-error); }
+.workflow-run-id { margin: 6px 0 8px; font-size: 10px; color: var(--color-text-tertiary); overflow-wrap: anywhere; }
+.workflow-run-reason { margin: 0 0 8px; font-size: 12px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.workflow-run-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.workflow-run-actions > .btn-tool { width: auto; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.workflow-panel .workflow-run-actions > .btn-tool + .btn-tool { margin: 0; }
+.workflow-details { min-width: 0; font-size: 12px; color: var(--color-text-secondary); }
+.workflow-details > summary { min-height: 36px; align-content: center; cursor: pointer; }
+.workflow-details pre { max-height: 320px; margin: 8px 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workflow-panel :is(button, select, summary, input):focus-visible { outline: 2px solid var(--color-brand); outline-offset: 3px; }
+@media (max-width: 640px) {
+    .workflow-panel.selector-section { padding: 16px; }
+    .workflow-launch { flex-direction: column; align-items: stretch; gap: 12px; }
+    .workflow-header { gap: 12px; align-items: flex-start; }
+    .workflow-run-actions > .btn-tool { flex: 1 1 100%; }
+}

@@ -12,6 +12,7 @@ Codex Mate 是本地运行的 CLI + Web 管理工具，在一个界面查看、�
   <a href="https://sakurabytecore.github.io/codexmate/">[项目文档]</a>
   <a href="#快速开始">[快速开始]</a>
   <a href="README.md">[English]</a>
+  <a href="README.vi.md">[Tiếng Việt]</a>
 </p>
 
 [![Version](https://img.shields.io/npm/v/codexmate?style=flat-square&color=A179FF)](https://www.npmjs.com/package/codexmate)
@@ -40,7 +41,7 @@ Codex Mate 是本地运行的 CLI + Web 管理工具，在一个界面查看、�
 
 Codex Mate 管理已有工具和本地记录，不是新的 AI 模型，也不替代原来的编程助手。第一次使用不必配置全部工具；先找回一段对话即可。
 
-[开始使用](#快速开始) · [查看会话使用方法](https://sakurabytecore.github.io/codexmate/guide/sessions)
+[开始使用](#快速开始) · [查看会话使用方法](https://sakurabytecore.github.io/codexmate/guide/sessions) · [线程交接](#线程交接)
 
 ## 快速开始
 
@@ -93,6 +94,38 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **OpenClaw**: 参见 [OpenClaw 仓库](https://github.com/moeru-ai/openclaw)
 - **Pi**: 会话从 `~/.pi/agent/sessions` 自动发现；供应商配置位于 `~/.pi/agent/models.json`，默认供应商/模型位于 `~/.pi/agent/settings.json`
 - **Zed**: 智能体会话从 Zed 本地数据库（其数据目录下的 `threads/threads.db`）只读发现，并在会话浏览器中列出
+
+---
+
+## 线程交接
+
+通过共享记忆 MCP 向目标智能体交接结构化卡片，不等于恢复完整会话状态。先保存 `card.json`：`goal` 为字符串，`completed`、`blockers`、`nextSteps`、`files` 均为字符串数组。
+
+```json
+{
+  "goal": "完成文档更新",
+  "completed": ["已核查会话指南"],
+  "blockers": [],
+  "nextSteps": ["核对各语言示例"],
+  "files": ["README.md"]
+}
+```
+
+在源码目录运行下列命令；安装后将 `node cli.js` 替换为 `codexmate`：
+
+```bash
+node cli.js thread handoff <thread-id> --card <json-file> --target <agent>
+node cli.js thread list <thread-id>
+node cli.js thread fallback <thread-id> --handoff <id>
+node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <session-or-retrieval-id>
+```
+
+将交接返回的编号填入 `<id>`，`<target>` 使用同一目标智能体，证据填写真实会话或检索编号。仅在目标自报已读取卡片后执行 `ack`。
+
+- **文件优先，限定 MCP 路由**：先将交接文件保存到 `~/.codexmate/threads/<hash>/`。只读探测项目 `.mcp.json`、Claude 用户配置、Codex `config.toml` 中的共享记忆 MCP，不修改配置。按兼容原生写入工具选择单个 MCP，使用短连接，不启动守护进程。不承诺兼容任意 MCP 版本，不新增依赖，不添加强行插入提示词的机制。
+- **显式文件回退**：MCP 写入失败不自动重试，结果明确提示文件路径。`thread fallback` 返回文件文本。界面会话交接区的「复制卡片」按钮同样是显式文件回退；复制后仍须手动粘贴到目标，不自动发送。
+- **写入成功不等于读取**：MCP 写入成功仅进入 `awaiting_read`，不能证明目标已读取。`thread ack` 记录附证据的目标自报读取，不是独立验证的回执。
+- **交接审计**：`thread list <thread-id>` 返回审计，包含所选 MCP/tool、耗时、写入结果、回退和读取状态。
 
 ---
 

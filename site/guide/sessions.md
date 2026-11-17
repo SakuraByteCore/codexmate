@@ -54,6 +54,30 @@ codexmate export-session --source codex --session-id YOUR_SESSION_ID --max-messa
 
 Markdown 导出不要求在另一编程工具中恢复会话。现有会话转换仅面向 Codex 与 Claude，围绕文本消息生成目标记录，并有独立的消息数量限制。不要将其理解为无损迁移；目标原生 CLI 能否续接，需要按具体版本另行验证。
 
+## 结构化交接与共享记忆
+
+在会话的「会话交接」区填写目标代理与交接目标。生成后查看每条交接的路径、写入结果、耗时和读取状态。MCP 路径下点击「回退文件并复制卡片」，再粘贴到目标会话；复制不等于发送。
+
+也可保存卡片 JSON：
+
+```json
+{"goal":"完成交接验证","completed":["已定位问题"],"blockers":[],"nextSteps":["执行定向测试"],"files":["lib/thread-handoff.js"]}
+```
+
+```bash
+codexmate thread handoff YOUR_SESSION_ID --card card.json --target claude
+codexmate thread list YOUR_SESSION_ID
+codexmate thread fallback YOUR_SESSION_ID --handoff HANDOFF_ID
+codexmate thread ack YOUR_SESSION_ID --handoff HANDOFF_ID --agent claude --evidence TARGET_SESSION_OR_RETRIEVAL_ID
+```
+
+先保存文件，再只读探测项目 `.mcp.json`、项目及用户 `.codex/config.toml`、用户 `.claude.json` 与 `.claude/settings.json`。识别 `uac` 等共享记忆服务，按原生工具 schema 选择单个 MCP。支持 `memory_write`、`set_memory` 等兼容写入工具；未知必填字段视为不兼容。不会新建共享记忆存储，不修改用户配置，不强塞目标提示词。
+
+MCP 不可用或写入失败时明确提示文件路径，不自动重试写入。卡片与追加审计保存在 `~/.codexmate/threads/<hash>/`。审计记录 MCP、工具、耗时、结果、回退与读取确认；配置解析问题也会记录。连接用完关闭，不新增守护进程。
+
+写入成功仅标记 `awaiting_read`，不是读取凭证。目标实际读取后才使用 `ack` 上报会话或检索标识；`read_confirmed` 表示附证据自报，不是独立验证。未上报时保持等待读取，不能断言目标一定没读。
+
+
 ## 主动删除与清理
 
 删除不属于首次查找与导出流程，也不是只读操作。当前 Web UI 的单条删除入口限制为 Codex、Claude 和 Pi；其他来源不能据此推断支持删除。

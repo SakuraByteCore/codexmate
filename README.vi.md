@@ -41,7 +41,7 @@ Giải pháp tuần trước được thảo luận trong Codex hay Claude Code?
 
 Codex Mate quản lý công cụ và dữ liệu cục bộ đã có. Đây không phải mô hình AI mới và không thay thế trợ lý lập trình của bạn. Hãy bắt đầu bằng việc tìm lại một cuộc trò chuyện hữu ích, không cần cấu hình mọi công cụ trước.
 
-[Bắt đầu sử dụng](#bắt-đầu-nhanh) · [Hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions)
+[Bắt đầu sử dụng](#bắt-đầu-nhanh) · [Hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions) · [Bàn giao luồng](#bàn-giao-luồng)
 
 ## Bắt đầu nhanh
 
@@ -94,6 +94,38 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **OpenClaw**: xem [kho lưu trữ OpenClaw](https://github.com/moeru-ai/openclaw)
 - **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`; cấu hình provider nằm ở `~/.pi/agent/models.json`, provider/model mặc định nằm ở `~/.pi/agent/settings.json`
 - **Zed**: phiên agent được đọc chỉ-đọc từ cơ sở dữ liệu cục bộ của Zed (`threads/threads.db` trong thư mục dữ liệu) và hiển thị trong trình duyệt phiên
+
+---
+
+## Bàn giao luồng
+
+Chuyển thẻ bàn giao có cấu trúc cho tác nhân đích qua MCP bộ nhớ dùng chung. Thao tác này không khôi phục toàn bộ trạng thái phiên. Lưu `card.json` với `goal` là chuỗi, còn `completed`, `blockers`, `nextSteps` và `files` là các mảng chuỗi:
+
+```json
+{
+  "goal": "Hoàn tất cập nhật tài liệu",
+  "completed": ["Đã xem hướng dẫn phiên"],
+  "blockers": [],
+  "nextSteps": ["Kiểm tra ví dụ trong các bản dịch"],
+  "files": ["README.md"]
+}
+```
+
+Chạy từ thư mục mã nguồn; sau khi cài đặt, thay `node cli.js` bằng `codexmate`:
+
+```bash
+node cli.js thread handoff <thread-id> --card <json-file> --target <agent>
+node cli.js thread list <thread-id>
+node cli.js thread fallback <thread-id> --handoff <id>
+node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <session-or-retrieval-id>
+```
+
+Dùng mã bàn giao được trả về cho `<id>`, cùng tác nhân đích cho `<target>`, và mã phiên hoặc truy xuất thực tế làm bằng chứng. Chỉ chạy `ack` sau khi tác nhân đích tự báo đã đọc thẻ.
+
+- **Lưu tệp trước, định tuyến MCP có giới hạn**: Trước tiên lưu tệp bàn giao tại `~/.codexmate/threads/<hash>/`. Dò tìm MCP bộ nhớ dùng chung bằng cách chỉ đọc `.mcp.json` của dự án, cấu hình người dùng Claude và `config.toml` của Codex, không sửa cấu hình. Chọn một MCP có công cụ ghi gốc tương thích, dùng kết nối ngắn hạn, không chạy tiến trình nền thường trực. Không bảo đảm tương thích với mọi phiên bản MCP. Không thêm phụ thuộc hay cơ chế ép chèn lời nhắc.
+- **Dự phòng tệp tường minh**: Khi ghi MCP thất bại, hệ thống không tự thử lại và hiển thị đường dẫn tệp. `thread fallback` trả về nội dung văn bản của tệp. Nút sao chép thẻ trong khu vực bàn giao phiên của giao diện cũng là lựa chọn dự phòng tệp tường minh: vẫn phải tự dán thẻ vào tác nhân đích; sao chép không tự gửi.
+- **Ghi thành công không xác nhận đã đọc**: Ghi MCP thành công chỉ đặt trạng thái `awaiting_read`, không chứng minh tác nhân đích đã đọc thẻ. `thread ack` ghi nhận việc tác nhân đích tự báo đã đọc kèm bằng chứng, không phải xác minh độc lập.
+- **Nhật ký kiểm toán**: `thread list <thread-id>` trả về nhật ký gồm MCP/công cụ đã chọn, thời gian thực hiện, kết quả ghi, dự phòng và trạng thái đọc.
 
 ---
 

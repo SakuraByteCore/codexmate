@@ -4,33 +4,64 @@
                     id="panel-dashboard"
                     role="tabpanel"
                     :aria-labelledby="'tab-dashboard'">
-                    <section class="selector-section" aria-label="自动工作流">
-                        <h2>自动工作流</h2>
-                        <p>提交后可以关闭页面。服务重启后恢复安全步骤；写入结果不明时请求介入。</p>
-                        <label for="workflow-id">任务定义</label>
-                        <select id="workflow-id" v-model="workflowId" class="form-input">
-                            <option v-for="item in workflowDefinitions" :key="item.id" :value="item.id">{{ item.name || item.id }}</option>
-                        </select>
-                        <label for="workflow-input">输入（JSON）；继续任务前先载入原输入</label>
-                        <textarea id="workflow-input" v-model="workflowInput" class="form-input" rows="3"></textarea>
-                        <label><input type="checkbox" v-model="workflowAllowWrite">授权本次任务写入</label>
-                        <button class="btn" @click="submitWorkflowRun" :disabled="workflowBusy">提交任务</button>
-                        <button class="btn" @click="refreshWorkflowRuns" :disabled="workflowBusy">刷新结果</button>
-                        <p v-if="workflowError" role="alert">{{ workflowError }}</p>
-                        <article v-for="run in workflowRuns" :key="run.id">
-                            <h3>{{ run.definition.name || run.definition.id }} · {{ workflowStatusLabel(run.status) }}</h3>
-                            <p>{{ run.id }} · {{ run.reason || run.error }}</p>
-                            <template v-if="run.status === 'waiting'">
-                                <button class="btn" @click="workflowInput = JSON.stringify(run.input, null, 2)">载入原输入</button>
-                                <button class="btn" @click="controlWorkflowRun(run, 'resume')" :disabled="workflowBusy">确认输入与授权后继续</button>
-                            </template>
-                            <button v-if="['queued', 'running', 'waiting'].includes(run.status)" class="btn" @click="controlWorkflowRun(run, 'cancel')" :disabled="workflowBusy">取消后续执行</button>
-                            <details v-if="run.summary" :open="run.status === 'waiting'">
-                                <summary>结果与未完成项</summary>
-                                <pre>{{ JSON.stringify(run.summary, null, 2) }}</pre>
+                    <section class="selector-section workflow-panel" :aria-label="t('workflow.title')" :aria-busy="workflowBusy">
+                        <header class="workflow-header">
+                            <div>
+                                <h2 class="workflow-title">{{ t('workflow.title') }}</h2>
+                                <p class="workflow-description">{{ t('workflow.tagline') }}</p>
+                            </div>
+                            <button type="button" class="btn-tool btn-tool-compact workflow-refresh" @click="refreshWorkflowRuns" :disabled="workflowBusy">{{ t('workflow.refresh') }}</button>
+                        </header>
+                        <form class="workflow-form" @submit.prevent="submitWorkflowRun">
+                            <div class="workflow-launch">
+                            <div class="workflow-field">
+                                <label class="form-label" for="workflow-id">{{ t('workflow.definition') }}</label>
+                                <select id="workflow-id" v-model="workflowId" class="model-select workflow-select" :disabled="workflowBusy || !workflowDefinitions.length">
+                                    <option v-if="!workflowDefinitions.length" value="diagnose-config">{{ t('workflow.noDefinitions') }}</option>
+                                    <option v-for="item in workflowDefinitions" :key="item.id" :value="item.id">{{ item.name || item.id }}</option>
+                                </select>
+                            </div>
+                                <button type="submit" class="btn btn-confirm workflow-submit" :disabled="workflowBusy || !workflowDefinitions.length">{{ workflowBusy ? t('workflow.submitting') : t('workflow.submit') }}<span aria-hidden="true">↗</span></button>
+                            </div>
+                            <details class="workflow-options" :open="workflowInput.trim() !== '{}'">
+                                <summary>{{ t('workflow.options') }} <span class="workflow-option-kind">JSON</span></summary>
+                            <div class="workflow-field">
+                                <label class="form-label" for="workflow-input">{{ t('workflow.input') }}</label>
+                                <textarea id="workflow-input" v-model="workflowInput" class="form-input workflow-json" rows="4" spellcheck="false" :disabled="workflowBusy" aria-describedby="workflow-input-hint"></textarea>
+                                <p id="workflow-input-hint" class="form-hint">{{ t('workflow.inputHint') }}</p>
+                            </div>
+                                <p class="form-hint">{{ t('workflow.description') }}</p>
                             </details>
-                            <details><summary>执行详情与通知状态</summary><pre>{{ JSON.stringify({ steps: run.steps, notification: run.notification }, null, 2) }}</pre></details>
-                        </article>
+                            <label class="workflow-authorization"><input type="checkbox" v-model="workflowAllowWrite" :disabled="workflowBusy"><span>{{ t('workflow.allowWrite') }}</span></label>
+                        </form>
+                        <p v-if="workflowError" class="form-hint form-error" role="alert">{{ workflowError }}</p>
+                        <details class="workflow-history" :open="workflowRuns.length > 0">
+                            <summary class="workflow-history-title">{{ t('workflow.runs') }} <span class="workflow-count">{{ workflowRuns.length }}</span></summary>
+                            <div v-if="!workflowRuns.length" class="workflow-empty">
+                                <p>{{ t('workflow.empty') }}</p>
+                                <p class="form-hint">{{ t('workflow.emptyHint') }}</p>
+                            </div>
+                            <article v-for="run in workflowRuns" :key="run.id" class="workflow-run">
+                                <div class="workflow-run-header">
+                                    <h4 class="workflow-run-title">{{ run.definition.name || run.definition.id }}</h4>
+                                    <span class="workflow-status" :data-status="run.status">{{ workflowStatusLabel(run.status) }}</span>
+                                </div>
+                                <p class="workflow-run-id">{{ t('workflow.runId') }} <code>{{ run.id }}</code></p>
+                                <p v-if="run.reason || run.error" class="workflow-run-reason">{{ run.reason || run.error }}</p>
+                                <div v-if="['queued', 'running', 'waiting'].includes(run.status)" class="workflow-run-actions">
+                                    <template v-if="run.status === 'waiting'">
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="workflowInput = JSON.stringify(run.input, null, 2)" :disabled="workflowBusy">{{ t('workflow.loadInput') }}</button>
+                                        <button type="button" class="btn-tool btn-tool-compact" @click="controlWorkflowRun(run, 'resume')" :disabled="workflowBusy">{{ t('workflow.resume') }}</button>
+                                    </template>
+                                    <button type="button" class="btn-tool btn-tool-compact" @click="controlWorkflowRun(run, 'cancel')" :disabled="workflowBusy">{{ t('workflow.cancel') }}</button>
+                                </div>
+                                <details v-if="run.summary" class="workflow-details" :open="run.status === 'waiting'">
+                                    <summary>{{ t('workflow.summary') }}</summary>
+                                    <pre>{{ JSON.stringify(run.summary, null, 2) }}</pre>
+                                </details>
+                                <details class="workflow-details"><summary>{{ t('workflow.details') }}</summary><pre>{{ JSON.stringify({ steps: run.steps, notification: run.notification }, null, 2) }}</pre></details>
+                            </article>
+                        </details>
                     </section>
                     <div class="selector-section doctor-hero">
                         <div class="selector-header doctor-header">

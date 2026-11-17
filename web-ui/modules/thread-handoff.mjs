@@ -101,7 +101,7 @@ export const threadHandoffMixin = {
             this.handoffError = '';
             this.handoffNotice = '';
             try {
-                const result = await api('thread-handoff-create', { threadId, target: draft.target.trim(), card });
+                const result = await api('thread-handoff-create', { threadId, target: draft.target.trim(), card, cwd: this.activeSession.cwd || undefined });
                 if (result.error) throw new Error(result.error);
                 if (requestSeq !== this.handoffRequestSeq) return;
                 this.handoffNotice = result.message || '已生成交接记录；读取状态以交接历史为准。';

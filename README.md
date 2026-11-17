@@ -41,7 +41,7 @@ Was last week's solution discussed in Codex or Claude Code? Narrow down your loc
 
 Codex Mate manages existing tools and local records. It is not a new AI model or a replacement for your coding assistant. Start by finding one useful conversation, without configuring every tool first.
 
-[Get started](#quick-start) · [Session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions)
+[Get started](#quick-start) · [Session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions) · [Thread handoff](#thread-handoff)
 
 ## Quick Start
 
@@ -94,6 +94,38 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **OpenClaw**: see the [OpenClaw repository](https://github.com/moeru-ai/openclaw)
 - **Pi**: sessions are discovered from `~/.pi/agent/sessions`; provider config lives in `~/.pi/agent/models.json` and the default provider/model in `~/.pi/agent/settings.json`
 - **Zed**: agent sessions are read from Zed's local database (`threads/threads.db` under its data directory) and listed in the session browser (read-only)
+
+---
+
+## Thread handoff
+
+Share a structured handoff card with a target agent through a shared-memory MCP. This does not restore complete session state. Save a `card.json` containing a `goal` string and string arrays for `completed`, `blockers`, `nextSteps`, and `files`:
+
+```json
+{
+  "goal": "Finish the documentation update",
+  "completed": ["Reviewed the session guide"],
+  "blockers": [],
+  "nextSteps": ["Check the translated examples"],
+  "files": ["README.md"]
+}
+```
+
+Run from the source checkout; after installation, replace `node cli.js` with `codexmate`:
+
+```bash
+node cli.js thread handoff <thread-id> --card <json-file> --target <agent>
+node cli.js thread list <thread-id>
+node cli.js thread fallback <thread-id> --handoff <id>
+node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <session-or-retrieval-id>
+```
+
+Use the handoff's returned ID for `<id>`, the same target agent for `<target>`, and an actual session or retrieval ID for the evidence. Run `ack` only after the target reports reading the card.
+
+- **File first, bounded MCP routing**: Save handoff files under `~/.codexmate/threads/<hash>/` first. Discover shared-memory MCPs by reading the project's `.mcp.json`, Claude user configuration, and Codex `config.toml` without modifying them. Select one MCP with a compatible native write tool and use a short-lived connection, not a daemon. Compatibility with arbitrary MCP versions is not guaranteed. No new dependencies or forced prompt insertion are added.
+- **Explicit file fallback**: A failed MCP write does not retry automatically; the result reports the file path. `thread fallback` returns the file text. The session handoff area's copy-card button in the UI is also an explicit file fallback: paste the copied card into the target yourself; copying does not send it automatically.
+- **Write success is not a read receipt**: A successful MCP write only sets `awaiting_read`, not proof that the target read the card. `thread ack` records the target's self-reported read with evidence, not an independently verified receipt.
+- **Audit**: `thread list <thread-id>` returns the audit, including the selected MCP/tool, elapsed time, write result, fallback, and read status.
 
 ---
 

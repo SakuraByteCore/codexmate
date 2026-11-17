@@ -891,103 +891,198 @@ return function render(_ctx, _cache) {
             "aria-labelledby": 'tab-dashboard'
           }, [
             _createElementVNode("section", {
-              class: "selector-section",
-              "aria-label": "自动工作流"
+              class: "selector-section workflow-panel",
+              "aria-label": _ctx.t('workflow.title'),
+              "aria-busy": _ctx.workflowBusy
             }, [
-              _createElementVNode("h2", null, "自动工作流"),
-              _createElementVNode("p", null, "提交后可以关闭页面。服务重启后恢复安全步骤；写入结果不明时请求介入。"),
-              _createElementVNode("label", { for: "workflow-id" }, "任务定义"),
-              _withDirectives(_createElementVNode("select", {
-                id: "workflow-id",
-                "onUpdate:modelValue": $event => ((_ctx.workflowId) = $event),
-                class: "form-input"
-              }, [
-                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowDefinitions, (item) => {
-                  return (_openBlock(), _createElementBlock("option", {
-                    key: item.id,
-                    value: item.id
-                  }, _toDisplayString(item.name || item.id), 9 /* TEXT, PROPS */, ["value"]))
-                }), 128 /* KEYED_FRAGMENT */))
-              ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                [_vModelSelect, _ctx.workflowId]
-              ]),
-              _createElementVNode("label", { for: "workflow-input" }, "输入（JSON）；继续任务前先载入原输入"),
-              _withDirectives(_createElementVNode("textarea", {
-                id: "workflow-input",
-                "onUpdate:modelValue": $event => ((_ctx.workflowInput) = $event),
-                class: "form-input",
-                rows: "3"
-              }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                [_vModelText, _ctx.workflowInput]
-              ]),
-              _createElementVNode("label", null, [
-                _withDirectives(_createElementVNode("input", {
-                  type: "checkbox",
-                  "onUpdate:modelValue": $event => ((_ctx.workflowAllowWrite) = $event)
-                }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                  [_vModelCheckbox, _ctx.workflowAllowWrite]
+              _createElementVNode("header", { class: "workflow-header" }, [
+                _createElementVNode("div", null, [
+                  _createElementVNode("h2", { class: "workflow-title" }, _toDisplayString(_ctx.t('workflow.title')), 1 /* TEXT */),
+                  _createElementVNode("p", { class: "workflow-description" }, _toDisplayString(_ctx.t('workflow.tagline')), 1 /* TEXT */)
                 ]),
-                _createTextVNode("授权本次任务写入")
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "btn-tool btn-tool-compact workflow-refresh",
+                  onClick: _ctx.refreshWorkflowRuns,
+                  disabled: _ctx.workflowBusy
+                }, _toDisplayString(_ctx.t('workflow.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
               ]),
-              _createElementVNode("button", {
-                class: "btn",
-                onClick: _ctx.submitWorkflowRun,
-                disabled: _ctx.workflowBusy
-              }, "提交任务", 8 /* PROPS */, ["onClick", "disabled"]),
-              _createElementVNode("button", {
-                class: "btn",
-                onClick: _ctx.refreshWorkflowRuns,
-                disabled: _ctx.workflowBusy
-              }, "刷新结果", 8 /* PROPS */, ["onClick", "disabled"]),
+              _createElementVNode("form", {
+                class: "workflow-form",
+                onSubmit: _withModifiers(_ctx.submitWorkflowRun, ["prevent"])
+              }, [
+                _createElementVNode("div", { class: "workflow-launch" }, [
+                  _createElementVNode("div", { class: "workflow-field" }, [
+                    _createElementVNode("label", {
+                      class: "form-label",
+                      for: "workflow-id"
+                    }, _toDisplayString(_ctx.t('workflow.definition')), 1 /* TEXT */),
+                    _withDirectives(_createElementVNode("select", {
+                      id: "workflow-id",
+                      "onUpdate:modelValue": $event => ((_ctx.workflowId) = $event),
+                      class: "model-select workflow-select",
+                      disabled: _ctx.workflowBusy || !_ctx.workflowDefinitions.length
+                    }, [
+                      (!_ctx.workflowDefinitions.length)
+                        ? (_openBlock(), _createElementBlock("option", {
+                            key: 0,
+                            value: "diagnose-config"
+                          }, _toDisplayString(_ctx.t('workflow.noDefinitions')), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowDefinitions, (item) => {
+                        return (_openBlock(), _createElementBlock("option", {
+                          key: item.id,
+                          value: item.id
+                        }, _toDisplayString(item.name || item.id), 9 /* TEXT, PROPS */, ["value"]))
+                      }), 128 /* KEYED_FRAGMENT */))
+                    ], 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                      [_vModelSelect, _ctx.workflowId]
+                    ])
+                  ]),
+                  _createElementVNode("button", {
+                    type: "submit",
+                    class: "btn btn-confirm workflow-submit",
+                    disabled: _ctx.workflowBusy || !_ctx.workflowDefinitions.length
+                  }, [
+                    _createTextVNode(_toDisplayString(_ctx.workflowBusy ? _ctx.t('workflow.submitting') : _ctx.t('workflow.submit')), 1 /* TEXT */),
+                    _createElementVNode("span", { "aria-hidden": "true" }, "↗")
+                  ], 8 /* PROPS */, ["disabled"])
+                ]),
+                _createElementVNode("details", {
+                  class: "workflow-options",
+                  open: _ctx.workflowInput.trim() !== '{}'
+                }, [
+                  _createElementVNode("summary", null, [
+                    _createTextVNode(_toDisplayString(_ctx.t('workflow.options')) + " ", 1 /* TEXT */),
+                    _createElementVNode("span", { class: "workflow-option-kind" }, "JSON")
+                  ]),
+                  _createElementVNode("div", { class: "workflow-field" }, [
+                    _createElementVNode("label", {
+                      class: "form-label",
+                      for: "workflow-input"
+                    }, _toDisplayString(_ctx.t('workflow.input')), 1 /* TEXT */),
+                    _withDirectives(_createElementVNode("textarea", {
+                      id: "workflow-input",
+                      "onUpdate:modelValue": $event => ((_ctx.workflowInput) = $event),
+                      class: "form-input workflow-json",
+                      rows: "4",
+                      spellcheck: "false",
+                      disabled: _ctx.workflowBusy,
+                      "aria-describedby": "workflow-input-hint"
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                      [_vModelText, _ctx.workflowInput]
+                    ]),
+                    _createElementVNode("p", {
+                      id: "workflow-input-hint",
+                      class: "form-hint"
+                    }, _toDisplayString(_ctx.t('workflow.inputHint')), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("p", { class: "form-hint" }, _toDisplayString(_ctx.t('workflow.description')), 1 /* TEXT */)
+                ], 8 /* PROPS */, ["open"]),
+                _createElementVNode("label", { class: "workflow-authorization" }, [
+                  _withDirectives(_createElementVNode("input", {
+                    type: "checkbox",
+                    "onUpdate:modelValue": $event => ((_ctx.workflowAllowWrite) = $event),
+                    disabled: _ctx.workflowBusy
+                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                    [_vModelCheckbox, _ctx.workflowAllowWrite]
+                  ]),
+                  _createElementVNode("span", null, _toDisplayString(_ctx.t('workflow.allowWrite')), 1 /* TEXT */)
+                ])
+              ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
               (_ctx.workflowError)
                 ? (_openBlock(), _createElementBlock("p", {
                     key: 0,
+                    class: "form-hint form-error",
                     role: "alert"
                   }, _toDisplayString(_ctx.workflowError), 1 /* TEXT */))
                 : _createCommentVNode("v-if", true),
-              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowRuns, (run) => {
-                return (_openBlock(), _createElementBlock("article", {
-                  key: run.id
-                }, [
-                  _createElementVNode("h3", null, _toDisplayString(run.definition.name || run.definition.id) + " · " + _toDisplayString(_ctx.workflowStatusLabel(run.status)), 1 /* TEXT */),
-                  _createElementVNode("p", null, _toDisplayString(run.id) + " · " + _toDisplayString(run.reason || run.error), 1 /* TEXT */),
-                  (run.status === 'waiting')
-                    ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
-                        _createElementVNode("button", {
-                          class: "btn",
-                          onClick: $event => (_ctx.workflowInput = JSON.stringify(run.input, null, 2))
-                        }, "载入原输入", 8 /* PROPS */, ["onClick"]),
-                        _createElementVNode("button", {
-                          class: "btn",
-                          onClick: $event => (_ctx.controlWorkflowRun(run, 'resume')),
-                          disabled: _ctx.workflowBusy
-                        }, "确认输入与授权后继续", 8 /* PROPS */, ["onClick", "disabled"])
-                      ], 64 /* STABLE_FRAGMENT */))
-                    : _createCommentVNode("v-if", true),
-                  (['queued', 'running', 'waiting'].includes(run.status))
-                    ? (_openBlock(), _createElementBlock("button", {
-                        key: 1,
-                        class: "btn",
-                        onClick: $event => (_ctx.controlWorkflowRun(run, 'cancel')),
-                        disabled: _ctx.workflowBusy
-                      }, "取消后续执行", 8 /* PROPS */, ["onClick", "disabled"]))
-                    : _createCommentVNode("v-if", true),
-                  (run.summary)
-                    ? (_openBlock(), _createElementBlock("details", {
-                        key: 2,
-                        open: run.status === 'waiting'
-                      }, [
-                        _createElementVNode("summary", null, "结果与未完成项"),
-                        _createElementVNode("pre", null, _toDisplayString(JSON.stringify(run.summary, null, 2)), 1 /* TEXT */)
-                      ], 8 /* PROPS */, ["open"]))
-                    : _createCommentVNode("v-if", true),
-                  _createElementVNode("details", null, [
-                    _createElementVNode("summary", null, "执行详情与通知状态"),
-                    _createElementVNode("pre", null, _toDisplayString(JSON.stringify({ steps: run.steps, notification: run.notification }, null, 2)), 1 /* TEXT */)
-                  ])
-                ]))
-              }), 128 /* KEYED_FRAGMENT */))
-            ]),
+              _createElementVNode("details", {
+                class: "workflow-history",
+                open: _ctx.workflowRuns.length > 0
+              }, [
+                _createElementVNode("summary", { class: "workflow-history-title" }, [
+                  _createTextVNode(_toDisplayString(_ctx.t('workflow.runs')) + " ", 1 /* TEXT */),
+                  _createElementVNode("span", { class: "workflow-count" }, _toDisplayString(_ctx.workflowRuns.length), 1 /* TEXT */)
+                ]),
+                (!_ctx.workflowRuns.length)
+                  ? (_openBlock(), _createElementBlock("div", {
+                      key: 0,
+                      class: "workflow-empty"
+                    }, [
+                      _createElementVNode("p", null, _toDisplayString(_ctx.t('workflow.empty')), 1 /* TEXT */),
+                      _createElementVNode("p", { class: "form-hint" }, _toDisplayString(_ctx.t('workflow.emptyHint')), 1 /* TEXT */)
+                    ]))
+                  : _createCommentVNode("v-if", true),
+                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowRuns, (run) => {
+                  return (_openBlock(), _createElementBlock("article", {
+                    key: run.id,
+                    class: "workflow-run"
+                  }, [
+                    _createElementVNode("div", { class: "workflow-run-header" }, [
+                      _createElementVNode("h4", { class: "workflow-run-title" }, _toDisplayString(run.definition.name || run.definition.id), 1 /* TEXT */),
+                      _createElementVNode("span", {
+                        class: "workflow-status",
+                        "data-status": run.status
+                      }, _toDisplayString(_ctx.workflowStatusLabel(run.status)), 9 /* TEXT, PROPS */, ["data-status"])
+                    ]),
+                    _createElementVNode("p", { class: "workflow-run-id" }, [
+                      _createTextVNode(_toDisplayString(_ctx.t('workflow.runId')) + " ", 1 /* TEXT */),
+                      _createElementVNode("code", null, _toDisplayString(run.id), 1 /* TEXT */)
+                    ]),
+                    (run.reason || run.error)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 0,
+                          class: "workflow-run-reason"
+                        }, _toDisplayString(run.reason || run.error), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    (['queued', 'running', 'waiting'].includes(run.status))
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 1,
+                          class: "workflow-run-actions"
+                        }, [
+                          (run.status === 'waiting')
+                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-tool btn-tool-compact",
+                                  onClick: $event => (_ctx.workflowInput = JSON.stringify(run.input, null, 2)),
+                                  disabled: _ctx.workflowBusy
+                                }, _toDisplayString(_ctx.t('workflow.loadInput')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-tool btn-tool-compact",
+                                  onClick: $event => (_ctx.controlWorkflowRun(run, 'resume')),
+                                  disabled: _ctx.workflowBusy
+                                }, _toDisplayString(_ctx.t('workflow.resume')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                              ], 64 /* STABLE_FRAGMENT */))
+                            : _createCommentVNode("v-if", true),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool btn-tool-compact",
+                            onClick: $event => (_ctx.controlWorkflowRun(run, 'cancel')),
+                            disabled: _ctx.workflowBusy
+                          }, _toDisplayString(_ctx.t('workflow.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (run.summary)
+                      ? (_openBlock(), _createElementBlock("details", {
+                          key: 2,
+                          class: "workflow-details",
+                          open: run.status === 'waiting'
+                        }, [
+                          _createElementVNode("summary", null, _toDisplayString(_ctx.t('workflow.summary')), 1 /* TEXT */),
+                          _createElementVNode("pre", null, _toDisplayString(JSON.stringify(run.summary, null, 2)), 1 /* TEXT */)
+                        ], 8 /* PROPS */, ["open"]))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("details", { class: "workflow-details" }, [
+                      _createElementVNode("summary", null, _toDisplayString(_ctx.t('workflow.details')), 1 /* TEXT */),
+                      _createElementVNode("pre", null, _toDisplayString(JSON.stringify({ steps: run.steps, notification: run.notification }, null, 2)), 1 /* TEXT */)
+                    ])
+                  ]))
+                }), 128 /* KEYED_FRAGMENT */))
+              ], 8 /* PROPS */, ["open"])
+            ], 8 /* PROPS */, ["aria-label", "aria-busy"]),
             _createElementVNode("div", { class: "selector-section doctor-hero" }, [
               _createElementVNode("div", { class: "selector-header doctor-header" }, [
                 _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('dashboard.doctor.title')), 1 /* TEXT */),
@@ -4686,12 +4781,15 @@ return function render(_ctx, _cache) {
                                                                 _createElementVNode("div", null, "读取证据：" + _toDisplayString(record.readConfirmation.evidence), 1 /* TEXT */)
                                                               ]))
                                                             : _createCommentVNode("v-if", true),
+                                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(record.discoveryWarnings || [], (warning, index) => {
+                                                            return (_openBlock(), _createElementBlock("div", { key: index }, "探测提示：" + _toDisplayString(warning.source) + " · " + _toDisplayString(warning.reason), 1 /* TEXT */))
+                                                          }), 128 /* KEYED_FRAGMENT */)),
                                                           _createElementVNode("button", {
                                                             class: "btn-mini",
                                                             type: "button",
                                                             onClick: $event => (_ctx.copyThreadHandoff(record)),
                                                             disabled: _ctx.handoffBusy || _ctx.handoffLoading
-                                                          }, "复制卡片", 8 /* PROPS */, ["onClick", "disabled"])
+                                                          }, _toDisplayString(record.route === 'mcp' ? '回退文件并复制卡片' : '复制卡片'), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                                         ]))
                                                       }), 128 /* KEYED_FRAGMENT */))
                                                     ]))

@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 const require = createRequire(import.meta.url);
 const { createHandoff, listHandoffs, fallbackHandoff, acknowledgeHandoff } = require('../../lib/thread-handoff');
-const { nativeWrite } = require('../../lib/handoff-mcp');
+const { nativeWrite, discoverServers } = require('../../lib/handoff-mcp');
 const register = globalThis.test || (await import('node:test')).test;
 const card = { goal: '交接测试', completed: ['完成路由'], blockers: [], nextSteps: ['验证读取'], files: ['lib/thread-handoff.js'] };
 function fixture() {
@@ -42,20 +42,28 @@ register('handoff stdio initializes, writes once, waits for target read, and clo
     const log = path.join(options.cwd, 'calls.jsonl');
     fs.writeFileSync(server, `const fs=require('fs');require('readline').createInterface({input:process.stdin}).on('line', line=>{
         const r=JSON.parse(line);fs.appendFileSync(${JSON.stringify(log)},line+'\\n');if(!r.id)return;
-        const result=r.method==='initialize'?{protocolVersion:'2025-03-26'}:r.method==='tools/list'?{tools:[{name:'store_memory',inputSchema:{type:'object',properties:{content:{type:'string'},agent_id:{type:'string'}},required:['content','agent_id']}}]}:{content:[{type:'text',text:'ok'}]};
+        const result=r.method==='initialize'?{protocolVersion:'2025-03-26'}:r.method==='tools/list'?{tools:[{name:'memory_write',inputSchema:{type:'object',properties:{content:{type:'string'},kind:{type:'string',default:'fact'},tags:{anyOf:[{type:'array',items:{type:'string'}},{type:'null'}]}},required:['content']}}]}:{content:[{type:'text',text:'ok'}]};
         process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:r.id,result})+'\\n');});`);
     configure(options, { command: process.execPath, args: [server] });
     const result = await createHandoff({ threadId: 'thread-stdio', target: 'claude', card }, options);
     assert.equal(result.record.route, 'mcp', result.message);
     assert.equal(result.record.status, 'awaiting_read');
     assert.equal(result.record.readConfirmation, null);
-    assert.equal(result.record.mcp.tool, 'store_memory');
+    assert.equal(result.record.mcp.tool, 'memory_write');
     const calls = fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
     assert.deepEqual(calls.map(call => call.method), ['initialize', 'notifications/initialized', 'tools/list', 'tools/call']);
     const written = JSON.parse(calls[3].params.arguments.content);
     assert.equal(written.id, result.record.id);
     assert.match(written.acknowledgement.instruction, /实际读取/);
-    assert.equal(calls[3].params.arguments.agent_id, 'claude');
+    assert.equal(written.target, 'claude');
+    assert.deepEqual(calls[3].params.arguments.tags, ['handoff', 'thread-stdio', 'claude']);
+    const acknowledged = acknowledgeHandoff({ threadId: 'thread-stdio', handoffId: result.record.id, agent: 'claude', evidence: 'target-session:retrieval-1' }, options).record;
+    assert.equal(acknowledged.route, 'mcp');
+    assert.equal(acknowledged.status, 'read_confirmed');
+    const fallback = fallbackHandoff({ threadId: 'thread-stdio', handoffId: result.record.id }, options).record;
+    assert.equal(fallback.status, 'read_confirmed');
+    assert.equal(fallback.writeResult, 'written');
+    assert.equal(fallback.readConfirmation.source, 'target_reported');
     const cardFile = path.join(options.cwd, 'cli-card.json');
     fs.writeFileSync(cardFile, JSON.stringify(card));
     const cliRun = spawnSync(process.execPath, [path.resolve('cli.js'), 'thread', 'handoff', 'mcp-cli-thread', '--card', cardFile, '--target', 'claude'], {
@@ -80,8 +88,8 @@ register('handoff HTTP session writes once, reports failure without retries and 
                 if (request.method === 'initialize') res.setHeader('Mcp-Session-Id', 'test-session');
                 else assert.equal(req.headers['mcp-session-id'], 'test-session');
                 let result = { protocolVersion: '2025-03-26' };
-                if (request.method === 'tools/list') result = { tools: [{ name: 'save_context', inputSchema: { properties: { content: { type: 'string' } }, required: mode === 'schema' ? ['unknown_required'] : ['content'] } }] };
-                if (request.method === 'tools/call') { writes++; result = mode === 'error' ? { isError: true, content: [{ type: 'text', text: 'secret-not-to-persist' }] } : { content: [] }; }
+                if (request.method === 'tools/list') result = { tools: [{ name: 'set_memory', inputSchema: { properties: { key: { type: 'string' }, value: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } } }, required: mode === 'schema' ? ['unknown_required'] : ['key', 'value'] } }] };
+                if (request.method === 'tools/call') { assert.equal(request.params.name, 'set_memory'); assert.equal(request.params.arguments.key, `handoff:${JSON.parse(request.params.arguments.value).id}`); writes++; result = mode === 'error' ? { isError: true, content: [{ type: 'text', text: 'secret-not-to-persist' }] } : { content: [] }; }
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ jsonrpc: '2.0', id: request.id, result }));
             });
@@ -113,6 +121,67 @@ register('handoff command runs file fallback and lists audit through actual CLI 
     const listed = run(['list', 'cli-thread']);
     assert.equal(JSON.parse(listed.stdout).records[0].id, payload.record.id);
 });
+register('handoff discovers project UAC, skips malformed configs and honors disabled servers', async () => {
+    const options = fixture();
+    fs.writeFileSync(path.join(options.cwd, '.mcp.json'), '{invalid');
+    fs.mkdirSync(path.join(options.cwd, '.codex'));
+    fs.writeFileSync(path.join(options.cwd, '.codex', 'config.toml'), '[mcp_servers.uac]\ncommand="uac"\nargs=["serve"]\n');
+    const warnings = [];
+    assert.equal(discoverServers(options, warnings)[0].name, 'uac');
+    assert.equal(warnings.length, 1);
+    fs.writeFileSync(path.join(options.cwd, '.claude.json'), JSON.stringify({
+        mcpServers: { memory: { command: 'memory' } }, disabledMcpServers: ['memory']
+    }));
+    assert.deepEqual(discoverServers(options).map(server => server.name), ['uac']);
+    fs.writeFileSync(path.join(options.cwd, '.codex', 'config.toml'), '[mcp_servers.uac]\nenabled=false\ncommand="uac"\n');
+    const result = await createHandoff({ threadId: 'malformed', target: 'claude', card }, options);
+    assert.equal(result.record.route, 'file');
+    assert.match(result.message, /文件级路径/);
+    assert.equal(result.record.discoveryWarnings.length, 1);
+    assert.match(result.message, /配置读取或解析失败/);
+    assert.equal(listHandoffs('malformed', options)[0].stage, 'discovery');
+});
+register('handoff rejects HTTP error status even with a successful-looking SSE write result', async () => {
+    const options = fixture();
+    let writes = 0;
+    const server = http.createServer((req, res) => {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            const request = JSON.parse(body);
+            if (!request.id) { res.writeHead(202).end(); return; }
+            if (request.method === 'tools/call') {
+                writes++;
+                res.writeHead(503, { 'Content-Type': 'text/event-stream' });
+                res.end(`data: ${JSON.stringify({ jsonrpc: '2.0', id: request.id, result: { content: [] } })}\n\n`);
+                return;
+            }
+            const result = request.method === 'initialize' ? { protocolVersion: '2025-03-26' }
+                : { tools: [{ name: 'memory_write', inputSchema: { properties: { content: { type: 'string' } }, required: ['content'] } }] };
+            res.end(JSON.stringify({ jsonrpc: '2.0', id: request.id, result }));
+        });
+    });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    configure(options, { url: `http://127.0.0.1:${server.address().port}/mcp` });
+    try {
+        const result = await createHandoff({ threadId: 'http-error-sse', target: 'claude', card }, options);
+        assert.equal(result.record.route, 'file');
+        assert.equal(result.record.writeResult, 'failed_or_unconfirmed');
+        assert.equal(writes, 1);
+        assert.match(result.message, /文件级路径/);
+    } finally { await new Promise(resolve => server.close(resolve)); }
+});
+register('handoff uses the selected session project instead of the web server working directory', async () => {
+    const options = fixture();
+    const project = path.join(options.cwd, 'session-project');
+    fs.mkdirSync(project);
+    fs.writeFileSync(path.join(project, '.mcp.json'), JSON.stringify({ mcpServers: {
+        'shared-context-project': { command: process.execPath, args: ['-e', 'process.exit(0)'] }
+    } }));
+    const result = await createHandoff({ threadId: 'project-cwd', target: 'claude', card, cwd: project }, options);
+    assert.equal(result.record.mcp.server, 'shared-context-project');
+    assert.equal(result.record.stage, 'initialize');
+});
 register('handoff refuses unsupported required native fields rather than inventing parameters', () => {
     assert.equal(nativeWrite({ name: 'store_memory', inputSchema: { properties: { content: { type: 'string' } }, required: ['session_token'] } }, {}), null);
 });
@@ -120,7 +189,7 @@ register('handoff timeout falls back without retry, even if another memory serve
     const options = fixture();
     const script = path.join(options.cwd, 'timeout.cjs');
     const log = path.join(options.cwd, 'timeout-calls.jsonl');
-    fs.writeFileSync(script, `const fs=require('fs');require('readline').createInterface({input:process.stdin}).on('line',line=>{const r=JSON.parse(line);fs.appendFileSync(${JSON.stringify(log)},line+String.fromCharCode(10));if(!r.id||r.method==='tools/call')return;const result=r.method==='initialize'?{protocolVersion:'2025-03-26'}:{tools:[{name:'store_memory',inputSchema:{properties:{content:{type:'string'}},required:['content']}}]};process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:r.id,result})+String.fromCharCode(10));});`);
+    fs.writeFileSync(script, `const fs=require('fs');require('readline').createInterface({input:process.stdin}).on('line',line=>{const r=JSON.parse(line);fs.appendFileSync(${JSON.stringify(log)},line+String.fromCharCode(10));if(!r.id||r.method==='tools/call')return;const result=r.method==='initialize'?{protocolVersion:'2025-03-26'}:{tools:[{name:'memory_write',inputSchema:{properties:{content:{type:'string'}},required:['content']}}]};process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:r.id,result})+String.fromCharCode(10));});`);
     fs.writeFileSync(path.join(options.cwd, '.mcp.json'), JSON.stringify({ mcpServers: {
         'shared-context-first': { command: process.execPath, args: [script] },
         'shared-context-second': { command: process.execPath, args: [script] }
