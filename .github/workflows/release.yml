@@ -16,6 +16,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -294,3 +296,9 @@ jobs:
             ${{ env.PACKAGE_TGZ }}
             ${{ env.STANDALONE_TGZ }}
           generate_release_notes: false
+
+  desktop:
+    needs: release
+    uses: ./.github/workflows/desktop-release.yml
+    with:
+      tag: ${{ needs.release.outputs.release_tag }}

@@ -45,9 +45,13 @@ Codex Mate manages existing tools and local records. It is not a new AI model or
 
 ## Quick Start
 
-Install using one option below, then run `codexmate run`. Open the address printed in your terminal, select a source with existing records in the session browser, open a conversation, and use its export action. If there are no local records, create a conversation in the original tool first.
+For CLI + Web, install via Homebrew, npm, or curl below, then run `codexmate run`. Open the address printed in your terminal, select a source with existing records in the session browser, open a conversation, and use its export action. If there are no local records, create a conversation in the original tool first.
 
 Exports are for reading and archiving, not restoring complete agent state in another tool. Use `codexmate setup` when you need to configure a provider. See the [quick-start guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/quick-start) for details.
+
+### Install the Desktop App
+
+Open the [latest release](https://github.com/SakuraByteCore/codexmate/releases/latest). Windows `.exe`, macOS `.dmg`, and Linux `.AppImage` packages appear in **Assets** only after the desktop builds complete. Download the package for your platform, install it, and launch the desktop app directly; `codexmate run` is not required.
 
 ### Install via Homebrew (macOS / Linux)
 

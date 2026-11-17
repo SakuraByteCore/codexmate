@@ -45,9 +45,13 @@ Codex Mate 管理已有工具和本地记录，不是新的 AI 模型，也不�
 
 ## 快速开始
 
-先任选一种方式安装，再运行 `codexmate run`。按终端显示的地址打开 Web UI，在「会话来源」选已有记录的工具，打开一条会话并点击「导出记录」。没有本地记录时，先在原工具中产生一段对话。
+使用 CLI + Web 时，先通过下方 Homebrew、npm 或 curl 安装，再运行 `codexmate run`。按终端显示的地址打开 Web UI，在「会话来源」选已有记录的工具，打开一条会话并点击「导出记录」。没有本地记录时，先在原工具中产生一段对话。
 
 导出用于阅读与归档，不等于在另一工具中恢复完整状态。需要配置 Provider 时再使用 `codexmate setup`；详细步骤见[快速开始](https://sakurabytecore.github.io/codexmate/guide/quick-start)。
+
+### 桌面版安装
+
+打开[最新发布页](https://github.com/SakuraByteCore/codexmate/releases/latest)。桌面构建完成后，**Assets**（发布附件）中才会出现 Windows `.exe`、macOS `.dmg`、Linux `.AppImage` 安装包。下载对应平台的安装包，安装后直接启动桌面应用，无需运行 `codexmate run`。
 
 ### Homebrew 安装（macOS / Linux）
 

@@ -1,10 +1,18 @@
 name: desktop-release
-run-name: "desktop ${{ github.ref_name }}"
+run-name: "desktop ${{ inputs.tag }}"
 on:
-  push:
-    tags:
-      - 'desktop-v*'
-  workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Existing release tag (vX.Y.Z)'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach desktop installers to (vX.Y.Z)'
+        required: true
+        type: string
 permissions:
   contents: write
 
@@ -16,21 +24,48 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Checkout
+      - name: Checkout release tag
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install dependencies
+      - name: Verify release and package versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          node - <<'NODE'
+          const tag = process.env.RELEASE_TAG;
+          if (!/^v\d+\.\d+\.\d+$/.test(tag)) throw new Error('Expected release tag vX.Y.Z');
+          for (const file of ['./package.json', './desktop/package.json']) {
+            if (`v${require(file).version}` !== tag) throw new Error(`${file} version does not match ${tag}`);
+          }
+          NODE
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
+          gh release view "${RELEASE_TAG}"
+      - name: Install backend dependencies
+        run: npm ci --omit=dev --no-audit --no-fund
+      - name: Install desktop dependencies
         working-directory: desktop
         run: npm install --no-audit --no-fund
       - name: Backend contract self-check
         working-directory: desktop
         run: node selfcheck.cjs
-      - name: Build & publish
+      - name: Build installers
         working-directory: desktop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --publish always
+        run: npm run dist
+      - name: Attach installers to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          fail_on_unmatched_files: true
+          files: |
+            ${{ matrix.os == 'windows-latest' && 'desktop/dist/*.exe' || matrix.os == 'macos-latest' && 'desktop/dist/*.dmg' || 'desktop/dist/*.AppImage' }}

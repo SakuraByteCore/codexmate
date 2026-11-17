@@ -45,9 +45,13 @@ Codex Mate quản lý công cụ và dữ liệu cục bộ đã có. Đây khô
 
 ## Bắt đầu nhanh
 
-Chọn một cách cài đặt bên dưới, rồi chạy `codexmate run`. Mở địa chỉ được in trong terminal, chọn nguồn có dữ liệu trong trình duyệt phiên, mở cuộc trò chuyện và dùng chức năng xuất. Nếu chưa có dữ liệu cục bộ, hãy tạo cuộc trò chuyện trong công cụ gốc trước.
+Để dùng CLI + Web, cài đặt qua Homebrew, npm hoặc curl bên dưới, rồi chạy `codexmate run`. Mở địa chỉ được in trong terminal, chọn nguồn có dữ liệu trong trình duyệt phiên, mở cuộc trò chuyện và dùng chức năng xuất. Nếu chưa có dữ liệu cục bộ, hãy tạo cuộc trò chuyện trong công cụ gốc trước.
 
 Bản xuất dùng để đọc và lưu trữ, không phải khôi phục toàn bộ trạng thái agent trong công cụ khác. Dùng `codexmate setup` khi cần cấu hình provider. Xem [hướng dẫn bắt đầu nhanh (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/quick-start) để biết chi tiết.
+
+### Cài đặt ứng dụng máy tính
+
+Mở [bản phát hành mới nhất](https://github.com/SakuraByteCore/codexmate/releases/latest). Các gói Windows `.exe`, macOS `.dmg` và Linux `.AppImage` chỉ xuất hiện trong mục **Assets** sau khi quá trình dựng ứng dụng máy tính hoàn tất. Tải gói dành cho nền tảng của bạn, cài đặt rồi mở trực tiếp ứng dụng máy tính; không cần chạy `codexmate run`.
 
 ### Cài đặt qua Homebrew (macOS / Linux)
 

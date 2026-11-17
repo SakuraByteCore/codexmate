@@ -147,3 +147,27 @@ test('release workflow uses generated changelog as release body', () => {
     assert.match(workflow, /generate_release_notes:\s*false/);
     assert.doesNotMatch(workflow, /generate_release_notes:\s*true/);
 });
+
+test('release workflow attaches desktop installers to the resolved release tag', () => {
+    const workflow = fs.readFileSync('.github/workflows/release.yml', 'utf8');
+    const desktop = fs.readFileSync('.github/workflows/desktop-release.yml', 'utf8');
+
+    assert.match(workflow, /outputs:\s*\n\s+release_tag: \$\{\{ steps\.resolve\.outputs\.release_tag \}\}/);
+    assert.match(workflow, /desktop:\s*\n\s+needs: release\s*\n\s+uses: \.\/\.github\/workflows\/desktop-release\.yml/);
+    assert.match(workflow, /tag: \$\{\{ needs\.release\.outputs\.release_tag \}\}/);
+    assert.match(desktop, /workflow_call:/);
+    assert.match(desktop, /workflow_dispatch:/);
+    assert.doesNotMatch(desktop, /desktop-v\*/);
+    assert.match(desktop, /ref: \$\{\{ inputs\.tag \}\}/);
+    assert.match(desktop, /git rev-parse "refs\/tags\/\$\{RELEASE_TAG\}\^\{commit\}"/);
+    assert.match(desktop, /gh release view "\$\{RELEASE_TAG\}"/);
+    assert.match(desktop, /run: npm ci --omit=dev --no-audit --no-fund/);
+    assert.match(desktop, /run: npm run dist/);
+    assert.doesNotMatch(desktop, /--publish always/);
+    assert.match(desktop, /uses: softprops\/action-gh-release@v2/);
+    assert.match(desktop, /tag_name: \$\{\{ inputs\.tag \}\}/);
+    assert.match(desktop, /fail_on_unmatched_files: true/);
+    for (const extension of ['exe', 'dmg', 'AppImage']) {
+        assert.ok(desktop.includes(`desktop/dist/*.${extension}`));
+    }
+});
