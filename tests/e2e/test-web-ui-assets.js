@@ -7,7 +7,8 @@ function getText(port, requestPath, timeoutMs = 2000) {
             hostname: '127.0.0.1',
             port,
             path: requestPath,
-            method: 'GET'
+            method: 'GET',
+            headers: { Authorization: `Bearer ${process.env.CODEXMATE_HTTP_TOKEN || 'codexmate-e2e-token'}` }
         }, (res) => {
             let body = '';
             res.setEncoding('utf-8');

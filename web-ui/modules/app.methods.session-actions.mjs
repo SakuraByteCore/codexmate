@@ -1,3 +1,4 @@
+import { getAccessToken } from './access-token.mjs';
 import {
     normalizeConfigTemplateDiffConfirmEnabled
 } from './config-template-confirm-pref.mjs';
@@ -124,6 +125,8 @@ export function createSessionActionMethods(options = {}) {
             params.set('source', source);
             if (sessionId) params.set('sessionId', sessionId);
             if (filePath) params.set('filePath', filePath);
+            const accessToken = getAccessToken();
+            if (accessToken) params.set('token', accessToken);
             return `${origin}/session?${params.toString()}`;
         },
 

@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '../..');
+const testToken = 'opencode-store-test-token';
 
 function postJson(port, payload, timeoutMs = 2000) {
     return new Promise((resolve, reject) => {
@@ -19,6 +20,7 @@ function postJson(port, payload, timeoutMs = 2000) {
             path: '/api',
             method: 'POST',
             headers: {
+                Authorization: `Bearer ${testToken}`,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(data)
             }
@@ -96,6 +98,7 @@ async function withCodexMateServer(fn) {
             CODEX_HOME: '',
             CLAUDE_HOME: '',
             CLAUDE_CONFIG_DIR: '',
+            CODEXMATE_HTTP_TOKEN: testToken,
             CODEXMATE_PORT: String(port),
             CODEXMATE_NO_BROWSER: '1'
         },

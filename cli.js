@@ -46,6 +46,8 @@ const {
     formatTimestampForFileName
 } = require('./lib/cli-file-utils');
 const { buildLineDiff } = require('./lib/text-diff');
+const { cmdThread, handleThreadAction } = require('./lib/thread-handoff');
+const { createStartupAuth } = require('./lib/web-startup-auth');
 const {
     extractModelNames,
     hasModelsListPayload,
@@ -13934,6 +13936,7 @@ function createWebAccessControlMiddleware(host) {
     });
 }
 function assertRequestAuthorized(req, res) {
+    if (req.codexmateStartupAuthenticated === true) return { ok: true, mode: 'startup-token' };
     const remoteAddr = req && req.socket ? req.socket.remoteAddress : '';
     if (isLoopbackRemoteAddress(remoteAddr)) {
         return { ok: true, mode: 'loopback' };
@@ -14171,7 +14174,8 @@ const PUBLIC_WEB_UI_STATIC_ASSETS = new Set([
 
 function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {
     const connections = new Set();
-    const httpToken = readServerToken();
+    const startupAuth = createStartupAuth(readServerToken());
+    const httpToken = startupAuth.token;
     const accessControlMiddleware = createWebAccessControlMiddleware(host);
     const probeWebUiReadiness = (callback) => {
         const payload = JSON.stringify({ action: 'health-check', params: {} });
@@ -15010,6 +15014,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'session-message-counts':
                             result = await readSessionMessageCounts(params || {});
                             break;
+                        case 'thread-handoff-list':
+                        case 'thread-handoff-create':
+                        case 'thread-handoff-fallback':
+                        case 'thread-handoff-ack':
+                            result = await handleThreadAction(action, params || {});
+                            break;
                         case 'session-detail':
                             result = await readSessionDetail(params);
                             break;
@@ -15346,7 +15356,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         }
     };
     const server = http.createServer((req, res) => {
-        accessControlMiddleware(req, res, () => handleRequest(req, res));
+        accessControlMiddleware(req, res, () => startupAuth.middleware(req, res, () => {
+            req.codexmateStartupAuthenticated = true;
+            handleRequest(req, res);
+        }));
     });
 
     server.on('connection', (socket) => {
@@ -15379,7 +15392,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
     const openHost = host === '::'
         ? '::1'
         : (host === '0.0.0.0' ? DEFAULT_WEB_OPEN_HOST : host);
-    const openUrl = `http://${formatHostForUrl(openHost)}:${port}`;
+    const openUrl = `http://${formatHostForUrl(openHost)}:${port}/?token=${encodeURIComponent(httpToken)}`;
     server.listen(port, host, () => {
         console.log('\n✓ Web UI 已启动');
         const willOpenBrowser = !!openBrowser && !process.env.CODEXMATE_NO_BROWSER;
@@ -17913,6 +17926,7 @@ function printMainHelp() {
     console.log('  codexmate add-model <模型> 添加模型');
     console.log('  codexmate delete-model <模型> 删除模型');
     console.log('  codexmate workflow <list|get|validate|run|runs>  MCP 工作流中心');
+    console.log('  codexmate thread <handoff|list|fallback|ack>  交接卡与共享记忆路由');
     console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--output <PATH|->] [-o <PATH|->]  导出 Usage 数据');
     console.log('  codexmate run [--host <HOST>] [--no-browser]    启动 Web 界面');
     console.log('  codexmate update [--check] 检查并快速更新工具');
@@ -17934,6 +17948,10 @@ function printMainHelp() {
 async function main() {
     const args = process.argv.slice(2);
     const command = args[0];
+    if (command === 'thread') {
+        await cmdThread(args.slice(1));
+        return;
+    }
     const isMcpCommand = command === 'mcp';
     const shouldGateInitialBootstrap = command === 'run' || isMcpCommand;
     const bootstrap = ensureManagedConfigBootstrap({

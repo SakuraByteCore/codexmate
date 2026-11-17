@@ -86,8 +86,10 @@
                 pathname = '/';
             }
             url.pathname = pathname;
+            const accessToken = url.searchParams.get('token') || '';
             url.search = '';
             url.hash = '';
+            if (accessToken) url.searchParams.set('token', accessToken);
             const nextUrl = url.toString();
             if (nextUrl === window.location.href) return;
             if (window.history && typeof window.history.replaceState === 'function') {

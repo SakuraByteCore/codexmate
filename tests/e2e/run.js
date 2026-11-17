@@ -98,6 +98,7 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         XDG_CONFIG_HOME: '',
         CODEXMATE_FORCE_RESET_EXISTING_CONFIG: '1',
         CODEXMATE_NO_BROWSER: '1',
+        CODEXMATE_HTTP_TOKEN: 'codexmate-e2e-token',
         CODEXMATE_ALLOW_PRIVATE_WEBHOOK: '1'
     };
     const cliPath = path.resolve(__dirname, '../../cli.js');

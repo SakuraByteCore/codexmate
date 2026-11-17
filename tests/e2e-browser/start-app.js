@@ -8,6 +8,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
+const { token } = require('./access-token.cjs');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const port = String(process.argv[2] || process.env.CODEXMATE_PORT || '3939');
@@ -22,6 +23,7 @@ const child = spawn(
             HOME: home,
             USERPROFILE: home,
             CODEXMATE_PORT: port,
+            CODEXMATE_HTTP_TOKEN: token,
             CODEXMATE_NO_BROWSER: '1'
         }),
         stdio: 'inherit'

@@ -7,6 +7,7 @@ async function fetchHtml(port) {
             hostname: '127.0.0.1',
             port,
             path: '/',
+            headers: { Authorization: `Bearer ${process.env.CODEXMATE_HTTP_TOKEN || 'codexmate-e2e-token'}` },
             timeout: 2000
         }, (res) => {
             let body = '';

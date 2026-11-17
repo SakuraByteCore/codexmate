@@ -16,6 +16,8 @@ await import(pathToFileURL(path.join(__dirname, 'session-query.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-export-range.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'web-ui-url-canonicalization.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'mcp-stdio.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'thread-handoff.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'web-startup-auth.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'workflow-engine.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'task-codex-exec-windows.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'skills-modal-ui.test.mjs')));

@@ -1,3 +1,4 @@
+import { withAccessToken } from './access-token.mjs';
 import {
     buildSpeedTestIssue,
     formatLatency
@@ -219,7 +220,7 @@ export function createRuntimeMethods(options = {}) {
                     return;
                 }
                 this.claudeDownloadProgress = 100;
-                const downloadUrl = `/download/${encodeURIComponent(res.fileName)}`;
+                const downloadUrl = withAccessToken(`/download/${encodeURIComponent(res.fileName)}`);
                 const link = document.createElement('a');
                 link.href = downloadUrl;
                 link.download = res.fileName;
@@ -260,7 +261,7 @@ export function createRuntimeMethods(options = {}) {
                     return;
                 }
                 this.codexDownloadProgress = 100;
-                const downloadUrl = `/download/${encodeURIComponent(res.fileName)}`;
+                const downloadUrl = withAccessToken(`/download/${encodeURIComponent(res.fileName)}`);
                 const link = document.createElement('a');
                 link.href = downloadUrl;
                 link.download = res.fileName;

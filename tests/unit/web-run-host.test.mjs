@@ -106,6 +106,10 @@ function extractFunctionBySignature(source, signature, funcName) {
 }
 
 function instantiateFunction(funcSource, funcName, bindings = {}) {
+    // Existing route unit tests isolate the outer startup gate; HTTP tests cover it.
+    if (funcName === 'createWebServer') bindings = { ...bindings,
+        createStartupAuth: token => ({ token: token || 'unit-startup-token', middleware: (_req, _res, next) => next() }) };
+
     const bindingNames = Object.keys(bindings);
     const bindingValues = Object.values(bindings);
     return Function(...bindingNames, `${funcSource}\nreturn ${funcName};`)(...bindingValues);
@@ -1456,7 +1460,7 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
     assetEndHandler();
     assert.deepStrictEqual(spawnCalls, [{
         command: 'cmd',
-        args: ['/c', 'start', '', 'http://127.0.0.1:3737'],
+        args: ['/c', 'start', '', 'http://127.0.0.1:3737/?token=secret-token'],
         options: {
             stdio: 'ignore',
             detached: true,
@@ -1750,7 +1754,7 @@ test('createWebServer retries readiness probe failures before auto-opening the b
     timers[0].callback();
     assert.deepStrictEqual(spawnCalls, [{
         command: 'xdg-open',
-        args: ['http://127.0.0.1:3737'],
+        args: ['http://127.0.0.1:3737/?token=unit-startup-token'],
         options: {
             stdio: 'ignore',
             detached: true,
