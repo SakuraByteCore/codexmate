@@ -43,6 +43,21 @@ Codex Mate manages existing tools and local records. It is not a new AI model or
 
 [Get started](#quick-start) · [Session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions) · [Thread handoff](#thread-handoff)
 
+## Comparison with Related Tools
+
+Choose by primary use case rather than treating this as an exclusive feature checklist. These projects overlap and can be used together.
+
+| Tool | Primary focus | Best fit |
+| --- | --- | --- |
+| **Codex Mate** | Local-first, cross-tool session and configuration management through CLI + Web and desktop entry points | Find, filter, and export conversations from different tools in one place, alongside Provider, Skills, and task workflow management |
+| [CC Switch](https://github.com/farion1231/cc-switch) | Desktop configuration manager for multiple AI coding tools, covering providers, MCP, Skills, and prompts | Switching API providers and reducing manual edits to each tool's configuration files |
+| [CloudCLI (Claude Code UI)](https://github.com/siteboon/claudecodeui) | Desktop and mobile Web UI for Claude Code, Cursor CLI, and Codex | Using coding assistants from a browser or phone and accessing local or remote projects and sessions |
+| [ccusage](https://github.com/ryoppippi/ccusage) | CLI for analyzing token usage and costs from local coding-agent records | Daily, weekly, monthly, or per-session usage and cost reports |
+
+**Why choose Codex Mate?** Bring cross-tool conversation lookup, Markdown archiving, and everyday configuration, Skills, and task management into one entry point without replacing your coding assistant.
+
+This comparison follows the official project descriptions linked above; it does not imply that other tools lack unlisted features and is not a performance or pricing ranking. Codex Mate's session operations vary by source; see the [session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions). Export and handoff do not provide lossless migration of complete session state, and running locally does not mean models run offline.
+
 ## Quick Start
 
 For CLI + Web, install via Homebrew, npm, or curl below, then run `codexmate run`. Open the address printed in your terminal, select a source with existing records in the session browser, open a conversation, and use its export action. If there are no local records, create a conversation in the original tool first.

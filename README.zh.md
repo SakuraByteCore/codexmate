@@ -43,6 +43,21 @@ Codex Mate 管理已有工具和本地记录，不是新的 AI 模型，也不�
 
 [开始使用](#快速开始) · [查看会话使用方法](https://sakurabytecore.github.io/codexmate/guide/sessions) · [线程交接](#线程交接)
 
+## 与同类工具对比
+
+按主要用途选择工具，而非将下表视为互斥功能清单。各项目存在功能重叠，也可以搭配使用。
+
+| 工具 | 主要定位 | 适合的需求 |
+| --- | --- | --- |
+| **Codex Mate** | 本地优先的跨工具会话与配置管理，提供 CLI + Web 和桌面入口 | 在一个界面找回、筛选和导出不同工具的历史对话，集中管理 Provider、Skills 与任务工作流 |
+| [CC Switch](https://github.com/farion1231/cc-switch) | 多种 AI 编程工具的桌面配置管理器，集中管理 Provider、MCP、Skills 与提示词 | 主要需要切换 API Provider，减少手工编辑各工具的配置文件 |
+| [CloudCLI（Claude Code UI）](https://github.com/siteboon/claudecodeui) | 面向 Claude Code、Cursor CLI 和 Codex 的桌面与移动端 Web 界面 | 主要需要在浏览器或手机上使用编程助手，访问本地或远程项目与会话 |
+| [ccusage](https://github.com/ryoppippi/ccusage) | 从本地编程智能体记录分析 Token 用量与费用的 CLI | 主要需要按日、周、月或会话查看用量与费用报表 |
+
+**选择 Codex Mate 的理由**：将跨工具历史会话查阅、Markdown 归档与日常配置、Skills、任务管理放在同一入口，不必更换原来的编程助手。
+
+对比依据为上方链接中的官方项目说明；不代表其他工具缺少未列出的功能，也不是性能或价格排名。Codex Mate 的会话操作能力因来源而异，详见[会话指南](https://sakurabytecore.github.io/codexmate/guide/sessions)；导出与交接不等于无损迁移完整会话状态，本地运行也不等于模型离线运行。
+
 ## 快速开始
 
 使用 CLI + Web 时，先通过下方 Homebrew、npm 或 curl 安装，再运行 `codexmate run`。按终端显示的地址打开 Web UI，在「会话来源」选已有记录的工具，打开一条会话并点击「导出记录」。没有本地记录时，先在原工具中产生一段对话。

@@ -43,6 +43,21 @@ Codex Mate quản lý công cụ và dữ liệu cục bộ đã có. Đây khô
 
 [Bắt đầu sử dụng](#bắt-đầu-nhanh) · [Hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions) · [Bàn giao luồng](#bàn-giao-luồng)
 
+## So sánh với các công cụ cùng nhóm
+
+Chọn theo nhu cầu chính, không xem bảng này là danh sách tính năng loại trừ lẫn nhau. Các dự án có tính năng giao nhau và có thể dùng kết hợp.
+
+| Công cụ | Trọng tâm chính | Nhu cầu phù hợp |
+| --- | --- | --- |
+| **Codex Mate** | Quản lý phiên và cấu hình xuyên công cụ, ưu tiên cục bộ, qua CLI + Web và ứng dụng máy tính | Tìm, lọc và xuất hội thoại từ nhiều công cụ tại một nơi, cùng quản lý Provider, Skills và quy trình tác vụ |
+| [CC Switch](https://github.com/farion1231/cc-switch) | Trình quản lý cấu hình trên máy tính cho nhiều công cụ lập trình AI, gồm provider, MCP, Skills và lời nhắc | Chuyển đổi API provider và giảm việc sửa thủ công tệp cấu hình của từng công cụ |
+| [CloudCLI (Claude Code UI)](https://github.com/siteboon/claudecodeui) | Giao diện Web trên máy tính và thiết bị di động cho Claude Code, Cursor CLI và Codex | Dùng trợ lý lập trình từ trình duyệt hoặc điện thoại, truy cập dự án và phiên cục bộ hoặc từ xa |
+| [ccusage](https://github.com/ryoppippi/ccusage) | CLI phân tích lượng token sử dụng và chi phí từ dữ liệu cục bộ của tác nhân lập trình | Xem báo cáo lượng sử dụng và chi phí theo ngày, tuần, tháng hoặc phiên |
+
+**Vì sao chọn Codex Mate?** Tập hợp tra cứu hội thoại xuyên công cụ, lưu trữ Markdown, quản lý cấu hình, Skills và tác vụ hằng ngày tại một nơi mà không thay thế trợ lý lập trình đang dùng.
+
+So sánh dựa trên mô tả chính thức tại các liên kết trên; không hàm ý công cụ khác thiếu tính năng chưa liệt kê và không phải bảng xếp hạng hiệu năng hay giá. Thao tác phiên của Codex Mate tùy thuộc nguồn; xem [hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions). Xuất và bàn giao không di chuyển nguyên vẹn toàn bộ trạng thái phiên; chạy cục bộ cũng không có nghĩa là mô hình chạy ngoại tuyến.
+
 ## Bắt đầu nhanh
 
 Để dùng CLI + Web, cài đặt qua Homebrew, npm hoặc curl bên dưới, rồi chạy `codexmate run`. Mở địa chỉ được in trong terminal, chọn nguồn có dữ liệu trong trình duyệt phiên, mở cuộc trò chuyện và dùng chức năng xuất. Nếu chưa có dữ liệu cục bộ, hãy tạo cuộc trò chuyện trong công cụ gốc trước.
