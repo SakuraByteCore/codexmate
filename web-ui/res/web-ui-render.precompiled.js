@@ -1,5 +1,5 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vModelSelect: _vModelSelect, withDirectives: _withDirectives, vModelText: _vModelText, vModelCheckbox: _vModelCheckbox, vShow: _vShow, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
 
 return function render(_ctx, _cache) {
   return (_openBlock(), _createElementBlock(_Fragment, null, [
@@ -890,6 +890,104 @@ return function render(_ctx, _cache) {
             role: "tabpanel",
             "aria-labelledby": 'tab-dashboard'
           }, [
+            _createElementVNode("section", {
+              class: "selector-section",
+              "aria-label": "自动工作流"
+            }, [
+              _createElementVNode("h2", null, "自动工作流"),
+              _createElementVNode("p", null, "提交后可以关闭页面。服务重启后恢复安全步骤；写入结果不明时请求介入。"),
+              _createElementVNode("label", { for: "workflow-id" }, "任务定义"),
+              _withDirectives(_createElementVNode("select", {
+                id: "workflow-id",
+                "onUpdate:modelValue": $event => ((_ctx.workflowId) = $event),
+                class: "form-input"
+              }, [
+                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowDefinitions, (item) => {
+                  return (_openBlock(), _createElementBlock("option", {
+                    key: item.id,
+                    value: item.id
+                  }, _toDisplayString(item.name || item.id), 9 /* TEXT, PROPS */, ["value"]))
+                }), 128 /* KEYED_FRAGMENT */))
+              ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                [_vModelSelect, _ctx.workflowId]
+              ]),
+              _createElementVNode("label", { for: "workflow-input" }, "输入（JSON）；继续任务前先载入原输入"),
+              _withDirectives(_createElementVNode("textarea", {
+                id: "workflow-input",
+                "onUpdate:modelValue": $event => ((_ctx.workflowInput) = $event),
+                class: "form-input",
+                rows: "3"
+              }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                [_vModelText, _ctx.workflowInput]
+              ]),
+              _createElementVNode("label", null, [
+                _withDirectives(_createElementVNode("input", {
+                  type: "checkbox",
+                  "onUpdate:modelValue": $event => ((_ctx.workflowAllowWrite) = $event)
+                }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                  [_vModelCheckbox, _ctx.workflowAllowWrite]
+                ]),
+                _createTextVNode("授权本次任务写入")
+              ]),
+              _createElementVNode("button", {
+                class: "btn",
+                onClick: _ctx.submitWorkflowRun,
+                disabled: _ctx.workflowBusy
+              }, "提交任务", 8 /* PROPS */, ["onClick", "disabled"]),
+              _createElementVNode("button", {
+                class: "btn",
+                onClick: _ctx.refreshWorkflowRuns,
+                disabled: _ctx.workflowBusy
+              }, "刷新结果", 8 /* PROPS */, ["onClick", "disabled"]),
+              (_ctx.workflowError)
+                ? (_openBlock(), _createElementBlock("p", {
+                    key: 0,
+                    role: "alert"
+                  }, _toDisplayString(_ctx.workflowError), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowRuns, (run) => {
+                return (_openBlock(), _createElementBlock("article", {
+                  key: run.id
+                }, [
+                  _createElementVNode("h3", null, _toDisplayString(run.definition.name || run.definition.id) + " · " + _toDisplayString(_ctx.workflowStatusLabel(run.status)), 1 /* TEXT */),
+                  _createElementVNode("p", null, _toDisplayString(run.id) + " · " + _toDisplayString(run.reason || run.error), 1 /* TEXT */),
+                  (run.status === 'waiting')
+                    ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                        _createElementVNode("button", {
+                          class: "btn",
+                          onClick: $event => (_ctx.workflowInput = JSON.stringify(run.input, null, 2))
+                        }, "载入原输入", 8 /* PROPS */, ["onClick"]),
+                        _createElementVNode("button", {
+                          class: "btn",
+                          onClick: $event => (_ctx.controlWorkflowRun(run, 'resume')),
+                          disabled: _ctx.workflowBusy
+                        }, "确认输入与授权后继续", 8 /* PROPS */, ["onClick", "disabled"])
+                      ], 64 /* STABLE_FRAGMENT */))
+                    : _createCommentVNode("v-if", true),
+                  (['queued', 'running', 'waiting'].includes(run.status))
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 1,
+                        class: "btn",
+                        onClick: $event => (_ctx.controlWorkflowRun(run, 'cancel')),
+                        disabled: _ctx.workflowBusy
+                      }, "取消后续执行", 8 /* PROPS */, ["onClick", "disabled"]))
+                    : _createCommentVNode("v-if", true),
+                  (run.summary)
+                    ? (_openBlock(), _createElementBlock("details", {
+                        key: 2,
+                        open: run.status === 'waiting'
+                      }, [
+                        _createElementVNode("summary", null, "结果与未完成项"),
+                        _createElementVNode("pre", null, _toDisplayString(JSON.stringify(run.summary, null, 2)), 1 /* TEXT */)
+                      ], 8 /* PROPS */, ["open"]))
+                    : _createCommentVNode("v-if", true),
+                  _createElementVNode("details", null, [
+                    _createElementVNode("summary", null, "执行详情与通知状态"),
+                    _createElementVNode("pre", null, _toDisplayString(JSON.stringify({ steps: run.steps, notification: run.notification }, null, 2)), 1 /* TEXT */)
+                  ])
+                ]))
+              }), 128 /* KEYED_FRAGMENT */))
+            ]),
             _createElementVNode("div", { class: "selector-section doctor-hero" }, [
               _createElementVNode("div", { class: "selector-header doctor-header" }, [
                 _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('dashboard.doctor.title')), 1 /* TEXT */),

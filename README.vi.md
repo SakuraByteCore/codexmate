@@ -104,7 +104,7 @@ Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình,
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
 - **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
-- **Điều phối tác vụ**: Lập kế hoạch và thực thi tác vụ phức tạp với theo dõi phụ thuộc.
+- **Điều phối tác vụ**: Tự động thực thi quy trình hiện có, lưu bền vững tiến độ và kết quả, chỉ yêu cầu can thiệp khi bị chặn.
 
 ---
 
@@ -118,13 +118,53 @@ Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình,
 | **Trình duyệt phiên** | ✅ | Xem và lọc phiên cục bộ; khả năng tìm kiếm và xuất Markdown tùy thuộc nguồn. Xem hướng dẫn phiên |
 | **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
 | **Chợ skill cục bộ** | ✅ | Import/export skill giữa các app agent |
-| **Hàng đợi tác vụ** | ✅ | Thực thi tác vụ theo DAG và xem log |
+| **Hàng đợi tác vụ** | ✅ | Quy trình tự động có phụ thuộc, lưu tiến độ, khôi phục an toàn và tổng kết kết quả |
 | **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
 | **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
 | **Mẫu Prompt** | ✅ | Plugin prompt tái sử dụng được với hỗ trợ biến |
 | **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md (bao gồm `~/.config/opencode/AGENTS.md` của OpenCode) và dùng kho preset chung. Áp dụng preset chỉ cập nhật editor; cần lưu thủ công để ghi vào tệp. |
 | **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
 | **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
+
+---
+
+## Quy trình tự động không cần theo dõi liên tục
+
+Tái sử dụng định nghĩa quy trình hiện có để backend tự động thực thi các bước sau khi gửi. Bảng quy trình trên trang tổng quan hỗ trợ gửi tác vụ, xem kết quả, tiếp tục sau khi bổ sung đầu vào và hủy các bước tiếp theo. Đóng trang không làm gián đoạn tác vụ; tác vụ không chạy khi dịch vụ dừng.
+
+### Khởi động và sử dụng
+
+Khởi động dịch vụ cục bộ trong một terminal và giữ dịch vụ hoạt động:
+
+```bash
+codexmate run --no-browser
+```
+
+Gửi tác vụ từ terminal khác. Dùng trường `id` trong bản ghi trả về làm `<runId>` cho các lệnh tiếp theo:
+
+```bash
+codexmate workflow list --json
+codexmate workflow submit diagnose-config --json
+codexmate workflow active-runs --json
+codexmate workflow detail <runId> --json
+codexmate workflow resume <runId> --input @input.json --json
+codexmate workflow cancel <runId> --json
+```
+
+- `resume` chỉ tiếp tục tác vụ đang chờ can thiệp. Tệp `input.json` chứa toàn bộ đầu vào đã cập nhật; bỏ `--input` để giữ đầu vào ban đầu.
+- Bước ghi cần cấp rõ quyền `--allow-write` và bật quyền ghi cấu hình của công cụ tương ứng. Kiểm tra tác động thực tế trước khi tiếp tục bước ghi có kết quả chưa xác định.
+- CLI mặc định kết nối đến `127.0.0.1:3737`. Khi dùng cổng tùy chỉnh, đặt cùng giá trị `CODEXMATE_PORT` trong hai terminal. Khi dùng token truy cập, dịch vụ và bên gọi cần dùng cùng `CODEXMATE_HTTP_TOKEN`.
+- Lệnh đồng bộ `codexmate workflow run` hiện có vẫn tương thích. `workflow runs` đọc lịch sử thực thi cũ; `workflow active-runs` đọc các bản ghi thực thi được lưu bền vững.
+
+### Xử lý tự động và giới hạn an toàn
+
+- Lưu bền vững bản chụp định nghĩa, đầu vào, trạng thái nút, toàn bộ đầu ra và số lần thử. Bản tổng kết gồm mục đã hoàn thành, kết quả cuối cùng và lý do các mục chưa hoàn thành.
+- Sau khi khởi động lại dịch vụ, tiếp tục các nút chỉ đọc đã xác nhận an toàn, không chạy lại nút đã thành công. Nút ghi hoặc nút chưa phân loại có kết quả chưa xác định sẽ chờ can thiệp, không tự động chạy lại.
+- Kiểm tra phụ thuộc được khai báo rõ ràng; giữ thứ tự thực thi tuần tự cho định nghĩa cũ. Không bao gồm tự động chia tác vụ từ ngôn ngữ tự nhiên.
+- Chỉ thử lại lỗi chỉ đọc được đánh dấu rõ là có thể thử lại, trong giới hạn hữu hạn. `retry` nhận giá trị `0–5`, mặc định không thử lại. Thao tác ghi không tự động thử lại.
+- Thiếu đầu vào bắt buộc hoặc quyền ghi sẽ tạm dừng để chờ can thiệp. Hủy chỉ ngăn các bước tiếp theo; công cụ đang chạy phải kết thúc trước khi việc hủy hoàn tất.
+- Khi hết `timeoutMs`, gửi tín hiệu hủy nhưng vẫn chờ công cụ kết thúc thực sự. Công cụ không hỗ trợ tín hiệu này không bảo đảm thời hạn cứng; hệ thống không báo sai rằng công cụ đã dừng.
+- Bật `workflow-completed`, `workflow-failed` và `workflow-waiting` trong cài đặt Webhook để nhận thông báo hoàn thành, thất bại hoặc cần can thiệp. Lỗi thông báo được ghi riêng, không thay đổi kết quả thực thi. Vẫn có thể tra cứu kết quả khi chưa cấu hình thông báo.
 
 ---
 

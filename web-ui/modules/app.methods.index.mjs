@@ -1,3 +1,4 @@
+import { createWorkflowMethods } from './app.methods.workflows.mjs';
 import {
     API_BASE,
     api,
@@ -53,6 +54,7 @@ import {
 export function createAppMethods() {
     return {
         ...createI18nMethods(),
+        ...createWorkflowMethods({ api }),
         ...createPromptsEditorMethods({ api }),
         ...createWebhookMethods(),
         ...createStartupClaudeMethods({

@@ -109,7 +109,7 @@ After finding your conversations, manage the configuration, skills, and tasks us
 - **Provider Health Cleanup**: Probe local Codex and Claude provider routes, surface failed configs in one modal, and bulk-clean selected broken providers without touching healthy or protected entries.
 - **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
 - **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` (including OpenCode's `~/.config/opencode/AGENTS.md`) with auto-detection of project paths, plus a shared preset pool for reusable prompts.
-- **Task Orchestrator**: Plan and execute complex tasks with dependency tracking.
+- **Task Orchestrator**: Automatically advance existing workflows, persist progress and results, and request intervention only when blocked.
 
 ---
 
@@ -122,7 +122,7 @@ After finding your conversations, manage the configuration, skills, and tasks us
 | **Session Browser** | ✅ | Browse and filter local sessions; search and Markdown export depend on the source. See the session guide |
 | **Usage Analytics** | ✅ | Visualize message trends and top projects |
 | **Local Skills Market** | ✅ | Cross-app import/export of agent skills |
-| **Task Queue** | ✅ | DAG-based task execution and logs |
+| **Task Queue** | ✅ | Dependency-aware automatic workflows, persistent progress, safe recovery, and result summaries |
 | **OpenAI Bridge** | ✅ | Convert Codex Responses API to standard OpenAI format and attach/normalize Codex fingerprints in the built-in conversion |
 | **Claude Provider Bridge** | ✅ | Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama via the built-in Claude-compatible proxy |
 | **OpenCode Provider Store** | ✅ | Keep multiple OpenCode providers in `~/.codexmate` while projecting only the selected provider to native OpenCode config |
@@ -133,6 +133,46 @@ After finding your conversations, manage the configuration, skills, and tasks us
 | **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with auto-detect, path switching, and a shared preset pool. Applying a preset only updates the editor; save manually to write the file. |
 | **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
 | **Auto Update** | ✅ | Quick update CLI via `codexmate update` |
+
+---
+
+## Unattended Workflows
+
+Reuse existing workflow definitions and let the backend advance tasks automatically after submission. The dashboard's workflow panel supports submission, result lookup, resuming with additional input, and cancellation of subsequent steps. Closing the page does not interrupt execution; tasks do not execute while the service is stopped.
+
+### Start and Use
+
+Start the local service in one terminal and keep it running:
+
+```bash
+codexmate run --no-browser
+```
+
+Submit tasks from another terminal. Use the returned record's `id` as `<runId>` in subsequent commands:
+
+```bash
+codexmate workflow list --json
+codexmate workflow submit diagnose-config --json
+codexmate workflow active-runs --json
+codexmate workflow detail <runId> --json
+codexmate workflow resume <runId> --input @input.json --json
+codexmate workflow cancel <runId> --json
+```
+
+- `resume` only resumes tasks waiting for intervention. Provide the complete updated input in `input.json`; omit `--input` to retain the original input.
+- Write steps require explicit `--allow-write` permission and the corresponding tool configuration's write permission. Check actual side effects before resuming a write step with an uncertain outcome.
+- The CLI connects to `127.0.0.1:3737` by default. For a custom port, set the same `CODEXMATE_PORT` in both terminals. When using an access token, use the same `CODEXMATE_HTTP_TOKEN` for the service and caller.
+- The existing synchronous `codexmate workflow run` remains compatible. `workflow runs` reads its execution history; `workflow active-runs` reads persistent run records.
+
+### Automatic Handling and Safety Boundaries
+
+- Persist definition snapshots, input, node states, full output, and attempt counts. Result summaries include completed items, the final result, and reasons for unfinished work.
+- After a service restart, resume confirmed-safe read-only nodes without repeating successful nodes. Write or unclassified nodes with uncertain outcomes wait for intervention instead of replaying automatically.
+- Validate explicit dependencies and preserve sequential execution for existing definitions. Natural-language task decomposition is not included.
+- Retry only read-only failures explicitly marked as retryable, within a finite budget. `retry` accepts `0–5` and defaults to no retries. Write operations never retry automatically.
+- Missing required input or write permission pauses execution for intervention. Cancellation stops subsequent advancement; an active tool must finish before cancellation completes.
+- When `timeoutMs` expires, send an abort signal but still wait for the tool to settle. Tools that do not support the signal cannot guarantee a hard timeout; the system does not falsely report termination.
+- Enable `workflow-completed`, `workflow-failed`, and `workflow-waiting` in Webhook settings for completion, failure, or intervention alerts. Notification failures are recorded separately and do not change execution outcomes. Results remain queryable without notifications.
 
 ---
 

@@ -4,6 +4,34 @@
                     id="panel-dashboard"
                     role="tabpanel"
                     :aria-labelledby="'tab-dashboard'">
+                    <section class="selector-section" aria-label="自动工作流">
+                        <h2>自动工作流</h2>
+                        <p>提交后可以关闭页面。服务重启后恢复安全步骤；写入结果不明时请求介入。</p>
+                        <label for="workflow-id">任务定义</label>
+                        <select id="workflow-id" v-model="workflowId" class="form-input">
+                            <option v-for="item in workflowDefinitions" :key="item.id" :value="item.id">{{ item.name || item.id }}</option>
+                        </select>
+                        <label for="workflow-input">输入（JSON）；继续任务前先载入原输入</label>
+                        <textarea id="workflow-input" v-model="workflowInput" class="form-input" rows="3"></textarea>
+                        <label><input type="checkbox" v-model="workflowAllowWrite">授权本次任务写入</label>
+                        <button class="btn" @click="submitWorkflowRun" :disabled="workflowBusy">提交任务</button>
+                        <button class="btn" @click="refreshWorkflowRuns" :disabled="workflowBusy">刷新结果</button>
+                        <p v-if="workflowError" role="alert">{{ workflowError }}</p>
+                        <article v-for="run in workflowRuns" :key="run.id">
+                            <h3>{{ run.definition.name || run.definition.id }} · {{ workflowStatusLabel(run.status) }}</h3>
+                            <p>{{ run.id }} · {{ run.reason || run.error }}</p>
+                            <template v-if="run.status === 'waiting'">
+                                <button class="btn" @click="workflowInput = JSON.stringify(run.input, null, 2)">载入原输入</button>
+                                <button class="btn" @click="controlWorkflowRun(run, 'resume')" :disabled="workflowBusy">确认输入与授权后继续</button>
+                            </template>
+                            <button v-if="['queued', 'running', 'waiting'].includes(run.status)" class="btn" @click="controlWorkflowRun(run, 'cancel')" :disabled="workflowBusy">取消后续执行</button>
+                            <details v-if="run.summary" :open="run.status === 'waiting'">
+                                <summary>结果与未完成项</summary>
+                                <pre>{{ JSON.stringify(run.summary, null, 2) }}</pre>
+                            </details>
+                            <details><summary>执行详情与通知状态</summary><pre>{{ JSON.stringify({ steps: run.steps, notification: run.notification }, null, 2) }}</pre></details>
+                        </article>
+                    </section>
                     <div class="selector-section doctor-hero">
                         <div class="selector-header doctor-header">
                             <span class="selector-title">{{ t('dashboard.doctor.title') }}</span>

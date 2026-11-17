@@ -95,6 +95,7 @@ const {
     validateWorkflowDefinition,
     executeWorkflowDefinition
 } = require('./lib/workflow-engine');
+const { createWorkflowRunner } = require('./lib/workflow-runner');
 const {
     ALLOWED_EVENTS: WEBHOOK_ALLOWED_EVENTS,
     defaultConfigPath: defaultWebhookConfigPath,
@@ -15117,6 +15118,24 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'claude-local-bridge-sync-providers':
                             result = syncClaudeBridgeProviders(params || {});
                             break;
+                        case 'workflow-submit':
+                            result = submitUnattendedWorkflow(params.id, params.input, params);
+                            break;
+                        case 'workflow-active-runs':
+                            result = { runs: getUnattendedWorkflowRunner().list() };
+                            break;
+                        case 'workflow-run-detail':
+                            result = getUnattendedWorkflowRunner().get(params.runId) || { error: 'run not found' };
+                            break;
+                        case 'workflow-resume':
+                            result = getUnattendedWorkflowRunner().resume(params.runId, {
+                                ...(params.input ? { input: params.input } : {}),
+                                ...(params.allowWrite === true ? { allowWrite: true } : {})
+                            });
+                            break;
+                        case 'workflow-cancel':
+                            result = getUnattendedWorkflowRunner().cancel(params.runId);
+                            break;
                         case 'workflow-list':
                             result = listWorkflowDefinitions();
                             break;
@@ -15394,6 +15413,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
         : (host === '0.0.0.0' ? DEFAULT_WEB_OPEN_HOST : host);
     const openUrl = `http://${formatHostForUrl(openHost)}:${port}/?token=${encodeURIComponent(httpToken)}`;
     server.listen(port, host, () => {
+        getUnattendedWorkflowRunner().recover();
         console.log('\n✓ Web UI 已启动');
         const willOpenBrowser = !!openBrowser && !process.env.CODEXMATE_NO_BROWSER;
         console.log(`  ${willOpenBrowser ? '已打开' : '待访问'}: ${openUrl}`);
@@ -15764,7 +15784,7 @@ function parseWorkflowInputArg(rawInput) {
 }
 
 function printWorkflowHelp() {
-    console.log('\n用法: codexmate workflow <list|get|validate|run|runs> [参数]');
+    console.log('\n用法: codexmate workflow <list|get|validate|run|runs|submit|active-runs|detail|resume|cancel> [参数]');
     console.log('  codexmate workflow list');
     console.log('  codexmate workflow get diagnose-config');
     console.log('  codexmate workflow validate safe-provider-switch --input \'{"provider":"e2e"}\'');
@@ -15833,6 +15853,28 @@ function parseWorkflowCliOptions(args = []) {
     return { options, rest };
 }
 
+async function callWorkflowService(action, params = {}) {
+    const actions = { submit: 'workflow-submit', 'active-runs': 'workflow-active-runs', detail: 'workflow-run-detail', resume: 'workflow-resume', cancel: 'workflow-cancel' };
+    const port = parseInt(process.env.CODEXMATE_PORT, 10) || DEFAULT_WEB_PORT;
+    const token = readServerToken();
+    const body = JSON.stringify({ action: actions[action], params });
+    return new Promise((resolve, reject) => {
+        const req = http.request({ hostname: '127.0.0.1', port, path: '/api', method: 'POST', headers: {
+            'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        } }, res => {
+            let text = '';
+            res.on('data', chunk => { text += chunk; });
+            res.on('end', () => {
+                try { resolve(JSON.parse(text)); } catch (error) { reject(error); }
+            });
+        });
+        req.on('error', reject);
+        req.setTimeout(10000, () => req.destroy(new Error('workflow service request timed out')));
+        req.end(body);
+    });
+}
+
 async function cmdWorkflow(args = []) {
     const argv = Array.isArray(args) ? args : [];
     if (argv.length === 0 || argv.includes('--help') || argv.includes('-h')) {
@@ -15843,6 +15885,16 @@ async function cmdWorkflow(args = []) {
     const parsed = parseWorkflowCliOptions(argv.slice(1));
     const options = parsed.options;
     const rest = parsed.rest;
+    if (['submit', 'active-runs', 'detail', 'resume', 'cancel'].includes(subcommand)) {
+        const result = await callWorkflowService(subcommand, {
+            id: rest[0], runId: rest[0],
+            ...(options.inputRaw ? { input: parseWorkflowInputArg(options.inputRaw) } : {}),
+            allowWrite: options.allowWrite === true, dryRun: options.dryRun === true
+        });
+        console.log(JSON.stringify(result, null, 2));
+        if (result.error) throw new Error(result.error);
+        return;
+    }
 
     if (subcommand === 'list') {
         const result = listWorkflowDefinitions();
@@ -16724,6 +16776,9 @@ function normalizeWorkflowDefinition(raw, idHint = '', source = 'custom') {
             tool: toolName,
             arguments: args,
             when,
+            ...(item.dependsOn !== undefined ? { dependsOn: cloneJson(item.dependsOn, null) } : {}),
+            ...(item.retry !== undefined ? { retry: item.retry } : {}),
+            ...(item.timeoutMs !== undefined ? { timeoutMs: item.timeoutMs } : {}),
             continueOnError: item.continueOnError === true,
             write: item.write === true
         });
@@ -17006,6 +17061,47 @@ function validateWorkflowById(workflowId, input = {}) {
         },
         warnings: definitionResult.warnings || []
     };
+}
+
+let unattendedWorkflowRunner = null;
+function getUnattendedWorkflowRunner() {
+    if (unattendedWorkflowRunner) return unattendedWorkflowRunner;
+    unattendedWorkflowRunner = createWorkflowRunner({
+        directory: path.join(CONFIG_DIR, 'workflow-runs'),
+        execute: async (definition, input, options) => {
+            const check = validateWorkflowInputBySchema(definition.inputSchema, input);
+            if (!check.ok) return { success: false, waiting: true, error: check.error, steps: options.resumeSteps || [] };
+            const catalog = createWorkflowToolCatalog();
+            return executeWorkflowDefinition(definition, input, {
+                ...options,
+                invokeTool: async (name, args, execution) => {
+                    const tool = catalog[name];
+                    if (!tool) return { error: `workflow tool not supported: ${name}`, blocked: true };
+                    if (!tool.readOnly && !options.allowWrite) return { error: 'write permission required', blocked: true };
+                    if (!tool.readOnly && !isToolConfigWriteAllowed('codex')) return { error: 'codex configuration permission required', blocked: true };
+                    return tool.handler(args, { signal: execution.signal });
+                }
+            });
+        },
+        notify: async run => {
+            const result = await notifyWebhook(
+                run.status === 'waiting' ? 'workflow-waiting' : (run.status === 'completed' ? 'workflow-completed' : 'workflow-failed'),
+                `工作流 ${run.definition.id}: ${run.status}`, { runId: run.id, summary: run.summary }
+            );
+            return result;
+        }
+    });
+    return unattendedWorkflowRunner;
+}
+function submitUnattendedWorkflow(id, input, options = {}) {
+    const result = getWorkflowDefinitionById(id);
+    if (result.error) return result;
+    const definition = resolveWorkflowDefinitionWithToolMeta(result.workflow);
+    const validation = validateWorkflowDefinition(definition, { knownTools: getWorkflowKnownToolsSet() });
+    if (!validation.ok) return validation;
+    return getUnattendedWorkflowRunner().submit(definition, input || {}, {
+        allowWrite: options.allowWrite === true, dryRun: options.dryRun === true
+    });
 }
 
 async function runWorkflowById(workflowId, input = {}, options = {}) {
@@ -17294,6 +17390,18 @@ function createMcpTools(options = {}) {
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => getBuiltinClaudeProxyStatus()
     });
+
+    for (const action of ['submit', 'active-runs', 'detail', 'resume', 'cancel']) {
+        pushTool({
+            name: `codexmate.workflow.${action}`,
+            description: `Persistent workflow ${action}; requires the Web service.`,
+            readOnly: !['submit', 'resume', 'cancel'].includes(action),
+            inputSchema: { type: 'object', properties: {
+                id: { type: 'string' }, runId: { type: 'string' }, input: { type: 'object' }, dryRun: { type: 'boolean' }
+            } },
+            handler: async (params = {}) => callWorkflowService(action, { ...params, allowWrite })
+        });
+    }
 
     pushTool({
         name: 'codexmate.workflow.list',
@@ -17925,7 +18033,7 @@ function printMainHelp() {
     console.log('  codexmate auth <list|import|switch|delete|status>  认证管理');
     console.log('  codexmate add-model <模型> 添加模型');
     console.log('  codexmate delete-model <模型> 删除模型');
-    console.log('  codexmate workflow <list|get|validate|run|runs>  MCP 工作流中心');
+    console.log('  codexmate workflow <list|get|validate|run|runs|submit|active-runs|detail|resume|cancel>  MCP 工作流中心');
     console.log('  codexmate thread <handoff|list|fallback|ack>  交接卡与共享记忆路由');
     console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--output <PATH|->] [-o <PATH|->]  导出 Usage 数据');
     console.log('  codexmate run [--host <HOST>] [--no-browser]    启动 Web 界面');

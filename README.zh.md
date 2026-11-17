@@ -107,7 +107,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **Provider 健康清理**：探测本地 Codex 与 Claude provider 路由，在同一个弹窗里集中展示失败配置，并批量清理已选坏配置，不影响正常或受保护项。
 - **Skills 市场**：本地优先的市场，支持在不同的智能体应用之间共享和导入 Skills。
 - **提示词文件编辑器**：统一编辑全局和项目级 `CLAUDE.md` 与 `AGENTS.md`（含 OpenCode 的 `~/.config/opencode/AGENTS.md`），支持项目路径自动检测，并提供通用预设池复用 prompt。
-- **任务编排器**：支持带有依赖跟踪的复杂任务规划与执行。
+- **任务编排器**：复用工作流定义自动推进任务，持久保存进度与结果，仅在阻塞时请求介入。
 
 ---
 
@@ -120,7 +120,7 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 | **会话浏览器** | ✅ | 集中浏览与筛选本地会话，按来源提供检索、Markdown 导出等操作；详见会话指南 |
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
 | **本地 Skills 市场** | ✅ | 跨应用的智能体 Skills 导入与导出 |
-| **任务队列** | ✅ | 基于 DAG 的任务执行与日志查看 |
+| **任务队列** | ✅ | 支持依赖的自动工作流、持久进度、安全恢复与结果汇总 |
 | **OpenAI 桥接** | ✅ | 将 Codex Responses API 转换为标准 OpenAI 格式，并在内建转换中附加/规范化 Codex 指纹 |
 | **Claude Provider 桥接** | ✅ | 通过内建 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama |
 | **OpenCode Provider 存储** | ✅ | 在 `~/.codexmate` 中保留多个 OpenCode provider，只将当前选中的 provider 投影到 OpenCode 原生配置 |
@@ -130,6 +130,46 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 | **提示词文件编辑器** | ✅ | 编辑全局和项目级 CLAUDE.md / AGENTS.md，支持自动检测、路径切换与通用预设池。应用预设只更新编辑器，需手动保存才会写入文件。 |
 | **MCP 集成** | ✅ | 通过 MCP stdio 暴露本地工具与资源 |
 | **自动更新** | ✅ | 通过 `codexmate update` 快速更新 CLI |
+
+---
+
+## 自动工作流：提交后无需持续看守
+
+复用现有工作流定义，提交一次后由后端自动推进。首页“自动工作流”提供提交、结果查询、补充输入后继续、取消后续执行。关闭页面不影响任务；服务停止期间不执行任务。
+
+### 启动与使用
+
+先在一个终端启动本地服务，保持服务运行：
+
+```bash
+codexmate run --no-browser
+```
+
+在另一个终端提交任务。将返回记录中的 `id` 用作后续命令的 `<runId>`：
+
+```bash
+codexmate workflow list --json
+codexmate workflow submit diagnose-config --json
+codexmate workflow active-runs --json
+codexmate workflow detail <runId> --json
+codexmate workflow resume <runId> --input @input.json --json
+codexmate workflow cancel <runId> --json
+```
+
+- `resume` 仅继续等待介入的任务；`input.json` 提供补充后的完整输入。省略 `--input` 时保留原输入。
+- 写入步骤需要显式传入 `--allow-write`，还须开启对应工具配置的写权限。结果不明的写步骤，须核对实际副作用后再决定是否继续。
+- CLI 默认连接 `127.0.0.1:3737`。自定义端口时，服务与调用终端须配置相同的 `CODEXMATE_PORT`；配置访问令牌时，两端须使用相同的 `CODEXMATE_HTTP_TOKEN`。
+- 原同步命令 `codexmate workflow run` 保持兼容；`workflow runs` 查询原执行历史，`workflow active-runs` 查询持久运行记录。
+
+### 自动处理与安全边界
+
+- 持久保存定义快照、输入、节点状态、完整输出和尝试次数；结果汇总包含完成项、最终结果与未完成原因。
+- 重启服务后恢复已确认安全的只读节点，不重复执行已成功节点。写节点或未分类节点的执行结果不明时，转为等待介入，不自动重放。
+- 支持显式依赖校验；旧定义保持顺序执行。不包含自然语言自动拆任务。
+- 仅对明确标为可重试的只读失败执行有限重试；`retry` 范围为 `0–5`，默认不重试。写操作不自动重试。
+- 缺少必要输入或写权限时等待介入。取消只停止后续推进；执行中工具结束前显示“正在取消”。
+- `timeoutMs` 到期后传递中止信号，但仍等待工具实际结束。不支持该信号的工具无法保证硬超时，不会虚报已终止。
+- 在 Webhook 设置中启用 `workflow-completed`、`workflow-failed`、`workflow-waiting`，接收完成、失败或介入提醒。通知失败单独记录，不改变任务执行结论；未配置通知时仍可查询结果。
 
 ---
 

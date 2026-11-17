@@ -61,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         mixins: [threadHandoffMixin],
         data() {
             return {
+                workflowDefinitions: [], workflowRuns: [], workflowId: 'diagnose-config',
+                workflowInput: '{}', workflowAllowWrite: false, workflowBusy: false, workflowError: '',
+                workflowTimer: null,
                 lang: 'zh',
                 languageMenuOpen: false,
                 appVersion: '',
@@ -587,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionLoadNativeDialog: false,
                 starPrompted: false,
                 webhookConfig: { enabled: false, url: '', events: ['provider-switch', 'claude-md-edit'] },
-                webhookEventOptions: ['provider-switch', 'claude-md-edit'],
+                webhookEventOptions: ['provider-switch', 'claude-md-edit', 'workflow-completed', 'workflow-failed', 'workflow-waiting'],
                 webhookSaving: false,
                 webhookTestResult: null,
                 webhookTesting: false,
@@ -595,6 +598,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         mounted() {
+            this.refreshWorkflowRuns();
+            this.workflowTimer = setInterval(() => this.refreshWorkflowRuns(), 3000);
             // URL 规范化：将 /web-ui/* 重定向到根路径 /
             try {
                 const pathname = window.location.pathname;
@@ -805,6 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         beforeUnmount() {
+            clearInterval(this.workflowTimer);
             this.teardownSessionTabRender();
             this.cancelScheduledSessionTabDeferredTeardown();
             this.disconnectSessionPreviewHeaderResizeObserver();
