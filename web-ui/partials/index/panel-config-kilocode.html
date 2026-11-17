@@ -90,11 +90,13 @@
                             </section>
 
                             <div v-if="!isToolConfigWriteAllowed('kilocode')" class="tool-config-write-overlay">
-                                <div class="tool-config-write-overlay-card">
+                                <teleport to="body" v-if="mainTab === 'config' && configMode === 'kilocode'">
+                            <div class="tool-config-write-overlay-card">
                                     <div class="tool-config-write-overlay-title">{{ t('toolConfig.kilocode.lockedTitle') }}</div>
                                     <p>{{ t('toolConfig.kilocode.lockedDesc') }}</p>
                                     <button type="button" class="btn-tool" @click="setToolConfigPermission('kilocode', true)" :disabled="toolConfigPermissionSaving.kilocode">{{ t('toolConfig.enableWrite') }}</button>
                                 </div>
+                            </teleport>
                             </div>
                         </div>
                     </div>

@@ -134,11 +134,13 @@
                         </div>
                     </section>
                         <div v-if="!isToolConfigWriteAllowed('openclaw')" class="tool-config-write-overlay">
+                            <teleport to="body" v-if="mainTab === 'config' && configMode === 'openclaw'">
                             <div class="tool-config-write-overlay-card">
                                 <div class="tool-config-write-overlay-title">{{ t('toolConfig.openclaw.lockedTitle') }}</div>
                                 <p>{{ t('toolConfig.openclaw.lockedDesc') }}</p>
                                 <button type="button" class="btn-tool" @click="setToolConfigPermission('openclaw', true)" :disabled="toolConfigPermissionSaving.openclaw">{{ t('toolConfig.enableWrite') }}</button>
                             </div>
+                            </teleport>
                         </div>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vShow: _vShow, withDirectives: _withDirectives, vModelSelect: _vModelSelect, vModelText: _vModelText, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, vModelCheckbox: _vModelCheckbox, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
 
 return function render(_ctx, _cache) {
   return (_openBlock(), _createElementBlock(_Fragment, null, [
@@ -1720,16 +1720,23 @@ return function render(_ctx, _cache) {
                             key: 4,
                             class: "tool-config-write-overlay"
                           }, [
-                            _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
-                              _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.codex.lockedTitle')), 1 /* TEXT */),
-                              _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.codex.lockedDesc')), 1 /* TEXT */),
-                              _createElementVNode("button", {
-                                type: "button",
-                                class: "btn-tool",
-                                onClick: $event => (_ctx.setToolConfigPermission('codex', true)),
-                                disabled: _ctx.toolConfigPermissionSaving.codex
-                              }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                            ])
+                            (_ctx.mainTab === 'config' && _ctx.configMode === 'codex')
+                              ? (_openBlock(), _createBlock(_Teleport, {
+                                  key: 0,
+                                  to: "body"
+                                }, [
+                                  _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                                    _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.codex.lockedTitle')), 1 /* TEXT */),
+                                    _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.codex.lockedDesc')), 1 /* TEXT */),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-tool",
+                                      onClick: $event => (_ctx.setToolConfigPermission('codex', true)),
+                                      disabled: _ctx.toolConfigPermissionSaving.codex
+                                    }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ])
+                                ]))
+                              : _createCommentVNode("v-if", true)
                           ]))
                         : _createCommentVNode("v-if", true)
                     ])
@@ -2257,16 +2264,23 @@ return function render(_ctx, _cache) {
                             key: 1,
                             class: "tool-config-write-overlay"
                           }, [
-                            _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
-                              _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.claude.lockedTitle')), 1 /* TEXT */),
-                              _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.claude.lockedDesc')), 1 /* TEXT */),
-                              _createElementVNode("button", {
-                                type: "button",
-                                class: "btn-tool",
-                                onClick: $event => (_ctx.setToolConfigPermission('claude', true)),
-                                disabled: _ctx.toolConfigPermissionSaving.claude
-                              }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                            ])
+                            (_ctx.mainTab === 'config' && _ctx.configMode === 'claude')
+                              ? (_openBlock(), _createBlock(_Teleport, {
+                                  key: 0,
+                                  to: "body"
+                                }, [
+                                  _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                                    _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.claude.lockedTitle')), 1 /* TEXT */),
+                                    _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.claude.lockedDesc')), 1 /* TEXT */),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-tool",
+                                      onClick: $event => (_ctx.setToolConfigPermission('claude', true)),
+                                      disabled: _ctx.toolConfigPermissionSaving.claude
+                                    }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ])
+                                ]))
+                              : _createCommentVNode("v-if", true)
                           ]))
                         : _createCommentVNode("v-if", true)
                     ])
@@ -2512,16 +2526,23 @@ return function render(_ctx, _cache) {
                         key: 0,
                         class: "tool-config-write-overlay"
                       }, [
-                        _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
-                          _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.openclaw.lockedTitle')), 1 /* TEXT */),
-                          _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.openclaw.lockedDesc')), 1 /* TEXT */),
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "btn-tool",
-                            onClick: $event => (_ctx.setToolConfigPermission('openclaw', true)),
-                            disabled: _ctx.toolConfigPermissionSaving.openclaw
-                          }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                        ])
+                        (_ctx.mainTab === 'config' && _ctx.configMode === 'openclaw')
+                          ? (_openBlock(), _createBlock(_Teleport, {
+                              key: 0,
+                              to: "body"
+                            }, [
+                              _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                                _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.openclaw.lockedTitle')), 1 /* TEXT */),
+                                _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.openclaw.lockedDesc')), 1 /* TEXT */),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-tool",
+                                  onClick: $event => (_ctx.setToolConfigPermission('openclaw', true)),
+                                  disabled: _ctx.toolConfigPermissionSaving.openclaw
+                                }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                              ])
+                            ]))
+                          : _createCommentVNode("v-if", true)
                       ]))
                     : _createCommentVNode("v-if", true)
                 ])
@@ -2921,16 +2942,23 @@ return function render(_ctx, _cache) {
                       key: 1,
                       class: "tool-config-write-overlay"
                     }, [
-                      _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
-                        _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.opencode.lockedTitle')), 1 /* TEXT */),
-                        _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.opencode.lockedDesc')), 1 /* TEXT */),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool",
-                          onClick: $event => (_ctx.setToolConfigPermission('opencode', true)),
-                          disabled: _ctx.toolConfigPermissionSaving.opencode
-                        }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ])
+                      (_ctx.mainTab === 'config' && _ctx.configMode === 'opencode')
+                        ? (_openBlock(), _createBlock(_Teleport, {
+                            key: 0,
+                            to: "body"
+                          }, [
+                            _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                              _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.opencode.lockedTitle')), 1 /* TEXT */),
+                              _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.opencode.lockedDesc')), 1 /* TEXT */),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-tool",
+                                onClick: $event => (_ctx.setToolConfigPermission('opencode', true)),
+                                disabled: _ctx.toolConfigPermissionSaving.opencode
+                              }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                            ])
+                          ]))
+                        : _createCommentVNode("v-if", true)
                     ]))
                   : _createCommentVNode("v-if", true)
               ])
@@ -3195,16 +3223,23 @@ return function render(_ctx, _cache) {
                       key: 1,
                       class: "tool-config-write-overlay"
                     }, [
-                      _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
-                        _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.kilocode.lockedTitle')), 1 /* TEXT */),
-                        _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.kilocode.lockedDesc')), 1 /* TEXT */),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool",
-                          onClick: $event => (_ctx.setToolConfigPermission('kilocode', true)),
-                          disabled: _ctx.toolConfigPermissionSaving.kilocode
-                        }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ])
+                      (_ctx.mainTab === 'config' && _ctx.configMode === 'kilocode')
+                        ? (_openBlock(), _createBlock(_Teleport, {
+                            key: 0,
+                            to: "body"
+                          }, [
+                            _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                              _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.kilocode.lockedTitle')), 1 /* TEXT */),
+                              _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.kilocode.lockedDesc')), 1 /* TEXT */),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-tool",
+                                onClick: $event => (_ctx.setToolConfigPermission('kilocode', true)),
+                                disabled: _ctx.toolConfigPermissionSaving.kilocode
+                              }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                            ])
+                          ]))
+                        : _createCommentVNode("v-if", true)
                     ]))
                   : _createCommentVNode("v-if", true)
               ])
@@ -3570,16 +3605,23 @@ return function render(_ctx, _cache) {
                       key: 0,
                       class: "tool-config-write-overlay"
                     }, [
-                      _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
-                        _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.pi.lockedTitle')), 1 /* TEXT */),
-                        _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.pi.lockedDesc')), 1 /* TEXT */),
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool",
-                          onClick: $event => (_ctx.setToolConfigPermission('pi', true)),
-                          disabled: _ctx.toolConfigPermissionSaving.pi
-                        }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                      ])
+                      (_ctx.mainTab === 'config' && _ctx.configMode === 'pi')
+                        ? (_openBlock(), _createBlock(_Teleport, {
+                            key: 0,
+                            to: "body"
+                          }, [
+                            _createElementVNode("div", { class: "tool-config-write-overlay-card" }, [
+                              _createElementVNode("div", { class: "tool-config-write-overlay-title" }, _toDisplayString(_ctx.t('toolConfig.pi.lockedTitle')), 1 /* TEXT */),
+                              _createElementVNode("p", null, _toDisplayString(_ctx.t('toolConfig.pi.lockedDesc')), 1 /* TEXT */),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-tool",
+                                onClick: $event => (_ctx.setToolConfigPermission('pi', true)),
+                                disabled: _ctx.toolConfigPermissionSaving.pi
+                              }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                            ])
+                          ]))
+                        : _createCommentVNode("v-if", true)
                     ]))
                   : _createCommentVNode("v-if", true)
               ])

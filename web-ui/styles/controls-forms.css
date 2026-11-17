@@ -596,6 +596,15 @@
 }
 
 .tool-config-write-overlay-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 40;
+    width: min(460px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
     max-width: 460px;
     padding: 18px 20px;
     border: 1px solid var(--color-border-soft);

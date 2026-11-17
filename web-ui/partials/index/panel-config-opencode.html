@@ -156,11 +156,13 @@
                                 </div>
                             </section>
                             <div v-if="!isToolConfigWriteAllowed('opencode')" class="tool-config-write-overlay">
-                                <div class="tool-config-write-overlay-card">
+                                <teleport to="body" v-if="mainTab === 'config' && configMode === 'opencode'">
+                            <div class="tool-config-write-overlay-card">
                                     <div class="tool-config-write-overlay-title">{{ t('toolConfig.opencode.lockedTitle') }}</div>
                                     <p>{{ t('toolConfig.opencode.lockedDesc') }}</p>
                                     <button type="button" class="btn-tool" @click="setToolConfigPermission('opencode', true)" :disabled="toolConfigPermissionSaving.opencode">{{ t('toolConfig.enableWrite') }}</button>
                                 </div>
+                            </teleport>
                             </div>
                         </div>
                     </div>

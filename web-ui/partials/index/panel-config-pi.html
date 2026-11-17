@@ -141,11 +141,13 @@
                             </details>
                         </section>
                         <div v-if="!isToolConfigWriteAllowed('pi')" class="tool-config-write-overlay">
+                            <teleport to="body" v-if="mainTab === 'config' && configMode === 'pi'">
                             <div class="tool-config-write-overlay-card">
                                 <div class="tool-config-write-overlay-title">{{ t('toolConfig.pi.lockedTitle') }}</div>
                                 <p>{{ t('toolConfig.pi.lockedDesc') }}</p>
                                 <button type="button" class="btn-tool" @click="setToolConfigPermission('pi', true)" :disabled="toolConfigPermissionSaving.pi">{{ t('toolConfig.enableWrite') }}</button>
                             </div>
+                            </teleport>
                         </div>
                     </div>
                 </div>
