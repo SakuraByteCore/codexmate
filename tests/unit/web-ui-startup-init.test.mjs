@@ -14,6 +14,7 @@ test('mounted defers initial loadAll until after window load and a short timer',
     let syncDefaultOpenclawCalls = 0;
     const context = {
         sessionResumeWithYolo: true,
+        refreshWorkflowRuns() { return Promise.resolve(); },
         claudeConfigs: {},
         openclawConfigs: {
             '默认配置': {
@@ -82,6 +83,7 @@ test('mounted defers initial loadAll until after window load and a short timer',
             timeoutCallbacks.push({ callback, ms });
             return timeoutCallbacks.length;
         },
+        setInterval() { return 1; },
         clearTimeout() {}
     }, async () => {
         appOptions.mounted.call(context);
@@ -120,6 +122,7 @@ test('mounted skips auxiliary startup requests when loadAll fails', async () => 
     let syncDefaultOpenclawCalls = 0;
     const context = {
         sessionResumeWithYolo: true,
+        refreshWorkflowRuns() { return Promise.resolve(); },
         claudeConfigs: {},
         openclawConfigs: {
             '默认配置': {
@@ -186,6 +189,7 @@ test('mounted skips auxiliary startup requests when loadAll fails', async () => 
             timeoutCallbacks.push({ callback, ms });
             return timeoutCallbacks.length;
         },
+        setInterval() { return 1; },
         clearTimeout() {}
     }, async () => {
         appOptions.mounted.call(context);
@@ -210,6 +214,7 @@ function createStartupMountContext(overrides = {}) {
         configMode: 'codex',
         settingsTab: 'general',
         sessionResumeWithYolo: true,
+        refreshWorkflowRuns() { return Promise.resolve(); },
         claudeConfigs: {},
         openclawConfigs: {
             '默认配置': {
@@ -310,6 +315,7 @@ function createStartupMountGlobals(initialHref, replacements = []) {
         setTimeout(callback) {
             return callback;
         },
+        setInterval() { return 1; },
         clearTimeout() {}
     };
 }

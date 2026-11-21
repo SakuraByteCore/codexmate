@@ -1314,6 +1314,7 @@ test('createWebServer waits for api readiness probe before auto-opening the brow
     let probePayload = '';
     const spawnCalls = [];
     const createWebServer = instantiateFunction(createWebServerSource, 'createWebServer', {
+        getUnattendedWorkflowRunner() { return { recover() {} }; },
         http: {
             createServer() {
                 return {
@@ -1627,6 +1628,7 @@ test('createWebServer retries readiness probe failures before auto-opening the b
     const timers = [];
     const spawnCalls = [];
     const createWebServer = instantiateFunction(createWebServerSource, 'createWebServer', {
+        getUnattendedWorkflowRunner() { return { recover() {} }; },
         http: {
             createServer() {
                 return {
