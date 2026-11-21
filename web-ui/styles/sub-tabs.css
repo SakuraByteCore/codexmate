@@ -1,0 +1,181 @@
+/* 面板子导航共享外观；保留模板、显隐条件与主题颜色。 */
+:is(
+    #panel-prompts, #panel-settings, #panel-plugins, #panel-sessions, #panel-market,
+    #panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+    #panel-config-opencode, #panel-config-kilocode, #panel-config-pi
+) {
+    --sub-tab-gap: 2px;
+    --sub-tab-min-size: 44px;
+    --sub-tab-padding: 7px 10px 8px;
+    --sub-tab-line-width: 2px;
+    --sub-tab-focus-offset: -4px;
+    --sub-tab-transition: color var(--transition-fast) var(--ease-smooth),
+        border-color var(--transition-fast) var(--ease-smooth);
+}
+
+/* 不设置 display，保留移动端编辑／预览开关的原有显隐。 */
+:is(
+    #panel-prompts .prompts-md-tabs,
+    #panel-prompts .prompts-mobile-view-switch,
+    #panel-settings .settings-tab-header > .segmented-control,
+    #panel-plugins .plugins-list,
+    #panel-plugins .prompt-templates-modebar,
+    #panel-sessions .session-source-pills,
+    #panel-market .skills-target-switch,
+    :is(#panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi) > .segmented-control
+) {
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: var(--sub-tab-gap);
+    width: fit-content;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+:is(
+    #panel-prompts .prompts-md-tab,
+    #panel-prompts .prompts-mobile-view-btn,
+    #panel-settings .settings-tab-header .segmented-option,
+    #panel-plugins .plugins-item,
+    #panel-plugins .mode-pill,
+    #panel-sessions .session-source-pill,
+    #panel-market .skills-target-chip,
+    :is(#panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi) > .segmented-control > .segment
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: var(--sub-tab-min-size);
+    min-height: var(--sub-tab-min-size);
+    padding: var(--sub-tab-padding);
+    border: 0;
+    border-bottom: var(--sub-tab-line-width) solid transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--color-text-secondary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-secondary);
+    line-height: 1.4;
+    letter-spacing: 0;
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    transform: none;
+    transition: var(--sub-tab-transition);
+}
+
+:is(
+    #panel-prompts .prompts-md-tab,
+    #panel-prompts .prompts-mobile-view-btn,
+    #panel-settings .settings-tab-header .segmented-option,
+    #panel-plugins .plugins-item,
+    #panel-plugins .mode-pill,
+    #panel-sessions .session-source-pill,
+    #panel-market .skills-target-chip,
+    :is(#panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi) > .segmented-control > .segment
+):hover:not(:disabled):not(.active) {
+    color: var(--color-text-primary);
+    background: transparent;
+    transform: none;
+}
+
+:is(
+    #panel-prompts .prompts-md-tab,
+    #panel-prompts .prompts-mobile-view-btn,
+    #panel-settings .settings-tab-header .segmented-option,
+    #panel-plugins .plugins-item,
+    #panel-plugins .mode-pill,
+    #panel-sessions .session-source-pill,
+    #panel-market .skills-target-chip,
+    :is(#panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi) > .segmented-control > .segment
+).active {
+    color: var(--color-brand-dark);
+    border-bottom-color: var(--color-brand);
+    background: transparent;
+    box-shadow: none;
+}
+
+:is(
+    #panel-prompts .prompts-md-tab,
+    #panel-prompts .prompts-mobile-view-btn,
+    #panel-settings .settings-tab-header .segmented-option,
+    #panel-plugins .plugins-item,
+    #panel-plugins .mode-pill,
+    #panel-sessions .session-source-pill,
+    #panel-market .skills-target-chip,
+    :is(#panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi) > .segmented-control > .segment
+):focus-visible {
+    outline: var(--sub-tab-line-width) solid var(--color-brand-dark);
+    outline-offset: var(--sub-tab-focus-offset);
+    box-shadow: none;
+}
+
+:is(
+    #panel-prompts .prompts-md-tab,
+    #panel-prompts .prompts-mobile-view-btn,
+    #panel-settings .settings-tab-header .segmented-option,
+    #panel-plugins .plugins-item,
+    #panel-plugins .mode-pill,
+    #panel-sessions .session-source-pill,
+    #panel-market .skills-target-chip,
+    :is(#panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi) > .segmented-control > .segment
+):disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 使用一条底边框，移除插件模式按钮的第二条选中线。 */
+#panel-plugins .mode-pill.active::after {
+    content: none;
+}
+
+#panel-plugins .plugins-item .plugins-item-title,
+#panel-sessions .session-source-pill-label {
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+/* 已知来源继续使用原有主题调色；其他来源不再保留白色选中圆点。 */
+#panel-sessions .session-source-pill-dot {
+    box-shadow: none;
+}
+
+#panel-sessions .session-source-pill:not(:is(
+    [data-source="codex"], [data-source="claude"],
+    [data-source="gemini"], [data-source="codebuddy"]
+)) .session-source-pill-dot {
+    background: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(
+        #panel-prompts, #panel-settings, #panel-plugins, #panel-sessions, #panel-market,
+        #panel-config-provider, #panel-config-claude, #panel-config-openclaw,
+        #panel-config-opencode, #panel-config-kilocode, #panel-config-pi
+    ) {
+        --sub-tab-transition: none;
+    }
+}

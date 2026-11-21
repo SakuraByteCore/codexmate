@@ -730,3 +730,76 @@ test('pi config file-JSON sections expose history panels with locale copy in eve
         }
     }
 });
+
+test('shared sub tabs load after themes in the served stylesheet', () => {
+    const entry = readProjectFile('web-ui/styles.css');
+    const shared = readProjectFile('web-ui/styles/sub-tabs.css');
+    const bundled = readBundledWebUiCss();
+
+    assert.ok(entry.trimEnd().endsWith("@import url('./styles/sub-tabs.css');"));
+    assert.ok(entry.indexOf('theme-dark.css') < entry.indexOf('sub-tabs.css'));
+    assert.ok(entry.indexOf('theme-ocean.css') < entry.indexOf('sub-tabs.css'));
+    assert.ok(bundled.endsWith(`${shared.trimEnd()}\n`));
+    assert.doesNotMatch(bundled, /@import\s+(?:url\()?['"]\.\/styles\//);
+});
+
+test('shared sub tabs cover every panel and retain selected focus and disabled states', () => {
+    const shared = readProjectFile('web-ui/styles/sub-tabs.css');
+    const rules = [...shared.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+        .map(([, selector, body]) => ({ selector: selector.trim(), body }));
+    const buttons = rules.filter(({ selector }) => selector.includes('#panel-prompts .prompts-md-tab,'));
+    const selectors = [
+        '#panel-prompts .prompts-mobile-view-btn',
+        '#panel-settings .settings-tab-header .segmented-option',
+        '#panel-plugins .plugins-item', '#panel-plugins .mode-pill',
+        '#panel-sessions .session-source-pill', '#panel-market .skills-target-chip',
+        '#panel-config-provider', '#panel-config-claude', '#panel-config-openclaw',
+        '#panel-config-opencode', '#panel-config-kilocode', '#panel-config-pi',
+        '> .segmented-control > .segment'
+    ];
+    const states = [
+        [')', /border-bottom:\s*var\(--sub-tab-line-width\) solid transparent;/],
+        ['):hover:not(:disabled):not(.active)', /color:\s*var\(--color-text-primary\);/],
+        [').active', /border-bottom-color:\s*var\(--color-brand\);/],
+        ['):focus-visible', /outline:\s*var\(--sub-tab-line-width\) solid var\(--color-brand-dark\);/],
+        ['):disabled', /opacity:\s*0\.5;\s*cursor:\s*not-allowed;/]
+    ];
+
+    assert.strictEqual(buttons.length, states.length);
+    for (const [suffix, declarations] of states) {
+        const rule = buttons.find(({ selector }) => selector.endsWith(suffix));
+        assert.ok(rule, `missing sub tab state ${suffix}`);
+        for (const selector of selectors) {
+            assert.ok(rule.selector.includes(selector), `${suffix} must cover ${selector}`);
+        }
+        assert.match(rule.body, declarations);
+    }
+    assert.match(buttons[0].body, /min-width:\s*var\(--sub-tab-min-size\);\s*min-height:\s*var\(--sub-tab-min-size\);/);
+    assert.match(buttons[0].body, /font-size:\s*var\(--font-size-body\);/);
+    assert.match(buttons[0].body, /transform:\s*none;\s*transition:\s*var\(--sub-tab-transition\);/);
+    assert.match(shared, /--sub-tab-min-size:\s*44px;/);
+    assert.match(shared, /--sub-tab-transition:\s*color var\(--transition-fast\)/);
+    assert.match(shared, /@media \(prefers-reduced-motion: reduce\)[\s\S]*--sub-tab-transition:\s*none;/);
+    assert.doesNotMatch(shared, /!important|#[0-9a-f]{3,8}\b|rgba?\(/i);
+});
+
+test('shared sub tabs scroll without changing mobile visibility or source colors', () => {
+    const shared = readProjectFile('web-ui/styles/sub-tabs.css');
+    const prompts = readProjectFile('web-ui/styles/prompts-editor.css');
+    const container = shared.match(/:is\(\s*#panel-prompts \.prompts-md-tabs,[\s\S]*?\)\s*\{([^{}]*)\}/)?.[1];
+
+    assert.ok(container, 'shared sub tab container rule must exist');
+    assert.match(container, /flex-direction:\s*row;\s*flex-wrap:\s*nowrap;/);
+    assert.match(container, /min-width:\s*0;\s*max-width:\s*100%;/);
+    assert.match(container, /overflow-x:\s*auto;\s*overflow-y:\s*hidden;/);
+    assert.doesNotMatch(container, /\bdisplay\s*:/);
+    assert.match(prompts, /\.prompts-mobile-view-switch\s*\{\s*display:\s*none;/);
+    assert.match(prompts, /@media \(max-width: 767\.98px\)\s*\{\s*\.prompts-mobile-view-switch\s*\{\s*display:\s*inline-flex;/);
+    assert.match(shared, /#panel-plugins \.mode-pill\.active::after\s*\{\s*content:\s*none;/);
+    assert.match(shared, /#panel-sessions \.session-source-pill-dot\s*\{\s*box-shadow:\s*none;/);
+    assert.match(shared, /\.session-source-pill:not\(:is\([\s\S]*\)\) \.session-source-pill-dot\s*\{\s*background:\s*var\(--color-text-muted\);/);
+    for (const source of ['codex', 'claude', 'gemini', 'codebuddy']) {
+        assert.ok(shared.includes(`[data-source="${source}"]`), `preserve the existing ${source} palette`);
+    }
+    assert.doesNotMatch(shared, /pointer-events|\.usage-range|\.install-action-tabs|\.side-item|\.theme-option/);
+});
