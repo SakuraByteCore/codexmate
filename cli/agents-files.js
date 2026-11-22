@@ -1,3 +1,5 @@
+const { writeTextAtomicWithBackup } = require('../lib/cli-config-engine');
+
 function createAgentsFileController(deps = {}) {
     const {
         fs,
@@ -162,11 +164,17 @@ function createAgentsFileController(deps = {}) {
         if (content.length > 2 * 1024 * 1024) {
             return { error: 'content too large (max 2MB)' };
         }
+        if (typeof params.baseContent === 'string') {
+            const current = readClaudeMdFile(params);
+            if (current.error) return current;
+            if (current.content !== params.baseContent) return { error: '文件已被修改，请重新加载后再回滚' };
+        }
         if (typeof backupPromptBeforeWrite === 'function') {
             var bucket = resolved.isProject
                 ? 'claude-project_' + sanitizeHistoryId(resolved.projectPath)
                 : 'claude-global';
-            backupPromptBeforeWrite(bucket, filePath);
+            const backup = backupPromptBeforeWrite(bucket, filePath);
+            if (backup && backup.error) return { error: backup.error };
             resolved.historyBucket = bucket;
         }
         var lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
@@ -174,7 +182,7 @@ function createAgentsFileController(deps = {}) {
         var finalContent = ensureUtf8Bom(normalized);
         try {
             ensureDir(path.dirname(filePath));
-            fs.writeFileSync(filePath, finalContent, 'utf-8');
+            writeTextAtomicWithBackup(filePath, finalContent, { fs });
             var result = { success: true, path: filePath };
             if (resolved.historyBucket) result.historyBucket = resolved.historyBucket;
             if (resolved.isProject) {
@@ -236,12 +244,18 @@ function createAgentsFileController(deps = {}) {
         if (content.length > 2 * 1024 * 1024) {
             return { error: '内容过大（最大 2MB）' };
         }
+        if (typeof params.baseContent === 'string') {
+            const current = readAgentsFile(params);
+            if (current.error) return current;
+            if (current.content !== params.baseContent) return { error: '文件已被修改，请重新加载后再回滚' };
+        }
         let agentsHistoryBucket = '';
         if (typeof backupPromptBeforeWrite === 'function') {
             const explicitBucket = typeof params.historyBucket === 'string' ? params.historyBucket.trim() : '';
             const bucket = explicitBucket
                 || ('codex_' + sanitizeHistoryId(String(params.baseDir || '').trim() || 'global'));
-            backupPromptBeforeWrite(bucket, filePath);
+            const backup = backupPromptBeforeWrite(bucket, filePath);
+            if (backup && backup.error) return { error: backup.error };
             agentsHistoryBucket = bucket;
         }
         const lineEnding = params.lineEnding === '\r\n' ? '\r\n' : '\n';
@@ -249,7 +263,7 @@ function createAgentsFileController(deps = {}) {
         const finalContent = ensureUtf8Bom(normalized);
 
         try {
-            fs.writeFileSync(filePath, finalContent, 'utf-8');
+            writeTextAtomicWithBackup(filePath, finalContent, { fs });
             const agentsResult = { success: true, path: filePath };
             if (agentsHistoryBucket) agentsResult.historyBucket = agentsHistoryBucket;
             return agentsResult;

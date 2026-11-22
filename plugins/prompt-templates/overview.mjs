@@ -38,6 +38,8 @@ export async function loadPromptTemplatesOverview(ctx, options = {}) {
     app.promptTemplatesListRaw = normalized;
     persistPromptTemplatesToStorage(normalized, localStorage);
 
+    if (typeof app.loadPluginConfig === 'function' && !await app.loadPluginConfig()) return false;
+
     app.promptTemplatesLoadedOnce = true;
 
     if (!app.promptTemplatesMode) {

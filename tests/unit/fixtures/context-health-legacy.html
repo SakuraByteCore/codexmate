@@ -1,0 +1,50 @@
+                                <section v-if="activeSession" class="context-health" @vue:mounted="loadSessionContextHealth()" @vue:updated="loadSessionContextHealth()" @mouseenter="sessionContextHealthExpanded = true" @mouseleave="leaveContextHealthDetails" @focusin="sessionContextHealthExpanded = true">
+                                    <div class="context-health-header">
+                                        <button type="button" class="context-health-toggle" :aria-expanded="sessionContextHealthExpanded" aria-controls="context-health-details" @click="toggleContextHealthDetails">
+                                            <span>{{ t('contextHealth.title') }}</span>
+                                            <template v-if="sessionContextHealth">
+                                                <strong :class="['context-health-rating', sessionContextHealth.health]">{{ t('contextHealth.level.' + sessionContextHealth.health) }}</strong>
+                                                <span class="mono">≈ {{ sessionContextHealth.totalEstimatedTokens.toLocaleString() }} Token</span>
+                                            </template>
+                                            <span v-else-if="sessionContextHealthLoading">{{ t('contextHealth.loading') }}</span>
+                                        </button>
+                                        <button type="button" class="btn-mini" @click="loadSessionContextHealth(true)" :disabled="sessionContextHealthLoading" :aria-label="t('common.refresh')">↻</button>
+                                    </div>
+                                    <div class="context-health-bar" role="img" :aria-label="t('contextHealth.composition')">
+                                        <template v-if="sessionContextHealth">
+                                        <span v-for="part in sessionContextHealth.categories" :key="part.id" :class="['context-health-segment', part.id]" :style="{ flexGrow: part.estimatedTokens }" :title="t('contextHealth.category.' + part.id) + ': ≈ ' + part.estimatedTokens + ' Token (' + part.percentage.toFixed(2) + '%)'" :aria-label="t('contextHealth.category.' + part.id) + ': ' + part.percentage.toFixed(2) + '%'" v-show="part.estimatedTokens > 0"></span>
+                                        </template>
+                                    </div>
+                                    <p v-if="sessionContextHealthError" class="form-error" role="alert">{{ sessionContextHealthError }}</p>
+                                    <div v-if="sessionContextHealthExpanded && sessionContextHealth" id="context-health-details" class="context-health-details">
+                                        <p class="form-hint">{{ t('contextHealth.estimateHint') }} · {{ sessionContextHealth.messageCount }} {{ t('contextHealth.nodes') }}</p>
+                                        <dl class="context-health-legend">
+                                            <div v-for="part in sessionContextHealth.categories" :key="part.id">
+                                                <dt><span :class="['context-health-dot', part.id]" aria-hidden="true"></span>{{ t('contextHealth.category.' + part.id) }}</dt>
+                                                <dd class="mono">≈ {{ part.estimatedTokens.toLocaleString() }} · {{ part.percentage.toFixed(2) }}%</dd>
+                                            </div>
+                                        </dl>
+                                        <h3 class="context-health-subtitle">{{ t('contextHealth.topFive') }}</h3>
+                                        <ol class="context-health-top">
+                                            <li v-for="node in sessionContextHealth.topMessages" :key="node.id">
+                                                <button type="button" @click="jumpToContextHealthNode(node)" :disabled="sessionContextHealthNodeLoading" :title="t('contextHealth.jump')">
+                                                    <span class="mono">≈ {{ node.estimatedTokens.toLocaleString() }} · {{ node.percentage.toFixed(2) }}%</span>
+                                                    <span class="context-health-preview">{{ node.preview || node.id }}</span>
+                                                    <span v-for="reason in node.reasons" :key="reason" class="context-health-hotspot">{{ contextHealthReasonLabel(reason) }}</span>
+                                                </button>
+                                            </li>
+                                        </ol>
+                                        <p v-if="!sessionContextHealth.topMessages.length" class="form-hint">{{ t('contextHealth.empty') }}</p>
+                                        <details v-if="sessionContextHealth.hotspots.length" class="context-health-hotspots">
+                                            <summary>{{ t('contextHealth.hotspots') }} · {{ sessionContextHealth.hotspots.length }}</summary>
+                                            <button v-for="node in sessionContextHealth.hotspots" :key="node.id" type="button" class="btn-mini" @click="jumpToContextHealthNode(node)" :disabled="sessionContextHealthNodeLoading">{{ node.id }} · {{ node.reasons.map(contextHealthReasonLabel).join(' / ') }}</button>
+                                        </details>
+                                    </div>
+                                </section>
+                                <article v-if="sessionContextHealthFocusedNode" ref="contextHealthFocusedMessage" class="context-health-focused-message" tabindex="-1" :data-context-node-id="sessionContextHealthFocusedNode.id" :aria-label="t('contextHealth.message')">
+                                    <header>
+                                        <strong>{{ t('contextHealth.message') }} · {{ sessionContextHealthFocusedNode.id }}</strong>
+                                        <button type="button" class="btn-mini" @click="sessionContextHealthFocusedNode = null" :aria-label="t('common.close')">×</button>
+                                    </header>
+                                    <pre>{{ sessionContextHealthFocusedNode.text }}</pre>
+                                </article>

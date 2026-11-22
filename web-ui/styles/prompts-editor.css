@@ -356,3 +356,26 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* 模板调用弹窗：保持多行变量、焦点与窄屏可访问。 */
+.prompt-invocation-dialog {
+    max-width: min(640px, calc(100vw - 32px));
+}
+
+.prompt-invocation-fields {
+    display: grid;
+    gap: 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-block: 16px;
+}
+
+.prompt-invocation-dialog :is(textarea, button) {
+    min-height: 44px;
+}
+
+.prompt-history-diff {
+    max-height: 320px;
+    overflow: auto;
+    margin-block: 8px;
+}

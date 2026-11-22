@@ -1,11 +1,15 @@
 'use strict';
 
+const crypto = require('crypto');
+const { writeTextAtomicWithBackup } = require('../lib/cli-config-engine');
+
 function createPromptHistoryController(deps = {}) {
     const {
         fs,
         path,
         CONFIG_DIR,
-        MAX_HISTORY = 20
+        MAX_HISTORY = 20,
+        now = Date.now
     } = deps;
 
     if (!fs) throw new Error('createPromptHistoryController 缺少 fs');
@@ -61,10 +65,19 @@ function createPromptHistoryController(deps = {}) {
             return { backedUp: false, error: '读取当前文件失败: ' + e.message };
         }
         ensureDirSync(dir);
-        const stamp = buildTimestamp();
-        const dest = path.join(dir, stamp + '.bak');
+        let time = now();
+        let stamp = buildTimestamp(new Date(time));
+        let dest = path.join(dir, stamp + '.bak');
+        while (fs.existsSync(dest)) {
+            time += 1;
+            stamp = buildTimestamp(new Date(time));
+            dest = path.join(dir, stamp + '.bak');
+        }
         try {
-            fs.writeFileSync(dest, raw, 'utf-8');
+            writeTextAtomicWithBackup(dest, raw, { fs });
+            const sourceHash = crypto.createHash('sha256').update(Buffer.from(raw, 'utf8')).digest('hex');
+            const backupHash = crypto.createHash('sha256').update(fs.readFileSync(dest)).digest('hex');
+            if (sourceHash !== backupHash) throw new Error('历史备份校验失败');
         } catch (e) {
             return { backedUp: false, error: '写入备份失败: ' + e.message };
         }

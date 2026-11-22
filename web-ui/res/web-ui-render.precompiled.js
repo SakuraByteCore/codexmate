@@ -1,5 +1,5 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vModelSelect: _vModelSelect, withDirectives: _withDirectives, vModelText: _vModelText, vModelCheckbox: _vModelCheckbox, vShow: _vShow, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, isMemoSame: _isMemoSame, withMemo: _withMemo, normalizeStyle: _normalizeStyle } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vModelSelect: _vModelSelect, withDirectives: _withDirectives, vModelText: _vModelText, vModelCheckbox: _vModelCheckbox, vShow: _vShow, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, normalizeStyle: _normalizeStyle, isMemoSame: _isMemoSame, withMemo: _withMemo } = Vue
 
 return function render(_ctx, _cache) {
   return (_openBlock(), _createElementBlock(_Fragment, null, [
@@ -4170,6 +4170,208 @@ return function render(_ctx, _cache) {
                               ? (_openBlock(), _createElementBlock("span", { key: 0 }, " · " + _toDisplayString(_ctx.sessionStandaloneSourceLabel), 1 /* TEXT */))
                               : _createCommentVNode("v-if", true)
                           ]),
+                          (_ctx.activeSession)
+                            ? (_openBlock(), _createElementBlock("section", {
+                                key: 0,
+                                class: "context-health",
+                                "aria-labelledby": "context-health-heading",
+                                "aria-busy": _ctx.sessionContextHealthLoading,
+                                onVnodeMounted: $event => (_ctx.loadSessionContextHealth()),
+                                onVnodeUpdated: $event => (_ctx.loadSessionContextHealth())
+                              }, [
+                                _createElementVNode("div", { class: "context-health-header" }, [
+                                  _createElementVNode("div", { class: "context-health-heading" }, [
+                                    _createElementVNode("h3", {
+                                      id: "context-health-heading",
+                                      class: "context-health-title"
+                                    }, _toDisplayString(_ctx.t('contextHealth.title')), 1 /* TEXT */),
+                                    (_ctx.sessionContextHealth)
+                                      ? (_openBlock(), _createElementBlock("span", {
+                                          key: 0,
+                                          class: _normalizeClass(['context-health-rating', _ctx.sessionContextHealth.health]),
+                                          role: "img",
+                                          "aria-label": _ctx.t('contextHealth.level.' + _ctx.sessionContextHealth.health)
+                                        }, null, 10 /* CLASS, PROPS */, ["aria-label"]))
+                                      : _createCommentVNode("v-if", true),
+                                    (_ctx.sessionContextHealth)
+                                      ? (_openBlock(), _createElementBlock("p", {
+                                          key: 1,
+                                          class: "context-health-meta"
+                                        }, _toDisplayString(_ctx.sessionContextHealth.messageCount.toLocaleString()) + " " + _toDisplayString(_ctx.t('contextHealth.nodes')), 1 /* TEXT */))
+                                      : (_ctx.sessionContextHealthLoading)
+                                        ? (_openBlock(), _createElementBlock("p", {
+                                            key: 2,
+                                            class: "context-health-meta",
+                                            role: "status"
+                                          }, _toDisplayString(_ctx.t('contextHealth.loading')), 1 /* TEXT */))
+                                        : _createCommentVNode("v-if", true)
+                                  ]),
+                                  (_ctx.sessionContextHealth)
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 0,
+                                        class: "context-health-summary"
+                                      }, [
+                                        _createElementVNode("span", { class: "context-health-total mono" }, [
+                                          _createTextVNode("≈ " + _toDisplayString(_ctx.sessionContextHealth.totalEstimatedTokens.toLocaleString()) + " ", 1 /* TEXT */),
+                                          _createElementVNode("small", null, "Token")
+                                        ])
+                                      ]))
+                                    : (_ctx.sessionContextHealthLoading)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 1,
+                                          class: "context-health-summary context-health-summary-skeleton",
+                                          "aria-hidden": "true"
+                                        }, [
+                                          _createElementVNode("span")
+                                        ]))
+                                      : _createCommentVNode("v-if", true),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini context-health-refresh",
+                                    onClick: $event => (_ctx.loadSessionContextHealth(true)),
+                                    disabled: _ctx.sessionContextHealthLoading,
+                                    "aria-label": _ctx.t('common.refresh'),
+                                    title: _ctx.t('common.refresh')
+                                  }, [
+                                    (_openBlock(), _createElementBlock("svg", {
+                                      width: "16",
+                                      height: "16",
+                                      viewBox: "0 0 24 24",
+                                      fill: "none",
+                                      stroke: "currentColor",
+                                      "stroke-width": "1.75",
+                                      "stroke-linecap": "round",
+                                      "stroke-linejoin": "round",
+                                      "aria-hidden": "true"
+                                    }, [
+                                      _createElementVNode("path", { d: "M20 7v5h-5M4 17v-5h5" }),
+                                      _createElementVNode("path", { d: "M6.1 7a7 7 0 0 1 11.5-1.3L20 8M4 16l2.4 2.3A7 7 0 0 0 17.9 17" })
+                                    ]))
+                                  ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
+                                ]),
+                                _createElementVNode("div", {
+                                  class: "context-health-bar",
+                                  role: "img",
+                                  "aria-label": _ctx.t('contextHealth.composition')
+                                }, [
+                                  (_ctx.sessionContextHealth)
+                                    ? (_openBlock(true), _createElementBlock(_Fragment, { key: 0 }, _renderList(_ctx.sessionContextHealth.categories, (part) => {
+                                        return _withDirectives((_openBlock(), _createElementBlock("span", {
+                                          key: part.id,
+                                          class: _normalizeClass(['context-health-segment', part.id]),
+                                          style: _normalizeStyle({ flexGrow: part.estimatedTokens }),
+                                          title: _ctx.t('contextHealth.category.' + part.id) + ': ≈ ' + part.estimatedTokens + ' Token (' + part.percentage.toFixed(2) + '%)',
+                                          "aria-label": _ctx.t('contextHealth.category.' + part.id) + ': ' + part.percentage.toFixed(2) + '%'
+                                        }, null, 14 /* CLASS, STYLE, PROPS */, ["title", "aria-label"])), [
+                                          [_vShow, part.estimatedTokens > 0]
+                                        ])
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    : _createCommentVNode("v-if", true)
+                                ], 8 /* PROPS */, ["aria-label"]),
+                                (_ctx.sessionContextHealthError)
+                                  ? (_openBlock(), _createElementBlock("p", {
+                                      key: 0,
+                                      class: "form-error context-health-error",
+                                      role: "alert"
+                                    }, _toDisplayString(_ctx.sessionContextHealthError), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true),
+                                (_ctx.sessionContextHealth)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 1,
+                                      id: "context-health-details",
+                                      class: "context-health-details"
+                                    }, [
+                                      _createElementVNode("dl", { class: "context-health-legend" }, [
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionContextHealth.categories, (part) => {
+                                          return (_openBlock(), _createElementBlock("div", {
+                                            key: part.id
+                                          }, [
+                                            _createElementVNode("dt", null, [
+                                              _createElementVNode("span", {
+                                                class: _normalizeClass(['context-health-dot', part.id]),
+                                                "aria-hidden": "true"
+                                              }, null, 2 /* CLASS */),
+                                              _createTextVNode(_toDisplayString(_ctx.t('contextHealth.category.' + part.id)), 1 /* TEXT */)
+                                            ]),
+                                            _createElementVNode("dd", null, [
+                                              _createElementVNode("span", { class: "context-health-category-tokens mono" }, "≈ " + _toDisplayString(part.estimatedTokens.toLocaleString()), 1 /* TEXT */),
+                                              _createElementVNode("span", { class: "context-health-category-share mono" }, _toDisplayString(part.percentage.toFixed(2)) + "%", 1 /* TEXT */)
+                                            ])
+                                          ]))
+                                        }), 128 /* KEYED_FRAGMENT */))
+                                      ]),
+                                      (!_ctx.sessionContextHealth.messageCount)
+                                        ? (_openBlock(), _createElementBlock("p", {
+                                            key: 0,
+                                            class: "context-health-note"
+                                          }, _toDisplayString(_ctx.t('contextHealth.empty')), 1 /* TEXT */))
+                                        : _createCommentVNode("v-if", true)
+                                    ]))
+                                  : (_ctx.sessionContextHealthLoading)
+                                    ? (_openBlock(), _createElementBlock("dl", {
+                                        key: 2,
+                                        class: "context-health-legend context-health-loading",
+                                        "aria-hidden": "true"
+                                      }, [
+                                        (_openBlock(), _createElementBlock(_Fragment, null, _renderList(['system', 'user', 'assistant', 'tools', 'code'], (part) => {
+                                          return _createElementVNode("div", {
+                                            key: part,
+                                            class: "context-health-loading-row"
+                                          }, [
+                                            _createElementVNode("dt", null, [
+                                              _createElementVNode("span", {
+                                                class: _normalizeClass(['context-health-dot', part]),
+                                                "aria-hidden": "true"
+                                              }, null, 2 /* CLASS */),
+                                              _createTextVNode(_toDisplayString(_ctx.t('contextHealth.category.' + part)), 1 /* TEXT */)
+                                            ]),
+                                            _createElementVNode("dd", null, [
+                                              _createElementVNode("span", { class: "context-health-value-skeleton" }),
+                                              _createElementVNode("span", { class: "context-health-share-skeleton" })
+                                            ])
+                                          ])
+                                        }), 64 /* STABLE_FRAGMENT */))
+                                      ]))
+                                    : _createCommentVNode("v-if", true)
+                              ], 8 /* PROPS */, ["aria-busy", "onVnodeMounted", "onVnodeUpdated"]))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.sessionContextHealthFocusedNode)
+                            ? (_openBlock(), _createElementBlock("article", {
+                                key: 1,
+                                ref: "contextHealthFocusedMessage",
+                                class: "context-health-focused-message",
+                                tabindex: "-1",
+                                "data-context-node-id": _ctx.sessionContextHealthFocusedNode.id,
+                                "aria-label": _ctx.t('contextHealth.message')
+                              }, [
+                                _createElementVNode("header", null, [
+                                  _createElementVNode("div", null, [
+                                    _createElementVNode("strong", null, _toDisplayString(_ctx.t('contextHealth.message')), 1 /* TEXT */),
+                                    _createElementVNode("span", { class: "context-health-meta mono" }, _toDisplayString(_ctx.sessionContextHealthFocusedNode.id), 1 /* TEXT */)
+                                  ]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini context-health-refresh",
+                                    onClick: $event => (_ctx.sessionContextHealthFocusedNode = null),
+                                    "aria-label": _ctx.t('common.close')
+                                  }, [
+                                    (_openBlock(), _createElementBlock("svg", {
+                                      width: "16",
+                                      height: "16",
+                                      viewBox: "0 0 24 24",
+                                      fill: "none",
+                                      stroke: "currentColor",
+                                      "stroke-width": "1.75",
+                                      "stroke-linecap": "round",
+                                      "aria-hidden": "true"
+                                    }, [
+                                      _createElementVNode("path", { d: "m6 6 12 12M18 6 6 18" })
+                                    ]))
+                                  ], 8 /* PROPS */, ["onClick", "aria-label"])
+                                ]),
+                                _createElementVNode("pre", null, _toDisplayString(_ctx.sessionContextHealthFocusedNode.text), 1 /* TEXT */)
+                              ], 8 /* PROPS */, ["data-context-node-id", "aria-label"]))
+                            : _createCommentVNode("v-if", true),
                           _createElementVNode("pre", { class: "session-standalone-text" }, _toDisplayString(_ctx.sessionStandaloneText), 1 /* TEXT */)
                         ]))
                 ]))
@@ -4824,12 +5026,15 @@ return function render(_ctx, _cache) {
                                         _createElementVNode("div", { class: "session-secondary-actions" }, [
                                           _createElementVNode("button", {
                                             class: "btn-session-refresh has-label session-action-optional-label",
+                                            "data-icon-only": "true",
                                             onClick: _ctx.loadActiveSessionDetail,
                                             disabled: _ctx.sessionDetailLoading || !_ctx.activeSession,
                                             title: _ctx.sessionDetailLoading ? _ctx.t('sessions.preview.loading') : _ctx.t('sessions.preview.refresh'),
                                             "aria-label": _ctx.sessionDetailLoading ? _ctx.t('sessions.preview.loading') : _ctx.t('sessions.preview.refresh')
                                           }, [
                                             (_openBlock(), _createElementBlock("svg", {
+                                              "aria-hidden": "true",
+                                              focusable: "false",
                                               viewBox: "0 0 16 16",
                                               fill: "none",
                                               stroke: "currentColor",
@@ -4842,7 +5047,11 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("polyline", { points: "2.5 2 2.5 5 5.5 5" }),
                                               _createElementVNode("polyline", { points: "13.5 14 13.5 11 10.5 11" })
                                             ])),
-                                            _createElementVNode("span", { class: "session-action-label session-action-optional-text" }, _toDisplayString(_ctx.t('sessions.preview.refresh')), 1 /* TEXT */)
+                                            _createElementVNode("span", {
+                                              class: "session-action-label session-action-optional-text",
+                                              hidden: "",
+                                              "aria-hidden": "true"
+                                            }, _toDisplayString(_ctx.t('sessions.preview.refresh')), 1 /* TEXT */)
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                           _createElementVNode("div", { class: "session-link-group" }, [
                                             _createElementVNode("button", {
@@ -4888,12 +5097,15 @@ return function render(_ctx, _cache) {
                                           ]),
                                           _createElementVNode("button", {
                                             class: "btn-session-open has-label session-action-optional-label",
+                                            "data-icon-only": "true",
                                             onClick: $event => (_ctx.copySessionPath(_ctx.activeSession)),
                                             disabled: !_ctx.activeSession || !_ctx.getSessionFilePath(_ctx.activeSession),
                                             title: _ctx.t('sessions.preview.copyPath'),
                                             "aria-label": _ctx.t('sessions.preview.copyPath')
                                           }, [
                                             (_openBlock(), _createElementBlock("svg", {
+                                              "aria-hidden": "true",
+                                              focusable: "false",
                                               viewBox: "0 0 16 16",
                                               fill: "none",
                                               stroke: "currentColor",
@@ -4903,18 +5115,25 @@ return function render(_ctx, _cache) {
                                             }, [
                                               _createElementVNode("path", { d: "M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z" })
                                             ])),
-                                            _createElementVNode("span", { class: "session-action-label session-action-optional-text" }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 1 /* TEXT */)
+                                            _createElementVNode("span", {
+                                              class: "session-action-label session-action-optional-text",
+                                              hidden: "",
+                                              "aria-hidden": "true"
+                                            }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 1 /* TEXT */)
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
                                         ]),
                                         _createElementVNode("div", { class: "session-primary-actions" }, [
                                           _createElementVNode("button", {
                                             class: "btn-session-export has-label",
+                                            "data-icon-only": "true",
                                             onClick: $event => (_ctx.exportSession(_ctx.activeSession)),
                                             disabled: !_ctx.activeSession || _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)],
                                             title: (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export'),
                                             "aria-label": (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')
                                           }, [
                                             (_openBlock(), _createElementBlock("svg", {
+                                              "aria-hidden": "true",
+                                              focusable: "false",
                                               viewBox: "0 0 16 16",
                                               fill: "none",
                                               stroke: "currentColor",
@@ -4926,23 +5145,247 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("polyline", { points: "4 7 8 10.5 12 7" }),
                                               _createElementVNode("path", { d: "M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12" })
                                             ])),
-                                            _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')), 1 /* TEXT */)
+                                            _createElementVNode("span", {
+                                              class: "session-action-label",
+                                              hidden: "",
+                                              "aria-hidden": "true"
+                                            }, _toDisplayString((_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')), 1 /* TEXT */)
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                           (_ctx.isDeleteAvailable(_ctx.activeSession))
                                             ? (_openBlock(), _createElementBlock("button", {
                                                 key: 0,
                                                 class: "btn-session-delete has-label session-delete-text-button",
+                                                "data-icon-only": "true",
                                                 onClick: $event => (_ctx.deleteSession(_ctx.activeSession)),
                                                 disabled: !_ctx.activeSession || _ctx.sessionsLoading || _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)],
                                                 title: (_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash')),
                                                 "aria-label": (_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))
                                               }, [
-                                                _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))), 1 /* TEXT */)
+                                                (_openBlock(), _createElementBlock("svg", {
+                                                  viewBox: "0 0 16 16",
+                                                  fill: "none",
+                                                  stroke: "currentColor",
+                                                  "stroke-width": "1.8",
+                                                  "stroke-linecap": "round",
+                                                  "stroke-linejoin": "round",
+                                                  "aria-hidden": "true",
+                                                  focusable: "false"
+                                                }, [
+                                                  _createElementVNode("path", { d: "M2.5 4.5h11M6 4.5V2.5h4v2" }),
+                                                  _createElementVNode("path", { d: "m4 4.5 .5 9h7l.5-9M6.5 7v4M9.5 7v4" })
+                                                ])),
+                                                _createElementVNode("span", {
+                                                  class: "session-action-label",
+                                                  hidden: "",
+                                                  "aria-hidden": "true"
+                                                }, _toDisplayString((_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))), 1 /* TEXT */)
                                               ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]))
                                             : _createCommentVNode("v-if", true)
                                         ])
                                       ])
                                     ], 512 /* NEED_PATCH */),
+                                    (_ctx.activeSession)
+                                      ? (_openBlock(), _createElementBlock("section", {
+                                          key: 1,
+                                          class: "context-health",
+                                          "aria-labelledby": "context-health-heading",
+                                          "aria-busy": _ctx.sessionContextHealthLoading,
+                                          onVnodeMounted: $event => (_ctx.loadSessionContextHealth()),
+                                          onVnodeUpdated: $event => (_ctx.loadSessionContextHealth())
+                                        }, [
+                                          _createElementVNode("div", { class: "context-health-header" }, [
+                                            _createElementVNode("div", { class: "context-health-heading" }, [
+                                              _createElementVNode("h3", {
+                                                id: "context-health-heading",
+                                                class: "context-health-title"
+                                              }, _toDisplayString(_ctx.t('contextHealth.title')), 1 /* TEXT */),
+                                              (_ctx.sessionContextHealth)
+                                                ? (_openBlock(), _createElementBlock("span", {
+                                                    key: 0,
+                                                    class: _normalizeClass(['context-health-rating', _ctx.sessionContextHealth.health]),
+                                                    role: "img",
+                                                    "aria-label": _ctx.t('contextHealth.level.' + _ctx.sessionContextHealth.health)
+                                                  }, null, 10 /* CLASS, PROPS */, ["aria-label"]))
+                                                : _createCommentVNode("v-if", true),
+                                              (_ctx.sessionContextHealth)
+                                                ? (_openBlock(), _createElementBlock("p", {
+                                                    key: 1,
+                                                    class: "context-health-meta"
+                                                  }, _toDisplayString(_ctx.sessionContextHealth.messageCount.toLocaleString()) + " " + _toDisplayString(_ctx.t('contextHealth.nodes')), 1 /* TEXT */))
+                                                : (_ctx.sessionContextHealthLoading)
+                                                  ? (_openBlock(), _createElementBlock("p", {
+                                                      key: 2,
+                                                      class: "context-health-meta",
+                                                      role: "status"
+                                                    }, _toDisplayString(_ctx.t('contextHealth.loading')), 1 /* TEXT */))
+                                                  : _createCommentVNode("v-if", true)
+                                            ]),
+                                            (_ctx.sessionContextHealth)
+                                              ? (_openBlock(), _createElementBlock("div", {
+                                                  key: 0,
+                                                  class: "context-health-summary"
+                                                }, [
+                                                  _createElementVNode("span", { class: "context-health-total mono" }, [
+                                                    _createTextVNode("≈ " + _toDisplayString(_ctx.sessionContextHealth.totalEstimatedTokens.toLocaleString()) + " ", 1 /* TEXT */),
+                                                    _createElementVNode("small", null, "Token")
+                                                  ])
+                                                ]))
+                                              : (_ctx.sessionContextHealthLoading)
+                                                ? (_openBlock(), _createElementBlock("div", {
+                                                    key: 1,
+                                                    class: "context-health-summary context-health-summary-skeleton",
+                                                    "aria-hidden": "true"
+                                                  }, [
+                                                    _createElementVNode("span")
+                                                  ]))
+                                                : _createCommentVNode("v-if", true),
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "btn-mini context-health-refresh",
+                                              onClick: $event => (_ctx.loadSessionContextHealth(true)),
+                                              disabled: _ctx.sessionContextHealthLoading,
+                                              "aria-label": _ctx.t('common.refresh'),
+                                              title: _ctx.t('common.refresh')
+                                            }, [
+                                              (_openBlock(), _createElementBlock("svg", {
+                                                width: "16",
+                                                height: "16",
+                                                viewBox: "0 0 24 24",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                "stroke-width": "1.75",
+                                                "stroke-linecap": "round",
+                                                "stroke-linejoin": "round",
+                                                "aria-hidden": "true"
+                                              }, [
+                                                _createElementVNode("path", { d: "M20 7v5h-5M4 17v-5h5" }),
+                                                _createElementVNode("path", { d: "M6.1 7a7 7 0 0 1 11.5-1.3L20 8M4 16l2.4 2.3A7 7 0 0 0 17.9 17" })
+                                              ]))
+                                            ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
+                                          ]),
+                                          _createElementVNode("div", {
+                                            class: "context-health-bar",
+                                            role: "img",
+                                            "aria-label": _ctx.t('contextHealth.composition')
+                                          }, [
+                                            (_ctx.sessionContextHealth)
+                                              ? (_openBlock(true), _createElementBlock(_Fragment, { key: 0 }, _renderList(_ctx.sessionContextHealth.categories, (part) => {
+                                                  return _withDirectives((_openBlock(), _createElementBlock("span", {
+                                                    key: part.id,
+                                                    class: _normalizeClass(['context-health-segment', part.id]),
+                                                    style: _normalizeStyle({ flexGrow: part.estimatedTokens }),
+                                                    title: _ctx.t('contextHealth.category.' + part.id) + ': ≈ ' + part.estimatedTokens + ' Token (' + part.percentage.toFixed(2) + '%)',
+                                                    "aria-label": _ctx.t('contextHealth.category.' + part.id) + ': ' + part.percentage.toFixed(2) + '%'
+                                                  }, null, 14 /* CLASS, STYLE, PROPS */, ["title", "aria-label"])), [
+                                                    [_vShow, part.estimatedTokens > 0]
+                                                  ])
+                                                }), 128 /* KEYED_FRAGMENT */))
+                                              : _createCommentVNode("v-if", true)
+                                          ], 8 /* PROPS */, ["aria-label"]),
+                                          (_ctx.sessionContextHealthError)
+                                            ? (_openBlock(), _createElementBlock("p", {
+                                                key: 0,
+                                                class: "form-error context-health-error",
+                                                role: "alert"
+                                              }, _toDisplayString(_ctx.sessionContextHealthError), 1 /* TEXT */))
+                                            : _createCommentVNode("v-if", true),
+                                          (_ctx.sessionContextHealth)
+                                            ? (_openBlock(), _createElementBlock("div", {
+                                                key: 1,
+                                                id: "context-health-details",
+                                                class: "context-health-details"
+                                              }, [
+                                                _createElementVNode("dl", { class: "context-health-legend" }, [
+                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionContextHealth.categories, (part) => {
+                                                    return (_openBlock(), _createElementBlock("div", {
+                                                      key: part.id
+                                                    }, [
+                                                      _createElementVNode("dt", null, [
+                                                        _createElementVNode("span", {
+                                                          class: _normalizeClass(['context-health-dot', part.id]),
+                                                          "aria-hidden": "true"
+                                                        }, null, 2 /* CLASS */),
+                                                        _createTextVNode(_toDisplayString(_ctx.t('contextHealth.category.' + part.id)), 1 /* TEXT */)
+                                                      ]),
+                                                      _createElementVNode("dd", null, [
+                                                        _createElementVNode("span", { class: "context-health-category-tokens mono" }, "≈ " + _toDisplayString(part.estimatedTokens.toLocaleString()), 1 /* TEXT */),
+                                                        _createElementVNode("span", { class: "context-health-category-share mono" }, _toDisplayString(part.percentage.toFixed(2)) + "%", 1 /* TEXT */)
+                                                      ])
+                                                    ]))
+                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                ]),
+                                                (!_ctx.sessionContextHealth.messageCount)
+                                                  ? (_openBlock(), _createElementBlock("p", {
+                                                      key: 0,
+                                                      class: "context-health-note"
+                                                    }, _toDisplayString(_ctx.t('contextHealth.empty')), 1 /* TEXT */))
+                                                  : _createCommentVNode("v-if", true)
+                                              ]))
+                                            : (_ctx.sessionContextHealthLoading)
+                                              ? (_openBlock(), _createElementBlock("dl", {
+                                                  key: 2,
+                                                  class: "context-health-legend context-health-loading",
+                                                  "aria-hidden": "true"
+                                                }, [
+                                                  (_openBlock(), _createElementBlock(_Fragment, null, _renderList(['system', 'user', 'assistant', 'tools', 'code'], (part) => {
+                                                    return _createElementVNode("div", {
+                                                      key: part,
+                                                      class: "context-health-loading-row"
+                                                    }, [
+                                                      _createElementVNode("dt", null, [
+                                                        _createElementVNode("span", {
+                                                          class: _normalizeClass(['context-health-dot', part]),
+                                                          "aria-hidden": "true"
+                                                        }, null, 2 /* CLASS */),
+                                                        _createTextVNode(_toDisplayString(_ctx.t('contextHealth.category.' + part)), 1 /* TEXT */)
+                                                      ]),
+                                                      _createElementVNode("dd", null, [
+                                                        _createElementVNode("span", { class: "context-health-value-skeleton" }),
+                                                        _createElementVNode("span", { class: "context-health-share-skeleton" })
+                                                      ])
+                                                    ])
+                                                  }), 64 /* STABLE_FRAGMENT */))
+                                                ]))
+                                              : _createCommentVNode("v-if", true)
+                                        ], 8 /* PROPS */, ["aria-busy", "onVnodeMounted", "onVnodeUpdated"]))
+                                      : _createCommentVNode("v-if", true),
+                                    (_ctx.sessionContextHealthFocusedNode)
+                                      ? (_openBlock(), _createElementBlock("article", {
+                                          key: 2,
+                                          ref: "contextHealthFocusedMessage",
+                                          class: "context-health-focused-message",
+                                          tabindex: "-1",
+                                          "data-context-node-id": _ctx.sessionContextHealthFocusedNode.id,
+                                          "aria-label": _ctx.t('contextHealth.message')
+                                        }, [
+                                          _createElementVNode("header", null, [
+                                            _createElementVNode("div", null, [
+                                              _createElementVNode("strong", null, _toDisplayString(_ctx.t('contextHealth.message')), 1 /* TEXT */),
+                                              _createElementVNode("span", { class: "context-health-meta mono" }, _toDisplayString(_ctx.sessionContextHealthFocusedNode.id), 1 /* TEXT */)
+                                            ]),
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "btn-mini context-health-refresh",
+                                              onClick: $event => (_ctx.sessionContextHealthFocusedNode = null),
+                                              "aria-label": _ctx.t('common.close')
+                                            }, [
+                                              (_openBlock(), _createElementBlock("svg", {
+                                                width: "16",
+                                                height: "16",
+                                                viewBox: "0 0 24 24",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                "stroke-width": "1.75",
+                                                "stroke-linecap": "round",
+                                                "aria-hidden": "true"
+                                              }, [
+                                                _createElementVNode("path", { d: "m6 6 12 12M18 6 6 18" })
+                                              ]))
+                                            ], 8 /* PROPS */, ["onClick", "aria-label"])
+                                          ]),
+                                          _createElementVNode("pre", null, _toDisplayString(_ctx.sessionContextHealthFocusedNode.text), 1 /* TEXT */)
+                                        ], 8 /* PROPS */, ["data-context-node-id", "aria-label"]))
+                                      : _createCommentVNode("v-if", true),
                                     _createElementVNode("div", { class: "session-export-feedback" }, [
                                       (_ctx.sessionExportNotice && _ctx.sessionExportNotice.key === _ctx.getSessionExportKey(_ctx.activeSession))
                                         ? (_openBlock(), _createElementBlock("p", {
@@ -4954,22 +5397,22 @@ return function render(_ctx, _cache) {
                                     ]),
                                     (_ctx.sessionDetailLoading && !_ctx.sessionPreviewLoadingMore)
                                       ? (_openBlock(), _createElementBlock("div", {
-                                          key: 1,
+                                          key: 3,
                                           class: "session-preview-empty"
                                         }, _toDisplayString(_ctx.t('sessions.preview.loadingBody')), 1 /* TEXT */))
                                       : (_ctx.activeSessionDetailError)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 2,
+                                            key: 4,
                                             class: "session-preview-empty"
                                           }, _toDisplayString(_ctx.activeSessionDetailError), 1 /* TEXT */))
                                         : (!_ctx.activeSessionMessages.length)
                                           ? (_openBlock(), _createElementBlock("div", {
-                                              key: 3,
+                                              key: 5,
                                               class: "session-preview-empty"
                                             }, _toDisplayString(_ctx.t('sessions.preview.emptyMsgs')), 1 /* TEXT */))
                                           : (_ctx.sessionPreviewRenderEnabled && !_ctx.activeSessionVisibleMessages.length)
                                             ? (_openBlock(), _createElementBlock("div", {
-                                                key: 4,
+                                                key: 6,
                                                 class: "session-preview-empty"
                                               }, [
                                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.preview.rendering')), 1 /* TEXT */),
@@ -4981,11 +5424,11 @@ return function render(_ctx, _cache) {
                                               ]))
                                             : (!_ctx.sessionPreviewRenderEnabled)
                                               ? (_openBlock(), _createElementBlock("div", {
-                                                  key: 5,
+                                                  key: 7,
                                                   class: "session-preview-empty"
                                                 }, _toDisplayString(_ctx.t('sessions.preview.preparing')), 1 /* TEXT */))
                                               : (_openBlock(), _createElementBlock("div", {
-                                                  key: 6,
+                                                  key: 8,
                                                   class: "session-preview-body"
                                                 }, [
                                                   (_ctx.activeSessionWorkspaceSummary.available)
@@ -7151,14 +7594,14 @@ return function render(_ctx, _cache) {
                                                     type: "button",
                                                     class: "btn-mini",
                                                     onClick: _ctx.focusPromptComposerFirstMissingVar,
-                                                    disabled: _ctx.pluginsLoading
+                                                    disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                                   }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.jumpToMissing')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
                                                 : _createCommentVNode("v-if", true),
                                               _createElementVNode("button", {
                                                 type: "button",
                                                 class: "btn-mini",
                                                 onClick: _ctx.resetPromptComposerVarValues,
-                                                disabled: _ctx.pluginsLoading
+                                                disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                               }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.reset')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                             ])
                                           ]),
@@ -7242,7 +7685,7 @@ return function render(_ctx, _cache) {
                                       type: "button",
                                       class: "btn-mini",
                                       onClick: _ctx.createPromptTemplate,
-                                      disabled: _ctx.pluginsLoading
+                                      disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                     }, _toDisplayString(_ctx.t('plugins.promptTemplates.manage.create')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                                     _createElementVNode("button", {
                                       type: "button",
@@ -7254,7 +7697,7 @@ return function render(_ctx, _cache) {
                                       type: "button",
                                       class: "btn-mini",
                                       onClick: _ctx.triggerPromptTemplatesImport,
-                                      disabled: _ctx.pluginsLoading
+                                      disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                     }, _toDisplayString(_ctx.t('plugins.promptTemplates.manage.import')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                   ]),
                                   (_ctx.pluginsLoading && !_ctx.promptTemplatesLoadedOnce)
@@ -7296,12 +7739,105 @@ return function render(_ctx, _cache) {
                                         ]))
                                 ]),
                                 _createElementVNode("div", { class: "prompt-templates-pane prompt-templates-pane-editor" }, [
+                                  _createElementVNode("div", { class: "prompt-editor-actions" }, [
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini",
+                                      onClick: _ctx.openPluginHistory,
+                                      disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving || _ctx.pluginHistoryLoading
+                                    }, _toDisplayString(_ctx.t('common.history')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini",
+                                      onClick: _ctx.sharePromptTemplate,
+                                      disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving || !_ctx.promptTemplateDraft
+                                    }, _toDisplayString(_ctx.t('ecosystem.share')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ]),
+                                  (_ctx.pluginHistoryVisible)
+                                    ? (_openBlock(), _createElementBlock("details", {
+                                        key: 0,
+                                        class: "prompt-history-panel",
+                                        open: ""
+                                      }, [
+                                        _createElementVNode("summary", { class: "prompt-history-summary" }, [
+                                          _createElementVNode("span", null, _toDisplayString(_ctx.t('common.history')), 1 /* TEXT */),
+                                          _createElementVNode("button", {
+                                            type: "button",
+                                            class: "btn-mini",
+                                            onClick: $event => {_ctx.pluginHistoryVisible = false; _ctx.pluginHistorySelectedId = ''},
+                                            "aria-label": _ctx.t('common.close')
+                                          }, "×", 8 /* PROPS */, ["onClick", "aria-label"])
+                                        ]),
+                                        _createElementVNode("div", { class: "prompt-history-body" }, [
+                                          _createElementVNode("div", {
+                                            class: "prompt-history-list",
+                                            role: "group",
+                                            "aria-label": _ctx.t('common.history')
+                                          }, [
+                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.pluginHistoryItems, (item) => {
+                                              return (_openBlock(), _createElementBlock("button", {
+                                                key: item.id,
+                                                type: "button",
+                                                class: _normalizeClass(['btn-mini', { active: _ctx.pluginHistorySelectedId === item.id }]),
+                                                "aria-pressed": _ctx.pluginHistorySelectedId === item.id,
+                                                disabled: _ctx.pluginHistoryLoading || _ctx.pluginConfigSaving,
+                                                onClick: $event => (_ctx.viewPluginHistory(item))
+                                              }, _toDisplayString(item.id), 11 /* TEXT, CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"]))
+                                            }), 128 /* KEYED_FRAGMENT */))
+                                          ], 8 /* PROPS */, ["aria-label"]),
+                                          (_ctx.pluginHistoryLoading)
+                                            ? (_openBlock(), _createElementBlock("p", {
+                                                key: 0,
+                                                class: "state-message"
+                                              }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
+                                            : (_ctx.pluginHistoryError)
+                                              ? (_openBlock(), _createElementBlock("p", {
+                                                  key: 1,
+                                                  class: "state-message error",
+                                                  role: "alert"
+                                                }, _toDisplayString(_ctx.pluginHistoryError), 1 /* TEXT */))
+                                              : (!_ctx.pluginHistoryItems.length)
+                                                ? (_openBlock(), _createElementBlock("p", {
+                                                    key: 2,
+                                                    class: "state-message"
+                                                  }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
+                                                : _createCommentVNode("v-if", true),
+                                          (_ctx.pluginHistorySelectedId && !_ctx.pluginHistoryLoading && !_ctx.pluginHistoryError)
+                                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
+                                                _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('ecosystem.historyCompare')) + " · +" + _toDisplayString(_ctx.pluginHistoryComparison.stats.added) + " / −" + _toDisplayString(_ctx.pluginHistoryComparison.stats.removed), 1 /* TEXT */),
+                                                _createElementVNode("div", {
+                                                  class: "agents-diff-view prompt-history-diff",
+                                                  role: "region",
+                                                  "aria-label": _ctx.t('ecosystem.historyCompare'),
+                                                  tabindex: "0"
+                                                }, [
+                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.pluginHistoryComparison.lines, (line, index) => {
+                                                    return (_openBlock(), _createElementBlock("div", {
+                                                      key: index,
+                                                      class: _normalizeClass(['agents-diff-line', line.type])
+                                                    }, [
+                                                      _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '−' : ' ')), 1 /* TEXT */),
+                                                      _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
+                                                    ], 2 /* CLASS */))
+                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                ], 8 /* PROPS */, ["aria-label"]),
+                                                _createElementVNode("button", {
+                                                  type: "button",
+                                                  class: "btn-mini btn-confirm-mini",
+                                                  onClick: _ctx.rollbackPluginConfig,
+                                                  disabled: _ctx.pluginConfigSaving || _ctx.pluginHistoryLoading
+                                                }, _toDisplayString(_ctx.t('ecosystem.rollback')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                              ], 64 /* STABLE_FRAGMENT */))
+                                            : _createCommentVNode("v-if", true)
+                                        ])
+                                      ]))
+                                    : _createCommentVNode("v-if", true),
                                   (!_ctx.promptTemplateDraft)
                                     ? (_openBlock(), _createElementBlock("div", {
-                                        key: 0,
+                                        key: 1,
                                         class: "skills-empty-state"
                                       }, _toDisplayString(_ctx.t('plugins.promptTemplates.editor.selectHint')), 1 /* TEXT */))
-                                    : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                                    : (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
                                         _createElementVNode("div", { class: "prompt-editor-head" }, [
                                           _createElementVNode("div", { class: "prompt-editor-title-row" }, [
                                             _withDirectives(_createElementVNode("input", {
@@ -7328,19 +7864,19 @@ return function render(_ctx, _cache) {
                                                     type: "button",
                                                     class: "btn-mini",
                                                     onClick: _ctx.duplicatePromptTemplate,
-                                                    disabled: _ctx.pluginsLoading
+                                                    disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                                   }, _toDisplayString(_ctx.t('plugins.promptTemplates.editor.duplicate')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                                                   _createElementVNode("button", {
                                                     type: "button",
                                                     class: "btn-mini delete",
                                                     onClick: _ctx.deletePromptTemplate,
-                                                    disabled: _ctx.pluginsLoading
+                                                    disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                                   }, _toDisplayString(_ctx.t('plugins.promptTemplates.editor.delete')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                                                   _createElementVNode("button", {
                                                     type: "button",
                                                     class: "btn-mini",
                                                     onClick: _ctx.savePromptTemplate,
-                                                    disabled: _ctx.pluginsLoading
+                                                    disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                                   }, _toDisplayString(_ctx.t('plugins.promptTemplates.editor.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                                 ]))
                                               : _createCommentVNode("v-if", true)
@@ -7401,7 +7937,7 @@ return function render(_ctx, _cache) {
                                                       type: "button",
                                                       class: "btn-mini",
                                                       onClick: _ctx.resetPromptVariableValues,
-                                                      disabled: _ctx.pluginsLoading
+                                                      disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                                     }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.reset')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                                   ]))
                                                 : _createCommentVNode("v-if", true)
@@ -7443,7 +7979,7 @@ return function render(_ctx, _cache) {
                                                 type: "button",
                                                 class: "btn-mini",
                                                 onClick: _ctx.copyRenderedPrompt,
-                                                disabled: _ctx.pluginsLoading
+                                                disabled: _ctx.pluginsLoading || _ctx.pluginConfigSaving
                                               }, _toDisplayString(_ctx.t('plugins.promptTemplates.preview.copy')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                                             ]),
                                             _createElementVNode("textarea", {
@@ -7870,12 +8406,35 @@ return function render(_ctx, _cache) {
                                         class: "state-message"
                                       }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
                                     : _createCommentVNode("v-if", true),
-                              (_ctx.promptHistoryPreviewContent)
+                              (_ctx.promptHistoryPreviewId && !_ctx.promptHistoryLoading && !_ctx.promptHistoryError)
                                 ? (_openBlock(), _createElementBlock("div", {
                                     key: 4,
                                     class: "prompt-history-preview-wrap"
                                   }, [
                                     _createElementVNode("pre", { class: "prompt-history-preview" }, _toDisplayString(_ctx.promptHistoryPreviewContent), 1 /* TEXT */),
+                                    _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('ecosystem.historyCompare')) + " · +" + _toDisplayString(_ctx.promptHistoryComparison.stats.added) + " / −" + _toDisplayString(_ctx.promptHistoryComparison.stats.removed), 1 /* TEXT */),
+                                    _createElementVNode("div", {
+                                      class: "agents-diff-view prompt-history-diff",
+                                      role: "region",
+                                      "aria-label": _ctx.t('ecosystem.historyCompare'),
+                                      tabindex: "0"
+                                    }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptHistoryComparison.lines, (line, index) => {
+                                        return (_openBlock(), _createElementBlock("div", {
+                                          key: index,
+                                          class: _normalizeClass(['agents-diff-line', line.type])
+                                        }, [
+                                          _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '−' : ' ')), 1 /* TEXT */),
+                                          _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
+                                        ], 2 /* CLASS */))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ], 8 /* PROPS */, ["aria-label"]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini btn-confirm-mini",
+                                      onClick: $event => (_ctx.rollbackPromptHistory('agents')),
+                                      disabled: _ctx.agentsSaving || _ctx.promptHistoryLoading || _ctx.agentsDiffVisible
+                                    }, _toDisplayString(_ctx.t('ecosystem.rollback')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                                     _createElementVNode("button", {
                                       type: "button",
                                       class: "btn-mini btn-confirm-mini",
@@ -8444,12 +9003,35 @@ return function render(_ctx, _cache) {
                                           class: "state-message"
                                         }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
                                       : _createCommentVNode("v-if", true),
-                                (_ctx.sysHistoryPreviewContent)
+                                (_ctx.sysHistoryPreviewId && !_ctx.sysHistoryLoading && !_ctx.sysHistoryError)
                                   ? (_openBlock(), _createElementBlock("div", {
                                       key: 4,
                                       class: "prompt-history-preview-wrap"
                                     }, [
                                       _createElementVNode("pre", { class: "prompt-history-preview" }, _toDisplayString(_ctx.sysHistoryPreviewContent), 1 /* TEXT */),
+                                      _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('ecosystem.historyCompare')) + " · +" + _toDisplayString(_ctx.sysHistoryComparison.stats.added) + " / −" + _toDisplayString(_ctx.sysHistoryComparison.stats.removed), 1 /* TEXT */),
+                                      _createElementVNode("div", {
+                                        class: "agents-diff-view prompt-history-diff",
+                                        role: "region",
+                                        "aria-label": _ctx.t('ecosystem.historyCompare'),
+                                        tabindex: "0"
+                                      }, [
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysHistoryComparison.lines, (line, index) => {
+                                          return (_openBlock(), _createElementBlock("div", {
+                                            key: index,
+                                            class: _normalizeClass(['agents-diff-line', line.type])
+                                          }, [
+                                            _createElementVNode("span", { class: "agents-diff-line-sign" }, _toDisplayString(line.type === 'add' ? '+' : (line.type === 'del' ? '−' : ' ')), 1 /* TEXT */),
+                                            _createElementVNode("span", { class: "agents-diff-line-text" }, _toDisplayString(line.value), 1 /* TEXT */)
+                                          ], 2 /* CLASS */))
+                                        }), 128 /* KEYED_FRAGMENT */))
+                                      ], 8 /* PROPS */, ["aria-label"]),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini btn-confirm-mini",
+                                        onClick: $event => (_ctx.rollbackPromptHistory('sys')),
+                                        disabled: _ctx.sysPromptSaving || _ctx.sysHistoryLoading || _ctx.sysPromptDiffVisible
+                                      }, _toDisplayString(_ctx.t('ecosystem.rollback')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                                       _createElementVNode("button", {
                                         type: "button",
                                         class: "btn-mini btn-confirm-mini",
@@ -9837,10 +10419,78 @@ return function render(_ctx, _cache) {
           ])
         ], 8 /* PROPS */, ["onClick"]))
       : _createCommentVNode("v-if", true),
+    (_ctx.promptInvocationVisible)
+      ? (_openBlock(), _createElementBlock("div", {
+          key: 14,
+          class: "modal-overlay",
+          onClick: _withModifiers(_ctx.closePromptTemplateInvocation, ["self"])
+        }, [
+          _createElementVNode("form", {
+            ref: "promptInvocationDialog",
+            class: "modal prompt-invocation-dialog",
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-labelledby": "prompt-invocation-title",
+            "aria-describedby": "prompt-invocation-hint",
+            onSubmit: _withModifiers(_ctx.finishPromptTemplateInvocation, ["prevent"]),
+            onKeydown: _ctx.onPromptInvocationKeydown
+          }, [
+            _createElementVNode("h2", {
+              id: "prompt-invocation-title",
+              class: "modal-title"
+            }, _toDisplayString(_ctx.t('ecosystem.variablesTitle')), 1 /* TEXT */),
+            _createElementVNode("p", {
+              id: "prompt-invocation-hint",
+              class: "form-hint"
+            }, _toDisplayString(_ctx.t('ecosystem.variablesHint')), 1 /* TEXT */),
+            _createElementVNode("div", { class: "prompt-invocation-fields" }, [
+              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptInvocationNames, (name, index) => {
+                return (_openBlock(), _createElementBlock("label", {
+                  key: name,
+                  class: "form-group",
+                  for: 'prompt-invocation-var-' + index
+                }, [
+                  _createElementVNode("span", { class: "form-label mono" }, _toDisplayString('{' + '{' + name + '}' + '}'), 1 /* TEXT */),
+                  _withDirectives(_createElementVNode("textarea", {
+                    id: 'prompt-invocation-var-' + index,
+                    "onUpdate:modelValue": $event => ((_ctx.promptInvocationValues[name]) = $event),
+                    class: "form-input",
+                    rows: name === 'git_diff' ? 6 : 2,
+                    autocomplete: "off",
+                    spellcheck: "false",
+                    "aria-required": "true",
+                    "aria-invalid": !!_ctx.promptInvocationError && !_ctx.promptInvocationValues[name].trim()
+                  }, null, 8 /* PROPS */, ["id", "onUpdate:modelValue", "rows", "aria-invalid"]), [
+                    [_vModelText, _ctx.promptInvocationValues[name]]
+                  ])
+                ], 8 /* PROPS */, ["for"]))
+              }), 128 /* KEYED_FRAGMENT */))
+            ]),
+            (_ctx.promptInvocationError)
+              ? (_openBlock(), _createElementBlock("p", {
+                  key: 0,
+                  class: "form-error",
+                  role: "alert"
+                }, _toDisplayString(_ctx.promptInvocationError), 1 /* TEXT */))
+              : _createCommentVNode("v-if", true),
+            _createElementVNode("div", { class: "modal-actions" }, [
+              _createElementVNode("button", {
+                type: "button",
+                class: "btn btn-secondary",
+                onClick: _ctx.closePromptTemplateInvocation
+              }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"]),
+              _createElementVNode("button", {
+                type: "submit",
+                class: "btn btn-primary"
+              }, _toDisplayString(_ctx.t('ecosystem.useTemplate')), 1 /* TEXT */)
+            ])
+          ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit", "onKeydown"])
+        ], 8 /* PROPS */, ["onClick"]))
+      : _createCommentVNode("v-if", true),
     _createCommentVNode(" Webhook settings modal "),
     (_ctx.showWebhookModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 14,
+          key: 15,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeWebhookModal, ["self"])
         }, [
@@ -9913,7 +10563,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showOpenclawConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 15,
+          key: 16,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!(_ctx.openclawSaving || _ctx.openclawApplying) && _ctx.closeOpenclawConfigModal()), ["self"])
         }, [
@@ -10625,7 +11275,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfigTemplateModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 16,
+          key: 17,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!_ctx.configTemplateApplying && _ctx.closeConfigTemplateModal()), ["self"])
         }, [
@@ -10770,7 +11420,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showAgentsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 17,
+          key: 18,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAgentsModal, ["self"])
         }, [
@@ -10941,7 +11591,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showSkillsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 18,
+          key: 19,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeSkillsModal, ["self"])
         }, [
@@ -11246,7 +11896,7 @@ return function render(_ctx, _cache) {
     }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
     (_ctx.showHealthCheckModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 19,
+          key: 20,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
@@ -11419,7 +12069,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfirmDialog)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 20,
+          key: 21,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeConfirmDialog, ["self"])
         }, [
@@ -11457,7 +12107,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Toast "),
     (_ctx.message)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 21,
+          key: 22,
           class: _normalizeClass(['toast', _ctx.messageType]),
           role: "status",
           "aria-live": "polite",

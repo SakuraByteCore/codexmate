@@ -1,0 +1,17 @@
+        <div v-if="promptInvocationVisible" class="modal-overlay" @click.self="closePromptTemplateInvocation">
+            <form ref="promptInvocationDialog" class="modal prompt-invocation-dialog" role="dialog" aria-modal="true" aria-labelledby="prompt-invocation-title" aria-describedby="prompt-invocation-hint" @submit.prevent="finishPromptTemplateInvocation" @keydown="onPromptInvocationKeydown">
+                <h2 id="prompt-invocation-title" class="modal-title">{{ t('ecosystem.variablesTitle') }}</h2>
+                <p id="prompt-invocation-hint" class="form-hint">{{ t('ecosystem.variablesHint') }}</p>
+                <div class="prompt-invocation-fields">
+                    <label v-for="(name, index) in promptInvocationNames" :key="name" class="form-group" :for="'prompt-invocation-var-' + index">
+                        <span class="form-label mono">{{ '{' + '{' + name + '}' + '}' }}</span>
+                        <textarea :id="'prompt-invocation-var-' + index" v-model="promptInvocationValues[name]" class="form-input" :rows="name === 'git_diff' ? 6 : 2" autocomplete="off" spellcheck="false" aria-required="true" :aria-invalid="!!promptInvocationError && !promptInvocationValues[name].trim()"></textarea>
+                    </label>
+                </div>
+                <p v-if="promptInvocationError" class="form-error" role="alert">{{ promptInvocationError }}</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" @click="closePromptTemplateInvocation">{{ t('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ t('ecosystem.useTemplate') }}</button>
+                </div>
+            </form>
+        </div>

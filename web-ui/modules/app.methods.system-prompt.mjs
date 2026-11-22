@@ -76,6 +76,7 @@ export function createSystemPromptMethods(options = {}) {
                 this.sysPromptPath = res.path || '';
                 this.sysPromptExists = !!res.exists;
                 this.sysPromptHash = res.hash || '';
+                this.sysHistoryBucket = res.historyBucket || '';
             } catch (e) {
                 if (!isLatestRequestToken(this, '_sysPromptOpenRequestToken', requestToken)) return;
                 this.showMessage(this.t('toast.load.fail'), 'error');
@@ -309,6 +310,8 @@ export function createSystemPromptMethods(options = {}) {
                 ? bucketArg.trim()
                 : this.resolveSysHistoryBucket();
             this.sysHistoryBucket = bucket;
+            const requestToken = Symbol('history-list');
+            this._sysHistoryRequestToken = requestToken;
             this.sysHistoryLoading = true;
             this.sysHistoryError = '';
             this.sysHistoryItems = [];
@@ -316,20 +319,24 @@ export function createSystemPromptMethods(options = {}) {
             this.sysHistoryPreviewContent = '';
             try {
                 const res = await api('list-prompt-history', { bucket });
+                if (this._sysHistoryRequestToken !== requestToken || !this.sysHistoryVisible || this.sysHistoryBucket !== bucket) return;
                 if (res && res.error) {
                     this.sysHistoryError = res.error;
                     return;
                 }
                 this.sysHistoryItems = Array.isArray(res) ? res : [];
             } catch (e) {
+                if (this._sysHistoryRequestToken !== requestToken) return;
                 this.sysHistoryError = this.t('toast.load.fail');
             } finally {
-                this.sysHistoryLoading = false;
+                if (this._sysHistoryRequestToken === requestToken) this.sysHistoryLoading = false;
             }
         },
 
         closeSysHistory() {
             this.sysHistoryVisible = false;
+            this._sysHistoryRequestToken = null;
+            this.sysHistoryLoading = false;
             this.sysHistoryPreviewId = '';
             this.sysHistoryPreviewContent = '';
             this.sysHistoryError = '';
@@ -339,10 +346,15 @@ export function createSystemPromptMethods(options = {}) {
             if (!item || !item.id) return;
             if (this.sysHistoryLoading) return;
             if (this.sysHistoryPreviewId === item.id && this.sysHistoryPreviewContent) return;
+            const bucket = this.sysHistoryBucket;
+            const requestToken = Symbol('history-preview');
+            this._sysHistoryRequestToken = requestToken;
+            this.sysHistoryLoading = true;
             this.sysHistoryPreviewId = item.id;
             this.sysHistoryPreviewContent = '';
             try {
-                const res = await api('get-prompt-history', { bucket: this.sysHistoryBucket, id: item.id });
+                const res = await api('get-prompt-history', { bucket, id: item.id });
+                if (this._sysHistoryRequestToken !== requestToken || !this.sysHistoryVisible || this.sysHistoryBucket !== bucket) return;
                 if (res && res.error) {
                     this.sysHistoryError = res.error;
                     this.sysHistoryPreviewId = '';
@@ -350,8 +362,11 @@ export function createSystemPromptMethods(options = {}) {
                 }
                 this.sysHistoryPreviewContent = typeof res.content === 'string' ? res.content : '';
             } catch (e) {
+                if (this._sysHistoryRequestToken !== requestToken) return;
                 this.sysHistoryError = this.t('toast.load.fail');
                 this.sysHistoryPreviewId = '';
+            } finally {
+                if (this._sysHistoryRequestToken === requestToken) this.sysHistoryLoading = false;
             }
         },
 

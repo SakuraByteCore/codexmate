@@ -151,7 +151,7 @@ Use the handoff's returned ID for `<id>`, the same target agent for `<target>`, 
 ## What's So Special?
 
 After finding your conversations, manage the configuration, skills, and tasks used in your daily work:
-- **Unified Session Browser**: Browse local sessions from Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed in one place. Search, export, and deletion availability varies by source; see the [session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions).
+- **Unified Session Browser**: Browse local sessions from Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode, and Zed in one place. Search, export, and deletion availability varies by source; see the [session guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/sessions). Session details show an always-visible five-category token breakdown, a composition bar, and a health rating.
 - **OpenAI-Compatible Bridge**: Use Codex with any OpenAI-compatible UI by normalizing the Responses API; the built-in Codex conversion also fills and normalizes Codex fingerprint headers such as `User-Agent`, `Version`, `OpenAI-Beta`, and `Originator` so upstream providers see an official Codex CLI-shaped request.
 - **Claude Provider Bridge**: Connect Claude Code to OpenAI Chat Completions-compatible providers and Ollama through the built-in local Claude-compatible proxy.
 - **OpenCode Provider Control**: Manage OpenCode provider/model selection with a CodexMate-owned provider store under `~/.codexmate`, projecting only the active provider into native OpenCode config to avoid polluting or deleting user-owned settings.
@@ -180,8 +180,8 @@ After finding your conversations, manage the configuration, skills, and tasks us
 | **KiloCode Config Bridge** | ✅ | Configure KiloCode through `codexmate kilo config` or the Web UI, writing provider URL/model/API key data to `~/.config/kilo/kilo.jsonc` |
 | **Pi Provider Config** | ✅ | Manage Pi providers in the Web UI writing to `~/.pi/agent/models.json` (unknown fields preserved) and switch the default provider/model in `~/.pi/agent/settings.json` |
 | **Provider Health Check** | ✅ | Probe local Codex/Claude provider routes, highlight failed configs, and bulk-remove selected broken providers safely |
-| **Prompt Templates** | ✅ | Reusable prompt plugins with variables |
-| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with auto-detect, path switching, and a shared preset pool. Applying a preset only updates the editor; save manually to write the file. |
+| **Prompt Templates** | ✅ | Variable-fill dialog on invocation, one-template JSON sharing, and versioned plugin template configuration with history Diff and rollback. `git_diff` is pasted text, not an executed command. |
+| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with a shared preset pool. Presets fill variables before updating the editor; save manually to write files. History shows version Diff; confirmed rollback writes the selected version with an atomic backup and concurrent-change checks. |
 | **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
 | **Auto Update** | ✅ | Quick update CLI via `codexmate update` |
 

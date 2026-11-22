@@ -138,6 +138,8 @@ const {
 const {
     createPromptHistoryController
 } = require('./cli/prompt-history');
+const { createPluginConfigController } = require('./cli/plugin-config');
+const { createSessionContextHealthController } = require('./lib/session-context-health');
 const {
     createArchiveHelperController
 } = require('./cli/archive-helpers');
@@ -2332,7 +2334,8 @@ function queryOpencodeSessionMessages(sessionId, options = {}) {
     const id = typeof sessionId === 'string' ? sessionId.trim() : '';
     if (!id) return null;
     const maxMessages = resolveMaxMessagesValue(options.maxMessages, DEFAULT_SESSION_DETAIL_MESSAGES);
-    const limit = maxMessages === Infinity ? OPENCODE_DB_READ_LIMIT : Math.min(OPENCODE_DB_READ_LIMIT, Math.max(1, Math.floor(maxMessages)));
+    const limit = options.contextHealth === true ? -1
+        : (maxMessages === Infinity ? OPENCODE_DB_READ_LIMIT : Math.min(OPENCODE_DB_READ_LIMIT, Math.max(1, Math.floor(maxMessages))));
     return withOpencodeDb((db) => {
         const totalRow = db.prepare('select count(*) as count from message where session_id = ?').get(id) || {};
         const totalMessages = Math.max(0, Math.floor(Number(totalRow.count) || 0));
@@ -2346,8 +2349,12 @@ function queryOpencodeSessionMessages(sessionId, options = {}) {
             group by m.id
             order by m.time_created asc
         `).all(id, limit);
-        const messages = rows.map(normalizeOpencodeMessageRow).filter(Boolean);
+        const messages = options.contextHealth === true ? rows.map((row) => ({
+            role: parseJsonObjectSafe(row.message_data || '')?.role || 'assistant',
+            content: String(row.parts || '').split('\n').map(parseJsonObjectSafe).filter(Boolean)
+        })) : rows.map(normalizeOpencodeMessageRow).filter(Boolean);
         const sessionRow = db.prepare('select id, directory, path, time_updated from session where id = ?').get(id) || null;
+        if (options.contextHealth === true && !sessionRow) return null;
         return {
             sessionId: id,
             cwd: sessionRow && (sessionRow.path || sessionRow.directory) ? (sessionRow.path || sessionRow.directory) : '',
@@ -2601,7 +2608,14 @@ function queryZedSessionMessages(sessionId, options = {}) {
     return withZedThreadsDb((db) => {
         const row = db.prepare('select data, data_type, folder_paths, updated_at from threads where id = ?').get(id) || null;
         const doc = parseZedThreadDocument(row);
+        if (options.contextHealth === true && !doc) return null;
         const modelInfo = readZedThreadModelInfo(doc);
+        if (options.contextHealth === true) return {
+            sessionId: id, messages: Array.isArray(doc?.messages) ? doc.messages : [],
+            cwd: doc ? readZedThreadCwd(row, doc) : '',
+            instructions: doc?.system_prompt || doc?.instructions || '',
+            totalMessages: Array.isArray(doc?.messages) ? doc.messages.length : 0, clipped: false
+        };
         const all = (doc && Array.isArray(doc.messages) ? doc.messages : [])
             .map(entry => normalizeZedThreadMessage(entry, modelInfo))
             .filter(Boolean);
@@ -2954,6 +2968,10 @@ const {
     fs,
     path,
     CONFIG_DIR
+});
+
+const { getPluginConfig, applyPluginConfig } = createPluginConfigController({
+    fs, path, CONFIG_DIR, backupPromptBeforeWrite: historyBackup
 });
 
 const {
@@ -9808,6 +9826,10 @@ async function extractMessagesFromFile(filePath, source, options = {}) {
     return state;
 }
 
+const { readSessionContextHealth, readSessionContextNode } = createSessionContextHealthController({
+    fs, normalizeSessionSourceName, resolveSessionFilePath, queryOpencodeSessionMessages, queryZedSessionMessages
+});
+
 async function readSessionDetail(params = {}) {
     const source = normalizeSessionSourceName(params.source, '');
     if (!source) {
@@ -14771,6 +14793,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'preview-system-prompt-diff':
                             result = buildSystemPromptDiff(params || {});
                             break;
+                        case 'get-plugin-config':
+                            result = getPluginConfig();
+                            break;
+                        case 'apply-plugin-config':
+                            result = applyPluginConfig(params || {});
+                            break;
                         case 'list-prompt-history':
                             result = listPromptHistory((params && params.bucket) || '');
                             break;
@@ -15020,6 +15048,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'thread-handoff-fallback':
                         case 'thread-handoff-ack':
                             result = await handleThreadAction(action, params || {});
+                            break;
+                        case 'session-context-health':
+                            result = await readSessionContextHealth(params || {});
+                            break;
+                        case 'session-context-node':
+                            result = await readSessionContextNode(params || {});
                             break;
                         case 'session-detail':
                             result = await readSessionDetail(params);

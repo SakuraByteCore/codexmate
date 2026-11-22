@@ -1,0 +1,45 @@
+                                <section v-if="activeSession" class="context-health" aria-labelledby="context-health-heading" :aria-busy="sessionContextHealthLoading" @vue:mounted="loadSessionContextHealth()" @vue:updated="loadSessionContextHealth()">
+                                    <div class="context-health-header">
+                                        <div class="context-health-heading">
+                                            <h3 id="context-health-heading" class="context-health-title">{{ t('contextHealth.title') }}</h3>
+                                            <span v-if="sessionContextHealth" :class="['context-health-rating', sessionContextHealth.health]" role="img" :aria-label="t('contextHealth.level.' + sessionContextHealth.health)"></span>
+                                            <p class="context-health-meta" v-if="sessionContextHealth">{{ sessionContextHealth.messageCount.toLocaleString() }} {{ t('contextHealth.nodes') }}</p>
+                                            <p class="context-health-meta" v-else-if="sessionContextHealthLoading" role="status">{{ t('contextHealth.loading') }}</p>
+                                        </div>
+                                        <div v-if="sessionContextHealth" class="context-health-summary">
+                                            <span class="context-health-total mono">≈ {{ sessionContextHealth.totalEstimatedTokens.toLocaleString() }} <small>Token</small></span>
+                                        </div>
+                                        <div v-else-if="sessionContextHealthLoading" class="context-health-summary context-health-summary-skeleton" aria-hidden="true"><span></span></div>
+                                        <button type="button" class="btn-mini context-health-refresh" @click="loadSessionContextHealth(true)" :disabled="sessionContextHealthLoading" :aria-label="t('common.refresh')" :title="t('common.refresh')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.5-1.3L20 8M4 16l2.4 2.3A7 7 0 0 0 17.9 17"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="context-health-bar" role="img" :aria-label="t('contextHealth.composition')">
+                                        <template v-if="sessionContextHealth">
+                                            <span v-for="part in sessionContextHealth.categories" :key="part.id" :class="['context-health-segment', part.id]" :style="{ flexGrow: part.estimatedTokens }" :title="t('contextHealth.category.' + part.id) + ': ≈ ' + part.estimatedTokens + ' Token (' + part.percentage.toFixed(2) + '%)'" :aria-label="t('contextHealth.category.' + part.id) + ': ' + part.percentage.toFixed(2) + '%'" v-show="part.estimatedTokens > 0"></span>
+                                        </template>
+                                    </div>
+                                    <p v-if="sessionContextHealthError" class="form-error context-health-error" role="alert">{{ sessionContextHealthError }}</p>
+                                    <div v-if="sessionContextHealth" id="context-health-details" class="context-health-details">
+                                        <dl class="context-health-legend">
+                                            <div v-for="part in sessionContextHealth.categories" :key="part.id">
+                                                <dt><span :class="['context-health-dot', part.id]" aria-hidden="true"></span>{{ t('contextHealth.category.' + part.id) }}</dt>
+                                                <dd><span class="context-health-category-tokens mono">≈ {{ part.estimatedTokens.toLocaleString() }}</span><span class="context-health-category-share mono">{{ part.percentage.toFixed(2) }}%</span></dd>
+                                            </div>
+                                        </dl>
+                                        <p v-if="!sessionContextHealth.messageCount" class="context-health-note">{{ t('contextHealth.empty') }}</p>
+                                    </div>
+                                    <dl v-else-if="sessionContextHealthLoading" class="context-health-legend context-health-loading" aria-hidden="true">
+                                        <div v-for="part in ['system', 'user', 'assistant', 'tools', 'code']" :key="part" class="context-health-loading-row">
+                                            <dt><span :class="['context-health-dot', part]" aria-hidden="true"></span>{{ t('contextHealth.category.' + part) }}</dt>
+                                            <dd><span class="context-health-value-skeleton"></span><span class="context-health-share-skeleton"></span></dd>
+                                        </div>
+                                    </dl>
+                                </section>
+                                <article v-if="sessionContextHealthFocusedNode" ref="contextHealthFocusedMessage" class="context-health-focused-message" tabindex="-1" :data-context-node-id="sessionContextHealthFocusedNode.id" :aria-label="t('contextHealth.message')">
+                                    <header>
+                                        <div><strong>{{ t('contextHealth.message') }}</strong><span class="context-health-meta mono">{{ sessionContextHealthFocusedNode.id }}</span></div>
+                                        <button type="button" class="btn-mini context-health-refresh" @click="sessionContextHealthFocusedNode = null" :aria-label="t('common.close')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+                                    </header>
+                                    <pre>{{ sessionContextHealthFocusedNode.text }}</pre>
+                                </article>

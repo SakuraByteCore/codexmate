@@ -99,8 +99,8 @@
                                                     <div v-if="promptComposerMissingVars.length" class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.missingCount', { count: promptComposerMissingVars.length }) }}</div>
                                                 </div>
                                                 <div class="prompt-editor-actions">
-                                                    <button v-if="promptComposerMissingVars.length" type="button" class="btn-mini" @click="focusPromptComposerFirstMissingVar" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.compose.jumpToMissing') }}</button>
-                                                    <button type="button" class="btn-mini" @click="resetPromptComposerVarValues" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.vars.reset') }}</button>
+                                                    <button v-if="promptComposerMissingVars.length" type="button" class="btn-mini" @click="focusPromptComposerFirstMissingVar" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.compose.jumpToMissing') }}</button>
+                                                    <button type="button" class="btn-mini" @click="resetPromptComposerVarValues" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.vars.reset') }}</button>
                                                 </div>
                                             </div>
                                             <div class="prompt-vars-grid">
@@ -139,9 +139,9 @@
                                                 v-model.trim="promptTemplatesKeyword"
                                                 :aria-label="t('plugins.promptTemplates.manage.searchAria')"
                                                 :placeholder="t('plugins.promptTemplates.manage.searchPlaceholder')">
-                                            <button type="button" class="btn-mini" @click="createPromptTemplate" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.manage.create') }}</button>
+                                            <button type="button" class="btn-mini" @click="createPromptTemplate" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.manage.create') }}</button>
                                             <button type="button" class="btn-mini" @click="exportPromptTemplates" :disabled="pluginsLoading || !promptTemplatesList.length">{{ t('plugins.promptTemplates.manage.export') }}</button>
-                                            <button type="button" class="btn-mini" @click="triggerPromptTemplatesImport" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.manage.import') }}</button>
+                                            <button type="button" class="btn-mini" @click="triggerPromptTemplatesImport" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.manage.import') }}</button>
                                         </div>
 
                                         <div v-if="pluginsLoading && !promptTemplatesLoadedOnce" class="skills-empty-state">{{ t('plugins.promptTemplates.manage.loading') }}</div>
@@ -168,15 +168,43 @@
                                     </div>
 
                                     <div class="prompt-templates-pane prompt-templates-pane-editor">
+                                        <div class="prompt-editor-actions">
+                                            <button type="button" class="btn-mini" @click="openPluginHistory" :disabled="pluginsLoading || pluginConfigSaving || pluginHistoryLoading">{{ t('common.history') }}</button>
+                                            <button type="button" class="btn-mini" @click="sharePromptTemplate" :disabled="pluginsLoading || pluginConfigSaving || !promptTemplateDraft">{{ t('ecosystem.share') }}</button>
+                                        </div>
+                                        <details v-if="pluginHistoryVisible" class="prompt-history-panel" open>
+                                            <summary class="prompt-history-summary">
+                                                <span>{{ t('common.history') }}</span>
+                                                <button type="button" class="btn-mini" @click="pluginHistoryVisible = false; pluginHistorySelectedId = ''" :aria-label="t('common.close')">×</button>
+                                            </summary>
+                                            <div class="prompt-history-body">
+                                                <div class="prompt-history-list" role="group" :aria-label="t('common.history')">
+                                                    <button v-for="item in pluginHistoryItems" :key="item.id" type="button" :class="['btn-mini', { active: pluginHistorySelectedId === item.id }]" :aria-pressed="pluginHistorySelectedId === item.id" :disabled="pluginHistoryLoading || pluginConfigSaving" @click="viewPluginHistory(item)">{{ item.id }}</button>
+                                                </div>
+                                                <p v-if="pluginHistoryLoading" class="state-message">{{ t('diff.generating') }}</p>
+                                                <p v-else-if="pluginHistoryError" class="state-message error" role="alert">{{ pluginHistoryError }}</p>
+                                                <p v-else-if="!pluginHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</p>
+                                                <template v-if="pluginHistorySelectedId && !pluginHistoryLoading && !pluginHistoryError">
+                                                    <div class="form-hint">{{ t('ecosystem.historyCompare') }} · +{{ pluginHistoryComparison.stats.added }} / −{{ pluginHistoryComparison.stats.removed }}</div>
+                                                    <div class="agents-diff-view prompt-history-diff" role="region" :aria-label="t('ecosystem.historyCompare')" tabindex="0">
+                                                        <div v-for="(line, index) in pluginHistoryComparison.lines" :key="index" :class="['agents-diff-line', line.type]">
+                                                            <span class="agents-diff-line-sign">{{ line.type === 'add' ? '+' : (line.type === 'del' ? '−' : ' ') }}</span>
+                                                            <span class="agents-diff-line-text">{{ line.value }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn-mini btn-confirm-mini" @click="rollbackPluginConfig" :disabled="pluginConfigSaving || pluginHistoryLoading">{{ t('ecosystem.rollback') }}</button>
+                                                </template>
+                                            </div>
+                                        </details>
                                         <div v-if="!promptTemplateDraft" class="skills-empty-state">{{ t('plugins.promptTemplates.editor.selectHint') }}</div>
                                         <template v-else>
                                             <div class="prompt-editor-head">
                                                 <div class="prompt-editor-title-row">
                                                     <input class="form-input prompt-editor-name" type="text" v-model.trim="promptTemplateDraftRaw.name" :disabled="promptTemplateDraft.isBuiltin" :placeholder="t('plugins.promptTemplates.editor.namePlaceholder')" :aria-label="t('plugins.promptTemplates.editor.nameAria')">
                                                     <div v-if="!promptTemplateDraft.isBuiltin" class="prompt-editor-actions">
-                                                        <button type="button" class="btn-mini" @click="duplicatePromptTemplate" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.editor.duplicate') }}</button>
-                                                        <button type="button" class="btn-mini delete" @click="deletePromptTemplate" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.editor.delete') }}</button>
-                                                        <button type="button" class="btn-mini" @click="savePromptTemplate" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.editor.save') }}</button>
+                                                        <button type="button" class="btn-mini" @click="duplicatePromptTemplate" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.editor.duplicate') }}</button>
+                                                        <button type="button" class="btn-mini delete" @click="deletePromptTemplate" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.editor.delete') }}</button>
+                                                        <button type="button" class="btn-mini" @click="savePromptTemplate" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.editor.save') }}</button>
                                                     </div>
                                                 </div>
                                                 <div v-if="promptTemplateDraft.isBuiltin" class="plugins-panel-note">
@@ -206,7 +234,7 @@
                                                             <div class="plugins-panel-note">{{ t('plugins.promptTemplates.vars.hint') }}</div>
                                                         </div>
                                                         <div v-if="!promptTemplateDraft.isBuiltin" class="prompt-editor-actions">
-                                                            <button type="button" class="btn-mini" @click="resetPromptVariableValues" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.vars.reset') }}</button>
+                                                            <button type="button" class="btn-mini" @click="resetPromptVariableValues" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.vars.reset') }}</button>
                                                         </div>
                                                     </div>
 
@@ -225,7 +253,7 @@
                                                             <div class="prompt-vars-title">{{ t('plugins.promptTemplates.preview.title') }}</div>
                                                             <div class="plugins-panel-note">{{ t('plugins.promptTemplates.preview.hint') }}</div>
                                                         </div>
-                                                        <button type="button" class="btn-mini" @click="copyRenderedPrompt" :disabled="pluginsLoading">{{ t('plugins.promptTemplates.preview.copy') }}</button>
+                                                        <button type="button" class="btn-mini" @click="copyRenderedPrompt" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.preview.copy') }}</button>
                                                     </div>
                                                     <textarea class="form-input prompt-preview-textarea" :value="renderedPrompt" rows="10" readonly spellcheck="false" :aria-label="t('plugins.promptTemplates.preview.outputAria')"></textarea>
                                                 </div>

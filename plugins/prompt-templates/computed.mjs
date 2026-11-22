@@ -26,7 +26,7 @@ function normalizePromptTemplateEntry(item) {
 
 const TEMPLATE_PARTS_CACHE = new Map();
 
-function parseTemplateVariables(templateText) {
+export function parseTemplateVariables(templateText) {
     const text = typeof templateText === 'string' ? templateText : '';
     const vars = new Set();
     const re = /\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g;
@@ -91,13 +91,13 @@ function formatIsoDateLabel(iso) {
     return `${y}-${m}-${d}`;
 }
 
-function renderTemplate(templateText, values = {}) {
+export function renderTemplate(templateText, values = {}) {
     const text = typeof templateText === 'string' ? templateText : '';
     const map = values && typeof values === 'object' ? values : {};
     return text.replace(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g, (_whole, key) => {
         const name = String(key || '').trim();
         if (!name) return '';
-        const value = map[name];
+        const value = Object.prototype.hasOwnProperty.call(map, name) ? map[name] : null;
         return value == null || String(value).trim() === '' ? _whole : String(value);
     });
 }

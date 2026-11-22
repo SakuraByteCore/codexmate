@@ -33,6 +33,8 @@ const testInstallStatus = require('./test-install-status');
 const testWebhook = require('./test-webhook');
 const testKilocodeConfig = require('./test-kilocode-config');
 const testOpencodeAgentsFile = require('./test-opencode-agents-file');
+const testPromptsEcosystem = require('./test-prompts-ecosystem');
+const testContextHealth = require('./test-context-health');
 const runRecentHealthE2E = require('./recent-health.e2e');
 const testWebUiSessionTab = require('./test-web-ui-session-tab');
 const testWebUiUrlRouting = require('./test-web-ui-url-routing');
@@ -96,6 +98,15 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         CLAUDE_HOME: '',
         CLAUDE_CONFIG_DIR: '',
         XDG_CONFIG_HOME: '',
+        XDG_DATA_HOME: path.join(tmpHome, '.local', 'share'),
+        ZED_DATA_DIR: path.join(tmpHome, '.local', 'share', 'zed'),
+        OPENCODE_DATA_HOME: '',
+        OPENCODE_DATA_DIR: '',
+        CODEBUDDY_CODE_HOME_DIR: '',
+        CODEBUDDY_HOME: '',
+        WORKBUDDY_AI_HOME_DIR: '',
+        WORKBUDDY_HOME: '',
+        PI_HOME: '',
         CODEXMATE_FORCE_RESET_EXISTING_CONFIG: '1',
         CODEXMATE_NO_BROWSER: '1',
         CODEXMATE_HTTP_TOKEN: 'codexmate-e2e-token',
@@ -209,6 +220,8 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         await testWebUiSessionTab();
         await testKilocodeConfig(ctx);
         await testOpencodeAgentsFile(ctx);
+        await testPromptsEcosystem(ctx);
+        await testContextHealth(ctx);
 
     } finally {
         const waitForExit = new Promise((resolve) => {

@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { mountContextHealth } from './helpers/context-health-render.mjs';
 import {
     readBundledWebUiCss,
     readBundledWebUiHtml
@@ -37,4 +38,37 @@ test('session preview action labels collapse inside narrow preview container', (
     assert.match(styles, /@container session-preview \(max-width:\s*620px\)/);
     assert.match(styles, /\.session-action-optional-text\s*\{\s*display:\s*none;/);
     assert.match(styles, /\.session-action-optional-label\s*\{[^}]*width:\s*32px;[^}]*padding:\s*0;/);
+});
+
+
+test('session icon actions hide visible labels and preserve click disabled and delete modes', async () => {
+    const buttons = [...readBundledWebUiHtml().matchAll(/<button\b[^>]*data-icon-only="true"[^>]*>[\s\S]*?<\/button>/g)].map((match) => match[0]);
+    assert.strictEqual(buttons.length, 4);
+    const calls = [];
+    const ui = mountContextHealth(buttons.join(''), {
+        data: () => ({ activeSession: { sessionId: 'fixture' }, sessionDetailLoading: false, sessionsLoading: false,
+            sessionExporting: {}, sessionDeleting: {}, sessionTrashEnabled: false }),
+        methods: { t: (key) => key, getSessionExportKey: (session) => session.sessionId, getSessionFilePath: () => '/fixture.jsonl',
+            isDeleteAvailable: () => true, loadActiveSessionDetail: () => calls.push('refresh'), copySessionPath: () => calls.push('path'),
+            exportSession: () => calls.push('export'), deleteSession: () => calls.push('delete') }
+    });
+    try {
+        await ui.flush();
+        const controls = ui.find((node) => node.type === 'button');
+        for (const control of controls) {
+            assert.ok(control.props['aria-label'] && control.props.title);
+            assert.ok(control.children.some((node) => node.type === 'svg' && node.props['aria-hidden'] === 'true'));
+            assert.ok(control.children.filter((node) => node.type === 'span').every((node) => node.props.hidden !== undefined));
+            control.props.onClick();
+        }
+        assert.deepStrictEqual(calls.sort(), ['delete', 'export', 'path', 'refresh']);
+        const deletion = controls.find((node) => String(node.props.class).includes('btn-session-delete'));
+        assert.strictEqual(deletion.props['aria-label'], 'sessions.preview.deleteHard');
+        ui.vm.sessionTrashEnabled = true; ui.vm.sessionDeleting.fixture = true; ui.vm.sessionExporting.fixture = true; ui.vm.sessionDetailLoading = true;
+        await ui.flush();
+        assert.strictEqual(deletion.props.disabled, true);
+        assert.strictEqual(deletion.props['aria-label'], 'sessions.preview.moving');
+        assert.ok(controls.find((node) => String(node.props.class).includes('btn-session-export')).props.disabled);
+        assert.ok(controls.find((node) => String(node.props.class).includes('btn-session-refresh')).props.disabled);
+    } finally { ui.unmount(); }
 });

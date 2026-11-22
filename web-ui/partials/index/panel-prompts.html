@@ -118,8 +118,16 @@
                             <div v-if="promptHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
                             <div v-else-if="promptHistoryError" class="state-message error">{{ promptHistoryError }}</div>
                             <div v-else-if="!promptHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
-                            <div v-if="promptHistoryPreviewContent" class="prompt-history-preview-wrap">
+                            <div v-if="promptHistoryPreviewId && !promptHistoryLoading && !promptHistoryError" class="prompt-history-preview-wrap">
                                 <pre class="prompt-history-preview">{{ promptHistoryPreviewContent }}</pre>
+                                <div class="form-hint">{{ t('ecosystem.historyCompare') }} · +{{ promptHistoryComparison.stats.added }} / −{{ promptHistoryComparison.stats.removed }}</div>
+                                <div class="agents-diff-view prompt-history-diff" role="region" :aria-label="t('ecosystem.historyCompare')" tabindex="0">
+                                    <div v-for="(line, index) in promptHistoryComparison.lines" :key="index" :class="['agents-diff-line', line.type]">
+                                        <span class="agents-diff-line-sign">{{ line.type === 'add' ? '+' : (line.type === 'del' ? '−' : ' ') }}</span>
+                                        <span class="agents-diff-line-text">{{ line.value }}</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-mini btn-confirm-mini" @click="rollbackPromptHistory('agents')" :disabled="agentsSaving || promptHistoryLoading || agentsDiffVisible">{{ t('ecosystem.rollback') }}</button>
                                 <button type="button" class="btn-mini btn-confirm-mini" @click="applyPromptHistoryToEditor" :disabled="agentsSaving || agentsDiffVisible">{{ t('common.restoreToEditor') }}</button>
                             </div>
                         </div>
@@ -347,8 +355,16 @@
                                 <div v-if="sysHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
                                 <div v-else-if="sysHistoryError" class="state-message error">{{ sysHistoryError }}</div>
                                 <div v-else-if="!sysHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
-                                <div v-if="sysHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                <div v-if="sysHistoryPreviewId && !sysHistoryLoading && !sysHistoryError" class="prompt-history-preview-wrap">
                                     <pre class="prompt-history-preview">{{ sysHistoryPreviewContent }}</pre>
+                                <div class="form-hint">{{ t('ecosystem.historyCompare') }} · +{{ sysHistoryComparison.stats.added }} / −{{ sysHistoryComparison.stats.removed }}</div>
+                                <div class="agents-diff-view prompt-history-diff" role="region" :aria-label="t('ecosystem.historyCompare')" tabindex="0">
+                                    <div v-for="(line, index) in sysHistoryComparison.lines" :key="index" :class="['agents-diff-line', line.type]">
+                                        <span class="agents-diff-line-sign">{{ line.type === 'add' ? '+' : (line.type === 'del' ? '−' : ' ') }}</span>
+                                        <span class="agents-diff-line-text">{{ line.value }}</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-mini btn-confirm-mini" @click="rollbackPromptHistory('sys')" :disabled="sysPromptSaving || sysHistoryLoading || sysPromptDiffVisible">{{ t('ecosystem.rollback') }}</button>
                                     <button type="button" class="btn-mini btn-confirm-mini" @click="applySysHistoryToEditor" :disabled="sysPromptSaving || sysPromptDiffVisible">{{ t('common.restoreToEditor') }}</button>
                                 </div>
                             </div>

@@ -151,7 +151,7 @@ node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <s
 ## 有什么独特之处？
 
 找回对话之后，还可以继续管理日常工作所需的配置、Skills 与任务：
-- **统一会话浏览器**：集中浏览 Codex、Claude Code、Gemini CLI、CodeBuddy Code、WorkBuddy、Pi、OpenCode 与 Zed 的本地会话；检索、导出和删除的来源限制见[会话指南](https://sakurabytecore.github.io/codexmate/guide/sessions)。
+- **统一会话浏览器**：集中浏览 Codex、Claude Code、Gemini CLI、CodeBuddy Code、WorkBuddy、Pi、OpenCode 与 Zed 的本地会话；检索、导出和删除的来源限制见[会话指南](https://sakurabytecore.github.io/codexmate/guide/sessions)。会话详情默认显示五类预估 Token、构成条与健康评级，无需展开。
 - **OpenAI 兼容桥接**：通过归一化 Responses API，让 Codex 能够与任何支持 OpenAI 格式的 UI 配合使用；内建 Codex 转换会补齐并规范化 `User-Agent`、`Version`、`OpenAI-Beta`、`Originator` 等 Codex 指纹，对上游伪装为官方 Codex CLI 请求。
 - **Claude Provider 桥接**：通过内建本地 Claude 兼容代理，让 Claude Code 接入 OpenAI Chat Completions 兼容 provider 与 Ollama。
 - **OpenCode Provider 控制**：在 `~/.codexmate` 下维护 CodexMate 自有的 OpenCode 多 provider 存储，只将当前选中的 provider 投影到 OpenCode 原生配置，避免污染或误删用户已有配置。
@@ -178,8 +178,8 @@ node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <s
 | **OpenCode Provider 存储** | ✅ | 在 `~/.codexmate` 中保留多个 OpenCode provider，只将当前选中的 provider 投影到 OpenCode 原生配置 |
 | **Pi Provider 配置** | ✅ | 在 Web UI 中管理 Pi 供应商，写入 `~/.pi/agent/models.json`（未知字段无损保留），并切换 `~/.pi/agent/settings.json` 中的默认供应商/模型 |
 | **Provider 健康检查** | ✅ | 探测本地 Codex/Claude provider 路由，标记失败配置，并安全批量移除已选坏配置 |
-| **提示词模板** | ✅ | 支持变量的可复用提示词插件 |
-| **提示词文件编辑器** | ✅ | 编辑全局和项目级 CLAUDE.md / AGENTS.md，支持自动检测、路径切换与通用预设池。应用预设只更新编辑器，需手动保存才会写入文件。 |
+| **提示词模板** | ✅ | 调用时弹窗填写变量，支持单模板 JSON 分享、插件模板配置历史 Diff 与回滚。`git_diff` 需粘贴差异文本，不执行命令。 |
+| **提示词文件编辑器** | ✅ | 编辑全局及项目级 CLAUDE.md / AGENTS.md，支持通用预设池。应用预设先填写变量，只更新编辑器，需手动保存。历史支持版本 Diff；确认回滚后写入所选版本，保留原子备份，校验外部修改。 |
 | **MCP 集成** | ✅ | 通过 MCP stdio 暴露本地工具与资源 |
 | **自动更新** | ✅ | 通过 `codexmate update` 快速更新 CLI |
 

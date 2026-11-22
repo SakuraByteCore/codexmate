@@ -1,7 +1,18 @@
+import { buildLineDiff } from '../logic.agents-diff.mjs';
 import { estimatePromptTokenCount, buildPromptTokenDiffStats } from '../logic.prompts-token-count.mjs';
 
 export function createPromptsComputed() {
     return {
+        promptHistoryComparison() {
+            return buildLineDiff(this.promptHistoryPreviewContent, this.agentsContent);
+        },
+        sysHistoryComparison() {
+            return buildLineDiff(this.sysHistoryPreviewContent, this.sysPromptContent);
+        },
+        pluginHistoryComparison() {
+            const templates = this.promptTemplatesListRaw.filter((item) => item.isBuiltin !== true);
+            return buildLineDiff(this.pluginHistoryContent, JSON.stringify({ version: 1, templates }, null, 2) + '\n');
+        },
         agentsTokenCount() {
             return estimatePromptTokenCount(this.agentsContent);
         },

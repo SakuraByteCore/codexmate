@@ -1,5 +1,7 @@
 'use strict';
 
+const { writeTextAtomicWithBackup } = require('../lib/cli-config-engine');
+
 function createSystemPromptFileController(deps = {}) {
     const {
         fs,
@@ -120,11 +122,12 @@ function createSystemPromptFileController(deps = {}) {
                 const bucket = 'system_' + target.scope + '_' + (target.scope === 'project'
                     ? sanitizeSystemHistoryId(path.dirname(target.path))
                     : 'global');
-                backupPromptBeforeWrite(bucket, target.path);
+                const backup = backupPromptBeforeWrite(bucket, target.path);
+                if (backup && backup.error) return { error: backup.error };
                 sysHistoryBucket = bucket;
             }
             const finalContent = content.endsWith('\n') ? content : content + '\n';
-            fs.writeFileSync(target.path, finalContent, { encoding: 'utf8', mode: 0o600 });
+            writeTextAtomicWithBackup(target.path, finalContent, { fs });
             try { fs.chmodSync(target.path, 0o600); } catch (_) {}
         } catch (e) {
             return { error: '写入 system prompt 失败: ' + e.message };
@@ -146,6 +149,8 @@ function createSystemPromptFileController(deps = {}) {
         }
         return {
             ...resolved,
+            historyBucket: 'system_' + resolved.scope + '_' + (resolved.scope === 'project'
+                ? sanitizeSystemHistoryId(path.dirname(resolved.path)) : 'global'),
             exists,
             content,
             hash: hashContent(content)

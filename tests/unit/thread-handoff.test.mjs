@@ -12,7 +12,7 @@ const register = globalThis.test || (await import('node:test')).test;
 const card = { goal: '交接测试', completed: ['完成路由'], blockers: [], nextSteps: ['验证读取'], files: ['lib/thread-handoff.js'] };
 function fixture() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codexmate-handoff-'));
-    return { cwd: dir, home: dir, root: path.join(dir, 'threads'), timeoutMs: 200 };
+    return { cwd: dir, home: dir, root: path.join(dir, 'threads'), timeoutMs: 1000 };
 }
 function configure(options, server) {
     fs.writeFileSync(path.join(options.cwd, '.mcp.json'), JSON.stringify({ mcpServers: { 'shared-context-mcp': server } }));

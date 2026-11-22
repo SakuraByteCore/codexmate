@@ -151,7 +151,7 @@ Dùng mã bàn giao được trả về cho `<id>`, cùng tác nhân đích cho 
 ## Điểm nổi bật
 
 Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình, skill và tác vụ phục vụ công việc hằng ngày:
-- **Trình duyệt phiên thống nhất**: Xem phiên cục bộ từ Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode và Zed tại một nơi. Khả năng tìm kiếm, xuất và xóa tùy thuộc nguồn; xem [hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions).
+- **Trình duyệt phiên thống nhất**: Xem phiên cục bộ từ Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode và Zed tại một nơi. Khả năng tìm kiếm, xuất và xóa tùy thuộc nguồn; xem [hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions). Chi tiết phiên luôn hiển thị ước tính token theo năm nhóm, thanh tỷ lệ và mức sức khỏe ngữ cảnh.
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
 - **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
@@ -172,8 +172,8 @@ Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình,
 | **Hàng đợi tác vụ** | ✅ | Quy trình tự động có phụ thuộc, lưu tiến độ, khôi phục an toàn và tổng kết kết quả |
 | **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
 | **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
-| **Mẫu Prompt** | ✅ | Plugin prompt tái sử dụng được với hỗ trợ biến |
-| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md (bao gồm `~/.config/opencode/AGENTS.md` của OpenCode) và dùng kho preset chung. Áp dụng preset chỉ cập nhật editor; cần lưu thủ công để ghi vào tệp. |
+| **Mẫu Prompt** | ✅ | Hộp thoại điền biến khi gọi, chia sẻ một mẫu bằng JSON, lịch sử Diff và khôi phục cấu hình mẫu plugin. `git_diff` là văn bản được dán, không thực thi lệnh. |
+| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md toàn cục và theo dự án với kho preset chung. Điền biến trước khi áp dụng preset; cần lưu thủ công để ghi tệp. Lịch sử hiển thị Diff; xác nhận khôi phục sẽ ghi phiên bản đã chọn với bản sao lưu nguyên tử và kiểm tra thay đổi bên ngoài. |
 | **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
 | **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
 

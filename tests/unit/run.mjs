@@ -48,6 +48,10 @@ await import(pathToFileURL(path.join(__dirname, 'openclaw-persist-regression.tes
 await import(pathToFileURL(path.join(__dirname, 'agents-modal-guards.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'agents-files-project.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'system-prompt-files.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'prompts-ecosystem.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'context-health.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'context-health-ui.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'context-health-backend.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-actions-standalone.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-resume-command.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-header-actions-layout.test.mjs')));

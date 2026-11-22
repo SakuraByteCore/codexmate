@@ -919,3 +919,24 @@
         min-height: 0;
     }
 }
+
+
+/* 会话操作仅显示图标；保留旧标签节点与按钮契约。 */
+#panel-sessions .session-preview-actions button[data-icon-only="true"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    gap: 0;
+    flex-shrink: 0;
+}
+#panel-sessions .session-preview-actions button[data-icon-only="true"] > .session-action-label { display: none; }
+#panel-sessions .session-preview-actions button[data-icon-only="true"] svg { width: 16px; height: 16px; }
+@container session-preview (max-width: 620px) {
+    #panel-sessions .session-preview-actions { align-items: flex-start; }
+    #panel-sessions .session-secondary-actions { flex-wrap: wrap; }
+}

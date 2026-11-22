@@ -36,6 +36,8 @@ import { createSessionTrashMethods } from './app.methods.session-trash.mjs';
 import { createStartupClaudeMethods } from './app.methods.startup-claude.mjs';
 import { createSkillsMethods } from './skills.methods.mjs';
 import { createPluginsMethods } from './plugins.methods.mjs';
+import { createPromptEcosystemMethods } from './prompt-ecosystem.methods.mjs';
+import { createContextHealthMethods } from './context-health.methods.mjs';
 import { createI18nMethods } from './i18n.mjs';
 import { createWebhookMethods } from './app.methods.webhook.mjs';
 import { createWebUiPreferencesMethods } from './app.methods.web-ui-preferences.mjs';
@@ -90,6 +92,8 @@ export function createAppMethods() {
         }),
         ...createSkillsMethods({ api }),
         ...createPluginsMethods(),
+        ...createPromptEcosystemMethods({ api }),
+        ...createContextHealthMethods({ api }),
         ...createAgentsMethods({ api, apiWithMeta }),
         ...createSystemPromptMethods({ api, apiWithMeta }),
         ...createProvidersMethods({ api }),

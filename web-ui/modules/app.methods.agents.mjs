@@ -908,7 +908,10 @@ export function createAgentsMethods(options = {}) {
         },
         async applyPromptPresetToEditor(preset) {
             if (!preset || typeof preset.content !== 'string' || !preset.content) return;
-            this.agentsContent = preset.content;
+            const content = typeof this.resolvePromptTemplateInvocation === 'function'
+                ? await this.resolvePromptTemplateInvocation({ template: preset.content }) : preset.content;
+            if (content === null) return;
+            this.agentsContent = content;
             this.onAgentsContentInput();
             this.selectedPromptPresetId = preset.id;
             this.showMessage(this.t('prompts.presets.toast.pasted'), 'success');
@@ -981,6 +984,8 @@ export function createAgentsMethods(options = {}) {
                 ? bucketArg.trim()
                 : (this.promptHistoryBucket || resolveAgentsHistoryBucket(this));
             this.promptHistoryBucket = bucket;
+            const requestToken = Symbol('history-list');
+            this._promptHistoryRequestToken = requestToken;
             this.promptHistoryLoading = true;
             this.promptHistoryError = '';
             this.promptHistoryItems = [];
@@ -988,20 +993,24 @@ export function createAgentsMethods(options = {}) {
             this.promptHistoryPreviewContent = '';
             try {
                 const res = await api('list-prompt-history', { bucket });
+                if (this._promptHistoryRequestToken !== requestToken || !this.promptHistoryVisible || this.promptHistoryBucket !== bucket) return;
                 if (res && res.error) {
                     this.promptHistoryError = res.error;
                     return;
                 }
                 this.promptHistoryItems = Array.isArray(res) ? res : [];
             } catch (e) {
+                if (this._promptHistoryRequestToken !== requestToken) return;
                 this.promptHistoryError = this.t('toast.load.fail');
             } finally {
-                this.promptHistoryLoading = false;
+                if (this._promptHistoryRequestToken === requestToken) this.promptHistoryLoading = false;
             }
         },
 
         closePromptHistory() {
             this.promptHistoryVisible = false;
+            this._promptHistoryRequestToken = null;
+            this.promptHistoryLoading = false;
             this.promptHistoryPreviewId = '';
             this.promptHistoryPreviewContent = '';
             this.promptHistoryError = '';
@@ -1011,10 +1020,15 @@ export function createAgentsMethods(options = {}) {
             if (!item || !item.id) return;
             if (this.promptHistoryLoading) return;
             if (this.promptHistoryPreviewId === item.id && this.promptHistoryPreviewContent) return;
+            const bucket = this.promptHistoryBucket;
+            const requestToken = Symbol('history-preview');
+            this._promptHistoryRequestToken = requestToken;
+            this.promptHistoryLoading = true;
             this.promptHistoryPreviewId = item.id;
             this.promptHistoryPreviewContent = '';
             try {
-                const res = await api('get-prompt-history', { bucket: this.promptHistoryBucket, id: item.id });
+                const res = await api('get-prompt-history', { bucket, id: item.id });
+                if (this._promptHistoryRequestToken !== requestToken || !this.promptHistoryVisible || this.promptHistoryBucket !== bucket) return;
                 if (res && res.error) {
                     this.promptHistoryError = res.error;
                     this.promptHistoryPreviewId = '';
@@ -1022,8 +1036,11 @@ export function createAgentsMethods(options = {}) {
                 }
                 this.promptHistoryPreviewContent = typeof res.content === 'string' ? res.content : '';
             } catch (e) {
+                if (this._promptHistoryRequestToken !== requestToken) return;
                 this.promptHistoryError = this.t('toast.load.fail');
                 this.promptHistoryPreviewId = '';
+            } finally {
+                if (this._promptHistoryRequestToken === requestToken) this.promptHistoryLoading = false;
             }
         },
 

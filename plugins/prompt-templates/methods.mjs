@@ -64,7 +64,7 @@ function nowIso() {
     return new Date().toISOString();
 }
 
-function normalizePromptTemplateDraft(draft) {
+export function normalizePromptTemplateDraft(draft) {
     const safe = draft && typeof draft === 'object' ? draft : {};
     return {
         id: typeof safe.id === 'string' ? safe.id : '',
@@ -79,8 +79,36 @@ function normalizePromptTemplateDraft(draft) {
     };
 }
 
+export function buildPromptTemplateSharePayload(template) {
+    const draft = normalizePromptTemplateDraft(template);
+    if (!draft.id || !draft.name.trim() || !draft.template.trim()) return '';
+    return JSON.stringify([draft], null, 2);
+}
+
 export function createPromptTemplatesMethods() {
     return {
+        async sharePromptTemplate() {
+            const payload = buildPromptTemplateSharePayload(this.promptTemplateDraft);
+            if (!payload) { this.showMessage(this.t('toast.export.empty'), 'info'); return false; }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(payload);
+                    this.showMessage(this.t('toast.copy.ok'), 'success');
+                    return true;
+                }
+            } catch (_) {}
+            if (typeof this.fallbackCopyText === 'function' && this.fallbackCopyText(payload)) {
+                this.showMessage(this.t('toast.copy.ok'), 'success');
+                return true;
+            }
+            if (typeof this.downloadTextFile === 'function') {
+                this.downloadTextFile(`prompt-template-${Date.now()}.json`, payload, 'application/json;charset=utf-8');
+                this.showMessage(this.t('toast.export.ok'), 'success');
+                return true;
+            }
+            this.showMessage(this.t('toast.copy.fail'), 'error');
+            return false;
+        },
         resetPromptComposerVarValues() {
             this.promptComposerVarValuesRaw = {};
             persistComposerValuesForTemplate(this.promptComposerSelectedTemplateId, {});
@@ -257,7 +285,14 @@ export function createPromptTemplatesMethods() {
         },
 
         async copyPromptComposerRendered() {
-            const text = typeof this.promptComposerRendered === 'string' ? this.promptComposerRendered.trim() : '';
+            let text = typeof this.promptComposerRendered === 'string' ? this.promptComposerRendered.trim() : '';
+            if (typeof this.resolvePromptTemplateInvocation === 'function' && this.promptComposerActiveTemplate) {
+                const rendered = await this.resolvePromptTemplateInvocation({
+                    template: this.promptComposerActiveTemplate.template, values: this.promptComposerVarValues
+                });
+                if (rendered === null) return;
+                text = rendered.trim();
+            }
             if (!text) {
                 this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.empty') : 'Nothing to copy', 'info');
                 return;
@@ -374,7 +409,14 @@ export function createPromptTemplatesMethods() {
         },
 
         async copyRenderedPrompt() {
-            const text = typeof this.renderedPrompt === 'string' ? this.renderedPrompt.trim() : '';
+            let text = typeof this.renderedPrompt === 'string' ? this.renderedPrompt.trim() : '';
+            if (typeof this.resolvePromptTemplateInvocation === 'function' && this.promptTemplateDraft) {
+                const rendered = await this.resolvePromptTemplateInvocation({
+                    template: this.promptTemplateDraft.template, values: this.promptTemplateVarValues
+                });
+                if (rendered === null) return;
+                text = rendered.trim();
+            }
             if (!text) {
                 this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.empty') : 'Nothing to copy', 'info');
                 return;
@@ -422,6 +464,7 @@ export function createPromptTemplatesMethods() {
             } else {
                 list.unshift(entry);
             }
+            if (typeof this.persistPluginTemplates === 'function' && !await this.persistPluginTemplates(list)) return false;
             this.promptTemplatesListRaw = list;
             persistPromptTemplatesToStorage(list, localStorage);
             this.promptTemplateDraftRaw = entry;
@@ -469,6 +512,7 @@ export function createPromptTemplatesMethods() {
 
             const list = Array.isArray(this.promptTemplatesListRaw) ? this.promptTemplatesListRaw : [];
             const next = list.filter((item) => !(item && item.id === draft.id));
+            if (typeof this.persistPluginTemplates === 'function' && !await this.persistPluginTemplates(next)) return false;
             this.promptTemplatesListRaw = next;
             persistPromptTemplatesToStorage(next, localStorage);
             this.promptTemplateDraftRaw = null;
@@ -552,6 +596,7 @@ export function createPromptTemplatesMethods() {
                 if (index >= 0) list[index] = entry;
                 else list.unshift(entry);
             }
+            if (typeof this.persistPluginTemplates === 'function' && !await this.persistPluginTemplates(list)) return false;
             this.promptTemplatesListRaw = list;
             persistPromptTemplatesToStorage(list, localStorage);
             this.showMessage(typeof this.t === 'function' ? this.t('toast.import.ok') : 'Imported', 'success');

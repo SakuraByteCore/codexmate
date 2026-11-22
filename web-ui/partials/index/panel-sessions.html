@@ -17,6 +17,7 @@
                             {{ sessionStandaloneTitle }}
                             <span v-if="sessionStandaloneSourceLabel"> · {{ sessionStandaloneSourceLabel }}</span>
                         </div>
+                        <!-- @include ./context-health.html -->
                         <pre class="session-standalone-text">{{ sessionStandaloneText }}</pre>
                     </div>
                 </div>
@@ -254,11 +255,11 @@
                                     </div>
                                     <div class="session-actions session-preview-actions">
                                         <div class="session-secondary-actions">
-                                            <button class="btn-session-refresh has-label session-action-optional-label" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
+                                            <button class="btn-session-refresh has-label session-action-optional-label" data-icon-only="true" @click="loadActiveSessionDetail" :disabled="sessionDetailLoading || !activeSession"
                                             :title="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')"
                                             :aria-label="sessionDetailLoading ? t('sessions.preview.loading') : t('sessions.preview.refresh')">
-                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.8"/><path d="M13.5 8a5.5 5.5 0 0 1-9.4 3.8"/><polyline points="2.5 2 2.5 5 5.5 5"/><polyline points="13.5 14 13.5 11 10.5 11"/></svg>
-                                                <span class="session-action-label session-action-optional-text">{{ t('sessions.preview.refresh') }}</span>
+                                                <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.8"/><path d="M13.5 8a5.5 5.5 0 0 1-9.4 3.8"/><polyline points="2.5 2 2.5 5 5.5 5"/><polyline points="13.5 14 13.5 11 10.5 11"/></svg>
+                                                <span class="session-action-label session-action-optional-text" hidden aria-hidden="true">{{ t('sessions.preview.refresh') }}</span>
                                             </button>
                                             <div class="session-link-group"><button
                                             class="btn-session-open"
@@ -276,37 +277,39 @@
                                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2h-8.5A1.5 1.5 0 0 0 2 3.5v8A1.5 1.5 0 0 0 3.5 13h8a1.5 1.5 0 0 0 1.5-1.5v-3"/><path d="M13 2v4h-4"/><path d="M13 2L7 8"/></svg>
                                         </button></div>
                                             <button
-                                            class="btn-session-open has-label session-action-optional-label"
+                                            class="btn-session-open has-label session-action-optional-label" data-icon-only="true"
                                             @click="copySessionPath(activeSession)"
                                             :disabled="!activeSession || !getSessionFilePath(activeSession)"
                                             :title="t('sessions.preview.copyPath')"
                                             :aria-label="t('sessions.preview.copyPath')">
-                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z"/></svg>
-                                                <span class="session-action-label session-action-optional-text">{{ t('sessions.preview.copyPath') }}</span>
+                                                <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z"/></svg>
+                                                <span class="session-action-label session-action-optional-text" hidden aria-hidden="true">{{ t('sessions.preview.copyPath') }}</span>
                                         </button>
                                         </div>
                                         <div class="session-primary-actions">
                                             <button
-                                            class="btn-session-export has-label"
+                                            class="btn-session-export has-label" data-icon-only="true"
                                             @click="exportSession(activeSession)"
                                             :disabled="!activeSession || sessionExporting[getSessionExportKey(activeSession)]"
                                             :title="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')"
                                             :aria-label="(activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export')">
-                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"/><polyline points="4 7 8 10.5 12 7"/><path d="M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12"/></svg>
-                                                <span class="session-action-label">{{ (activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export') }}</span>
+                                                <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"/><polyline points="4 7 8 10.5 12 7"/><path d="M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12"/></svg>
+                                                <span class="session-action-label" hidden aria-hidden="true">{{ (activeSession && sessionExporting[getSessionExportKey(activeSession)]) ? t('sessions.preview.exporting') : t('sessions.preview.export') }}</span>
                                             </button>
                                             <button
                                             v-if="isDeleteAvailable(activeSession)"
-                                            class="btn-session-delete has-label session-delete-text-button"
+                                            class="btn-session-delete has-label session-delete-text-button" data-icon-only="true"
                                             @click="deleteSession(activeSession)"
                                             :disabled="!activeSession || sessionsLoading || sessionDeleting[getSessionExportKey(activeSession)]"
                                             :title="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))"
                                             :aria-label="(activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash'))">
-                                                <span class="session-action-label">{{ (activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash')) }}</span>
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2.5 4.5h11M6 4.5V2.5h4v2"/><path d="m4 4.5 .5 9h7l.5-9M6.5 7v4M9.5 7v4"/></svg>
+                                                <span class="session-action-label" hidden aria-hidden="true">{{ (activeSession && sessionDeleting[getSessionExportKey(activeSession)]) ? (sessionTrashEnabled === false ? t('sessions.preview.deleting') : t('sessions.preview.moving')) : (sessionTrashEnabled === false ? t('sessions.preview.deleteHard') : t('sessions.preview.moveToTrash')) }}</span>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
+                                <!-- @include ./context-health.html -->
                                 <div class="session-export-feedback">
                                     <p v-if="sessionExportNotice && sessionExportNotice.key === getSessionExportKey(activeSession)" class="session-export-notice" role="status">{{ t('sessions.export.truncated') }}</p>
                                 </div>
