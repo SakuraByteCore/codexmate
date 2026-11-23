@@ -285,6 +285,11 @@ export function createAgentsMethods(options = {}) {
             }
         },
         handleGlobalKeydown(event) {
+            if (this.configChangePreview) {
+                if (event.key === 'Escape') { event.preventDefault(); this.closeConfigChangePreview(); }
+                else if (event.key === 'Tab') this.trapModalFocus(event);
+                return;
+            }
             if (!event) {
                 return;
             }

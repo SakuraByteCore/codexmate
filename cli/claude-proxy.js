@@ -1511,7 +1511,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
         });
     }
 
-    async function startBuiltinClaudeProxyRuntime(payload = {}) {
+    async function startBuiltinClaudeProxyRuntime(payload = {}, options = {}) {
         if (runtime) {
             return {
                 error: 'Claude 兼容代理已在运行',
@@ -1522,7 +1522,7 @@ function createBuiltinClaudeProxyRuntimeController(deps = {}) {
             };
         }
 
-        const saveResult = saveBuiltinClaudeProxySettings(payload);
+        const saveResult = saveBuiltinClaudeProxySettings(payload, options);
         if (saveResult.error) {
             return { error: saveResult.error };
         }

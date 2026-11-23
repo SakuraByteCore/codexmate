@@ -382,3 +382,26 @@ test('provider cache backend avoids absolute path response and readConfig restor
     assert.match(cli, /const redactSecretString = \(text\) => String\(text \|\| ''\) \? '\*\*\*' : ''/);
     assert.doesNotMatch(cli, /valueText\.slice\(0, 4\).*valueText\.slice\(-4\)/s);
 });
+
+test('provider cache timeout aborts its read and allows a later refresh', async () => {
+    const methods = createProviderCacheMethods({
+        cacheLoadTimeoutMs: 10,
+        api: async (_action, _params, { signal }) => {
+            if (!context.providerCacheLoadedOnce) {
+                requestSignal = signal;
+                return new Promise(() => {});
+            }
+            return { groups: [], generatedAt: 'recovered' };
+        }
+    });
+    let requestSignal;
+    const context = { ...createContext(), ...methods };
+    await context.loadProviderCacheRecords();
+    assert.strictEqual(requestSignal.aborted, true);
+    assert.strictEqual(context.providerCacheLoading, false);
+    assert.strictEqual(context.providerCacheError, 'modal.providerCache.loadFailed');
+    context.providerCacheLoadedOnce = true;
+    await context.loadProviderCacheRecords({ forceRefresh: true });
+    assert.strictEqual(context.providerCacheError, '');
+    assert.strictEqual(context.providerCacheLoadedAt, 'recovered');
+});

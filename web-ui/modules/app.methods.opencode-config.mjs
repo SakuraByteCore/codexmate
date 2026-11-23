@@ -160,6 +160,7 @@ export function createOpencodeConfigMethods(options = {}) {
             this.opencodeError = '';
             try {
                 const res = await api('apply-opencode-config', { content: this.opencodeContent });
+                if (res && res.canceled) return;
                 if (res && res.error) {
                     this.opencodeError = res.error;
                     this.showMessage(res.error, 'error');
@@ -205,6 +206,7 @@ export function createOpencodeConfigMethods(options = {}) {
                     maxTokens: this.opencodeMaxTokens,
                     reasoningEffort: this.opencodeReasoningEffort
                 });
+                if (res && res.canceled) return;
                 if (res && res.error) {
                     this.opencodeError = res.error;
                     this.showMessage(res.error, 'error');

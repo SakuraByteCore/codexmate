@@ -1,0 +1,25 @@
+    <section v-if="mainTab === 'config' && lastConfigChange && lastConfigChange.target === configMode" class="config-change-last" aria-live="polite">
+        <span>{{ t('changes.last') }} · {{ lastConfigChange.createdAt }}</span>
+        <button type="button" class="btn-tool" @click="undoLastConfigChange" :disabled="configChangeBusy || configChangeApplying || !isToolConfigWriteAllowed(configMode)">{{ t('changes.undo') }}</button>
+    </section>
+    <teleport to="body">
+        <div v-if="configChangePreview" class="modal-overlay config-change-overlay" @click.self="closeConfigChangePreview()" @keydown="handleConfigChangeKeydown">
+            <section class="modal modal-wide config-change-modal" role="dialog" aria-modal="true" aria-labelledby="config-change-title" aria-describedby="config-change-hint" :aria-busy="configChangeApplying">
+                <h2 id="config-change-title" class="modal-title">{{ t('changes.preview') }}</h2>
+                <p id="config-change-hint" class="form-hint">{{ t('changes.hint') }}</p>
+                <div class="config-change-files" tabindex="0" :aria-label="t('changes.files')">
+                    <article v-for="file in configChangePreview.files" :key="file.path" class="config-change-file">
+                        <h3><span>{{ t('changes.operation.' + file.operation) }}</span> <code>{{ file.path }}</code></h3>
+                        <p v-if="file.hidden" class="form-hint">{{ t('changes.hidden') }}</p>
+                        <p v-else-if="file.maskedOnly" class="form-hint">{{ t('changes.maskedOnly') }}</p>
+                        <pre v-else class="config-change-diff"><template v-for="(line, index) in file.diff.lines" :key="index"><span :class="['config-change-line', 'config-change-line-' + line.type]">{{ line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' ' }} {{ line.text || line.value }}</span></template></pre>
+                    </article>
+                </div>
+                <p v-if="configChangeError" class="form-hint form-error" role="alert">{{ configChangeError }}</p>
+                <div class="btn-group config-change-actions">
+                    <button ref="configChangeCancel" type="button" class="btn btn-cancel" @click="closeConfigChangePreview()" :disabled="configChangeApplying">{{ t('common.cancel') }}</button>
+                    <button type="button" class="btn btn-confirm" @click="confirmConfigChange" :disabled="configChangeApplying || !!configChangeError">{{ configChangeApplying ? t('changes.saving') : t('changes.apply') }}</button>
+                </div>
+            </section>
+        </div>
+    </teleport>

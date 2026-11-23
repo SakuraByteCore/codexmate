@@ -189,6 +189,7 @@ export function createProvidersMethods(options = {}) {
                 }
                 const suggestedModel = validation.model;
                 const res = await api('add-provider', payload);
+                if (res && res.canceled) return;
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                     return;
@@ -284,6 +285,7 @@ export function createProvidersMethods(options = {}) {
             }
             try {
                 const res = await api('delete-provider', { name });
+                if (res && res.canceled) return;
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                     return;
@@ -438,6 +440,7 @@ export function createProvidersMethods(options = {}) {
             }
             try {
                 const res = await api('update-provider', params);
+                if (res && res.canceled) return;
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                     return;
@@ -490,6 +493,7 @@ export function createProvidersMethods(options = {}) {
             this.resetConfigLoading = true;
             try {
                 const res = await api('reset-config');
+                if (res && res.canceled) return;
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                     return;
@@ -511,6 +515,7 @@ export function createProvidersMethods(options = {}) {
             try {
                 const modelName = this.newModelName.trim();
                 const res = await api('add-model', { model: modelName });
+                if (res && res.canceled) return;
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                 } else {
@@ -538,6 +543,7 @@ export function createProvidersMethods(options = {}) {
         async removeModel(model) {
             try {
                 const res = await api('delete-model', { model });
+                if (res && res.canceled) return;
                 if (res.error) {
                     this.showMessage(res.error, 'error');
                 } else {

@@ -158,6 +158,7 @@ After finding your conversations, manage the configuration, skills, and tasks us
 - **KiloCode Config Bridge**: Configure KiloCode providers from the CLI or Web UI, writing to `~/.config/kilo/kilo.jsonc` while preserving stored API keys.
 - **Pi Provider Config**: Manage Pi providers from the Web UI with lossless round-trip writes to `~/.pi/agent/models.json`, auto-fetched remote model lists, and one-click default provider/model switching via `~/.pi/agent/settings.json`.
 - **Provider Health Cleanup**: Probe local Codex and Claude provider routes, surface failed configs in one modal, and bulk-clean selected broken providers without touching healthy or protected entries.
+- **Configuration Preview and Undo**: Preview affected paths and redacted field changes before writing any of the six tools. Detect external edits since loading or preview, and undo the latest change per tool, including after a server restart. The existing preview setting controls the dialog; turning it off keeps conflict checks and undo.
 - **Skills Marketplace**: A local-first market to share and import skills between different agent apps.
 - **Prompt File Editor**: Unified editor for global and project-level `CLAUDE.md` and `AGENTS.md` (including OpenCode's `~/.config/opencode/AGENTS.md`) with auto-detection of project paths, plus a shared preset pool for reusable prompts.
 - **Task Orchestrator**: Automatically advance existing workflows, persist progress and results, and request intervention only when blocked.

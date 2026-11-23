@@ -9,7 +9,8 @@ const require = createRequire(import.meta.url);
 const fs = require('fs');
 
 const cliPath = path.join(__dirname, '..', '..', 'cli.js');
-const cliContent = fs.readFileSync(cliPath, 'utf-8');
+// Startup contracts span the unchanged CLI wiring and the extracted lifecycle.
+const cliContent = fs.readFileSync(cliPath, 'utf-8') + '\n' + fs.readFileSync(require.resolve('../../lib/web-server.js'), 'utf-8');
 const skillsPath = path.join(__dirname, '..', '..', 'cli', 'skills.js');
 const skillsContent = fs.readFileSync(skillsPath, 'utf-8');
 
@@ -107,7 +108,11 @@ function extractFunctionBySignature(source, signature, funcName) {
 
 function instantiateFunction(funcSource, funcName, bindings = {}) {
     // Existing route unit tests isolate the outer startup gate; HTTP tests cover it.
-    if (funcName === 'createWebServer') bindings = { ...bindings,
+    if (funcName === 'createWebServer') bindings = {
+        createWebServerLifecycle: require('../../lib/web-server.js').createWebServerLifecycle,
+        CONFIG_CHANGE_READERS: {},
+        configChanges: { isBusy: () => false },
+        ...bindings,
         createStartupAuth: token => ({ token: token || 'unit-startup-token', middleware: (_req, _res, next) => next() }) };
 
     const bindingNames = Object.keys(bindings);

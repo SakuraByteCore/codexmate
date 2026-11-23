@@ -1,3 +1,4 @@
+import { withRequestDeadline } from '../../web-ui/modules/request-deadline.mjs';
 import assert from 'assert';
 import { createRequire } from 'module';
 import {
@@ -50,6 +51,9 @@ function extractMethodAsFunction(source, signature, methodName) {
 }
 
 function instantiateFunction(funcSource, funcName, bindings = {}) {
+    if (funcName === 'loadAll' || funcName === 'refreshClaudeSelectionFromSettings') {
+        bindings = { withRequestDeadline, configLoadTimeoutMs: 6000, ...bindings };
+    }
     const bindingNames = Object.keys(bindings);
     const bindingValues = Object.values(bindings);
     return Function(...bindingNames, `${funcSource}\nreturn ${funcName};`)(...bindingValues);

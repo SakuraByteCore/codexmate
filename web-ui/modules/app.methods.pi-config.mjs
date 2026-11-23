@@ -58,6 +58,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             else updates.defaultModel = '';
             try {
                 const result = await apiClient('write-pi-settings', updates);
+                if (result && result.canceled) return;
                 if (result && result.error) throw new Error(result.error);
                 await this.loadPiSettings();
                 this.message = '已切换为使用该供应商';
@@ -75,7 +76,8 @@ export function createPiConfigMethods({ api: apiClient }) {
             const existing = providers[providerId] || {};
             const updated = { ...providers };
             delete updated[providerId];
-            await this.savePiProviders(updated);
+            const result = await this.savePiProviders(updated);
+            if (result && (result.canceled || result.error)) return result;
             return { success: true, provider: existing };
         },
         async persistPiProvider(providerId, values) {
@@ -137,7 +139,9 @@ export function createPiConfigMethods({ api: apiClient }) {
                     merged.id = providerId;
                     if (merged.name === undefined) merged.name = providerId;
                 }
-                await this.persistPiProvider(providerId, merged);
+                const result = await this.persistPiProvider(providerId, merged);
+                if (result && result.canceled) return;
+                if (result && result.error) throw new Error(result.error);
                 this.piProviders = { ...this.piProviders, [providerId]: merged };
                 this.piProviderIds = Object.keys(this.piProviders).sort();
                 this.resetPiProviderEditing();
@@ -421,7 +425,9 @@ export function createPiConfigMethods({ api: apiClient }) {
                 danger: true
             });
             if (!confirmed) return;
-            await this.removePiProvider(providerId);
+            const result = await this.removePiProvider(providerId);
+            if (result && result.canceled) return;
+            if (result && result.error) { this.message = result.error; this.messageType = 'error'; return; }
             const updated = { ...this.piProviders };
             delete updated[providerId];
             this.piProviders = updated;
@@ -486,6 +492,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piFileJsonSaving = true;
             try {
                 const result = await apiClient('write-pi-settings', { settings: parsed.value });
+                if (result && result.canceled) return;
                 if (result && result.error) throw new Error(result.error);
                 this.piSettingsJsonError = '';
                 this.piSettingsJsonDraft = JSON.stringify(parsed.value, null, 2);
@@ -511,6 +518,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piFileJsonSaving = true;
             try {
                 const result = await apiClient('write-pi-models', { file: parsed.value });
+                if (result && result.canceled) return;
                 if (result && result.error) throw new Error(result.error);
                 await this.loadPiSources();
                 this.message = 'models.json 已保存';
@@ -640,6 +648,7 @@ export function createPiConfigMethods({ api: apiClient }) {
             this.piHistoryApplying = true;
             try {
                 const res = await api('apply-pi-config-history', { target: this.piHistoryTarget, id: this.piHistoryPreviewId });
+                if (res && res.canceled) return;
                 if (res && res.error) {
                     this.showMessage(res.error, 'error');
                     return;

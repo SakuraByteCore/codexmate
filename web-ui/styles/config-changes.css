@@ -1,0 +1,30 @@
+.config-change-last {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+}
+.config-change-overlay { z-index: 160; }
+.config-change-modal {
+    display: flex;
+    flex-direction: column;
+    max-height: 88dvh;
+    gap: 16px;
+}
+.config-change-files {
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+.config-change-file + .config-change-file { margin-top: 24px; }
+.config-change-file h3 { font-size: 14px; margin: 0 0 8px; }
+.config-change-file code { overflow-wrap: anywhere; font-weight: normal; }
+.config-change-diff { margin: 0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.config-change-line { display: block; min-height: 1.6em; }
+.config-change-line-add { background: color-mix(in srgb, var(--success, #27834b) 12%, transparent); }
+.config-change-line-del { background: color-mix(in srgb, var(--danger, #b34646) 12%, transparent); }
+.config-change-actions { margin-top: 0; flex-shrink: 0; }
+.config-change-actions button, .config-change-last button { min-height: 44px; }

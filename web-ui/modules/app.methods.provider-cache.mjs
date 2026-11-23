@@ -1,5 +1,7 @@
+import { withRequestDeadline } from './request-deadline.mjs';
+
 export function createProviderCacheMethods(options = {}) {
-    const { api } = options;
+    const { api, cacheLoadTimeoutMs = 6000 } = options;
 
     return {
         async openProviderCacheModal(options = {}) {
@@ -41,7 +43,10 @@ export function createProviderCacheMethods(options = {}) {
             }
             this.providerCacheError = '';
             try {
-                const res = await api('get-provider-cache-records');
+                const res = await withRequestDeadline(
+                    signal => api('get-provider-cache-records', {}, { signal }),
+                    { timeoutMs: cacheLoadTimeoutMs }
+                );
                 if (!isLatestRequest()) return;
                 if (res && res.error) {
                     this.providerCacheError = res.error;
@@ -52,7 +57,8 @@ export function createProviderCacheMethods(options = {}) {
                 this.providerCacheLoadedAt = this.providerCacheRecords.generatedAt || new Date().toISOString();
             } catch (e) {
                 if (!isLatestRequest()) return;
-                this.providerCacheError = e && e.message ? e.message : this.t('modal.providerCache.loadFailed');
+                this.providerCacheError = e && e.message && e.name !== 'TimeoutError'
+                    ? e.message : this.t('modal.providerCache.loadFailed');
             } finally {
                 if (isLatestRequest() && !background) {
                     this.providerCacheLoading = false;

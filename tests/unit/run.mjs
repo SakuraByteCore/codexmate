@@ -1,119 +1,68 @@
 import path from 'path';
+import { spawnSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { discoverUnitTests } from './registration.mjs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const tests = [];
-globalThis.test = (name, fn) => tests.push({ name, fn });
-
-await import(pathToFileURL(path.join(__dirname, 'web-ui-logic.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-runtime-navigation-regression.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'api-module.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-startup-init.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'reset-main.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-query.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-export-range.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-url-canonicalization.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'mcp-stdio.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'thread-handoff.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-startup-auth.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'workflow-engine.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'task-codex-exec-windows.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'skills-modal-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'skills-market-runtime.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'skills-pi-target-backend.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'context-recovery-skill.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'readme-docs-consistency.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'lan-access-auth-docs.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'http-access-control.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'config-tabs-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'opencode-config-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'opencode-provider-store-backend.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'kilocode-config-cli.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'kilocode-config-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'compact-layout-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-source-bundle.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'startup-navigation-flicker.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'startup-claude-star-prompt.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'toast-message-translation.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'install-methods.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'cli-help.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'analytics-export-args.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'cli-network-utils.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'config-health-module.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'openclaw-core.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'openclaw-editing.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'openclaw-persist-regression.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'agents-modal-guards.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'agents-files-project.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'system-prompt-files.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'prompts-ecosystem.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'context-health.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'context-health-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'context-health-backend.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-actions-standalone.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-resume-command.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-header-actions-layout.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-browser-timeline-regression.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-workspace-summary.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-list-title-export-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-actions-layout.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'sidebar-language-dropdown.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'sidebar-tab-top-spacing.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'skills-backup-export.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'trash-panel-layout.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-detail-preview-fast.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-usage.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-usage-backend.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'agents-diff-ui.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'prompts-markdown-editor.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'text-diff.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'claude-settings-sync.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'unzip-ext.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'provider-share-command.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-preferences.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'prompt-presets.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'provider-cache-records.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'config-engine.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'providers-validation.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'provider-default-names.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'provider-switch-regression.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'codex-proxy-options.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'builtin-proxy-responses-shim.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'claude-proxy-adapter.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'local-bridge-claude-target-api.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'coderabbit-workflows.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'release-changelog.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'update-version-status.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'ci-workflow-contract.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'lint-contract.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'npm-package-files.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-tab-switch-performance.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'session-trash-state.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-restart.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-ui-behavior-parity.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'i18n-locales.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'text-tools.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'web-run-host.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'opencode-agents-file.test.mjs')));
-await import(pathToFileURL(path.join(__dirname, 'prompts-path-reference.test.mjs')));
-
-let failures = 0;
-for (const { name, fn } of tests) {
-    try {
-        await fn();
-        // console.log(`\u2713 ${name}`);
-    } catch (err) {
-        failures += 1;
-        console.error(`\u2717 ${name}`);
-        console.error(err);
+const RUNNER_PATH = fileURLToPath(import.meta.url);
+const UNIT_DIRECTORY = path.dirname(RUNNER_PATH);
+const SUITE_TIMEOUT_MS = 30000;
+const LEGACY_SUITE_FILE_LIMIT = 50;
+const LEGACY_MODE = '--legacy';
+const isLegacyWorker = process.argv[2] === LEGACY_MODE;
+const requestedNames = process.argv.slice(isLegacyWorker ? 3 : 2);
+const inventory = discoverUnitTests();
+for (const name of requestedNames) {
+    if (!inventory.some(entry => entry.name === name && entry.runner !== 'archived')) {
+        throw new Error(`Unknown or archived unit test: ${name}`);
     }
 }
+const selected = inventory.filter(entry => !requestedNames.length || requestedNames.includes(entry.name));
 
-if (failures) {
-    console.error(`Failed ${failures} test(s).`);
-    process.exit(1);
+if (isLegacyWorker) {
+    const cases = [];
+    let currentFile = '';
+    globalThis.test = (name, fn) => cases.push({ name, fn, file: currentFile });
+    let failures = 0;
+    for (const entry of selected.filter(entry => entry.runner === 'legacy')) {
+        currentFile = entry.name;
+        try {
+            await import(pathToFileURL(path.join(UNIT_DIRECTORY, entry.name)));
+        } catch (error) {
+            failures += 1;
+            console.error(`Import failed: ${entry.name}`, error);
+        }
+    }
+    for (const { name, fn, file } of cases) {
+        try {
+            await fn();
+        } catch (error) {
+            failures += 1;
+            console.error(`Failed: ${file}: ${name}`, error);
+        }
+    }
+    console.log(`Legacy unit tests: ${cases.length} registered, ${failures} failed.`);
+    // The worker owns its timers; exit only after every registered assertion finishes.
+    process.exit(failures || process.exitCode ? 1 : 0);
 } else {
-    console.log(`All ${tests.length} tests passed.`);
+    for (const entry of selected.filter(entry => entry.runner === 'archived')) {
+        console.log(`Archived unit test: ${entry.name}: ${entry.reason}`);
+    }
+    const legacyFiles = selected.filter(entry => entry.runner === 'legacy').map(entry => entry.name);
+    const nodeFiles = selected.filter(entry => ['node', 'standalone'].includes(entry.runner)).map(entry => path.join(UNIT_DIRECTORY, entry.name));
+    const suites = [];
+    for (let offset = 0; offset < legacyFiles.length; offset += LEGACY_SUITE_FILE_LIMIT) {
+        const files = legacyFiles.slice(offset, offset + LEGACY_SUITE_FILE_LIMIT);
+        suites.push({ name: `legacy ${offset / LEGACY_SUITE_FILE_LIMIT + 1}`, args: [RUNNER_PATH, LEGACY_MODE, ...files], count: files.length });
+    }
+    suites.push({ name: 'node:test', args: ['--test', '--test-concurrency=1', ...nodeFiles], count: nodeFiles.length });
+    let failures = 0;
+    for (const suite of suites.filter(suite => suite.count > 0)) {
+        console.log(`Unit suite ${suite.name}: ${suite.count} files.`);
+        const result = spawnSync(process.execPath, suite.args, { stdio: 'inherit', timeout: SUITE_TIMEOUT_MS });
+        if (result.error || result.status !== 0) {
+            failures += 1;
+            console.error(`Unit suite ${suite.name} failed: ${result.error?.message || result.signal || result.status}`);
+        }
+    }
+    process.exit(failures ? 1 : 0);
 }

@@ -294,6 +294,7 @@ export function createOpenclawPersistMethods(options = {}) {
                     lineEnding: this.openclawLineEnding,
                     authProfileUpdates: Object.values(this.openclawPendingAuthProfileUpdates || {})
                 });
+                if (res && res.canceled) return;
                 if (res.error || res.success === false) {
                     this.showMessage(res.error || '应用配置失败', 'error');
                     return;
@@ -352,6 +353,7 @@ export function createOpenclawPersistMethods(options = {}) {
                     lineEnding: this.openclawLineEnding,
                     authProfileUpdates: Object.values(this.openclawPendingAuthProfileUpdates || {})
                 });
+                if (res && res.canceled) return;
                 if (res.error || res.success === false) {
                     this.showMessage(res.error || '应用配置失败', 'error');
                 } else {

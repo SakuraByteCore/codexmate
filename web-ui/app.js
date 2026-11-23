@@ -1,3 +1,4 @@
+import { configChangeMixin } from './modules/app.methods.config-changes.mjs';
 import { threadHandoffMixin } from './modules/thread-handoff.mjs';
 import {
     DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT,
@@ -58,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const appOptions = {
-        mixins: [threadHandoffMixin],
+        mixins: [threadHandoffMixin, configChangeMixin],
         data() {
             return {
                 workflowDefinitions: [], workflowRuns: [], workflowId: 'diagnose-config',
@@ -623,6 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         mounted() {
+            if (typeof this.installConfigChangePreview === 'function') this.installConfigChangePreview();
             this.refreshWorkflowRuns();
             this.workflowTimer = setInterval(() => this.refreshWorkflowRuns(), 3000);
             // URL 规范化：将 /web-ui/* 重定向到根路径 /
@@ -835,6 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         beforeUnmount() {
+            if (typeof this.uninstallConfigChangePreview === 'function') this.uninstallConfigChangePreview();
             clearInterval(this.workflowTimer);
             this.teardownSessionTabRender();
             this.cancelScheduledSessionTabDeferredTeardown();
@@ -936,6 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             configMode(newMode) {
+                if (typeof this.refreshLastConfigChange === 'function') this.refreshLastConfigChange();
                 if (newMode === 'pi' && typeof this.loadPiSources === 'function') {
                     this.loadPiSources();
                 }

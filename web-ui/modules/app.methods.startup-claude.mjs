@@ -1,3 +1,4 @@
+import { withRequestDeadline } from './request-deadline.mjs';
 import {
     findDuplicateClaudeConfigName,
     getClaudeModelCatalogForBaseUrl,
@@ -29,6 +30,7 @@ function shouldSuppressDeletedClaudeSettingsImport(env = {}, deletedEntries = []
 export function createStartupClaudeMethods(options = {}) {
     const {
         api,
+        configLoadTimeoutMs = 6000,
         defaultModelContextWindow = 190000,
         defaultModelAutoCompactTokenLimit = 185000
     } = options;
@@ -41,26 +43,6 @@ export function createStartupClaudeMethods(options = {}) {
             }
             const preserveLoading = !!options.preserveLoading;
             const run = async () => {
-                const configLoadTimeoutMs = 6000;
-                const withTimeout = async (promise, ms) => {
-                    const timeoutMs = Number.isFinite(Number(ms)) ? Math.max(0, Number(ms)) : 0;
-                    if (!timeoutMs) {
-                        return promise;
-                    }
-                    let timer = null;
-                    try {
-                        return await Promise.race([
-                            promise,
-                            new Promise((_, reject) => {
-                                timer = setTimeout(() => reject(new Error('timeout')), timeoutMs);
-                            })
-                        ]);
-                    } finally {
-                        if (timer) {
-                            clearTimeout(timer);
-                        }
-                    }
-                };
                 if (!preserveLoading) {
                     this.loading = true;
                 }
@@ -68,12 +50,12 @@ export function createStartupClaudeMethods(options = {}) {
                 const startedAt = Date.now();
                 const timeLeftMs = () => configLoadTimeoutMs - (Date.now() - startedAt);
                 try {
-                    const statusRes = await withTimeout(api('status'), timeLeftMs());
+                    const statusRes = await withRequestDeadline(signal => api('status', {}, { signal }), { timeoutMs: Math.max(0, timeLeftMs()) });
                     if (statusRes && statusRes.error) {
                         this.initError = statusRes.error;
                         return false;
                     }
-                    const listRes = await withTimeout(api('list'), timeLeftMs());
+                    const listRes = await withRequestDeadline(signal => api('list', {}, { signal }), { timeoutMs: Math.max(0, timeLeftMs()) });
                     if (listRes && listRes.error) {
                         this.initError = listRes.error;
                         return false;
@@ -91,7 +73,7 @@ export function createStartupClaudeMethods(options = {}) {
                         : '';
                     this.currentModel = dictModelForCurrent || statusRes.model;
                     try {
-                        const installRes = await withTimeout(api('install-status'), Math.max(0, Math.min(1200, timeLeftMs())));
+                        const installRes = await withRequestDeadline(signal => api('install-status', {}, { signal }), { timeoutMs: Math.max(0, Math.min(1200, timeLeftMs())) });
                         if (installRes && !installRes.error) {
                             const targets = Array.isArray(installRes.targets) ? installRes.targets : null;
                             if (targets) {
@@ -162,9 +144,8 @@ export function createStartupClaudeMethods(options = {}) {
                     this.maybeShowStarPrompt();
                     return true;
                 } catch (e) {
-                    if (e && e.message !== 'timeout') {
-                        this.initError = '连接失败: ' + (e.message || '');
-                    }
+                    this.initError = e && e.message === 'timeout'
+                        ? '读取配置超时' : '连接失败: ' + (e && e.message || '');
                     return false;
                 } finally {
                     if (!preserveLoading) {
@@ -340,28 +321,8 @@ export function createStartupClaudeMethods(options = {}) {
             const silent = !!options.silent;
             const silentModelError = !!options.silentModelError || silent;
             const run = async () => {
-                const configLoadTimeoutMs = 6000;
-                const withTimeout = async (promise, ms) => {
-                    const timeoutMs = Number.isFinite(Number(ms)) ? Math.max(0, Number(ms)) : 0;
-                    if (!timeoutMs) {
-                        return promise;
-                    }
-                    let timer = null;
-                    try {
-                        return await Promise.race([
-                            promise,
-                            new Promise((_, reject) => {
-                                timer = setTimeout(() => reject(new Error('timeout')), timeoutMs);
-                            })
-                        ]);
-                    } finally {
-                        if (timer) {
-                            clearTimeout(timer);
-                        }
-                    }
-                };
                 try {
-                    const res = await withTimeout(api('get-claude-settings'), configLoadTimeoutMs);
+                    const res = await withRequestDeadline(signal => api('get-claude-settings', {}, { signal }), { timeoutMs: configLoadTimeoutMs });
                     if (res && res.error) {
                         if (!silent) {
                             this.showMessage('读取配置失败', 'error');

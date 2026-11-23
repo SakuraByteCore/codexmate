@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { isConfigStaging } = require('../lib/config-change-fs');
 const { writeTextAtomicWithBackup } = require('../lib/cli-config-engine');
 
 function createPromptHistoryController(deps = {}) {
@@ -55,6 +56,7 @@ function createPromptHistoryController(deps = {}) {
     }
 
     function backupPromptBeforeWrite(bucket, currentFilePath) {
+        if (isConfigStaging()) return { backedUp: false, entries: [] };
         const dir = resolveBucketDir(bucket);
         const exists = fs.existsSync(currentFilePath);
         if (!exists) return { backedUp: false, entries: listPromptHistory(bucket) };

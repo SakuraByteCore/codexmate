@@ -1,40 +1,9 @@
 import assert from 'assert';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
-import vm from 'vm';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
-const fs = require('fs');
+const { normalizeQueryTokens, expandSessionQueryTokens, matchTokensInText } = require('../../lib/cli-sessions.js');
 
-const sessionsPath = path.join(__dirname, '..', '..', 'lib', 'cli-sessions.js');
-const cliContent = fs.readFileSync(sessionsPath, 'utf-8');
-
-// Extract the functions we need to test
-function extractFunction(content, funcName) {
-    const regex = new RegExp(`function ${funcName}\\([^)]*\\)\\s*\\{[\\s\\S]*?^\\}`, 'm');
-    const match = content.match(regex);
-    if (!match) {
-        throw new Error(`Function ${funcName} not found`);
-    }
-    return match[0];
-}
-
-// Extract the functions
-const normalizeQueryTokensSrc = extractFunction(cliContent, 'normalizeQueryTokens');
-const expandSessionQueryTokensSrc = extractFunction(cliContent, 'expandSessionQueryTokens');
-const matchTokensInTextSrc = extractFunction(cliContent, 'matchTokensInText');
-
-// Create a context and evaluate the functions
-const context = vm.createContext({});
-const allFunctionsSrc = `${normalizeQueryTokensSrc}\n${expandSessionQueryTokensSrc}\n${matchTokensInTextSrc}`;
-vm.runInContext(allFunctionsSrc, context);
-
-const { normalizeQueryTokens, expandSessionQueryTokens, matchTokensInText } = context;
-
-// Helper to compare arrays from different contexts
 function assertArrayEquals(actual, expected, msg) {
     assert.strictEqual(JSON.stringify(actual), JSON.stringify(expected), msg);
 }

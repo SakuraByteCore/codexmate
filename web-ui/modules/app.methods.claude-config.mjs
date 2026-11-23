@@ -391,6 +391,7 @@ export function createClaudeConfigMethods(options = {}) {
             const _claudeKey = `${name}|${config.apiKey || ""}|${config.providerCacheRef || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
             try {
                 const res = await api('apply-claude-config', { config: { ...config, name } });
+                if (res && res.canceled) return;
                 if (res.error || res.success === false) {
                     this.showMessage(res.error || this.t('toast.apply.fail'), 'error');
                 } else {
@@ -512,6 +513,7 @@ export function createClaudeConfigMethods(options = {}) {
             const _claudeKey2 = `${name}|${config.apiKey || ""}|${config.providerCacheRef || ""}|${config.baseUrl || ""}|${config.model || ""}|${config.targetApi || "responses"}`;
             try {
                 const res = await api('apply-claude-config', { config: { ...config, name } });
+                if (res && res.canceled) return;
                 if (res.error || res.success === false) {
                     if (!silentError) this.showMessage(res.error || this.t('toast.apply.fail'), 'error');
                     return false;

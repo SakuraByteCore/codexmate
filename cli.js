@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-const fs = require('fs');
+const { fs, isConfigStaging, stageConfigWrites } = require('./lib/config-change-fs');
+const { createConfigChanges } = require('./lib/config-changes');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
@@ -96,6 +97,7 @@ const {
     executeWorkflowDefinition
 } = require('./lib/workflow-engine');
 const { createWorkflowRunner } = require('./lib/workflow-runner');
+const { createWebServerLifecycle } = require('./lib/web-server');
 const {
     ALLOWED_EVENTS: WEBHOOK_ALLOWED_EVENTS,
     defaultConfigPath: defaultWebhookConfigPath,
@@ -1292,6 +1294,74 @@ function getApiToolConfigWriteTarget(action) {
     if (piWriteActions.has(name)) return 'pi';
     return '';
 }
+
+const CONFIG_CHANGE_ACTIONS = Object.freeze({
+    'apply-config-template': 'codex', 'add-provider': 'codex', 'update-provider': 'codex',
+    'delete-provider': 'codex', 'reset-config': 'codex', 'add-model': 'codex', 'delete-model': 'codex',
+    'apply-claude-settings-raw': 'claude', 'apply-claude-config': 'claude',
+    'apply-opencode-config': 'opencode', 'update-opencode-selection': 'opencode',
+    'apply-kilocode-config': 'kilocode', 'apply-openclaw-config': 'openclaw',
+    'write-pi-models': 'pi', 'write-pi-settings': 'pi', 'apply-pi-config-history': 'pi'
+});
+const CONFIG_CHANGE_READERS = Object.freeze({
+    'get-config-template': { target: 'codex', read: getConfigTemplate },
+    'get-claude-settings-raw': { target: 'claude', read: readClaudeSettingsRaw },
+    'get-openclaw-config': { target: 'openclaw', read: params => readOpenclawConfigFile(params) },
+    'get-opencode-config': { target: 'opencode', read: readOpencodeConfigInfo },
+    'get-kilocode-config': { target: 'kilocode', read: readKilocodeConfigInfo },
+    'read-pi-models': { target: 'pi', read: readPiModels },
+    'read-pi-settings': { target: 'pi', read: readPiSettings }
+});
+const configChanges = createConfigChanges({
+    journalPath: path.join(CODEXMATE_DIR, 'config-change-last.json'),
+    getTarget: action => Object.prototype.hasOwnProperty.call(CONFIG_CHANGE_ACTIONS, action) ? CONFIG_CHANGE_ACTIONS[action] : '',
+    isTarget: target => TOOL_CONFIG_PERMISSION_TARGETS.has(target),
+    isAllowed: isToolConfigWriteAllowed,
+    isPathAllowed(filePath) {
+        if (OPENCODE_CONFIG_ENV_FILE && filePath === OPENCODE_CONFIG_ENV_FILE) return true;
+        const roots = [CONFIG_DIR, CODEXMATE_DIR, CLAUDE_DIR, OPENCLAW_DIR, OPENCODE_CONFIG_DIR, KILOCODE_CONFIG_DIR, getPiAgentDir()];
+        return roots.some(root => {
+            const relative = path.relative(root, filePath);
+            return relative && !relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative);
+        });
+    },
+    execute(action, params) {
+        const handlers = {
+            'apply-config-template': applyConfigTemplate,
+            'add-provider': values => addProviderToConfig({ ...values, requireModel: true }),
+            'update-provider': updateProviderInConfig, 'delete-provider': deleteProviderFromConfig,
+            'reset-config': resetConfigToDefault,
+            'add-model': values => { cmdAddModel(values.model, true); return { success: true }; },
+            'delete-model': values => { cmdDeleteModel(values.model, true); return { success: true }; },
+            'apply-claude-settings-raw': applyClaudeSettingsRaw,
+            'apply-claude-config': values => applyToClaudeSettings(values.config),
+            'apply-opencode-config': applyOpencodeConfigRaw, 'update-opencode-selection': updateOpencodeSelection,
+            'apply-kilocode-config': applyKilocodeConfig, 'apply-openclaw-config': applyOpenclawConfig,
+            'write-pi-models': writePiModels, 'write-pi-settings': writePiSettings,
+            'apply-pi-config-history': applyPiConfigHistory
+        };
+        return handlers[action](params);
+    },
+    beforeWrite(plan, entry) {
+        if (plan.target !== 'pi') return;
+        const bucket = path.basename(entry.path) === 'models.json' ? 'pi-models' : 'pi-settings';
+        const backup = historyBackup(bucket, entry.path);
+        if (backup && backup.error) throw new Error('保存 Pi 历史备份失败');
+    },
+    runtimeState(plan) {
+        return plan.action === 'apply-claude-config' ? { running: getBuiltinClaudeProxyStatus().running === true } : null;
+    },
+    async reconcileRuntime(plan, rollback, state) {
+        if (plan.action !== 'apply-claude-config') return;
+        await stopBuiltinClaudeProxyRuntime();
+        const saved = readJsonObjectFromFile(BUILTIN_CLAUDE_PROXY_SETTINGS_FILE, DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS);
+        if (!saved.ok) throw new Error('读取 Claude 兼容代理配置失败');
+        if (rollback ? state && state.running : saved.data.enabled) {
+            const result = await startBuiltinClaudeProxyRuntime(saved.data, { skipWrite: true });
+            if (result.error) throw new Error('恢复 Claude 兼容代理失败');
+        }
+    }
+});
 
 function getPiAgentDir() {
     const homeDir = (typeof os.homedir === 'function' ? os.homedir() : null) || process.env.HOME || process.env.USERPROFILE || '';
@@ -8099,6 +8169,9 @@ const {
 });
 
 const {
+    saveBuiltinClaudeProxySettings,
+    buildBuiltinClaudeProxyListenUrl,
+    resolveBuiltinClaudeProxyUpstream,
     startBuiltinClaudeProxyRuntime,
     stopBuiltinClaudeProxyRuntime,
     getBuiltinClaudeProxyStatus
@@ -12373,9 +12446,9 @@ async function applyToClaudeSettings(config = {}) {
                     error: 'chat_completions 模式需要显式的上游 Base URL 或可解析的 provider 名称'
                 };
             }
-            await stopBuiltinClaudeProxyRuntime();
+            if (!isConfigStaging()) await stopBuiltinClaudeProxyRuntime();
             const proxyToken = crypto.randomBytes(24).toString('hex');
-            proxyResult = await startBuiltinClaudeProxyRuntime({
+            const proxyPayload = {
                 enabled: true,
                 host: DEFAULT_BUILTIN_CLAUDE_PROXY_SETTINGS.host,
                 provider: upstreamProviderName,
@@ -12385,9 +12458,18 @@ async function applyToClaudeSettings(config = {}) {
                 upstreamProviderName,
                 ...(configuredBaseUrl ? { upstreamBaseUrl: configuredBaseUrl } : {}),
                 upstreamApiKey: apiKey
-            });
+            };
+            if (isConfigStaging()) {
+                const saved = saveBuiltinClaudeProxySettings(proxyPayload);
+                if (saved.error) return { error: saved.error };
+                const upstream = configuredBaseUrl ? null : resolveBuiltinClaudeProxyUpstream(saved.settings);
+                if (upstream && upstream.error) return { error: upstream.error };
+                proxyResult = { success: true, listenUrl: buildBuiltinClaudeProxyListenUrl(saved.settings), upstreamProvider: upstreamProviderName };
+            } else {
+                proxyResult = await startBuiltinClaudeProxyRuntime(proxyPayload);
+            }
             if (!proxyResult || proxyResult.error || proxyResult.success === false || !proxyResult.listenUrl) {
-                await stopBuiltinClaudeProxyRuntime();
+                if (!isConfigStaging()) await stopBuiltinClaudeProxyRuntime();
                 resetBuiltinClaudeProxySavedSettingsToResponses();
                 return {
                     success: false,
@@ -12399,14 +12481,14 @@ async function applyToClaudeSettings(config = {}) {
             settingsBaseUrl = proxyResult.listenUrl;
             settingsApiKey = proxyToken;
         } else {
-            await stopBuiltinClaudeProxyRuntime();
+            if (!isConfigStaging()) await stopBuiltinClaudeProxyRuntime();
             resetBuiltinClaudeProxySavedSettingsToResponses();
         }
 
         const readResult = readJsonObjectFromFile(CLAUDE_SETTINGS_FILE, {});
         if (!readResult.ok) {
             if (proxyStarted) {
-                await stopBuiltinClaudeProxyRuntime();
+                if (!isConfigStaging()) await stopBuiltinClaudeProxyRuntime();
                 resetBuiltinClaudeProxySavedSettingsToResponses();
             }
             return { success: false, mode: 'settings-file', error: readResult.error };
@@ -12469,7 +12551,7 @@ async function applyToClaudeSettings(config = {}) {
         return result;
     } catch (e) {
         if (proxyStarted) {
-            try { await stopBuiltinClaudeProxyRuntime(); } catch (_) {}
+            try { if (!isConfigStaging()) await stopBuiltinClaudeProxyRuntime(); } catch (_) {}
             try { resetBuiltinClaudeProxySavedSettingsToResponses(); } catch (_) {}
         }
         return {
@@ -14196,137 +14278,11 @@ const PUBLIC_WEB_UI_STATIC_ASSETS = new Set([
 ]);
 
 function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {
-    const connections = new Set();
+
     const startupAuth = createStartupAuth(readServerToken());
     const httpToken = startupAuth.token;
     const accessControlMiddleware = createWebAccessControlMiddleware(host);
-    const probeWebUiReadiness = (callback) => {
-        const payload = JSON.stringify({ action: 'health-check', params: {} });
-        const requestOptions = {
-            hostname: openHost,
-            port,
-            path: '/api',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'Content-Length': Buffer.byteLength(payload, 'utf-8'),
-                ...(httpToken ? { Authorization: `Bearer ${httpToken}` } : {})
-            }
-        };
-        let settled = false;
-        const finish = (ready) => {
-            if (settled) return;
-            settled = true;
-            callback(ready);
-        };
-        const req = http.request(requestOptions, (probeRes) => {
-            if (typeof probeRes.resume === 'function') {
-                probeRes.resume();
-            }
-            probeRes.on('end', () => {
-                finish(probeRes.statusCode === 200);
-            });
-        });
-        req.on('error', () => finish(false));
-        req.setTimeout(1000, () => {
-            try { req.destroy(); } catch (_) { }
-            finish(false);
-        });
-        req.end(payload, 'utf-8');
-    };
-    const probeWebUiAssetReadiness = (callback) => {
-        const requestOptions = {
-            hostname: openHost,
-            port,
-            path: '/web-ui/app.js',
-            method: 'GET',
-            headers: httpToken ? { Authorization: `Bearer ${httpToken}` } : {}
-        };
-        let settled = false;
-        const finish = (ready) => {
-            if (settled) return;
-            settled = true;
-            callback(ready);
-        };
-        const req = http.request(requestOptions, (probeRes) => {
-            if (typeof probeRes.resume === 'function') {
-                probeRes.resume();
-            }
-            probeRes.on('end', () => {
-                finish(probeRes.statusCode === 200);
-            });
-        });
-        req.on('error', () => finish(false));
-        req.setTimeout(1000, () => {
-            try { req.destroy(); } catch (_) { }
-            finish(false);
-        });
-        req.end();
-    };
-    const openBrowserAfterReady = (url) => {
-        // Some environments may start the listener before the bundled web-ui assets
-        // are ready for the first browser hit; wait until both API and assets respond.
-        const maxAttempts = 120;
-        const retryDelayMs = 200;
-        let finished = false;
 
-        const finish = (ready) => {
-            if (finished) return;
-            finished = true;
-            if (!ready) {
-                console.warn('! Web UI 就绪探测超时，未自动打开浏览器，请手动访问:', url);
-                return;
-            }
-
-            const platform = process.platform;
-            const commandSpec = platform === 'win32'
-                ? { command: 'cmd', args: ['/c', 'start', '', url] }
-                : (platform === 'darwin'
-                    ? { command: 'open', args: [url] }
-                    : { command: 'xdg-open', args: [url] });
-
-            try {
-                const child = spawn(commandSpec.command, commandSpec.args, {
-                    stdio: 'ignore',
-                    detached: true,
-                    windowsHide: true
-                });
-                child.on('error', () => {
-                    console.warn('无法自动打开浏览器，请手动访问:', url);
-                });
-                if (typeof child.unref === 'function') {
-                    child.unref();
-                }
-            } catch (_) {
-                console.warn('无法自动打开浏览器，请手动访问:', url);
-            }
-        };
-        const scheduleProbe = (attempt) => {
-            probeWebUiReadiness((apiReady) => {
-                if (!apiReady) {
-                    if (attempt >= maxAttempts) {
-                        finish(false);
-                        return;
-                    }
-                    setTimeout(() => scheduleProbe(attempt + 1), retryDelayMs);
-                    return;
-                }
-                probeWebUiAssetReadiness((assetReady) => {
-                    if (assetReady) {
-                        finish(true);
-                        return;
-                    }
-                    if (attempt >= maxAttempts) {
-                        finish(false);
-                        return;
-                    }
-                    setTimeout(() => scheduleProbe(attempt + 1), retryDelayMs);
-                });
-            });
-        };
-
-        scheduleProbe(1);
-    };
     const writeWebUiAssetError = (res, requestPath, error) => {
         const message = error && error.message ? error.message : String(error);
         console.error(`! Web UI 资源读取失败 [${requestPath}]:`, message);
@@ -14462,10 +14418,31 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                     let result;
 
                     const guardedToolConfigTarget = getApiToolConfigWriteTarget(action);
-                    if (guardedToolConfigTarget && !isToolConfigWriteAllowed(guardedToolConfigTarget)) {
+                    if (guardedToolConfigTarget && configChanges.isBusy()) {
+                        result = { error: '已有配置变更正在执行', errorCode: 'config-change-busy' };
+                    } else if (guardedToolConfigTarget && !isToolConfigWriteAllowed(guardedToolConfigTarget)) {
                         result = buildToolConfigWriteDeniedPayload(guardedToolConfigTarget);
+                    } else if (Object.prototype.hasOwnProperty.call(CONFIG_CHANGE_READERS, action)) {
+                        const reader = CONFIG_CHANGE_READERS[action];
+                        const observed = await stageConfigWrites(() => reader.read(params || {}), { maxFileBytes: Infinity, allowSymlinks: true });
+                        result = { ...observed.result, configChangeTarget: reader.target, configChangeBaseline: observed.files.map(entry => ({ path: entry.path, exists: entry.before.exists, hash: entry.before.hash, mode: entry.before.mode })) };
                     } else {
                         switch (action) {
+                        case 'preview-config-change':
+                            result = await configChanges.preview(params || {});
+                            break;
+                        case 'apply-config-change':
+                            result = await configChanges.apply(params || {});
+                            if (result.change && result.change.action === 'apply-claude-config') {
+                                notifyWebhook('provider-switch', 'Claude provider configuration applied', { changeId: result.change.id }).catch(function () { });
+                            }
+                            break;
+                        case 'get-last-config-change':
+                            result = configChanges.last(params || {});
+                            break;
+                        case 'undo-config-change':
+                            result = await configChanges.undo(params || {});
+                            break;
                         case 'health-check':
                             result = { ok: true };
                             break;
@@ -15414,83 +15391,11 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             handleRequest(req, res);
         }));
     });
-
-    server.on('connection', (socket) => {
-        connections.add(socket);
-        socket.on('close', () => connections.delete(socket));
+    return createWebServerLifecycle({ server, host, port, httpToken, openBrowser }, {
+        http, process, console, setTimeout, formatHostForUrl, DEFAULT_WEB_OPEN_HOST, isAnyAddressHost,
+        spawn: (...args) => spawn(...args),
+        getUnattendedWorkflowRunner: () => getUnattendedWorkflowRunner()
     });
-
-    const printPortOverrideHint = () => {
-        const examplePort = port === 8080 ? 8081 : 8080;
-        console.error(`  临时换端口（macOS/Linux）: CODEXMATE_PORT=${examplePort} codexmate run`);
-        console.error(`  临时换端口（Windows PowerShell）: $env:CODEXMATE_PORT=${examplePort}; codexmate run`);
-        console.error(`  临时换端口（Windows CMD）: set CODEXMATE_PORT=${examplePort} && codexmate run`);
-    };
-
-    server.once('error', (err) => {
-        if (err && err.code === 'EADDRINUSE') {
-            console.error(`! 启动失败: 端口 ${port} 已被占用，可能有残留的 codexmate run 实例。`);
-            console.error('  请先停止旧实例或更换端口后重试。');
-            printPortOverrideHint();
-        } else if (err && err.code === 'EACCES') {
-            console.error(`! 启动失败: 没有权限监听 ${host}:${port}。`);
-            console.error('  请检查系统/安全软件限制，或更换端口后重试。');
-            printPortOverrideHint();
-        } else {
-            console.error('! 启动 Web UI 失败:', err && err.message ? err.message : err);
-        }
-        process.exit(1);
-    });
-
-    const openHost = host === '::'
-        ? '::1'
-        : (host === '0.0.0.0' ? DEFAULT_WEB_OPEN_HOST : host);
-    const openUrl = `http://${formatHostForUrl(openHost)}:${port}/?token=${encodeURIComponent(httpToken)}`;
-    server.listen(port, host, () => {
-        getUnattendedWorkflowRunner().recover();
-        console.log('\n✓ Web UI 已启动');
-        const willOpenBrowser = !!openBrowser && !process.env.CODEXMATE_NO_BROWSER;
-        console.log(`  ${willOpenBrowser ? '已打开' : '待访问'}: ${openUrl}`);
-        if (host && host !== openHost) {
-            console.log('  监听地址:', host);
-        }
-        console.log('  退出: Ctrl+C\n');
-        if (isAnyAddressHost(host)) {
-            console.warn('! 安全提示: 当前监听所有网卡，局域网访问需要访问令牌。');
-            console.warn('  远程 /bridge/ 请求需携带 Authorization: Bearer <访问令牌>。');
-            const allowedIps = (process.env.CODEXMATE_ALLOWED_IPS || '').trim();
-            if (allowedIps) {
-                console.warn(`  已启用的来源 IP 白名单: ${allowedIps}`);
-            }
-        }
-
-        if (willOpenBrowser) {
-            openBrowserAfterReady(openUrl);
-        }
-    });
-
-    const stop = () => new Promise((resolve) => {
-        let done = false;
-        const finish = () => {
-            if (done) return;
-            done = true;
-            for (const socket of connections) {
-                try { socket.destroy(); } catch (_) { }
-            }
-            connections.clear();
-            resolve();
-        };
-
-        if (!server.listening) {
-            finish();
-            return;
-        }
-
-        server.close(() => finish());
-        setTimeout(() => finish(), 800);
-    });
-
-    return { server, stop };
 }
 
 // Region markers are used by unit tests that extract these helpers directly.

@@ -636,6 +636,7 @@ export function createCodexConfigMethods(options = {}) {
 
                 for (const item of codexItems) {
                     const res = await api('delete-provider', { name: item.name });
+                    if (res && res.canceled) return;
                     if (res && res.error) {
                         throw new Error(res.error);
                     }
@@ -861,6 +862,7 @@ export function createCodexConfigMethods(options = {}) {
                 const applyRes = await api('apply-config-template', {
                     template: tplRes.template
                 });
+                if (applyRes && applyRes.canceled) return;
                 if (applyRes.error) {
                     this.showMessage(
                         (typeof applyRes.error === 'string' && applyRes.error.trim())
@@ -1048,10 +1050,12 @@ export function createCodexConfigMethods(options = {}) {
                         res = await api('apply-claude-settings-raw', {
                             content: this.configTemplateContent
                         });
+                        if (res && res.canceled) return;
                     } else {
                         res = await api('apply-config-template', {
                             template: this.configTemplateContent
                         });
+                        if (res && res.canceled) return;
                     }
                     if (res.error) {
                         this.showMessage(res.error, 'error');
@@ -1070,6 +1074,11 @@ export function createCodexConfigMethods(options = {}) {
                     this.configTemplateApplying = false;
                 }
             };
+
+            if (this._configChangeApiHandler) {
+                await performApply();
+                return;
+            }
 
             // One-step mode: apply immediately unless user explicitly entered the diff preview state.
             if (!shouldUseTwoStepConfirm && !this.configTemplateDiffVisible) {

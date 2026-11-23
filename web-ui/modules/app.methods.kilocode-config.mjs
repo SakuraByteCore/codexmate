@@ -109,6 +109,7 @@ export function createKilocodeConfigMethods(options = {}) {
             this.kilocodeError = '';
             try {
                 const res = await api('apply-kilocode-config', { provider, url, model, apiKey });
+                if (res && res.canceled) return;
                 if (res && res.error) {
                     this.kilocodeError = res.error;
                     this.showMessage(res.error, 'error');
@@ -145,6 +146,7 @@ export function createKilocodeConfigMethods(options = {}) {
                     apiKey: this.kilocodeApiKey
                 } : {};
                 const res = await api('start-kilocode', payload);
+                if (res && res.canceled) return;
                 if (res && res.error) {
                     this.kilocodeError = res.error;
                     this.showMessage(res.error, 'error');

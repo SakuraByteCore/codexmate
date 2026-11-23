@@ -28,14 +28,10 @@
                         </label>
                     </section>
 
-                    <section class="settings-card settings-card--wide openclaw-summary-card" aria-label="OpenClaw 当前摘要">
+                    <section class="settings-card settings-card--wide openclaw-summary-card" aria-labelledby="openclaw-summary-title">
                         <div class="settings-card-body">
                             <div class="openclaw-summary-header">
-                                <div>
-                                    <div class="summary-eyebrow">OPENCLAW</div>
-                                    <div class="summary-title">配置与本地诊断</div>
-                                </div>
-                                <div class="summary-note">配置摘要</div>
+                                <h2 class="summary-title" id="openclaw-summary-title">{{ t('tab.config.openclaw') }}</h2>
                             </div>
                             <div class="openclaw-summary-grid">
                                 <div v-for="item in getOpenclawStatusSummaryItems()" :key="item.key" :class="['openclaw-summary-item', item.tone || '']">
@@ -51,16 +47,20 @@
 
                     <div class="tool-config-write-scope" :class="{ locked: !isToolConfigWriteAllowed('openclaw') }">
                         <div class="tool-config-write-body">
-                    <section class="settings-card settings-card--wide openclaw-workspace-card">
+                    <section class="settings-card settings-card--wide openclaw-workspace-card" aria-labelledby="openclaw-workspace-title">
                         <div class="settings-card-body">
+                            <h3 class="openclaw-section-title" id="openclaw-workspace-title">{{ t('openclaw.workspaceFile') }}</h3>
                             <div class="openclaw-tools-grid">
                                 <button class="openclaw-tool-btn" @click="openOpenclawAgentsEditor" :disabled="loading || !!initError || agentsLoading || !isToolConfigWriteAllowed('openclaw')">
-                                    <div class="tool-icon">📄</div>
+                                    <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <path d="M14 2v6h6M8 13h8M8 17h6"/>
+                                    </svg>
                                     <div class="tool-content">
                                         <div class="tool-title">AGENTS.md</div>
-                                        <div class="tool-meta">{{ agentsLoading ? t('config.modelLoading') : 'Workspace file' }}</div>
+                                        <div v-if="agentsLoading" class="tool-meta">{{ t('config.modelLoading') }}</div>
                                     </div>
-                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M9 18l6-6-6-6"/>
                                     </svg>
                                 </button>
@@ -72,12 +72,14 @@
                                     class="openclaw-tool-btn"
                                     @click="openOpenclawQuickWorkspaceFile(fileName)"
                                     :disabled="loading || !!initError || agentsLoading || !isToolConfigWriteAllowed('openclaw')">
-                                    <div class="tool-icon">📄</div>
+                                    <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <path d="M14 2v6h6M8 13h8M8 17h6"/>
+                                    </svg>
                                     <div class="tool-content">
                                         <div class="tool-title">{{ fileName }}</div>
-                                        <div class="tool-meta">Workspace file</div>
                                     </div>
-                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M9 18l6-6-6-6"/>
                                     </svg>
                                 </button>
@@ -87,6 +89,7 @@
 
                     <section class="settings-card settings-card--wide openclaw-configs-card" aria-labelledby="openclaw-configs-title">
                         <div class="settings-card-body">
+                            <h3 class="openclaw-section-title" id="openclaw-configs-title">{{ t('tab.config') }}</h3>
                             <div class="card-list openclaw-card-list">
                                 <div v-for="(config, name) in openclawConfigs" :key="name"
                                      :class="['card', { active: currentOpenclawConfig === name, disabled: !isToolConfigWriteAllowed('openclaw') }]"

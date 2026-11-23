@@ -154,6 +154,7 @@ Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình,
 - **Trình duyệt phiên thống nhất**: Xem phiên cục bộ từ Codex, Claude Code, Gemini CLI, CodeBuddy Code, WorkBuddy, Pi, OpenCode và Zed tại một nơi. Khả năng tìm kiếm, xuất và xóa tùy thuộc nguồn; xem [hướng dẫn phiên (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/sessions). Chi tiết phiên luôn hiển thị ước tính token theo năm nhóm, thanh tỷ lệ và mức sức khỏe ngữ cảnh.
 - **Bridge tương thích OpenAI**: Dùng Codex với bất kỳ UI nào hỗ trợ OpenAI bằng cách chuẩn hóa Responses API.
 - **Dọn dẹp provider lỗi**: Kiểm tra route provider cục bộ của Codex/Claude, hiển thị cấu hình lỗi trong một modal và xóa hàng loạt các provider hỏng đã chọn mà không chạm vào mục khỏe mạnh hoặc được bảo vệ.
+- **Xem trước và hoàn tác cấu hình**: Hiển thị đường dẫn và khác biệt trường đã ẩn thông tin xác thực trước khi ghi cả sáu công cụ. Phát hiện sửa đổi bên ngoài sau khi tải hoặc xem trước; hoàn tác thay đổi gần nhất của từng công cụ, kể cả sau khi khởi động lại dịch vụ. Tùy chọn xem trước điều khiển hộp thoại; khi tắt vẫn giữ kiểm tra xung đột và hoàn tác.
 - **Chợ skill cục bộ**: Chia sẻ và nhập skill giữa các app agent khác nhau.
 - **Điều phối tác vụ**: Tự động thực thi quy trình hiện có, lưu bền vững tiến độ và kết quả, chỉ yêu cầu can thiệp khi bị chặn.
 

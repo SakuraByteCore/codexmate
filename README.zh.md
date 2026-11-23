@@ -157,6 +157,7 @@ node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <s
 - **OpenCode Provider 控制**：在 `~/.codexmate` 下维护 CodexMate 自有的 OpenCode 多 provider 存储，只将当前选中的 provider 投影到 OpenCode 原生配置，避免污染或误删用户已有配置。
 - **Pi Provider 配置**：在 Web UI 中管理 Pi 供应商，写入 `~/.pi/agent/models.json` 时无损保留未知字段，支持自动拉取远端模型列表，并可一键切换 `~/.pi/agent/settings.json` 中的默认供应商/模型。
 - **Provider 健康清理**：探测本地 Codex 与 Claude provider 路由，在同一个弹窗里集中展示失败配置，并批量清理已选坏配置，不影响正常或受保护项。
+- **配置变更预览与撤销**：六种工具写入前统一展示文件路径与脱敏字段差异；检测读取后及预览后的外部修改，支持撤销各工具最近一次变更，重启服务后仍可恢复。沿用设置中的预览开关，关闭后保留冲突检查与撤销。
 - **Skills 市场**：本地优先的市场，支持在不同的智能体应用之间共享和导入 Skills。
 - **提示词文件编辑器**：统一编辑全局和项目级 `CLAUDE.md` 与 `AGENTS.md`（含 OpenCode 的 `~/.config/opencode/AGENTS.md`），支持项目路径自动检测，并提供通用预设池复用 prompt。
 - **任务编排器**：复用工作流定义自动推进任务，持久保存进度与结果，仅在阻塞时请求介入。

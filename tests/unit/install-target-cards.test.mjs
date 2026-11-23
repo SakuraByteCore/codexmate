@@ -46,7 +46,7 @@ test('installTargetCards falls back when install-status is missing', () => {
     assert.strictEqual(kilocode.termuxCommand, '');
 });
 
-test('currentInstalledCommandCards exposes detected installed commands only', () => {
+test('installTargetCards preserves detected installed command metadata', () => {
     const ctx = createContext({
         installStatusTargets: [
             {
@@ -73,7 +73,9 @@ test('currentInstalledCommandCards exposes detected installed commands only', ()
     });
     ctx.installTargetCards = computed.installTargetCards.call(ctx);
 
-    const cards = computed.currentInstalledCommandCards.call(ctx);
+    const cards = computed.installTargetCards.call(ctx).filter(card => ctx.isInstallTargetInstalled(card.id));
+    assert.strictEqual(ctx.isInstallTargetInstalled('codex'), true);
+    assert.strictEqual(ctx.isInstallTargetInstalled('gemini'), false);
 
     assert.deepStrictEqual(cards.map((item) => item.id), ['codex']);
     assert.strictEqual(cards[0].commandPath, '/usr/local/bin/codex');

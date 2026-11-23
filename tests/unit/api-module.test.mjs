@@ -168,3 +168,63 @@ test('apiWithMeta preserves payload-too-large for json non-object responses', as
         });
     });
 });
+
+for (const requestApi of [api, apiWithMeta]) {
+    test(`${requestApi.name} aborts stalled headers once without retrying`, async () => {
+        let requestSignal;
+        let calls = 0;
+        await withFetch((_url, { signal }) => {
+            calls += 1;
+            requestSignal = signal;
+            return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
+        }, async () => {
+            await assert.rejects(() => requestApi('status', {}, { timeoutMs: 10 }), { name: 'TimeoutError' });
+            assert.strictEqual(requestSignal.aborted, true);
+            assert.strictEqual(calls, 1);
+        });
+    });
+
+    test(`${requestApi.name} keeps deadline active while parsing the response body`, async () => {
+        let requestSignal;
+        await withFetch(async (_url, { signal }) => {
+            requestSignal = signal;
+            return { ...createResponse(), json: () => new Promise(() => {}) };
+        }, async () => {
+            await assert.rejects(() => requestApi('status', {}, { timeoutMs: 10 }), { name: 'TimeoutError' });
+            assert.strictEqual(requestSignal.aborted, true);
+        });
+    });
+}
+
+test('api forwards caller cancellation and removes its listener after success', async () => {
+    const controller = new AbortController();
+    const reason = new Error('caller canceled');
+    await withFetch((_url, { signal }) => new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+    }), async () => {
+        const pending = api('status', {}, { signal: controller.signal });
+        controller.abort(reason);
+        await assert.rejects(pending, error => error === reason);
+    });
+    const successController = new AbortController();
+    let removed = 0;
+    const originalRemove = successController.signal.removeEventListener.bind(successController.signal);
+    successController.signal.removeEventListener = (...args) => { removed += 1; originalRemove(...args); };
+    await withFetch(async () => createResponse({ jsonValue: { success: true } }), async () => {
+        assert.deepStrictEqual(await api('status', {}, { signal: successController.signal }), { success: true });
+        assert.strictEqual(removed, 1);
+    });
+});
+
+test('api leaves ordinary requests unbounded and rejects invalid deadlines before fetching', async () => {
+    let calls = 0;
+    await withFetch(async (_url, init) => {
+        calls += 1;
+        assert.strictEqual(Object.prototype.hasOwnProperty.call(init, 'signal'), false);
+        return createResponse();
+    }, async () => {
+        await api('status');
+        await assert.rejects(() => api('status', {}, { timeoutMs: -1 }), TypeError);
+        assert.strictEqual(calls, 1);
+    });
+});

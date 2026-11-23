@@ -14,6 +14,7 @@ const {
 
 const testSetup = require('./test-setup');
 const testConfig = require('./test-config');
+const testConfigChanges = require('./test-config-changes');
 const testClaude = require('./test-claude');
 const testClaudeProxy = require('./test-claude-proxy');
 const testSessionSearch = require('./test-session-search');
@@ -202,6 +203,7 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         await testConfig(ctx);
         await testClaude(ctx);
         await testClaudeProxy(ctx);
+        await testConfigChanges(ctx);
         await testSessionSearch(ctx);
         await testSessions(ctx);
         await testSessionConvertDerived(ctx);

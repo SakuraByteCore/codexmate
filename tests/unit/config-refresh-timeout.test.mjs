@@ -88,6 +88,8 @@ test('refreshClaudeSelectionFromSettings queues the latest call during an inflig
         refreshClaudeModelContext() {}
     };
 
+    context.refreshClaudeSelectionFromSettings = methods.refreshClaudeSelectionFromSettings;
+
     const run1 = methods.refreshClaudeSelectionFromSettings.call(context, { silent: true });
     const run2 = methods.refreshClaudeSelectionFromSettings.call(context, { silent: true });
     await Promise.resolve();

@@ -1306,6 +1306,110 @@ return function render(_ctx, _cache) {
           ], 512 /* NEED_PATCH */), [
             [_vShow, _ctx.mainTab === 'dashboard']
           ]),
+          (_ctx.mainTab === 'config' && _ctx.lastConfigChange && _ctx.lastConfigChange.target === _ctx.configMode)
+            ? (_openBlock(), _createElementBlock("section", {
+                key: 0,
+                class: "config-change-last",
+                "aria-live": "polite"
+              }, [
+                _createElementVNode("span", null, _toDisplayString(_ctx.t('changes.last')) + " · " + _toDisplayString(_ctx.lastConfigChange.createdAt), 1 /* TEXT */),
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "btn-tool",
+                  onClick: _ctx.undoLastConfigChange,
+                  disabled: _ctx.configChangeBusy || _ctx.configChangeApplying || !_ctx.isToolConfigWriteAllowed(_ctx.configMode)
+                }, _toDisplayString(_ctx.t('changes.undo')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+              ]))
+            : _createCommentVNode("v-if", true),
+          (_openBlock(), _createBlock(_Teleport, { to: "body" }, [
+            (_ctx.configChangePreview)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 0,
+                  class: "modal-overlay config-change-overlay",
+                  onClick: _withModifiers($event => (_ctx.closeConfigChangePreview()), ["self"]),
+                  onKeydown: _ctx.handleConfigChangeKeydown
+                }, [
+                  _createElementVNode("section", {
+                    class: "modal modal-wide config-change-modal",
+                    role: "dialog",
+                    "aria-modal": "true",
+                    "aria-labelledby": "config-change-title",
+                    "aria-describedby": "config-change-hint",
+                    "aria-busy": _ctx.configChangeApplying
+                  }, [
+                    _createElementVNode("h2", {
+                      id: "config-change-title",
+                      class: "modal-title"
+                    }, _toDisplayString(_ctx.t('changes.preview')), 1 /* TEXT */),
+                    _createElementVNode("p", {
+                      id: "config-change-hint",
+                      class: "form-hint"
+                    }, _toDisplayString(_ctx.t('changes.hint')), 1 /* TEXT */),
+                    _createElementVNode("div", {
+                      class: "config-change-files",
+                      tabindex: "0",
+                      "aria-label": _ctx.t('changes.files')
+                    }, [
+                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.configChangePreview.files, (file) => {
+                        return (_openBlock(), _createElementBlock("article", {
+                          key: file.path,
+                          class: "config-change-file"
+                        }, [
+                          _createElementVNode("h3", null, [
+                            _createElementVNode("span", null, _toDisplayString(_ctx.t('changes.operation.' + file.operation)), 1 /* TEXT */),
+                            _createTextVNode(),
+                            _createElementVNode("code", null, _toDisplayString(file.path), 1 /* TEXT */)
+                          ]),
+                          (file.hidden)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 0,
+                                class: "form-hint"
+                              }, _toDisplayString(_ctx.t('changes.hidden')), 1 /* TEXT */))
+                            : (file.maskedOnly)
+                              ? (_openBlock(), _createElementBlock("p", {
+                                  key: 1,
+                                  class: "form-hint"
+                                }, _toDisplayString(_ctx.t('changes.maskedOnly')), 1 /* TEXT */))
+                              : (_openBlock(), _createElementBlock("pre", {
+                                  key: 2,
+                                  class: "config-change-diff"
+                                }, [
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(file.diff.lines, (line, index) => {
+                                    return (_openBlock(), _createElementBlock("span", {
+                                      key: index,
+                                      class: _normalizeClass(['config-change-line', 'config-change-line-' + line.type])
+                                    }, _toDisplayString(line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' ') + " " + _toDisplayString(line.text || line.value), 3 /* TEXT, CLASS */))
+                                  }), 128 /* KEYED_FRAGMENT */))
+                                ]))
+                        ]))
+                      }), 128 /* KEYED_FRAGMENT */))
+                    ], 8 /* PROPS */, ["aria-label"]),
+                    (_ctx.configChangeError)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 0,
+                          class: "form-hint form-error",
+                          role: "alert"
+                        }, _toDisplayString(_ctx.configChangeError), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("div", { class: "btn-group config-change-actions" }, [
+                      _createElementVNode("button", {
+                        ref: "configChangeCancel",
+                        type: "button",
+                        class: "btn btn-cancel",
+                        onClick: $event => (_ctx.closeConfigChangePreview()),
+                        disabled: _ctx.configChangeApplying
+                      }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn btn-confirm",
+                        onClick: _ctx.confirmConfigChange,
+                        disabled: _ctx.configChangeApplying || !!_ctx.configChangeError
+                      }, _toDisplayString(_ctx.configChangeApplying ? _ctx.t('changes.saving') : _ctx.t('changes.apply')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                    ])
+                  ], 8 /* PROPS */, ["aria-busy"])
+                ], 40 /* PROPS, NEED_HYDRATION */, ["onClick", "onKeydown"]))
+              : _createCommentVNode("v-if", true)
+          ])),
           _createCommentVNode(" Codex 配置 "),
           _withDirectives(_createElementVNode("div", {
             class: "mode-content mode-cards",
@@ -2545,15 +2649,14 @@ return function render(_ctx, _cache) {
               ], 8 /* PROPS */, ["aria-label"]),
               _createElementVNode("section", {
                 class: "settings-card settings-card--wide openclaw-summary-card",
-                "aria-label": "OpenClaw 当前摘要"
+                "aria-labelledby": "openclaw-summary-title"
               }, [
                 _createElementVNode("div", { class: "settings-card-body" }, [
                   _createElementVNode("div", { class: "openclaw-summary-header" }, [
-                    _createElementVNode("div", null, [
-                      _createElementVNode("div", { class: "summary-eyebrow" }, "OPENCLAW"),
-                      _createElementVNode("div", { class: "summary-title" }, "配置与本地诊断")
-                    ]),
-                    _createElementVNode("div", { class: "summary-note" }, "配置摘要")
+                    _createElementVNode("h2", {
+                      class: "summary-title",
+                      id: "openclaw-summary-title"
+                    }, _toDisplayString(_ctx.t('tab.config.openclaw')), 1 /* TEXT */)
                   ]),
                   _createElementVNode("div", { class: "openclaw-summary-grid" }, [
                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getOpenclawStatusSummaryItems(), (item) => {
@@ -2573,25 +2676,48 @@ return function render(_ctx, _cache) {
                 class: _normalizeClass(["tool-config-write-scope", { locked: !_ctx.isToolConfigWriteAllowed('openclaw') }])
               }, [
                 _createElementVNode("div", { class: "tool-config-write-body" }, [
-                  _createElementVNode("section", { class: "settings-card settings-card--wide openclaw-workspace-card" }, [
+                  _createElementVNode("section", {
+                    class: "settings-card settings-card--wide openclaw-workspace-card",
+                    "aria-labelledby": "openclaw-workspace-title"
+                  }, [
                     _createElementVNode("div", { class: "settings-card-body" }, [
+                      _createElementVNode("h3", {
+                        class: "openclaw-section-title",
+                        id: "openclaw-workspace-title"
+                      }, _toDisplayString(_ctx.t('openclaw.workspaceFile')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "openclaw-tools-grid" }, [
                         _createElementVNode("button", {
                           class: "openclaw-tool-btn",
                           onClick: _ctx.openOpenclawAgentsEditor,
                           disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading || !_ctx.isToolConfigWriteAllowed('openclaw')
                         }, [
-                          _createElementVNode("div", { class: "tool-icon" }, "📄"),
+                          (_openBlock(), _createElementBlock("svg", {
+                            class: "tool-icon",
+                            viewBox: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "1.5",
+                            "aria-hidden": "true"
+                          }, [
+                            _createElementVNode("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
+                            _createElementVNode("path", { d: "M14 2v6h6M8 13h8M8 17h6" })
+                          ])),
                           _createElementVNode("div", { class: "tool-content" }, [
                             _createElementVNode("div", { class: "tool-title" }, "AGENTS.md"),
-                            _createElementVNode("div", { class: "tool-meta" }, _toDisplayString(_ctx.agentsLoading ? _ctx.t('config.modelLoading') : 'Workspace file'), 1 /* TEXT */)
+                            (_ctx.agentsLoading)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 0,
+                                  class: "tool-meta"
+                                }, _toDisplayString(_ctx.t('config.modelLoading')), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true)
                           ]),
                           (_openBlock(), _createElementBlock("svg", {
                             class: "tool-chevron",
                             viewBox: "0 0 24 24",
                             fill: "none",
                             stroke: "currentColor",
-                            "stroke-width": "2"
+                            "stroke-width": "2",
+                            "aria-hidden": "true"
                           }, [
                             _createElementVNode("path", { d: "M9 18l6-6-6-6" })
                           ]))
@@ -2604,17 +2730,27 @@ return function render(_ctx, _cache) {
                             onClick: $event => (_ctx.openOpenclawQuickWorkspaceFile(fileName)),
                             disabled: _ctx.loading || !!_ctx.initError || _ctx.agentsLoading || !_ctx.isToolConfigWriteAllowed('openclaw')
                           }, [
-                            _createElementVNode("div", { class: "tool-icon" }, "📄"),
+                            (_openBlock(), _createElementBlock("svg", {
+                              class: "tool-icon",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "1.5",
+                              "aria-hidden": "true"
+                            }, [
+                              _createElementVNode("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
+                              _createElementVNode("path", { d: "M14 2v6h6M8 13h8M8 17h6" })
+                            ])),
                             _createElementVNode("div", { class: "tool-content" }, [
-                              _createElementVNode("div", { class: "tool-title" }, _toDisplayString(fileName), 1 /* TEXT */),
-                              _createElementVNode("div", { class: "tool-meta" }, "Workspace file")
+                              _createElementVNode("div", { class: "tool-title" }, _toDisplayString(fileName), 1 /* TEXT */)
                             ]),
                             (_openBlock(), _createElementBlock("svg", {
                               class: "tool-chevron",
                               viewBox: "0 0 24 24",
                               fill: "none",
                               stroke: "currentColor",
-                              "stroke-width": "2"
+                              "stroke-width": "2",
+                              "aria-hidden": "true"
                             }, [
                               _createElementVNode("path", { d: "M9 18l6-6-6-6" })
                             ]))
@@ -2628,6 +2764,10 @@ return function render(_ctx, _cache) {
                     "aria-labelledby": "openclaw-configs-title"
                   }, [
                     _createElementVNode("div", { class: "settings-card-body" }, [
+                      _createElementVNode("h3", {
+                        class: "openclaw-section-title",
+                        id: "openclaw-configs-title"
+                      }, _toDisplayString(_ctx.t('tab.config')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "card-list openclaw-card-list" }, [
                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.openclawConfigs, (config, name) => {
                           return (_openBlock(), _createElementBlock("div", {
@@ -3825,7 +3965,7 @@ return function render(_ctx, _cache) {
           _createCommentVNode(" Pi 新增供应商模板选择模态框 "),
           (_ctx.showAddPiProviderModal && !_ctx.editingPiProvider)
             ? (_openBlock(), _createElementBlock("div", {
-                key: 0,
+                key: 1,
                 class: "modal-overlay",
                 onClick: _withModifiers(_ctx.cancelAddPiProviderModal, ["self"])
               }, [
@@ -3897,7 +4037,7 @@ return function render(_ctx, _cache) {
           _createCommentVNode(" Pi 供应商编辑器模态框 "),
           (_ctx.editingPiProvider)
             ? (_openBlock(), _createElementBlock("div", {
-                key: 1,
+                key: 2,
                 class: "modal-overlay",
                 onClick: _withModifiers(_ctx.closePiProviderEditor, ["self"])
               }, [
@@ -8088,7 +8228,7 @@ return function render(_ctx, _cache) {
           _createCommentVNode(" Prompts editor "),
           (_ctx.mainTab === 'prompts')
             ? (_openBlock(), _createElementBlock("div", {
-                key: 2,
+                key: 3,
                 class: "mode-content mode-cards",
                 id: "panel-prompts",
                 role: "tabpanel",
@@ -9245,12 +9385,12 @@ return function render(_ctx, _cache) {
           _createCommentVNode(" 加载状态 "),
           (_ctx.loading && _ctx.mainTab !== 'usage')
             ? (_openBlock(), _createElementBlock("div", {
-                key: 3,
+                key: 4,
                 class: "state-message app-loading-state"
               }, _toDisplayString(_ctx.t('app.loadingConfig')), 1 /* TEXT */))
             : (_ctx.initError)
               ? (_openBlock(), _createElementBlock("div", {
-                  key: 4,
+                  key: 5,
                   class: "state-message error"
                 }, [
                   _createCommentVNode(" 错误状态 "),
