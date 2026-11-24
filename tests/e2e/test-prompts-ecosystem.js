@@ -1,6 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 const { assert } = require('./helpers');
 
-module.exports = async function testPromptsEcosystem({ api }) {
+module.exports = async function testPromptsEcosystem({ api, tmpHome }) {
     const initial = await api('get-plugin-config');
     assert(!initial.error && typeof initial.hash === 'string', 'plugin configuration endpoint must return a hash');
     const old = { id: 'e2e-template', name: 'Template', template: '{{project_path}}', isBuiltin: false };
@@ -25,5 +27,26 @@ module.exports = async function testPromptsEcosystem({ api }) {
     const applied = await api('apply-agents-file', { content: 'ecosystem-test\n', baseContent: prompt.content });
     assert(applied.success === true && !!applied.historyBucket, 'compatible prompt writes must succeed and return a history bucket');
     assert((await api('get-agents-file')).content === 'ecosystem-test\n', 'atomic prompt write must preserve text semantics');
+    const piDirectory = path.join(tmpHome, '.pi', 'agent');
+    fs.mkdirSync(piDirectory, { recursive: true });
+    const extraFile = path.join(piDirectory, 'extra.md');
+    fs.writeFileSync(extraFile, 'extra original\n');
+    const piFiles = await api('list-system-prompt-files', { scope: 'global' });
+    assert(!piFiles.error && piFiles.files.some(file => file.filename === 'extra.md'), 'Pi API must discover a new direct markdown file');
+    const extra = await api('get-system-prompt', { scope: 'global', fileName: 'extra.md' });
+    assert(extra.content === 'extra original\n' && extra.replaceDefault === false, 'custom Pi file must not acquire SYSTEM mode semantics');
+    const diff = await api('preview-system-prompt-diff', { scope: 'global', fileName: 'extra.md', content: 'extra changed' });
+    assert(diff.filename === 'extra.md' && diff.diff.hasChanges, 'Pi preview must resolve the selected file');
+    assert(fs.readFileSync(extraFile, 'utf8') === 'extra original\n', 'Pi preview must not write the file');
+    const savedExtra = await api('apply-system-prompt', { scope: 'global', fileName: 'extra.md', content: 'extra changed', baseHash: extra.hash });
+    assert(!savedExtra.error && savedExtra.content === 'extra changed\n', 'Pi API must save the selected custom file');
+    const extraHistory = await api('list-prompt-history', { bucket: savedExtra.historyBucket });
+    assert(extraHistory.length > 0, 'Pi custom file must keep its own history');
+    const staleExtra = await api('apply-system-prompt', { scope: 'global', fileName: 'extra.md', content: 'stale', baseHash: extra.hash });
+    assert(!!staleExtra.error && fs.readFileSync(extraFile, 'utf8') === 'extra changed\n', 'Pi API must reject stale writes');
+    const traversal = await api('get-system-prompt', { scope: 'global', fileName: '../escape.md' });
+    assert(!!traversal.error, 'Pi API must reject traversal');
+    const legacyPi = await api('get-system-prompt', { scope: 'global', mode: 'system' });
+    assert(legacyPi.filename === 'SYSTEM.md', 'Pi legacy mode contract must remain compatible');
     console.log('[e2e] prompts ecosystem endpoints, history and atomic rollback passed');
 };

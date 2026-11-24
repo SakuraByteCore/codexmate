@@ -50,7 +50,7 @@ module.exports = async function testSessionFeatures(ctx) {
     assert(focused.node.text.includes('验收目标'), 'indexed source lookup failed');
     const log = path.join(project, 'mcp-probe.log');
     const mock = path.join(project, 'probe.cjs');
-    fs.writeFileSync(mock, `const fs=require('fs'),rl=require('readline').createInterface({input:process.stdin});\nrl.on('line',line=>{const q=JSON.parse(line);fs.appendFileSync(${JSON.stringify(log)},q.method+'\\n');if(q.id===undefined)return;const result=q.method==='initialize'?{protocolVersion:'2025-11-25',capabilities:{tools:{}},serverInfo:{name:'fixture',version:'1'}}:{tools:[{name:'read_only',inputSchema:{type:'object'}}]};console.log(JSON.stringify({jsonrpc:'2.0',id:q.id,result}));});\nprocess.on('SIGTERM',()=>{fs.appendFileSync(${JSON.stringify(log)},'closed\\n');process.exit(0)});\n`);
+    fs.writeFileSync(mock, `const fs=require('fs'),rl=require('readline').createInterface({input:process.stdin});\nrl.on('line',line=>{const q=JSON.parse(line);fs.appendFileSync(${JSON.stringify(log)},q.method+'\\n');if(q.id===undefined)return;const result=q.method==='initialize'?{protocolVersion:'2025-11-25',capabilities:{tools:{}},serverInfo:{name:'fixture',version:'1'}}:{tools:[{name:'read_only',inputSchema:{type:'object'}}]};console.log(JSON.stringify({jsonrpc:'2.0',id:q.id,result}));});\nprocess.on('exit',()=>{fs.appendFileSync(${JSON.stringify(log)},'closed\\n')});process.on('SIGTERM',()=>process.exit(0));\n`);
     fs.writeFileSync(path.join(project, '.mcp.json'), JSON.stringify({ mcpServers: { fixture: { command: process.execPath, args: [mock] } } }));
     const targets = await api('session-diagnostics-targets', { cwd: project });
     assert(targets.names.includes('fixture'), 'configured MCP target missing');

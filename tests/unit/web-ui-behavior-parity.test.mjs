@@ -335,6 +335,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const extraCurrentKeys = currentDataKeys.filter((key) => !headDataKeys.includes(key)).sort();
     const missingCurrentKeys = headDataKeys.filter((key) => !currentDataKeys.includes(key)).sort();
     const allowedExtraCurrentKeys = parityAgainstHead ? [
+        'sysPromptFileName',
+        'sysPromptFiles',
+        'sysPromptFilesLoading',
+        'sysPromptFilesError',
+        'sysPromptFileMissing',
+        '_sysPromptFilesRequestToken',
         'appVersion',
         'appLatestVersion',
         'appVersionStatusError',
@@ -390,6 +396,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'promptsPathReferenceLoading',
         'promptsPathReferenceCacheKey'
     ] : [
+        'sysPromptFileName',
+        'sysPromptFiles',
+        'sysPromptFilesLoading',
+        'sysPromptFilesError',
+        'sysPromptFileMissing',
+        '_sysPromptFilesRequestToken',
         'appVersion',
         'appLatestVersion',
         'appVersionStatusError',
@@ -722,6 +734,12 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     const extraCurrentMethodKeys = currentMethodKeys.filter((key) => !headMethodKeys.includes(key)).sort();
     const missingCurrentMethodKeys = headMethodKeys.filter((key) => !currentMethodKeys.includes(key)).sort();
     const allowedExtraCurrentMethodKeys = [
+        'currentSysPromptFileName',
+        'isSysPromptCustomFile',
+        'sysPromptTargetParams',
+        'canSwitchSysPromptTarget',
+        'loadSystemPromptFiles',
+        'switchSysPromptFileName',
         'loadSessionContextHealth',
         'toggleContextHealthDetails',
         'leaveContextHealthDetails',
@@ -1947,4 +1965,16 @@ test('system prompt download uses UTF-8 BOM', async () => {
     assert.deepStrictEqual(env.snapshot().createdBlobs, [{
         parts: ['\uFEFF中文提示词'], type: 'text/markdown;charset=utf-8'
     }]);
+});
+
+
+test('Pi dynamic file state and methods retain explicit defaults in the bundled app', () => {
+    const state = currentAppOptions.data();
+    assert.strictEqual(state.sysPromptFileName, '');
+    assert.deepStrictEqual(state.sysPromptFiles, []);
+    assert.strictEqual(state.sysPromptFilesLoading, false);
+    assert.strictEqual(state.sysPromptFileMissing, false);
+    for (const name of ['currentSysPromptFileName', 'loadSystemPromptFiles', 'switchSysPromptFileName']) {
+        assert.strictEqual(typeof currentMethods[name], 'function', name);
+    }
 });

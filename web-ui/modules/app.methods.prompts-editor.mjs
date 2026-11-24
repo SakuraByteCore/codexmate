@@ -204,7 +204,7 @@ export function createPromptsEditorMethods(options = {}) {
                 (this.projectClaudeMdPath || '').trim(),
                 this.sysPromptScope || 'global',
                 this.sysPromptMode || 'system'
-            ].join('|');
+            ].concat(this.sysPromptFileName ? [this.sysPromptFileName] : []).join('|');
         },
 
         // Lazy loader for the path-reference dropdown. Fetches the OTHER tabs'
@@ -220,7 +220,7 @@ export function createPromptsEditorMethods(options = {}) {
             if (this.promptsPathReferenceCacheKey === cacheKey && !this.promptsPathReferenceLoading) {
                 return Promise.resolve();
             }
-            if (this.promptsPathReferenceLoading && this._promptsPathReferencePromise) {
+            if (this.promptsPathReferenceLoading && this._promptsPathReferencePromise && this.promptsPathReferenceCacheKey === cacheKey) {
                 return this._promptsPathReferencePromise;
             }
             if (typeof api !== 'function') {
@@ -245,6 +245,7 @@ export function createPromptsEditorMethods(options = {}) {
                 }
             };
             this.promptsPathReferenceLoading = true;
+            this.promptsPathReferenceCacheKey = cacheKey;
             const promise = Promise.all([
                 fetchEntry('get-agents-file', { metaOnly: true }),
                 fetchEntry('get-opencode-agents-file', { metaOnly: true }),
@@ -252,8 +253,9 @@ export function createPromptsEditorMethods(options = {}) {
                 projectPath
                     ? fetchEntry('get-claude-md-file', { baseDir: projectPath, metaOnly: true })
                     : Promise.resolve(null),
-                fetchEntry('get-system-prompt', { scope, mode })
+                fetchEntry('get-system-prompt', { scope, mode, ...(this.sysPromptFileName ? { fileName: this.sysPromptFileName } : {}) })
             ]).then((results) => {
+                if (cacheKey !== this.buildPromptsPathReferenceCacheKey()) return;
                 this.promptsPathReferencePaths = {
                     codex: results[0],
                     opencode: results[1],
@@ -263,6 +265,7 @@ export function createPromptsEditorMethods(options = {}) {
                 };
                 this.promptsPathReferenceCacheKey = cacheKey;
             }).finally(() => {
+                if (this._promptsPathReferencePromise !== promise) return;
                 this.promptsPathReferenceLoading = false;
                 this._promptsPathReferencePromise = null;
             });
@@ -275,7 +278,7 @@ export function createPromptsEditorMethods(options = {}) {
                 currentTab: this.promptsSubTab,
                 paths: this.promptsPathReferencePaths || {},
                 t: (key, params) => (typeof this.t === 'function' ? this.t(key, params) : key),
-                systemFile: (this.sysPromptMode || 'system') === 'append' ? 'APPEND_SYSTEM.md' : 'SYSTEM.md'
+                systemFile: this.sysPromptFileName || ((this.sysPromptMode || 'system') === 'append' ? 'APPEND_SYSTEM.md' : 'SYSTEM.md')
             });
         },
 

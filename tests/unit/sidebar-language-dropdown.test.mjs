@@ -3,6 +3,7 @@ import {
     readBundledWebUiCss,
     readBundledWebUiHtml
 } from './helpers/web-ui-source.mjs';
+import { captureCurrentBundledAppOptions } from './helpers/web-ui-app-options.mjs';
 import { createI18nMethods } from '../../web-ui/modules/i18n.mjs';
 
 test('sidebar language menu toggles and applies selected language', () => {
@@ -38,6 +39,11 @@ test('sidebar exposes an accessible language dropdown menu', () => {
     const styles = readBundledWebUiCss();
 
     assert.match(html, /class="side-language-menu"/);
+    const trigger = html.match(/<div class="side-language-menu">[\s\S]*?<\/button>/);
+    assert.ok(trigger, 'sidebar language trigger must exist');
+    assert.match(trigger[0], /@keydown\.esc\.prevent="closeLanguageMenu">\s*\{\{ currentLanguageLabel\(\) \}\}/);
+    assert.doesNotMatch(trigger[0], /\{\{ t\('settings\.language\.sideLabel'/);
+    assert.match(trigger[0], /:aria-label="t\('settings\.language\.sideLabel', \{ language: currentLanguageLabel\(\) \}\)"/);
     assert.match(html, /:aria-expanded="languageMenuOpen \? 'true' : 'false'"/);
     assert.match(html, /aria-haspopup="menu"/);
     assert.match(html, /class="side-language-dropdown" role="menu"/);
@@ -52,4 +58,15 @@ test('session source pills use the shared top spacing rhythm', () => {
     const styles = readBundledWebUiCss();
 
     assert.match(styles, /\.session-selector-section\s*\{[^}]*padding:\s*0 10px 8px;[^}]*gap:\s*0;/);
+});
+
+test('sidebar stays collapsed without a collapse or expand control', async () => {
+    const options = await captureCurrentBundledAppOptions();
+    const html = readBundledWebUiHtml();
+    assert.strictEqual(options.data().sidebarCollapsed, true);
+    assert.match(html, /:class="\['app-shell', 'sidebar-collapsed', \{ standalone: sessionStandalone \}\]"/);
+    assert.doesNotMatch(html, /side-rail-collapse-toggle|@click="toggleSidebarCollapsed"/);
+    assert.doesNotMatch(html, /'sidebar-collapsed': sidebarCollapsed/);
+    assert.match(html, /class="side-rail" v-if="!sessionStandalone"/);
+    assert.match(html, /@click="onMainTabClick\('dashboard', \$event\)"/);
 });

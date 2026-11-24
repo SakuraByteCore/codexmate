@@ -178,7 +178,7 @@ Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình,
 | **Bridge OpenAI** | ✅ | Chuyển đổi Codex Responses API sang định dạng OpenAI chuẩn |
 | **Kiểm tra sức khỏe Provider** | ✅ | Kiểm tra route provider Codex/Claude, đánh dấu cấu hình lỗi và xóa hàng loạt các provider hỏng đã chọn một cách an toàn |
 | **Mẫu Prompt** | ✅ | Hộp thoại điền biến khi gọi, chia sẻ một mẫu bằng JSON, lịch sử Diff và khôi phục cấu hình mẫu plugin. `git_diff` là văn bản được dán, không thực thi lệnh. |
-| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md toàn cục và theo dự án với kho preset chung. Điền biến trước khi áp dụng preset; cần lưu thủ công để ghi tệp. Lịch sử hiển thị Diff; xác nhận khôi phục sẽ ghi phiên bản đã chọn với bản sao lưu nguyên tử và kiểm tra thay đổi bên ngoài. |
+| **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md toàn cục và theo dự án với kho preset chung. Điền biến trước khi áp dụng preset; cần lưu thủ công để ghi tệp. Lịch sử hiển thị Diff; xác nhận khôi phục sẽ ghi phiên bản đã chọn với bản sao lưu nguyên tử và kiểm tra thay đổi bên ngoài. Tab Pi liệt kê tệp `.md` trực tiếp trong `~/.pi/agent/` hoặc `<cwd>/.pi/`, cập nhật khi mở tab hoặc danh sách tệp; không tự động nạp prompt. |
 | **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
 | **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
 

@@ -376,3 +376,24 @@ test('jumpToPromptsChangeTick centers the diff row and no-ops in edit mode', () 
     assert.deepStrictEqual(prepareCalls, [], 'edit-mode jump must not open the diff flow');
     assert.strictEqual(textarea.scrollTop, 0, 'edit-mode jump must not scroll the editor');
 });
+
+test('Pi editor exposes dynamic file selection without assigning system mode to custom files', () => {
+    const html = readProjectFile('web-ui/partials/index/panel-prompts.html');
+    assert.match(html, /for="sys-prompt-file-select"/);
+    assert.match(html, /v-for="file in sysPromptFiles"[^>]*:key="file.filename"/);
+    assert.match(html, /@pointerdown="loadSystemPromptFiles"/);
+    assert.match(html, /@change="switchSysPromptFileName\(\$event.target.value, \$event\)"/);
+    assert.match(html, /v-if="!isSysPromptCustomFile\(\)"/);
+    assert.match(html, /v-if="sysPromptFilesError"[^>]*role="alert"/);
+    for (const locale of Object.values(DICT)) assert.ok(locale['sysPrompt.fileLabel'] && locale['sysPrompt.fileUnsaved']);
+});
+
+test('Pi controls share the neighboring project tab spacing without extra label margins', () => {
+    const styles = readProjectFile('web-ui/styles/system-prompt.css');
+    const neighboringStyles = readProjectFile('web-ui/styles/modals-core.css');
+    assert.match(neighboringStyles, /\.project-path-selector\s*\{[^}]*margin-top:\s*8px;[^}]*margin-bottom:\s*4px;/);
+    assert.match(styles, /\.sys-prompt-controls\s*\{[^}]*gap:\s*8px;[^}]*margin:\s*8px 0 4px;/);
+    assert.match(styles, /\.sys-prompt-control-group\s*\{[^}]*flex:\s*1 1 180px;[^}]*min-width:\s*0;[^}]*gap:\s*4px;/);
+    assert.match(styles, /\.sys-prompt-control-group \.form-label\s*\{[^}]*margin:\s*0;[^}]*font-size:\s*0\.85em;/);
+    assert.match(styles, /\.sys-prompt-select\s*\{[^}]*min-width:\s*0;/);
+});

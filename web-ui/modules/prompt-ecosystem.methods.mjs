@@ -5,11 +5,12 @@ export function createPromptEcosystemMethods({ api }) {
     return {
         promptHistoryTarget(kind) {
             if (kind === 'sys') return {
-                key: `${this.sysPromptScope}:${this.sysPromptMode}:${this.sysHistoryPreviewId}`,
-                busy: this.sysPromptLoading || this.sysPromptSaving || this.sysPromptDiffVisible,
+                key: `${this.sysPromptScope}:${this.sysPromptMode}:${this.sysPromptFileName || ''}:${this.sysHistoryPreviewId}`,
+                busy: this.sysPromptFileMissing || this.sysPromptLoading || this.sysPromptSaving || this.sysPromptDiffVisible,
                 id: this.sysHistoryPreviewId, content: this.sysHistoryPreviewContent,
                 action: 'apply-system-prompt', saving: 'sysPromptSaving',
-                params: { scope: this.sysPromptScope, mode: this.sysPromptMode, baseHash: this.sysPromptHash },
+                params: { scope: this.sysPromptScope, mode: this.sysPromptMode, baseHash: this.sysPromptHash,
+                    ...(this.sysPromptFileName ? { fileName: this.sysPromptFileName } : {}) },
                 load: 'loadSystemPrompt', history: 'loadSysHistory', bucket: this.sysHistoryBucket
             };
             const context = this.agentsContext || 'codex';

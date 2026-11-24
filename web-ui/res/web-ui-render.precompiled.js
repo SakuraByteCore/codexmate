@@ -173,23 +173,13 @@ return function render(_ctx, _cache) {
         ]))
       : _createCommentVNode("v-if", true),
     _createElementVNode("div", {
-      class: _normalizeClass(['app-shell', { standalone: _ctx.sessionStandalone, 'sidebar-collapsed': _ctx.sidebarCollapsed }])
+      class: _normalizeClass(['app-shell', 'sidebar-collapsed', { standalone: _ctx.sessionStandalone }])
     }, [
       (!_ctx.sessionStandalone)
         ? (_openBlock(), _createElementBlock("aside", {
             key: 0,
             class: "side-rail"
           }, [
-            _createElementVNode("button", {
-              type: "button",
-              class: "side-rail-collapse-toggle",
-              "aria-pressed": _ctx.sidebarCollapsed ? 'true' : 'false',
-              "aria-label": _ctx.sidebarCollapsed ? _ctx.t('side.expand') : _ctx.t('side.collapse'),
-              title: _ctx.sidebarCollapsed ? _ctx.t('side.expand') : _ctx.t('side.collapse'),
-              onClick: _ctx.toggleSidebarCollapsed
-            }, [
-              _createElementVNode("span", { "aria-hidden": "true" }, _toDisplayString(_ctx.sidebarCollapsed ? '›' : '‹'), 1 /* TEXT */)
-            ], 8 /* PROPS */, ["aria-pressed", "aria-label", "title", "onClick"]),
             _createElementVNode("div", { class: "brand-block" }, [
               _createElementVNode("div", { class: "brand-head" }, [
                 _createElementVNode("img", {
@@ -579,7 +569,7 @@ return function render(_ctx, _cache) {
                     onClick: _ctx.toggleLanguageMenu,
                     onKeydown: _withKeys(_withModifiers(_ctx.closeLanguageMenu, ["prevent"]), ["esc"])
                   }, [
-                    _createTextVNode(_toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })) + " ", 1 /* TEXT */),
+                    _createTextVNode(_toDisplayString(_ctx.currentLanguageLabel()) + " ", 1 /* TEXT */),
                     (_openBlock(), _createElementBlock("svg", {
                       viewBox: "0 0 16 16",
                       fill: "none",
@@ -9694,30 +9684,83 @@ return function render(_ctx, _cache) {
                   ? (_openBlock(), _createElementBlock("div", { key: 2 }, [
                       _createElementVNode("div", { class: "sys-prompt-controls" }, [
                         _createElementVNode("div", { class: "sys-prompt-control-group" }, [
+                          _createElementVNode("label", {
+                            class: "form-label",
+                            for: "sys-prompt-file-select"
+                          }, _toDisplayString(_ctx.t('sysPrompt.fileLabel')), 1 /* TEXT */),
+                          _createElementVNode("select", {
+                            id: "sys-prompt-file-select",
+                            class: "form-input sys-prompt-select",
+                            value: _ctx.currentSysPromptFileName(),
+                            "aria-busy": _ctx.sysPromptFilesLoading,
+                            disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                            onFocus: _ctx.loadSystemPromptFiles,
+                            onPointerdown: _ctx.loadSystemPromptFiles,
+                            onKeydown: [
+                              _withKeys(_ctx.loadSystemPromptFiles, ["enter"]),
+                              _withKeys(_ctx.loadSystemPromptFiles, ["space"])
+                            ],
+                            onChange: $event => (_ctx.switchSysPromptFileName($event.target.value, $event))
+                          }, [
+                            (!_ctx.sysPromptFiles.some(file => file.filename === _ctx.currentSysPromptFileName()))
+                              ? (_openBlock(), _createElementBlock("option", {
+                                  key: 0,
+                                  value: _ctx.currentSysPromptFileName(),
+                                  disabled: ""
+                                }, _toDisplayString(_ctx.currentSysPromptFileName()), 9 /* TEXT, PROPS */, ["value"]))
+                              : _createCommentVNode("v-if", true),
+                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysPromptFiles, (file) => {
+                              return (_openBlock(), _createElementBlock("option", {
+                                key: file.filename,
+                                value: file.filename
+                              }, _toDisplayString(file.filename) + _toDisplayString(file.exists ? '' : ' · ' + _ctx.t('common.notExistsWillCreateOnSave')), 9 /* TEXT, PROPS */, ["value"]))
+                            }), 128 /* KEYED_FRAGMENT */))
+                          ], 40 /* PROPS, NEED_HYDRATION */, ["value", "aria-busy", "disabled", "onFocus", "onPointerdown", "onKeydown", "onChange"]),
+                          (_ctx.sysPromptFilesLoading)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 0,
+                                class: "form-hint",
+                                role: "status"
+                              }, _toDisplayString(_ctx.t('sysPrompt.filesLoading')), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true)
+                        ]),
+                        _createElementVNode("div", { class: "sys-prompt-control-group" }, [
                           _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('sysPrompt.scope.label')), 1 /* TEXT */),
                           _createElementVNode("select", {
                             class: "form-input sys-prompt-select",
                             value: _ctx.sysPromptScope,
                             onChange: $event => (_ctx.switchSysPromptScope($event.target.value)),
-                            disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible
+                            disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible || _ctx.hasSysPromptContentChanged()
                           }, [
                             _createElementVNode("option", { value: "global" }, _toDisplayString(_ctx.t('sysPrompt.scope.global')), 1 /* TEXT */),
                             _createElementVNode("option", { value: "project" }, _toDisplayString(_ctx.t('sysPrompt.scope.project')), 1 /* TEXT */)
                           ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange", "disabled"])
                         ]),
-                        _createElementVNode("div", { class: "sys-prompt-control-group" }, [
-                          _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('sysPrompt.mode.label')), 1 /* TEXT */),
-                          _createElementVNode("select", {
-                            class: "form-input sys-prompt-select",
-                            value: _ctx.sysPromptMode,
-                            onChange: $event => (_ctx.switchSysPromptMode($event.target.value)),
-                            disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible
-                          }, [
-                            _createElementVNode("option", { value: "append" }, _toDisplayString(_ctx.t('sysPrompt.mode.append')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "system" }, _toDisplayString(_ctx.t('sysPrompt.mode.system')), 1 /* TEXT */)
-                          ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange", "disabled"])
-                        ])
+                        (!_ctx.isSysPromptCustomFile())
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 0,
+                              class: "sys-prompt-control-group"
+                            }, [
+                              _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('sysPrompt.mode.label')), 1 /* TEXT */),
+                              _createElementVNode("select", {
+                                class: "form-input sys-prompt-select",
+                                value: _ctx.sysPromptMode,
+                                onChange: $event => (_ctx.switchSysPromptMode($event.target.value)),
+                                disabled: _ctx.sysPromptLoading || _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible || _ctx.hasSysPromptContentChanged()
+                              }, [
+                                _createElementVNode("option", { value: "append" }, _toDisplayString(_ctx.t('sysPrompt.mode.append')), 1 /* TEXT */),
+                                _createElementVNode("option", { value: "system" }, _toDisplayString(_ctx.t('sysPrompt.mode.system')), 1 /* TEXT */)
+                              ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange", "disabled"])
+                            ]))
+                          : _createCommentVNode("v-if", true)
                       ]),
+                      (_ctx.sysPromptFilesError)
+                        ? (_openBlock(), _createElementBlock("div", {
+                            key: 0,
+                            class: "state-message error",
+                            role: "alert"
+                          }, _toDisplayString(_ctx.sysPromptFilesError), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
                       _createElementVNode("div", { class: "prompts-editor" }, [
                         _createElementVNode("div", { class: "prompts-editor-toolbar" }, [
                           _createElementVNode("div", { class: "prompts-path-summary-wrap" }, [
@@ -9874,7 +9917,7 @@ return function render(_ctx, _cache) {
                               _createElementVNode("button", {
                                 class: "btn-mini btn-confirm-mini",
                                 onClick: _ctx.applySystemPrompt,
-                                disabled: _ctx.sysPromptSaving || _ctx.sysPromptLoading || _ctx.sysPromptDiffLoading || (!_ctx.sysPromptDiffVisible && !_ctx.hasSysPromptContentChanged()) || (_ctx.sysPromptDiffVisible && !_ctx.sysPromptDiffHasChangesValue),
+                                disabled: _ctx.sysPromptFileMissing || _ctx.sysPromptSaving || _ctx.sysPromptLoading || _ctx.sysPromptDiffLoading || (!_ctx.sysPromptDiffVisible && !_ctx.hasSysPromptContentChanged()) || (_ctx.sysPromptDiffVisible && !_ctx.sysPromptDiffHasChangesValue),
                                 title: _ctx.sysPromptDiffVisible ? _ctx.t('common.save') : _ctx.t('common.preview')
                               }, [
                                 (_ctx.sysPromptDiffVisible)

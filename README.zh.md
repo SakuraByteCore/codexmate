@@ -184,7 +184,7 @@ node cli.js thread ack <thread-id> --handoff <id> --agent <target> --evidence <s
 | **Pi Provider 配置** | ✅ | 在 Web UI 中管理 Pi 供应商，写入 `~/.pi/agent/models.json`（未知字段无损保留），并切换 `~/.pi/agent/settings.json` 中的默认供应商/模型 |
 | **Provider 健康检查** | ✅ | 探测本地 Codex/Claude provider 路由，标记失败配置，并安全批量移除已选坏配置 |
 | **提示词模板** | ✅ | 调用时弹窗填写变量，支持单模板 JSON 分享、插件模板配置历史 Diff 与回滚。`git_diff` 需粘贴差异文本，不执行命令。 |
-| **提示词文件编辑器** | ✅ | 编辑全局及项目级 CLAUDE.md / AGENTS.md，支持通用预设池。应用预设先填写变量，只更新编辑器，需手动保存。历史支持版本 Diff；确认回滚后写入所选版本，保留原子备份，校验外部修改。 |
+| **提示词文件编辑器** | ✅ | 编辑全局及项目级 CLAUDE.md / AGENTS.md，支持通用预设池。应用预设先填写变量，只更新编辑器，需手动保存。历史支持版本 Diff；确认回滚后写入所选版本，保留原子备份，校验外部修改。 Pi 页签动态列出 `~/.pi/agent/` 或 `<cwd>/.pi/` 直属 `.md`，进入页签或展开文件列表时更新；不自动加载提示词。 |
 | **MCP 集成** | ✅ | 通过 MCP stdio 暴露本地工具与资源 |
 | **自动更新** | ✅ | 通过 `codexmate update` 快速更新 CLI |
 

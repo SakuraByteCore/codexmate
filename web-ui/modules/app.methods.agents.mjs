@@ -1080,6 +1080,8 @@ export function createAgentsMethods(options = {}) {
         loadPromptsTabContent() {
             if (typeof this.loadPromptsPathReferences === "function") this.loadPromptsPathReferences();
             if (this.promptsSubTab === 'system') {
+                if (typeof this.loadSystemPromptFiles === 'function') this.loadSystemPromptFiles();
+                if (this.sysPromptLoading || this.sysPromptSaving || this.sysPromptDiffVisible || this.hasSysPromptContentChanged()) return;
                 if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
             } else {
                 if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {

@@ -184,3 +184,22 @@ test('ecosystem UI exposes invocation dialog diff rollback and sharing with loca
         }
     }
 });
+
+test('Pi history rollback uses the selected file and rejects confirmation target drift', async () => {
+    const writes = [];
+    const ctx = Object.assign({ sysPromptScope: 'global', sysPromptMode: 'system', sysPromptFileName: 'one.md',
+        sysHistoryPreviewId: 'version', sysHistoryPreviewContent: 'old', sysPromptHash: 'current',
+        sysHistoryBucket: 'one', requestConfirmDialog: async () => true, t: key => key, showMessage() {},
+        async loadSystemPrompt() {}, async loadSysHistory() {} },
+        createPromptEcosystemMethods({ api: async (action, params) => { writes.push({ action, params }); return {}; } }));
+    assert.strictEqual(await ctx.rollbackPromptHistory('sys'), true);
+    assert.strictEqual(writes[0].action, 'apply-system-prompt');
+    assert.strictEqual(writes[0].params.fileName, 'one.md');
+    assert.strictEqual(writes[0].params.baseHash, 'current');
+    ctx.requestConfirmDialog = async () => { ctx.sysPromptFileName = 'two.md'; return true; };
+    assert.strictEqual(await ctx.rollbackPromptHistory('sys'), false);
+    assert.strictEqual(writes.length, 1);
+    ctx.sysPromptFileMissing = true;
+    assert.strictEqual(await ctx.rollbackPromptHistory('sys'), false);
+    assert.strictEqual(writes.length, 1);
+});

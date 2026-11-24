@@ -116,17 +116,8 @@
                 @click="openLanguageSettings">{{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}</button>
         </div>
 
-        <div :class="['app-shell', { standalone: sessionStandalone, 'sidebar-collapsed': sidebarCollapsed }]">
+        <div :class="['app-shell', 'sidebar-collapsed', { standalone: sessionStandalone }]">
             <aside class="side-rail" v-if="!sessionStandalone">
-                <button
-                    type="button"
-                    class="side-rail-collapse-toggle"
-                    :aria-pressed="sidebarCollapsed ? 'true' : 'false'"
-                    :aria-label="sidebarCollapsed ? t('side.expand') : t('side.collapse')"
-                    :title="sidebarCollapsed ? t('side.expand') : t('side.collapse')"
-                    @click="toggleSidebarCollapsed">
-                    <span aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
-                </button>
                 <div class="brand-block">
                     <div class="brand-head">
                         <img class="brand-logo" src="/res/logo-pack.webp" alt="Codex Mate logo">
@@ -402,7 +393,7 @@
                                 aria-haspopup="menu"
                                 @click="toggleLanguageMenu"
                                 @keydown.esc.prevent="closeLanguageMenu">
-                                {{ t('settings.language.sideLabel', { language: currentLanguageLabel() }) }}
+                                {{ currentLanguageLabel() }}
                                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
                             </button>
                             <div v-if="languageMenuOpen" class="side-language-dropdown" role="menu" @focusout="handleLanguageMenuFocusOut">

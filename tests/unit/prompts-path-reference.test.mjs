@@ -271,3 +271,33 @@ test('insert works for the agents editor meta as well', async () => {
     const optionIds = vm.promptsPathReferenceOptionList().map((opt) => opt.id);
     assert.deepEqual(optionIds, ['opencode', 'claudeGlobal', 'claudeProject', 'system'], 'codex tab excludes its own entry');
 });
+
+test('Pi selected file updates path-reference identity and cache without changing legacy entry order', async () => {
+    const { vm, apiCalls } = createPathRefVm();
+    vm.sysPromptFileName = 'extra.md';
+    await vm.loadPromptsPathReferences();
+    const firstKey = vm.promptsPathReferenceCacheKey;
+    assert.strictEqual(apiCalls.find(call => call.action === 'get-system-prompt').params.fileName, 'extra.md');
+    vm.promptsSubTab = 'codex';
+    assert.match(vm.promptsPathReferenceOptionList().find(option => option.id === 'system').label, /extra.md/);
+    vm.sysPromptFileName = 'second.md';
+    await vm.loadPromptsPathReferences();
+    assert.notStrictEqual(vm.promptsPathReferenceCacheKey, firstKey);
+    assert.strictEqual(apiCalls.filter(call => call.action === 'get-system-prompt').at(-1).params.fileName, 'second.md');
+});
+
+test('late Pi reference response cannot overwrite paths for a newly selected file', async () => {
+    const requests = [];
+    const methods = createPromptsEditorMethods({ api: (action, params) => action === 'get-system-prompt'
+        ? new Promise(resolve => requests.push({ params, resolve })) : Promise.resolve({ path: '/other.md', exists: true }) });
+    const vm = Object.assign({ sysPromptScope: 'global', sysPromptMode: 'system', sysPromptFileName: 'one.md' }, methods);
+    const first = vm.loadPromptsPathReferences();
+    vm.sysPromptFileName = 'two.md';
+    const second = vm.loadPromptsPathReferences();
+    requests[1].resolve({ path: '/pi/two.md', exists: true });
+    await second;
+    requests[0].resolve({ path: '/pi/one.md', exists: true });
+    await first;
+    assert.strictEqual(vm.promptsPathReferencePaths.system.path, '/pi/two.md');
+    assert.strictEqual(vm.promptsPathReferenceLoading, false);
+});

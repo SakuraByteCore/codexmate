@@ -272,20 +272,29 @@
                 <div v-if="promptsSubTab === 'system'">
                     <div class="sys-prompt-controls">
                         <div class="sys-prompt-control-group">
+                            <label class="form-label" for="sys-prompt-file-select">{{ t('sysPrompt.fileLabel') }}</label>
+                            <select id="sys-prompt-file-select" class="form-input sys-prompt-select" :value="currentSysPromptFileName()" :aria-busy="sysPromptFilesLoading" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" @focus="loadSystemPromptFiles" @pointerdown="loadSystemPromptFiles" @keydown.enter="loadSystemPromptFiles" @keydown.space="loadSystemPromptFiles" @change="switchSysPromptFileName($event.target.value, $event)">
+                                <option v-if="!sysPromptFiles.some(file => file.filename === currentSysPromptFileName())" :value="currentSysPromptFileName()" disabled>{{ currentSysPromptFileName() }}</option>
+                                <option v-for="file in sysPromptFiles" :key="file.filename" :value="file.filename">{{ file.filename }}{{ file.exists ? '' : ' · ' + t('common.notExistsWillCreateOnSave') }}</option>
+                            </select>
+                            <div v-if="sysPromptFilesLoading" class="form-hint" role="status">{{ t('sysPrompt.filesLoading') }}</div>
+                        </div>
+                        <div class="sys-prompt-control-group">
                             <label class="form-label">{{ t('sysPrompt.scope.label') }}</label>
-                            <select class="form-input sys-prompt-select" :value="sysPromptScope" @change="switchSysPromptScope($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible">
+                            <select class="form-input sys-prompt-select" :value="sysPromptScope" @change="switchSysPromptScope($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible || hasSysPromptContentChanged()">
                                 <option value="global">{{ t('sysPrompt.scope.global') }}</option>
                                 <option value="project">{{ t('sysPrompt.scope.project') }}</option>
                             </select>
                         </div>
-                        <div class="sys-prompt-control-group">
+                        <div v-if="!isSysPromptCustomFile()" class="sys-prompt-control-group">
                             <label class="form-label">{{ t('sysPrompt.mode.label') }}</label>
-                            <select class="form-input sys-prompt-select" :value="sysPromptMode" @change="switchSysPromptMode($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible">
+                            <select class="form-input sys-prompt-select" :value="sysPromptMode" @change="switchSysPromptMode($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible || hasSysPromptContentChanged()">
                                 <option value="append">{{ t('sysPrompt.mode.append') }}</option>
                                 <option value="system">{{ t('sysPrompt.mode.system') }}</option>
                             </select>
                         </div>
                     </div>
+                    <div v-if="sysPromptFilesError" class="state-message error" role="alert">{{ sysPromptFilesError }}</div>
 
                     <div class="prompts-editor">
                         <div class="prompts-editor-toolbar">
@@ -332,7 +341,7 @@
                                     <button class="btn-mini" @click="sysPromptDiffVisible ? resetSysPromptDiffState() : cancelSysPromptEdit()" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                     </button>
-                                    <button class="btn-mini btn-confirm-mini" @click="applySystemPrompt" :disabled="sysPromptSaving || sysPromptLoading || sysPromptDiffLoading || (!sysPromptDiffVisible && !hasSysPromptContentChanged()) || (sysPromptDiffVisible && !sysPromptDiffHasChangesValue)" :title="sysPromptDiffVisible ? t('common.save') : t('common.preview')">
+                                    <button class="btn-mini btn-confirm-mini" @click="applySystemPrompt" :disabled="sysPromptFileMissing || sysPromptSaving || sysPromptLoading || sysPromptDiffLoading || (!sysPromptDiffVisible && !hasSysPromptContentChanged()) || (sysPromptDiffVisible && !sysPromptDiffHasChangesValue)" :title="sysPromptDiffVisible ? t('common.save') : t('common.preview')">
                                         <svg v-if="sysPromptDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
                                         <svg v-else class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>

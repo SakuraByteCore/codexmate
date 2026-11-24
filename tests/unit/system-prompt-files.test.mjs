@@ -329,3 +329,89 @@ test('saveSystemPromptFile returns updated content and hash after write', () => 
     assert.strictEqual(result.exists, true);
     assert.strictEqual(result.replaceDefault, true);
 });
+
+test('Pi file list discovers new direct markdown files without scanning nested directories', () => {
+    const { tmpDir, ctrl } = createTestController();
+    const directory = path.join(tmpDir, 'agent');
+    fs.mkdirSync(path.join(directory, 'nested'), { recursive: true });
+    fs.writeFileSync(path.join(directory, 'extra.md'), 'extra');
+    fs.writeFileSync(path.join(directory, 'notes.txt'), 'not markdown');
+    fs.writeFileSync(path.join(directory, 'nested', 'hidden.md'), 'nested');
+    const initial = ctrl.listSystemPromptFiles({ scope: 'global' });
+    assert.deepStrictEqual(initial.files.map(file => file.filename), ['SYSTEM.md', 'APPEND_SYSTEM.md', 'extra.md']);
+    assert.strictEqual(initial.files[0].exists, false);
+    fs.writeFileSync(path.join(directory, 'new.md'), 'new');
+    assert.strictEqual(ctrl.listSystemPromptFiles({ scope: 'global' }).files.filter(file => file.filename === 'new.md').length, 1);
+    assert.strictEqual(ctrl.readSystemPromptFile({ scope: 'global', fileName: 'extra.md' }).replaceDefault, false);
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('Pi file lists preserve missing standard targets and isolate project scope', () => {
+    const { tmpDir, ctrl } = createTestController();
+    assert.deepStrictEqual(ctrl.listSystemPromptFiles({ scope: 'global' }).files.map(file => file.exists), [false, false]);
+    const project = path.join(tmpDir, 'project');
+    fs.mkdirSync(path.join(project, '.pi'), { recursive: true });
+    fs.writeFileSync(path.join(project, '.pi', 'project.md'), 'project');
+    const result = ctrl.listSystemPromptFiles({ scope: 'project', cwd: project });
+    assert.strictEqual(result.directory, path.join(project, '.pi'));
+    assert.strictEqual(result.files.at(-1).filename, 'project.md');
+    assert.strictEqual(ctrl.readSystemPromptFile({ scope: 'project', cwd: project, fileName: 'project.md' }).content, 'project');
+    assert.ok(!ctrl.listSystemPromptFiles({ scope: 'global' }).files.some(file => file.filename === 'project.md'));
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('Pi custom file operations reject traversal symlinks and directory targets', () => {
+    const { tmpDir, ctrl } = createTestController();
+    const directory = path.join(tmpDir, 'agent');
+    fs.mkdirSync(path.join(directory, 'directory.md'), { recursive: true });
+    const outside = path.join(tmpDir, 'outside.md');
+    fs.writeFileSync(outside, 'protected');
+    fs.symlinkSync(outside, path.join(directory, 'link.md'));
+    for (const fileName of ['../outside.md', '/outside.md', 'nested/x.md', 'nested\\x.md', 'bad\0.md', 'notes.txt', '']) {
+        assert.throws(() => ctrl.readSystemPromptFile({ scope: 'global', fileName }), /Invalid system prompt filename/, fileName);
+        assert.throws(() => ctrl.saveSystemPromptFile({ scope: 'global', fileName, content: 'changed' }), /Invalid system prompt filename/, fileName);
+    }
+    for (const fileName of ['link.md', 'directory.md']) {
+        assert.ok(ctrl.readSystemPromptFile({ scope: 'global', fileName }).error, fileName);
+        assert.ok(ctrl.saveSystemPromptFile({ scope: 'global', fileName, content: 'changed' }).error, fileName);
+        assert.ok(ctrl.buildSystemPromptDiff({ scope: 'global', fileName, content: 'changed' }).error, fileName);
+        assert.ok(!ctrl.listSystemPromptFiles({ scope: 'global' }).files.some(file => file.filename === fileName));
+    }
+    assert.strictEqual(fs.readFileSync(outside, 'utf8'), 'protected');
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('Pi custom files keep independent histories and retain conflict and deletion protection', () => {
+    const buckets = [];
+    const { tmpDir, ctrl } = createTestController({ controllerDeps: {
+        backupPromptBeforeWrite(bucket, file) { buckets.push({ bucket, file }); return {}; }
+    } });
+    const directory = path.join(tmpDir, 'agent');
+    fs.mkdirSync(directory, { recursive: true });
+    for (const fileName of ['one.md', 'two.md']) fs.writeFileSync(path.join(directory, fileName), 'original');
+    const first = ctrl.readSystemPromptFile({ scope: 'global', fileName: 'one.md' });
+    const diff = ctrl.buildSystemPromptDiff({ scope: 'global', fileName: 'one.md', content: 'changed' });
+    assert.strictEqual(diff.filename, 'one.md');
+    assert.strictEqual(diff.diff.hasChanges, true);
+    const saved = ctrl.saveSystemPromptFile({ scope: 'global', fileName: 'one.md', content: 'changed', baseHash: first.hash });
+    assert.strictEqual(saved.content, 'changed\n');
+    assert.strictEqual(saved.historyBucket, first.historyBucket);
+    ctrl.saveSystemPromptFile({ scope: 'global', fileName: 'two.md', content: 'second' });
+    assert.notStrictEqual(buckets[0].bucket, buckets[1].bucket);
+    assert.ok(ctrl.saveSystemPromptFile({ scope: 'global', fileName: 'one.md', content: 'stale', baseHash: first.hash }).error);
+    fs.unlinkSync(path.join(directory, 'one.md'));
+    assert.ok(ctrl.saveSystemPromptFile({ scope: 'global', fileName: 'one.md', content: 'recreate', baseHash: saved.hash }).error);
+    assert.strictEqual(fs.existsSync(path.join(directory, 'one.md')), false);
+    assert.strictEqual(ctrl.readSystemPromptFile({ scope: 'global', mode: 'system' }).historyBucket, 'system_global_global');
+    assert.ok(ctrl.saveSystemPromptFile({ scope: 'global', fileName: 'two.md', content: '中'.repeat(1024 * 1024) }).error);
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('Pi standard modes retain their legacy character-size limit for non-ASCII content', () => {
+    const { tmpDir, ctrl } = createTestController();
+    const content = '中'.repeat(1024 * 1024);
+    const saved = ctrl.saveSystemPromptFile({ scope: 'global', mode: 'system', content });
+    assert.ok(!saved.error, saved.error);
+    assert.strictEqual(ctrl.readSystemPromptFile({ scope: 'global', mode: 'system' }).content, content + '\n');
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+});

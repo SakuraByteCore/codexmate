@@ -29,6 +29,8 @@ function createSystemPromptFileController(deps = {}) {
     };
 
     const SCOPES = ['global', 'project'];
+    const MAX_PROMPT_BYTES = 2 * 1024 * 1024;
+    const READ_FLAGS = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0);
 
     function normalizeMode(mode) {
         const key = typeof mode === 'string' ? mode.trim() : '';
@@ -56,45 +58,60 @@ function createSystemPromptFileController(deps = {}) {
         return crypto.createHash('sha256').update(String(content || '')).digest('hex');
     }
 
-    function resolveSystemPromptFilePath(params = {}) {
+    function isValidFileName(filename) {
+        return typeof filename === 'string' && filename.length > 3
+            && filename === filename.trim() && filename.endsWith('.md')
+            && !/[\\/\0]/.test(filename) && path.basename(filename) === filename;
+    }
+
+    function resolveSystemPromptDirectory(params) {
         const scope = normalizeScope(params.scope);
-        const mode = normalizeMode(params.mode);
-        const filename = MODES[mode];
-        let base;
-        if (scope === 'global') {
-            base = PI_AGENT_DIR;
-        } else {
-            const cwd = typeof params.cwd === 'string' && params.cwd.trim()
-                ? params.cwd.trim()
-                : process.cwd();
-            base = path.join(path.resolve(cwd), '.pi');
+        const cwd = typeof params.cwd === 'string' && params.cwd.trim() ? params.cwd.trim() : process.cwd();
+        return { scope, directory: scope === 'global' ? path.resolve(PI_AGENT_DIR) : path.join(path.resolve(cwd), '.pi') };
+    }
+
+    function resolveSystemPromptFilePath(params = {}) {
+        const { scope, directory } = resolveSystemPromptDirectory(params);
+        const hasFileName = Object.prototype.hasOwnProperty.call(params, 'fileName');
+        if (hasFileName && !isValidFileName(params.fileName)) {
+            throw new Error('Invalid system prompt filename: expected a direct .md file');
         }
-        return {
-            scope,
-            mode,
-            filename,
-            path: path.join(base, filename),
-            replaceDefault: mode === 'system'
-        };
+        const requestedMode = normalizeMode(hasFileName ? (params.mode || 'system') : params.mode);
+        const filename = hasFileName ? params.fileName : MODES[requestedMode];
+        const mode = filename === MODES.append ? 'append' : (filename === MODES.system ? 'system' : requestedMode);
+        return { scope, mode, filename, path: path.join(directory, filename), replaceDefault: filename === MODES.system };
+    }
+
+    function systemHistoryBucket(target) {
+        if (!Object.values(MODES).includes(target.filename)) return 'system_file_' + hashContent(target.path);
+        return 'system_' + target.scope + '_' + (target.scope === 'project'
+            ? sanitizeSystemHistoryId(path.dirname(target.path)) : 'global');
+    }
+
+    function listSystemPromptFiles(params = {}) {
+        const { scope, directory } = resolveSystemPromptDirectory(params);
+        try {
+            let entries;
+            try { entries = fs.readdirSync(directory, { withFileTypes: true }); }
+            catch (error) { if (error.code !== 'ENOENT') throw error; entries = []; }
+            const files = entries.filter(entry => entry.isFile() && isValidFileName(entry.name))
+                .map(entry => ({ filename: entry.name, path: path.join(directory, entry.name), exists: true }));
+            for (const filename of Object.values(MODES)) {
+                if (!entries.some(entry => entry.name === filename)) {
+                    files.push({ filename, path: path.join(directory, filename), exists: false });
+                }
+            }
+            const order = Object.values(MODES);
+            files.sort((left, right) => {
+                const rank = name => order.includes(name) ? order.indexOf(name) : order.length;
+                return rank(left.filename) - rank(right.filename) || left.filename.localeCompare(right.filename);
+            });
+            return { scope, directory, files };
+        } catch (error) { return { scope, directory, files: [], error: '读取 Pi 文件列表失败: ' + error.message }; }
     }
 
     function readSystemPromptFile(params = {}) {
-        const target = resolveSystemPromptFilePath(params);
-        const exists = fs.existsSync(target.path);
-        let content = '';
-        if (exists) {
-            try {
-                content = fs.readFileSync(target.path, 'utf8');
-            } catch (e) {
-                return { ...target, exists: false, content: '', hash: hashContent(''), error: '读取 system prompt 失败: ' + e.message };
-            }
-        }
-        return {
-            ...target,
-            exists,
-            content,
-            hash: hashContent(content)
-        };
+        return readSystemPromptFilePath(resolveSystemPromptFilePath(params));
     }
 
     function saveSystemPromptFile(params = {}) {
@@ -102,13 +119,19 @@ function createSystemPromptFileController(deps = {}) {
         if (!content.trim()) {
             return { error: 'System prompt 不能为空' };
         }
-        if (content.length > 2 * 1024 * 1024) {
+        if (content.length > MAX_PROMPT_BYTES) {
             return { error: '内容过大（最大 2MB）' };
         }
         const target = resolveSystemPromptFilePath(params);
+        if (!Object.values(MODES).includes(target.filename) && Buffer.byteLength(content, 'utf8') > MAX_PROMPT_BYTES) {
+            return { error: '内容过大（最大 2MB）' };
+        }
         const current = readSystemPromptFilePath(target);
         if (current.error) {
             return { error: current.error };
+        }
+        if (!Object.values(MODES).includes(target.filename) && !current.exists) {
+            return { error: '文件不存在，请刷新文件列表' };
         }
         const baseHash = typeof params.baseHash === 'string' ? params.baseHash.trim() : '';
         if (baseHash && baseHash !== current.hash) {
@@ -119,9 +142,7 @@ function createSystemPromptFileController(deps = {}) {
             const dir = path.dirname(target.path);
             fs.mkdirSync(dir, { recursive: true });
             if (typeof backupPromptBeforeWrite === 'function') {
-                const bucket = 'system_' + target.scope + '_' + (target.scope === 'project'
-                    ? sanitizeSystemHistoryId(path.dirname(target.path))
-                    : 'global');
+                const bucket = systemHistoryBucket(target);
                 const backup = backupPromptBeforeWrite(bucket, target.path);
                 if (backup && backup.error) return { error: backup.error };
                 sysHistoryBucket = bucket;
@@ -138,23 +159,22 @@ function createSystemPromptFileController(deps = {}) {
     }
 
     function readSystemPromptFilePath(resolved) {
-        const exists = fs.existsSync(resolved.path);
+        let exists = false;
         let content = '';
-        if (exists) {
-            try {
-                content = fs.readFileSync(resolved.path, 'utf8');
-            } catch (e) {
-                return { ...resolved, exists: false, content: '', hash: hashContent(''), error: '读取 system prompt 失败: ' + e.message };
+        try {
+            const stat = fs.lstatSync(resolved.path);
+            if (!stat.isFile()) throw new Error('目标必须是普通 .md 文件，不能使用符号链接');
+            if (!Object.values(MODES).includes(resolved.filename) && stat.size > MAX_PROMPT_BYTES) {
+                throw new Error('内容过大（最大 2MB）');
+            }
+            content = fs.readFileSync(resolved.path, { encoding: 'utf8', flag: READ_FLAGS });
+            exists = true;
+        } catch (error) {
+            if (error.code !== 'ENOENT') {
+                return { ...resolved, exists: false, content: '', hash: hashContent(''), error: '读取 system prompt 失败: ' + error.message };
             }
         }
-        return {
-            ...resolved,
-            historyBucket: 'system_' + resolved.scope + '_' + (resolved.scope === 'project'
-                ? sanitizeSystemHistoryId(path.dirname(resolved.path)) : 'global'),
-            exists,
-            content,
-            hash: hashContent(content)
-        };
+        return { ...resolved, historyBucket: systemHistoryBucket(resolved), exists, content, hash: hashContent(content) };
     }
 
     function buildSystemPromptDiff(params = {}) {
@@ -182,11 +202,13 @@ function createSystemPromptFileController(deps = {}) {
             path: target.path,
             exists: current.exists,
             scope: target.scope,
-            mode: target.mode
+            mode: target.mode,
+            filename: target.filename
         };
     }
 
     return {
+        listSystemPromptFiles,
         readSystemPromptFile,
         saveSystemPromptFile,
         buildSystemPromptDiff,

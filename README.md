@@ -186,7 +186,7 @@ After finding your conversations, manage the configuration, skills, and tasks us
 | **Pi Provider Config** | ✅ | Manage Pi providers in the Web UI writing to `~/.pi/agent/models.json` (unknown fields preserved) and switch the default provider/model in `~/.pi/agent/settings.json` |
 | **Provider Health Check** | ✅ | Probe local Codex/Claude provider routes, highlight failed configs, and bulk-remove selected broken providers safely |
 | **Prompt Templates** | ✅ | Variable-fill dialog on invocation, one-template JSON sharing, and versioned plugin template configuration with history Diff and rollback. `git_diff` is pasted text, not an executed command. |
-| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with a shared preset pool. Presets fill variables before updating the editor; save manually to write files. History shows version Diff; confirmed rollback writes the selected version with an atomic backup and concurrent-change checks. |
+| **Prompt File Editor** | ✅ | Edit global and project-level CLAUDE.md / AGENTS.md with a shared preset pool. Presets fill variables before updating the editor; save manually to write files. History shows version Diff; confirmed rollback writes the selected version with an atomic backup and concurrent-change checks. Pi lists direct `.md` files in `~/.pi/agent/` or `<cwd>/.pi/`, refreshing on tab entry or file-picker opening. Listing does not auto-load prompts. |
 | **MCP Integration** | ✅ | Expose local tools and resources via MCP stdio |
 | **Auto Update** | ✅ | Quick update CLI via `codexmate update` |
 

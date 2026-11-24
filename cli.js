@@ -3086,6 +3086,7 @@ const {
 });
 
 const {
+    listSystemPromptFiles,
     readSystemPromptFile,
     saveSystemPromptFile,
     buildSystemPromptDiff
@@ -14786,6 +14787,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'apply-openclaw-workspace-file':
                             result = applyOpenclawWorkspaceFile(params || {});
+                            break;
+                        case 'list-system-prompt-files':
+                            result = listSystemPromptFiles(params || {});
                             break;
                         case 'get-system-prompt':
                             result = readSystemPromptFile(params || {});

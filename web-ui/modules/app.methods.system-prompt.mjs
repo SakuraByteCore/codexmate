@@ -14,19 +14,83 @@ export function createSystemPromptMethods(options = {}) {
 
     return {
 
+        currentSysPromptFileName() {
+            return this.sysPromptFileName || (this.sysPromptMode === 'append' ? 'APPEND_SYSTEM.md' : 'SYSTEM.md');
+        },
+
+        isSysPromptCustomFile() {
+            return !['SYSTEM.md', 'APPEND_SYSTEM.md'].includes(this.currentSysPromptFileName());
+        },
+
+        sysPromptTargetParams() {
+            return {
+                scope: this.sysPromptScope || 'global', mode: this.sysPromptMode || 'append',
+                ...(this.sysPromptFileName ? { fileName: this.sysPromptFileName } : {})
+            };
+        },
+
+        canSwitchSysPromptTarget() {
+            if (this.sysPromptLoading || this.sysPromptSaving || this.sysPromptDiffVisible) return false;
+            if (!this.hasSysPromptContentChanged()) return true;
+            this.showMessage(this.t('sysPrompt.fileUnsaved'), 'info');
+            return false;
+        },
+
+        async loadSystemPromptFiles() {
+            if (this.sysPromptFilesLoading) return;
+            const scope = this.sysPromptScope || 'global';
+            const token = issueLatestRequestToken(this, '_sysPromptFilesRequestToken');
+            this.sysPromptFilesLoading = true;
+            try {
+                const result = await api('list-system-prompt-files', { scope });
+                if (!isLatestRequestToken(this, '_sysPromptFilesRequestToken', token) || scope !== this.sysPromptScope) return;
+                if (result.error) throw new Error(result.error);
+                this.sysPromptFiles = result.files;
+                const isListed = result.files.some(file => file.filename === this.currentSysPromptFileName());
+                if (!isListed) this.sysPromptFileMissing = true;
+                this.sysPromptFilesError = !isListed ? this.t('sysPrompt.fileMissing')
+                    : (this.sysPromptFileMissing ? this.sysPromptFilesError : '');
+            } catch (error) {
+                if (isLatestRequestToken(this, '_sysPromptFilesRequestToken', token) && scope === this.sysPromptScope) {
+                    this.sysPromptFilesError = error.message || this.t('toast.load.fail');
+                }
+            } finally {
+                if (isLatestRequestToken(this, '_sysPromptFilesRequestToken', token)) this.sysPromptFilesLoading = false;
+            }
+        },
+
+        switchSysPromptFileName(filename, event) {
+            if (event) event.target.value = this.currentSysPromptFileName();
+            if (filename === this.currentSysPromptFileName() || !this.canSwitchSysPromptTarget()) return;
+            if (!this.sysPromptFiles.some(file => file.filename === filename)) return;
+            this.sysPromptFileName = filename;
+            if (filename === 'SYSTEM.md') this.sysPromptMode = 'system';
+            if (filename === 'APPEND_SYSTEM.md') this.sysPromptMode = 'append';
+            this.closeSysHistory();
+            this.loadSystemPrompt();
+        },
+
         switchSysPromptScope(scope) {
-            if (this.sysPromptLoading || this.sysPromptSaving) return;
+            if (!this.canSwitchSysPromptTarget()) return;
             const normalized = scope === 'project' ? scope : 'global';
             if (normalized === this.sysPromptScope) return;
             this.sysPromptScope = normalized;
+            this.sysPromptFileName = '';
+            this.sysPromptFiles = [];
+            this._sysPromptFilesRequestToken = null;
+            this.sysPromptFilesLoading = false;
+            this.closeSysHistory();
+            this.loadSystemPromptFiles();
             this.loadSystemPrompt();
         },
 
         switchSysPromptMode(mode) {
-            if (this.sysPromptLoading || this.sysPromptSaving) return;
+            if (!this.canSwitchSysPromptTarget()) return;
             const normalized = mode === 'system' ? mode : 'append';
             if (normalized === this.sysPromptMode) return;
             this.sysPromptMode = normalized;
+            this.sysPromptFileName = normalized === 'system' ? 'SYSTEM.md' : 'APPEND_SYSTEM.md';
+            this.closeSysHistory();
             this.loadSystemPrompt();
         },
 
@@ -53,24 +117,29 @@ export function createSystemPromptMethods(options = {}) {
             const mode = this.sysPromptMode || 'append';
             const content = typeof this.sysPromptContent === 'string' ? this.sysPromptContent : '';
             const original = typeof this.sysPromptOriginalContent === 'string' ? this.sysPromptOriginalContent : '';
-            return `${scope}::${mode}::${content.length}::${content}::${original.length}::${original}`;
+            return `${scope}::${mode}::${this.currentSysPromptFileName()}::${content.length}::${content}::${original.length}::${original}`;
         },
 
         async loadSystemPrompt() {
             const requestToken = issueLatestRequestToken(this, '_sysPromptOpenRequestToken');
+            const filename = this.currentSysPromptFileName();
             this.sysPromptLoading = true;
+            this.sysPromptFileMissing = true;
             this.resetSysPromptDiffState();
             try {
-                const params = {
-                    scope: this.sysPromptScope || 'global',
-                    mode: this.sysPromptMode || 'append'
-                };
+                const params = this.sysPromptTargetParams();
                 const res = await api('get-system-prompt', params);
-                if (!isLatestRequestToken(this, '_sysPromptOpenRequestToken', requestToken)) return;
-                if (res.error) {
-                    this.showMessage(res.error, 'error');
+                if (!isLatestRequestToken(this, '_sysPromptOpenRequestToken', requestToken)
+                    || params.scope !== this.sysPromptScope || filename !== this.currentSysPromptFileName()) return;
+                if (res.error || (this.isSysPromptCustomFile() && !res.exists)) {
+                    this.sysPromptFileMissing = true;
+                    this.sysPromptFilesError = res.error || this.t('sysPrompt.fileMissing');
+                    this.showMessage(this.sysPromptFilesError, 'error');
                     return;
                 }
+                this.sysPromptFileName = res.filename || this.currentSysPromptFileName();
+                this.sysPromptFileMissing = false;
+                this.sysPromptFilesError = '';
                 this.sysPromptContent = res.content || '';
                 this.sysPromptOriginalContent = this.sysPromptContent;
                 this.sysPromptPath = res.path || '';
@@ -79,7 +148,9 @@ export function createSystemPromptMethods(options = {}) {
                 this.sysHistoryBucket = res.historyBucket || '';
             } catch (e) {
                 if (!isLatestRequestToken(this, '_sysPromptOpenRequestToken', requestToken)) return;
-                this.showMessage(this.t('toast.load.fail'), 'error');
+                this.sysPromptFileMissing = true;
+                this.sysPromptFilesError = this.t('toast.load.fail');
+                this.showMessage(this.sysPromptFilesError, 'error');
             } finally {
                 if (isLatestRequestToken(this, '_sysPromptOpenRequestToken', requestToken)) {
                     this.sysPromptLoading = false;
@@ -147,8 +218,7 @@ export function createSystemPromptMethods(options = {}) {
                 }
                 const rpcParams = {
                     ...previewRequest.params,
-                    scope: this.sysPromptScope || 'global',
-                    mode: this.sysPromptMode || 'append'
+                    ...this.sysPromptTargetParams()
                 };
                 const res = await apiWithMeta('preview-system-prompt-diff', rpcParams);
                 if (!shouldApplyPreviewState()) return;
@@ -188,7 +258,7 @@ export function createSystemPromptMethods(options = {}) {
         },
 
         async applySystemPrompt() {
-            if (this.sysPromptSaving) return;
+            if (this.sysPromptSaving || this.sysPromptFileMissing) return;
             if (!this.sysPromptDiffVisible) {
                 if (!this.hasSysPromptContentChanged()) {
                     this.showMessage(this.t('toast.noChanges'), 'info');
@@ -214,8 +284,7 @@ export function createSystemPromptMethods(options = {}) {
             this.sysPromptSaving = true;
             try {
                 const params = {
-                    scope: this.sysPromptScope || 'global',
-                    mode: this.sysPromptMode || 'append',
+                    ...this.sysPromptTargetParams(),
                     content: this.sysPromptContent,
                     baseHash: this.sysPromptHash
                 };
@@ -248,7 +317,7 @@ export function createSystemPromptMethods(options = {}) {
         exportSysPromptContent() {
             const content = typeof this.sysPromptContent === 'string' ? this.sysPromptContent : '';
             if (!content) return;
-            const filename = (this.sysPromptMode === 'system' ? 'SYSTEM.md' : 'APPEND_SYSTEM.md');
+            const filename = this.sysPromptFileName || (this.sysPromptMode === 'system' ? 'SYSTEM.md' : 'APPEND_SYSTEM.md');
             this.downloadTextFile(filename, content, 'text/markdown;charset=utf-8');
         },
 
@@ -292,6 +361,7 @@ export function createSystemPromptMethods(options = {}) {
             if (typeof this.sysHistoryBucket === 'string' && this.sysHistoryBucket) {
                 return this.sysHistoryBucket;
             }
+            if (this.isSysPromptCustomFile()) return '';
             const scope = this.sysPromptScope || 'global';
             return 'system_' + scope + '_global';
         },
@@ -299,6 +369,7 @@ export function createSystemPromptMethods(options = {}) {
         async openSysHistory() {
             if (this.sysHistoryLoading) return;
             const bucket = this.resolveSysHistoryBucket();
+            if (!bucket || this.sysPromptFileMissing) return;
             this.sysHistoryVisible = true;
             this.sysHistoryError = '';
             await this.loadSysHistory(bucket);
