@@ -36,6 +36,7 @@ const testKilocodeConfig = require('./test-kilocode-config');
 const testOpencodeAgentsFile = require('./test-opencode-agents-file');
 const testPromptsEcosystem = require('./test-prompts-ecosystem');
 const testContextHealth = require('./test-context-health');
+const testSessionFeatures = require('./test-session-features');
 const runRecentHealthE2E = require('./recent-health.e2e');
 const testWebUiSessionTab = require('./test-web-ui-session-tab');
 const testWebUiUrlRouting = require('./test-web-ui-url-routing');
@@ -224,6 +225,7 @@ fs.writeFileSync(path.join(process.env.HOME, 'kilocode-launch.json'), JSON.strin
         await testOpencodeAgentsFile(ctx);
         await testPromptsEcosystem(ctx);
         await testContextHealth(ctx);
+        await testSessionFeatures(ctx);
 
     } finally {
         const waitForExit = new Promise((resolve) => {

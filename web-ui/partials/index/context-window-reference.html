@@ -1,0 +1,17 @@
+<section v-if="sessionContextHealth" class="context-window-reference" :aria-label="t('features.windowReference')">
+    <div class="feature-section-heading"><h4>{{ t('features.windowReference') }}</h4><small v-if="contextReference?.percentage !== undefined" class="feature-meta">{{ t('features.windowSource.' + contextReference.source) }}</small></div>
+    <p v-if="contextReference?.percentage !== undefined" class="feature-hint">{{ t('features.contextEstimate', { percent: contextReference.percentage.toFixed(2), window: contextReference.window }) }}</p>
+    <p v-else class="feature-hint">{{ t('features.windowStatus.' + (contextReference?.status || 'unknown')) }}</p>
+    <details class="feature-disclosure">
+        <summary>{{ t('features.windowSettings') }}</summary>
+        <div class="feature-window-fields">
+            <label v-if="sessionContextHealth.models?.length">{{ t('features.model') }}<select v-model="contextSelectedModel" :aria-label="t('features.model')"><option value="">{{ t('features.chooseModel') }}</option><option v-for="model in sessionContextHealth.models" :key="model" :value="model">{{ model }}</option></select></label>
+            <label>{{ t('features.contextWindow') }}<input v-model="contextWindowInput" type="number" min="1" step="1" :aria-label="t('features.contextWindow')"></label>
+            <button type="button" class="btn-mini" @click="saveContextPreferences(false)" :disabled="contextReference?.status === 'invalid'">{{ t('features.save') }}</button>
+        </div>
+    </details>
+    <div v-if="contextReference && ['warning', 'high'].includes(contextReference.status) && !contextReminderDismissed" role="status" class="feature-window-warning">
+        <span>{{ t('features.windowStatus.' + contextReference.status) }}</span>
+        <div class="feature-record-actions"><button type="button" class="btn-mini" @click="handoffExpanded = true">{{ t('features.handoffs') }}</button><button type="button" class="btn-mini feature-quiet" @click="saveContextPreferences(true)">{{ t('features.dismiss') }}</button></div>
+    </div>
+</section>

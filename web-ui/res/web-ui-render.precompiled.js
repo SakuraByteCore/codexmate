@@ -1,7 +1,9 @@
 window.__CODEXMATE_WEB_UI_RENDER__ = (() => {
-const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vModelSelect: _vModelSelect, withDirectives: _withDirectives, vModelText: _vModelText, vModelCheckbox: _vModelCheckbox, vShow: _vShow, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, normalizeStyle: _normalizeStyle, isMemoSame: _isMemoSame, withMemo: _withMemo } = Vue
+const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode, createTextVNode: _createTextVNode, createElementVNode: _createElementVNode, normalizeClass: _normalizeClass, withModifiers: _withModifiers, withKeys: _withKeys, renderList: _renderList, Fragment: _Fragment, vModelSelect: _vModelSelect, withDirectives: _withDirectives, vModelText: _vModelText, vModelCheckbox: _vModelCheckbox, vShow: _vShow, Teleport: _Teleport, createBlock: _createBlock, vModelDynamic: _vModelDynamic, normalizeStyle: _normalizeStyle, isMemoSame: _isMemoSame, withMemo: _withMemo, resolveComponent: _resolveComponent, createVNode: _createVNode } = Vue
 
 return function render(_ctx, _cache) {
+  const _component_session_message_actions = _resolveComponent("session-message-actions")
+
   return (_openBlock(), _createElementBlock(_Fragment, null, [
     (!_ctx.navigationReady)
       ? (_openBlock(), _createElementBlock("div", {
@@ -236,7 +238,6 @@ return function render(_ctx, _cache) {
                   }, "⌂"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.overview.doctor')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.overview.doctor.meta')), 1 /* TEXT */),
                     _createElementVNode("span", null, _toDisplayString(_ctx.inspectorHealthStatus), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
@@ -261,7 +262,6 @@ return function render(_ctx, _cache) {
                   }, "?"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.docs.cliInstall')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.docs.cliInstall.meta')), 1 /* TEXT */),
                     _createElementVNode("span", null, _toDisplayString(String(_ctx.installPackageManager || 'npm').toUpperCase()) + " · " + _toDisplayString(_ctx.installCommandAction === 'update' ? _ctx.t('common.update') : (_ctx.installCommandAction === 'uninstall' ? _ctx.t('common.uninstall') : _ctx.t('common.install'))), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
@@ -276,6 +276,7 @@ return function render(_ctx, _cache) {
                   ? (_openBlock(), _createElementBlock("button", {
                       key: 0,
                       id: "side-tab-config-codex",
+                      "aria-description": _ctx.t('side.config.codex.meta'),
                       "data-main-tab": "config",
                       "data-config-mode": "codex",
                       "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'codex' ? 'page' : null,
@@ -287,16 +288,14 @@ return function render(_ctx, _cache) {
                         class: "side-item-icon",
                         "aria-hidden": "true"
                       }, "C"),
-                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.codex')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.codex.meta')), 1 /* TEXT */)
-                      ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.codex')), 1 /* TEXT */)
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true),
                 (_ctx.isConfigModeVisible('claude'))
                   ? (_openBlock(), _createElementBlock("button", {
                       key: 1,
                       id: "side-tab-config-claude",
+                      "aria-description": _ctx.t('side.config.claude.meta'),
                       "data-main-tab": "config",
                       "data-config-mode": "claude",
                       "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'claude' ? 'page' : null,
@@ -308,16 +307,14 @@ return function render(_ctx, _cache) {
                         class: "side-item-icon",
                         "aria-hidden": "true"
                       }, "A"),
-                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.claude')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.claude.meta')), 1 /* TEXT */)
-                      ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.claude')), 1 /* TEXT */)
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true),
                 (_ctx.isConfigModeVisible('openclaw'))
                   ? (_openBlock(), _createElementBlock("button", {
                       key: 2,
                       id: "side-tab-config-openclaw",
+                      "aria-description": _ctx.t('side.config.openclaw.meta'),
                       "data-main-tab": "config",
                       "data-config-mode": "openclaw",
                       "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'openclaw' ? 'page' : null,
@@ -329,16 +326,14 @@ return function render(_ctx, _cache) {
                         class: "side-item-icon",
                         "aria-hidden": "true"
                       }, "O"),
-                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.openclaw')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.openclaw.meta')), 1 /* TEXT */)
-                      ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.openclaw')), 1 /* TEXT */)
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true),
                 (_ctx.isConfigModeVisible('opencode'))
                   ? (_openBlock(), _createElementBlock("button", {
                       key: 3,
                       id: "side-tab-config-opencode",
+                      "aria-description": _ctx.t('side.config.opencode.meta'),
                       "data-main-tab": "config",
                       "data-config-mode": "opencode",
                       "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'opencode' ? 'page' : null,
@@ -350,16 +345,14 @@ return function render(_ctx, _cache) {
                         class: "side-item-icon",
                         "aria-hidden": "true"
                       }, "N"),
-                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.opencode')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.opencode.meta')), 1 /* TEXT */)
-                      ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.opencode')), 1 /* TEXT */)
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true),
                 (_ctx.isConfigModeVisible('kilocode'))
                   ? (_openBlock(), _createElementBlock("button", {
                       key: 4,
                       id: "side-tab-config-kilocode",
+                      "aria-description": _ctx.t('side.config.kilocode.meta'),
                       "data-main-tab": "config",
                       "data-config-mode": "kilocode",
                       "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'kilocode' ? 'page' : null,
@@ -371,16 +364,14 @@ return function render(_ctx, _cache) {
                         class: "side-item-icon",
                         "aria-hidden": "true"
                       }, "K"),
-                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.kilocode')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.kilocode.meta')), 1 /* TEXT */)
-                      ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.kilocode')), 1 /* TEXT */)
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true),
                 (_ctx.isConfigModeVisible('pi'))
                   ? (_openBlock(), _createElementBlock("button", {
                       key: 5,
                       id: "side-tab-config-pi",
+                      "aria-description": _ctx.t('side.config.pi.meta'),
                       "data-main-tab": "config",
                       "data-config-mode": "pi",
                       "aria-current": _ctx.mainTab === 'config' && _ctx.configMode === 'pi' ? 'page' : null,
@@ -392,11 +383,8 @@ return function render(_ctx, _cache) {
                         class: "side-item-icon",
                         "aria-hidden": "true"
                       }, "P"),
-                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.pi')), 1 /* TEXT */),
-                      _createElementVNode("div", { class: "side-item-meta" }, [
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('side.config.pi.meta')), 1 /* TEXT */)
-                      ])
-                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]))
+                      _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.config.pi')), 1 /* TEXT */)
+                    ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]))
                   : _createCommentVNode("v-if", true)
               ], 8 /* PROPS */, ["aria-label"]),
               _createElementVNode("div", {
@@ -419,12 +407,12 @@ return function render(_ctx, _cache) {
                   }, "S"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.sessions.browser')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.sessions.browser.meta')), 1 /* TEXT */),
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.sourceLabel', { value: (_ctx.sessionFilterSource === 'all' ? _ctx.t('sessions.source.all') : (_ctx.sessionFilterSource === 'claude' ? 'Claude Code' : (_ctx.sessionFilterSource === 'gemini' ? 'Gemini CLI' : (_ctx.sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : (_ctx.sessionFilterSource === 'workbuddy' ? 'WorkBuddy AI' : 'Codex'))))) })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
                   id: "side-tab-prompts",
+                  "aria-description": _ctx.t('side.prompts.meta'),
                   "data-main-tab": "prompts",
                   "aria-current": _ctx.mainTab === 'prompts' ? 'page' : null,
                   class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('prompts') }]),
@@ -435,11 +423,8 @@ return function render(_ctx, _cache) {
                     class: "side-item-icon",
                     "aria-hidden": "true"
                   }, "P"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.prompts.meta')), 1 /* TEXT */)
-                  ])
-                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.prompts')), 1 /* TEXT */)
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-description", "aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
                   id: "side-tab-usage",
                   "data-main-tab": "usage",
@@ -454,7 +439,6 @@ return function render(_ctx, _cache) {
                   }, "↗"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('tab.usage')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.usage.meta')), 1 /* TEXT */),
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('usage.rangeLabel', { value: (_ctx.sessionsUsageTimeRange === 'all' ? _ctx.t('usage.range.all') : (_ctx.sessionsUsageTimeRange === '30d' ? _ctx.t('usage.range.30d.short') : _ctx.t('usage.range.7d.short'))) })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
@@ -505,7 +489,6 @@ return function render(_ctx, _cache) {
                   }, "◇"),
                   _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.plugins.tools')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.tools.meta')), 1 /* TEXT */),
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('side.plugins.templatesCount', { count: _ctx.promptTemplatesList.length })), 1 /* TEXT */)
                   ])
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
@@ -546,10 +529,7 @@ return function render(_ctx, _cache) {
                     class: "side-item-icon",
                     "aria-hidden": "true"
                   }, "⚙"),
-                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.system.settings')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "side-item-meta" }, [
-                    _createElementVNode("span", null, _toDisplayString(_ctx.t('side.system.settings.meta')), 1 /* TEXT */)
-                  ])
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('side.system.settings')), 1 /* TEXT */)
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
                   id: "side-tab-trash",
@@ -684,8 +664,7 @@ return function render(_ctx, _cache) {
               }, [
                 _createElementVNode("div", { class: "panel-header-copy" }, [
                   _createElementVNode("div", { class: "panel-kicker" }, _toDisplayString(_ctx.mainTabKicker), 1 /* TEXT */),
-                  _createElementVNode("h1", { class: "main-title" }, _toDisplayString(_ctx.mainTabTitle), 1 /* TEXT */),
-                  _createElementVNode("p", { class: "subtitle" }, _toDisplayString(_ctx.mainTabSubtitle), 1 /* TEXT */)
+                  _createElementVNode("h1", { class: "main-title" }, _toDisplayString(_ctx.mainTabTitle), 1 /* TEXT */)
                 ])
               ]))
             : _createCommentVNode("v-if", true),
@@ -897,8 +876,7 @@ return function render(_ctx, _cache) {
             }, [
               _createElementVNode("header", { class: "workflow-header" }, [
                 _createElementVNode("div", null, [
-                  _createElementVNode("h2", { class: "workflow-title" }, _toDisplayString(_ctx.t('workflow.title')), 1 /* TEXT */),
-                  _createElementVNode("p", { class: "workflow-description" }, _toDisplayString(_ctx.t('workflow.tagline')), 1 /* TEXT */)
+                  _createElementVNode("h2", { class: "workflow-title" }, _toDisplayString(_ctx.t('workflow.title')), 1 /* TEXT */)
                 ]),
                 _createElementVNode("button", {
                   type: "button",
@@ -1010,8 +988,7 @@ return function render(_ctx, _cache) {
                       key: 0,
                       class: "workflow-empty"
                     }, [
-                      _createElementVNode("p", null, _toDisplayString(_ctx.t('workflow.empty')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "form-hint" }, _toDisplayString(_ctx.t('workflow.emptyHint')), 1 /* TEXT */)
+                      _createElementVNode("p", null, _toDisplayString(_ctx.t('workflow.empty')), 1 /* TEXT */)
                     ]))
                   : _createCommentVNode("v-if", true),
                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.workflowRuns, (run) => {
@@ -1698,8 +1675,7 @@ return function render(_ctx, _cache) {
                                   _createElementVNode("option", { value: "xhigh" }, "xhigh")
                                 ], 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onChange"]), [
                                   [_vModelSelect, _ctx.modelReasoningEffort]
-                                ]),
-                                _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('config.reasoningEffort.hint')), 1 /* TEXT */)
+                                ])
                               ])
                             ]),
                             _createElementVNode("div", { class: "selector-section" }, [
@@ -1732,8 +1708,7 @@ return function render(_ctx, _cache) {
                                     onKeydown: _withKeys(_withModifiers(_ctx.onModelContextWindowBlur, ["prevent"]), ["enter"])
                                   }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onFocus", "onInput", "onBlur", "onKeydown"]), [
                                     [_vModelText, _ctx.modelContextWindowInput]
-                                  ]),
-                                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('config.contextWindow.hint')), 1 /* TEXT */)
+                                  ])
                                 ]),
                                 _createElementVNode("div", { class: "form-group codex-config-field" }, [
                                   _createElementVNode("label", {
@@ -1753,8 +1728,7 @@ return function render(_ctx, _cache) {
                                     onKeydown: _withKeys(_withModifiers(_ctx.onModelAutoCompactTokenLimitBlur, ["prevent"]), ["enter"])
                                   }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onFocus", "onInput", "onBlur", "onKeydown"]), [
                                     [_vModelText, _ctx.modelAutoCompactTokenLimitInput]
-                                  ]),
-                                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('config.autoCompact.hint')), 1 /* TEXT */)
+                                  ])
                                 ])
                               ])
                             ]),
@@ -3979,7 +3953,6 @@ return function render(_ctx, _cache) {
                     class: "modal-title",
                     id: "pi-provider-picker-modal-title"
                   }, _toDisplayString(_ctx.t('pi.providers.addModal.title')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('pi.providers.addModal.subtitle')), 1 /* TEXT */),
                   _createElementVNode("div", { class: "pi-picker" }, [
                     _withDirectives(_createElementVNode("input", {
                       class: "form-input",
@@ -4512,10 +4485,595 @@ return function render(_ctx, _cache) {
                                 _createElementVNode("pre", null, _toDisplayString(_ctx.sessionContextHealthFocusedNode.text), 1 /* TEXT */)
                               ], 8 /* PROPS */, ["data-context-node-id", "aria-label"]))
                             : _createCommentVNode("v-if", true),
+                          (_ctx.sessionContextHealth)
+                            ? (_openBlock(), _createElementBlock("section", {
+                                key: 2,
+                                class: "context-window-reference",
+                                "aria-label": _ctx.t('features.windowReference')
+                              }, [
+                                _createElementVNode("div", { class: "feature-section-heading" }, [
+                                  _createElementVNode("h4", null, _toDisplayString(_ctx.t('features.windowReference')), 1 /* TEXT */),
+                                  (_ctx.contextReference?.percentage !== undefined)
+                                    ? (_openBlock(), _createElementBlock("small", {
+                                        key: 0,
+                                        class: "feature-meta"
+                                      }, _toDisplayString(_ctx.t('features.windowSource.' + _ctx.contextReference.source)), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true)
+                                ]),
+                                (_ctx.contextReference?.percentage !== undefined)
+                                  ? (_openBlock(), _createElementBlock("p", {
+                                      key: 0,
+                                      class: "feature-hint"
+                                    }, _toDisplayString(_ctx.t('features.contextEstimate', { percent: _ctx.contextReference.percentage.toFixed(2), window: _ctx.contextReference.window })), 1 /* TEXT */))
+                                  : (_openBlock(), _createElementBlock("p", {
+                                      key: 1,
+                                      class: "feature-hint"
+                                    }, _toDisplayString(_ctx.t('features.windowStatus.' + (_ctx.contextReference?.status || 'unknown'))), 1 /* TEXT */)),
+                                _createElementVNode("details", { class: "feature-disclosure" }, [
+                                  _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.windowSettings')), 1 /* TEXT */),
+                                  _createElementVNode("div", { class: "feature-window-fields" }, [
+                                    (_ctx.sessionContextHealth.models?.length)
+                                      ? (_openBlock(), _createElementBlock("label", { key: 0 }, [
+                                          _createTextVNode(_toDisplayString(_ctx.t('features.model')), 1 /* TEXT */),
+                                          _withDirectives(_createElementVNode("select", {
+                                            "onUpdate:modelValue": $event => ((_ctx.contextSelectedModel) = $event),
+                                            "aria-label": _ctx.t('features.model')
+                                          }, [
+                                            _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('features.chooseModel')), 1 /* TEXT */),
+                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionContextHealth.models, (model) => {
+                                              return (_openBlock(), _createElementBlock("option", {
+                                                key: model,
+                                                value: model
+                                              }, _toDisplayString(model), 9 /* TEXT, PROPS */, ["value"]))
+                                            }), 128 /* KEYED_FRAGMENT */))
+                                          ], 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                                            [_vModelSelect, _ctx.contextSelectedModel]
+                                          ])
+                                        ]))
+                                      : _createCommentVNode("v-if", true),
+                                    _createElementVNode("label", null, [
+                                      _createTextVNode(_toDisplayString(_ctx.t('features.contextWindow')), 1 /* TEXT */),
+                                      _withDirectives(_createElementVNode("input", {
+                                        "onUpdate:modelValue": $event => ((_ctx.contextWindowInput) = $event),
+                                        type: "number",
+                                        min: "1",
+                                        step: "1",
+                                        "aria-label": _ctx.t('features.contextWindow')
+                                      }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                                        [_vModelText, _ctx.contextWindowInput]
+                                      ])
+                                    ]),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini",
+                                      onClick: $event => (_ctx.saveContextPreferences(false)),
+                                      disabled: _ctx.contextReference?.status === 'invalid'
+                                    }, _toDisplayString(_ctx.t('features.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ])
+                                ]),
+                                (_ctx.contextReference && ['warning', 'high'].includes(_ctx.contextReference.status) && !_ctx.contextReminderDismissed)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 2,
+                                      role: "status",
+                                      class: "feature-window-warning"
+                                    }, [
+                                      _createElementVNode("span", null, _toDisplayString(_ctx.t('features.windowStatus.' + _ctx.contextReference.status)), 1 /* TEXT */),
+                                      _createElementVNode("div", { class: "feature-record-actions" }, [
+                                        _createElementVNode("button", {
+                                          type: "button",
+                                          class: "btn-mini",
+                                          onClick: $event => (_ctx.handoffExpanded = true)
+                                        }, _toDisplayString(_ctx.t('features.handoffs')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                        _createElementVNode("button", {
+                                          type: "button",
+                                          class: "btn-mini feature-quiet",
+                                          onClick: $event => (_ctx.saveContextPreferences(true))
+                                        }, _toDisplayString(_ctx.t('features.dismiss')), 9 /* TEXT, PROPS */, ["onClick"])
+                                      ])
+                                    ]))
+                                  : _createCommentVNode("v-if", true)
+                              ], 8 /* PROPS */, ["aria-label"]))
+                            : _createCommentVNode("v-if", true),
                           _createElementVNode("pre", { class: "session-standalone-text" }, _toDisplayString(_ctx.sessionStandaloneText), 1 /* TEXT */)
                         ]))
                 ]))
               : (_openBlock(), _createElementBlock("div", { key: 1 }, [
+                  _createElementVNode("section", {
+                    class: "session-features",
+                    "aria-label": _ctx.t('features.title')
+                  }, [
+                    _createElementVNode("header", { class: "feature-toolbar" }, [
+                      _createElementVNode("div", {
+                        class: "feature-tabs",
+                        role: "group",
+                        "aria-label": _ctx.t('features.title')
+                      }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          "aria-expanded": _ctx.featureView === 'bookmarks',
+                          onClick: $event => (_ctx.openFeatureView('bookmarks'))
+                        }, _toDisplayString(_ctx.t('features.bookmarks')), 9 /* TEXT, PROPS */, ["aria-expanded", "onClick"]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          "aria-expanded": _ctx.featureView === 'search',
+                          onClick: $event => (_ctx.openFeatureView('search'))
+                        }, _toDisplayString(_ctx.t('features.index')), 9 /* TEXT, PROPS */, ["aria-expanded", "onClick"]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          "aria-expanded": _ctx.featureView === 'projects',
+                          onClick: $event => (_ctx.openFeatureView('projects'))
+                        }, _toDisplayString(_ctx.t('features.projects')), 9 /* TEXT, PROPS */, ["aria-expanded", "onClick"])
+                      ], 8 /* PROPS */, ["aria-label"]),
+                      (_ctx.selectedContextIds.length)
+                        ? (_openBlock(), _createElementBlock("button", {
+                            key: 0,
+                            type: "button",
+                            class: "btn-mini",
+                            onClick: _ctx.generateSelectedHandoff,
+                            disabled: _ctx.featureBusy
+                          }, _toDisplayString(_ctx.t('features.generateDraft', { count: _ctx.selectedContextIds.length })), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                        : _createCommentVNode("v-if", true)
+                    ]),
+                    (_ctx.featureError)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 0,
+                          class: "form-error feature-feedback",
+                          role: "alert"
+                        }, _toDisplayString(_ctx.featureError), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.featureView === 'search')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 1,
+                          class: "feature-content"
+                        }, [
+                          _createElementVNode("div", { class: "feature-section-heading" }, [
+                            _createElementVNode("h3", null, _toDisplayString(_ctx.t('features.index')), 1 /* TEXT */),
+                            _createElementVNode("div", { class: "feature-actions" }, [
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini",
+                                onClick: $event => (_ctx.refreshSessionIndex(false)),
+                                disabled: _ctx.indexReport?.job.status === 'running'
+                              }, _toDisplayString(_ctx.t('features.refreshIndex')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini feature-quiet",
+                                onClick: $event => (_ctx.refreshSessionIndex(true)),
+                                disabled: _ctx.indexReport?.job.status === 'running'
+                              }, _toDisplayString(_ctx.t('features.rebuildIndex')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                              (_ctx.indexReport?.job.status === 'running')
+                                ? (_openBlock(), _createElementBlock("button", {
+                                    key: 0,
+                                    type: "button",
+                                    class: "btn-mini",
+                                    onClick: _ctx.cancelSessionIndex
+                                  }, _toDisplayString(_ctx.t('features.cancel')), 9 /* TEXT, PROPS */, ["onClick"]))
+                                : _createCommentVNode("v-if", true)
+                            ])
+                          ]),
+                          (_ctx.indexReport)
+                            ? (_openBlock(), _createElementBlock("div", {
+                                key: 0,
+                                class: "feature-meta",
+                                role: "status"
+                              }, [
+                                _createElementVNode("span", {
+                                  class: "feature-status",
+                                  "data-status": _ctx.indexReport.job.status
+                                }, _toDisplayString(_ctx.t('features.status.' + _ctx.indexReport.job.status)), 9 /* TEXT, PROPS */, ["data-status"]),
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('features.indexStatus', { count: _ctx.indexReport.indexed, processed: _ctx.indexReport.job.processed, total: _ctx.indexReport.job.candidates })), 1 /* TEXT */)
+                              ]))
+                            : _createCommentVNode("v-if", true),
+                          _createElementVNode("form", {
+                            class: "feature-actions feature-search-form",
+                            onSubmit: _withModifiers(_ctx.searchSessionIndex, ["prevent"])
+                          }, [
+                            _withDirectives(_createElementVNode("input", {
+                              "onUpdate:modelValue": $event => ((_ctx.indexQuery) = $event),
+                              "aria-label": _ctx.t('features.search'),
+                              placeholder: _ctx.t('features.search')
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label", "placeholder"]), [
+                              [_vModelText, _ctx.indexQuery]
+                            ]),
+                            _createElementVNode("button", {
+                              class: "btn-mini feature-primary",
+                              disabled: _ctx.featureBusy || !_ctx.indexQuery.trim() || !_ctx.indexReport?.updatedAt
+                            }, _toDisplayString(_ctx.t('features.search')), 9 /* TEXT, PROPS */, ["disabled"])
+                          ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
+                          _createElementVNode("details", { class: "feature-disclosure" }, [
+                            _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.searchScope')), 1 /* TEXT */),
+                            _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('features.indexScope')), 1 /* TEXT */)
+                          ]),
+                          (_ctx.indexReport?.failures.length)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 1,
+                                class: "form-error",
+                                role: "alert"
+                              }, _toDisplayString(_ctx.t('features.indexFailures', { count: _ctx.indexReport.failures.length })), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.featureBusy)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 2,
+                                class: "feature-loading",
+                                role: "status"
+                              }, _toDisplayString(_ctx.t('features.loading')), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.indexResults)
+                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
+                                _createElementVNode("p", { class: "feature-meta" }, _toDisplayString(_ctx.t('features.coverage', { scanned: _ctx.indexResults.scanned, total: _ctx.indexResults.candidates })), 1 /* TEXT */),
+                                (!_ctx.indexResults.complete)
+                                  ? (_openBlock(), _createElementBlock("p", {
+                                      key: 0,
+                                      class: "feature-hint"
+                                    }, _toDisplayString(_ctx.t('features.partial')), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true),
+                                (!_ctx.indexResults.results.length)
+                                  ? (_openBlock(), _createElementBlock("p", {
+                                      key: 1,
+                                      class: "feature-empty"
+                                    }, _toDisplayString(_ctx.t('features.empty')), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true),
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.indexResults.results, (result) => {
+                                  return (_openBlock(), _createElementBlock("article", {
+                                    key: result.session.key + result.nodeId,
+                                    class: "feature-record"
+                                  }, [
+                                    _createElementVNode("header", { class: "feature-record-heading" }, [
+                                      _createElementVNode("h4", null, _toDisplayString(result.session.title || result.session.sessionId), 1 /* TEXT */),
+                                      _createElementVNode("span", { class: "feature-source" }, _toDisplayString(result.session.source), 1 /* TEXT */)
+                                    ]),
+                                    _createElementVNode("small", {
+                                      class: "feature-path",
+                                      title: result.session.cwd
+                                    }, _toDisplayString(result.session.cwd), 9 /* TEXT, PROPS */, ["title"]),
+                                    _createElementVNode("pre", { class: "feature-excerpt" }, _toDisplayString(result.snippet), 1 /* TEXT */),
+                                    _createElementVNode("div", { class: "feature-record-actions" }, [
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini",
+                                        onClick: $event => (_ctx.openIndexedMessage(result))
+                                      }, _toDisplayString(_ctx.t('features.source')), 9 /* TEXT, PROPS */, ["onClick"])
+                                    ]),
+                                    _createElementVNode("details", { class: "feature-disclosure" }, [
+                                      _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.context')), 1 /* TEXT */),
+                                      _createElementVNode("pre", null, _toDisplayString(result.before), 1 /* TEXT */),
+                                      _createElementVNode("pre", null, _toDisplayString(result.after), 1 /* TEXT */)
+                                    ])
+                                  ]))
+                                }), 128 /* KEYED_FRAGMENT */))
+                              ], 64 /* STABLE_FRAGMENT */))
+                            : _createCommentVNode("v-if", true)
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.featureView === 'projects')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 2,
+                          class: "feature-content"
+                        }, [
+                          _createElementVNode("div", { class: "feature-section-heading" }, [
+                            _createElementVNode("h3", null, _toDisplayString(_ctx.t('features.projects')), 1 /* TEXT */),
+                            (_ctx.projectReport)
+                              ? (_openBlock(), _createElementBlock("small", {
+                                  key: 0,
+                                  class: "feature-meta"
+                                }, _toDisplayString(_ctx.t('features.readAt', { time: _ctx.projectReport.readAt })), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true)
+                          ]),
+                          _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('features.projectHistory')), 1 /* TEXT */),
+                          (_ctx.featureBusy)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 0,
+                                class: "feature-loading",
+                                role: "status"
+                              }, _toDisplayString(_ctx.t('features.loading')), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.projectReport)
+                            ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                                (_ctx.projectReport.failures.length)
+                                  ? (_openBlock(), _createElementBlock("p", {
+                                      key: 0,
+                                      class: "form-error"
+                                    }, _toDisplayString(_ctx.t('features.indexFailures', { count: _ctx.projectReport.failures.length })), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true),
+                                _createElementVNode("div", {
+                                  class: "feature-project-picker",
+                                  role: "group",
+                                  "aria-label": _ctx.t('features.projects')
+                                }, [
+                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectReport.projects, (project) => {
+                                    return (_openBlock(), _createElementBlock("button", {
+                                      key: project.key,
+                                      type: "button",
+                                      onClick: $event => (_ctx.loadProjectWorkspace(project.key)),
+                                      disabled: _ctx.featureBusy,
+                                      "aria-pressed": _ctx.projectSelected === project.key && !!_ctx.projectReport.detail
+                                    }, [
+                                      _createElementVNode("span", { class: "feature-project-label" }, [
+                                        _createElementVNode("strong", null, _toDisplayString(project.cwd.split(/[\\/]/).filter(Boolean).pop() || project.cwd || _ctx.t('features.unassigned')), 1 /* TEXT */),
+                                        _createElementVNode("small", {
+                                          class: "feature-path",
+                                          title: project.cwd
+                                        }, _toDisplayString(project.cwd || _ctx.t('features.unassigned')), 9 /* TEXT, PROPS */, ["title"])
+                                      ]),
+                                      _createElementVNode("span", { class: "feature-count" }, _toDisplayString(project.sessionCount), 1 /* TEXT */)
+                                    ], 8 /* PROPS */, ["onClick", "disabled", "aria-pressed"]))
+                                  }), 128 /* KEYED_FRAGMENT */))
+                                ], 8 /* PROPS */, ["aria-label"]),
+                                (_ctx.projectReport.detail)
+                                  ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                                      _createElementVNode("div", { class: "feature-section-heading feature-project-heading" }, [
+                                        _createElementVNode("h4", {
+                                          class: "feature-path",
+                                          title: _ctx.projectReport.detail.cwd
+                                        }, _toDisplayString(_ctx.projectReport.detail.cwd || _ctx.t('features.unassigned')), 9 /* TEXT, PROPS */, ["title"])
+                                      ]),
+                                      (_ctx.projectReport.detail.truncated)
+                                        ? (_openBlock(), _createElementBlock("p", {
+                                            key: 0,
+                                            class: "feature-hint"
+                                          }, _toDisplayString(_ctx.t('features.partial')), 1 /* TEXT */))
+                                        : _createCommentVNode("v-if", true),
+                                      _createElementVNode("div", { class: "feature-project-sessions" }, [
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectReport.detail.sessions, (session) => {
+                                          return (_openBlock(), _createElementBlock("article", {
+                                            key: session.source + session.sessionId,
+                                            class: "feature-session-row"
+                                          }, [
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              onClick: $event => (_ctx.selectSession(session))
+                                            }, _toDisplayString(session.title || session.sessionId), 9 /* TEXT, PROPS */, ["onClick"]),
+                                            _createElementVNode("small", { class: "feature-meta" }, _toDisplayString(session.source) + " · " + _toDisplayString(session.timestamp), 1 /* TEXT */)
+                                          ]))
+                                        }), 128 /* KEYED_FRAGMENT */))
+                                      ]),
+                                      _createElementVNode("details", {
+                                        class: "feature-disclosure",
+                                        open: !!_ctx.projectReport.detail.bookmarks.length
+                                      }, [
+                                        _createElementVNode("summary", null, [
+                                          _createTextVNode(_toDisplayString(_ctx.t('features.bookmarks')) + " ", 1 /* TEXT */),
+                                          _createElementVNode("span", { class: "feature-count" }, _toDisplayString(_ctx.projectReport.detail.bookmarks.length), 1 /* TEXT */)
+                                        ]),
+                                        _createElementVNode("div", { class: "feature-link-list" }, [
+                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectReport.detail.bookmarks, (item) => {
+                                            return (_openBlock(), _createElementBlock("button", {
+                                              key: item.id,
+                                              type: "button",
+                                              onClick: $event => (_ctx.locateBookmark(item))
+                                            }, _toDisplayString(item.note || item.excerpt.slice(0, 80)), 9 /* TEXT, PROPS */, ["onClick"]))
+                                          }), 128 /* KEYED_FRAGMENT */))
+                                        ])
+                                      ], 8 /* PROPS */, ["open"]),
+                                      _createElementVNode("details", { class: "feature-disclosure" }, [
+                                        _createElementVNode("summary", null, [
+                                          _createTextVNode(_toDisplayString(_ctx.t('features.prompts')) + " ", 1 /* TEXT */),
+                                          _createElementVNode("span", { class: "feature-count" }, _toDisplayString(_ctx.projectReport.detail.prompts.length), 1 /* TEXT */)
+                                        ]),
+                                        _createElementVNode("div", { class: "feature-link-list" }, [
+                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectReport.detail.prompts, (file) => {
+                                            return (_openBlock(), _createElementBlock("button", {
+                                              key: file,
+                                              type: "button",
+                                              onClick: $event => (_ctx.openProjectPrompt(file))
+                                            }, _toDisplayString(file), 9 /* TEXT, PROPS */, ["onClick"]))
+                                          }), 128 /* KEYED_FRAGMENT */))
+                                        ]),
+                                        (_ctx.projectPrompt)
+                                          ? (_openBlock(), _createElementBlock("pre", {
+                                              key: 0,
+                                              class: "feature-code"
+                                            }, _toDisplayString(_ctx.projectPrompt.content), 1 /* TEXT */))
+                                          : _createCommentVNode("v-if", true)
+                                      ]),
+                                      _createElementVNode("details", { class: "feature-disclosure" }, [
+                                        _createElementVNode("summary", null, [
+                                          _createTextVNode(_toDisplayString(_ctx.t('features.handoffs')) + " ", 1 /* TEXT */),
+                                          _createElementVNode("span", { class: "feature-count" }, _toDisplayString(_ctx.projectReport.detail.handoffs.length), 1 /* TEXT */)
+                                        ]),
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectReport.detail.handoffs, (record) => {
+                                          return (_openBlock(), _createElementBlock("p", {
+                                            key: record.source + record.id,
+                                            class: "feature-meta"
+                                          }, _toDisplayString(record.source) + " · " + _toDisplayString(record.target) + " · " + _toDisplayString(record.createdAt) + " · " + _toDisplayString(_ctx.handoffStatusLabel(record.status)), 1 /* TEXT */))
+                                        }), 128 /* KEYED_FRAGMENT */))
+                                      ]),
+                                      (_ctx.projectSelected)
+                                        ? (_openBlock(), _createElementBlock("details", {
+                                            key: 1,
+                                            class: "feature-disclosure"
+                                          }, [
+                                            _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.projectMapping')), 1 /* TEXT */),
+                                            _createElementVNode("form", {
+                                              class: "feature-actions feature-search-form",
+                                              onSubmit: _withModifiers(_ctx.mapProjectWorkspace, ["prevent"])
+                                            }, [
+                                              _withDirectives(_createElementVNode("input", {
+                                                "onUpdate:modelValue": $event => ((_ctx.projectAlias) = $event),
+                                                "aria-label": _ctx.t('features.projectPath'),
+                                                placeholder: _ctx.t('features.projectPath')
+                                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label", "placeholder"]), [
+                                                [_vModelText, _ctx.projectAlias]
+                                              ]),
+                                              _createElementVNode("button", {
+                                                class: "btn-mini",
+                                                disabled: _ctx.featureBusy
+                                              }, _toDisplayString(_ctx.t('features.saveMapping')), 9 /* TEXT, PROPS */, ["disabled"])
+                                            ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"])
+                                          ]))
+                                        : _createCommentVNode("v-if", true)
+                                    ], 64 /* STABLE_FRAGMENT */))
+                                  : _createCommentVNode("v-if", true)
+                              ], 64 /* STABLE_FRAGMENT */))
+                            : _createCommentVNode("v-if", true)
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.featureView === 'bookmarks')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 3,
+                          class: "feature-content"
+                        }, [
+                          _createElementVNode("div", { class: "feature-section-heading" }, [
+                            _createElementVNode("h3", null, _toDisplayString(_ctx.t('features.bookmarks')), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "feature-count" }, _toDisplayString(_ctx.bookmarks.length), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("form", {
+                            onSubmit: _withModifiers(_ctx.loadBookmarks, ["prevent"])
+                          }, [
+                            _createElementVNode("div", { class: "feature-actions feature-search-form" }, [
+                              _withDirectives(_createElementVNode("input", {
+                                "onUpdate:modelValue": $event => ((_ctx.bookmarkQuery) = $event),
+                                "aria-label": _ctx.t('features.search'),
+                                placeholder: _ctx.t('features.search')
+                              }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label", "placeholder"]), [
+                                [_vModelText, _ctx.bookmarkQuery]
+                              ]),
+                              _createElementVNode("button", {
+                                class: "btn-mini feature-primary",
+                                disabled: _ctx.featureBusy
+                              }, _toDisplayString(_ctx.t('features.search')), 9 /* TEXT, PROPS */, ["disabled"])
+                            ]),
+                            _createElementVNode("details", { class: "feature-disclosure" }, [
+                              _createElementVNode("summary", null, [
+                                _createTextVNode(_toDisplayString(_ctx.t('features.moreFilters')) + " ", 1 /* TEXT */),
+                                (_ctx.bookmarkTag || _ctx.bookmarkProject)
+                                  ? (_openBlock(), _createElementBlock("span", {
+                                      key: 0,
+                                      class: "feature-count"
+                                    }, _toDisplayString((_ctx.bookmarkTag ? 1 : 0) + (_ctx.bookmarkProject ? 1 : 0)), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true)
+                              ]),
+                              _createElementVNode("div", { class: "feature-filter-fields" }, [
+                                _createElementVNode("label", null, [
+                                  _createTextVNode(_toDisplayString(_ctx.t('features.tag')), 1 /* TEXT */),
+                                  _withDirectives(_createElementVNode("input", {
+                                    "onUpdate:modelValue": $event => ((_ctx.bookmarkTag) = $event),
+                                    "aria-label": _ctx.t('features.tag')
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                                    [_vModelText, _ctx.bookmarkTag]
+                                  ])
+                                ]),
+                                _createElementVNode("label", null, [
+                                  _createTextVNode(_toDisplayString(_ctx.t('features.projectPath')), 1 /* TEXT */),
+                                  _withDirectives(_createElementVNode("input", {
+                                    "onUpdate:modelValue": $event => ((_ctx.bookmarkProject) = $event),
+                                    "aria-label": _ctx.t('features.projectPath')
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                                    [_vModelText, _ctx.bookmarkProject]
+                                  ])
+                                ])
+                              ])
+                            ])
+                          ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
+                          (_ctx.featureBusy)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 0,
+                                class: "feature-loading",
+                                role: "status"
+                              }, _toDisplayString(_ctx.t('features.loading')), 1 /* TEXT */))
+                            : (!_ctx.bookmarks.length)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 1,
+                                  class: "feature-empty"
+                                }, [
+                                  _createElementVNode("p", null, _toDisplayString(_ctx.t('features.empty')), 1 /* TEXT */)
+                                ]))
+                              : _createCommentVNode("v-if", true),
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.bookmarks, (item) => {
+                            return (_openBlock(), _createElementBlock("article", {
+                              key: item.id,
+                              class: "feature-record"
+                            }, [
+                              _createElementVNode("header", { class: "feature-record-heading" }, [
+                                _createElementVNode("span", { class: "feature-source" }, _toDisplayString(item.source), 1 /* TEXT */),
+                                _createElementVNode("small", { class: "feature-meta" }, _toDisplayString(item.updatedAt), 1 /* TEXT */)
+                              ]),
+                              _createElementVNode("small", {
+                                class: "feature-path",
+                                title: item.cwd
+                              }, _toDisplayString(item.cwd), 9 /* TEXT, PROPS */, ["title"]),
+                              _createElementVNode("pre", { class: "feature-excerpt" }, _toDisplayString(item.excerpt), 1 /* TEXT */),
+                              (item.note)
+                                ? (_openBlock(), _createElementBlock("p", {
+                                    key: 0,
+                                    class: "feature-note"
+                                  }, _toDisplayString(item.note), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true),
+                              (item.tags.length)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 1,
+                                    class: "feature-tags"
+                                  }, [
+                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(item.tags, (tag) => {
+                                      return (_openBlock(), _createElementBlock("span", {
+                                        key: tag,
+                                        class: "feature-tag"
+                                      }, _toDisplayString(tag), 1 /* TEXT */))
+                                    }), 128 /* KEYED_FRAGMENT */))
+                                  ]))
+                                : _createCommentVNode("v-if", true),
+                              _createElementVNode("div", { class: "feature-record-actions" }, [
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini",
+                                  onClick: $event => (_ctx.locateBookmark(item)),
+                                  disabled: _ctx.featureBusy
+                                }, _toDisplayString(_ctx.t('features.source')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini feature-quiet",
+                                  onClick: $event => (_ctx.bookmarkEditor = { ...item, tagsText: item.tags.join(', ') }),
+                                  disabled: _ctx.featureBusy
+                                }, _toDisplayString(_ctx.t('features.edit')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini feature-quiet",
+                                  onClick: $event => (_ctx.removeBookmark(item)),
+                                  disabled: _ctx.featureBusy
+                                }, _toDisplayString(_ctx.t('features.unbookmark')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                              ])
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */)),
+                          (_ctx.bookmarkEditor)
+                            ? (_openBlock(), _createElementBlock("form", {
+                                key: 2,
+                                onSubmit: _withModifiers(_ctx.saveBookmark, ["prevent"]),
+                                class: "feature-editor"
+                              }, [
+                                _createElementVNode("label", null, [
+                                  _createTextVNode(_toDisplayString(_ctx.t('features.note')), 1 /* TEXT */),
+                                  _withDirectives(_createElementVNode("textarea", {
+                                    "onUpdate:modelValue": $event => ((_ctx.bookmarkEditor.note) = $event),
+                                    maxlength: "4000"
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                    [_vModelText, _ctx.bookmarkEditor.note]
+                                  ])
+                                ]),
+                                _createElementVNode("label", null, [
+                                  _createTextVNode(_toDisplayString(_ctx.t('features.tags')), 1 /* TEXT */),
+                                  _withDirectives(_createElementVNode("input", {
+                                    "onUpdate:modelValue": $event => ((_ctx.bookmarkEditor.tagsText) = $event)
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                    [_vModelText, _ctx.bookmarkEditor.tagsText]
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "feature-actions" }, [
+                                  _createElementVNode("button", {
+                                    class: "btn-mini feature-primary",
+                                    disabled: _ctx.featureBusy
+                                  }, _toDisplayString(_ctx.t('features.save')), 9 /* TEXT, PROPS */, ["disabled"]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini feature-quiet",
+                                    onClick: $event => (_ctx.bookmarkEditor = null),
+                                    disabled: _ctx.featureBusy
+                                  }, _toDisplayString(_ctx.t('features.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                ])
+                              ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]))
+                            : _createCommentVNode("v-if", true)
+                        ]))
+                      : _createCommentVNode("v-if", true)
+                  ], 8 /* PROPS */, ["aria-label"]),
                   _createElementVNode("div", { class: "selector-section session-selector-section" }, [
                     _createElementVNode("div", {
                       class: "selector-header",
@@ -4967,7 +5525,7 @@ return function render(_ctx, _cache) {
                                                 class: "thread-handoff-body"
                                               }, [
                                                 _createElementVNode("div", { class: "session-workspace-header session-workspace-card-wide" }, [
-                                                  _createElementVNode("p", { class: "session-workspace-subtitle" }, "交代目标，让下一位代理接着做。草稿在切换会话后保留，刷新后清空。"),
+                                                  _createElementVNode("p", { class: "session-workspace-subtitle" }, "草稿在切换会话后保留，刷新后清空。"),
                                                   _createElementVNode("button", {
                                                     class: "btn-mini",
                                                     type: "button",
@@ -5011,10 +5569,7 @@ return function render(_ctx, _cache) {
                                                     ])
                                                   ]),
                                                   _createElementVNode("details", { class: "thread-handoff-optional" }, [
-                                                    _createElementVNode("summary", { class: "thread-handoff-optional-summary" }, [
-                                                      _createTextVNode("补充上下文 "),
-                                                      _createElementVNode("small", null, "已完成 / 阻塞 / 步骤 / 文件 · 可选")
-                                                    ]),
+                                                    _createElementVNode("summary", { class: "thread-handoff-optional-summary" }, "补充上下文"),
                                                     _createElementVNode("div", { class: "session-workspace-grid" }, [
                                                       (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffFields, (field) => {
                                                         return (_openBlock(), _createElementBlock("label", {
@@ -5036,7 +5591,6 @@ return function render(_ctx, _cache) {
                                                     ])
                                                   ]),
                                                   _createElementVNode("div", { class: "thread-handoff-actions" }, [
-                                                    _createElementVNode("span", { class: "session-workspace-subtitle" }, "生成后可复制到目标会话"),
                                                     _createElementVNode("button", {
                                                       class: "btn-mini thread-handoff-submit",
                                                       type: "submit",
@@ -5075,21 +5629,55 @@ return function render(_ctx, _cache) {
                                                     ]))
                                                   : _createCommentVNode("v-if", true),
                                                 _createElementVNode("p", { class: "session-workspace-subtitle session-workspace-card-wide" }, "复制不会自动发送。读取确认由目标代理通过 CLI ack 提交。"),
+                                                _createElementVNode("div", { class: "feature-actions" }, [
+                                                  _createElementVNode("button", {
+                                                    type: "button",
+                                                    class: "btn-mini",
+                                                    onClick: _ctx.generateSelectedHandoff,
+                                                    disabled: _ctx.featureBusy || !_ctx.selectedContextIds.length
+                                                  }, _toDisplayString(_ctx.t('features.generateDraft', { count: _ctx.selectedContextIds.length })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                                ]),
+                                                (_ctx.handoffDraftEvidence.length)
+                                                  ? (_openBlock(), _createElementBlock("p", { key: 3 }, _toDisplayString(_ctx.t('features.draftReview')), 1 /* TEXT */))
+                                                  : _createCommentVNode("v-if", true),
+                                                (_ctx.handoffUnverified.length)
+                                                  ? (_openBlock(), _createElementBlock("details", { key: 4 }, [
+                                                      _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.unverified', { count: _ctx.handoffUnverified.length })), 1 /* TEXT */),
+                                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffUnverified, (text, index) => {
+                                                        return (_openBlock(), _createElementBlock("pre", { key: index }, _toDisplayString(text), 1 /* TEXT */))
+                                                      }), 128 /* KEYED_FRAGMENT */))
+                                                    ]))
+                                                  : _createCommentVNode("v-if", true),
+                                                (_ctx.handoffDraftEvidence.length)
+                                                  ? (_openBlock(), _createElementBlock("ul", { key: 5 }, [
+                                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffDraftEvidence, (item) => {
+                                                        return (_openBlock(), _createElementBlock("li", {
+                                                          key: item.nodeId
+                                                        }, [
+                                                          _createElementVNode("button", {
+                                                            type: "button",
+                                                            class: "btn-mini",
+                                                            onClick: $event => (_ctx.locateDraftEvidence(item))
+                                                          }, _toDisplayString(item.nodeId) + " · " + _toDisplayString(_ctx.t('features.evidence.' + item.status)), 9 /* TEXT, PROPS */, ["onClick"])
+                                                        ]))
+                                                      }), 128 /* KEYED_FRAGMENT */))
+                                                    ]))
+                                                  : _createCommentVNode("v-if", true),
                                                 (_ctx.handoffLoading)
                                                   ? (_openBlock(), _createElementBlock("p", {
-                                                      key: 3,
+                                                      key: 6,
                                                       class: "session-workspace-card-wide",
                                                       role: "status"
                                                     }, "正在加载交接历史…"))
                                                   : (!_ctx.handoffError && !_ctx.handoffRecords.length)
                                                     ? (_openBlock(), _createElementBlock("p", {
-                                                        key: 4,
+                                                        key: 7,
                                                         class: "session-workspace-empty session-workspace-card-wide"
                                                       }, "暂无交接记录"))
                                                     : _createCommentVNode("v-if", true),
                                                 (_ctx.handoffRecords.length)
                                                   ? (_openBlock(), _createElementBlock("ol", {
-                                                      key: 5,
+                                                      key: 8,
                                                       class: "session-workspace-list session-workspace-card-wide"
                                                     }, [
                                                       (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffRecords, (record) => {
@@ -5526,6 +6114,126 @@ return function render(_ctx, _cache) {
                                           _createElementVNode("pre", null, _toDisplayString(_ctx.sessionContextHealthFocusedNode.text), 1 /* TEXT */)
                                         ], 8 /* PROPS */, ["data-context-node-id", "aria-label"]))
                                       : _createCommentVNode("v-if", true),
+                                    (_ctx.sessionContextHealth)
+                                      ? (_openBlock(), _createElementBlock("section", {
+                                          key: 3,
+                                          class: "context-window-reference",
+                                          "aria-label": _ctx.t('features.windowReference')
+                                        }, [
+                                          _createElementVNode("div", { class: "feature-section-heading" }, [
+                                            _createElementVNode("h4", null, _toDisplayString(_ctx.t('features.windowReference')), 1 /* TEXT */),
+                                            (_ctx.contextReference?.percentage !== undefined)
+                                              ? (_openBlock(), _createElementBlock("small", {
+                                                  key: 0,
+                                                  class: "feature-meta"
+                                                }, _toDisplayString(_ctx.t('features.windowSource.' + _ctx.contextReference.source)), 1 /* TEXT */))
+                                              : _createCommentVNode("v-if", true)
+                                          ]),
+                                          (_ctx.contextReference?.percentage !== undefined)
+                                            ? (_openBlock(), _createElementBlock("p", {
+                                                key: 0,
+                                                class: "feature-hint"
+                                              }, _toDisplayString(_ctx.t('features.contextEstimate', { percent: _ctx.contextReference.percentage.toFixed(2), window: _ctx.contextReference.window })), 1 /* TEXT */))
+                                            : (_openBlock(), _createElementBlock("p", {
+                                                key: 1,
+                                                class: "feature-hint"
+                                              }, _toDisplayString(_ctx.t('features.windowStatus.' + (_ctx.contextReference?.status || 'unknown'))), 1 /* TEXT */)),
+                                          _createElementVNode("details", { class: "feature-disclosure" }, [
+                                            _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.windowSettings')), 1 /* TEXT */),
+                                            _createElementVNode("div", { class: "feature-window-fields" }, [
+                                              (_ctx.sessionContextHealth.models?.length)
+                                                ? (_openBlock(), _createElementBlock("label", { key: 0 }, [
+                                                    _createTextVNode(_toDisplayString(_ctx.t('features.model')), 1 /* TEXT */),
+                                                    _withDirectives(_createElementVNode("select", {
+                                                      "onUpdate:modelValue": $event => ((_ctx.contextSelectedModel) = $event),
+                                                      "aria-label": _ctx.t('features.model')
+                                                    }, [
+                                                      _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('features.chooseModel')), 1 /* TEXT */),
+                                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionContextHealth.models, (model) => {
+                                                        return (_openBlock(), _createElementBlock("option", {
+                                                          key: model,
+                                                          value: model
+                                                        }, _toDisplayString(model), 9 /* TEXT, PROPS */, ["value"]))
+                                                      }), 128 /* KEYED_FRAGMENT */))
+                                                    ], 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                                                      [_vModelSelect, _ctx.contextSelectedModel]
+                                                    ])
+                                                  ]))
+                                                : _createCommentVNode("v-if", true),
+                                              _createElementVNode("label", null, [
+                                                _createTextVNode(_toDisplayString(_ctx.t('features.contextWindow')), 1 /* TEXT */),
+                                                _withDirectives(_createElementVNode("input", {
+                                                  "onUpdate:modelValue": $event => ((_ctx.contextWindowInput) = $event),
+                                                  type: "number",
+                                                  min: "1",
+                                                  step: "1",
+                                                  "aria-label": _ctx.t('features.contextWindow')
+                                                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                                                  [_vModelText, _ctx.contextWindowInput]
+                                                ])
+                                              ]),
+                                              _createElementVNode("button", {
+                                                type: "button",
+                                                class: "btn-mini",
+                                                onClick: $event => (_ctx.saveContextPreferences(false)),
+                                                disabled: _ctx.contextReference?.status === 'invalid'
+                                              }, _toDisplayString(_ctx.t('features.save')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                            ])
+                                          ]),
+                                          (_ctx.contextReference && ['warning', 'high'].includes(_ctx.contextReference.status) && !_ctx.contextReminderDismissed)
+                                            ? (_openBlock(), _createElementBlock("div", {
+                                                key: 2,
+                                                role: "status",
+                                                class: "feature-window-warning"
+                                              }, [
+                                                _createElementVNode("span", null, _toDisplayString(_ctx.t('features.windowStatus.' + _ctx.contextReference.status)), 1 /* TEXT */),
+                                                _createElementVNode("div", { class: "feature-record-actions" }, [
+                                                  _createElementVNode("button", {
+                                                    type: "button",
+                                                    class: "btn-mini",
+                                                    onClick: $event => (_ctx.handoffExpanded = true)
+                                                  }, _toDisplayString(_ctx.t('features.handoffs')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                                  _createElementVNode("button", {
+                                                    type: "button",
+                                                    class: "btn-mini feature-quiet",
+                                                    onClick: $event => (_ctx.saveContextPreferences(true))
+                                                  }, _toDisplayString(_ctx.t('features.dismiss')), 9 /* TEXT, PROPS */, ["onClick"])
+                                                ])
+                                              ]))
+                                            : _createCommentVNode("v-if", true)
+                                        ], 8 /* PROPS */, ["aria-label"]))
+                                      : _createCommentVNode("v-if", true),
+                                    (_ctx.featureFocus)
+                                      ? (_openBlock(), _createElementBlock("article", {
+                                          key: 4,
+                                          ref: "featureFocus",
+                                          class: "feature-focus",
+                                          tabindex: "-1"
+                                        }, [
+                                          _createElementVNode("div", { class: "feature-actions" }, [
+                                            _createElementVNode("strong", null, _toDisplayString(_ctx.t('features.source')) + " · " + _toDisplayString(_ctx.featureFocus.id), 1 /* TEXT */),
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "btn-mini",
+                                              onClick: $event => (_ctx.featureFocus = null)
+                                            }, _toDisplayString(_ctx.t('features.close')), 9 /* TEXT, PROPS */, ["onClick"])
+                                          ]),
+                                          _createElementVNode("pre", null, _toDisplayString(_ctx.featureFocus.text), 1 /* TEXT */),
+                                          _createElementVNode("div", { class: "feature-actions" }, [
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "btn-mini",
+                                              onClick: $event => (_ctx.bookmarkMessage(_ctx.featureFocus)),
+                                              disabled: _ctx.featureBusy
+                                            }, _toDisplayString(_ctx.t('features.bookmark')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "btn-mini",
+                                              onClick: $event => (_ctx.toggleHandoffMessage(_ctx.featureFocus))
+                                            }, _toDisplayString(_ctx.t('features.selectMessage')), 9 /* TEXT, PROPS */, ["onClick"])
+                                          ])
+                                        ], 512 /* NEED_PATCH */))
+                                      : _createCommentVNode("v-if", true),
                                     _createElementVNode("div", { class: "session-export-feedback" }, [
                                       (_ctx.sessionExportNotice && _ctx.sessionExportNotice.key === _ctx.getSessionExportKey(_ctx.activeSession))
                                         ? (_openBlock(), _createElementBlock("p", {
@@ -5537,22 +6245,22 @@ return function render(_ctx, _cache) {
                                     ]),
                                     (_ctx.sessionDetailLoading && !_ctx.sessionPreviewLoadingMore)
                                       ? (_openBlock(), _createElementBlock("div", {
-                                          key: 3,
+                                          key: 5,
                                           class: "session-preview-empty"
                                         }, _toDisplayString(_ctx.t('sessions.preview.loadingBody')), 1 /* TEXT */))
                                       : (_ctx.activeSessionDetailError)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 4,
+                                            key: 6,
                                             class: "session-preview-empty"
                                           }, _toDisplayString(_ctx.activeSessionDetailError), 1 /* TEXT */))
                                         : (!_ctx.activeSessionMessages.length)
                                           ? (_openBlock(), _createElementBlock("div", {
-                                              key: 5,
+                                              key: 7,
                                               class: "session-preview-empty"
                                             }, _toDisplayString(_ctx.t('sessions.preview.emptyMsgs')), 1 /* TEXT */))
                                           : (_ctx.sessionPreviewRenderEnabled && !_ctx.activeSessionVisibleMessages.length)
                                             ? (_openBlock(), _createElementBlock("div", {
-                                                key: 6,
+                                                key: 8,
                                                 class: "session-preview-empty"
                                               }, [
                                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.preview.rendering')), 1 /* TEXT */),
@@ -5564,11 +6272,11 @@ return function render(_ctx, _cache) {
                                               ]))
                                             : (!_ctx.sessionPreviewRenderEnabled)
                                               ? (_openBlock(), _createElementBlock("div", {
-                                                  key: 7,
+                                                  key: 9,
                                                   class: "session-preview-empty"
                                                 }, _toDisplayString(_ctx.t('sessions.preview.preparing')), 1 /* TEXT */))
                                               : (_openBlock(), _createElementBlock("div", {
-                                                  key: 8,
+                                                  key: 10,
                                                   class: "session-preview-body"
                                                 }, [
                                                   (_ctx.activeSessionWorkspaceSummary.available)
@@ -5723,6 +6431,7 @@ return function render(_ctx, _cache) {
                                                         class: _normalizeClass(['session-msg', msg.normalizedRole === 'user' ? 'user' : (msg.normalizedRole === 'system' ? 'system' : 'assistant')])
                                                       }, [
                                                         _createElementVNode("div", { class: "session-msg-header" }, [
+                                                          _createVNode(_component_session_message_actions, { message: msg }, null, 8 /* PROPS */, ["message"]),
                                                           _createElementVNode("div", { class: "session-msg-meta" }, [
                                                             _createElementVNode("span", { class: "session-msg-role" }, _toDisplayString(msg.roleLabel || (msg.normalizedRole === 'user' ? _ctx.t('sessions.roleLabel.user') : (msg.normalizedRole === 'system' ? _ctx.t('sessions.roleLabel.system') : _ctx.t('sessions.roleLabel.assistant')))), 1 /* TEXT */),
                                                             _createElementVNode("span", { class: "session-msg-time" }, _toDisplayString(msg.timestamp || ''), 1 /* TEXT */)
@@ -6549,6 +7258,125 @@ return function render(_ctx, _cache) {
             role: "tabpanel",
             "aria-labelledby": 'tab-settings'
           }, [
+            _createElementVNode("details", {
+              class: "session-features feature-diagnostics",
+              onToggle: $event => ($event.target === $event.currentTarget && $event.currentTarget.open && _ctx.loadDiagnosticTargets())
+            }, [
+              _createElementVNode("summary", { class: "feature-diagnostics-heading" }, _toDisplayString(_ctx.t('features.diagnostics')), 1 /* TEXT */),
+              _createElementVNode("div", { class: "feature-content" }, [
+                _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('features.diagnosticScope')), 1 /* TEXT */),
+                (_ctx.featureError)
+                  ? (_openBlock(), _createElementBlock("p", {
+                      key: 0,
+                      class: "form-error feature-feedback",
+                      role: "alert"
+                    }, _toDisplayString(_ctx.featureError), 1 /* TEXT */))
+                  : _createCommentVNode("v-if", true),
+                _createElementVNode("div", { class: "feature-diagnostic-options" }, [
+                  _createElementVNode("label", null, [
+                    _withDirectives(_createElementVNode("input", {
+                      type: "checkbox",
+                      "onUpdate:modelValue": $event => ((_ctx.diagnosticsRemote) = $event),
+                      disabled: _ctx.diagnosticsReport?.status === 'running'
+                    }, null, 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                      [_vModelCheckbox, _ctx.diagnosticsRemote]
+                    ]),
+                    _createElementVNode("span", null, _toDisplayString(_ctx.t('features.remoteProbe')), 1 /* TEXT */)
+                  ]),
+                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.diagnosticsTargets, (name) => {
+                    return (_openBlock(), _createElementBlock("label", { key: name }, [
+                      _withDirectives(_createElementVNode("input", {
+                        type: "checkbox",
+                        value: name,
+                        "onUpdate:modelValue": $event => ((_ctx.diagnosticsSelected) = $event),
+                        disabled: _ctx.diagnosticsReport?.status === 'running'
+                      }, null, 8 /* PROPS */, ["value", "onUpdate:modelValue", "disabled"]), [
+                        [_vModelCheckbox, _ctx.diagnosticsSelected]
+                      ]),
+                      _createElementVNode("span", null, _toDisplayString(name), 1 /* TEXT */)
+                    ]))
+                  }), 128 /* KEYED_FRAGMENT */))
+                ]),
+                _createElementVNode("div", { class: "feature-actions feature-diagnostic-controls" }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "btn-mini feature-primary",
+                    onClick: _ctx.startDiagnostics,
+                    disabled: _ctx.diagnosticsReport?.status === 'running'
+                  }, _toDisplayString(_ctx.t('features.check')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  (_ctx.diagnosticsReport?.status === 'running')
+                    ? (_openBlock(), _createElementBlock("button", {
+                        key: 0,
+                        type: "button",
+                        class: "btn-mini feature-quiet",
+                        onClick: _ctx.cancelDiagnostics
+                      }, _toDisplayString(_ctx.t('features.cancel')), 9 /* TEXT, PROPS */, ["onClick"]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.diagnosticsReport)
+                    ? (_openBlock(), _createElementBlock("span", {
+                        key: 1,
+                        class: "feature-status",
+                        "data-status": _ctx.diagnosticsReport.status,
+                        role: "status"
+                      }, _toDisplayString(_ctx.t('features.status.' + _ctx.diagnosticsReport.status)), 9 /* TEXT, PROPS */, ["data-status"]))
+                    : _createCommentVNode("v-if", true)
+                ]),
+                (_ctx.diagnosticsReport)
+                  ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.diagnosticsReport.items, (item) => {
+                        return (_openBlock(), _createElementBlock("article", {
+                          key: item.id,
+                          class: "feature-record feature-diagnostic-row"
+                        }, [
+                          _createElementVNode("header", { class: "feature-record-heading" }, [
+                            _createElementVNode("strong", null, _toDisplayString(item.id === 'local' ? _ctx.t('features.localCheck') : item.id === 'provider' ? _ctx.t('features.providerCheck') : item.id), 1 /* TEXT */),
+                            _createElementVNode("span", {
+                              class: "feature-status",
+                              "data-status": item.status
+                            }, _toDisplayString(_ctx.t('features.status.' + item.status)), 9 /* TEXT, PROPS */, ["data-status"])
+                          ]),
+                          _createElementVNode("small", { class: "feature-meta" }, [
+                            _createTextVNode(_toDisplayString(item.checkedAt), 1 /* TEXT */),
+                            (item.durationMs !== undefined)
+                              ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                                  _createTextVNode(" · " + _toDisplayString(item.durationMs) + " ms", 1 /* TEXT */)
+                                ], 64 /* STABLE_FRAGMENT */))
+                              : _createCommentVNode("v-if", true)
+                          ]),
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(item.evidence?.issues || [], (issue) => {
+                            return (_openBlock(), _createElementBlock("p", {
+                              key: issue.id || issue.code,
+                              class: "feature-issue"
+                            }, _toDisplayString(issue.problem || issue.code), 1 /* TEXT */))
+                          }), 128 /* KEYED_FRAGMENT */)),
+                          (item.errorCode)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 0,
+                                class: "form-error"
+                              }, _toDisplayString(_ctx.t('features.error.' + item.errorCode)), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          _createElementVNode("details", { class: "feature-disclosure" }, [
+                            _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.technicalDetails')), 1 /* TEXT */),
+                            _createElementVNode("pre", { class: "feature-code" }, _toDisplayString(JSON.stringify(item.evidence || {}, null, 2)), 1 /* TEXT */)
+                          ])
+                        ]))
+                      }), 128 /* KEYED_FRAGMENT */)),
+                      _createElementVNode("footer", { class: "feature-record-actions feature-export-actions" }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-mini feature-quiet",
+                          onClick: $event => (_ctx.exportDiagnostics('json'))
+                        }, _toDisplayString(_ctx.t('features.exportJson')), 9 /* TEXT, PROPS */, ["onClick"]),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-mini feature-quiet",
+                          onClick: $event => (_ctx.exportDiagnostics('md'))
+                        }, _toDisplayString(_ctx.t('features.exportMarkdown')), 9 /* TEXT, PROPS */, ["onClick"])
+                      ])
+                    ], 64 /* STABLE_FRAGMENT */))
+                  : _createCommentVNode("v-if", true)
+              ])
+            ], 40 /* PROPS, NEED_HYDRATION */, ["onToggle"]),
             _createElementVNode("div", { class: "settings-tab-header" }, [
               _createElementVNode("div", {
                 class: "segmented-control",
@@ -6593,7 +7421,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.language.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.language.meta')), 1 /* TEXT */),
                       _createElementVNode("label", {
                         class: "selector-label",
                         for: "settings-language-select"
@@ -6610,8 +7437,7 @@ return function render(_ctx, _cache) {
                             value: option.code
                           }, _toDisplayString(option.nativeName) + " · " + _toDisplayString(option.englishName), 9 /* TEXT, PROPS */, ["value"]))
                         }), 128 /* KEYED_FRAGMENT */))
-                      ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange"]),
-                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.language.hint')), 1 /* TEXT */)
+                      ], 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange"])
                     ])
                   ])
                 ], 8 /* PROPS */, ["aria-label"]),
@@ -6622,7 +7448,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.theme.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.theme.meta')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "settings-toggle-group" }, [
                         _createElementVNode("button", {
                           type: "button",
@@ -6639,8 +7464,7 @@ return function render(_ctx, _cache) {
                           class: _normalizeClass(['toggle-btn', { active: _ctx.theme === 'ocean' }]),
                           onClick: $event => (_ctx.setTheme('ocean'))
                         }, _toDisplayString(_ctx.t('settings.theme.ocean')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
-                      ]),
-                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.theme.hint')), 1 /* TEXT */)
+                      ])
                     ])
                   ])
                 ], 8 /* PROPS */, ["aria-label"]),
@@ -6651,7 +7475,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.sharePrefix.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.sharePrefix.meta')), 1 /* TEXT */),
                       _createElementVNode("label", {
                         class: "selector-label",
                         for: "settings-share-prefix"
@@ -6676,7 +7499,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.templateConfirm.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.templateConfirm.meta')), 1 /* TEXT */),
                       _createElementVNode("label", { class: "settings-toggle-row" }, [
                         _createElementVNode("input", {
                           type: "checkbox",
@@ -6730,7 +7552,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.timeline.style.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.timeline.style.meta')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "settings-toggle-group" }, [
                         _createElementVNode("button", {
                           type: "button",
@@ -6742,8 +7563,7 @@ return function render(_ctx, _cache) {
                           class: _normalizeClass(['toggle-btn', { active: _ctx.sessionTimelineStyle === 'bar' }]),
                           onClick: $event => (_ctx.setSessionTimelineStyle('bar'))
                         }, _toDisplayString(_ctx.t('settings.timeline.style.bar')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
-                      ]),
-                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.timeline.style.hint')), 1 /* TEXT */)
+                      ])
                     ])
                   ])
                 ], 8 /* PROPS */, ["aria-label"]),
@@ -6754,7 +7574,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.configTabs.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.configTabs.meta')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "settings-toggle-grid" }, [
                         _createElementVNode("label", { class: "settings-toggle-row" }, [
                           _createElementVNode("input", {
@@ -6843,8 +7662,7 @@ return function render(_ctx, _cache) {
                 }, [
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
-                      _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.backup.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.backup.meta')), 1 /* TEXT */)
+                      _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.backup.title')), 1 /* TEXT */)
                     ])
                   ]),
                   _createElementVNode("div", { class: "settings-card-actions" }, [
@@ -6885,7 +7703,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.providerCache.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.providerCache.meta')), 1 /* TEXT */),
                       _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.providerCache.hint')), 1 /* TEXT */),
                       (_ctx.providerCacheSyncMessage)
                         ? (_openBlock(), _createElementBlock("p", {
@@ -6921,7 +7738,6 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "settings-card-main" }, [
                     _createElementVNode("div", { class: "settings-card-content" }, [
                       _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.reset.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.reset.meta')), 1 /* TEXT */),
                       _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.reset.hint')), 1 /* TEXT */)
                     ])
                   ]),
@@ -6958,7 +7774,6 @@ return function render(_ctx, _cache) {
                     _createElementVNode("div", { class: "settings-card-main" }, [
                       _createElementVNode("div", { class: "settings-card-content" }, [
                         _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.trashConfig.title')), 1 /* TEXT */),
-                        _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.trashConfig.meta')), 1 /* TEXT */),
                         _createElementVNode("label", { class: "settings-toggle-row" }, [
                           _createElementVNode("input", {
                             type: "checkbox",
@@ -8065,8 +8880,7 @@ return function render(_ctx, _cache) {
                                           _createElementVNode("div", { class: "prompt-vars-block" }, [
                                             _createElementVNode("div", { class: "prompt-vars-head" }, [
                                               _createElementVNode("div", null, [
-                                                _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.title')), 1 /* TEXT */),
-                                                _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.hint')), 1 /* TEXT */)
+                                                _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.title')), 1 /* TEXT */)
                                               ]),
                                               (!_ctx.promptTemplateDraft.isBuiltin)
                                                 ? (_openBlock(), _createElementBlock("div", {
@@ -8626,8 +9440,7 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("details", { class: "prompt-presets-panel" }, [
                         _createElementVNode("summary", { class: "prompt-presets-summary" }, [
-                          _createElementVNode("span", null, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */),
-                          _createElementVNode("small", null, _toDisplayString(_ctx.t('prompts.presets.hint')), 1 /* TEXT */)
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */)
                         ]),
                         _createElementVNode("div", { class: "form-group prompt-presets-body" }, [
                           _createElementVNode("div", { class: "editor-frame prompt-presets-frame" }, [
@@ -9774,36 +10587,29 @@ return function render(_ctx, _cache) {
               _createElementVNode("div", {
                 class: "modal-title project-announcement-title",
                 id: "provider-cache-announcement-title"
-              }, _toDisplayString(_ctx.t('announcement.project.title')), 1 /* TEXT */),
-              _createElementVNode("p", { class: "provider-cache-announcement-copy provider-cache-announcement-lede" }, _toDisplayString(_ctx.t('announcement.project.subtitle')), 1 /* TEXT */)
+              }, _toDisplayString(_ctx.t('announcement.project.title')), 1 /* TEXT */)
             ]),
             _createElementVNode("div", {
               class: "project-announcement-feature-grid",
               "aria-label": _ctx.t('announcement.project.features.aria')
             }, [
               _createElementVNode("article", { class: "project-announcement-feature-card" }, [
-                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.config.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.config.meta')), 1 /* TEXT */)
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.config.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("article", { class: "project-announcement-feature-card" }, [
-                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.sessions.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.sessions.meta')), 1 /* TEXT */)
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.sessions.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("article", { class: "project-announcement-feature-card" }, [
-                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.usage.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.usage.meta')), 1 /* TEXT */)
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.usage.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("article", { class: "project-announcement-feature-card" }, [
-                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.tasks.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.tasks.meta')), 1 /* TEXT */)
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.tasks.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("article", { class: "project-announcement-feature-card" }, [
-                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.skills.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.skills.meta')), 1 /* TEXT */)
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.skills.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("article", { class: "project-announcement-feature-card" }, [
-                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.data.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.data.meta')), 1 /* TEXT */)
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.data.title')), 1 /* TEXT */)
               ])
             ], 8 /* PROPS */, ["aria-label"]),
             _createElementVNode("details", {
@@ -9815,8 +10621,7 @@ return function render(_ctx, _cache) {
                   _createElementVNode("span", {
                     class: "project-announcement-section-title",
                     id: "project-announcement-cache-title"
-                  }, _toDisplayString(_ctx.t('announcement.project.cache.title')), 1 /* TEXT */),
-                  _createElementVNode("span", { class: "project-announcement-section-meta" }, _toDisplayString(_ctx.t('announcement.project.cache.meta')), 1 /* TEXT */)
+                  }, _toDisplayString(_ctx.t('announcement.project.cache.title')), 1 /* TEXT */)
                 ]),
                 (_ctx.getProviderCacheAnnouncementSummary().loadedAt)
                   ? (_openBlock(), _createElementBlock("span", {
@@ -10750,8 +11555,7 @@ return function render(_ctx, _cache) {
             _createElementVNode("div", { class: "quick-section" }, [
               _createElementVNode("div", { class: "quick-header" }, [
                 _createElementVNode("div", null, [
-                  _createElementVNode("div", { class: "quick-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.title')), 1 /* TEXT */),
-                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.quick.subtitle')), 1 /* TEXT */)
+                  _createElementVNode("div", { class: "quick-title" }, _toDisplayString(_ctx.t('modal.openclaw.quick.title')), 1 /* TEXT */)
                 ]),
                 _createElementVNode("div", { class: "quick-actions" }, [
                   _createElementVNode("button", {
@@ -10959,8 +11763,7 @@ return function render(_ctx, _cache) {
                         placeholder: _ctx.t('placeholder.modelNameOptional')
                       }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                         [_vModelText, _ctx.openclawQuick.modelName]
-                      ]),
-                      _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('modal.openclaw.quick.modelNameHint')), 1 /* TEXT */)
+                      ])
                     ]),
                     _createElementVNode("div", { class: "form-group" }, [
                       _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.contextAndMaxOutput')), 1 /* TEXT */),
@@ -11746,8 +12549,7 @@ return function render(_ctx, _cache) {
                 _createElementVNode("div", {
                   class: "modal-title",
                   id: "skills-modal-title"
-                }, _toDisplayString(_ctx.t('modal.skills.title')), 1 /* TEXT */),
-                _createElementVNode("div", { class: "skills-modal-subtitle" }, _toDisplayString(_ctx.t('modal.skills.subtitle')), 1 /* TEXT */)
+                }, _toDisplayString(_ctx.t('modal.skills.title')), 1 /* TEXT */)
               ]),
               _createElementVNode("div", { class: "modal-header-actions skills-modal-actions" }, [
                 _createElementVNode("div", {

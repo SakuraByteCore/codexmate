@@ -231,7 +231,6 @@
                                                     <div class="prompt-vars-head">
                                                         <div>
                                                             <div class="prompt-vars-title">{{ t('plugins.promptTemplates.vars.title') }}</div>
-                                                            <div class="plugins-panel-note">{{ t('plugins.promptTemplates.vars.hint') }}</div>
                                                         </div>
                                                         <div v-if="!promptTemplateDraft.isBuiltin" class="prompt-editor-actions">
                                                             <button type="button" class="btn-mini" @click="resetPromptVariableValues" :disabled="pluginsLoading || pluginConfigSaving">{{ t('plugins.promptTemplates.vars.reset') }}</button>

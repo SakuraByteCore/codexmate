@@ -6,6 +6,7 @@
                     role="tabpanel"
                     :aria-labelledby="'tab-settings'">
 
+                    <!-- @include ./session-diagnostics.html -->
                     <div class="settings-tab-header">
                         <div
                             class="segmented-control"
@@ -44,7 +45,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.language.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.language.meta') }}</p>
                                         <label class="selector-label" for="settings-language-select">{{ t('settings.language.label') }}</label>
                                         <select
                                             id="settings-language-select"
@@ -56,7 +56,6 @@
                                                 :key="option.code"
                                                 :value="option.code">{{ option.nativeName }} · {{ option.englishName }}</option>
                                         </select>
-                                        <p class="settings-card-hint">{{ t('settings.language.hint') }}</p>
                                     </div>
                                 </div>
                             </section>
@@ -65,7 +64,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.theme.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.theme.meta') }}</p>
                                         <div class="settings-toggle-group">
                                             <button
                                                 type="button"
@@ -86,7 +84,6 @@
                                                 {{ t('settings.theme.ocean') }}
                                             </button>
                                         </div>
-                                        <p class="settings-card-hint">{{ t('settings.theme.hint') }}</p>
                                     </div>
                                 </div>
                             </section>
@@ -95,7 +92,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.sharePrefix.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.sharePrefix.meta') }}</p>
                                         <label class="selector-label" for="settings-share-prefix">{{ t('settings.sharePrefix.label') }}</label>
                                         <select
                                             id="settings-share-prefix"
@@ -114,7 +110,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.templateConfirm.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.templateConfirm.meta') }}</p>
                                         <label class="settings-toggle-row">
                                             <input type="checkbox" :checked="configTemplateDiffConfirmEnabled" @change="setConfigTemplateDiffConfirmEnabled($event.target.checked)">
                                             <span class="toggle-track">
@@ -149,7 +144,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.timeline.style.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.timeline.style.meta') }}</p>
                                         <div class="settings-toggle-group">
                                             <button
                                                 type="button"
@@ -164,7 +158,6 @@
                                                 {{ t('settings.timeline.style.bar') }}
                                             </button>
                                         </div>
-                                        <p class="settings-card-hint">{{ t('settings.timeline.style.hint') }}</p>
                                     </div>
                                 </div>
                             </section>
@@ -173,7 +166,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.configTabs.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.configTabs.meta') }}</p>
                                         <div class="settings-toggle-grid">
                                         <label class="settings-toggle-row">
                                             <input type="checkbox" :checked="configModeVisibility.codex" @change="setConfigModeVisibility('codex', $event.target.checked)">
@@ -223,7 +215,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.backup.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.backup.meta') }}</p>
                                     </div>
                                 </div>
                                 <div class="settings-card-actions">
@@ -242,7 +233,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.providerCache.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.providerCache.meta') }}</p>
                                         <p class="settings-card-hint">{{ t('settings.providerCache.hint') }}</p>
                                         <p v-if="providerCacheSyncMessage" class="settings-card-hint provider-cache-sync-message">{{ providerCacheSyncMessage }}</p>
                                         <p v-if="providerCacheError" class="settings-card-hint form-error">{{ providerCacheError }}</p>
@@ -261,7 +251,6 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.reset.title') }}</div>
-                                        <p class="settings-card-desc">{{ t('settings.reset.meta') }}</p>
                                         <p class="settings-card-hint">{{ t('settings.reset.hint') }}</p>
                                     </div>
                                 </div>

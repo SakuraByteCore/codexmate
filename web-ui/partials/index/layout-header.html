@@ -161,7 +161,6 @@
                         <span class="side-item-icon" aria-hidden="true">⌂</span>
                         <div class="side-item-title">{{ t('side.overview.doctor') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.overview.doctor.meta') }}</span>
                             <span>{{ inspectorHealthStatus }}</span>
                         </div>
                     </button>
@@ -178,7 +177,6 @@
                         <span class="side-item-icon" aria-hidden="true">?</span>
                         <div class="side-item-title">{{ t('side.docs.cliInstall') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.docs.cliInstall.meta') }}</span>
                             <span>{{ String(installPackageManager || 'npm').toUpperCase() }} · {{ installCommandAction === 'update' ? t('common.update') : (installCommandAction === 'uninstall' ? t('common.uninstall') : t('common.install')) }}</span>
                         </div>
                     </button>
@@ -188,6 +186,7 @@
                     <button
                         v-if="isConfigModeVisible('codex')"
                         id="side-tab-config-codex"
+                        :aria-description="t('side.config.codex.meta')"
                         data-main-tab="config"
                         data-config-mode="codex"
                         :aria-current="mainTab === 'config' && configMode === 'codex' ? 'page' : null"
@@ -196,13 +195,11 @@
                         @click="onConfigTabClick('codex', $event)">
                         <span class="side-item-icon" aria-hidden="true">C</span>
                         <div class="side-item-title">{{ t('side.config.codex') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.config.codex.meta') }}</span>
-                        </div>
                     </button>
                     <button
                         v-if="isConfigModeVisible('claude')"
                         id="side-tab-config-claude"
+                        :aria-description="t('side.config.claude.meta')"
                         data-main-tab="config"
                         data-config-mode="claude"
                         :aria-current="mainTab === 'config' && configMode === 'claude' ? 'page' : null"
@@ -211,13 +208,11 @@
                         @click="onConfigTabClick('claude', $event)">
                         <span class="side-item-icon" aria-hidden="true">A</span>
                         <div class="side-item-title">{{ t('side.config.claude') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.config.claude.meta') }}</span>
-                        </div>
                     </button>
                     <button
                         v-if="isConfigModeVisible('openclaw')"
                         id="side-tab-config-openclaw"
+                        :aria-description="t('side.config.openclaw.meta')"
                         data-main-tab="config"
                         data-config-mode="openclaw"
                         :aria-current="mainTab === 'config' && configMode === 'openclaw' ? 'page' : null"
@@ -226,13 +221,11 @@
                         @click="onConfigTabClick('openclaw', $event)">
                         <span class="side-item-icon" aria-hidden="true">O</span>
                         <div class="side-item-title">{{ t('side.config.openclaw') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.config.openclaw.meta') }}</span>
-                        </div>
                     </button>
                     <button
                         v-if="isConfigModeVisible('opencode')"
                         id="side-tab-config-opencode"
+                        :aria-description="t('side.config.opencode.meta')"
                         data-main-tab="config"
                         data-config-mode="opencode"
                         :aria-current="mainTab === 'config' && configMode === 'opencode' ? 'page' : null"
@@ -241,14 +234,12 @@
                         @click="onConfigTabClick('opencode', $event)">
                         <span class="side-item-icon" aria-hidden="true">N</span>
                         <div class="side-item-title">{{ t('side.config.opencode') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.config.opencode.meta') }}</span>
-                        </div>
                     </button>
 
                     <button
                         v-if="isConfigModeVisible('kilocode')"
                         id="side-tab-config-kilocode"
+                        :aria-description="t('side.config.kilocode.meta')"
                         data-main-tab="config"
                         data-config-mode="kilocode"
                         :aria-current="mainTab === 'config' && configMode === 'kilocode' ? 'page' : null"
@@ -257,13 +248,11 @@
                         @click="onConfigTabClick('kilocode', $event)">
                         <span class="side-item-icon" aria-hidden="true">K</span>
                         <div class="side-item-title">{{ t('side.config.kilocode') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.config.kilocode.meta') }}</span>
-                        </div>
                     </button>
                     <button
                         v-if="isConfigModeVisible('pi')"
                         id="side-tab-config-pi"
+                        :aria-description="t('side.config.pi.meta')"
                         data-main-tab="config"
                         data-config-mode="pi"
                         :aria-current="mainTab === 'config' && configMode === 'pi' ? 'page' : null"
@@ -272,9 +261,6 @@
                         @click="onConfigTabClick('pi', $event)">
                         <span class="side-item-icon" aria-hidden="true">P</span>
                         <div class="side-item-title">{{ t('side.config.pi') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.config.pi.meta') }}</span>
-                        </div>
                     </button>
                 </div>
 
@@ -291,12 +277,12 @@
                         <span class="side-item-icon" aria-hidden="true">S</span>
                         <div class="side-item-title">{{ t('side.sessions.browser') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.sessions.browser.meta') }}</span>
                             <span>{{ t('sessions.sourceLabel', { value: (sessionFilterSource === 'all' ? t('sessions.source.all') : (sessionFilterSource === 'claude' ? 'Claude Code' : (sessionFilterSource === 'gemini' ? 'Gemini CLI' : (sessionFilterSource === 'codebuddy' ? 'CodeBuddy Code' : (sessionFilterSource === 'workbuddy' ? 'WorkBuddy AI' : 'Codex'))))) }) }}</span>
                         </div>
                     </button>
                     <button
                         id="side-tab-prompts"
+                        :aria-description="t('side.prompts.meta')"
                         data-main-tab="prompts"
                         :aria-current="mainTab === 'prompts' ? 'page' : null"
                         :class="['side-item', { active: isMainTabNavActive('prompts') }]"
@@ -304,9 +290,6 @@
                         @click="onMainTabClick('prompts', $event)">
                         <span class="side-item-icon" aria-hidden="true">P</span>
                         <div class="side-item-title">{{ t('side.prompts') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.prompts.meta') }}</span>
-                        </div>
                     </button>
 
                     <button
@@ -319,7 +302,6 @@
                         <span class="side-item-icon" aria-hidden="true">↗</span>
                         <div class="side-item-title">{{ t('tab.usage') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.usage.meta') }}</span>
                             <span>{{ t('usage.rangeLabel', { value: (sessionsUsageTimeRange === 'all' ? t('usage.range.all') : (sessionsUsageTimeRange === '30d' ? t('usage.range.30d.short') : t('usage.range.7d.short'))) }) }}</span>
                         </div>
                     </button>
@@ -357,7 +339,6 @@
                         <span class="side-item-icon" aria-hidden="true">◇</span>
                         <div class="side-item-title">{{ t('side.plugins.tools') }}</div>
                         <div class="side-item-meta">
-                            <span>{{ t('side.plugins.tools.meta') }}</span>
                             <span>{{ t('side.plugins.templatesCount', { count: promptTemplatesList.length }) }}</span>
                         </div>
                     </button>
@@ -388,9 +369,6 @@
                         @click="onMainTabClick('settings', $event)">
                         <span class="side-item-icon" aria-hidden="true">⚙</span>
                         <div class="side-item-title">{{ t('side.system.settings') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('side.system.settings.meta') }}</span>
-                        </div>
                     </button>
                     <button
                         id="side-tab-trash"
@@ -463,7 +441,6 @@
                         <div class="panel-header-copy">
                             <div class="panel-kicker">{{ mainTabKicker }}</div>
                             <h1 class="main-title">{{ mainTabTitle }}</h1>
-                            <p class="subtitle">{{ mainTabSubtitle }}</p>
                         </div>
                     </div>
 

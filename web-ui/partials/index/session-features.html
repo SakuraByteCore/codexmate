@@ -1,0 +1,107 @@
+<section class="session-features" :aria-label="t('features.title')">
+    <header class="feature-toolbar">
+        <div class="feature-tabs" role="group" :aria-label="t('features.title')">
+            <button type="button" :aria-expanded="featureView === 'bookmarks'" @click="openFeatureView('bookmarks')">{{ t('features.bookmarks') }}</button>
+            <button type="button" :aria-expanded="featureView === 'search'" @click="openFeatureView('search')">{{ t('features.index') }}</button>
+            <button type="button" :aria-expanded="featureView === 'projects'" @click="openFeatureView('projects')">{{ t('features.projects') }}</button>
+        </div>
+        <button v-if="selectedContextIds.length" type="button" class="btn-mini" @click="generateSelectedHandoff" :disabled="featureBusy">{{ t('features.generateDraft', { count: selectedContextIds.length }) }}</button>
+    </header>
+    <p v-if="featureError" class="form-error feature-feedback" role="alert">{{ featureError }}</p>
+    <div v-if="featureView === 'search'" class="feature-content">
+        <div class="feature-section-heading">
+            <h3>{{ t('features.index') }}</h3>
+            <div class="feature-actions">
+                <button type="button" class="btn-mini" @click="refreshSessionIndex(false)" :disabled="indexReport?.job.status === 'running'">{{ t('features.refreshIndex') }}</button>
+                <button type="button" class="btn-mini feature-quiet" @click="refreshSessionIndex(true)" :disabled="indexReport?.job.status === 'running'">{{ t('features.rebuildIndex') }}</button>
+                <button v-if="indexReport?.job.status === 'running'" type="button" class="btn-mini" @click="cancelSessionIndex">{{ t('features.cancel') }}</button>
+            </div>
+        </div>
+        <div v-if="indexReport" class="feature-meta" role="status">
+            <span class="feature-status" :data-status="indexReport.job.status">{{ t('features.status.' + indexReport.job.status) }}</span>
+            <span>{{ t('features.indexStatus', { count: indexReport.indexed, processed: indexReport.job.processed, total: indexReport.job.candidates }) }}</span>
+        </div>
+        <form class="feature-actions feature-search-form" @submit.prevent="searchSessionIndex">
+            <input v-model="indexQuery" :aria-label="t('features.search')" :placeholder="t('features.search')">
+            <button class="btn-mini feature-primary" :disabled="featureBusy || !indexQuery.trim() || !indexReport?.updatedAt">{{ t('features.search') }}</button>
+        </form>
+        <details class="feature-disclosure"><summary>{{ t('features.searchScope') }}</summary><p class="feature-hint">{{ t('features.indexScope') }}</p></details>
+        <p v-if="indexReport?.failures.length" class="form-error" role="alert">{{ t('features.indexFailures', { count: indexReport.failures.length }) }}</p>
+        <p v-if="featureBusy" class="feature-loading" role="status">{{ t('features.loading') }}</p>
+        <template v-if="indexResults">
+            <p class="feature-meta">{{ t('features.coverage', { scanned: indexResults.scanned, total: indexResults.candidates }) }}</p>
+            <p v-if="!indexResults.complete" class="feature-hint">{{ t('features.partial') }}</p>
+            <p v-if="!indexResults.results.length" class="feature-empty">{{ t('features.empty') }}</p>
+            <article v-for="result in indexResults.results" :key="result.session.key + result.nodeId" class="feature-record">
+                <header class="feature-record-heading"><h4>{{ result.session.title || result.session.sessionId }}</h4><span class="feature-source">{{ result.session.source }}</span></header>
+                <small class="feature-path" :title="result.session.cwd">{{ result.session.cwd }}</small>
+                <pre class="feature-excerpt">{{ result.snippet }}</pre>
+                <div class="feature-record-actions"><button type="button" class="btn-mini" @click="openIndexedMessage(result)">{{ t('features.source') }}</button></div>
+                <details class="feature-disclosure"><summary>{{ t('features.context') }}</summary><pre>{{ result.before }}</pre><pre>{{ result.after }}</pre></details>
+            </article>
+        </template>
+    </div>
+    <div v-if="featureView === 'projects'" class="feature-content">
+        <div class="feature-section-heading"><h3>{{ t('features.projects') }}</h3><small v-if="projectReport" class="feature-meta">{{ t('features.readAt', { time: projectReport.readAt }) }}</small></div>
+        <p class="feature-hint">{{ t('features.projectHistory') }}</p>
+        <p v-if="featureBusy" class="feature-loading" role="status">{{ t('features.loading') }}</p>
+        <template v-if="projectReport">
+            <p v-if="projectReport.failures.length" class="form-error">{{ t('features.indexFailures', { count: projectReport.failures.length }) }}</p>
+            <div class="feature-project-picker" role="group" :aria-label="t('features.projects')">
+                <button v-for="project in projectReport.projects" :key="project.key" type="button" @click="loadProjectWorkspace(project.key)" :disabled="featureBusy" :aria-pressed="projectSelected === project.key && !!projectReport.detail">
+                    <span class="feature-project-label"><strong>{{ project.cwd.split(/[\\/]/).filter(Boolean).pop() || project.cwd || t('features.unassigned') }}</strong><small class="feature-path" :title="project.cwd">{{ project.cwd || t('features.unassigned') }}</small></span>
+                    <span class="feature-count">{{ project.sessionCount }}</span>
+                </button>
+            </div>
+            <template v-if="projectReport.detail">
+                <div class="feature-section-heading feature-project-heading"><h4 class="feature-path" :title="projectReport.detail.cwd">{{ projectReport.detail.cwd || t('features.unassigned') }}</h4></div>
+                <p v-if="projectReport.detail.truncated" class="feature-hint">{{ t('features.partial') }}</p>
+                <div class="feature-project-sessions">
+                    <article v-for="session in projectReport.detail.sessions" :key="session.source + session.sessionId" class="feature-session-row">
+                        <button type="button" @click="selectSession(session)">{{ session.title || session.sessionId }}</button>
+                        <small class="feature-meta">{{ session.source }} · {{ session.timestamp }}</small>
+                    </article>
+                </div>
+                <details class="feature-disclosure" :open="!!projectReport.detail.bookmarks.length"><summary>{{ t('features.bookmarks') }} <span class="feature-count">{{ projectReport.detail.bookmarks.length }}</span></summary>
+                    <div class="feature-link-list"><button v-for="item in projectReport.detail.bookmarks" :key="item.id" type="button" @click="locateBookmark(item)">{{ item.note || item.excerpt.slice(0, 80) }}</button></div>
+                </details>
+                <details class="feature-disclosure"><summary>{{ t('features.prompts') }} <span class="feature-count">{{ projectReport.detail.prompts.length }}</span></summary>
+                    <div class="feature-link-list"><button v-for="file in projectReport.detail.prompts" :key="file" type="button" @click="openProjectPrompt(file)">{{ file }}</button></div>
+                    <pre v-if="projectPrompt" class="feature-code">{{ projectPrompt.content }}</pre>
+                </details>
+                <details class="feature-disclosure"><summary>{{ t('features.handoffs') }} <span class="feature-count">{{ projectReport.detail.handoffs.length }}</span></summary>
+                    <p v-for="record in projectReport.detail.handoffs" :key="record.source + record.id" class="feature-meta">{{ record.source }} · {{ record.target }} · {{ record.createdAt }} · {{ handoffStatusLabel(record.status) }}</p>
+                </details>
+                <details v-if="projectSelected" class="feature-disclosure"><summary>{{ t('features.projectMapping') }}</summary><form class="feature-actions feature-search-form" @submit.prevent="mapProjectWorkspace"><input v-model="projectAlias" :aria-label="t('features.projectPath')" :placeholder="t('features.projectPath')"><button class="btn-mini" :disabled="featureBusy">{{ t('features.saveMapping') }}</button></form></details>
+            </template>
+        </template>
+    </div>
+    <div v-if="featureView === 'bookmarks'" class="feature-content">
+        <div class="feature-section-heading"><h3>{{ t('features.bookmarks') }}</h3><span class="feature-count">{{ bookmarks.length }}</span></div>
+        <form @submit.prevent="loadBookmarks">
+            <div class="feature-actions feature-search-form"><input v-model="bookmarkQuery" :aria-label="t('features.search')" :placeholder="t('features.search')"><button class="btn-mini feature-primary" :disabled="featureBusy">{{ t('features.search') }}</button></div>
+            <details class="feature-disclosure"><summary>{{ t('features.moreFilters') }} <span v-if="bookmarkTag || bookmarkProject" class="feature-count">{{ (bookmarkTag ? 1 : 0) + (bookmarkProject ? 1 : 0) }}</span></summary>
+                <div class="feature-filter-fields"><label>{{ t('features.tag') }}<input v-model="bookmarkTag" :aria-label="t('features.tag')"></label><label>{{ t('features.projectPath') }}<input v-model="bookmarkProject" :aria-label="t('features.projectPath')"></label></div>
+            </details>
+        </form>
+        <p v-if="featureBusy" class="feature-loading" role="status">{{ t('features.loading') }}</p>
+        <div v-else-if="!bookmarks.length" class="feature-empty"><p>{{ t('features.empty') }}</p></div>
+        <article v-for="item in bookmarks" :key="item.id" class="feature-record">
+            <header class="feature-record-heading"><span class="feature-source">{{ item.source }}</span><small class="feature-meta">{{ item.updatedAt }}</small></header>
+            <small class="feature-path" :title="item.cwd">{{ item.cwd }}</small>
+            <pre class="feature-excerpt">{{ item.excerpt }}</pre>
+            <p v-if="item.note" class="feature-note">{{ item.note }}</p>
+            <div v-if="item.tags.length" class="feature-tags"><span v-for="tag in item.tags" :key="tag" class="feature-tag">{{ tag }}</span></div>
+            <div class="feature-record-actions">
+                <button type="button" class="btn-mini" @click="locateBookmark(item)" :disabled="featureBusy">{{ t('features.source') }}</button>
+                <button type="button" class="btn-mini feature-quiet" @click="bookmarkEditor = { ...item, tagsText: item.tags.join(', ') }" :disabled="featureBusy">{{ t('features.edit') }}</button>
+                <button type="button" class="btn-mini feature-quiet" @click="removeBookmark(item)" :disabled="featureBusy">{{ t('features.unbookmark') }}</button>
+            </div>
+        </article>
+        <form v-if="bookmarkEditor" @submit.prevent="saveBookmark" class="feature-editor">
+            <label>{{ t('features.note') }}<textarea v-model="bookmarkEditor.note" maxlength="4000"></textarea></label>
+            <label>{{ t('features.tags') }}<input v-model="bookmarkEditor.tagsText"></label>
+            <div class="feature-actions"><button class="btn-mini feature-primary" :disabled="featureBusy">{{ t('features.save') }}</button><button type="button" class="btn-mini feature-quiet" @click="bookmarkEditor = null" :disabled="featureBusy">{{ t('features.cancel') }}</button></div>
+        </form>
+    </div>
+</section>

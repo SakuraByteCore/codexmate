@@ -8,7 +8,6 @@
                         <header class="workflow-header">
                             <div>
                                 <h2 class="workflow-title">{{ t('workflow.title') }}</h2>
-                                <p class="workflow-description">{{ t('workflow.tagline') }}</p>
                             </div>
                             <button type="button" class="btn-tool btn-tool-compact workflow-refresh" @click="refreshWorkflowRuns" :disabled="workflowBusy">{{ t('workflow.refresh') }}</button>
                         </header>
@@ -39,7 +38,6 @@
                             <summary class="workflow-history-title">{{ t('workflow.runs') }} <span class="workflow-count">{{ workflowRuns.length }}</span></summary>
                             <div v-if="!workflowRuns.length" class="workflow-empty">
                                 <p>{{ t('workflow.empty') }}</p>
-                                <p class="form-hint">{{ t('workflow.emptyHint') }}</p>
                             </div>
                             <article v-for="run in workflowRuns" :key="run.id" class="workflow-run">
                                 <div class="workflow-run-header">

@@ -18,10 +18,12 @@
                             <span v-if="sessionStandaloneSourceLabel"> · {{ sessionStandaloneSourceLabel }}</span>
                         </div>
                         <!-- @include ./context-health.html -->
+                        <!-- @include ./context-window-reference.html -->
                         <pre class="session-standalone-text">{{ sessionStandaloneText }}</pre>
                     </div>
                 </div>
                 <div v-else>
+                <!-- @include ./session-features.html -->
                 <div class="selector-section session-selector-section">
                     <div class="selector-header" style="display:none">
                         <span class="selector-title">{{ t('sessions.sourceTitle') }}</span>
@@ -310,6 +312,12 @@
                                     </div>
                                 </div>
                                 <!-- @include ./context-health.html -->
+                                <!-- @include ./context-window-reference.html -->
+                                <article v-if="featureFocus" ref="featureFocus" class="feature-focus" tabindex="-1">
+                                    <div class="feature-actions"><strong>{{ t('features.source') }} · {{ featureFocus.id }}</strong><button type="button" class="btn-mini" @click="featureFocus = null">{{ t('features.close') }}</button></div>
+                                    <pre>{{ featureFocus.text }}</pre>
+                                    <div class="feature-actions"><button type="button" class="btn-mini" @click="bookmarkMessage(featureFocus)" :disabled="featureBusy">{{ t('features.bookmark') }}</button><button type="button" class="btn-mini" @click="toggleHandoffMessage(featureFocus)">{{ t('features.selectMessage') }}</button></div>
+                                </article>
                                 <div class="session-export-feedback">
                                     <p v-if="sessionExportNotice && sessionExportNotice.key === getSessionExportKey(activeSession)" class="session-export-notice" role="status">{{ t('sessions.export.truncated') }}</p>
                                 </div>
@@ -415,6 +423,7 @@
                                             :ref="getSessionMessageRefBinder(getRecordRenderKey(msg, idx))"
                                             :class="['session-msg', msg.normalizedRole === 'user' ? 'user' : (msg.normalizedRole === 'system' ? 'system' : 'assistant')]">
                                             <div class="session-msg-header">
+                                                <session-message-actions :message="msg"></session-message-actions>
                                                 <div class="session-msg-meta">
                                                     <span class="session-msg-role">{{ msg.roleLabel || (msg.normalizedRole === 'user' ? t('sessions.roleLabel.user') : (msg.normalizedRole === 'system' ? t('sessions.roleLabel.system') : t('sessions.roleLabel.assistant'))) }}</span>
                                                     <span class="session-msg-time">{{ msg.timestamp || '' }}</span>

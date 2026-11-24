@@ -1,0 +1,29 @@
+<details class="session-features feature-diagnostics" @toggle="$event.target === $event.currentTarget && $event.currentTarget.open && loadDiagnosticTargets()">
+    <summary class="feature-diagnostics-heading">{{ t('features.diagnostics') }}</summary>
+    <div class="feature-content">
+        <p class="feature-hint">{{ t('features.diagnosticScope') }}</p>
+        <p v-if="featureError" class="form-error feature-feedback" role="alert">{{ featureError }}</p>
+        <div class="feature-diagnostic-options">
+            <label><input type="checkbox" v-model="diagnosticsRemote" :disabled="diagnosticsReport?.status === 'running'"><span>{{ t('features.remoteProbe') }}</span></label>
+            <label v-for="name in diagnosticsTargets" :key="name"><input type="checkbox" :value="name" v-model="diagnosticsSelected" :disabled="diagnosticsReport?.status === 'running'"><span>{{ name }}</span></label>
+        </div>
+        <div class="feature-actions feature-diagnostic-controls">
+            <button type="button" class="btn-mini feature-primary" @click="startDiagnostics" :disabled="diagnosticsReport?.status === 'running'">{{ t('features.check') }}</button>
+            <button v-if="diagnosticsReport?.status === 'running'" type="button" class="btn-mini feature-quiet" @click="cancelDiagnostics">{{ t('features.cancel') }}</button>
+            <span v-if="diagnosticsReport" class="feature-status" :data-status="diagnosticsReport.status" role="status">{{ t('features.status.' + diagnosticsReport.status) }}</span>
+        </div>
+        <template v-if="diagnosticsReport">
+            <article v-for="item in diagnosticsReport.items" :key="item.id" class="feature-record feature-diagnostic-row">
+                <header class="feature-record-heading">
+                    <strong>{{ item.id === 'local' ? t('features.localCheck') : item.id === 'provider' ? t('features.providerCheck') : item.id }}</strong>
+                    <span class="feature-status" :data-status="item.status">{{ t('features.status.' + item.status) }}</span>
+                </header>
+                <small class="feature-meta">{{ item.checkedAt }}<template v-if="item.durationMs !== undefined"> · {{ item.durationMs }} ms</template></small>
+                <p v-for="issue in item.evidence?.issues || []" :key="issue.id || issue.code" class="feature-issue">{{ issue.problem || issue.code }}</p>
+                <p v-if="item.errorCode" class="form-error">{{ t('features.error.' + item.errorCode) }}</p>
+                <details class="feature-disclosure"><summary>{{ t('features.technicalDetails') }}</summary><pre class="feature-code">{{ JSON.stringify(item.evidence || {}, null, 2) }}</pre></details>
+            </article>
+            <footer class="feature-record-actions feature-export-actions"><button type="button" class="btn-mini feature-quiet" @click="exportDiagnostics('json')">{{ t('features.exportJson') }}</button><button type="button" class="btn-mini feature-quiet" @click="exportDiagnostics('md')">{{ t('features.exportMarkdown') }}</button></footer>
+        </template>
+    </div>
+</details>

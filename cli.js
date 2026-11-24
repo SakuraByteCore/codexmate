@@ -142,6 +142,9 @@ const {
 } = require('./cli/prompt-history');
 const { createPluginConfigController } = require('./cli/plugin-config');
 const { createSessionContextHealthController } = require('./lib/session-context-health');
+const { createSessionFeatures } = require('./lib/session-features');
+const { listHandoffs } = require('./lib/thread-handoff');
+const { discoverServers, probeServer } = require('./lib/handoff-mcp');
 const {
     createArchiveHelperController
 } = require('./cli/archive-helpers');
@@ -9899,9 +9902,32 @@ async function extractMessagesFromFile(filePath, source, options = {}) {
     return state;
 }
 
-const { readSessionContextHealth, readSessionContextNode } = createSessionContextHealthController({
+const { readSessionContextHealth, readSessionContextNode, iterateSessionContextNodes } = createSessionContextHealthController({
     fs, normalizeSessionSourceName, resolveSessionFilePath, queryOpencodeSessionMessages, queryZedSessionMessages
 });
+
+const sessionFeatures = createSessionFeatures({ root: path.join(CODEXMATE_DIR, 'session-features'),
+    readNode: readSessionContextNode, nodes: iterateSessionContextNodes,
+    diagnostics: {
+        home: os.homedir(),
+        secrets: () => [readServerToken()],
+        local: async () => {
+            const report = await buildDoctorReport({ remote: false, includeInstall: false, includeUsage: false }, {
+                getStatusPayload: buildMcpStatusPayload, buildConfigHealthReport, listSkills });
+            return { ok: report.ok, issues: report.issues.map((item) => ({ id: item.id, severity: item.severity,
+                problem: item.problem, impact: item.impact, actions: item.actions })),
+                command: 'codexmate doctor --format md' };
+        },
+        provider: async () => {
+            const report = await buildConfigHealthReport({ remote: true });
+            return { ok: report.ok, issues: (report.issues || []).map((item) => ({ code: item.code, statusCode: item.statusCode })),
+                command: 'codexmate doctor --format md' };
+        },
+        mcp: (name, options) => probeServer(name, options),
+        mcpTargets: (cwd) => discoverServers({ cwd, allServers: true }).map((server) => server.name)
+    },
+    handoffs: (threadId) => listHandoffs(threadId),
+    inventory: (source, limit) => listSessionInventoryBySource(source, limit, { scanCount: limit, maxFilesScanned: limit * 4 }, { forceRefresh: true }) });
 
 async function readSessionDetail(params = {}) {
     const source = normalizeSessionSourceName(params.source, '');
@@ -15025,6 +15051,27 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'thread-handoff-fallback':
                         case 'thread-handoff-ack':
                             result = await handleThreadAction(action, params || {});
+                            break;
+                        case 'session-diagnostics-targets':
+                        case 'session-diagnostics-start':
+                        case 'session-diagnostics-status':
+                        case 'session-diagnostics-cancel':
+                        case 'session-feature-settings-get':
+                        case 'session-feature-settings-save':
+                        case 'session-projects':
+                        case 'session-project-map':
+                        case 'session-project-prompt':
+                        case 'session-handoff-draft':
+                        case 'session-index-status':
+                        case 'session-index-refresh':
+                        case 'session-index-cancel':
+                        case 'session-index-search':
+                        case 'session-index-node':
+                        case 'session-bookmarks-list':
+                        case 'session-bookmark-save':
+                        case 'session-bookmark-remove':
+                        case 'session-bookmark-locate':
+                            result = await sessionFeatures.handle(action, params || {});
                             break;
                         case 'session-context-health':
                             result = await readSessionContextHealth(params || {});

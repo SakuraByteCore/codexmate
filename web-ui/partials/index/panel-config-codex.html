@@ -103,7 +103,6 @@
                             <option value="low">low</option>
                             <option value="xhigh">xhigh</option>
                         </select>
-                        <div class="config-template-hint">{{ t('config.reasoningEffort.hint') }}</div>
                     </div>
                 </div>
 
@@ -118,12 +117,10 @@
                         <div class="form-group codex-config-field">
                             <label class="form-label" for="codex-model-context-window">model_context_window</label>
                             <input id="codex-model-context-window" v-model="modelContextWindowInput" class="form-input" inputmode="numeric" autocomplete="off" :placeholder="t('config.example', { value: 190000 })" @focus="editingCodexBudgetField = 'modelContextWindowInput'" @input="sanitizePositiveIntegerDraft('modelContextWindowInput')" @blur="onModelContextWindowBlur" @keydown.enter.prevent="onModelContextWindowBlur">
-                            <div class="form-hint">{{ t('config.contextWindow.hint') }}</div>
                         </div>
                         <div class="form-group codex-config-field">
                             <label class="form-label" for="codex-model-auto-compact-token-limit">model_auto_compact_token_limit</label>
                             <input id="codex-model-auto-compact-token-limit" v-model="modelAutoCompactTokenLimitInput" class="form-input" inputmode="numeric" autocomplete="off" :placeholder="t('config.example', { value: 185000 })" @focus="editingCodexBudgetField = 'modelAutoCompactTokenLimitInput'" @input="sanitizePositiveIntegerDraft('modelAutoCompactTokenLimitInput')" @blur="onModelAutoCompactTokenLimitBlur" @keydown.enter.prevent="onModelAutoCompactTokenLimitBlur">
-                            <div class="form-hint">{{ t('config.autoCompact.hint') }}</div>
                         </div>
                     </div>
                 </div>

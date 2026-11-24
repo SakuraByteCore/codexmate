@@ -30,6 +30,10 @@ Codex Mate is a locally running CLI + Web tool for browsing, filtering, and expo
 
 </div>
 
+### Session workbench
+
+The session page adds message bookmarks with notes and tags, an incremental local full-text index, evidence-linked handoff drafts, a read-only project workspace, and model-window references. Bookmarks do not modify source sessions. The index covers discovered candidates only; refresh it for new messages. Historical text ratios are not actual request utilization. Settings offers local diagnostics and redacted JSON/Markdown exports. Only selected checks probe the current Codex route or start selected MCP servers; no write tools are called. See the [session guide](https://sakurabytecore.github.io/codexmate/guide/sessions).
+
 ---
 
 > [!TIP]

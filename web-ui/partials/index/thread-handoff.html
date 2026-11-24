@@ -2,7 +2,7 @@
                                     <summary class="thread-handoff-summary"><span>会话交接</span><span class="thread-handoff-summary-hint">{{ handoffExpanded ? '收起' : '填写交接 · 查看历史' }}</span></summary>
                                     <div v-if="handoffExpanded" class="thread-handoff-body">
                                         <div class="session-workspace-header session-workspace-card-wide">
-                                            <p class="session-workspace-subtitle">交代目标，让下一位代理接着做。草稿在切换会话后保留，刷新后清空。</p>
+                                            <p class="session-workspace-subtitle">草稿在切换会话后保留，刷新后清空。</p>
                                             <button class="btn-mini" type="button" @click="loadThreadHandoffs" :disabled="handoffLoading || handoffBusy">{{ handoffLoading ? '刷新中…' : '刷新历史' }}</button>
                                         </div>
                                         <form @submit.prevent="createThreadHandoff" class="thread-handoff-form">
@@ -15,7 +15,7 @@
                                                 <textarea v-model="handoffDraft.goal" class="session-query-input" rows="3" required :disabled="handoffBusy" placeholder="描述下一步任务、预期结果或验收标准"></textarea>
                                             </label>
                                             <details class="thread-handoff-optional">
-                                                <summary class="thread-handoff-optional-summary">补充上下文 <small>已完成 / 阻塞 / 步骤 / 文件 · 可选</small></summary>
+                                                <summary class="thread-handoff-optional-summary">补充上下文</summary>
                                                 <div class="session-workspace-grid">
                                                     <label v-for="field in handoffFields" :key="field.key" class="thread-handoff-field">
                                                         <span class="session-workspace-card-title">{{ field.label }}（可选）</span>
@@ -24,7 +24,6 @@
                                                 </div>
                                             </details>
                                             <div class="thread-handoff-actions">
-                                                <span class="session-workspace-subtitle">生成后可复制到目标会话</span>
                                                 <button class="btn-mini thread-handoff-submit" type="submit" :disabled="handoffBusy || handoffLoading || !handoffDraft.target.trim() || !handoffDraft.goal.trim()">{{ handoffBusy ? '处理中…' : '生成交接' }}</button>
                                             </div>
                                         </form>
@@ -35,6 +34,10 @@
                                             <textarea class="session-query-input" rows="6" readonly :value="handoffCopyText" @focus="$event.target.select()"></textarea>
                                         </label>
                                         <p class="session-workspace-subtitle session-workspace-card-wide">复制不会自动发送。读取确认由目标代理通过 CLI ack 提交。</p>
+                                        <div class="feature-actions"><button type="button" class="btn-mini" @click="generateSelectedHandoff" :disabled="featureBusy || !selectedContextIds.length">{{ t('features.generateDraft', { count: selectedContextIds.length }) }}</button></div>
+                                        <p v-if="handoffDraftEvidence.length">{{ t('features.draftReview') }}</p>
+                                        <details v-if="handoffUnverified.length"><summary>{{ t('features.unverified', { count: handoffUnverified.length }) }}</summary><pre v-for="(text, index) in handoffUnverified" :key="index">{{ text }}</pre></details>
+                                        <ul v-if="handoffDraftEvidence.length"><li v-for="item in handoffDraftEvidence" :key="item.nodeId"><button type="button" class="btn-mini" @click="locateDraftEvidence(item)">{{ item.nodeId }} · {{ t('features.evidence.' + item.status) }}</button></li></ul>
                                         <p v-if="handoffLoading" class="session-workspace-card-wide" role="status">正在加载交接历史…</p>
                                         <p v-else-if="!handoffError && !handoffRecords.length" class="session-workspace-empty session-workspace-card-wide">暂无交接记录</p>
                                         <ol v-if="handoffRecords.length" class="session-workspace-list session-workspace-card-wide">

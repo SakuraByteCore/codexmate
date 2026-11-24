@@ -1,5 +1,6 @@
 import { configChangeMixin } from './modules/app.methods.config-changes.mjs';
 import { threadHandoffMixin } from './modules/thread-handoff.mjs';
+import { sessionFeaturesMixin } from './modules/session-features.mjs';
 import {
     DEFAULT_MODEL_AUTO_COMPACT_TOKEN_LIMIT,
     DEFAULT_MODEL_CONTEXT_WINDOW,
@@ -957,6 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appOptions.render = window.__CODEXMATE_WEB_UI_RENDER__;
     }
 
+    appOptions.mixins.push(sessionFeaturesMixin);
     const app = createApp(appOptions);
     app.config.errorHandler = (err, vm, info) => {
         console.error('[Vue error handler]', err, info);

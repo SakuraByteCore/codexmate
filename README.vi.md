@@ -30,6 +30,10 @@ Codex Mate là công cụ CLI + Web chạy cục bộ, giúp xem, lọc và xu�
 
 </div>
 
+### Không gian làm việc phiên
+
+Trang phiên bổ sung dấu trang tin nhắn với ghi chú và nhãn, chỉ mục toàn văn cục bộ cập nhật tăng dần, bản nháp bàn giao có bằng chứng, không gian dự án chỉ đọc và tham chiếu cửa sổ mô hình. Dấu trang không sửa phiên gốc. Chỉ mục chỉ bao gồm phiên đã phát hiện; cần cập nhật để tìm tin nhắn mới. Tỷ lệ văn bản lịch sử không phải mức sử dụng thực tế của yêu cầu. Cài đặt cung cấp chẩn đoán cục bộ và xuất JSON/Markdown đã ẩn bí mật. Chỉ mục kiểm tra được chọn mới truy cập tuyến Codex hiện tại hoặc khởi động MCP; không gọi công cụ ghi. Xem [hướng dẫn phiên](https://sakurabytecore.github.io/codexmate/guide/sessions).
+
 ---
 
 > [!TIP]

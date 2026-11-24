@@ -2,7 +2,6 @@
         <div v-if="showAddPiProviderModal && !editingPiProvider" class="modal-overlay" @click.self="cancelAddPiProviderModal">
             <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="pi-provider-picker-modal-title">
                 <div class="modal-title" id="pi-provider-picker-modal-title">{{ t('pi.providers.addModal.title') }}</div>
-                <div class="config-template-hint">{{ t('pi.providers.addModal.subtitle') }}</div>
                 <div class="pi-picker">
                     <input class="form-input" type="text" v-model="piProviderPickerQuery" autocomplete="off" spellcheck="false" :placeholder="t('pi.picker.searchPlaceholder')">
                     <div class="pi-picker-group" v-for="group in piProviderTemplateGroups()" :key="group.id">
