@@ -140,12 +140,15 @@ test('app version status exposes loading and retry states in the side rail', () 
     assert.strictEqual(ctx.appUpdateNoticeMeta(), 'network down');
 });
 
-test('app version status click retries checks unless an update is available', () => {
+test('app version status click retries checks or opens the update reminder', () => {
     const calls = [];
+    const trigger = {};
     const ctx = createContext({
         appVersion: '0.0.40',
         appLatestVersion: '0.0.40',
+        mainTab: 'sessions',
         loadAppVersionStatus(options) { calls.push(['load', options]); },
+        openAppUpdateModal(button) { calls.push(['modal', button]); },
         openAppUpdateDocs() { calls.push(['docs']); }
     });
 
@@ -154,8 +157,10 @@ test('app version status click retries checks unless an update is available', ()
 
     calls.length = 0;
     ctx.appLatestVersion = '0.0.41';
-    ctx.handleAppVersionStatusClick();
-    assert.deepStrictEqual(calls, [['docs']]);
+    ctx.handleAppVersionStatusClick({ currentTarget: trigger });
+    assert.deepStrictEqual(calls, [['modal', trigger]]);
+    assert.strictEqual(ctx.mainTab, 'sessions');
+    assert.strictEqual(ctx.installCommandAction, 'install');
 });
 
 test('loadAppVersionStatus passes force refresh through to the API', async () => {

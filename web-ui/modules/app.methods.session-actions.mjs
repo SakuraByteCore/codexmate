@@ -539,13 +539,13 @@ export function createSessionActionMethods(options = {}) {
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(text);
-                    this.showMessage('已复制命令', 'success');
+                    this.showMessage(this.t('toast.copy.ok'), 'success');
                     return;
                 }
             } catch (_) {}
             const ok = this.fallbackCopyText(text);
             if (ok) {
-                this.showMessage('已复制命令', 'success');
+                this.showMessage(this.t('toast.copy.ok'), 'success');
                 return;
             }
             this.showMessage(this.t('toast.copy.fail'), 'error');

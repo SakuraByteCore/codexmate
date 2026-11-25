@@ -180,7 +180,7 @@ Sau khi tìm lại cuộc trò chuyện, bạn có thể quản lý cấu hình,
 | **Mẫu Prompt** | ✅ | Hộp thoại điền biến khi gọi, chia sẻ một mẫu bằng JSON, lịch sử Diff và khôi phục cấu hình mẫu plugin. `git_diff` là văn bản được dán, không thực thi lệnh. |
 | **Trình sửa tệp prompt** | ✅ | Chỉnh sửa CLAUDE.md / AGENTS.md toàn cục và theo dự án với kho preset chung. Điền biến trước khi áp dụng preset; cần lưu thủ công để ghi tệp. Lịch sử hiển thị Diff; xác nhận khôi phục sẽ ghi phiên bản đã chọn với bản sao lưu nguyên tử và kiểm tra thay đổi bên ngoài. Tab Pi liệt kê tệp `.md` trực tiếp trong `~/.pi/agent/` hoặc `<cwd>/.pi/`, cập nhật khi mở tab hoặc danh sách tệp; không tự động nạp prompt. |
 | **Tích hợp MCP** | ✅ | Expose tool và resource cục bộ qua MCP stdio |
-| **Tự động cập nhật** | ✅ | Cập nhật nhanh qua `codexmate update` |
+| **Tự động cập nhật** | ✅ | Nhấp thông báo phiên bản mới trong Web UI để xem phiên bản và sao chép `codexmate update`. Chạy trên máy chủ dịch vụ rồi khởi động lại dịch vụ sau khi cập nhật thành công. Nhấp hoặc sao chép không thực thi cập nhật |
 
 ---
 

@@ -1,3 +1,5 @@
+const APP_UPDATE_COMMAND = 'codexmate update';
+
 export function createInstallMethods(options = {}) {
     const { api } = options;
     return {
@@ -91,12 +93,30 @@ export function createInstallMethods(options = {}) {
             return suffix ? `${meta} · ${suffix}` : meta;
         },
 
-        handleAppVersionStatusClick() {
-            if (this.isAppUpdateAvailable()) {
-                this.openAppUpdateDocs();
+        handleAppVersionStatusClick(event) {
+            if (this.appVersionStatusLoading) return;
+            if (!this.appVersionStatusError && this.isAppUpdateAvailable()) {
+                this.openAppUpdateModal(event?.currentTarget);
                 return;
             }
             void this.loadAppVersionStatus({ silent: false, force: true });
+        },
+
+        appUpdateCommand() {
+            return APP_UPDATE_COMMAND;
+        },
+
+        openAppUpdateModal(trigger) {
+            this._appUpdateTrigger = trigger || document.activeElement;
+            this.showAppUpdateModal = true;
+            this.$nextTick(() => document.getElementById('app-update-command')?.focus());
+        },
+
+        closeAppUpdateModal() {
+            const trigger = this._appUpdateTrigger;
+            this._appUpdateTrigger = null;
+            this.showAppUpdateModal = false;
+            this.$nextTick(() => trigger?.focus());
         },
 
         async loadAppVersionStatus(options = {}) {

@@ -1,3 +1,18 @@
+        <div v-if="showAppUpdateModal" class="modal-overlay" @click.self="closeAppUpdateModal">
+            <div class="modal app-update-modal" role="dialog" aria-modal="true" aria-labelledby="app-update-title" aria-describedby="app-update-versions app-update-hint">
+                <div id="app-update-title" class="modal-title">{{ t('side.update.available') }}</div>
+                <div id="app-update-versions" class="form-group confirm-dialog-message">{{ t('side.update.metaVersions', { current: normalizePackageVersion(appVersion), latest: normalizePackageVersion(appLatestVersion) }) }}</div>
+                <div class="docs-command-box">
+                    <input id="app-update-command" class="install-command" type="text" :value="appUpdateCommand()" readonly :aria-label="t('common.command')" @focus="$event.target.select()">
+                    <button type="button" class="btn-mini docs-copy-btn" @click="copyInstallCommand(appUpdateCommand())">{{ t('common.copy') }}</button>
+                </div>
+                <p id="app-update-hint" class="form-hint">{{ t('side.update.commandHint') }}</p>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-cancel" @click="closeAppUpdateModal">{{ t('common.close') }}</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 添加提供商模态框 -->
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-provider-modal-title">

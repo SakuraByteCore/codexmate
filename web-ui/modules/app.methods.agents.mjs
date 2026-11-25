@@ -293,6 +293,16 @@ export function createAgentsMethods(options = {}) {
             if (!event) {
                 return;
             }
+            if (this.showAppUpdateModal && !this.showConfirmDialog) {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.closeAppUpdateModal();
+                } else if (event.key === 'Tab') {
+                    this.trapModalFocus(event);
+                }
+                return;
+            }
             const isCmdLike = !!(event.metaKey || event.ctrlKey);
             const key = typeof event.key === 'string' ? event.key : '';
             const isSearchHotkey = isCmdLike && !event.altKey && (key === 'k' || key === 'K');

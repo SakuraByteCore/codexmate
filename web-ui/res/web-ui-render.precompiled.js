@@ -10256,10 +10256,61 @@ return function render(_ctx, _cache) {
         ])
       ])
     ], 2 /* CLASS */),
+    (_ctx.showAppUpdateModal)
+      ? (_openBlock(), _createElementBlock("div", {
+          key: 4,
+          class: "modal-overlay",
+          onClick: _withModifiers(_ctx.closeAppUpdateModal, ["self"])
+        }, [
+          _createElementVNode("div", {
+            class: "modal app-update-modal",
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-labelledby": "app-update-title",
+            "aria-describedby": "app-update-versions app-update-hint"
+          }, [
+            _createElementVNode("div", {
+              id: "app-update-title",
+              class: "modal-title"
+            }, _toDisplayString(_ctx.t('side.update.available')), 1 /* TEXT */),
+            _createElementVNode("div", {
+              id: "app-update-versions",
+              class: "form-group confirm-dialog-message"
+            }, _toDisplayString(_ctx.t('side.update.metaVersions', { current: _ctx.normalizePackageVersion(_ctx.appVersion), latest: _ctx.normalizePackageVersion(_ctx.appLatestVersion) })), 1 /* TEXT */),
+            _createElementVNode("div", { class: "docs-command-box" }, [
+              _createElementVNode("input", {
+                id: "app-update-command",
+                class: "install-command",
+                type: "text",
+                value: _ctx.appUpdateCommand(),
+                readonly: "",
+                "aria-label": _ctx.t('common.command'),
+                onFocus: $event => ($event.target.select())
+              }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "aria-label", "onFocus"]),
+              _createElementVNode("button", {
+                type: "button",
+                class: "btn-mini docs-copy-btn",
+                onClick: $event => (_ctx.copyInstallCommand(_ctx.appUpdateCommand()))
+              }, _toDisplayString(_ctx.t('common.copy')), 9 /* TEXT, PROPS */, ["onClick"])
+            ]),
+            _createElementVNode("p", {
+              id: "app-update-hint",
+              class: "form-hint"
+            }, _toDisplayString(_ctx.t('side.update.commandHint')), 1 /* TEXT */),
+            _createElementVNode("div", { class: "btn-group" }, [
+              _createElementVNode("button", {
+                type: "button",
+                class: "btn btn-cancel",
+                onClick: _ctx.closeAppUpdateModal
+              }, _toDisplayString(_ctx.t('common.close')), 9 /* TEXT, PROPS */, ["onClick"])
+            ])
+          ])
+        ], 8 /* PROPS */, ["onClick"]))
+      : _createCommentVNode("v-if", true),
     _createCommentVNode(" 添加提供商模态框 "),
     (_ctx.showAddModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 4,
+          key: 5,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAddModal, ["self"])
         }, [
@@ -10416,7 +10467,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑提供商模态框 "),
     (_ctx.showEditModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 5,
+          key: 6,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditModal, ["self"])
         }, [
@@ -10528,7 +10579,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加模型模态框 "),
     (_ctx.showModelModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 6,
+          key: 7,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeModelModal, ["self"])
         }, [
@@ -10568,7 +10619,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 模型列表模态框 "),
     (_ctx.showModelListModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 7,
+          key: 8,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showModelListModal = false), ["self"])
         }, [
@@ -10609,7 +10660,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 项目功能公告模态框 "),
     (_ctx.showProviderCacheAnnouncementModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 8,
+          key: 9,
           class: "modal-overlay project-announcement-overlay",
           onClick: _withModifiers(_ctx.closeProviderCacheAnnouncementModal, ["self"])
         }, [
@@ -10770,7 +10821,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Provider 缓存记录模态框 "),
     (_ctx.showProviderCacheModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 9,
+          key: 10,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeProviderCacheModal, ["self"])
         }, [
@@ -10918,7 +10969,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 添加Claude配置模态框 "),
     (_ctx.showClaudeConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 10,
+          key: 11,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeClaudeConfigModal, ["self"])
         }, [
@@ -11070,7 +11121,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑Claude配置模态框 "),
     (_ctx.showEditConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 11,
+          key: 12,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditConfigModal, ["self"])
         }, [
@@ -11223,7 +11274,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Codex bridge pool modal "),
     (_ctx.showCodexBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 12,
+          key: 13,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showCodexBridgePoolModal = false), ["self"])
         }, [
@@ -11316,7 +11367,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showClaudeBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 13,
+          key: 14,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showClaudeBridgePoolModal = false), ["self"])
         }, [
@@ -11409,7 +11460,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.promptInvocationVisible)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 14,
+          key: 15,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closePromptTemplateInvocation, ["self"])
         }, [
@@ -11478,7 +11529,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Webhook settings modal "),
     (_ctx.showWebhookModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 15,
+          key: 16,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeWebhookModal, ["self"])
         }, [
@@ -11551,7 +11602,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showOpenclawConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 16,
+          key: 17,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!(_ctx.openclawSaving || _ctx.openclawApplying) && _ctx.closeOpenclawConfigModal()), ["self"])
         }, [
@@ -12261,7 +12312,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfigTemplateModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 17,
+          key: 18,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!_ctx.configTemplateApplying && _ctx.closeConfigTemplateModal()), ["self"])
         }, [
@@ -12406,7 +12457,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showAgentsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 18,
+          key: 19,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAgentsModal, ["self"])
         }, [
@@ -12577,7 +12628,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showSkillsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 19,
+          key: 20,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeSkillsModal, ["self"])
         }, [
@@ -12881,7 +12932,7 @@ return function render(_ctx, _cache) {
     }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
     (_ctx.showHealthCheckModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 20,
+          key: 21,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
@@ -13054,7 +13105,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfirmDialog)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 21,
+          key: 22,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeConfirmDialog, ["self"])
         }, [
@@ -13092,7 +13143,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Toast "),
     (_ctx.message)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 22,
+          key: 23,
           class: _normalizeClass(['toast', _ctx.messageType]),
           role: "status",
           "aria-live": "polite",

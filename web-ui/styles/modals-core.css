@@ -168,6 +168,12 @@
     letter-spacing: -0.01em;
 }
 
+.app-update-modal .btn,
+.app-update-modal .docs-copy-btn {
+    min-width: 44px;
+    min-height: 44px;
+}
+
 .confirm-dialog {
     max-width: 460px;
 }

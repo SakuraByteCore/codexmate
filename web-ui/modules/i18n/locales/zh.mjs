@@ -363,6 +363,7 @@ const zh = Object.freeze({
     'side.update.availableWithVersion': '有新版本 v{version}',
     'side.update.meta': '点击查看更新命令',
     'side.update.metaVersions': '当前 v{current} → 最新 v{latest}',
+    'side.update.commandHint': '在运行 Codex Mate 的主机终端执行。更新成功后重启服务。',
     'side.update.checkFailed': '检查最新版本失败',
     'side.update.check': '检查更新',
     'side.update.checking': '正在检查更新…',

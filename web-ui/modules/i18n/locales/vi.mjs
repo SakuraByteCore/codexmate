@@ -334,6 +334,7 @@ const vi = Object.freeze({
     'side.update.availableWithVersion': 'Có bản cập nhật v{version}',
     'side.update.meta': 'Mở lệnh cập nhật',
     'side.update.metaVersions': 'Hiện tại v{current} → mới nhất v{latest}',
+    'side.update.commandHint': 'Chạy lệnh trong terminal trên máy đang chạy Codex Mate. Khởi động lại dịch vụ sau khi cập nhật thành công.',
     'side.update.checkFailed': 'Không thể kiểm tra phiên bản mới nhất',
     'side.update.check': 'Kiểm tra cập nhật',
     'side.update.checking': 'Đang kiểm tra cập nhật…',

@@ -448,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 installRegistryCustom: '',
                 installStatusTargets: null,
                 appLatestVersion: '',
+                showAppUpdateModal: false,
                 appVersionStatusLoading: false,
                 appVersionStatusError: '',
                 appVersionStatusChecked: false,

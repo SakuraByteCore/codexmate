@@ -363,6 +363,7 @@ const en = Object.freeze({
     'side.update.availableWithVersion': 'Update available v{version}',
     'side.update.meta': 'Open update command',
     'side.update.metaVersions': 'Current v{current} → latest v{latest}',
+    'side.update.commandHint': 'Run this in a terminal on the host running Codex Mate. Restart the service after a successful update.',
     'side.update.checkFailed': 'Failed to check latest version',
     'side.update.check': 'Check for updates',
     'side.update.checking': 'Checking for updates…',

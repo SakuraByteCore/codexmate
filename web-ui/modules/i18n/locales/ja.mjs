@@ -364,6 +364,7 @@ const ja = Object.freeze({
     'side.update.availableWithVersion': '新しいバージョン v{version}',
     'side.update.meta': '更新コマンドを開く',
     'side.update.metaVersions': '現在 v{current} → 最新 v{latest}',
+    'side.update.commandHint': 'Codex Mate を実行しているホストのターミナルで実行してください。更新成功後、サービスを再起動してください。',
     'side.update.checkFailed': '最新バージョンの確認に失敗しました',
     'side.update.check': '更新を確認',
     'side.update.checking': '更新を確認中…',
