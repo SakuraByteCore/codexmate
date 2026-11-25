@@ -78,3 +78,35 @@ test('new panel gutters follow neighboring session, context and settings control
     assert.match(settings, /padding: 18px 20px/);
     assert.match(css, /@media \(max-width: 640px\)\s*\{\s*#panel-settings \.feature-diagnostics\s*\{ padding-inline: 20px/);
 });
+
+test('session top tools keep stable selection metrics and fit narrow screens', () => {
+    const fs = require('fs');
+    const stylesheet = require('postcss').parse(fs.readFileSync('web-ui/styles/session-features.css', 'utf8'));
+    const rules = [];
+    stylesheet.walkRules((rule) => rules.push(rule));
+    const base = rules.find((rule) => rule.selector === '#panel-sessions .feature-tabs button' && rule.parent.type === 'root');
+    const declarations = (rule) => Object.fromEntries(rule.nodes.map(({ prop, value }) => [prop, value]));
+    const metrics = declarations(base);
+    assert.equal(metrics['min-height'], '44px');
+    assert.equal(metrics['min-width'], '44px');
+    assert.equal(metrics['font-weight'], 'var(--font-weight-secondary)');
+    assert.equal(metrics['font-size'], 'var(--font-size-body)');
+    const selected = rules.find((rule) => rule.selector.includes('.feature-tabs button[aria-expanded="true"]'));
+    assert.deepEqual(declarations(selected), { background: 'var(--color-brand-light)', color: 'var(--color-brand-dark)' });
+    const focus = rules.find((rule) => rule.selector === '#panel-sessions .feature-tabs button:focus-visible');
+    assert.equal(declarations(focus)['outline-offset'], '-4px');
+    const mobile = rules.filter((rule) => rule.parent.type === 'atrule' && rule.parent.params === '(max-width: 640px)');
+    const group = mobile.find((rule) => rule.selector === '#panel-sessions .feature-tabs');
+    assert.equal(declarations(group)['grid-template-columns'], 'repeat(3, minmax(0, 1fr))');
+    assert.equal(declarations(group).width, '100%');
+    const labels = mobile.find((rule) => rule.selector === '#panel-sessions .feature-tabs button');
+    assert.equal(declarations(labels)['white-space'], 'normal');
+    assert.equal(declarations(labels)['overflow-wrap'], 'anywhere');
+    const template = fs.readFileSync('web-ui/partials/index/session-features.html', 'utf8');
+    const toolbar = template.slice(template.indexOf('<div class="feature-tabs"'), template.indexOf('</div>'));
+    assert.equal((toolbar.match(/<button /g) || []).length, 3);
+    for (const view of ['bookmarks', 'search', 'projects']) {
+        assert.ok(toolbar.includes(`:aria-expanded="featureView === '${view}'"`), view);
+        assert.ok(toolbar.includes(`@click="openFeatureView('${view}')"`), view);
+    }
+});

@@ -159,6 +159,7 @@
 }
 
 .main-panel {
+    --panel-top-gap: 12px;
     min-width: 0;
     background: transparent;
     border: none;
@@ -184,6 +185,7 @@
     top: 0;
     z-index: 12;
     margin: 0 -16px 12px;
+    margin-block-end: var(--panel-top-gap);
     padding: 0 16px 8px;
     background: linear-gradient(180deg, var(--color-bg-topbar-strong) 0%, var(--color-bg-topbar-soft) 78%, var(--color-bg-topbar-clear) 100%);
     backdrop-filter: blur(18px) saturate(130%);
@@ -386,6 +388,8 @@
 }
 
 .content-wrapper {
+    /* Contain leading margins without changing the session-specific flex layout. */
+    display: flow-root;
     background: transparent;
     border: none;
     border-radius: 0;

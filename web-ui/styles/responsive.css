@@ -25,7 +25,7 @@ textarea:focus-visible {
     }
 
     .main-panel-topbar {
-        margin: 0 -20px 12px;
+        margin: 0 -20px var(--panel-top-gap);
         padding: 0 20px 10px;
     }
 
@@ -48,7 +48,7 @@ textarea:focus-visible {
         min-height: 0;
     }
     .main-panel-topbar {
-        margin: 0 -16px 12px;
+        margin: 0 -16px var(--panel-top-gap);
         padding: 0 16px 10px;
     }
     .top-tabs {
@@ -148,7 +148,7 @@ textarea:focus-visible {
         position: sticky;
         top: 0;
         z-index: 20;
-        margin: 0 0 10px;
+        margin: 0 0 var(--panel-top-gap);
         padding: 0 0 8px;
         background: rgba(255, 248, 241, 0.96);
         backdrop-filter: blur(14px) saturate(130%);
@@ -314,7 +314,7 @@ textarea:focus-visible {
     }
 
     .main-panel-topbar {
-        margin-bottom: 8px;
+        margin-bottom: var(--panel-top-gap);
     }
     .card {
         padding: 12px;
@@ -734,7 +734,7 @@ textarea:focus-visible {
         position: sticky;
         top: 0;
         z-index: 20;
-        margin: 0 0 10px;
+        margin: 0 0 var(--panel-top-gap);
         padding: 0 0 8px;
         background: rgba(255, 248, 241, 0.96);
         backdrop-filter: blur(14px) saturate(130%);

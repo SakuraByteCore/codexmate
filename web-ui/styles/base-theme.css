@@ -167,7 +167,7 @@ body.force-compact .provider-fast-switch-select {
 
     body.force-compact .main-panel-topbar {
         position: static;
-        margin: 0 0 10px;
+        margin: 0 0 var(--panel-top-gap);
         padding: 0;
         background: transparent;
         backdrop-filter: none;
