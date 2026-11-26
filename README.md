@@ -30,19 +30,16 @@ Codex Mate is a locally running CLI + Web tool for browsing, filtering, and expo
 
 </div>
 
+### Appearance themes
+
+Choose Light, Dark, Ocean or Violet in Settings. Violet adapts [Catppuccin Latte](https://github.com/catppuccin/palette) with light surfaces and a purple accent. Your theme is saved automatically and restored after reload.
+
 <a id="routing-groups"></a>
-### Model routing
+### Model test
 
-**Model routing** assigns a primary model and optional backups to Codex or Claude. **Primary first** tries backups on timeouts, rate limits or server errors before output starts. **Take turns** rotates the preferred model per request; it does not combine answers or provide a chat window.
+The selected Codex/Pi subtab is saved and restored after reload. Choose a provider and model from existing configuration, enter a message and send it. View the Markdown reply, returned model ID and response time in seconds. Tests consume API credits without starting CLIs, changing configuration or saving test history. Each test sends one request without retries, sets no local response deadline and limits output to 2048 tokens. Supports configured Responses, Chat Completions, Completions and Anthropic Messages; native login and command-based credentials are not integrated. Group settings are no longer shown in the Web UI; existing backend routing and OpenAI Chat API behavior is unchanged. See the [Web UI guide](https://sakurabytecore.github.io/codexmate/guide/web-ui).
 
-Create a model group, check its provider/model entries, save, and click **Enable this group**. After first activation, restart the selected agent and ask there. This page does not start agents or run tasks. Group names are free-form; model IDs must be supported by providers. Existing configuration is prefilled. Write access retains its confirmation, and member details retain **Bind only**. **Stop using this group** restores the original pool without disconnecting; **Restore agent configuration** uses the existing connection rollback. Groups are stored in `~/.codexmate/routing-groups.json` without credentials.
-
-Failover applies only to HTTP 408, 429 or 5xx before output starts. Other 4xx and started replies are not replayed. Only requests connected through the local bridge are affected; enabled configuration is not a provider health check. Quota scheduling, nested groups and request tracing are not included. See the [Web UI guide (Chinese)](https://sakurabytecore.github.io/codexmate/guide/web-ui).
-
-
-**OpenAI Chat access**: select **OpenAI Chat** in **Model routing**, create a group and enable it. Reuse Codex providers and their write permission without installing Codex or changing either native agent connection. Copy the displayed Base URL ending in `/bridge/openai-chat/v1`; use `routing` as the model ID. Supports `POST /chat/completions`, `GET /models`, streaming and tool parameters without Responses/Messages conversion. An unbound API returns 503 instead of using another target’s group.
-
-When `CODEXMATE_HTTP_TOKEN` is configured, use it as the client API key; it also authorizes the management API. Without a token, only loopback clients are allowed; use `local` if a client requires an API key. Upstream credentials come from configured provider keys or `env_key`, never the client access token or routing storage. Native Codex login credentials are not automatically reused.
+Tests use Codex UA/Originator or Pi SDK headers, with configured UA overrides taking priority. They read Codex reasoning/output settings and Pi model token limits and compatibility flags. If the installed client version cannot be resolved, requests identify as versioned CodexMate tests rather than inventing a client version.
 
 ### Session workbench
 

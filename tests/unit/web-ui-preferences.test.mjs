@@ -223,6 +223,19 @@ test('theme preference round-trips through the backend preference store', async 
     assert.strictEqual(writeCall.params.preferences.theme, 'light');
 });
 
+test('violet theme persists and restores without resetting navigation', async () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+    context.setTheme('  VIOLET  ');
+    const writeCall = await waitForApiCall(apiCalls, 'set-web-ui-preferences');
+    assert.strictEqual(writeCall.params.preferences.theme, 'violet');
+    const restored = createContext([], createMemoryStorage());
+    restored.applyWebUiPreferences({ theme: 'violet' });
+    assert.strictEqual(restored.theme, 'violet');
+    assert.strictEqual(restored.normalizeTheme('ocean'), 'ocean');
+    assert.strictEqual(restored.normalizeTheme(null), 'light');
+});
+
 test('web UI preferences load restores the cached plugins active id', async () => {
     const apiCalls = [];
     const context = createContext(apiCalls, createMemoryStorage());
@@ -347,4 +360,21 @@ test('web UI preferences backend actions and startup hook are wired', () => {
     assert.match(index, /createWebUiPreferencesMethods/);
     assert.match(readProjectFile('web-ui/modules/app.methods.startup-claude.mjs'), /kilocode: statusRes\.toolConfigPermissions\.kilocode === true/);
     assert.match(readProjectFile('web-ui/modules/app.methods.web-ui-preferences.mjs'), /kilocode: source\.toolConfigPermissions\.kilocode === true/);
+});
+
+test('model-test source survives navigation snapshots and restores on explicit page URLs', async () => {
+    const apiCalls = [];
+    const context = createContext(apiCalls, createMemoryStorage());
+    context.modelTestTarget = 'pi';
+    context.saveNavState();
+    await waitForApiCall(apiCalls, 'set-web-ui-preferences');
+    assert.strictEqual(apiCalls.at(-1).params.preferences.navigation.modelTestTarget, 'pi');
+    context.modelTestTarget = 'codex';
+    context.applyWebUiPreferences({ navigation: { modelTestTarget: 'pi', mainTab: 'routing' } }, { applyNavigation: false });
+    assert.strictEqual(context.modelTestTarget, 'pi');
+    assert.strictEqual(context.mainTab, 'dashboard');
+    const snapshot = context.buildWebUiPreferencesSnapshot({ navigation: { settingsTab: 'data' } });
+    assert.strictEqual(snapshot.navigation.modelTestTarget, 'pi');
+    context.applyWebUiPreferences({ navigation: { modelTestTarget: 'invalid' } });
+    assert.strictEqual(context.modelTestTarget, 'pi');
 });

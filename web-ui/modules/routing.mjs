@@ -1,8 +1,10 @@
 import { api } from './api.mjs';
+import { createModelTestMethods, modelTestData } from './model-test.mjs';
 
 const MAX_MEMBERS = 16;
 export function createRoutingMethods({ request = api, origin = () => globalThis.location.origin } = {}) {
     return {
+        ...createModelTestMethods({ request }),
         applyRoutingState(state) {
             this.routingGroups = state.groups;
             this.routingBindings = { 'openai-chat': '', ...state.bindings };
@@ -187,6 +189,7 @@ export function createRoutingMethods({ request = api, origin = () => globalThis.
 export const routingMixin = {
     data() {
         return {
+            ...modelTestData(),
             routingTarget: 'codex', routingGroups: [], routingBindings: { codex: '', claude: '', 'openai-chat': '' },
             routingCatalogs: { codex: [], claude: [], 'openai-chat': [] },
             routingBridges: { codex: { enabled: false, active: false }, claude: { enabled: false, active: false }, 'openai-chat': { enabled: false, active: false } },
@@ -195,8 +198,9 @@ export const routingMixin = {
             routingLoaded: false, routingError: ''
         };
     },
+    computed: { modelTestRenderedResponse() { return this.modelTestPreview(); } },
     watch: {
-        mainTab(tab) { if (tab === 'routing') this.loadRouting(); }
+        mainTab(tab) { if (tab === 'routing') { this.loadRouting(); this.loadModelTestCatalog(); } }
     },
     methods: createRoutingMethods()
 };

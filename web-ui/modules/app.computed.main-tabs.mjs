@@ -3,7 +3,7 @@ export function createMainTabsComputed() {
         mainTabKicker() {
             if (this.mainTab === 'dashboard') return this.t('kicker.dashboard');
             if (this.mainTab === 'config') return this.t('kicker.config');
-            if (this.mainTab === 'routing') return this.t('kicker.routing');
+            if (this.mainTab === 'routing') return '';
             if (this.mainTab === 'sessions') return this.t('kicker.sessions');
             if (this.mainTab === 'usage') return this.t('kicker.usage');
             if (this.mainTab === 'market') return this.t('kicker.market');
@@ -29,7 +29,7 @@ export function createMainTabsComputed() {
         mainTabSubtitle() {
             if (this.mainTab === 'dashboard') return this.t('subtitle.dashboard');
             if (this.mainTab === 'config') return this.t('subtitle.config');
-            if (this.mainTab === 'routing') return this.t('subtitle.routing');
+            if (this.mainTab === 'routing') return '';
             if (this.mainTab === 'sessions') return this.t('subtitle.sessions');
             if (this.mainTab === 'usage') return this.t('subtitle.usage');
             if (this.mainTab === 'market') return this.t('subtitle.market');

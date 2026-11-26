@@ -29,9 +29,6 @@
                             :value="projectClaudeMdPath"
                             @change="setProjectClaudeMdPathManual($event.target.value)">
                     </div>
-                    <div v-if="projectClaudeMdPath" class="form-hint project-path-detected">
-                        {{ t('prompts.project.detected', { path: projectClaudeMdPath }) }}
-                    </div>
                 </div>
 
 

@@ -739,6 +739,9 @@ test('shared sub tabs load after themes in the served stylesheet', () => {
     assert.ok(entry.trimEnd().endsWith("@import url('./styles/sub-tabs.css');"));
     assert.ok(entry.indexOf('theme-dark.css') < entry.indexOf('sub-tabs.css'));
     assert.ok(entry.indexOf('theme-ocean.css') < entry.indexOf('sub-tabs.css'));
+    assert.ok(entry.includes("@import url('./styles/theme-violet.css');"));
+    assert.ok(entry.indexOf('theme-violet.css') < entry.indexOf('sub-tabs.css'));
+    assert.match(bundled, /:root\[data-theme="violet"\]/);
     assert.ok(bundled.endsWith(`${shared.trimEnd()}\n`));
     assert.doesNotMatch(bundled, /@import\s+(?:url\()?['"]\.\/styles\//);
 });

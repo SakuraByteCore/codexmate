@@ -108,6 +108,8 @@ function normalizeNavigationSnapshot(vm, source = {}) {
     return {
         mainTab: typeof source.mainTab === 'string' ? source.mainTab : vm.mainTab,
         configMode: typeof source.configMode === 'string' ? source.configMode : vm.configMode,
+        modelTestTarget: source.modelTestTarget === 'pi' || source.modelTestTarget === 'codex'
+            ? source.modelTestTarget : vm.modelTestTarget === 'pi' ? 'pi' : 'codex',
         settingsTab: typeof source.settingsTab === 'string' ? source.settingsTab : vm.settingsTab,
         skillsTargetApp: source.skillsTargetApp === 'claude' || source.skillsTargetApp === 'codex' || source.skillsTargetApp === 'pi'
             ? source.skillsTargetApp
@@ -480,6 +482,11 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (Array.isArray(source.deletedClaudeSettingsImports)) {
                     this.deletedClaudeSettingsImports = source.deletedClaudeSettingsImports;
+                }
+                const modelTestTarget = source.navigation && source.navigation.modelTestTarget;
+                if (modelTestTarget === 'codex' || modelTestTarget === 'pi') {
+                    if (typeof this.setModelTestTarget === 'function') this.setModelTestTarget(modelTestTarget);
+                    else this.modelTestTarget = modelTestTarget;
                 }
                 if (shouldApplyNavigation && source.navigation && typeof source.navigation === 'object') {
                     const nav = source.navigation;

@@ -12,12 +12,12 @@
     <script src="/res/purify.min.js"></script>
     <link rel="stylesheet" href="/web-ui/styles.css">
     <script>
-        // Render hint: skip the light flash for dark-theme users before the
+        // Render hint: restore the selected theme before the
         // server preference store loads. Kept in sync by applyDocumentTheme().
         (function () {
             try {
                 var cachedTheme = localStorage.getItem('codexmateThemeCache');
-                if (cachedTheme === 'dark' || cachedTheme === 'ocean') {
+                if (cachedTheme === 'dark' || cachedTheme === 'ocean' || cachedTheme === 'violet') {
                     document.documentElement.setAttribute('data-theme', cachedTheme);
                 }
             } catch (_) {}

@@ -1,21 +1,7 @@
-#panel-routing .routing-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 12px;
-}
-#panel-routing :is(.routing-toolbar-actions, .routing-group-actions, .routing-member-actions, .routing-editor-actions) {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-}
 #panel-routing .segmented-control { margin-bottom: 0; min-width: 192px; }
 #panel-routing .segment { min-height: 44px; }
 #panel-routing .btn-tool { min-height: 44px; }
-#panel-routing :is(.routing-toolbar-actions, .routing-group-actions, .routing-member-actions, .routing-editor-actions, .routing-status-row, .routing-empty, .routing-access, .routing-secondary-actions) > .btn-tool {
+#panel-routing :is(.routing-test-heading, .routing-test-actions) > .btn-tool {
     width: auto;
     flex: 0 0 auto;
     white-space: nowrap;
@@ -29,35 +15,11 @@
     padding: 8px;
 }
 #panel-routing .routing-icon-btn svg { display: block; width: 16px; height: 16px; }
-#panel-routing :is(.btn-tool, .segment, summary):focus-visible {
+#panel-routing :is(.btn-tool, .segment):focus-visible {
     outline: 2px solid var(--color-brand);
     outline-offset: 3px;
 }
 #panel-routing .btn-tool:not(:disabled):active { transform: translateY(0); }
-#panel-routing .routing-delete:not(:disabled):hover { color: var(--color-error); }
-#panel-routing .routing-status-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-    padding: 16px;
-    border-radius: var(--radius-md);
-    background: var(--color-surface-tint);
-}
-#panel-routing .routing-status-copy { min-width: 0; }
-#panel-routing .routing-state {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-secondary);
-    font-weight: var(--font-weight-primary);
-    color: var(--color-text-secondary);
-    background: var(--color-surface-alt);
-}
-#panel-routing .routing-state.is-active { color: var(--color-brand-dark); background: var(--color-brand-light); }
 #panel-routing .routing-hint {
     margin: 8px 0 0;
     max-width: 70ch;
@@ -74,26 +36,7 @@
     color: var(--color-error);
     overflow-wrap: anywhere;
 }
-#panel-routing .routing-empty { padding: 32px 0; color: var(--color-text-secondary); }
-#panel-routing .routing-empty p { margin: 0 0 16px; }
-#panel-routing .routing-editor {
-    position: relative;
-    padding: 16px;
-    margin-bottom: 16px;
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-}
-#panel-routing .routing-editor-close { position: absolute; top: 16px; right: 16px; }
 #panel-routing fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-#panel-routing legend {
-    min-height: 44px;
-    padding: 12px 52px 12px 0;
-    margin-bottom: 16px;
-    font-size: var(--font-size-body);
-    font-weight: var(--font-weight-primary);
-    color: var(--color-text-primary);
-}
 #panel-routing .routing-form-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 240px);
@@ -102,106 +45,34 @@
 #panel-routing .routing-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 #panel-routing .routing-field .form-label { margin: 0; }
 #panel-routing :is(.form-input, .model-select) { width: 100%; max-width: none; min-width: 0; min-height: 44px; height: 44px; padding-block: 8px; box-sizing: border-box; }
-#panel-routing .routing-members { margin: 24px 0; padding: 0; list-style: none; }
-#panel-routing .routing-member {
-    display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr) auto;
-    align-items: end;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-#panel-routing .routing-member-number {
-    display: grid;
-    place-items: center;
-    align-self: end;
-    min-height: 44px;
-    color: var(--color-text-muted);
-    font-size: var(--font-size-secondary);
-}
-#panel-routing .routing-member-actions { flex-wrap: nowrap; }
-#panel-routing .routing-editor-actions { justify-content: space-between; padding-top: 8px; }
-#panel-routing .routing-groups { padding: 0; margin: 0; list-style: none; }
-#panel-routing .routing-group-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 16px;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--color-border-soft);
-}
-#panel-routing .routing-group-copy { min-width: 0; overflow-wrap: anywhere; }
-#panel-routing .routing-group-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-#panel-routing .routing-group-title strong { font-size: var(--font-size-body); font-weight: var(--font-weight-primary); color: var(--color-text-primary); }
-#panel-routing .routing-bound {
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    color: var(--color-brand-dark);
-    background: var(--color-brand-light);
-    font-size: var(--font-size-caption);
-}
-#panel-routing .routing-group-meta { display: block; color: var(--color-text-tertiary); font-size: var(--font-size-secondary); margin-top: 8px; }
-#panel-routing .routing-group-details { margin-top: 4px; }
-#panel-routing .routing-group-details summary {
-    width: fit-content;
-    max-width: 100%;
-    min-height: 44px;
-    padding: 12px 4px;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-secondary);
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-}
-#panel-routing .routing-group-details summary:hover { color: var(--color-brand-dark); }
-#panel-routing .routing-group-path { margin: 0; padding-left: 0; list-style: none; color: var(--color-text-secondary); font-size: var(--font-size-secondary); line-height: var(--line-height-normal); }
-#panel-routing .routing-group-path li + li { margin-top: 8px; }
-@media (max-width: 760px) {
-    #panel-routing .routing-form-head { grid-template-columns: minmax(0, 1fr); }
-    #panel-routing .routing-member { grid-template-columns: 64px minmax(0, 1fr); }
-    #panel-routing .routing-member :is(.routing-field, .routing-member-actions) { grid-column: 2; }
-    #panel-routing .routing-member-number { align-self: end; grid-row: 1; }
-    #panel-routing .routing-group-row { grid-template-columns: minmax(0, 1fr); }
-    #panel-routing .routing-status-row { flex-direction: column; align-items: flex-start; }
-    #panel-routing :is(.form-input, .model-select) { font-size: 16px; }
-}
-
-#panel-routing .routing-access {
+#panel-routing :is(.routing-test-heading, .routing-test-actions, .routing-test-result-head) {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px 16px;
-    margin-bottom: 16px;
 }
-#panel-routing .routing-access .routing-hint { margin: 0; }
-#panel-routing .routing-secondary-actions { margin-top: 12px; }
-#panel-routing .routing-provider-notice { padding: 16px 0; }
-
-#panel-routing .routing-purpose {
-    margin: 0 0 8px;
-    max-width: 70ch;
-    font-size: var(--font-size-body);
-    color: var(--color-text-primary);
-    line-height: var(--line-height-normal);
-}
-#panel-routing .routing-explainer { margin: 0 0 16px; max-width: 70ch; }
-#panel-routing .routing-explainer summary {
-    min-height: 44px;
-    padding: 12px 0;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-secondary);
-    cursor: pointer;
-}
-#panel-routing .routing-explainer-body { color: var(--color-text-secondary); font-size: var(--font-size-secondary); line-height: var(--line-height-normal); }
-#panel-routing .routing-explainer-body p + p { margin-top: 8px; }
-#panel-routing .routing-start-steps { margin: 0; padding-left: 24px; font-size: var(--font-size-secondary); line-height: var(--line-height-normal); }
-#panel-routing .routing-start-steps li + li { margin-top: 8px; }
-#panel-routing .routing-member-role { color: var(--color-text-primary); font-weight: var(--font-weight-primary); }
-#panel-routing .routing-group-path .routing-member-role { display: inline-block; min-width: 64px; }
-#panel-routing .routing-edit-warning { margin: 0 0 16px; }
-
-#panel-routing .routing-api-access { margin: 0 0 24px; }
-#panel-routing .routing-api-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 160px); gap: 16px; margin-top: 16px; }
-@media (max-width: 600px) {
-    #panel-routing .routing-toolbar > .segmented-control { flex-wrap: wrap; }
-    #panel-routing .routing-api-fields { grid-template-columns: minmax(0, 1fr); }
+#panel-routing .routing-test-heading { flex-wrap: nowrap; margin-bottom: 16px; }
+#panel-routing .routing-test-legend { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+#panel-routing .routing-test-heading .segmented-control { flex-direction: row; width: fit-content; min-width: 0; margin-bottom: 0; }
+#panel-routing .routing-test-prompt { margin-top: 24px; }
+#panel-routing .routing-test-prompt textarea { height: auto; min-height: 128px; resize: vertical; line-height: var(--line-height-normal); }
+#panel-routing .routing-test-actions { justify-content: flex-end; margin: 16px 0 24px; }
+#panel-routing .routing-test-result-head .routing-hint { margin: 0; }
+#panel-routing .routing-test-response { min-height: 192px; padding: 24px 0; border-top: 1px solid var(--color-border-soft); }
+#panel-routing .routing-test-result-head { color: var(--color-text-primary); overflow-wrap: anywhere; }
+#panel-routing .routing-test-question { margin: 16px 0 24px; color: var(--color-text-tertiary); white-space: pre-wrap; overflow-wrap: anywhere; }
+#panel-routing .routing-test-answer { max-width: 72ch; color: var(--color-text-primary); line-height: var(--line-height-normal); overflow-wrap: anywhere; }
+#panel-routing .routing-test-plain { white-space: pre-wrap; }
+#panel-routing .routing-test-answer :is(h1, h2, h3, h4) { font-size: var(--font-size-body); margin: 24px 0 8px; }
+#panel-routing .routing-test-answer :is(p, ul, ol) { margin: 12px 0; }
+#panel-routing .routing-test-answer :is(ul, ol) { padding-left: 24px; }
+#panel-routing .routing-test-answer pre { padding: 16px; max-width: 100%; overflow-x: auto; background: var(--color-surface-alt); border-radius: var(--radius-sm); }
+#panel-routing .routing-test-answer code { font-family: var(--font-family-mono); font-size: var(--font-size-secondary); }
+#panel-routing .routing-test-answer :is(table, img) { max-width: 100%; }
+#panel-routing .routing-test-answer table { display: block; overflow-x: auto; border-collapse: collapse; }
+#panel-routing .routing-test-answer :is(th, td) { padding: 8px; border-bottom: 1px solid var(--color-border-soft); }
+@media (max-width: 760px) {
+    #panel-routing .routing-form-head { grid-template-columns: minmax(0, 1fr); }
+    #panel-routing :is(.form-input, .model-select) { font-size: 16px; }
 }

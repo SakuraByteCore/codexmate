@@ -1,4 +1,4 @@
-import { routingMixin } from './modules/routing.mjs';
+import { modelTestMixin } from './modules/model-test.mjs';
 import { configChangeMixin } from './modules/app.methods.config-changes.mjs';
 import { threadHandoffMixin } from './modules/thread-handoff.mjs';
 import { sessionFeaturesMixin } from './modules/session-features.mjs';
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appOptions.render = window.__CODEXMATE_WEB_UI_RENDER__;
     }
 
-    appOptions.mixins.push(routingMixin);
+    appOptions.mixins.push(modelTestMixin);
     appOptions.mixins.push(sessionFeaturesMixin);
     const app = createApp(appOptions);
     app.config.errorHandler = (err, vm, info) => {

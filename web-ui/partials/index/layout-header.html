@@ -449,7 +449,7 @@
                 <div class="main-panel-topbar">
                     <div class="panel-header panel-header-refined" v-if="!sessionStandalone">
                         <div class="panel-header-copy">
-                            <div class="panel-kicker">{{ mainTabKicker }}</div>
+                            <div v-if="mainTabKicker" class="panel-kicker">{{ mainTabKicker }}</div>
                             <h1 class="main-title">{{ mainTabTitle }}</h1>
                         </div>
                     </div>

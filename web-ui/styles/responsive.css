@@ -114,6 +114,11 @@ textarea:focus-visible {
         overflow: hidden;
     }
 
+    /* Hidden rails must not leave the higher-specificity collapsed grid column. */
+    .app-shell.sidebar-collapsed {
+        grid-template-columns: 1fr;
+    }
+
     .side-rail {
         display: none;
     }

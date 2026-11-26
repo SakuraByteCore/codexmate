@@ -159,6 +159,68 @@
 .feature-diagnostic-options label { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--color-text-secondary); font-size: var(--font-size-secondary); }
 .feature-diagnostic-controls { margin-bottom: 8px; }
 .feature-export-actions { padding-top: var(--spacing-sm); }
+#panel-settings .feature-diagnostics-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    min-width: 0;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-primary);
+    line-height: var(--line-height-normal);
+    list-style: none;
+}
+#panel-settings .feature-diagnostics-heading::-webkit-details-marker { display: none; }
+#panel-settings .feature-diagnostics-heading > span { min-width: 0; overflow-wrap: anywhere; }
+#panel-settings .feature-diagnostics-chevron {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: transform var(--feature-duration) var(--feature-ease);
+}
+#panel-settings .feature-diagnostics[open] > summary .feature-diagnostics-chevron { transform: rotate(90deg); }
+#panel-settings .feature-diagnostics > .feature-content { padding-block: var(--spacing-sm); }
+#panel-settings .feature-diagnostics .feature-hint { margin: 0 0 var(--spacing-sm); }
+#panel-settings .feature-diagnostic-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px var(--spacing-sm);
+    margin: 0 0 var(--spacing-sm);
+}
+#panel-settings .feature-diagnostic-options label {
+    min-width: 0;
+    font-size: var(--font-size-body);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+#panel-settings .feature-diagnostic-options label:first-child { grid-column: 1 / -1; }
+#panel-settings .feature-diagnostic-options input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--color-brand); }
+#panel-settings .feature-diagnostic-options span { min-width: 0; overflow-wrap: anywhere; }
+#panel-settings .feature-diagnostic-options label:has(input:disabled) { cursor: not-allowed; opacity: 0.45; }
+#panel-settings .feature-diagnostic-controls { margin-bottom: var(--spacing-xs); }
+#panel-settings .feature-diagnostic-controls > .feature-status { margin-inline-start: auto; }
+#panel-settings .feature-diagnostics .feature-button {
+    min-width: 44px;
+    padding: 8px var(--spacing-sm);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font: inherit;
+    font-size: var(--font-size-secondary);
+    font-weight: var(--font-weight-secondary);
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+#panel-settings .feature-diagnostics .feature-button:not(:disabled):hover { background: var(--color-surface-alt); color: var(--color-text-primary); }
+#panel-settings .feature-diagnostics .feature-button:disabled { cursor: not-allowed; }
+#panel-settings .feature-diagnostics .feature-primary { background: var(--color-brand-light); color: var(--color-brand-dark); }
+#panel-settings .feature-diagnostics .feature-primary:not(:disabled):hover { background: var(--color-brand-light); color: var(--color-brand-dark); border-color: var(--color-brand-dark); }
+#panel-settings .feature-diagnostic-row strong { min-width: 0; font-size: var(--font-size-body); font-weight: var(--font-weight-primary); overflow-wrap: anywhere; }
+#panel-settings .feature-diagnostics .feature-status { max-width: 100%; flex-shrink: 0; overflow-wrap: anywhere; }
+#panel-settings .feature-diagnostics .feature-meta { font-variant-numeric: tabular-nums; }
 .context-window-reference { box-sizing: border-box; margin: var(--spacing-md) 0 var(--spacing-sm); padding-inline: var(--spacing-sm); color: var(--color-text-primary); }
 .context-window-reference .feature-section-heading { margin-bottom: 4px; }
 .feature-window-warning { margin-top: 12px; padding-block: 8px; }
@@ -172,6 +234,7 @@
 .feature-focus { margin: 16px 0; padding: 16px; background: var(--color-surface-alt); }
 @media (max-width: 640px) {
     #panel-settings .feature-diagnostics { padding-inline: 20px; }
+    #panel-settings .feature-diagnostic-options { grid-template-columns: minmax(0, 1fr); }
     .feature-toolbar { align-items: stretch; }
     #panel-sessions .feature-tabs {
         display: grid;
@@ -190,5 +253,6 @@
     .feature-project-picker { max-height: 240px; }
 }
 @media (prefers-reduced-motion: reduce) {
+    #panel-settings .feature-diagnostics-chevron { transition: none; }
     .session-features button, .context-window-reference button, .session-feature-controls button { transition: none; }
 }

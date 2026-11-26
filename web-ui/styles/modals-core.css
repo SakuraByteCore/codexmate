@@ -829,11 +829,6 @@
     min-width: 0;
 }
 
-.project-path-detected {
-    margin-top: 4px;
-    font-size: 0.82em;
-}
-
 .editor-frame {
     position: relative;
     border-radius: var(--radius-md);

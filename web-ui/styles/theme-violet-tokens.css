@@ -1,0 +1,52 @@
+/*
+ * Codex Mate Web UI - violet light theme tokens (hand maintained).
+ * Palette adapted from Catppuccin Latte (MIT):
+ * https://github.com/catppuccin/palette/blob/main/palette.json
+ * https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md
+ * Mauve is the accent; neutral hues and semantic colors are adapted for WCAG AA.
+ * Regenerate: node scripts/generate-ocean-theme-css.mjs violet
+ */
+:root[data-theme="violet"] {
+    color-scheme: light;
+    --color-brand: oklch(54.5% 0.250346 297.016);
+    --color-brand-dark: oklch(49% 0.225 297.016);
+    --color-brand-light: oklch(54.5% 0.25 297.016 / 13%);
+    --color-brand-subtle: oklch(54.5% 0.25 297.016 / 20%);
+    --color-bg: oklch(95.5% 0.008 297.016);
+    --color-surface: oklch(98.2% 0.006 297.016);
+    --color-surface-alt: oklch(93.2% 0.01 297.016);
+    --color-surface-elevated: oklch(99% 0.005 297.016);
+    --color-surface-tint: oklch(98.2% 0.006 297.016 / 86%);
+    --color-surface-chip: oklch(99% 0.005 297.016 / 76%);
+    --color-text-primary: oklch(43% 0.035 297.016);
+    --color-text-secondary: oklch(49% 0.035 297.016);
+    --color-text-tertiary: oklch(52% 0.032 297.016);
+    --color-text-muted: oklch(52% 0.032 297.016);
+    --color-border: oklch(60% 0.025 297.016);
+    --color-border-soft: oklch(84% 0.012 297.016);
+    --color-border-strong: oklch(52% 0.032 297.016);
+    --color-success: oklch(47% 0.12 145);
+    --color-success-light: oklch(96% 0.025 145);
+    --color-error: oklch(50% 0.18 15);
+    --color-error-light: oklch(96% 0.018 15);
+    --color-warning: oklch(48% 0.10 70);
+    --color-warning-light: oklch(96% 0.025 70);
+    --color-delta-up: var(--color-success);
+    --color-delta-down: var(--color-error);
+    --color-heatmap-1: oklch(54.5% 0.25 297.016 / 20%);
+    --color-heatmap-2: oklch(54.5% 0.25 297.016 / 40%);
+    --color-heatmap-3: oklch(54.5% 0.25 297.016 / 60%);
+    --color-heatmap-4: oklch(54.5% 0.25 297.016 / 85%);
+    --color-modal-scrim: color-mix(in oklch, var(--color-text-primary) 48%, transparent);
+    --bg-warm-gradient: var(--color-bg);
+    --color-bg-topbar-strong: oklch(95.5% 0.008 297.016 / 96%);
+    --color-bg-topbar-soft: oklch(95.5% 0.008 297.016 / 86%);
+    --color-bg-topbar-clear: oklch(95.5% 0.008 297.016 / 0%);
+    --shadow-subtle: none;
+    --shadow-card: none;
+    --shadow-card-hover: none;
+    --shadow-float: none;
+    --shadow-raised: none;
+    --shadow-modal: none;
+    --shadow-input-focus: 0 0 0 3px var(--color-brand-light);
+}

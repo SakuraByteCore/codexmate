@@ -1,0 +1,53 @@
+                    <div class="routing-test">
+                        <form novalidate @submit.prevent="runModelTest" :aria-busy="modelTestRunning">
+                            <fieldset :disabled="modelTestRunning || modelTestLoading">
+                                <legend class="routing-test-legend">{{ t('modelTest.selection') }}</legend>
+                                <div class="routing-test-heading">
+                                    <div class="segmented-control" role="group" :aria-label="t('modelTest.source')">
+                                        <button v-for="target in ['codex', 'pi']" :key="target" type="button" :class="['segment', { active: modelTestTarget === target }]" :aria-pressed="modelTestTarget === target" @click="setModelTestTarget(target)">{{ target === 'codex' ? 'Codex' : 'Pi' }}</button>
+                                    </div>
+                                    <button type="button" class="btn-tool routing-icon-btn" :disabled="modelTestLoading || modelTestRunning" :aria-label="t('routing.refresh')" :title="t('routing.refresh')" @click="loadModelTestCatalog">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" focusable="false"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg>
+                                    </button>
+                                </div>
+                                <div class="routing-form-head">
+                                    <label class="routing-field"><span class="form-label">{{ t('routing.provider') }}</span>
+                                        <select class="model-select" v-model="modelTestProvider" @change="selectModelTestProvider">
+                                            <option value="" disabled>{{ t('routing.selectProvider') }}</option>
+                                            <option v-for="provider in modelTestProviders()" :key="provider.name" :value="provider.name">{{ provider.name }}</option>
+                                        </select>
+                                    </label>
+                                    <label class="routing-field"><span class="form-label">{{ t('routing.model') }}</span>
+                                        <select class="model-select" v-model="modelTestModel">
+                                            <option value="" disabled>{{ t('modelTest.selectModel') }}</option>
+                                            <option v-for="model in modelTestModels()" :key="model" :value="model">{{ model }}</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <p v-if="!modelTestLoading && !modelTestModels().length" class="routing-hint">{{ t('modelTest.empty') }} <button type="button" class="btn-tool" @click="switchConfigMode(modelTestTarget)">{{ t('routing.openConfig') }}</button></p>
+                                <label class="routing-field routing-test-prompt"><span class="form-label">{{ t('modelTest.prompt') }}</span>
+                                    <textarea class="form-input" v-model="modelTestPrompt" rows="4" maxlength="8000"></textarea>
+                                </label>
+                                <div class="routing-test-actions">
+                                    <button type="submit" class="btn-tool btn-primary" :disabled="!modelTestPrompt.trim() || !modelTestModels().length">{{ t(modelTestRunning ? 'modelTest.running' : 'modelTest.run') }}</button>
+                                </div>
+                            </fieldset>
+                        </form>
+                        <p v-if="modelTestError" class="routing-error" role="alert">{{ modelTestError }}</p>
+                        <div class="routing-test-response" aria-live="polite" :aria-busy="modelTestRunning">
+                            <p v-if="modelTestLoading" class="routing-hint" role="status">{{ t('modelTest.loading') }}</p>
+                            <template v-else-if="modelTestResult">
+                                <div class="routing-test-result-head">
+                                    <strong>{{ modelTestResult.provider }} / {{ modelTestResult.responseModel || modelTestResult.model }}</strong>
+                                    <span class="routing-hint">{{ t(modelTestRunning ? 'modelTest.running' : modelTestResult.ok ? 'modelTest.completed' : 'modelTest.failed') }}<template v-if="!modelTestRunning"> · {{ modelTestDuration() }}</template></span>
+                                </div>
+                                <p class="routing-test-question">{{ modelTestResult.prompt }}</p>
+                                <p v-if="!modelTestRunning && !modelTestResult.ok" class="routing-error" role="alert">{{ modelTestResult.error }}</p>
+                                <template v-else-if="!modelTestRunning">
+                                    <div v-if="modelTestRenderedResponse.html" class="routing-test-answer" v-html="modelTestRenderedResponse.html"></div>
+                                    <p v-else class="routing-test-answer routing-test-plain">{{ modelTestResult.text }}</p>
+                                    <p v-if="modelTestResult.incomplete" class="routing-hint">{{ t('modelTest.incomplete') }}</p>
+                                </template>
+                            </template>
+                        </div>
+                    </div>

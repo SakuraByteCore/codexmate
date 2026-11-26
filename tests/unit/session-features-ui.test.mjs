@@ -110,3 +110,29 @@ test('session top tools keep stable selection metrics and fit narrow screens', (
         assert.ok(toolbar.includes(`@click="openFeatureView('${view}')"`), view);
     }
 });
+
+test('settings diagnostics use scoped settings typography, flat controls and a responsive option grid', () => {
+    const fs = require('fs');
+    const html = fs.readFileSync('web-ui/partials/index/session-diagnostics.html', 'utf8');
+    for (const action of ['startDiagnostics', 'cancelDiagnostics', "exportDiagnostics('json')", "exportDiagnostics('md')"]) assert.ok(html.includes(`@click="${action}"`), action);
+    for (const field of ['diagnosticsRemote', 'diagnosticsSelected']) assert.ok(html.includes(`v-model="${field}"`), field);
+    assert.ok(html.includes('$event.target === $event.currentTarget && $event.currentTarget.open && loadDiagnosticTargets()'));
+    assert.ok(html.includes("t('features.diagnosticScope')"));
+    assert.equal((html.match(/class="feature-button /g) || []).length, 4);
+    assert.doesNotMatch(html, /btn-mini/);
+    assert.match(html, /<summary class="feature-diagnostics-heading">[\s\S]*feature-diagnostics-chevron/);
+    const stylesheet = require('postcss').parse(fs.readFileSync('web-ui/styles/session-features.css', 'utf8'));
+    const rules = []; stylesheet.walkRules(rule => rules.push(rule));
+    const metrics = (selector) => Object.fromEntries(rules.find(rule => rule.selector === selector && rule.parent.type === 'root').nodes.map(({ prop, value }) => [prop, value]));
+    assert.equal(metrics('#panel-settings .feature-diagnostics-heading')['font-size'], 'var(--font-size-body)');
+    assert.equal(metrics('#panel-settings .feature-diagnostics-heading')['font-weight'], 'var(--font-weight-primary)');
+    assert.equal(metrics('#panel-settings .feature-diagnostic-options')['grid-template-columns'], 'repeat(2, minmax(0, 1fr))');
+    assert.equal(metrics('#panel-settings .feature-diagnostic-options span')['overflow-wrap'], 'anywhere');
+    assert.equal(metrics('#panel-settings .feature-diagnostics .feature-button')['min-width'], '44px');
+    assert.equal(metrics('#panel-settings .feature-diagnostics .feature-primary').background, 'var(--color-brand-light)');
+    assert.equal(metrics('#panel-settings .feature-diagnostics .feature-button:disabled').cursor, 'not-allowed');
+    const mobile = rules.find(rule => rule.selector === '#panel-settings .feature-diagnostic-options' && rule.parent.params === '(max-width: 640px)');
+    assert.equal(mobile.nodes.find(node => node.prop === 'grid-template-columns').value, 'minmax(0, 1fr)');
+    const reduced = rules.find(rule => rule.selector === '#panel-settings .feature-diagnostics-chevron' && rule.parent.params === '(prefers-reduced-motion: reduce)');
+    assert.equal(reduced.nodes.find(node => node.prop === 'transition').value, 'none');
+});

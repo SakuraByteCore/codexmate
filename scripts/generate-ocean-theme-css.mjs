@@ -19,10 +19,15 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const STYLES_DIR = path.join(ROOT, 'web-ui', 'styles');
 const ENTRY = path.join(ROOT, 'web-ui', 'styles.css');
-const OUTPUT = path.join(STYLES_DIR, 'theme-ocean.css');
-const HAND_TOKENS_FILE = path.join(STYLES_DIR, 'theme-ocean-tokens.css');
+const THEME = process.argv[2] || 'ocean';
+if (THEME !== 'ocean' && THEME !== 'violet') throw new Error(`unsupported theme: ${THEME}`);
+const IS_VIOLET = THEME === 'violet';
+const CHECK_ONLY = process.argv[3] === '--check';
+if (process.argv[3] && !CHECK_ONLY) throw new Error(`unsupported option: ${process.argv[3]}`);
+const OUTPUT = path.join(STYLES_DIR, `theme-${THEME}.css`);
+const HAND_TOKENS_FILE = path.join(STYLES_DIR, `theme-${THEME}-tokens.css`);
 
-const SKIP_FILES = new Set(['base-theme.css', 'theme-dark.css', 'theme-dark-tokens.css', 'theme-ocean.css', 'theme-ocean-tokens.css']);
+const SKIP_FILES = new Set(['base-theme.css', 'theme-dark.css', 'theme-dark-tokens.css', 'theme-ocean.css', 'theme-ocean-tokens.css', 'theme-violet.css', 'theme-violet-tokens.css']);
 
 /* ---------- palette map: warm light literal -> ocean literal ---------- */
 /* rgb triple (no alpha) -> rgb triple; alpha is preserved. */
@@ -159,9 +164,62 @@ function channelsToText(c) {
     return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`;
 }
 
-function mapLiteral(raw) {
+// Resolve existing warm literals to semantic tokens, not a second hardcoded palette.
+const VIOLET_CHANNEL_RATIO = 2;
+const VIOLET_SURFACE_MIN = 220;
+const VIOLET_BORDER_MIN = 150;
+const VIOLET_NEUTRAL_SPREAD = 10;
+const VIOLET_WARNING_SPREAD = 20;
+const VIOLET_PRIMARY_GREEN = 98;
+
+function violetRole(channels, { prop, selector }) {
+    const { r, g, b } = channels;
+    const maximum = Math.max(r, g, b);
+    const minimum = Math.min(r, g, b);
+    const isText = /^(?:color|fill|stroke)$/.test(prop.trim());
+    const key = `${r},${g},${b}`;
+    if (maximum - minimum <= VIOLET_NEUTRAL_SPREAD) {
+        if (minimum >= VIOLET_SURFACE_MIN) return isText ? 'surface-elevated' : 'surface';
+        if (minimum >= VIOLET_BORDER_MIN && !isText) return 'border-soft';
+        return maximum >= VIOLET_BORDER_MIN ? 'text-muted' : 'text-primary';
+    }
+    const hasError = /error|danger|negative|delta-down|unhealthy/.test(selector);
+    const hasWarning = /warning|delta-warn/.test(selector);
+    const hasSuccess = /success|positive|delta-up|healthy/.test(selector) && !hasError;
+    const isGreen = g > r && g > b && g - Math.min(r, b) > VIOLET_WARNING_SPREAD;
+    if (hasError || hasWarning || hasSuccess || isGreen || SEMANTIC_KEEP.has(key)) {
+        const status = hasError ? 'error' : hasWarning ? 'warning' : hasSuccess || isGreen ? 'success'
+            : g - b >= VIOLET_WARNING_SPREAD ? 'warning' : 'error';
+        return !isText && minimum >= VIOLET_BORDER_MIN ? `${status}-light` : status;
+    }
+    const mapped = OCEAN_MAP[key];
+    if (!mapped) return null;
+    const [red, green, blue] = mapped.split(',').map(Number);
+    if (blue > red * VIOLET_CHANNEL_RATIO && blue > green * VIOLET_CHANNEL_RATIO) {
+        return green < VIOLET_PRIMARY_GREEN ? 'brand-dark' : 'brand';
+    }
+    if (red >= VIOLET_SURFACE_MIN) return red >= green ? 'surface' : 'surface-alt';
+    if (red >= VIOLET_BORDER_MIN) return 'border';
+    return red <= VIOLET_WARNING_SPREAD ? 'text-primary' : 'text-muted';
+}
+
+function mapVioletLiteral(channels, context) {
+    let role = violetRole(channels, context);
+    if (!role) return null;
+    const isText = /^(?:color|fill|stroke)$/.test(context.prop.trim());
+    const isControlBorder = /border/.test(context.prop) && /input|select|textarea|toggle-btn|checkbox|button/.test(context.selector);
+    if (isControlBorder && !/^(?:brand|error|success|warning)/.test(role)) role = 'border';
+    const token = `var(--color-${role})`;
+    // Opacity is meaningful for surfaces, not for readable labels or control edges.
+    if (channels.a >= 1 || isText || isControlBorder) return token;
+    const percentage = Math.round(channels.a * 10000) / 100;
+    return `color-mix(in oklch, ${token} ${percentage}%, transparent)`;
+}
+
+function mapLiteral(raw, context) {
     const channels = parseChannels(raw);
     if (!channels) return null;
+    if (IS_VIOLET) return mapVioletLiteral(channels, context);
     const key = `${channels.r},${channels.g},${channels.b}`;
     const mapped = OCEAN_MAP[key];
     if (!mapped) return null;
@@ -169,14 +227,41 @@ function mapLiteral(raw) {
     return channelsToText({ r, g, b, a: channels.a });
 }
 
-function mapDeclaration(decl) {
+const VIOLET_BACKGROUND_COLOR_RE = new RegExp(`var\\(--[\\w-]+\\)|${COLOR_RE.source}`);
+
+const VIOLET_MODAL_OVERLAYS = new Set(['.modal-overlay', '.project-announcement-overlay']);
+
+function flatVioletBackground(value, context) {
+    if (VIOLET_MODAL_OVERLAYS.has(context.selector)) return 'var(--color-modal-scrim)';
+    // Compare tokens in source order: a later literal must not replace a leading role.
+    const firstColor = value.match(VIOLET_BACKGROUND_COLOR_RE)?.[0];
+    if (!firstColor) return 'var(--color-surface)';
+    // The neutral border is opaque in this theme, unsuitable as a button hover fill.
+    if (firstColor === 'var(--color-border)') return 'var(--color-surface-alt)';
+    return firstColor.startsWith('var(') ? firstColor : mapLiteral(firstColor, context) || firstColor;
+}
+
+function mapDeclaration(decl, selector, hasTextClipping = false) {
     const colon = decl.indexOf(':');
     if (colon <= 0) return null;
     const prop = decl.slice(0, colon);
     const value = decl.slice(colon + 1);
+    const context = { prop, selector };
+    if (IS_VIOLET && prop.trim() === 'box-shadow') return 'box-shadow:none';
+    if (IS_VIOLET && hasTextClipping && /^(?:background|background-image|background-color)$/.test(prop.trim())) {
+        return 'background-image:none; background-color:transparent';
+    }
+    if (IS_VIOLET && /background-clip$/.test(prop.trim()) && value.trim() === 'text') {
+        return `${prop}:border-box`;
+    }
+    if (IS_VIOLET && prop.trim() === '-webkit-text-fill-color') return `${prop}:var(--color-text-primary)`;
+    if (IS_VIOLET && /^(?:background|background-image)$/.test(prop.trim()) && /gradient\(/.test(value)) {
+        const flatColor = flatVioletBackground(value, context);
+        return `background-image:none; background-color:${flatColor}`;
+    }
     let changed = false;
     const mappedValue = value.replace(COLOR_RE, (raw) => {
-        const mapped = mapLiteral(raw);
+        const mapped = mapLiteral(raw, context);
         if (!mapped) return raw;
         changed = true;
         return mapped;
@@ -247,7 +332,7 @@ function extractRules(css) {
             const frame = stack.pop();
             buf = '';
             if (!frame) continue;
-            if (frame.type === 'rule') {
+            if (frame.type === 'rule' && !(IS_VIOLET && stack.some(parent => parent.type === 'skip'))) {
                 const media = stack.filter((f) => f.type === 'at').map((f) => f.prelude);
                 rules.push({ media: media.join(' && '), selector: frame.selector, body: frame.body || '' });
             }
@@ -271,7 +356,7 @@ function prefixSelector(selector) {
         .split(',')
         .map((part) => part.trim())
         .filter(Boolean)
-        .map((part) => (part === ':root' ? ':root[data-theme="ocean"]' : `[data-theme="ocean"] ${part}`))
+        .map((part) => (part === ':root' ? `:root[data-theme="${THEME}"]` : `[data-theme="${THEME}"] ${part}`))
         .join(',\n');
 }
 
@@ -282,10 +367,12 @@ for (const name of order) {
     const css = stripComments(fs.readFileSync(path.join(STYLES_DIR, name), 'utf8'));
     for (const rule of extractRules(css)) {
         if (!rule.selector || /@(?:import|charset|keyframes|font-face)/i.test(rule.selector)) continue;
+        if (IS_VIOLET && /sessions-header-actions/.test(rule.selector)) continue;
         const decls = rule.body.split(';').map((d) => d.trim()).filter(Boolean);
         const mappedDecls = [];
+        const hasTextClipping = /background-clip\s*:\s*text\b/.test(rule.body);
         for (const decl of decls) {
-            const mapped = mapDeclaration(decl);
+            const mapped = mapDeclaration(decl, rule.selector, hasTextClipping);
             if (mapped) {
                 mappedDecls.push(mapped);
                 continue;
@@ -327,22 +414,41 @@ for (const [mediaKey, bySelector] of groups) {
 const handTokens = fs.readFileSync(HAND_TOKENS_FILE, 'utf8').trimEnd();
 
 const header = `/*
- * Codex Mate Web UI - ocean light theme overrides.
+ * Codex Mate Web UI - ${THEME} light theme overrides.
  *
- * The token section is hand maintained in web-ui/styles/theme-ocean-tokens.css.
+ * The token section is hand maintained in web-ui/styles/theme-${THEME}-tokens.css.
  * The component section below is GENERATED - do not edit by hand.
  * Regenerate after changing any stylesheet:
- *   node scripts/generate-ocean-theme-css.mjs
+ *   node scripts/generate-ocean-theme-css.mjs${IS_VIOLET ? ' violet' : ''}
  */
 `;
 
 const output = `${header}\n${handTokens}\n\n/* ==========================================================================
    GENERATED COMPONENT OVERRIDES - do not edit by hand
    ========================================================================== */\n\n${generated.trimEnd()}\n`;
-fs.writeFileSync(OUTPUT, output);
-process.stdout.write(`wrote ${OUTPUT} (${output.length} bytes)\n`);
+const violetOverrides = IS_VIOLET ? `
+:root[data-theme="violet"] body::before {
+    background: none;
+}
+:root[data-theme="violet"] .btn-mini.btn-confirm-mini {
+    background-image: none;
+    background-color: var(--color-brand);
+    color: var(--color-surface-elevated);
+}
+:root[data-theme="violet"] :is(button, input, textarea, select, a, summary):focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+}
+` : '';
+const generatedOutput = output + violetOverrides;
+if (CHECK_ONLY) {
+    if (fs.readFileSync(OUTPUT, 'utf8') !== generatedOutput) throw new Error(`stale theme output: ${OUTPUT}`);
+} else {
+    fs.writeFileSync(OUTPUT, generatedOutput);
+}
+process.stdout.write(`${CHECK_ONLY ? 'verified' : 'wrote'} ${OUTPUT} (${Buffer.byteLength(generatedOutput)} bytes)\n`);
 if (unmapped.size) {
-    process.stdout.write('warm literals without an ocean mapping (kept as-is):\n');
+    process.stdout.write(`warm literals without a ${THEME} mapping (kept as-is):\n`);
     for (const [key, count] of [...unmapped.entries()].sort((a, b) => b[1] - a[1])) {
         process.stdout.write(`  ${key} x${count}\n`);
     }

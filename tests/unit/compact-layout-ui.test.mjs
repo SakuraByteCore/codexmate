@@ -100,3 +100,9 @@ test('styles keep desktop layout wide and session history readable on large scre
     assert.match(titleBlock[0], /overflow:\s*hidden;/);
     assert.match(titleBlock[0], /max-width:\s*none;/);
 });
+
+
+test('mobile collapsed rails leave the full width to the visible main panel', () => {
+    const styles = readProjectFile('web-ui/styles/responsive.css');
+    assert.match(styles, /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*?\.app-shell\.sidebar-collapsed\s*\{\s*grid-template-columns:\s*1fr;\s*\}/);
+});

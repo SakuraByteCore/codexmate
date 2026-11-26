@@ -1,4 +1,19 @@
 const vi = Object.freeze({
+    "modelTest.title": "Kiểm thử thực tế",
+    "modelTest.selection": "Chọn mô hình kiểm thử",
+    "modelTest.source": "Nguồn cấu hình",
+    "modelTest.selectModel": "Chọn mô hình",
+    "modelTest.prompt": "Nội dung kiểm thử",
+    "modelTest.run": "Gửi kiểm thử",
+    "modelTest.running": "Đang kiểm thử…",
+    "modelTest.completed": "Đã trả lời",
+    "modelTest.failed": "Kiểm thử thất bại",
+    "modelTest.seconds": "{seconds} giây",
+    "modelTest.loading": "Đang đọc mô hình đã cấu hình…",
+    "modelTest.empty": "Chưa có mô hình để chọn.",
+    "modelTest.required": "Nhập nội dung và chọn mô hình đã cấu hình.",
+    "modelTest.incomplete": "Câu trả lời đạt giới hạn độ dài, nội dung chưa đầy đủ.",
+
     "routing.openai.purpose": "Cung cấp API phân phối mô hình cho khách tương thích OpenAI, với mô hình chính và dự phòng.",
     "routing.openai.active": "OpenAI Chat được cấu hình dùng “{name}”.",
     "routing.openai.off": "API chưa bật. Tạo nhóm rồi bấm Bật nhóm này.",
@@ -41,10 +56,10 @@ const vi = Object.freeze({
     "routing.restorePool": "Ngừng dùng nhóm này",
     "routing.useGroup": "Bật nhóm này",
     "routing.bindEnable": "Bật nhóm này",
-    "tab.routing": "Phân phối mô hình",
-    "kicker.routing": "Chính và dự phòng",
-    "title.routing": "Phân phối mô hình",
-    "subtitle.routing": "Đặt thứ tự mô hình",
+    "tab.routing": "Kiểm thử mô hình",
+    "kicker.routing": "",
+    "title.routing": "Kiểm thử mô hình",
+    "subtitle.routing": "",
     "routing.target": "Đích kết nối",
     "routing.refresh": "Làm mới",
     "routing.create": "Tạo nhóm mô hình",
@@ -597,7 +612,6 @@ const vi = Object.freeze({
     'prompts.project.pathLabel': 'Đường dẫn dự án (tùy chọn)',
     'prompts.project.selectPlaceholder': '-- Toàn cục (~/.claude/CLAUDE.md) --',
     'prompts.project.manualPlaceholder': 'Hoặc nhập đường dẫn gốc dự án...',
-    'prompts.project.detected': 'Đang chỉnh sửa CLAUDE.md trong: {path}',
 
 
     // Share command prefix
@@ -686,6 +700,7 @@ const vi = Object.freeze({
     'settings.theme.light': 'Sáng',
     'settings.theme.dark': 'Tối',
     'settings.theme.ocean': 'Đại dương',
+    'settings.theme.violet': 'Tím dịu',
     'settings.theme.hint': 'Tùy chọn chủ đề được tự động lưu và giữ nguyên sau khi tải lại.',
 
     'settings.webhook.title': 'Webhook',

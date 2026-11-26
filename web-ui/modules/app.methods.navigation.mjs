@@ -121,6 +121,7 @@
             settingsTab: settingsTab === 'data' ? 'data' : 'general',
             mainTab: resolveSelectableMainTab(mainTab),
             configMode: configModeSet && configModeSet.has(configMode) ? configMode : 'codex',
+            modelTestTarget: vm.modelTestTarget === 'pi' ? 'pi' : 'codex',
             skillsTargetApp,
             promptTemplatesMode,
             pluginsActiveId: pluginsActiveId || 'prompt-templates'

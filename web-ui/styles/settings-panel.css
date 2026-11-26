@@ -245,6 +245,36 @@
     font-weight: var(--font-weight-primary);
 }
 
+/* Scope four-theme sizing to appearance controls, not other setting toggles. */
+#panel-settings .settings-theme-options .toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    transition: color var(--transition-fast) var(--ease-smooth),
+        background-color var(--transition-fast) var(--ease-smooth);
+}
+
+#panel-settings .settings-theme-options .toggle-btn.active {
+    box-shadow: none;
+}
+
+#panel-settings .settings-theme-options .toggle-btn:active:not(:disabled) {
+    transform: none;
+}
+
+#panel-settings .settings-theme-options .toggle-btn:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    #panel-settings .settings-theme-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+}
+
 /* ---- 保留天数输入 ---- */
 .settings-retention {
     display: inline-flex;

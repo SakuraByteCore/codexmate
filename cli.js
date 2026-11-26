@@ -50,6 +50,7 @@ const {
     formatTimestampForFileName
 } = require('./lib/cli-file-utils');
 const { buildLineDiff } = require('./lib/text-diff');
+const { createModelTestService } = require('./lib/model-test');
 const { cmdThread, handleThreadAction } = require('./lib/thread-handoff');
 const { createStartupAuth } = require('./lib/web-startup-auth');
 const {
@@ -498,6 +499,44 @@ function getRoutingCatalog(target) {
         if (upstream.error) return marked ? null : entry;
         return { ...entry, baseUrl: upstream.baseUrl };
     }).filter(Boolean);
+}
+const modelTests = createModelTestService({ providers: getModelTestProviders });
+function getModelTestProviders(target) {
+    if (target === 'pi') {
+        const state = readPiModels();
+        if (state.error) throw new Error(state.error);
+        const apis = { 'openai-responses': 'responses', 'openai-completions': 'chat_completions' };
+        return Object.entries(state.providers).map(([name, provider]) => {
+            const key = typeof provider.apiKey === 'string' ? provider.apiKey.trim() : '';
+            const models = Array.isArray(provider.models) ? provider.models : [];
+            return { name, baseUrl: provider.baseUrl, api: apis[provider.api] || provider.api,
+                apiKey: process.env[key] || key, headers: provider.headers,
+                error: key.startsWith('!') ? '命令式凭据暂不支持真实测试，请使用已有环境变量配置' : '',
+                models: models.map(model => model.id).filter(id => typeof id === 'string' && id.trim()),
+                modelOptions: Object.fromEntries(models.filter(model => model && model.id).map(model => [model.id, {
+                    api: apis[model.api || provider.api] || model.api || provider.api,
+                    baseUrl: model.baseUrl || provider.baseUrl, headers: { ...provider.headers, ...model.headers },
+                    maxTokens: model.maxTokens, compat: model.compat || provider.compat
+                }])) };
+        });
+    }
+    const config = readConfig();
+    const currentModels = readCurrentModels();
+    const savedModels = readModels();
+    return Object.entries(config.model_providers || {}).filter(([, provider]) => provider.base_url).map(([name, provider]) => {
+        const isBridge = provider.codexmate_bridge === 'openai' || provider.preferred_auth_method === 'openai-bridge';
+        const upstream = isBridge ? resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, name) : {};
+        const apiKey = upstream.apiKey || provider.experimental_bearer_token || (provider.env_key ? process.env[provider.env_key] : '');
+        const model = currentModels[name] || config.model || '';
+        return { name, models: [...new Set([model, ...savedModels].filter(Boolean))],
+            baseUrl: upstream.baseUrl || provider.base_url, apiKey,
+            headers: { ...provider.http_headers, ...Object.fromEntries(Object.entries(provider.env_http_headers || {})
+                .filter(([, variable]) => process.env[variable]).map(([header, variable]) => [header, process.env[variable]])), ...upstream.headers },
+            reasoningEffort: config.model_reasoning_effort, reasoningSummary: config.model_reasoning_summary,
+            verbosity: config.model_verbosity,
+            api: provider.codexmate_bridge === 'claude' ? 'unsupported' : upstream.targetApi || normalizeWireApi(provider.wire_api),
+            error: upstream.error || (provider.requires_openai_auth && !apiKey ? '登录凭据暂不支持此测试，请选择已配置 API Key 的供应商' : '') };
+    });
 }
 function getRoutingState() {
     const state = routingGroups.read();
@@ -1168,7 +1207,7 @@ function normalizeSidebarCollapsedPreference(value) {
 
 function normalizeThemePreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'dark' || normalized === 'ocean' ? normalized : 'light';
+    return normalized === 'dark' || normalized === 'ocean' || normalized === 'violet' ? normalized : 'light';
 }
 
 function normalizeSessionFilterSourcePreference(value) {
@@ -1256,6 +1295,7 @@ function normalizeWebUiPreferences(value = {}) {
         navigation: {
             mainTab: normalizeMainTabPreference(navigation.mainTab),
             configMode: normalizeConfigModePreference(navigation.configMode),
+            modelTestTarget: navigation.modelTestTarget === 'pi' ? 'pi' : 'codex',
             settingsTab: normalizeSettingsTabPreference(navigation.settingsTab),
             skillsTargetApp: navigation.skillsTargetApp === 'claude' || navigation.skillsTargetApp === 'pi'
                 ? navigation.skillsTargetApp
@@ -15235,6 +15275,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'proxy-apply-provider':
                             result = applyBuiltinProxyProvider(params || {});
+                            break;
+                        case 'model-test-catalog':
+                            result = { catalogs: modelTests.catalog() };
+                            break;
+                        case 'model-test-run':
+                            result = await modelTests.run(params || {});
                             break;
                         case 'routing-get':
                             result = getRoutingState();

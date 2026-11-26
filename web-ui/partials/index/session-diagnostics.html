@@ -1,5 +1,8 @@
 <details class="session-features feature-diagnostics" @toggle="$event.target === $event.currentTarget && $event.currentTarget.open && loadDiagnosticTargets()">
-    <summary class="feature-diagnostics-heading">{{ t('features.diagnostics') }}</summary>
+    <summary class="feature-diagnostics-heading">
+        <span>{{ t('features.diagnostics') }}</span>
+        <svg class="feature-diagnostics-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7"/></svg>
+    </summary>
     <div class="feature-content">
         <p class="feature-hint">{{ t('features.diagnosticScope') }}</p>
         <p v-if="featureError" class="form-error feature-feedback" role="alert">{{ featureError }}</p>
@@ -8,8 +11,8 @@
             <label v-for="name in diagnosticsTargets" :key="name"><input type="checkbox" :value="name" v-model="diagnosticsSelected" :disabled="diagnosticsReport?.status === 'running'"><span>{{ name }}</span></label>
         </div>
         <div class="feature-actions feature-diagnostic-controls">
-            <button type="button" class="btn-mini feature-primary" @click="startDiagnostics" :disabled="diagnosticsReport?.status === 'running'">{{ t('features.check') }}</button>
-            <button v-if="diagnosticsReport?.status === 'running'" type="button" class="btn-mini feature-quiet" @click="cancelDiagnostics">{{ t('features.cancel') }}</button>
+            <button type="button" class="feature-button feature-primary" @click="startDiagnostics" :disabled="diagnosticsReport?.status === 'running'">{{ t('features.check') }}</button>
+            <button v-if="diagnosticsReport?.status === 'running'" type="button" class="feature-button feature-quiet" @click="cancelDiagnostics">{{ t('features.cancel') }}</button>
             <span v-if="diagnosticsReport" class="feature-status" :data-status="diagnosticsReport.status" role="status">{{ t('features.status.' + diagnosticsReport.status) }}</span>
         </div>
         <template v-if="diagnosticsReport">
@@ -23,7 +26,7 @@
                 <p v-if="item.errorCode" class="form-error">{{ t('features.error.' + item.errorCode) }}</p>
                 <details class="feature-disclosure"><summary>{{ t('features.technicalDetails') }}</summary><pre class="feature-code">{{ JSON.stringify(item.evidence || {}, null, 2) }}</pre></details>
             </article>
-            <footer class="feature-record-actions feature-export-actions"><button type="button" class="btn-mini feature-quiet" @click="exportDiagnostics('json')">{{ t('features.exportJson') }}</button><button type="button" class="btn-mini feature-quiet" @click="exportDiagnostics('md')">{{ t('features.exportMarkdown') }}</button></footer>
+            <footer class="feature-record-actions feature-export-actions"><button type="button" class="feature-button feature-quiet" @click="exportDiagnostics('json')">{{ t('features.exportJson') }}</button><button type="button" class="feature-button feature-quiet" @click="exportDiagnostics('md')">{{ t('features.exportMarkdown') }}</button></footer>
         </template>
     </div>
 </details>

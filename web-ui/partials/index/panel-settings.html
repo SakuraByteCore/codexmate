@@ -64,24 +64,34 @@
                                 <div class="settings-card-main">
                                     <div class="settings-card-content">
                                         <div class="settings-card-title">{{ t('settings.theme.title') }}</div>
-                                        <div class="settings-toggle-group">
+                                        <div class="settings-toggle-group settings-theme-options">
                                             <button
                                                 type="button"
                                                 :class="['toggle-btn', { active: theme === 'light' }]"
+                                                :aria-pressed="theme === 'light'"
                                                 @click="setTheme('light')">
                                                 {{ t('settings.theme.light') }}
                                             </button>
                                             <button
                                                 type="button"
                                                 :class="['toggle-btn', { active: theme === 'dark' }]"
+                                                :aria-pressed="theme === 'dark'"
                                                 @click="setTheme('dark')">
                                                 {{ t('settings.theme.dark') }}
                                             </button>
                                             <button
                                                 type="button"
                                                 :class="['toggle-btn', { active: theme === 'ocean' }]"
+                                                :aria-pressed="theme === 'ocean'"
                                                 @click="setTheme('ocean')">
                                                 {{ t('settings.theme.ocean') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                :class="['toggle-btn', { active: theme === 'violet' }]"
+                                                :aria-pressed="theme === 'violet'"
+                                                @click="setTheme('violet')">
+                                                {{ t('settings.theme.violet') }}
                                             </button>
                                         </div>
                                     </div>

@@ -18,12 +18,13 @@ function context() {
     } };
     return { vm, calls };
 }
-test('first-time guidance explains purpose, optional backups, activation and where to ask', () => {
+test('real-test page omits legacy group purpose, setup steps and bridge controls', () => {
     const html = readProjectFile('web-ui/partials/index/panel-routing.html');
-    assert.match(html, /routing-purpose[\s\S]*routing\.purpose[\s\S]*routing-toolbar/);
-    assert.match(html, /routing-start-steps[\s\S]*routing\.start\.create[\s\S]*routing\.start\.save[\s\S]*routing\.start\.enable[\s\S]*routing\.start\.use/);
-    assert.match(html, /<details class="routing-explainer">/);
-    assert.match(html, /v-if="routingBridges\[routingTarget\]\.active \|\| routingBindings\[routingTarget\]"[^>]*@click="toggleRoutingBridge"/);
+    assert.match(html, /routing-model-test\.html/);
+    assert.doesNotMatch(html, /routing-purpose[\s\S]*routing\.purpose[\s\S]*routing-toolbar/);
+    assert.doesNotMatch(html, /routing-start-steps[\s\S]*routing\.start\.create[\s\S]*routing\.start\.save[\s\S]*routing\.start\.enable[\s\S]*routing\.start\.use/);
+    assert.doesNotMatch(html, /<details class="routing-explainer">/);
+    assert.doesNotMatch(html, /v-if="routingBridges\[routingTarget\]\.active \|\| routingBindings\[routingTarget\]"[^>]*@click="toggleRoutingBridge"/);
     assert.ok(zh['routing.start.create'].includes('备用可选'));
     assert.ok(zh['routing.start.use'].includes('重启所选工具'));
     assert.ok(zh['routing.help.scope'].includes('不执行任务'));
@@ -41,8 +42,8 @@ test('role labels explain ordering without changing requests or stored model ass
     assert.equal(JSON.stringify(vm.routingDraft), original);
     assert.equal(calls.length, 0);
     const html = readProjectFile('web-ui/partials/index/panel-routing.html');
-    assert.match(html, /routingMemberRole\(index, routingDraft\.strategy\)/);
-    assert.match(html, /routingMemberRole\(index, group\.strategy\)/);
+    assert.doesNotMatch(html, /routingMemberRole\(index, routingDraft\.strategy\)/);
+    assert.doesNotMatch(html, /routingMemberRole\(index, group\.strategy\)/);
 });
 test('configuration status names the selected group without claiming a successful model call', () => {
     const { vm, calls } = context();

@@ -30,19 +30,16 @@ Codex Mate 是本地运行的 CLI + Web 管理工具，在一个界面查看、�
 
 </div>
 
+### 外观主题
+
+在设置中选择浅色、深色、海洋蓝或柔紫。柔紫参考 [Catppuccin Latte](https://github.com/catppuccin/palette)，使用浅底与紫色强调。主题自动保存，刷新后恢复。
+
 <a id="路由组"></a>
-### 模型分配
+### 模型测试
 
-「模型分配」（原「路由」）给 Codex 或 Claude 设置模型使用顺序：先选主力，备用可选。默认「主力优先」，主力超时、限流或服务异常时，在回复开始前尝试备用；「轮流使用」按请求轮换首选模型，不是多模型协作，也不是聊天窗口。
+Codex／Pi 子页签选择会保存，刷新后恢复。选择已有配置中的供应商与模型，手动输入问题后发送。查看 Markdown 回复、返回模型 ID 与耗时秒数。测试消耗 API 额度；不启动 CLI、不改配置、不保存测试记录。单次只发一个请求，不自动重试，不设本地响应超时，输出上限 2048 Token。支持配置中的 Responses、Chat Completions、Completions 与 Anthropic Messages；原生登录与命令式凭据暂不接入。Web 已移除模型组设置入口，已有后端分配与 OpenAI Chat API 保持原行为。详见 [Web UI 指南](https://sakurabytecore.github.io/codexmate/guide/web-ui)。
 
-新建模型组，核对供应商与模型后保存，点击「启用此组」。首次启用后重启所选工具，在工具里提问；本页不自动启动工具或执行任务。组名可以自定义，模型 ID 必须来自供应商，已有配置会自动带入。写权限入口沿用原确认，成员明细保留「仅绑定」。取消此组恢复原分配方式，不关闭连接；「恢复工具配置」沿用原接入回退。组配置保存在 `~/.codexmate/routing-groups.json`，不保存密钥。
-
-回退仅限输出前的 HTTP 408、429、5xx；其他 4xx 不切换，开始回复后不重放。只影响通过本机桥接接入的请求，不证明供应商可用。首版不含配额调度、嵌套组或请求追踪。详见[Web UI 指南](https://sakurabytecore.github.io/codexmate/guide/web-ui)。
-
-
-**OpenAI Chat 接入**：在「模型分配」选择 **OpenAI Chat**，创建组后启用。复用 Codex 配置页的供应商与写权限，无需安装 Codex，不启用或改动 Codex／Claude 连接。客户端 Base URL 用页面显示的 `/bridge/openai-chat/v1` 地址，模型 ID 固定填 `routing`；实际模型由组内规则选择。支持 `POST /chat/completions`、`GET /models`、流式回复与工具参数，不做 Responses／Messages 转换。取消组后返回 503，不使用其他目标的组。
-
-配置 `CODEXMATE_HTTP_TOKEN` 时，客户端 API Key 使用该访问令牌；此令牌也可访问管理 API。未配置时仅允许本机，客户端要求 API Key 时可填 `local`。上游密钥取已有供应商配置或其 `env_key`，不转发客户端访问令牌，不复制到组文件，不自动复用 Codex 登录凭据。
+测试请求使用 Codex UA／Originator 或 Pi 的 SDK 请求头，已有自定义 UA 优先。读取 Codex 的推理／输出配置及 Pi 模型的 Token 上限与兼容参数。无法读取客户端版本时使用带版本的 CodexMate 测试标识，不伪造客户端版本。
 
 ### 会话工作台
 

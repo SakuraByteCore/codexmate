@@ -59,3 +59,12 @@ test('web UI keeps safety boundaries, errors, states and handoff recovery semant
     assert.match(template('thread-handoff'), /复制不会自动发送。/);
     assert.doesNotMatch(template('thread-handoff'), /交代目标，让下一位代理接着做。|生成后可复制到目标会话|已完成 \/ 阻塞 \/ 步骤 \/ 文件 · 可选/);
 });
+
+test('project prompts omit the duplicate editing-path hint but retain path controls', () => {
+    const html = template('panel-prompts');
+    assert.doesNotMatch(html, /prompts\.project\.detected|project-path-detected/);
+    assert.match(html, /@change="selectProjectClaudeMdPath\(\$event\.target\.value\)"/);
+    assert.match(html, /@change="setProjectClaudeMdPathManual\(\$event\.target\.value\)"/);
+    assert.match(html, /:title="agentsPath"[\s\S]*<code>\{\{ agentsPath \}\}<\/code>/);
+    for (const locale of ['zh', 'zh-tw', 'en', 'ja', 'vi']) assert.ok(!fs.readFileSync(new URL(`../../web-ui/modules/i18n/locales/${locale}.mjs`, import.meta.url), 'utf8').includes('prompts.project.detected'), locale);
+});

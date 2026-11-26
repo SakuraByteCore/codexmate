@@ -22,15 +22,19 @@ test('routing tab uses the existing navigation, headers, tokens and compiled pan
     assert.match(html, /id="tab-routing"[\s\S]*?aria-controls="panel-routing"/);
     assert.match(html, /id="side-tab-routing"[\s\S]*?:class="\['side-item'/);
     assert.match(html, /id="panel-routing"[^>]*role="tabpanel"[^>]*aria-labelledby="tab-routing"/);
-    assert.match(html, /class="routing-toolbar"/);
-    assert.match(css, /#panel-routing \.routing-toolbar\s*\{[^}]*margin: 0 0 12px;/);
+    assert.doesNotMatch(html, /class="routing-toolbar"/);
+    assert.match(html, /class="routing-test-heading"/);
+    assert.doesNotMatch(css, /#panel-routing \.routing-toolbar\s*\{[^}]*margin: 0 0 12px;/);
+    assert.match(css, /#panel-routing \.routing-test-heading \{[^}]*margin-bottom: 16px;/);
     assert.match(css, /#panel-routing \.btn-tool\s*\{ min-height: 44px;/);
     const localCss = readProjectFile('web-ui/styles/routing.css');
     assert.doesNotMatch(localCss, /#[\da-f]{3,8}\b|box-shadow:|linear-gradient/);
-    assert.match(readProjectFile('web-ui/app.js'), /appOptions\.mixins\.push\(routingMixin\)/);
+    assert.match(readProjectFile('web-ui/app.js'), /appOptions\.mixins\.push\(modelTestMixin\)/);
     const computed = createMainTabsComputed();
     for (const method of ['mainTabTitle', 'mainTabKicker', 'mainTabSubtitle']) {
-        assert.match(computed[method].call({ mainTab: 'routing', t: key => key }), /routing/);
+        const value = computed[method].call({ mainTab: 'routing', t: key => key });
+        if (method === 'mainTabTitle') assert.match(value, /routing/);
+        else assert.equal(value, '', 'routing must not show obsolete group descriptions');
     }
 });
 test('entering routing only reads state and editing preserves the original group and revision', async () => {
@@ -81,8 +85,8 @@ test('successful binding does not enable a bridge and bound groups cannot be del
     assert.equal(vm.routingStateLabel(), 'routing.state.legacy');
 });
 
-test('routing polish preserves every existing action and uses the shared segment control', () => {
-    const html = readProjectFile('web-ui/partials/index/panel-routing.html');
+test('routing removes every group action and retains only real-test controls', () => {
+    const html = readProjectFile('web-ui/partials/index/panel-routing.html') + readProjectFile('web-ui/partials/index/routing-model-test.html');
     const events = [...html.matchAll(/(@[\w.]+)="([^"]*)"/g)].map(match => [match[1], match[2]]).sort();
     const expected = [
         ['@change', 'setRoutingMemberProvider(index)'],
@@ -97,23 +101,31 @@ test('routing polish preserves every existing action and uses the shared segment
         ['@focus', '$event.target.select()'], ['@focus', '$event.target.select()'],
         ['@submit.prevent', 'saveRoutingGroup']
     ].sort();
-    assert.deepEqual(events, expected);
-    assert.match(html, /:class="\['segment', \{ active: routingTarget === target \}\]"/);
+    for (const [event, action] of expected) assert.equal(events.some(entry => entry[0] === event && entry[1] === action), false, action);
+    assert.deepEqual(events, [
+        ['@change', 'selectModelTestProvider'], ['@click', 'loadModelTestCatalog'],
+        ['@click', 'setModelTestTarget(target)'], ['@click', 'switchConfigMode(modelTestTarget)'],
+        ['@submit.prevent', 'runModelTest']
+    ].sort());
+    assert.match(html, /:class="\['segment', \{ active: modelTestTarget === target \}\]"/);
     assert.doesNotMatch(html, /segmented-option/);
-    assert.match(html, /<details class="routing-group-details" :open="routingBindings\[routingTarget\] === group.id">/);
-    assert.match(html, /<summary>\{\{ t\('routing.memberCount'/);
+    assert.doesNotMatch(html, /<details class="routing-group-details" :open="routingBindings\[routingTarget\] === group.id">/);
+    assert.doesNotMatch(html, /<summary>\{\{ t\('routing.memberCount'/);
     for (const action of ['routing.edit', 'routing.delete', 'common.cancel']) {
-        assert.ok(html.includes(`:aria-label="t('${action}')" :title="t('${action}')"`), action);
+        assert.equal(html.includes(`:aria-label="t('${action}')" :title="t('${action}')"`), false, action);
     }
-    assert.match(html, /<fieldset :disabled="routingSaving \|\| routingLoading \|\| !isToolConfigWriteAllowed\(routingPermissionTarget\(\)\)">/);
+    assert.match(html, /<fieldset :disabled="modelTestRunning \|\| modelTestLoading">/);
+    assert.doesNotMatch(html, /<fieldset :disabled="routingSaving \|\| routingLoading \|\| !isToolConfigWriteAllowed\(routingPermissionTarget\(\)\)">/);
 });
 test('routing controls remove inherited width limits and keep layouts and focus scoped', () => {
     const css = readProjectFile('web-ui/styles/routing.css');
     assert.match(css, /#panel-routing :is\([^}]+\) > \.btn-tool\s*\{[^}]*width: auto;/);
     assert.match(css, /#panel-routing :is\(\.form-input, \.model-select\)\s*\{[^}]*max-width: none;/);
-    assert.match(css, /#panel-routing \.routing-member-actions \{ flex-wrap: nowrap;/);
+    assert.doesNotMatch(css, /#panel-routing \.routing-member-actions \{ flex-wrap: nowrap;/);
     assert.match(css, /#panel-routing :is\(\.form-input, \.model-select\)\s*\{[^}]*height: 44px; padding-block: 8px;/);
-    assert.match(css, /#panel-routing :is\(\.btn-tool, \.segment, summary\):focus-visible/);
-    assert.match(css, /@media \(max-width: 760px\)[\s\S]*#panel-routing \.routing-group-row \{ grid-template-columns: minmax\(0, 1fr\);/);
+    assert.doesNotMatch(css, /#panel-routing :is\(\.btn-tool, \.segment, summary\):focus-visible/);
+    assert.match(css, /#panel-routing :is\(\.btn-tool, \.segment\):focus-visible/);
+    assert.doesNotMatch(css, /@media \(max-width: 760px\)[\s\S]*#panel-routing \.routing-group-row \{ grid-template-columns: minmax\(0, 1fr\);/);
+    assert.match(css, /@media \(max-width: 760px\)[\s\S]*#panel-routing \.routing-form-head \{ grid-template-columns: minmax\(0, 1fr\);/);
     assert.match(css, /#panel-routing \.routing-icon-btn svg \{[^}]*width: 16px; height: 16px;/);
 });

@@ -34,17 +34,19 @@ function jsonRequest(port, pathname, payload, token = 'routing-test-token') {
 test('routing API enforces permissions, revisions, binding and live group failover in an isolated home', { timeout: 25000 }, async t => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'codexmate-routing-api-'));
     const calls = [];
+    const testRequests = [];
     const upstream = http.createServer((req, res) => {
         let text = '';
         req.on('data', chunk => { text += chunk; });
         req.on('end', () => {
             const payload = JSON.parse(text);
             calls.push(payload.model);
+            testRequests.push({ headers: req.headers, payload });
             res.setHeader('Content-Type', 'application/json');
             res.statusCode = payload.model === 'alpha-model' ? 503 : 200;
             res.end(JSON.stringify(res.statusCode === 503 ? { error: 'unavailable' }
                 : req.url === '/v1/messages' ? { id: 'msg', type: 'message', model: payload.model, role: 'assistant', content: [{ type: 'text', text: 'ok' }], usage: {} }
-                    : { id: 'resp', object: 'response', model: payload.model, output: [], status: 'completed' }));
+                    : { id: 'resp', object: 'response', model: payload.model, output: [], output_text: '真实测试回复', status: 'completed' }));
         });
     });
     const upstreamPort = await listen(upstream);
@@ -53,7 +55,7 @@ test('routing API enforces permissions, revisions, binding and live group failov
     await new Promise(resolve => reserve.close(resolve));
     fs.mkdirSync(path.join(home, '.codex'));
     const configPath = path.join(home, '.codex', 'config.toml');
-    fs.writeFileSync(configPath, `model_provider = "alpha"\nmodel = "original"\n[model_providers.alpha]\nbase_url = "http://127.0.0.1:${upstreamPort}/v1"\nexperimental_bearer_token = "test-secret-not-public"\n[model_providers.beta]\nbase_url = "http://127.0.0.1:${upstreamPort}/v1"\n`);
+    fs.writeFileSync(configPath, `model_provider = "alpha"\nmodel = "original"\n[model_providers.alpha]\nbase_url = "http://127.0.0.1:${upstreamPort}/v1"\nexperimental_bearer_token = "test-secret-not-public"\n[model_providers.beta]\nbase_url = "http://127.0.0.1:${upstreamPort}/v1"\nhttp_headers = { User-Agent = "configured-codex/1" }\nenv_http_headers = { X-Test-Route = "MOCK_MODEL_TEST_HEADER" }\n`);
     const configBefore = fs.readFileSync(configPath, 'utf8');
     fs.writeFileSync(path.join(home, '.codex/codexmate-claude-bridge.json'), JSON.stringify({ providers: {
         alpha: { baseUrl: `http://127.0.0.1:${upstreamPort}`, model: 'alpha-model', apiKey: 'test-secret-not-public', targetApi: 'responses' },
@@ -63,7 +65,7 @@ test('routing API enforces permissions, revisions, binding and live group failov
     const child = spawn(process.execPath, [path.join(project, 'cli.js'), 'run'], {
         cwd: project,
         env: { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: '', CLAUDE_HOME: '', CLAUDE_CONFIG_DIR: '', XDG_CONFIG_HOME: '', PI_HOME: '',
-            XDG_DATA_HOME: path.join(home, '.local/share'), CODEXMATE_PORT: String(port), CODEXMATE_NO_BROWSER: '1', CODEXMATE_HTTP_TOKEN: 'routing-test-token' },
+            XDG_DATA_HOME: path.join(home, '.local/share'), CODEXMATE_PORT: String(port), CODEXMATE_NO_BROWSER: '1', CODEXMATE_HTTP_TOKEN: 'routing-test-token', MOCK_MODEL_TEST_HEADER: 'env-route' },
         stdio: ['ignore', 'pipe', 'pipe']
     });
     child.stdout.pipe(output); child.stderr.pipe(output, { end: false });
@@ -123,12 +125,50 @@ test('routing API enforces permissions, revisions, binding and live group failov
     assert.equal((await api('claude-local-bridge-toggle', { enable: false })).success, true);
 
     assert.equal((await jsonRequest(port, '/api', { action: 'routing-get' }, 'wrong-token')).status, 401);
-    await api('set-web-ui-preferences', { preferences: { navigation: { mainTab: 'routing', configMode: 'codex' } } });
+    await api('set-web-ui-preferences', { preferences: { theme: '  VIOLET  ', navigation: { mainTab: 'routing', configMode: 'codex', modelTestTarget: 'pi' } } });
     assert.equal((await api('get-web-ui-preferences')).preferences.navigation.mainTab, 'routing');
+    assert.equal((await api('get-web-ui-preferences')).preferences.navigation.modelTestTarget, 'pi');
+    assert.equal((await api('get-web-ui-preferences')).preferences.theme, 'violet');
+    for (const [theme, expected] of [['ocean', 'ocean'], ['dark', 'dark'], ['light', 'light'], ['bogus', 'light']]) {
+        await api('set-web-ui-preferences', { preferences: { theme } });
+        assert.equal((await api('get-web-ui-preferences')).preferences.theme, expected);
+        assert.equal((await api('get-web-ui-preferences')).preferences.navigation.modelTestTarget, 'pi');
+    }
     state = await api('routing-bind', { target: 'codex', id: '', revision: state.revision });
     assert.equal(state.bindings.codex, '');
     state = await api('routing-delete', { id, revision: state.revision });
     assert.equal(state.groups.length, 0);
     assert.equal((await api('local-bridge-toggle', { enable: false })).success, true);
     assert.match(fs.readFileSync(configPath, 'utf8'), /model_provider = "alpha"/);
+    fs.mkdirSync(path.join(home, '.pi/agent'), { recursive: true });
+    const piPath = path.join(home, '.pi/agent/models.json');
+    fs.writeFileSync(piPath, JSON.stringify({ providers: { saved: {
+        api: 'openai-responses', baseUrl: `http://127.0.0.1:${upstreamPort}/v1`, apiKey: 'mock-pi-test-key', headers: { 'User-Agent': 'provider-pi/1' },
+        models: [{ id: 'pi-model', headers: { 'user-agent': 'model-pi/2' }, maxTokens: 512 }]
+    } } }));
+    const snapshots = [fs.readFileSync(configPath, 'utf8'), fs.readFileSync(piPath, 'utf8'), fs.readFileSync(storage, 'utf8')];
+    await api('set-tool-config-permission', { target: 'codex', allowWrite: false });
+    await api('set-tool-config-permission', { target: 'pi', allowWrite: false });
+    const catalog = await api('model-test-catalog');
+    assert.ok(catalog.catalogs.codex.some(entry => entry.name === 'beta'));
+    assert.deepEqual(catalog.catalogs.pi[0].models, ['pi-model']);
+    assert.doesNotMatch(JSON.stringify(catalog), /test-secret-not-public|mock-pi-test-key/);
+    const beforeCalls = calls.length;
+    const live = await api('model-test-run', { target: 'codex', provider: 'beta', model: 'original', prompt: '手动输入的问题' });
+    assert.equal(live.ok, true); assert.equal(live.text, '真实测试回复'); assert.ok(Number.isFinite(live.durationMs));
+    const piLive = await api('model-test-run', { target: 'pi', provider: 'saved', model: 'pi-model', prompt: 'Pi 的问题' });
+    assert.equal(piLive.ok, true); assert.equal(piLive.model, 'pi-model');
+    assert.equal(testRequests.at(-2).headers['user-agent'], 'configured-codex/1');
+    assert.equal(testRequests.at(-2).headers['x-test-route'], 'env-route');
+    assert.equal(testRequests.at(-2).headers.originator, 'codex_cli_rs');
+    assert.equal(testRequests.at(-1).headers['user-agent'], 'model-pi/2');
+    assert.equal(testRequests.at(-1).payload.max_output_tokens, 512);
+    assert.equal(testRequests.at(-1).payload.store, false);
+    assert.equal(calls.length - beforeCalls, 2, 'real tests must make one upstream call each');
+    assert.equal((await jsonRequest(port, '/api', { action: 'model-test-run' }, 'wrong-token')).status, 401);
+    assert.equal((await api('model-test-run', { target: 'pi', provider: 'saved', model: 'missing', prompt: 'no' })).ok, false);
+    assert.equal(fs.readFileSync(configPath, 'utf8'), snapshots[0]);
+    assert.equal(fs.readFileSync(piPath, 'utf8'), snapshots[1]);
+    assert.equal(fs.readFileSync(storage, 'utf8'), snapshots[2]);
+
 });

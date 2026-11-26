@@ -58,3 +58,6 @@ log.txt
 tmp/
 .gitnexus/
 
+# Local change archives; keep them on disk, outside new Git commits.
+/docs/
+

@@ -30,19 +30,16 @@ Codex Mate là công cụ CLI + Web chạy cục bộ, giúp xem, lọc và xu�
 
 </div>
 
+### Chủ đề giao diện
+
+Chọn Sáng, Tối, Đại dương hoặc Tím dịu trong phần cài đặt. Tím dịu tham khảo [Catppuccin Latte](https://github.com/catppuccin/palette), dùng nền sáng và điểm nhấn tím. Chủ đề được lưu tự động và khôi phục sau khi tải lại.
+
 <a id="nhóm-định-tuyến"></a>
-### Phân phối mô hình
+### Kiểm thử mô hình
 
-**Phân phối mô hình** chọn mô hình chính và dự phòng tùy chọn cho Codex hoặc Claude. **Ưu tiên mô hình chính** thử dự phòng khi hết thời gian, bị giới hạn hoặc lỗi dịch vụ trước khi xuất kết quả. **Dùng luân phiên** đổi mô hình ưu tiên theo yêu cầu, không gộp nhiều câu trả lời và không cung cấp cửa sổ trò chuyện.
+Lựa chọn tab Codex/Pi được lưu và khôi phục sau khi tải lại. Chọn nhà cung cấp và mô hình trong cấu hình hiện có, nhập nội dung rồi gửi. Xem câu trả lời Markdown, ID mô hình trả về và thời gian tính bằng giây. Kiểm thử tiêu thụ hạn mức API; không mở CLI, đổi cấu hình hoặc lưu lịch sử. Mỗi lần chỉ gửi một yêu cầu, không tự thử lại, không đặt thời hạn phản hồi cục bộ và giới hạn đầu ra 2048 token. Hỗ trợ Responses, Chat Completions, Completions và Anthropic Messages đã cấu hình; chưa tích hợp đăng nhập gốc hoặc khóa lấy bằng lệnh. Web không còn hiển thị cài đặt nhóm; chức năng phân phối phía máy chủ và OpenAI Chat API giữ nguyên. Xem [hướng dẫn Web UI](https://sakurabytecore.github.io/codexmate/guide/web-ui).
 
-Tạo nhóm mô hình, kiểm tra nhà cung cấp và mô hình, lưu rồi bấm **Bật nhóm này**. Lần đầu, khởi động lại công cụ đã chọn rồi hỏi tại đó. Trang này không mở công cụ hoặc chạy tác vụ. Tên nhóm tùy chọn; ID mô hình phải được nhà cung cấp hỗ trợ. Cấu hình đã có được điền sẵn. Quyền ghi giữ xác nhận hiện có; chi tiết thành viên giữ **Chỉ liên kết**. **Ngừng dùng nhóm này** khôi phục nhóm ban đầu mà không ngắt kết nối; **Khôi phục cấu hình công cụ** dùng cơ chế khôi phục kết nối hiện có. Nhóm nằm tại `~/.codexmate/routing-groups.json`, không lưu khóa.
-
-Chỉ chuyển dự phòng với HTTP 408, 429 hoặc 5xx trước khi xuất kết quả. Không phát lại lỗi 4xx khác hoặc câu trả lời đã bắt đầu. Chỉ ảnh hưởng yêu cầu qua cầu nối cục bộ; trạng thái đã bật không xác nhận nhà cung cấp hoạt động. Chưa có điều phối hạn mức, nhóm lồng nhau hoặc theo dõi yêu cầu. Xem [hướng dẫn Web UI (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/web-ui).
-
-
-**Kết nối OpenAI Chat**: chọn **OpenAI Chat** trong **Phân phối mô hình**, tạo nhóm rồi bật. Dùng nhà cung cấp Codex và quyền ghi hiện có, không cần cài Codex và không đổi kết nối Codex/Claude. Sao chép Base URL có đuôi `/bridge/openai-chat/v1`; ID mô hình là `routing`. Hỗ trợ `POST /chat/completions`, `GET /models`, truyền luồng và tham số công cụ, không chuyển đổi Responses/Messages. Bỏ liên kết trả 503, không dùng nhóm của mục tiêu khác.
-
-Nếu đặt `CODEXMATE_HTTP_TOKEN`, API Key của khách dùng mã này; mã cũng truy cập được API quản lý. Không có mã thì chỉ cho phép máy cục bộ; nhập `local` nếu khách bắt buộc API Key. Khóa bên cung cấp lấy từ cấu hình hoặc `env_key`, không lấy mã truy cập của khách và không lưu vào nhóm. Không tự dùng thông tin đăng nhập Codex.
+Yêu cầu kiểm thử dùng UA/Originator của Codex hoặc header SDK của Pi; UA đã cấu hình được ưu tiên. Đọc thiết lập suy luận/đầu ra Codex và giới hạn token, tham số tương thích của mô hình Pi. Nếu không đọc được phiên bản khách đã cài, yêu cầu dùng định danh kiểm thử CodexMate có phiên bản, không giả tạo phiên bản khách.
 
 ### Không gian làm việc phiên
 
