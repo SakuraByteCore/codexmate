@@ -111,6 +111,7 @@ function instantiateFunction(funcSource, funcName, bindings = {}) {
     if (funcName === 'createWebServer') bindings = {
         createWebServerLifecycle: require('../../lib/web-server.js').createWebServerLifecycle,
         CONFIG_CHANGE_READERS: {},
+        routingBridgeHandler: () => false,
         configChanges: { isBusy: () => false },
         ...bindings,
         createStartupAuth: token => ({ token: token || 'unit-startup-token', middleware: (_req, _res, next) => next() }) };

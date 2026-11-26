@@ -87,6 +87,18 @@ return function render(_ctx, _cache) {
           }, _toDisplayString(_ctx.t('tab.config')), 43 /* TEXT, CLASS, PROPS, NEED_HYDRATION */, ["data-config-mode", "tabindex", "aria-selected", "aria-controls", "onPointerdown", "onClick"]),
           _createElementVNode("button", {
             type: "button",
+            class: _normalizeClass(["top-tab", { active: _ctx.isMainTabNavActive('routing') }]),
+            id: "tab-routing",
+            role: "tab",
+            "data-main-tab": "routing",
+            tabindex: _ctx.mainTab === 'routing' ? 0 : -1,
+            "aria-selected": _ctx.mainTab === 'routing',
+            "aria-controls": "panel-routing",
+            onPointerdown: $event => (_ctx.onMainTabPointerDown('routing', $event)),
+            onClick: $event => (_ctx.onMainTabClick('routing', $event))
+          }, _toDisplayString(_ctx.t('tab.routing')), 43 /* TEXT, CLASS, PROPS, NEED_HYDRATION */, ["tabindex", "aria-selected", "onPointerdown", "onClick"]),
+          _createElementVNode("button", {
+            type: "button",
             class: _normalizeClass(["top-tab", { active: _ctx.isMainTabNavActive('sessions') }]),
             id: "tab-sessions",
             role: "tab",
@@ -383,6 +395,16 @@ return function render(_ctx, _cache) {
                 "aria-label": _ctx.t('side.workspace')
               }, [
                 _createElementVNode("div", { class: "side-section-title" }, _toDisplayString(_ctx.t('side.workspace')), 1 /* TEXT */),
+                _createElementVNode("button", {
+                  id: "side-tab-routing",
+                  "data-main-tab": "routing",
+                  "aria-current": _ctx.mainTab === 'routing' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isMainTabNavActive('routing') }]),
+                  onPointerdown: $event => (_ctx.onMainTabPointerDown('routing', $event)),
+                  onClick: $event => (_ctx.onMainTabClick('routing', $event))
+                }, [
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('tab.routing')), 1 /* TEXT */)
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
                 _createElementVNode("button", {
                   id: "side-tab-sessions",
                   "data-main-tab": "sessions",
@@ -4244,6 +4266,459 @@ return function render(_ctx, _cache) {
                 ])
               ], 8 /* PROPS */, ["onClick"]))
             : _createCommentVNode("v-if", true),
+          _withDirectives(_createElementVNode("section", {
+            id: "panel-routing",
+            class: "mode-content",
+            role: "tabpanel",
+            "aria-labelledby": "tab-routing"
+          }, [
+            _createElementVNode("p", { class: "routing-purpose" }, _toDisplayString(_ctx.t(_ctx.routingTarget === 'openai-chat' ? 'routing.openai.purpose' : 'routing.purpose', { agent: _ctx.routingTargetName() })), 1 /* TEXT */),
+            _createElementVNode("details", { class: "routing-explainer" }, [
+              _createElementVNode("summary", null, _toDisplayString(_ctx.t('routing.help.title')), 1 /* TEXT */),
+              _createElementVNode("div", { class: "routing-explainer-body" }, [
+                _createElementVNode("p", null, _toDisplayString(_ctx.t('routing.help.scope')), 1 /* TEXT */),
+                _createElementVNode("p", null, _toDisplayString(_ctx.t('routing.help.errors')), 1 /* TEXT */),
+                _createElementVNode("p", null, _toDisplayString(_ctx.t('routing.help.model')), 1 /* TEXT */)
+              ])
+            ]),
+            _createElementVNode("div", { class: "routing-toolbar" }, [
+              _createElementVNode("div", {
+                class: "segmented-control",
+                role: "group",
+                "aria-label": _ctx.t('routing.target')
+              }, [
+                (_openBlock(), _createElementBlock(_Fragment, null, _renderList(['codex', 'claude', 'openai-chat'], (target) => {
+                  return _createElementVNode("button", {
+                    key: target,
+                    type: "button",
+                    class: _normalizeClass(['segment', { active: _ctx.routingTarget === target }]),
+                    "aria-pressed": _ctx.routingTarget === target,
+                    disabled: !!_ctx.routingDraft || _ctx.routingSaving,
+                    onClick: $event => (_ctx.setRoutingTarget(target))
+                  }, _toDisplayString(_ctx.routingTargetName(target)), 11 /* TEXT, CLASS, PROPS */, ["aria-pressed", "disabled", "onClick"])
+                }), 64 /* STABLE_FRAGMENT */))
+              ], 8 /* PROPS */, ["aria-label"]),
+              _createElementVNode("div", { class: "routing-toolbar-actions" }, [
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "btn-tool",
+                  disabled: _ctx.routingLoading || _ctx.routingSaving,
+                  onClick: _ctx.loadRouting
+                }, _toDisplayString(_ctx.t('routing.refresh')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "btn-tool btn-primary",
+                  disabled: !_ctx.routingLoaded || _ctx.routingLoading || _ctx.routingSaving || !!_ctx.routingDraft || !_ctx.routingCatalog().length || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()),
+                  onClick: $event => (_ctx.editRoutingGroup())
+                }, _toDisplayString(_ctx.t('routing.create')), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+              ])
+            ]),
+            (_ctx.routingError)
+              ? (_openBlock(), _createElementBlock("p", {
+                  key: 0,
+                  class: "routing-error",
+                  role: "alert"
+                }, _toDisplayString(_ctx.routingError), 1 /* TEXT */))
+              : _createCommentVNode("v-if", true),
+            (_ctx.routingLoading && !_ctx.routingLoaded)
+              ? (_openBlock(), _createElementBlock("p", {
+                  key: 1,
+                  class: "routing-empty",
+                  role: "status"
+                }, _toDisplayString(_ctx.t('routing.loading')), 1 /* TEXT */))
+              : _createCommentVNode("v-if", true),
+            (_ctx.routingLoaded)
+              ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
+                  _createElementVNode("div", { class: "routing-status-row" }, [
+                    _createElementVNode("div", { class: "routing-status-copy" }, [
+                      _createElementVNode("span", {
+                        class: _normalizeClass(['routing-state', { 'is-active': _ctx.routingBridges[_ctx.routingTarget].active }])
+                      }, _toDisplayString(_ctx.routingStateLabel()), 3 /* TEXT, CLASS */),
+                      _createElementVNode("p", { class: "routing-hint" }, _toDisplayString(_ctx.t(_ctx.routingTarget === 'openai-chat' ? 'routing.openai.bindingHint' : 'routing.bindingHint')), 1 /* TEXT */)
+                    ]),
+                    (_ctx.routingBridges[_ctx.routingTarget].active || _ctx.routingBindings[_ctx.routingTarget])
+                      ? (_openBlock(), _createElementBlock("button", {
+                          key: 0,
+                          type: "button",
+                          class: "btn-tool",
+                          disabled: _ctx.routingSaving || _ctx.routingLoading || !!_ctx.routingDraft || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()),
+                          onClick: _ctx.toggleRoutingBridge
+                        }, _toDisplayString(_ctx.t(_ctx.routingTarget === 'openai-chat' ? 'routing.openai.disable' : _ctx.routingBridges[_ctx.routingTarget].active ? 'routing.bridge.disable' : 'routing.bridge.enable')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]))
+                      : _createCommentVNode("v-if", true)
+                  ]),
+                  (!_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()))
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "routing-access"
+                      }, [
+                        _createElementVNode("p", { class: "routing-hint" }, _toDisplayString(_ctx.t(_ctx.routingTarget === 'openai-chat' ? 'routing.openai.permission' : 'routing.readOnly')), 1 /* TEXT */),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool",
+                          disabled: _ctx.toolConfigPermissionSaving[_ctx.routingPermissionTarget()] || _ctx.routingSaving || _ctx.routingLoading,
+                          onClick: $event => (_ctx.setToolConfigPermission(_ctx.routingPermissionTarget(), true))
+                        }, _toDisplayString(_ctx.t('toolConfig.enableWrite')), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  (!_ctx.routingCatalog().length)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 1,
+                        class: "routing-empty routing-provider-notice"
+                      }, [
+                        _createElementVNode("p", null, _toDisplayString(_ctx.t('routing.noProviders')), 1 /* TEXT */),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool",
+                          onClick: $event => (_ctx.switchConfigMode(_ctx.routingPermissionTarget()))
+                        }, _toDisplayString(_ctx.t('routing.openConfig')), 9 /* TEXT, PROPS */, ["onClick"])
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.routingTarget === 'openai-chat')
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 2,
+                        class: "routing-api-access"
+                      }, [
+                        _createElementVNode("p", { class: "routing-hint" }, _toDisplayString(_ctx.t('routing.openai.providers')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "routing-api-fields" }, [
+                          _createElementVNode("label", { class: "routing-field" }, [
+                            _createElementVNode("span", { class: "form-label" }, _toDisplayString(_ctx.t('routing.openai.baseUrl')), 1 /* TEXT */),
+                            _createElementVNode("input", {
+                              class: "form-input",
+                              readonly: "",
+                              value: _ctx.routingOpenaiBaseUrl(),
+                              onFocus: $event => ($event.target.select())
+                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onFocus"])
+                          ]),
+                          _createElementVNode("label", { class: "routing-field" }, [
+                            _createElementVNode("span", { class: "form-label" }, _toDisplayString(_ctx.t('routing.openai.model')), 1 /* TEXT */),
+                            _createElementVNode("input", {
+                              class: "form-input",
+                              readonly: "",
+                              value: _ctx.routingOpenaiAccess.model,
+                              onFocus: $event => ($event.target.select())
+                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onFocus"])
+                          ])
+                        ]),
+                        _createElementVNode("p", { class: "routing-hint" }, _toDisplayString(_ctx.t(_ctx.routingOpenaiAccess.requiresToken ? 'routing.openai.auth' : 'routing.openai.localOnly')), 1 /* TEXT */),
+                        _createElementVNode("p", { class: "routing-hint" }, _toDisplayString(_ctx.t('routing.openai.alias')), 1 /* TEXT */)
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  (_ctx.routingDraft)
+                    ? (_openBlock(), _createElementBlock("form", {
+                        key: 3,
+                        class: "routing-editor",
+                        novalidate: "",
+                        onSubmit: _withModifiers(_ctx.saveRoutingGroup, ["prevent"])
+                      }, [
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool routing-icon-btn routing-editor-close",
+                          disabled: _ctx.routingSaving,
+                          "aria-label": _ctx.t('common.cancel'),
+                          title: _ctx.t('common.cancel'),
+                          onClick: _ctx.cancelRoutingEdit
+                        }, [
+                          (_openBlock(), _createElementBlock("svg", {
+                            viewBox: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "1.75",
+                            focusable: "false"
+                          }, [
+                            _createElementVNode("path", { d: "m6 6 12 12M18 6 6 18" })
+                          ]))
+                        ], 8 /* PROPS */, ["disabled", "aria-label", "title", "onClick"]),
+                        _createElementVNode("fieldset", {
+                          disabled: _ctx.routingSaving || _ctx.routingLoading || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget())
+                        }, [
+                          _createElementVNode("legend", null, _toDisplayString(_ctx.t(_ctx.routingDraft.id ? 'routing.edit' : 'routing.create')), 1 /* TEXT */),
+                          (_ctx.routingDraft.id && _ctx.routingBindings[_ctx.routingTarget] === _ctx.routingDraft.id && _ctx.routingBridges[_ctx.routingTarget].active)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 0,
+                                class: "routing-hint routing-edit-warning"
+                              }, _toDisplayString(_ctx.t('routing.editActive')), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          _createElementVNode("div", { class: "routing-form-head" }, [
+                            _createElementVNode("label", { class: "routing-field" }, [
+                              _createElementVNode("span", { class: "form-label" }, _toDisplayString(_ctx.t('routing.name')), 1 /* TEXT */),
+                              _withDirectives(_createElementVNode("input", {
+                                ref: "routingNameInput",
+                                class: "form-input",
+                                "onUpdate:modelValue": $event => ((_ctx.routingDraft.name) = $event),
+                                required: "",
+                                maxlength: "128",
+                                autocomplete: "off"
+                              }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                [
+                                  _vModelText,
+                                  _ctx.routingDraft.name,
+                                  void 0,
+                                  { trim: true }
+                                ]
+                              ])
+                            ]),
+                            _createElementVNode("label", { class: "routing-field" }, [
+                              _createElementVNode("span", { class: "form-label" }, _toDisplayString(_ctx.t('routing.strategy')), 1 /* TEXT */),
+                              _withDirectives(_createElementVNode("select", {
+                                class: "model-select",
+                                "onUpdate:modelValue": $event => ((_ctx.routingDraft.strategy) = $event)
+                              }, [
+                                _createElementVNode("option", { value: "order" }, _toDisplayString(_ctx.t('routing.strategy.order')), 1 /* TEXT */),
+                                _createElementVNode("option", { value: "rotate" }, _toDisplayString(_ctx.t('routing.strategy.rotate')), 1 /* TEXT */)
+                              ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                [_vModelSelect, _ctx.routingDraft.strategy]
+                              ])
+                            ])
+                          ]),
+                          _createElementVNode("p", { class: "routing-hint" }, _toDisplayString(_ctx.t('routing.strategy.' + _ctx.routingDraft.strategy + '.hint')), 1 /* TEXT */),
+                          _createElementVNode("ol", { class: "routing-members" }, [
+                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.routingDraft.members, (member, index) => {
+                              return (_openBlock(), _createElementBlock("li", {
+                                key: index,
+                                class: "routing-member"
+                              }, [
+                                _createElementVNode("span", { class: "routing-member-number" }, [
+                                  _createElementVNode("span", null, _toDisplayString(index + 1), 1 /* TEXT */),
+                                  _createElementVNode("span", { class: "routing-member-role" }, _toDisplayString(_ctx.routingMemberRole(index, _ctx.routingDraft.strategy)), 1 /* TEXT */)
+                                ]),
+                                _createElementVNode("label", { class: "routing-field" }, [
+                                  _createElementVNode("span", { class: "form-label" }, _toDisplayString(_ctx.t('routing.provider')), 1 /* TEXT */),
+                                  _withDirectives(_createElementVNode("select", {
+                                    class: "model-select",
+                                    "onUpdate:modelValue": $event => ((member.provider) = $event),
+                                    required: "",
+                                    onChange: $event => (_ctx.setRoutingMemberProvider(index))
+                                  }, [
+                                    _createElementVNode("option", {
+                                      value: "",
+                                      disabled: ""
+                                    }, _toDisplayString(_ctx.t('routing.selectProvider')), 1 /* TEXT */),
+                                    (member.provider && !_ctx.routingCatalog().some(entry => entry.name === member.provider))
+                                      ? (_openBlock(), _createElementBlock("option", {
+                                          key: 0,
+                                          value: member.provider
+                                        }, _toDisplayString(member.provider) + " · " + _toDisplayString(_ctx.t('routing.unavailable')), 9 /* TEXT, PROPS */, ["value"]))
+                                      : _createCommentVNode("v-if", true),
+                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.routingCatalog(), (entry) => {
+                                      return (_openBlock(), _createElementBlock("option", {
+                                        key: entry.name,
+                                        value: entry.name
+                                      }, _toDisplayString(entry.name), 9 /* TEXT, PROPS */, ["value"]))
+                                    }), 128 /* KEYED_FRAGMENT */))
+                                  ], 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onChange"]), [
+                                    [_vModelSelect, member.provider]
+                                  ])
+                                ]),
+                                _createElementVNode("label", { class: "routing-field" }, [
+                                  _createElementVNode("span", { class: "form-label" }, _toDisplayString(_ctx.t('routing.model')), 1 /* TEXT */),
+                                  _withDirectives(_createElementVNode("input", {
+                                    class: "form-input",
+                                    "onUpdate:modelValue": $event => ((member.model) = $event),
+                                    required: "",
+                                    maxlength: "256",
+                                    autocomplete: "off",
+                                    placeholder: _ctx.t('routing.modelHint')
+                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                                    [
+                                      _vModelText,
+                                      member.model,
+                                      void 0,
+                                      { trim: true }
+                                    ]
+                                  ])
+                                ]),
+                                _createElementVNode("div", { class: "routing-member-actions" }, [
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-tool routing-icon-btn",
+                                    disabled: index === 0,
+                                    "aria-label": _ctx.t('routing.moveUp'),
+                                    title: _ctx.t('routing.moveUp'),
+                                    onClick: $event => (_ctx.moveRoutingMember(index, -1))
+                                  }, [
+                                    (_openBlock(), _createElementBlock("svg", {
+                                      viewBox: "0 0 24 24",
+                                      fill: "none",
+                                      stroke: "currentColor",
+                                      "stroke-width": "1.75",
+                                      focusable: "false"
+                                    }, [
+                                      _createElementVNode("path", { d: "m6 14 6-6 6 6" })
+                                    ]))
+                                  ], 8 /* PROPS */, ["disabled", "aria-label", "title", "onClick"]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-tool routing-icon-btn",
+                                    disabled: index === _ctx.routingDraft.members.length - 1,
+                                    "aria-label": _ctx.t('routing.moveDown'),
+                                    title: _ctx.t('routing.moveDown'),
+                                    onClick: $event => (_ctx.moveRoutingMember(index, 1))
+                                  }, [
+                                    (_openBlock(), _createElementBlock("svg", {
+                                      viewBox: "0 0 24 24",
+                                      fill: "none",
+                                      stroke: "currentColor",
+                                      "stroke-width": "1.75",
+                                      focusable: "false"
+                                    }, [
+                                      _createElementVNode("path", { d: "m6 10 6 6 6-6" })
+                                    ]))
+                                  ], 8 /* PROPS */, ["disabled", "aria-label", "title", "onClick"]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-tool routing-icon-btn",
+                                    disabled: _ctx.routingDraft.members.length === 1,
+                                    "aria-label": _ctx.t('routing.removeMember'),
+                                    title: _ctx.t('routing.removeMember'),
+                                    onClick: $event => (_ctx.routingDraft.members.splice(index, 1))
+                                  }, [
+                                    (_openBlock(), _createElementBlock("svg", {
+                                      viewBox: "0 0 24 24",
+                                      fill: "none",
+                                      stroke: "currentColor",
+                                      "stroke-width": "1.75",
+                                      focusable: "false"
+                                    }, [
+                                      _createElementVNode("path", { d: "m6 6 12 12M18 6 6 18" })
+                                    ]))
+                                  ], 8 /* PROPS */, ["disabled", "aria-label", "title", "onClick"])
+                                ])
+                              ]))
+                            }), 128 /* KEYED_FRAGMENT */))
+                          ]),
+                          _createElementVNode("div", { class: "routing-editor-actions" }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool",
+                              disabled: _ctx.routingDraft.members.length >= 16,
+                              onClick: _ctx.addRoutingMember
+                            }, _toDisplayString(_ctx.t('routing.addMember')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                            _createElementVNode("button", {
+                              type: "submit",
+                              class: "btn-tool btn-primary"
+                            }, _toDisplayString(_ctx.t(_ctx.routingSaving ? 'routing.working' : 'routing.save')), 1 /* TEXT */)
+                          ])
+                        ], 8 /* PROPS */, ["disabled"])
+                      ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]))
+                    : _createCommentVNode("v-if", true),
+                  (!_ctx.routingGroupsForTarget().length && !_ctx.routingDraft && _ctx.routingCatalog().length)
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 4,
+                        class: "routing-empty"
+                      }, [
+                        _createElementVNode("p", null, _toDisplayString(_ctx.t('routing.empty')), 1 /* TEXT */),
+                        _createElementVNode("ol", { class: "routing-start-steps" }, [
+                          _createElementVNode("li", null, _toDisplayString(_ctx.t('routing.start.create')), 1 /* TEXT */),
+                          _createElementVNode("li", null, _toDisplayString(_ctx.t('routing.start.save')), 1 /* TEXT */),
+                          _createElementVNode("li", null, _toDisplayString(_ctx.t('routing.start.enable')), 1 /* TEXT */),
+                          _createElementVNode("li", null, _toDisplayString(_ctx.t(_ctx.routingTarget === 'openai-chat' ? 'routing.openai.use' : 'routing.start.use')), 1 /* TEXT */)
+                        ])
+                      ]))
+                    : _createCommentVNode("v-if", true),
+                  _createElementVNode("ul", { class: "routing-groups" }, [
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.routingGroupsForTarget(), (group) => {
+                      return (_openBlock(), _createElementBlock("li", {
+                        key: group.id,
+                        class: "routing-group-row"
+                      }, [
+                        _createElementVNode("div", { class: "routing-group-copy" }, [
+                          _createElementVNode("div", { class: "routing-group-title" }, [
+                            _createElementVNode("strong", null, _toDisplayString(group.name), 1 /* TEXT */),
+                            (_ctx.routingBindings[_ctx.routingTarget] === group.id)
+                              ? (_openBlock(), _createElementBlock("span", {
+                                  key: 0,
+                                  class: "routing-bound"
+                                }, _toDisplayString(_ctx.t(_ctx.routingBridges[_ctx.routingTarget].active ? 'routing.inUse' : 'routing.awaitingEnable')), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true)
+                          ]),
+                          _createElementVNode("span", { class: "routing-group-meta" }, _toDisplayString(_ctx.t('routing.strategy.' + group.strategy)), 1 /* TEXT */),
+                          _createElementVNode("details", {
+                            class: "routing-group-details",
+                            open: _ctx.routingBindings[_ctx.routingTarget] === group.id
+                          }, [
+                            _createElementVNode("summary", null, _toDisplayString(_ctx.t('routing.memberCount', { count: group.members.length })), 1 /* TEXT */),
+                            _createElementVNode("ol", { class: "routing-group-path" }, [
+                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(group.members, (member, index) => {
+                                return (_openBlock(), _createElementBlock("li", { key: index }, [
+                                  _createElementVNode("span", { class: "routing-member-role" }, _toDisplayString(_ctx.routingMemberRole(index, group.strategy)), 1 /* TEXT */),
+                                  _createTextVNode(" " + _toDisplayString(member.provider) + " / " + _toDisplayString(member.model), 1 /* TEXT */),
+                                  (!_ctx.routingCatalog().some(entry => entry.name === member.provider))
+                                    ? (_openBlock(), _createElementBlock("span", {
+                                        key: 0,
+                                        class: "routing-hint"
+                                      }, " · " + _toDisplayString(_ctx.t('routing.unavailable')), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true)
+                                ]))
+                              }), 128 /* KEYED_FRAGMENT */))
+                            ]),
+                            (_ctx.routingTarget !== 'openai-chat')
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 0,
+                                  class: "routing-secondary-actions"
+                                }, [
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-tool",
+                                    disabled: _ctx.routingSaving || _ctx.routingLoading || !!_ctx.routingDraft || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()),
+                                    onClick: $event => (_ctx.bindRoutingGroup(_ctx.routingBindings[_ctx.routingTarget] === group.id ? '' : group.id))
+                                  }, _toDisplayString(_ctx.t(_ctx.routingBindings[_ctx.routingTarget] === group.id ? 'routing.unbind' : 'routing.bind')), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+                                ]))
+                              : _createCommentVNode("v-if", true)
+                          ], 8 /* PROPS */, ["open"])
+                        ]),
+                        _createElementVNode("div", { class: "routing-group-actions" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: _normalizeClass(['btn-tool', { 'btn-primary': _ctx.routingBindings[_ctx.routingTarget] !== group.id || !_ctx.routingBridges[_ctx.routingTarget].active }]),
+                            disabled: _ctx.routingSaving || _ctx.routingLoading || !!_ctx.routingDraft || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()),
+                            "aria-busy": _ctx.routingSaving && _ctx.routingPendingGroupId === group.id,
+                            onClick: $event => (_ctx.useRoutingGroup(group))
+                          }, _toDisplayString(_ctx.t(_ctx.routingSaving && _ctx.routingPendingGroupId === group.id ? 'routing.working' : (_ctx.routingBindings[_ctx.routingTarget] === group.id && _ctx.routingBridges[_ctx.routingTarget].active ? 'routing.restorePool' : (_ctx.routingBridges[_ctx.routingTarget].active ? 'routing.useGroup' : 'routing.bindEnable')))), 11 /* TEXT, CLASS, PROPS */, ["disabled", "aria-busy", "onClick"]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool routing-icon-btn",
+                            disabled: _ctx.routingSaving || _ctx.routingLoading || !!_ctx.routingDraft || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()),
+                            "aria-label": _ctx.t('routing.edit'),
+                            title: _ctx.t('routing.edit'),
+                            onClick: $event => (_ctx.editRoutingGroup(group))
+                          }, [
+                            (_openBlock(), _createElementBlock("svg", {
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "1.75",
+                              focusable: "false"
+                            }, [
+                              _createElementVNode("path", { d: "m15 5 4 4M4 20l4-1L20 7l-4-4L4 15z" })
+                            ]))
+                          ], 8 /* PROPS */, ["disabled", "aria-label", "title", "onClick"]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool routing-icon-btn routing-delete",
+                            disabled: _ctx.routingSaving || _ctx.routingLoading || !!_ctx.routingDraft || _ctx.routingBindings[_ctx.routingTarget] === group.id || !_ctx.isToolConfigWriteAllowed(_ctx.routingPermissionTarget()),
+                            "aria-label": _ctx.t('routing.delete'),
+                            title: _ctx.t('routing.delete'),
+                            onClick: $event => (_ctx.deleteRoutingGroup(group))
+                          }, [
+                            (_openBlock(), _createElementBlock("svg", {
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "1.75",
+                              focusable: "false"
+                            }, [
+                              _createElementVNode("path", { d: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7M14 10v7" })
+                            ]))
+                          ], 8 /* PROPS */, ["disabled", "aria-label", "title", "onClick"])
+                        ])
+                      ]))
+                    }), 128 /* KEYED_FRAGMENT */))
+                  ])
+                ], 64 /* STABLE_FRAGMENT */))
+              : _createCommentVNode("v-if", true)
+          ], 512 /* NEED_PATCH */), [
+            [_vShow, _ctx.mainTab === 'routing']
+          ]),
           _createCommentVNode(" 会话浏览模式 "),
           _withDirectives(_createElementVNode("div", {
             class: "mode-content session-browser-refined",

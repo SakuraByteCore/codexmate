@@ -30,6 +30,20 @@ Codex Mate là công cụ CLI + Web chạy cục bộ, giúp xem, lọc và xu�
 
 </div>
 
+<a id="nhóm-định-tuyến"></a>
+### Phân phối mô hình
+
+**Phân phối mô hình** chọn mô hình chính và dự phòng tùy chọn cho Codex hoặc Claude. **Ưu tiên mô hình chính** thử dự phòng khi hết thời gian, bị giới hạn hoặc lỗi dịch vụ trước khi xuất kết quả. **Dùng luân phiên** đổi mô hình ưu tiên theo yêu cầu, không gộp nhiều câu trả lời và không cung cấp cửa sổ trò chuyện.
+
+Tạo nhóm mô hình, kiểm tra nhà cung cấp và mô hình, lưu rồi bấm **Bật nhóm này**. Lần đầu, khởi động lại công cụ đã chọn rồi hỏi tại đó. Trang này không mở công cụ hoặc chạy tác vụ. Tên nhóm tùy chọn; ID mô hình phải được nhà cung cấp hỗ trợ. Cấu hình đã có được điền sẵn. Quyền ghi giữ xác nhận hiện có; chi tiết thành viên giữ **Chỉ liên kết**. **Ngừng dùng nhóm này** khôi phục nhóm ban đầu mà không ngắt kết nối; **Khôi phục cấu hình công cụ** dùng cơ chế khôi phục kết nối hiện có. Nhóm nằm tại `~/.codexmate/routing-groups.json`, không lưu khóa.
+
+Chỉ chuyển dự phòng với HTTP 408, 429 hoặc 5xx trước khi xuất kết quả. Không phát lại lỗi 4xx khác hoặc câu trả lời đã bắt đầu. Chỉ ảnh hưởng yêu cầu qua cầu nối cục bộ; trạng thái đã bật không xác nhận nhà cung cấp hoạt động. Chưa có điều phối hạn mức, nhóm lồng nhau hoặc theo dõi yêu cầu. Xem [hướng dẫn Web UI (tiếng Trung)](https://sakurabytecore.github.io/codexmate/guide/web-ui).
+
+
+**Kết nối OpenAI Chat**: chọn **OpenAI Chat** trong **Phân phối mô hình**, tạo nhóm rồi bật. Dùng nhà cung cấp Codex và quyền ghi hiện có, không cần cài Codex và không đổi kết nối Codex/Claude. Sao chép Base URL có đuôi `/bridge/openai-chat/v1`; ID mô hình là `routing`. Hỗ trợ `POST /chat/completions`, `GET /models`, truyền luồng và tham số công cụ, không chuyển đổi Responses/Messages. Bỏ liên kết trả 503, không dùng nhóm của mục tiêu khác.
+
+Nếu đặt `CODEXMATE_HTTP_TOKEN`, API Key của khách dùng mã này; mã cũng truy cập được API quản lý. Không có mã thì chỉ cho phép máy cục bộ; nhập `local` nếu khách bắt buộc API Key. Khóa bên cung cấp lấy từ cấu hình hoặc `env_key`, không lấy mã truy cập của khách và không lưu vào nhóm. Không tự dùng thông tin đăng nhập Codex.
+
 ### Không gian làm việc phiên
 
 Trang phiên bổ sung dấu trang tin nhắn với ghi chú và nhãn, chỉ mục toàn văn cục bộ cập nhật tăng dần, bản nháp bàn giao có bằng chứng, không gian dự án chỉ đọc và tham chiếu cửa sổ mô hình. Dấu trang không sửa phiên gốc. Chỉ mục chỉ bao gồm phiên đã phát hiện; cần cập nhật để tìm tin nhắn mới. Tỷ lệ văn bản lịch sử không phải mức sử dụng thực tế của yêu cầu. Cài đặt cung cấp chẩn đoán cục bộ và xuất JSON/Markdown đã ẩn bí mật. Chỉ mục kiểm tra được chọn mới truy cập tuyến Codex hiện tại hoặc khởi động MCP; không gọi công cụ ghi. Xem [hướng dẫn phiên](https://sakurabytecore.github.io/codexmate/guide/sessions).

@@ -7,6 +7,7 @@
     const MAIN_TAB_ORDER = [
         'dashboard',
         'config',
+        'routing',
         'sessions',
         'usage',
         'market',

@@ -1,3 +1,4 @@
+import { routingMixin } from './modules/routing.mjs';
 import { configChangeMixin } from './modules/app.methods.config-changes.mjs';
 import { threadHandoffMixin } from './modules/thread-handoff.mjs';
 import { sessionFeaturesMixin } from './modules/session-features.mjs';
@@ -687,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.agentsModalHint = this.t('modal.agents.hint');
             }
             {
-                const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
+                const mainTabSet = new Set(['dashboard', 'config', 'routing', 'sessions', 'usage', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
                 let urlMainTab = '';
                 try {
                     const url = new URL(window.location.href);
@@ -965,6 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appOptions.render = window.__CODEXMATE_WEB_UI_RENDER__;
     }
 
+    appOptions.mixins.push(routingMixin);
     appOptions.mixins.push(sessionFeaturesMixin);
     const app = createApp(appOptions);
     app.config.errorHandler = (err, vm, info) => {

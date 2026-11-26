@@ -47,6 +47,16 @@
                 @pointerdown="onMainTabPointerDown('config', $event)"
                 @click="onMainTabClick('config', $event)">{{ t('tab.config') }}</button>
             <button type="button" class="top-tab"
+                id="tab-routing"
+                role="tab"
+                data-main-tab="routing"
+                :tabindex="mainTab === 'routing' ? 0 : -1"
+                :aria-selected="mainTab === 'routing'"
+                aria-controls="panel-routing"
+                :class="{ active: isMainTabNavActive('routing') }"
+                @pointerdown="onMainTabPointerDown('routing', $event)"
+                @click="onMainTabClick('routing', $event)">{{ t('tab.routing') }}</button>
+            <button type="button" class="top-tab"
                 id="tab-sessions"
                 role="tab"
                 data-main-tab="sessions"
@@ -258,6 +268,15 @@
 
                 <div class="side-section" role="navigation" :aria-label="t('side.workspace')">
                     <div class="side-section-title">{{ t('side.workspace') }}</div>
+                    <button
+                        id="side-tab-routing"
+                        data-main-tab="routing"
+                        :aria-current="mainTab === 'routing' ? 'page' : null"
+                        :class="['side-item', { active: isMainTabNavActive('routing') }]"
+                        @pointerdown="onMainTabPointerDown('routing', $event)"
+                        @click="onMainTabClick('routing', $event)">
+                        <div class="side-item-title">{{ t('tab.routing') }}</div>
+                    </button>
                     <button
                         id="side-tab-sessions"
                         data-main-tab="sessions"

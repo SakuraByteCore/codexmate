@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+const { createRoutingGroups, OPENAI_CHAT_TARGET } = require('./lib/routing-groups');
+const { createRoutingBridgeHttpHandler, OPENAI_CHAT_BASE_PATH, OPENAI_CHAT_MODEL } = require('./cli/routing-bridge');
+const { createOpenaiChatRoutingHandler } = require('./cli/openai-chat-routing');
 const { fs, isConfigStaging, stageConfigWrites } = require('./lib/config-change-fs');
 const { createConfigChanges } = require('./lib/config-changes');
 const path = require('path');
@@ -123,7 +126,7 @@ const {
     resolveOpenaiBridgeUpstream
 } = require('./cli/openai-bridge');
 const {
-    createLocalBridgeHttpHandler
+    createLocalBridgeHttpHandler, buildUpstreamPool, buildClaudeUpstreamPool
 } = require('./cli/local-bridge');
 const {
     createOpenclawConfigController
@@ -439,6 +442,85 @@ const localBridgeHandler = createLocalBridgeHttpHandler({
     httpAgent: HTTP_KEEP_ALIVE_AGENT,
     httpsAgent: HTTPS_KEEP_ALIVE_AGENT
 });
+
+
+const routingGroups = createRoutingGroups({
+    filePath: path.join(CODEXMATE_DIR, 'routing-groups.json'),
+    assertAllowed: target => assertToolConfigWriteAllowed(target === OPENAI_CHAT_TARGET ? 'codex' : target),
+    catalog: getRoutingCatalog
+});
+const routingBridgeHandler = createRoutingBridgeHttpHandler({
+    groups: routingGroups,
+    maxBodySize: MAX_API_BODY_SIZE,
+    expectedToken: typeof process.env.CODEXMATE_HTTP_TOKEN === 'string' ? process.env.CODEXMATE_HTTP_TOKEN.trim() : '',
+    createHandler(target, member) {
+        if (target === OPENAI_CHAT_TARGET) {
+            const provider = readConfig().model_providers[member.name];
+            const settings = readOpenaiBridgeSettings(OPENAI_BRIDGE_SETTINGS_FILE);
+            const upstream = settings.providers && settings.providers[member.name];
+            const normalized = resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, member.name);
+            const configuredKey = !normalized.error && normalized.apiKey || upstream && upstream.apiKey || provider.experimental_bearer_token
+                || (provider.env_key ? process.env[provider.env_key] : '');
+            const key = typeof configuredKey === 'string' ? configuredKey.trim() : '';
+            return createOpenaiChatRoutingHandler({
+                member, authorization: key ? (key.startsWith('Bearer ') ? key : `Bearer ${key}`) : '',
+                upstreamHeaders: normalized.error ? undefined : normalized.headers,
+                httpAgent: HTTP_KEEP_ALIVE_AGENT, httpsAgent: HTTPS_KEEP_ALIVE_AGENT
+            });
+        }
+        return createLocalBridgeHttpHandler({
+            readConfigFn: () => ({ model_providers: { [member.name]: {
+                base_url: member.baseUrl, preferred_auth_method: member.authMethod,
+                requires_openai_auth: member.requiresOpenaiAuth
+            } } }),
+            openaiBridgeFile: OPENAI_BRIDGE_SETTINGS_FILE,
+            claudeProvidersFile: CLAUDE_LOCAL_PROVIDERS_FILE,
+            readClaudeProviders: () => ({ providers: { [member.name]: member } }),
+            expectedToken: typeof process.env.CODEXMATE_HTTP_TOKEN === 'string' ? process.env.CODEXMATE_HTTP_TOKEN.trim() : '',
+            requestMaxRetries: 0,
+            maxBodySize: MAX_API_BODY_SIZE,
+            httpAgent: HTTP_KEEP_ALIVE_AGENT, httpsAgent: HTTPS_KEEP_ALIVE_AGENT
+        });
+    }
+});
+
+function getRoutingCatalog(target) {
+    let config;
+    const result = target === 'claude'
+        ? buildClaudeUpstreamPool(CLAUDE_LOCAL_PROVIDERS_FILE, readClaudeLocalBridgeSettings().excludedProviders)
+        : buildUpstreamPool(() => { config = readConfig(); return config; }, OPENAI_BRIDGE_SETTINGS_FILE, readLocalBridgeSettings().excludedProviders);
+    const pool = result.pool || [];
+    if (target !== OPENAI_CHAT_TARGET) return pool;
+    return pool.map(entry => {
+        const marked = config.model_providers[entry.name].codexmate_bridge === 'openai';
+        if (!marked && !new URL(entry.baseUrl).pathname.startsWith('/bridge/openai/')) return entry;
+        const upstream = resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, entry.name);
+        if (upstream.error) return marked ? null : entry;
+        return { ...entry, baseUrl: upstream.baseUrl };
+    }).filter(Boolean);
+}
+function getRoutingState() {
+    const state = routingGroups.read();
+    const catalogs = Object.fromEntries(['codex', 'claude', OPENAI_CHAT_TARGET].map(target => [target, getRoutingCatalog(target).map(entry => ({
+        name: entry.name, model: entry.model || '', origin: new URL(entry.baseUrl).origin
+    }))]));
+    const codex = getLocalBridgeStatus();
+    const claude = getClaudeLocalBridgeStatus();
+    return { ...state, catalogs, openaiChat: { basePath: OPENAI_CHAT_BASE_PATH, model: OPENAI_CHAT_MODEL, requiresToken: !!(process.env.CODEXMATE_HTTP_TOKEN || '').trim() }, bridges: {
+        codex: { enabled: codex.enabled, active: codex.active },
+        claude: { enabled: claude.enabled, active: claude.active },
+        [OPENAI_CHAT_TARGET]: { enabled: !!state.bindings[OPENAI_CHAT_TARGET], active: !!state.bindings[OPENAI_CHAT_TARGET] }
+    } };
+}
+function mutateRoutingGroup(operation, params) {
+    try {
+        if (configChanges.isBusy()) return { error: '已有配置变更正在执行', errorCode: 'config-change-busy' };
+        routingGroups[operation](params || {});
+        return { success: true, ...getRoutingState() };
+    } catch (error) {
+        return { error: error.message, errorCode: error.code || 'routing-storage-error' };
+    }
+}
 
 function resolveWebPort() {
     const raw = process.env.CODEXMATE_PORT;
@@ -1048,7 +1130,7 @@ function normalizeSettingsTabPreference(value) {
 
 function normalizeMainTabPreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    const allowed = new Set(['dashboard', 'config', 'sessions', 'usage', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
+    const allowed = new Set(['dashboard', 'config', 'routing', 'sessions', 'usage', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
     return allowed.has(normalized) ? normalized : 'dashboard';
 }
 
@@ -14364,6 +14446,7 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             });
             res.end(body, 'utf-8');
         };
+        if (routingBridgeHandler(req, res)) return;
         if (typeof localBridgeHandler === 'function' && localBridgeHandler(req, res)) {
             return;
         }
@@ -15152,6 +15235,18 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'proxy-apply-provider':
                             result = applyBuiltinProxyProvider(params || {});
+                            break;
+                        case 'routing-get':
+                            result = getRoutingState();
+                            break;
+                        case 'routing-save':
+                            result = mutateRoutingGroup('save', params);
+                            break;
+                        case 'routing-delete':
+                            result = mutateRoutingGroup('remove', params);
+                            break;
+                        case 'routing-bind':
+                            result = mutateRoutingGroup('bind', params);
                             break;
                         case 'local-bridge-toggle':
                             result = toggleLocalBridgeProvider(params || {});

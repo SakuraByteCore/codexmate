@@ -7,6 +7,7 @@
 | 功能 | 状态 | 说明 |
 | --- | --- | --- |
 | Provider 管理 | ✅ | Codex / Claude / OpenCode / KiloCode / OpenClaw 的 provider/model 切换 |
+| 模型分配（路由组） | ✅ | Codex / Claude / OpenAI Chat 主力与备用、模型排序、主力优先、轮流使用；显式启用，不运行任务 |
 | 实时同步 | ✅ | Codex / Claude 配置与状态实时监控 |
 | 会话浏览 | ✅ | 集中浏览 Codex / Claude Code / Gemini CLI / CodeBuddy Code / WorkBuddy / Pi / OpenCode / Zed 的本地会话；操作差异与验证边界见[会话指南](/guide/sessions) |
 | 用量分析 | ✅ | 消息趋势与项目排行可视化 |

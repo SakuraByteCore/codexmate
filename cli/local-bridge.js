@@ -14,7 +14,7 @@ const {
     parseJsonOrError,
     extractChatCompletionResult,
     buildResponsesPayloadFromChatResult,
-    retryTransientRequest,
+    retryTransientRequest: retryBridgeRequest,
     shouldFallbackFromUpstreamResponses,
     isTransientNetworkError,
     isLoopbackAddress
@@ -109,11 +109,14 @@ function buildUpstreamPool(readConfigFn, openaiBridgeFile, excludedProviders) {
     return { pool };
 }
 
-function buildClaudeUpstreamPool(claudeProvidersFile, excludedProviders) {
+function buildClaudeUpstreamPool(claudeProvidersFile, excludedProviders, readProviders) {
     let raw;
     try {
-        if (!fs.existsSync(claudeProvidersFile)) return { error: '暂无可用上游 provider，请先添加 Claude 提供商' };
-        raw = JSON.parse(fs.readFileSync(claudeProvidersFile, 'utf-8'));
+        if (readProviders) raw = readProviders();
+        else {
+            if (!fs.existsSync(claudeProvidersFile)) return { error: '暂无可用上游 provider，请先添加 Claude 提供商' };
+            raw = JSON.parse(fs.readFileSync(claudeProvidersFile, 'utf-8'));
+        }
     } catch (e) { return { error: '读取 Claude 提供商配置失败' }; }
     const providers = (raw && typeof raw.providers === 'object' && !Array.isArray(raw.providers))
         ? raw.providers : {};
@@ -157,6 +160,7 @@ function resolveUpstreamAuth(entry, openaiBridgeFile, reqAuthToken) {
 
 function createLocalBridgeHttpHandler(options = {}) {
     const readConfigFn = options.readConfigFn;
+    const retryTransientRequest = executor => retryBridgeRequest(executor, { maxRetries: options.requestMaxRetries });
     const openaiBridgeFile = options.openaiBridgeFile;
     const claudeProvidersFile = options.claudeProvidersFile || '';
     const expectedToken = typeof options.expectedToken === 'string' ? options.expectedToken.trim() : '';
@@ -314,7 +318,7 @@ function createLocalBridgeHttpHandler(options = {}) {
                 return;
             }
 
-            const poolResult = buildClaudeUpstreamPool(claudeProvidersFile, readClaudeExcludedProviders());
+            const poolResult = buildClaudeUpstreamPool(claudeProvidersFile, readClaudeExcludedProviders(), options.readClaudeProviders);
             if (poolResult.error) {
                 res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({ error: poolResult.error }));
@@ -752,4 +756,4 @@ function createLocalBridgeHttpHandler(options = {}) {
     return handler;
 }
 
-module.exports = { createLocalBridgeHttpHandler };
+module.exports = { createLocalBridgeHttpHandler, buildUpstreamPool, buildClaudeUpstreamPool };
