@@ -13,6 +13,7 @@ Codex Mate is a locally running CLI + Web tool for browsing, filtering, and expo
   <a href="#quick-start">[Quick Start]</a>
   <a href="README.zh.md">[简体中文]</a>
   <a href="README.vi.md">[Tiếng Việt]</a>
+  <a href="README.tr.md">[Türkçe]</a>
 </p>
 
 [![Version](https://img.shields.io/npm/v/codexmate?style=flat-square&color=A179FF)](https://www.npmjs.com/package/codexmate)
