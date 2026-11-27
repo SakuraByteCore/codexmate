@@ -309,5 +309,8 @@ module.exports = {
     listSessionUsageCore,
     buildUsageExportRows,
     exportSessionUsageCore,
-    serializeUsageExportRowsToCsv
+    serializeUsageExportRowsToCsv,
+    parseUsageExportDate,
+    normalizeUsageExportModelFilters,
+    sessionMatchesUsageExportModelFilters
 };

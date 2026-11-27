@@ -329,6 +329,18 @@ function createCopyActionContext(methods) {
     };
 }
 
+test('usage records initialize closed and expose only explicit read actions', () => {
+    const state = currentAppOptions.data();
+    assert.strictEqual(state.usageRecords, null);
+    assert.strictEqual(state.usageRecordsLoading, false);
+    assert.strictEqual(state.usageRecordsOpen, false);
+    assert.strictEqual(state.usageRecordsError, '');
+    assert.strictEqual(state.usageRecordsRange, '');
+    for (const name of ['toggleUsageRecords', 'loadUsageRecords', 'formatUsageRecordCount']) {
+        assert.strictEqual(typeof currentMethods[name], 'function', name);
+    }
+});
+
 test('captured bundled app skeleton only exposes expected data key drift versus parity baseline', () => {
     const currentDataKeys = Object.keys(currentAppOptions.data()).sort();
     const headDataKeys = Object.keys(headAppOptions.data()).sort();
@@ -509,6 +521,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sysPromptHighlightHtml'
     ];
     allowedExtraCurrentKeys.push(
+        'usageRecords',
+        'usageRecordsError',
+        'usageRecordsLoading',
+        'usageRecordsOpen',
+        'usageRecordsRange',
         'sessionContextHealth',
         'sessionContextHealthStamp',
         'sessionContextHealthLoading',
@@ -929,6 +946,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'scrollSessionsUsageDayIntoView'
     ];
     allowedExtraCurrentMethodKeys.push(
+        'toggleUsageRecords',
+        'loadUsageRecords',
+        'formatUsageRecordCount',
         'normalizePackageVersion',
         'comparePackageVersions',
         'isAppUpdateAvailable',

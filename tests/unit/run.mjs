@@ -7,6 +7,7 @@ const RUNNER_PATH = fileURLToPath(import.meta.url);
 const UNIT_DIRECTORY = path.dirname(RUNNER_PATH);
 const SUITE_TIMEOUT_MS = 30000;
 const LEGACY_SUITE_FILE_LIMIT = 50;
+const NODE_SUITE_FILE_LIMIT = 8;
 const LEGACY_MODE = '--legacy';
 const isLegacyWorker = process.argv[2] === LEGACY_MODE;
 const requestedNames = process.argv.slice(isLegacyWorker ? 3 : 2);
@@ -54,7 +55,10 @@ if (isLegacyWorker) {
         const files = legacyFiles.slice(offset, offset + LEGACY_SUITE_FILE_LIMIT);
         suites.push({ name: `legacy ${offset / LEGACY_SUITE_FILE_LIMIT + 1}`, args: [RUNNER_PATH, LEGACY_MODE, ...files], count: files.length });
     }
-    suites.push({ name: 'node:test', args: ['--test', '--test-concurrency=1', ...nodeFiles], count: nodeFiles.length });
+    for (let offset = 0; offset < nodeFiles.length; offset += NODE_SUITE_FILE_LIMIT) {
+        const files = nodeFiles.slice(offset, offset + NODE_SUITE_FILE_LIMIT);
+        suites.push({ name: `node:test ${offset / NODE_SUITE_FILE_LIMIT + 1}`, args: ['--test', '--test-concurrency=1', ...files], count: files.length });
+    }
     let failures = 0;
     for (const suite of suites.filter(suite => suite.count > 0)) {
         console.log(`Unit suite ${suite.name}: ${suite.count} files.`);

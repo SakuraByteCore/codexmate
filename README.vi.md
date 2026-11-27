@@ -30,6 +30,14 @@ Codex Mate là công cụ CLI + Web chạy cục bộ, giúp xem, lọc và xu�
 
 </div>
 
+### Chi tiết bản ghi sử dụng
+
+Mở bản ghi UTC khi cần để tách token ghi nhận, các loại bộ nhớ đệm và ước tính toàn bộ văn bản đã lưu. Hỗ trợ bản ghi Codex, Claude và Pi; biểu đồ và xuất mặc định giữ nguyên cách thống kê. Không tính chi phí. Dùng `codexmate analytics export --attribution records`. Xem [hướng dẫn sử dụng](https://sakurabytecore.github.io/codexmate/guide/sessions#%E7%94%A8%E9%87%8F%E8%AE%B0%E5%BD%95%E6%98%8E%E7%BB%86).
+
+### Chia sẻ tệp
+
+Chọn tệp hoặc thư mục rồi tải lên thủ công. Tải bản sao hoặc sao chép liên kết LAN có hiệu lực 60 phút. Tải xuống dùng cổng riêng, không cấp quyền API quản trị. Xóa lô hoặc dừng dịch vụ sẽ vô hiệu hóa liên kết và giữ nguyên tệp gốc. Xem [hướng dẫn chia sẻ tệp](https://sakurabytecore.github.io/codexmate/guide/web-ui#%E6%96%87%E4%BB%B6%E5%85%B1%E4%BA%AB).
+
 ### Chủ đề giao diện
 
 Chọn Sáng, Tối, Đại dương hoặc Tím dịu trong phần cài đặt. Tím dịu tham khảo [Catppuccin Latte](https://github.com/catppuccin/palette), dùng nền sáng và điểm nhấn tím. Chủ đề được lưu tự động và khôi phục sau khi tải lại.

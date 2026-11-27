@@ -147,6 +147,7 @@ const {
 const { createFileSharingRoutes } = require('./lib/file-sharing');
 const { createPluginConfigController } = require('./cli/plugin-config');
 const { createSessionContextHealthController } = require('./lib/session-context-health');
+const { createSessionUsageReportController, exportSessionUsageReport } = require('./lib/session-usage-report');
 const { createSessionFeatures } = require('./lib/session-features');
 const { listHandoffs } = require('./lib/thread-handoff');
 const { discoverServers, probeServer } = require('./lib/handoff-mcp');
@@ -7991,6 +7992,8 @@ async function listSessionUsage(params = {}) {
 }
 
 async function exportSessionUsage(params = {}) {
+    if (params.attribution !== undefined && !['session', 'records'].includes(params.attribution)) return { error: 'Invalid attribution' };
+    if (params.attribution === 'records') return exportSessionUsageReport(await sessionUsageReport.read(params), params.format);
     return exportSessionUsageCore(params, {
         listSessionUsage
     });
@@ -10026,9 +10029,11 @@ async function extractMessagesFromFile(filePath, source, options = {}) {
     return state;
 }
 
-const { readSessionContextHealth, readSessionContextNode, iterateSessionContextNodes } = createSessionContextHealthController({
+const { readSessionContextHealth, readSessionContextNode, iterateSessionContextNodes, iterateSessionUsageRecords } = createSessionContextHealthController({
     fs, normalizeSessionSourceName, resolveSessionFilePath, queryOpencodeSessionMessages, queryZedSessionMessages
 });
+
+const sessionUsageReport = createSessionUsageReportController({ fs, listSessionUsage, iterateSessionUsageRecords });
 
 const sessionFeatures = createSessionFeatures({ root: path.join(CODEXMATE_DIR, 'session-features'),
     readNode: readSessionContextNode, nodes: iterateSessionContextNodes,
@@ -13784,7 +13789,7 @@ async function cmdExportSession(args = []) {
 
 function printAnalyticsUsage() {
     console.log('\n用法:');
-    console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--source <codex|claude|gemini|codebuddy|workbuddy|pi|opencode|all>] [--output <PATH|->] [-o <PATH|->]');
+    console.log('  codexmate analytics export [--format csv|json] [--attribution session|records] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--source <codex|claude|gemini|codebuddy|workbuddy|pi|opencode|all>] [--output <PATH|->] [-o <PATH|->]');
     console.log('');
 }
 
@@ -15122,6 +15127,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                     };
                                 }
                             }
+                            break;
+                        case 'read-sessions-usage-report':
+                            if (params?.source && !isSessionSourceOrAll(params.source)) result = { error: 'Invalid source' };
+                            else result = await sessionUsageReport.read(isPlainObject(params) ? params : {});
                             break;
                         case 'export-sessions-usage':
                             {
@@ -18179,7 +18188,7 @@ function printMainHelp() {
     console.log('  codexmate delete-model <模型> 删除模型');
     console.log('  codexmate workflow <list|get|validate|run|runs|submit|active-runs|detail|resume|cancel>  MCP 工作流中心');
     console.log('  codexmate thread <handoff|list|fallback|ack>  交接卡与共享记忆路由');
-    console.log('  codexmate analytics export [--format csv|json] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--output <PATH|->] [-o <PATH|->]  导出 Usage 数据');
+    console.log('  codexmate analytics export [--format csv|json] [--attribution session|records] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--model <MODEL>] [--output <PATH|->] [-o <PATH|->]  导出 Usage 数据');
     console.log('  codexmate run [--host <HOST>] [--no-browser]    启动 Web 界面');
     console.log('  codexmate update [--check] 检查并快速更新工具');
     console.log('  codexmate codex [参数...] [--follow-up <文本>|--queued-follow-up <文本> 可重复]  等同于 codex --yolo');
@@ -18202,6 +18211,10 @@ async function main() {
     const command = args[0];
     if (command === 'thread') {
         await cmdThread(args.slice(1));
+        return;
+    }
+    if (command === 'analytics') {
+        await cmdAnalytics(args.slice(1));
         return;
     }
     const isMcpCommand = command === 'mcp';
@@ -18282,7 +18295,6 @@ async function main() {
         case 'auth': cmdAuth(args.slice(1)); break;
         case 'proxy': await cmdProxy(args.slice(1)); break;
         case 'workflow': await cmdWorkflow(args.slice(1)); break;
-        case 'analytics': await cmdAnalytics(args.slice(1)); break;
         case 'run': await cmdStart(parseStartOptions(args.slice(1))); break;
         case 'update': await cmdToolUpdate(args.slice(1)); break;
         case 'start':

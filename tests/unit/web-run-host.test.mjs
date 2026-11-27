@@ -110,6 +110,7 @@ function instantiateFunction(funcSource, funcName, bindings = {}) {
     // Existing route unit tests isolate the outer startup gate; HTTP tests cover it.
     if (funcName === 'createWebServer') bindings = {
         createWebServerLifecycle: require('../../lib/web-server.js').createWebServerLifecycle,
+        createFileSharingRoutes: require('../../lib/file-sharing.js').createFileSharingRoutes,
         CONFIG_CHANGE_READERS: {},
         routingBridgeHandler: () => false,
         configChanges: { isBusy: () => false },

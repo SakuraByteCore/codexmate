@@ -908,3 +908,11 @@
         font-size: 7px;
     }
 }
+
+/* Keep wide numeric breakdowns inside the usage card on compact screens. */
+.usage-records { margin: 16px 0; min-width: 0; }
+.usage-records > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.usage-records-table { overflow-x: auto; max-width: 100%; margin: 16px 0; }
+.usage-records-table table { width: 100%; border-collapse: collapse; }
+.usage-records-table th, .usage-records-table td { padding: 8px; text-align: right; white-space: nowrap; }
+.usage-records-table th:first-child, .usage-records-table td:first-child { text-align: left; }

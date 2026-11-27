@@ -1,0 +1,25 @@
+                    <details class="usage-card usage-records" id="usage-records-report" @toggle="toggleUsageRecords($event)">
+                        <summary>{{ t('usage.records.title') }}</summary>
+                        <p class="usage-list-meta">{{ t('usage.records.scope') }}</p>
+                        <p v-if="usageRecordsLoading" role="status">{{ t('usage.loading') }}</p>
+                        <p v-if="usageRecordsError" role="alert">{{ usageRecordsError }}</p>
+                        <template v-if="usageRecords">
+                            <p class="usage-list-meta">{{ t('usage.records.coverage', { scanned: usageRecords.summary.scannedSessions, candidates: usageRecords.summary.candidateSessions, unreported: usageRecords.summary.unreportedSessions, unsupported: usageRecords.summary.unsupportedSessions }) }}</p>
+                            <p v-if="usageRecords.summary.failedSessions.length" role="alert">{{ t('usage.records.failed', { count: usageRecords.summary.failedSessions.length }) }}</p>
+                            <div class="usage-kpi-grid">
+                                <div class="usage-kpi-card"><div class="usage-kpi-label">{{ t('usage.records.total') }}</div><div class="usage-kpi-value">{{ formatUsageRecordCount(usageRecords.summary.totalTokens) }}</div></div>
+                                <div class="usage-kpi-card"><div class="usage-kpi-label">{{ t('usage.records.estimated') }}</div><div class="usage-kpi-value">{{ formatUsageRecordCount(usageRecords.summary.estimatedTextTokens) }}</div></div>
+                                <div class="usage-kpi-card"><div class="usage-kpi-label">{{ t('usage.records.cacheRead') }}</div><div class="usage-kpi-value">{{ formatUsageRecordCount(usageRecords.summary.cachedInputTokens) }}</div></div>
+                                <div class="usage-kpi-card"><div class="usage-kpi-label">{{ t('usage.records.cacheWrite') }}</div><div class="usage-kpi-value">{{ formatUsageRecordCount(usageRecords.summary.cacheCreationInputTokens) }}</div></div>
+                            </div>
+                            <p v-if="usageRecords.summary.undatedTokens" class="usage-list-meta">{{ t('usage.records.undated', { tokens: usageRecords.summary.undatedTokens }) }}</p>
+                            <div class="usage-records-table">
+                                <table>
+                                    <thead><tr><th>{{ t('usage.records.date') }}</th><th>{{ t('usage.records.source') }}</th><th>{{ t('usage.records.model') }}</th><th>{{ t('usage.records.input') }}</th><th>{{ t('usage.records.cacheRead') }}</th><th>{{ t('usage.records.cacheWrite') }}</th><th>{{ t('usage.records.output') }}</th><th>{{ t('usage.records.total') }}</th></tr></thead>
+                                    <tbody><tr v-for="row in usageRecords.rows" :key="row.date + ':' + row.source + ':' + row.model"><td>{{ row.date || t('usage.records.unknown') }}</td><td>{{ row.source }}</td><td>{{ row.model }}</td><td>{{ formatUsageRecordCount(row.inputTokens) }}</td><td>{{ formatUsageRecordCount(row.cachedInputTokens) }}</td><td>{{ formatUsageRecordCount(row.cacheCreationInputTokens) }}</td><td>{{ formatUsageRecordCount(row.outputTokens) }}</td><td>{{ formatUsageRecordCount(row.totalTokens) }}</td></tr></tbody>
+                                </table>
+                            </div>
+                            <p v-if="!usageRecords.rows.length">{{ t('usage.empty') }}</p>
+                        </template>
+                        <button v-if="!usageRecordsLoading" type="button" class="btn-mini" @click="loadUsageRecords({ forceRefresh: true })">{{ t('usage.refresh') }}</button>
+                    </details>

@@ -1539,6 +1539,9 @@
 [data-theme="violet"] #panel-plugins .prompt-template-item.active {
     box-shadow:none;
 }
+[data-theme="violet"] .file-sharing-row .file-sharing-icon {
+    box-shadow:none;
+}
 [data-theme="violet"] .docs-toolbar-card .install-action-tabs .btn-mini {
     box-shadow:none;
 }

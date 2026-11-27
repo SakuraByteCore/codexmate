@@ -6872,6 +6872,104 @@ return function render(_ctx, _cache) {
                 ], 8 /* PROPS */, ["onClick", "disabled", "title"])
               ], 8 /* PROPS */, ["aria-label"])
             ]),
+            _createElementVNode("details", {
+              class: "usage-card usage-records",
+              id: "usage-records-report",
+              onToggle: $event => (_ctx.toggleUsageRecords($event))
+            }, [
+              _createElementVNode("summary", null, _toDisplayString(_ctx.t('usage.records.title')), 1 /* TEXT */),
+              _createElementVNode("p", { class: "usage-list-meta" }, _toDisplayString(_ctx.t('usage.records.scope')), 1 /* TEXT */),
+              (_ctx.usageRecordsLoading)
+                ? (_openBlock(), _createElementBlock("p", {
+                    key: 0,
+                    role: "status"
+                  }, _toDisplayString(_ctx.t('usage.loading')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.usageRecordsError)
+                ? (_openBlock(), _createElementBlock("p", {
+                    key: 1,
+                    role: "alert"
+                  }, _toDisplayString(_ctx.usageRecordsError), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.usageRecords)
+                ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
+                    _createElementVNode("p", { class: "usage-list-meta" }, _toDisplayString(_ctx.t('usage.records.coverage', { scanned: _ctx.usageRecords.summary.scannedSessions, candidates: _ctx.usageRecords.summary.candidateSessions, unreported: _ctx.usageRecords.summary.unreportedSessions, unsupported: _ctx.usageRecords.summary.unsupportedSessions })), 1 /* TEXT */),
+                    (_ctx.usageRecords.summary.failedSessions.length)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 0,
+                          role: "alert"
+                        }, _toDisplayString(_ctx.t('usage.records.failed', { count: _ctx.usageRecords.summary.failedSessions.length })), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("div", { class: "usage-kpi-grid" }, [
+                      _createElementVNode("div", { class: "usage-kpi-card" }, [
+                        _createElementVNode("div", { class: "usage-kpi-label" }, _toDisplayString(_ctx.t('usage.records.total')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "usage-kpi-value" }, _toDisplayString(_ctx.formatUsageRecordCount(_ctx.usageRecords.summary.totalTokens)), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "usage-kpi-card" }, [
+                        _createElementVNode("div", { class: "usage-kpi-label" }, _toDisplayString(_ctx.t('usage.records.estimated')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "usage-kpi-value" }, _toDisplayString(_ctx.formatUsageRecordCount(_ctx.usageRecords.summary.estimatedTextTokens)), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "usage-kpi-card" }, [
+                        _createElementVNode("div", { class: "usage-kpi-label" }, _toDisplayString(_ctx.t('usage.records.cacheRead')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "usage-kpi-value" }, _toDisplayString(_ctx.formatUsageRecordCount(_ctx.usageRecords.summary.cachedInputTokens)), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "usage-kpi-card" }, [
+                        _createElementVNode("div", { class: "usage-kpi-label" }, _toDisplayString(_ctx.t('usage.records.cacheWrite')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "usage-kpi-value" }, _toDisplayString(_ctx.formatUsageRecordCount(_ctx.usageRecords.summary.cacheCreationInputTokens)), 1 /* TEXT */)
+                      ])
+                    ]),
+                    (_ctx.usageRecords.summary.undatedTokens)
+                      ? (_openBlock(), _createElementBlock("p", {
+                          key: 1,
+                          class: "usage-list-meta"
+                        }, _toDisplayString(_ctx.t('usage.records.undated', { tokens: _ctx.usageRecords.summary.undatedTokens })), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("div", { class: "usage-records-table" }, [
+                      _createElementVNode("table", null, [
+                        _createElementVNode("thead", null, [
+                          _createElementVNode("tr", null, [
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.date')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.source')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.model')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.input')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.cacheRead')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.cacheWrite')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.output')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.total')), 1 /* TEXT */)
+                          ])
+                        ]),
+                        _createElementVNode("tbody", null, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.usageRecords.rows, (row) => {
+                            return (_openBlock(), _createElementBlock("tr", {
+                              key: row.date + ':' + row.source + ':' + row.model
+                            }, [
+                              _createElementVNode("td", null, _toDisplayString(row.date || _ctx.t('usage.records.unknown')), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(row.source), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(row.model), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(_ctx.formatUsageRecordCount(row.inputTokens)), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(_ctx.formatUsageRecordCount(row.cachedInputTokens)), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(_ctx.formatUsageRecordCount(row.cacheCreationInputTokens)), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(_ctx.formatUsageRecordCount(row.outputTokens)), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(_ctx.formatUsageRecordCount(row.totalTokens)), 1 /* TEXT */)
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ])
+                      ])
+                    ]),
+                    (!_ctx.usageRecords.rows.length)
+                      ? (_openBlock(), _createElementBlock("p", { key: 2 }, _toDisplayString(_ctx.t('usage.empty')), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true)
+                  ], 64 /* STABLE_FRAGMENT */))
+                : _createCommentVNode("v-if", true),
+              (!_ctx.usageRecordsLoading)
+                ? (_openBlock(), _createElementBlock("button", {
+                    key: 3,
+                    type: "button",
+                    class: "btn-mini",
+                    onClick: $event => (_ctx.loadUsageRecords({ forceRefresh: true }))
+                  }, _toDisplayString(_ctx.t('usage.refresh')), 9 /* TEXT, PROPS */, ["onClick"]))
+                : _createCommentVNode("v-if", true)
+            ], 40 /* PROPS, NEED_HYDRATION */, ["onToggle"]),
             (_ctx.sessionsUsageLoading && !_ctx.sessionsUsageList.length)
               ? (_openBlock(), _createElementBlock("div", {
                   key: 0,

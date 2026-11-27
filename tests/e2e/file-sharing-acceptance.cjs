@@ -4,6 +4,11 @@ const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+// Android runs an explicitly supplied Chromium; Playwright's registry has no Android cache layout.
+const androidChromium = process.platform === 'android' && Boolean(process.env.CHROME_EXECUTABLE);
+if (androidChromium) {
+    Object.defineProperty(process, 'platform', { value: 'linux' });
+}
 const { chromium } = require('playwright-core');
 const { entryPath, token } = require('../e2e-browser/access-token.cjs');
 const { startLocalServer, closeServer } = require('./helpers');
@@ -182,9 +187,10 @@ async function runFileSharingAcceptance() {
     await fs.writeFile(path.join(folder, 'sub', 'nested.bin'), Buffer.from([0, 25, 255]));
     await fs.writeFile(path.join(folder, 'zero.txt'), '');
     await fs.writeFile(path.join(fixtures, 'not-selected.txt'), 'private fixture');
-    const app = spawn(process.execPath, ['tests/e2e-browser/start-app.js', String(port)], {
-        env: { ...process.env, TMP: fixtures, TEMP: fixtures }, stdio: 'ignore'
+    const startApp = () => spawn(process.execPath, ['tests/e2e-browser/start-app.js', String(port)], {
+        env: { ...process.env, TMPDIR: fixtures, TMP: fixtures, TEMP: fixtures }, stdio: 'ignore'
     });
+    let app = startApp();
     let browser;
     try {
         let response;
@@ -198,19 +204,53 @@ async function runFileSharingAcceptance() {
         const appBundle = await fetch(base + '/web-ui/app.js').then(r => r.text());
         assert.match(appBundle, /function createFileSharingMethods/);
         if (!process.argv.includes('--quota-baseline')) assert.doesNotMatch(appBundle, /plugins.fileSharing.limit/);
-        browser = await chromium.launch({ executablePath: process.env.CHROME_EXECUTABLE || undefined });
-        const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] });
+        browser = await chromium.launch({ executablePath: process.env.CHROME_EXECUTABLE || undefined,
+            args: androidChromium ? ['--no-zygote', '--single-process', '--disable-dev-shm-usage'] : [] });
+        // Chromium single-process mode cannot create a second incognito context.
+        const sharedContext = androidChromium ? await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] }) : null;
+        const browserPages = { async newPage(options = {}) {
+            if (!sharedContext) return browser.newPage(options);
+            const target = await sharedContext.newPage();
+            if (options.viewport) await target.setViewportSize(options.viewport);
+            return target;
+        } };
+        const page = await browserPages.newPage({ viewport: { width: 1440, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] });
         await page.goto(ready);
         await page.locator('#side-tab-plugins-file-sharing').click();
+        if (process.argv.includes('--large-only')) {
+            const compact = await browserPages.newPage({ viewport: { width: 390, height: 844 } });
+            await compact.goto(ready);
+            await compact.locator('#tab-plugins').click();
+            await compact.locator('#panel-plugins [data-plugin-id="file-sharing"]').click();
+            await checkFormerUploadQuotas(page, compact, fixtures, list);
+            return;
+        }
+
         const share = page.locator('#plugin-file-sharing');
         await share.locator('.skills-empty-state').waitFor();
         assert.deepEqual((await list()).batches, []);
         assert.equal(await page.locator('#side-tab-plugins-file-sharing').getAttribute('aria-current'), 'page');
 
         async function chooseFile(buttonIndex, files) {
+            await page.bringToFront();
             const chooser = page.waitForEvent('filechooser');
             await share.locator('.plugins-panel-head button').nth(buttonIndex).click();
-            await (await chooser).setFiles(files);
+            const selected = await chooser;
+            const pending = selected.setFiles(files);
+            if (files === empty) {
+                // Chromium returns zero files without an input event for an empty directory.
+                const input = selected.element();
+                await input.evaluate(element => new Promise(resolve => {
+                    const poll = () => {
+                        if (element.files.length) return setTimeout(poll, 20);
+                        element.dispatchEvent(new Event('input', { bubbles: true }));
+                        element.dispatchEvent(new Event('change', { bubbles: true }));
+                        resolve();
+                    };
+                    setTimeout(poll, 20);
+                }));
+            }
+            await pending;
         }
         await chooseFile(0, [{ name: filename, mimeType: 'text/plain', buffer: plain }]);
         await page.locator('#cancel-file-sharing').click();
@@ -244,7 +284,7 @@ async function runFileSharingAcceptance() {
         assert.deepEqual(await fs.readFile(await download.path()), plain);
         console.log('PASS: explicit selection, cancel, file downloads, attachment headers, auth');
 
-        const compact = await browser.newPage({ viewport: { width: 390, height: 844 } });
+        const compact = await browserPages.newPage({ viewport: { width: 390, height: 844 } });
         await compact.goto(ready);
         await compact.locator('#tab-plugins').click();
         await compact.locator('#panel-plugins [data-plugin-id="file-sharing"]').click();
@@ -268,7 +308,7 @@ async function runFileSharingAcceptance() {
         assert.equal(await page.locator('#upload-file-sharing').count(), 0);
         assert.equal((await list()).batches.length, 2);
         console.log('PASS: nested directory, empty directory, compact layout, independent reader and reload');
-        const lan = process.argv.includes('--lan') ? await checkLanDownload({ page, compact, browser, base, textPath, htmlPath, folderPath }) : null;
+        const lan = process.argv.includes('--lan') ? await checkLanDownload({ page, compact, browser: browserPages, base, textPath, htmlPath, folderPath }) : null;
 
         assert.equal((await upload(uploadBody('empty', []))).status, 400);
         assert.equal((await upload(uploadBody('folder', [{ name: 'folder/../no.txt', size: 0 }]))).status, 400);
@@ -303,7 +343,42 @@ async function runFileSharingAcceptance() {
         await page.reload();
         await share.locator('.skills-empty-state').waitFor();
         console.log('PASS: invalid batches never listed; removal disables download and preserves source');
-        await checkFormerUploadQuotas(page, compact, fixtures, list);
+        const restartBatch = await (await upload(uploadBody('', [{ name: filename, size: plain.length }], plain))).json();
+        const stalePath = `${route}/${restartBatch.batch.id}/0`;
+        const staleLan = process.argv.includes('--lan')
+            ? await (await fetch(base + stalePath + '/link', { method: 'POST', headers: auth })).json() : null;
+        const stopped = new Promise(resolve => app.once('exit', resolve));
+        app.kill('SIGTERM');
+        await stopped;
+        app = startApp();
+        let restarted;
+        for (let attempt = 0; attempt < 80; attempt++) {
+            restarted = await fetch(ready).catch(() => null);
+            if (restarted?.ok) break;
+            await new Promise(resolve => setTimeout(resolve, 150));
+        }
+        assert.ok(restarted?.ok, 'replacement Web instance must load');
+        assert.deepEqual((await list()).batches, [], 'restart must not restore temporary batches');
+        assert.equal((await fetch(base + stalePath, { headers: auth })).status, 404);
+        if (staleLan) {
+            const oldDownload = await fetch(staleLan.url).catch(() => null);
+            assert.ok(!oldDownload || oldDownload.status !== 200, 'stopped listener must not serve stale links');
+            const fresh = await (await upload(uploadBody('', [{ name: filename, size: plain.length }], plain))).json();
+            const freshPath = `${route}/${fresh.batch.id}/0/link`;
+            const freshLan = await (await fetch(base + freshPath, { method: 'POST', headers: auth })).json();
+            const replay = new URL(freshLan.url);
+            replay.searchParams.set('token', new URL(staleLan.url).searchParams.get('token'));
+            assert.equal((await fetch(replay)).status, 403, 'old capability must not authorize the replacement instance');
+            assert.equal((await fetch(base + route + '/' + fresh.batch.id, { method: 'DELETE', headers: auth })).status, 200);
+        }
+        assert.deepEqual(await fs.readFile(path.join(folder, 'sub', 'nested.bin')), Buffer.from([0, 25, 255]));
+        console.log('PASS: service restart empties batches, revokes old links and preserves source files');
+
+        // The replacement instance starts with fresh navigation preferences.
+        await compact.goto(ready);
+        await compact.locator('#tab-plugins').click();
+        await compact.locator('#panel-plugins [data-plugin-id="file-sharing"]').click();
+        if (!process.argv.includes('--skip-large')) await checkFormerUploadQuotas(page, compact, fixtures, list);
 
         await page.locator('#side-tab-plugins').click();
         const panel = page.locator('#panel-plugins');

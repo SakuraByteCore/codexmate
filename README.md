@@ -30,6 +30,14 @@ Codex Mate is a locally running CLI + Web tool for browsing, filtering, and expo
 
 </div>
 
+### Usage record breakdown
+
+Expand UTC usage records on demand to separate recorded tokens, cache categories and full saved-text estimates. Record adapters cover Codex, Claude and Pi; existing charts and default exports keep their original semantics. No cost calculation. Use `codexmate analytics export --attribution records`. See the [usage guide](https://sakurabytecore.github.io/codexmate/guide/sessions#%E7%94%A8%E9%87%8F%E8%AE%B0%E5%BD%95%E6%98%8E%E7%BB%86).
+
+### File sharing
+
+Select files or a folder, then upload explicitly. Download copies or copy LAN links valid for 60 minutes. Downloads use a separate port without management API access. Removing a batch or stopping the service invalidates its links and preserves the originals. See the [file-sharing guide](https://sakurabytecore.github.io/codexmate/guide/web-ui#%E6%96%87%E4%BB%B6%E5%85%B1%E4%BA%AB).
+
 ### Appearance themes
 
 Choose Light, Dark, Ocean or Violet in Settings. Violet adapts [Catppuccin Latte](https://github.com/catppuccin/palette) with light surfaces and a purple accent. Your theme is saved automatically and restored after reload.

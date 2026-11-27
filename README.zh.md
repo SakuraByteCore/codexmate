@@ -30,6 +30,14 @@ Codex Mate 是本地运行的 CLI + Web 管理工具，在一个界面查看、�
 
 </div>
 
+### 用量记录明细
+
+在 Usage 页按需展开 UTC 记录明细，区分记录 Token、缓存分项与完整文本估算。当前适配 Codex、Claude、Pi；旧图表和默认导出保持原口径，不计算费用。CLI 使用 `codexmate analytics export --attribution records`。详见[用量指南](https://sakurabytecore.github.io/codexmate/guide/sessions#用量记录明细)。
+
+### 文件共享
+
+选择文件或文件夹后手动上传，下载副本或复制 60 分钟有效的局域网文件链接。下载使用独立端口，不授权管理 API；移除批次或停止服务后链接失效，原文件保留。详见[文件共享指南](https://sakurabytecore.github.io/codexmate/guide/web-ui#文件共享)。
+
 ### 外观主题
 
 在设置中选择浅色、深色、海洋蓝或柔紫。柔紫参考 [Catppuccin Latte](https://github.com/catppuccin/palette)，使用浅底与紫色强调。主题自动保存，刷新后恢复。

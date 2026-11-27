@@ -828,6 +828,40 @@ export function createSessionBrowserMethods(options = {}) {
             }
         },
 
+        toggleUsageRecords(event) {
+            this.usageRecordsOpen = event.target.open;
+            if (this.usageRecordsOpen) return this.loadUsageRecords();
+        },
+        formatUsageRecordCount(value) {
+            return value === null ? this.t('usage.records.unknown') : Number(value || 0).toLocaleString('en-US');
+        },
+        async loadUsageRecords(options = {}) {
+            if (this.usageRecordsLoading) return;
+            const range = this.sessionsUsageTimeRange;
+            if (!options.forceRefresh && this.usageRecords && this.usageRecordsRange === range) return;
+            this.usageRecordsLoading = true;
+            this.usageRecordsError = '';
+            if (this.usageRecordsRange !== range) this.usageRecords = null;
+            const today = new Date();
+            const from = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (range === '30d' ? 29 : 6)));
+            try {
+                const report = await api('read-sessions-usage-report', { source: 'all',
+                    limit: range === 'all' ? 2000 : (range === '30d' ? 1200 : 600),
+                    ...(range === 'all' ? {} : { from: from.toISOString().slice(0, 10), to: today.toISOString().slice(0, 10) }),
+                    forceRefresh: !!options.forceRefresh });
+                if (report.error) throw new Error(report.error);
+                if (range === this.sessionsUsageTimeRange) {
+                    this.usageRecords = report;
+                    this.usageRecordsRange = range;
+                }
+            } catch (error) {
+                if (range === this.sessionsUsageTimeRange) this.usageRecordsError = error.message;
+            } finally {
+                this.usageRecordsLoading = false;
+                if (this.usageRecordsOpen && range !== this.sessionsUsageTimeRange) return this.loadUsageRecords();
+            }
+        },
+
         async loadSessionsUsage(options = {}) {
             if (this.sessionsUsageLoading) return;
             const normalizedRange = typeof options.range === 'string'
@@ -865,6 +899,7 @@ export function createSessionBrowserMethods(options = {}) {
                     return;
                 }
                 this.sessionsUsageList = Array.isArray(res.sessions) ? res.sessions : [];
+                if (this.usageRecordsOpen) void this.loadUsageRecords({ forceRefresh: !!options.forceRefresh });
                 loadSucceeded = true;
             } catch (e) {
                 this.sessionsUsageError = '加载 usage 统计失败';

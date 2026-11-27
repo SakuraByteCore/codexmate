@@ -19,6 +19,10 @@ function parseAnalyticsExportArgs(args = []) {
             options.format = String(readValue('--format') || '').trim().toLowerCase();
             continue;
         }
+        if (token === '--attribution' || token.startsWith('--attribution=')) {
+            options.attribution = String(readValue('--attribution') || '').trim().toLowerCase();
+            continue;
+        }
         if (token === '--from' || token.startsWith('--from=')) {
             options.from = String(readValue('--from') || '').trim();
             continue;
@@ -53,6 +57,9 @@ function parseAnalyticsExportArgs(args = []) {
     }
     if (options.format !== 'csv' && options.format !== 'json') {
         errors.push('--format 必须是 csv 或 json');
+    }
+    if (options.attribution !== undefined && !['session', 'records'].includes(options.attribution)) {
+        errors.push('--attribution 必须是 session 或 records');
     }
     if (options.source && !['codex', 'claude', 'gemini', 'codebuddy', 'pi', 'all'].includes(options.source)) {
         errors.push('--source 必须是 codex、claude、gemini、codebuddy、pi 或 all');
