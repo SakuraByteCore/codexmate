@@ -1,9 +1,12 @@
+import { fileSharingPluginMeta } from './file-sharing/manifest.mjs';
+import { loadFileSharingOverview } from './file-sharing/overview.mjs';
 import { promptTemplatesPluginMeta } from './prompt-templates/manifest.mjs';
 import { loadPromptTemplatesOverview } from './prompt-templates/overview.mjs';
 import { textToolsPluginMeta } from './text-tools/manifest.mjs';
 import { loadTextToolsOverview } from './text-tools/overview.mjs';
 
 export const pluginsRegistry = [
+    { id: fileSharingPluginMeta.id, meta: fileSharingPluginMeta, loadOverview: loadFileSharingOverview },
     { id: promptTemplatesPluginMeta.id, meta: promptTemplatesPluginMeta, loadOverview: loadPromptTemplatesOverview },
     { id: textToolsPluginMeta.id, meta: textToolsPluginMeta, loadOverview: loadTextToolsOverview }
 ];

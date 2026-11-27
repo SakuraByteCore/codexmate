@@ -9,7 +9,6 @@
                             <div class="selector-header plugins-sidebar-header">
                                 <div>
                                     <span class="selector-title">{{ t('plugins.sidebar.title') }}</span>
-                                    <div class="plugins-panel-note">{{ t('plugins.sidebar.note') }}</div>
                                 </div>
                             </div>
 
@@ -17,6 +16,7 @@
                                 <button
                                     v-for="plugin in pluginsCatalog"
                                     :key="'plugin-' + plugin.id"
+                                    :data-plugin-id="plugin.id"
                                     type="button"
                                     :class="['plugins-item', { active: pluginsActiveId === plugin.id }]"
                                     :aria-current="pluginsActiveId === plugin.id ? 'page' : null"
@@ -41,7 +41,6 @@
                                 <div class="plugins-panel-head">
                                     <div>
                                         <div class="plugins-panel-title">{{ t('plugins.promptTemplates.title') }}</div>
-                                        <div v-if="pluginsActiveAttribution" class="plugins-panel-note">{{ pluginsActiveAttribution }}</div>
                                     </div>
                                     <div v-if="!pluginsSidebarVisible" class="settings-tab-actions">
                                         <button type="button" class="btn-tool btn-tool-compact" @click="loadPluginsOverview({ forceRefresh: true, silent: false })" :disabled="loading || !!initError || pluginsLoading">
@@ -81,7 +80,6 @@
                                             </select>
 
                                             <div v-if="!promptComposerActiveTemplate" class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.empty') }}</div>
-                                            <div v-else-if="promptComposerActiveTemplate.description" class="plugins-panel-note">{{ promptComposerActiveTemplate.description }}</div>
                                             <div v-if="promptComposerActiveTemplate && !promptComposerActiveTemplate.isBuiltin" class="prompt-compose-actions">
                                                 <button
                                                     type="button"
@@ -95,7 +93,6 @@
                                             <div class="prompt-vars-head">
                                                 <div>
                                                     <div class="prompt-vars-title">{{ t('plugins.promptTemplates.vars.title') }}</div>
-                                                    <div v-if="!promptComposerActiveTemplate.isBuiltin" class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.varsHint') }}</div>
                                                     <div v-if="promptComposerMissingVars.length" class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.missingCount', { count: promptComposerMissingVars.length }) }}</div>
                                                 </div>
                                                 <div class="prompt-editor-actions">
@@ -121,7 +118,6 @@
                                             <div class="prompt-vars-head">
                                                 <div>
                                                     <div class="prompt-vars-title">{{ t('plugins.promptTemplates.compose.outputTitle') }}</div>
-                                                    <div class="plugins-panel-note">{{ t('plugins.promptTemplates.compose.outputHint') }}</div>
                                                 </div>
                                                 <button type="button" class="btn-mini" @click="copyPromptComposerRendered" :disabled="pluginsLoading || !promptComposerRendered">{{ t('plugins.promptTemplates.compose.copy') }}</button>
                                             </div>
@@ -210,9 +206,7 @@
                                                 <div v-if="promptTemplateDraft.isBuiltin" class="plugins-panel-note">
                                                     {{ t('plugins.promptTemplates.editor.builtinReadOnly') }}
                                                 </div>
-                                                <div v-if="promptTemplateDraft.isBuiltin && (promptTemplateDraft.createdBy || (promptTemplateDraft.maintainers && promptTemplateDraft.maintainers.length))" class="plugins-panel-note">
-                                                    {{ t('plugins.meta.attribution', { createdBy: promptTemplateDraft.createdBy || '', maintainers: (promptTemplateDraft.maintainers || []).join(', ') }) }}
-                                                </div>
+
                                                 <input class="form-input" type="text" v-model.trim="promptTemplateDraftRaw.description" :disabled="promptTemplateDraft.isBuiltin" :placeholder="t('plugins.promptTemplates.editor.descPlaceholder')" :aria-label="t('plugins.promptTemplates.editor.descAria')">
                                             </div>
 
@@ -265,7 +259,6 @@
                                 <div class="plugins-panel-head">
                                     <div>
                                         <div class="plugins-panel-title">{{ t('plugins.textTools.title') }}</div>
-                                        <div v-if="pluginsActiveAttribution" class="plugins-panel-note">{{ pluginsActiveAttribution }}</div>
                                     </div>
                                 </div>
 
@@ -307,6 +300,7 @@
                                 </div>
                             </div>
 
+    <!-- @include ./plugin-file-sharing.html -->
                             <div v-else class="skills-empty-state">{{ t('plugins.promptTemplates.noPluginSelected') }}</div>
                         </section>
                     </div>

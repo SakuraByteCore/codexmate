@@ -568,7 +568,6 @@
 #panel-plugins .plugins-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 #panel-plugins .plugins-sidebar { padding: 0; border: 0; background: transparent; box-shadow: none; }
 #panel-plugins .plugins-sidebar-header { display: none; }
-#panel-plugins .plugins-sidebar-header .plugins-panel-note { display: none; }
 #panel-plugins .plugins-list { display: flex; flex-wrap: wrap; gap: 2px; width: fit-content; border-bottom: 1px solid var(--color-border-soft); }
 #panel-plugins .plugins-item { width: auto; min-height: 44px; padding: 7px 10px 8px; gap: 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; }
 #panel-plugins .plugins-item-meta, #panel-plugins .plugins-item > .pill { display: none; }
@@ -624,3 +623,43 @@
 @media (prefers-reduced-motion: reduce) {
     #panel-plugins button { transition: none; }
 }
+
+#plugin-file-sharing .plugins-panel-head { flex-wrap: wrap; }
+.file-sharing-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.file-sharing-actions .btn-mini, .file-sharing-row .btn-mini { min-height: 44px; min-width: 44px; }
+.file-sharing-items { list-style: none; margin: 0; padding: 0; overflow-wrap: anywhere; }
+.file-sharing-pending { display: grid; gap: 8px; margin-block: 16px; }
+.file-sharing-pending .file-sharing-items { max-height: 200px; overflow: auto; }
+.file-sharing-batches { display: grid; gap: 16px; margin-block: 16px; }
+.file-sharing-batches > li {
+    min-width: 0;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+.file-sharing-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.file-sharing-row > :first-child { flex: 1 1 160px; min-width: 0; }
+.file-sharing-row .file-sharing-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    color: var(--color-text-secondary);
+    transition: background-color 150ms ease, color 150ms ease;
+}
+.file-sharing-icon svg { width: 18px; height: 18px; }
+.file-sharing-row .file-sharing-icon:hover,
+.file-sharing-row .file-sharing-icon:active {
+    background: var(--color-surface-alt);
+    color: var(--color-text-primary);
+    transform: none;
+}
+.file-sharing-row .file-sharing-remove:hover,
+.file-sharing-row .file-sharing-remove:active { color: var(--color-error); }
+.file-sharing-row .file-sharing-icon:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+.file-sharing-row .file-sharing-icon:disabled { opacity: .5; cursor: not-allowed; }
+.file-sharing-size { color: var(--color-text-secondary); }

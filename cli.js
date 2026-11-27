@@ -144,6 +144,7 @@ const {
 const {
     createPromptHistoryController
 } = require('./cli/prompt-history');
+const { createFileSharingRoutes } = require('./lib/file-sharing');
 const { createPluginConfigController } = require('./cli/plugin-config');
 const { createSessionContextHealthController } = require('./lib/session-context-health');
 const { createSessionFeatures } = require('./lib/session-features');
@@ -14428,6 +14429,7 @@ const PUBLIC_WEB_UI_STATIC_ASSETS = new Set([
 
 function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser }) {
 
+    const fileSharing = createFileSharingRoutes();
     const startupAuth = createStartupAuth(readServerToken());
     const httpToken = startupAuth.token;
     const accessControlMiddleware = createWebAccessControlMiddleware(host);
@@ -14526,6 +14528,10 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                     return;
                 }
             }
+        }
+        if (fileSharing.match(requestPath)) {
+            fileSharing.serve(req, res, requestPath);
+            return;
         }
         if (requestPath === '/api/import-skills-zip') {
             void handleImportSkillsZipUpload(req, res);
@@ -15583,11 +15589,18 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
             handleRequest(req, res);
         }));
     });
-    return createWebServerLifecycle({ server, host, port, httpToken, openBrowser }, {
+    const lifecycle = createWebServerLifecycle({ server, host, port, httpToken, openBrowser }, {
         http, process, console, setTimeout, formatHostForUrl, DEFAULT_WEB_OPEN_HOST, isAnyAddressHost,
         spawn: (...args) => spawn(...args),
         getUnattendedWorkflowRunner: () => getUnattendedWorkflowRunner()
     });
+    return {
+        ...lifecycle,
+        async stop() {
+            await lifecycle.stop();
+            await fileSharing.dispose().catch(() => console.warn('! 文件共享临时目录清理失败'));
+        }
+    };
 }
 
 // Region markers are used by unit tests that extract these helpers directly.

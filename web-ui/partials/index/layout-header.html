@@ -366,6 +366,17 @@
                             <span>{{ t('plugins.textTools.tools.compress') }}</span>
                         </div>
                     </button>
+                    <button
+                        id="side-tab-plugins-file-sharing"
+                        data-main-tab="plugins"
+                        data-plugins-id="file-sharing"
+                        :aria-current="mainTab === 'plugins' && pluginsActiveId === 'file-sharing' ? 'page' : null"
+                        :class="['side-item', { active: isPluginsIdNavActive('file-sharing') }]"
+                        @pointerdown="onPluginsTabPointerDown('file-sharing', $event)"
+                        @click="onPluginsTabClick('file-sharing', $event)">
+                        <span class="side-item-icon" aria-hidden="true">⇩</span>
+                        <div class="side-item-title">{{ t('plugins.fileSharing.title') }}</div>
+                    </button>
                 </div>
 
                 <div class="side-section" role="navigation" :aria-label="t('side.system')">

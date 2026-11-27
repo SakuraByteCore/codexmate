@@ -20,9 +20,11 @@ test('web UI drops repeated descriptions while keeping navigation data', () => {
         'modal.openclaw.quick.modelNameHint', 'config.reasoningEffort.hint', 'config.contextWindow.hint',
         'config.autoCompact.hint', 'announcement.project.subtitle', 'announcement.project.cache.meta',
         ...['config', 'sessions', 'usage', 'tasks', 'skills', 'data'].map((section) => `announcement.project.feature.${section}.meta`),
+        'plugins.sidebar.note', 'plugins.promptTemplates.compose.varsHint', 'plugins.promptTemplates.compose.outputHint',
         'features.bookmarkHint'
     ];
     for (const key of removedKeys) assert.ok(!html.includes(`t('${key}'`), key);
+    assert.doesNotMatch(template('panel-plugins'), /pluginsActiveAttribution|plugins.meta.attribution/);
     assert.doesNotMatch(template('layout-header'), /\{\{ mainTabSubtitle \}\}/);
     assert.match(template('layout-header'), /:aria-description="t\('side\.prompts\.meta'\)"/);
     for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode', 'pi']) {
@@ -46,6 +48,7 @@ test('web UI keeps safety boundaries, errors, states and handoff recovery semant
         'sessions.export.truncated', 'features.indexScope', 'features.indexFailures', 'features.partial',
         'features.projectHistory', 'features.diagnosticScope', 'features.contextEstimate', 'features.draftReview',
         'changes.hint', 'changes.hidden', 'modal.agents.hint.twoStepSave', 'plugins.promptTemplates.preview.hint',
+        'plugins.promptTemplates.compose.missingCount', 'plugins.promptTemplates.editor.builtinReadOnly',
         'modal.openclaw.structured.writeHint', 'modal.openclaw.quick.apiKeyHintKeep'
     ];
     for (const key of requiredKeys) assert.ok(html.includes(`t('${key}'`), key);

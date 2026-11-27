@@ -521,6 +521,21 @@ return function render(_ctx, _cache) {
                   _createElementVNode("div", { class: "side-item-meta" }, [
                     _createElementVNode("span", null, _toDisplayString(_ctx.t('plugins.textTools.tools.compress')), 1 /* TEXT */)
                   ])
+                ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"]),
+                _createElementVNode("button", {
+                  id: "side-tab-plugins-file-sharing",
+                  "data-main-tab": "plugins",
+                  "data-plugins-id": "file-sharing",
+                  "aria-current": _ctx.mainTab === 'plugins' && _ctx.pluginsActiveId === 'file-sharing' ? 'page' : null,
+                  class: _normalizeClass(['side-item', { active: _ctx.isPluginsIdNavActive('file-sharing') }]),
+                  onPointerdown: $event => (_ctx.onPluginsTabPointerDown('file-sharing', $event)),
+                  onClick: $event => (_ctx.onPluginsTabClick('file-sharing', $event))
+                }, [
+                  _createElementVNode("span", {
+                    class: "side-item-icon",
+                    "aria-hidden": "true"
+                  }, "⇩"),
+                  _createElementVNode("div", { class: "side-item-title" }, _toDisplayString(_ctx.t('plugins.fileSharing.title')), 1 /* TEXT */)
                 ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["aria-current", "onPointerdown", "onClick"])
               ], 8 /* PROPS */, ["aria-label"]),
               _createElementVNode("div", {
@@ -8580,8 +8595,7 @@ return function render(_ctx, _cache) {
                   }, [
                     _createElementVNode("div", { class: "selector-header plugins-sidebar-header" }, [
                       _createElementVNode("div", null, [
-                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('plugins.sidebar.title')), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.sidebar.note')), 1 /* TEXT */)
+                        _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('plugins.sidebar.title')), 1 /* TEXT */)
                       ])
                     ]),
                     _createElementVNode("div", {
@@ -8591,6 +8605,7 @@ return function render(_ctx, _cache) {
                       (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.pluginsCatalog, (plugin) => {
                         return (_openBlock(), _createElementBlock("button", {
                           key: 'plugin-' + plugin.id,
+                          "data-plugin-id": plugin.id,
                           type: "button",
                           class: _normalizeClass(['plugins-item', { active: _ctx.pluginsActiveId === plugin.id }]),
                           "aria-current": _ctx.pluginsActiveId === plugin.id ? 'page' : null,
@@ -8604,7 +8619,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("span", {
                             class: _normalizeClass(['pill', plugin.tone])
                           }, _toDisplayString(plugin.statusLabel), 3 /* TEXT, CLASS */)
-                        ], 10 /* CLASS, PROPS */, ["aria-current", "disabled", "onClick"]))
+                        ], 10 /* CLASS, PROPS */, ["data-plugin-id", "aria-current", "disabled", "onClick"]))
                       }), 128 /* KEYED_FRAGMENT */))
                     ])
                   ], 8 /* PROPS */, ["aria-label"]))
@@ -8638,13 +8653,7 @@ return function render(_ctx, _cache) {
                         }, [
                           _createElementVNode("div", { class: "plugins-panel-head" }, [
                             _createElementVNode("div", null, [
-                              _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.title')), 1 /* TEXT */),
-                              (_ctx.pluginsActiveAttribution)
-                                ? (_openBlock(), _createElementBlock("div", {
-                                    key: 0,
-                                    class: "plugins-panel-note"
-                                  }, _toDisplayString(_ctx.pluginsActiveAttribution), 1 /* TEXT */))
-                                : _createCommentVNode("v-if", true)
+                              _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.title')), 1 /* TEXT */)
                             ]),
                             (!_ctx.pluginsSidebarVisible)
                               ? (_openBlock(), _createElementBlock("div", {
@@ -8732,15 +8741,10 @@ return function render(_ctx, _cache) {
                                             key: 0,
                                             class: "plugins-panel-note"
                                           }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.empty')), 1 /* TEXT */))
-                                        : (_ctx.promptComposerActiveTemplate.description)
-                                          ? (_openBlock(), _createElementBlock("div", {
-                                              key: 1,
-                                              class: "plugins-panel-note"
-                                            }, _toDisplayString(_ctx.promptComposerActiveTemplate.description), 1 /* TEXT */))
-                                          : _createCommentVNode("v-if", true),
+                                        : _createCommentVNode("v-if", true),
                                       (_ctx.promptComposerActiveTemplate && !_ctx.promptComposerActiveTemplate.isBuiltin)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 2,
+                                            key: 1,
                                             class: "prompt-compose-actions"
                                           }, [
                                             _createElementVNode("button", {
@@ -8760,15 +8764,9 @@ return function render(_ctx, _cache) {
                                           _createElementVNode("div", { class: "prompt-vars-head" }, [
                                             _createElementVNode("div", null, [
                                               _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.vars.title')), 1 /* TEXT */),
-                                              (!_ctx.promptComposerActiveTemplate.isBuiltin)
-                                                ? (_openBlock(), _createElementBlock("div", {
-                                                    key: 0,
-                                                    class: "plugins-panel-note"
-                                                  }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.varsHint')), 1 /* TEXT */))
-                                                : _createCommentVNode("v-if", true),
                                               (_ctx.promptComposerMissingVars.length)
                                                 ? (_openBlock(), _createElementBlock("div", {
-                                                    key: 1,
+                                                    key: 0,
                                                     class: "plugins-panel-note"
                                                   }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.missingCount', { count: _ctx.promptComposerMissingVars.length })), 1 /* TEXT */))
                                                 : _createCommentVNode("v-if", true)
@@ -8826,8 +8824,7 @@ return function render(_ctx, _cache) {
                                   _createElementVNode("div", { class: "prompt-preview-block prompt-compose-preview" }, [
                                     _createElementVNode("div", { class: "prompt-vars-head" }, [
                                       _createElementVNode("div", null, [
-                                        _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.outputTitle')), 1 /* TEXT */),
-                                        _createElementVNode("div", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.outputHint')), 1 /* TEXT */)
+                                        _createElementVNode("div", { class: "prompt-vars-title" }, _toDisplayString(_ctx.t('plugins.promptTemplates.compose.outputTitle')), 1 /* TEXT */)
                                       ]),
                                       _createElementVNode("button", {
                                         type: "button",
@@ -9073,12 +9070,6 @@ return function render(_ctx, _cache) {
                                                 class: "plugins-panel-note"
                                               }, _toDisplayString(_ctx.t('plugins.promptTemplates.editor.builtinReadOnly')), 1 /* TEXT */))
                                             : _createCommentVNode("v-if", true),
-                                          (_ctx.promptTemplateDraft.isBuiltin && (_ctx.promptTemplateDraft.createdBy || (_ctx.promptTemplateDraft.maintainers && _ctx.promptTemplateDraft.maintainers.length)))
-                                            ? (_openBlock(), _createElementBlock("div", {
-                                                key: 1,
-                                                class: "plugins-panel-note"
-                                              }, _toDisplayString(_ctx.t('plugins.meta.attribution', { createdBy: _ctx.promptTemplateDraft.createdBy || '', maintainers: (_ctx.promptTemplateDraft.maintainers || []).join(', ') })), 1 /* TEXT */))
-                                            : _createCommentVNode("v-if", true),
                                           _withDirectives(_createElementVNode("input", {
                                             class: "form-input",
                                             type: "text",
@@ -9188,13 +9179,7 @@ return function render(_ctx, _cache) {
                           }, [
                             _createElementVNode("div", { class: "plugins-panel-head" }, [
                               _createElementVNode("div", null, [
-                                _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.textTools.title')), 1 /* TEXT */),
-                                (_ctx.pluginsActiveAttribution)
-                                  ? (_openBlock(), _createElementBlock("div", {
-                                      key: 0,
-                                      class: "plugins-panel-note"
-                                    }, _toDisplayString(_ctx.pluginsActiveAttribution), 1 /* TEXT */))
-                                  : _createCommentVNode("v-if", true)
+                                _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.textTools.title')), 1 /* TEXT */)
                               ])
                             ]),
                             _createElementVNode("div", {
@@ -9254,10 +9239,197 @@ return function render(_ctx, _cache) {
                               ])
                             ])
                           ]))
-                        : (_openBlock(), _createElementBlock("div", {
-                            key: 4,
-                            class: "skills-empty-state"
-                          }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
+                        : (_ctx.pluginsActiveId === 'file-sharing')
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 4,
+                              class: "plugins-panel",
+                              id: "plugin-file-sharing"
+                            }, [
+                              _createElementVNode("div", { class: "plugins-panel-head" }, [
+                                _createElementVNode("div", { class: "plugins-panel-title" }, _toDisplayString(_ctx.t('plugins.fileSharing.title')), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "file-sharing-actions" }, [
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini",
+                                    disabled: _ctx.fileSharingBusy,
+                                    onClick: $event => (_ctx.$refs.fileSharingFiles.click())
+                                  }, _toDisplayString(_ctx.t('plugins.fileSharing.chooseFiles')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini",
+                                    disabled: _ctx.fileSharingBusy,
+                                    onClick: $event => (_ctx.$refs.fileSharingFolder.click())
+                                  }, _toDisplayString(_ctx.t('plugins.fileSharing.chooseFolder')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                                  _createElementVNode("button", {
+                                    type: "button",
+                                    class: "btn-mini",
+                                    disabled: _ctx.fileSharingBusy,
+                                    onClick: _ctx.refreshFileSharing
+                                  }, _toDisplayString(_ctx.t('common.refresh')), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+                                ])
+                              ]),
+                              _createElementVNode("input", {
+                                ref: "fileSharingFiles",
+                                id: "file-sharing-files",
+                                type: "file",
+                                multiple: "",
+                                hidden: "",
+                                onChange: $event => (_ctx.selectFileSharingItems($event, false))
+                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
+                              _createElementVNode("input", {
+                                ref: "fileSharingFolder",
+                                id: "file-sharing-folder",
+                                type: "file",
+                                webkitdirectory: "",
+                                hidden: "",
+                                onChange: $event => (_ctx.selectFileSharingItems($event, true))
+                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
+                              (_ctx.fileSharingError)
+                                ? (_openBlock(), _createElementBlock("p", {
+                                    key: 0,
+                                    role: "alert",
+                                    class: "state-message error"
+                                  }, _toDisplayString(_ctx.fileSharingError), 1 /* TEXT */))
+                                : _createCommentVNode("v-if", true),
+                              (_ctx.fileSharingPending)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 1,
+                                    class: "file-sharing-pending"
+                                  }, [
+                                    _createElementVNode("p", { class: "plugins-panel-note" }, _toDisplayString(_ctx.t('plugins.fileSharing.confirm')), 1 /* TEXT */),
+                                    _createElementVNode("ul", {
+                                      class: "file-sharing-items",
+                                      "aria-live": "polite"
+                                    }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.fileSharingPending.entries, (file, index) => {
+                                        return (_openBlock(), _createElementBlock("li", {
+                                          key: index,
+                                          dir: "auto"
+                                        }, _toDisplayString(file.name), 1 /* TEXT */))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ]),
+                                    _createElementVNode("div", { class: "file-sharing-actions" }, [
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini",
+                                        id: "upload-file-sharing",
+                                        disabled: _ctx.fileSharingBusy,
+                                        onClick: _ctx.uploadFileSharingItems
+                                      }, _toDisplayString(_ctx.t('plugins.fileSharing.upload')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini",
+                                        id: "cancel-file-sharing",
+                                        disabled: _ctx.fileSharingBusy,
+                                        onClick: $event => (_ctx.fileSharingPending = null)
+                                      }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["disabled", "onClick"])
+                                    ])
+                                  ]))
+                                : _createCommentVNode("v-if", true),
+                              (_ctx.fileSharingBusy)
+                                ? (_openBlock(), _createElementBlock("p", {
+                                    key: 2,
+                                    role: "status",
+                                    class: "plugins-panel-note"
+                                  }, _toDisplayString(_ctx.t('common.loading')), 1 /* TEXT */))
+                                : (!_ctx.fileSharingBatches.length)
+                                  ? (_openBlock(), _createElementBlock("p", {
+                                      key: 3,
+                                      class: "skills-empty-state"
+                                    }, _toDisplayString(_ctx.t('plugins.fileSharing.empty')), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true),
+                              (_ctx.fileSharingBatches.length)
+                                ? (_openBlock(), _createElementBlock("ul", {
+                                    key: 4,
+                                    class: "file-sharing-items file-sharing-batches"
+                                  }, [
+                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.fileSharingBatches, (batch) => {
+                                      return (_openBlock(), _createElementBlock("li", {
+                                        key: batch.id
+                                      }, [
+                                        _createElementVNode("div", { class: "file-sharing-row" }, [
+                                          _createElementVNode("strong", { dir: "auto" }, _toDisplayString(batch.folder || _ctx.t('plugins.fileSharing.files', { count: batch.files.length })), 1 /* TEXT */),
+                                          _createElementVNode("button", {
+                                            type: "button",
+                                            class: "btn-mini file-sharing-icon file-sharing-remove",
+                                            "aria-label": _ctx.t('plugins.fileSharing.remove'),
+                                            title: _ctx.t('plugins.fileSharing.remove'),
+                                            disabled: _ctx.fileSharingBusy,
+                                            onClick: $event => (_ctx.removeFileSharingBatch(batch.id))
+                                          }, [
+                                            (_openBlock(), _createElementBlock("svg", {
+                                              viewBox: "0 0 24 24",
+                                              fill: "none",
+                                              stroke: "currentColor",
+                                              "stroke-width": "1.8",
+                                              "stroke-linecap": "round",
+                                              "stroke-linejoin": "round",
+                                              focusable: "false"
+                                            }, [
+                                              _createElementVNode("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6m5 4v6m4-6v6" })
+                                            ]))
+                                          ], 8 /* PROPS */, ["aria-label", "title", "disabled", "onClick"])
+                                        ]),
+                                        _createElementVNode("ul", { class: "file-sharing-items" }, [
+                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(batch.files, (file, index) => {
+                                            return (_openBlock(), _createElementBlock("li", {
+                                              key: index,
+                                              class: "file-sharing-row"
+                                            }, [
+                                              _createElementVNode("span", { dir: "auto" }, _toDisplayString(file.name), 1 /* TEXT */),
+                                              _createElementVNode("span", { class: "file-sharing-size" }, _toDisplayString(_ctx.t('plugins.fileSharing.bytes', { size: file.size })), 1 /* TEXT */),
+                                              _createElementVNode("a", {
+                                                class: "btn-mini file-sharing-icon",
+                                                "aria-label": _ctx.t('plugins.fileSharing.download'),
+                                                title: _ctx.t('plugins.fileSharing.download'),
+                                                href: _ctx.fileSharingDownloadUrl(batch.id, index),
+                                                download: "",
+                                                referrerpolicy: "no-referrer"
+                                              }, [
+                                                (_openBlock(), _createElementBlock("svg", {
+                                                  viewBox: "0 0 24 24",
+                                                  fill: "none",
+                                                  stroke: "currentColor",
+                                                  "stroke-width": "1.8",
+                                                  "stroke-linecap": "round",
+                                                  "stroke-linejoin": "round",
+                                                  focusable: "false"
+                                                }, [
+                                                  _createElementVNode("path", { d: "M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4" })
+                                                ]))
+                                              ], 8 /* PROPS */, ["aria-label", "title", "href"]),
+                                              _createElementVNode("button", {
+                                                type: "button",
+                                                class: "btn-mini file-sharing-icon file-sharing-copy",
+                                                "aria-label": _ctx.t('plugins.fileSharing.copyLink'),
+                                                title: _ctx.t('plugins.fileSharing.copyLink'),
+                                                disabled: _ctx.fileSharingBusy,
+                                                onClick: $event => (_ctx.copyFileSharingLink(batch.id, index))
+                                              }, [
+                                                (_openBlock(), _createElementBlock("svg", {
+                                                  viewBox: "0 0 24 24",
+                                                  fill: "none",
+                                                  stroke: "currentColor",
+                                                  "stroke-width": "1.8",
+                                                  "stroke-linecap": "round",
+                                                  "stroke-linejoin": "round",
+                                                  focusable: "false"
+                                                }, [
+                                                  _createElementVNode("path", { d: "M10 13a4 4 0 0 0 6 .5l3-3a4 4 0 0 0-5.5-5.5l-1.7 1.7m2.2 4.3a4 4 0 0 0-6-.5l-3 3a4 4 0 0 0 5.5 5.5l1.7-1.7" })
+                                                ]))
+                                              ], 8 /* PROPS */, ["aria-label", "title", "disabled", "onClick"])
+                                            ]))
+                                          }), 128 /* KEYED_FRAGMENT */))
+                                        ])
+                                      ]))
+                                    }), 128 /* KEYED_FRAGMENT */))
+                                  ]))
+                                : _createCommentVNode("v-if", true)
+                            ]))
+                          : (_openBlock(), _createElementBlock("div", {
+                              key: 5,
+                              class: "skills-empty-state"
+                            }, _toDisplayString(_ctx.t('plugins.promptTemplates.noPluginSelected')), 1 /* TEXT */))
               ], 8 /* PROPS */, ["aria-label"])
             ], 2 /* CLASS */)
           ], 512 /* NEED_PATCH */), [
