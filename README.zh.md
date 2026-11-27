@@ -13,6 +13,7 @@ Codex Mate 是本地运行的 CLI + Web 管理工具，在一个界面查看、�
   <a href="#快速开始">[快速开始]</a>
   <a href="README.md">[English]</a>
   <a href="README.vi.md">[Tiếng Việt]</a>
+  <a href="README.tr.md">[Türkçe]</a>
 </p>
 
 [![Version](https://img.shields.io/npm/v/codexmate?style=flat-square&color=A179FF)](https://www.npmjs.com/package/codexmate)
