@@ -378,3 +378,17 @@ test('model-test source survives navigation snapshots and restores on explicit p
     context.applyWebUiPreferences({ navigation: { modelTestTarget: 'invalid' } });
     assert.strictEqual(context.modelTestTarget, 'pi');
 });
+
+
+test('prompt file preferences persist the selected filename and restore it before navigation', async () => {
+    const source = createContext();
+    Object.assign(source, { promptsSubTab: 'system', sysPromptScope: 'project', sysPromptMode: 'append', sysPromptFileName: 'extra.md' });
+    const snapshot = source.buildWebUiPreferencesSnapshot();
+    assert.strictEqual(snapshot.sysPromptFileName, 'extra.md');
+    const restored = createContext([], null, snapshot);
+    restored.switchMainTab = function () { assert.strictEqual(this.sysPromptFileName, 'extra.md'); };
+    await restored.loadWebUiPreferences();
+    assert.strictEqual(restored.sysPromptScope, 'project');
+    assert.strictEqual(restored.sysPromptMode, 'append');
+    assert.match(readProjectFile('web-ui/app.js'), /sysPromptFileName\(newVal\)/);
+});

@@ -141,3 +141,52 @@ test('successful list refresh cannot unlock a file whose content failed to load'
     assert.equal(vm.sysPromptFilesError, 'toast.load.fail');
     assert.equal(vm.sysPromptContent, 'original');
 });
+
+
+test('Pi clean missing selection falls back to the first listed file and loads its content', async () => {
+    const vm = context(async (action, params) => action === 'list-system-prompt-files'
+        ? files(['SYSTEM.md', 'extra.md']) : { filename: params.fileName, exists: true, content: 'first file' });
+    vm.sysPromptFileName = 'removed.md';
+    await vm.loadSystemPromptFiles();
+    assert.equal(vm.currentSysPromptFileName(), 'SYSTEM.md');
+    assert.equal(vm.sysPromptContent, 'first file');
+    assert.equal(vm.sysPromptMode, 'system');
+});
+
+test('Pi scope switch retains a listed filename instead of resetting to a fixed file', async () => {
+    const calls = [];
+    const vm = context(async (action, params) => {
+        calls.push({ action, params });
+        return action === 'list-system-prompt-files' ? files(['SYSTEM.md', 'extra.md'])
+            : { filename: params.fileName, exists: true, content: params.scope };
+    });
+    vm.sysPromptFileName = 'extra.md';
+    await vm.switchSysPromptScope('project');
+    assert.equal(vm.currentSysPromptFileName(), 'extra.md');
+    assert.equal(vm.sysPromptContent, 'project');
+    await vm.switchSysPromptScope('global');
+    assert.equal(vm.currentSysPromptFileName(), 'extra.md');
+    assert.equal(vm.sysPromptContent, 'global');
+    assert.ok(calls.filter(call => call.action === 'get-system-prompt').every(call => call.params.fileName === 'extra.md'));
+});
+
+
+test('concurrent Pi tab entry waits for the same list before loading a missing cached file', async () => {
+    let resolveList;
+    const reads = [];
+    const vm = Object.assign(context((action, params) => {
+        if (action === 'list-system-prompt-files') return new Promise(resolve => { resolveList = resolve; });
+        reads.push(params.fileName);
+        return Promise.resolve({ filename: params.fileName, exists: true, content: 'first file' });
+    }), createAgentsMethods({ api: async () => ({}) }));
+    vm.promptsSubTab = 'system';
+    vm.sysPromptFileName = 'removed.md';
+    const first = vm.loadPromptsTabContent();
+    const second = vm.loadPromptsTabContent();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(reads, []);
+    resolveList(files(['SYSTEM.md']));
+    await Promise.all([first, second]);
+    assert.deepEqual(reads, ['SYSTEM.md']);
+    assert.equal(vm.sysPromptContent, 'first file');
+});

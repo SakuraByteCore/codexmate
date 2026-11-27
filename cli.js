@@ -1189,7 +1189,7 @@ function normalizeUsageTimeRangePreference(value) {
 function normalizePromptsSubTabPreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
     if (normalized === 'claude-project') return normalized;
-    if (normalized === 'system') return normalized;
+    if (normalized === 'system' || normalized === 'opencode') return normalized;
     return 'codex';
 }
 
@@ -1281,6 +1281,7 @@ function normalizeWebUiPreferences(value = {}) {
         promptsPreviewCollapsed: normalizeBooleanPreference(source.promptsPreviewCollapsed, true),
         sysPromptScope: normalizeSysPromptScopePreference(source.sysPromptScope),
         sysPromptMode: normalizeSysPromptModePreference(source.sysPromptMode),
+        sysPromptFileName: typeof source.sysPromptFileName === 'string' ? source.sysPromptFileName : '',
         projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',
         sidebarCollapsed: normalizeSidebarCollapsedPreference(source.sidebarCollapsed),
         theme: normalizeThemePreference(source.theme),

@@ -349,6 +349,8 @@ export function createWebUiPreferencesMethods(options = {}) {
                 promptsPreviewCollapsed: normalizeBoolean(hasOwn(source, 'promptsPreviewCollapsed') ? source.promptsPreviewCollapsed : this.promptsPreviewCollapsed, true),
                 sysPromptScope: normalizeSysPromptScope(hasOwn(source, 'sysPromptScope') ? source.sysPromptScope : this.sysPromptScope),
                 sysPromptMode: normalizeSysPromptMode(hasOwn(source, 'sysPromptMode') ? source.sysPromptMode : this.sysPromptMode),
+                sysPromptFileName: typeof source.sysPromptFileName === 'string'
+                    ? source.sysPromptFileName : (this.sysPromptFileName || ''),
                 promptPresets: normalizePromptPresets(hasOwn(source, 'promptPresets') ? source.promptPresets : this.promptPresets),
                 projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string'
                     ? source.projectClaudeMdPath
@@ -415,6 +417,9 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (typeof source.sysPromptMode === 'string') {
                     this.sysPromptMode = normalizeSysPromptMode(source.sysPromptMode);
+                }
+                if (typeof source.sysPromptFileName === 'string') {
+                    this.sysPromptFileName = source.sysPromptFileName;
                 }
                 if (Array.isArray(source.promptPresets)) {
                     this.promptPresets = normalizePromptPresets(source.promptPresets);

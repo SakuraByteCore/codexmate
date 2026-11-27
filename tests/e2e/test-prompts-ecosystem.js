@@ -3,6 +3,13 @@ const path = require('path');
 const { assert } = require('./helpers');
 
 module.exports = async function testPromptsEcosystem({ api, tmpHome }) {
+    await api('set-web-ui-preferences', { preferences: {
+        promptsSubTab: 'opencode', sysPromptScope: 'project', sysPromptMode: 'append', sysPromptFileName: 'extra.md'
+    } });
+    const preferences = (await api('get-web-ui-preferences')).preferences;
+    assert(preferences.promptsSubTab === 'opencode', 'prompt editor subtab must survive backend normalization');
+    assert(preferences.sysPromptFileName === 'extra.md', 'selected Pi filename must survive preference persistence');
+    assert(preferences.sysPromptScope === 'project' && preferences.sysPromptMode === 'append', 'Pi scope and mode preferences must remain compatible');
     const initial = await api('get-plugin-config');
     assert(!initial.error && typeof initial.hash === 'string', 'plugin configuration endpoint must return a hash');
     const old = { id: 'e2e-template', name: 'Template', template: '{{project_path}}', isBuiltin: false };

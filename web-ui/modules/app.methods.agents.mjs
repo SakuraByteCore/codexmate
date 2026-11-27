@@ -1087,10 +1087,11 @@ export function createAgentsMethods(options = {}) {
             });
         },
 
-        loadPromptsTabContent() {
+        async loadPromptsTabContent() {
             if (typeof this.loadPromptsPathReferences === "function") this.loadPromptsPathReferences();
             if (this.promptsSubTab === 'system') {
-                if (typeof this.loadSystemPromptFiles === 'function') this.loadSystemPromptFiles();
+                const didLoadFallback = typeof this.loadSystemPromptFiles === 'function' && await this.loadSystemPromptFiles();
+                if (this.promptsSubTab !== 'system' || didLoadFallback) return;
                 if (this.sysPromptLoading || this.sysPromptSaving || this.sysPromptDiffVisible || this.hasSysPromptContentChanged()) return;
                 if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
             } else {

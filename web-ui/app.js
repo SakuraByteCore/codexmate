@@ -951,6 +951,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.persistWebUiPreferences({ sysPromptScope: newVal });
                 }
             },
+            sysPromptFileName(newVal) {
+                if (typeof this.persistWebUiPreferences === 'function') {
+                    this.persistWebUiPreferences({ sysPromptFileName: newVal });
+                }
+            },
             sysPromptMode(newVal) {
                 if (typeof this.persistWebUiPreferences === 'function') {
                     this.persistWebUiPreferences({ sysPromptMode: newVal });

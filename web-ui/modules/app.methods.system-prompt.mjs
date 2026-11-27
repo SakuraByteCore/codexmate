@@ -36,8 +36,12 @@ export function createSystemPromptMethods(options = {}) {
             return false;
         },
 
-        async loadSystemPromptFiles() {
-            if (this.sysPromptFilesLoading) return;
+        loadSystemPromptFiles() {
+            if (!this.sysPromptFilesLoading) this._sysPromptFilesPromise = this.refreshSystemPromptFiles();
+            return this._sysPromptFilesPromise;
+        },
+
+        async refreshSystemPromptFiles() {
             const scope = this.sysPromptScope || 'global';
             const token = issueLatestRequestToken(this, '_sysPromptFilesRequestToken');
             this.sysPromptFilesLoading = true;
@@ -47,6 +51,11 @@ export function createSystemPromptMethods(options = {}) {
                 if (result.error) throw new Error(result.error);
                 this.sysPromptFiles = result.files;
                 const isListed = result.files.some(file => file.filename === this.currentSysPromptFileName());
+                if (!isListed && result.files.length && !this.hasSysPromptContentChanged()
+                    && !this.sysPromptLoading && !this.sysPromptSaving && !this.sysPromptDiffVisible) {
+                    await this.switchSysPromptFileName(result.files[0].filename);
+                    return true;
+                }
                 if (!isListed) this.sysPromptFileMissing = true;
                 this.sysPromptFilesError = !isListed ? this.t('sysPrompt.fileMissing')
                     : (this.sysPromptFileMissing ? this.sysPromptFilesError : '');
@@ -67,21 +76,21 @@ export function createSystemPromptMethods(options = {}) {
             if (filename === 'SYSTEM.md') this.sysPromptMode = 'system';
             if (filename === 'APPEND_SYSTEM.md') this.sysPromptMode = 'append';
             this.closeSysHistory();
-            this.loadSystemPrompt();
+            return this.loadSystemPrompt();
         },
 
-        switchSysPromptScope(scope) {
+        async switchSysPromptScope(scope) {
             if (!this.canSwitchSysPromptTarget()) return;
             const normalized = scope === 'project' ? scope : 'global';
             if (normalized === this.sysPromptScope) return;
             this.sysPromptScope = normalized;
-            this.sysPromptFileName = '';
             this.sysPromptFiles = [];
             this._sysPromptFilesRequestToken = null;
             this.sysPromptFilesLoading = false;
             this.closeSysHistory();
-            this.loadSystemPromptFiles();
-            this.loadSystemPrompt();
+            const didLoadFallback = await this.loadSystemPromptFiles();
+            if (normalized !== this.sysPromptScope || didLoadFallback) return;
+            return this.loadSystemPrompt();
         },
 
         switchSysPromptMode(mode) {
