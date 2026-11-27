@@ -127,7 +127,11 @@ const ja = Object.freeze({
     "features.index": "全文インデックス",
     "features.refreshIndex": "インデックスを更新",
     "features.indexStatus": "{count} セッションを登録、更新 {processed}/{total}",
-    "features.indexScope": "検出済み候補のみ対象。上のソース・プロジェクト・役割の条件を使用。新規メッセージは更新後に検索できます。",
+    "features.indexCatalogTime": "索引カタログ更新日時（UTC）：{time}",
+    "features.indexSourceCoverage": "{source}：候補 {count} 件を検出；検出上限 {limit}",
+    "features.indexUnknown": "不明",
+    "features.indexCoverageUnknown": "現在のソースに対象範囲の記録がありません。索引を更新してください。",
+    "features.indexScope": "検索対象は索引済みの候補のみで、全履歴や最新メッセージではありません。カタログ日時は各ソースの同期日時ではありません。上のソース、プロジェクト、ロールの絞り込みを使用します。新しいメッセージには索引更新が必要です。",
     "features.indexFailures": "{count} 件の読み込み失敗。該当記録は対象外です",
     "features.coverage": "登録済みセッション {scanned}/{total} 件を検索",
     "features.partial": "対象範囲は一部のみ。最大 100 件を表示",
@@ -1137,7 +1141,7 @@ const ja = Object.freeze({
 
     // Usage panel
     "usage.records.title": "使用量記録の内訳",
-    "usage.records.scope": "記録は UTC 日付で集計します。Codex は累積値の差分、Claude/Pi はアシスタントの使用量記録を使います。既存グラフはセッション更新日を使います。保存済み全文の推定値は記録トークンと分離し、料金を表しません。",
+    "usage.records.scope": "記録は UTC 日付で集計します。Codex は累積値の差分、Claude/Pi はアシスタント使用量、Gemini は対応済み JSON セッションの tokens を使います。Gemini の合計には思考とツールの Token が含まれ、キャッシュ読み取りは入力の一部です。未記録項目は不明のままです。既存グラフはセッション更新日を使います。全文推定は別集計で、料金ではありません。",
     "usage.records.coverage": "候補 {candidates} 件中 {scanned} 件を走査。使用量記録なし {unreported} 件、記録形式未対応 {unsupported} 件。",
     "usage.records.failed": "{count} 件の読み込みに失敗。結果は不完全です。更新して再試行してください。",
     "usage.records.total": "記録トークン",

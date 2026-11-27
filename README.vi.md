@@ -32,7 +32,7 @@ Codex Mate là công cụ CLI + Web chạy cục bộ, giúp xem, lọc và xu�
 
 ### Chi tiết bản ghi sử dụng
 
-Mở bản ghi UTC khi cần để tách token ghi nhận, các loại bộ nhớ đệm và ước tính toàn bộ văn bản đã lưu. Hỗ trợ bản ghi Codex, Claude và Pi; biểu đồ và xuất mặc định giữ nguyên cách thống kê. Không tính chi phí. Dùng `codexmate analytics export --attribution records`. Xem [hướng dẫn sử dụng](https://sakurabytecore.github.io/codexmate/guide/sessions#%E7%94%A8%E9%87%8F%E8%AE%B0%E5%BD%95%E6%98%8E%E7%BB%86).
+Mở bản ghi UTC khi cần để tách token ghi nhận, các loại bộ nhớ đệm và ước tính toàn bộ văn bản đã lưu. Hỗ trợ bản ghi Codex, Claude, Pi và phiên Gemini JSON; biểu đồ và xuất mặc định giữ nguyên cách thống kê. Không tính chi phí. Dùng `codexmate analytics export --attribution records`. Xem [hướng dẫn sử dụng](https://sakurabytecore.github.io/codexmate/guide/sessions#%E7%94%A8%E9%87%8F%E8%AE%B0%E5%BD%95%E6%98%8E%E7%BB%86).
 
 ### Chia sẻ tệp
 

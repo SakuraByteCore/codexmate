@@ -32,7 +32,7 @@ Codex Mate 是本地运行的 CLI + Web 管理工具，在一个界面查看、�
 
 ### 用量记录明细
 
-在 Usage 页按需展开 UTC 记录明细，区分记录 Token、缓存分项与完整文本估算。当前适配 Codex、Claude、Pi；旧图表和默认导出保持原口径，不计算费用。CLI 使用 `codexmate analytics export --attribution records`。详见[用量指南](https://sakurabytecore.github.io/codexmate/guide/sessions#用量记录明细)。
+在 Usage 页按需展开 UTC 记录明细，区分记录 Token、缓存分项与完整文本估算。当前适配 Codex、Claude、Pi 与 Gemini JSON 会话；旧图表和默认导出保持原口径，不计算费用。CLI 使用 `codexmate analytics export --attribution records`。详见[用量指南](https://sakurabytecore.github.io/codexmate/guide/sessions#用量记录明细)。
 
 ### 文件共享
 

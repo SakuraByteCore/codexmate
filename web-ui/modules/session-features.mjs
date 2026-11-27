@@ -29,6 +29,16 @@ export const sessionFeaturesMixin = {
             diagnosticsTargets: [], diagnosticsSelected: [], diagnosticsTimer: null };
     },
     computed: {
+        indexCatalogTime() {
+            const timestamp = this.indexReport?.updatedAt;
+            const parsed = typeof timestamp === 'string' ? Date.parse(timestamp) : NaN;
+            return Number.isFinite(parsed) ? new Date(parsed).toISOString() : this.t('features.indexUnknown');
+        },
+        indexSourceCoverage() {
+            const coverage = this.indexReport?.coverage;
+            const source = this.sessionFilterSource || 'all';
+            return Array.isArray(coverage) ? coverage.filter(entry => source === 'all' || entry.source === source) : [];
+        },
         contextPreferenceKey() {
             return `${this.handoffSessionKey}::${this.contextSelectedModel || this.sessionContextHealth?.models?.[0] || 'manual'}`;
         },

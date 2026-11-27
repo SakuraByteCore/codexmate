@@ -127,7 +127,11 @@ const en = Object.freeze({
     "features.index": "Full-text index",
     "features.refreshIndex": "Refresh index",
     "features.indexStatus": "{count} sessions indexed; refresh {processed}/{total}",
-    "features.indexScope": "Covers discovered candidates only. Uses source, project and role filters above. Refresh for new messages.",
+    "features.indexCatalogTime": "Index catalog updated (UTC): {time}",
+    "features.indexSourceCoverage": "{source}: {count} candidates discovered; discovery limit {limit}",
+    "features.indexUnknown": "Unknown",
+    "features.indexCoverageUnknown": "No coverage record for the current source. Refresh the index.",
+    "features.indexScope": "Search covers indexed candidates, not all history or new messages. Catalog time is not a per-source sync time. Uses source, project and role filters above. Refresh for new messages.",
     "features.indexFailures": "{count} read failures; these records are not covered",
     "features.coverage": "Searched {scanned}/{total} indexed sessions",
     "features.partial": "Partial coverage; at most 100 matches are shown",
@@ -1134,7 +1138,7 @@ const en = Object.freeze({
 
     // Usage panel
     "usage.records.title": "Usage record breakdown",
-    "usage.records.scope": "Records use UTC dates: Codex cumulative deltas and Claude/Pi assistant usage. Existing charts still use session update dates. Full saved-text estimates stay separate from recorded tokens and do not represent cost.",
+    "usage.records.scope": "Records use UTC dates: Codex cumulative deltas, Claude/Pi assistant usage and Gemini tokens from supported JSON sessions. Gemini totals include reasoning/tool tokens; cache reads are an input subset. Missing fields stay unknown. Existing charts use session update dates. Full-text estimates stay separate and do not represent cost.",
     "usage.records.coverage": "Scanned {scanned}/{candidates} candidate sessions; {unreported} without usage records, {unsupported} with unsupported record sources.",
     "usage.records.failed": "{count} sessions failed to load. Results are incomplete; refresh to retry.",
     "usage.records.total": "Recorded tokens",

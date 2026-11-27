@@ -32,7 +32,7 @@ Codex Mate is a locally running CLI + Web tool for browsing, filtering, and expo
 
 ### Usage record breakdown
 
-Expand UTC usage records on demand to separate recorded tokens, cache categories and full saved-text estimates. Record adapters cover Codex, Claude and Pi; existing charts and default exports keep their original semantics. No cost calculation. Use `codexmate analytics export --attribution records`. See the [usage guide](https://sakurabytecore.github.io/codexmate/guide/sessions#%E7%94%A8%E9%87%8F%E8%AE%B0%E5%BD%95%E6%98%8E%E7%BB%86).
+Expand UTC usage records on demand to separate recorded tokens, cache categories and full saved-text estimates. Record adapters cover Codex, Claude, Pi and Gemini JSON sessions; existing charts and default exports keep their original semantics. No cost calculation. Use `codexmate analytics export --attribution records`. See the [usage guide](https://sakurabytecore.github.io/codexmate/guide/sessions#%E7%94%A8%E9%87%8F%E8%AE%B0%E5%BD%95%E6%98%8E%E7%BB%86).
 
 ### File sharing
 

@@ -14,6 +14,81 @@ const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const jsonl = records => records.map(record => JSON.stringify(record)).join('\n') + '\n';
 
+async function checkIndexAndGemini({ context, api, base, home, fixtures, today, yesterday, env }) {
+    const file = path.join(home, '.gemini/tmp/iteration/chats/session-gemini-records.json');
+    const messages = [
+        { type: 'user', id: 'gemini-user', timestamp: yesterday + 'T11:00:00Z', content: 'Gemini request' },
+        { type: 'gemini', id: 'gemini-one', model: 'gemini-records', timestamp: yesterday + 'T12:00:00Z', content: 'Gemini snapshot needle',
+            tokens: { input: 100, output: 10, cached: 40, thoughts: 7, tool: 3, total: 120 } },
+        { type: 'gemini', id: 'gemini-two', model: 'gemini-records', timestamp: today + 'T12:00:00Z', content: 'Gemini reply',
+            tokens: { input: 30, output: 5, cached: 10, thoughts: 2, tool: 1, total: 38 } }
+    ];
+    const document = { sessionId: 'gemini-records', startTime: yesterday + 'T11:00:00Z', lastUpdated: today + 'T12:00:00Z', messages };
+    const original = JSON.stringify(document);
+    await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, original); fixtures.set(file, original);
+    const expectedTotal = messages.reduce((sum, message) => sum + (message.tokens?.total || 0), 0);
+    const report = await api('read-sessions-usage-report', { source: 'gemini', forceRefresh: true });
+    assert.deepEqual(report.rows.map(row => [row.date, row.totalTokens, row.cachedInputTokens, row.cacheCreationInputTokens]),
+        [[yesterday, 120, 40, null], [today, 38, 10, null]]);
+    assert.equal(report.summary.totalTokens, expectedTotal);
+    assert.equal(report.summary.unsupportedSessions, 0);
+    const cli = spawnSync(process.execPath, ['cli.js', 'analytics', 'export', '--attribution', 'records', '--source', 'gemini', '--format', 'json', '-o', '-'],
+        { env, encoding: 'utf8', timeout: 15000 });
+    assert.equal(cli.status, 0, cli.stderr); assert.deepEqual(JSON.parse(cli.stdout).rows, report.rows);
+    const csv = await api('export-sessions-usage', { attribution: 'records', source: 'gemini', format: 'csv' });
+    assert.match(csv.content, /gemini,gemini-records,100,40,,10,120/);
+    const served = await (await fetch(base + '/web-ui/app.js')).text();
+    assert.equal(served, require('../../web-ui/source-bundle.cjs').readExecutableBundledWebUiScript(), 'candidate serves final workspace bundle');
+    for (const width of [1440, 390]) {
+        const page = await context.newPage(); await page.setViewportSize({ width, height: 900 });
+        await page.goto(base + '/?token=' + token);
+        const navigate = id => page.locator(width === 1440 ? `#side-tab-${id}` : `#tab-${id}`).click();
+        await navigate('usage');
+        const usage = page.locator('#usage-records-report'); await usage.locator('summary').click();
+        await page.waitForFunction(total => document.querySelector('#usage-records-report .usage-kpi-value')?.textContent.trim() === String(total), 236 + expectedTotal);
+        assert.match(await usage.innerText(), /Gemini/);
+        await navigate('sessions');
+        await page.locator('.session-features .feature-tabs button').filter({ hasText: '全文索引' }).click();
+        const time = page.locator('.feature-index-time'); await time.waitFor();
+        if (width === 1440) assert.match(await time.innerText(), /未知/);
+        const chooseSource = source => page.locator(`.session-source-pill[data-source="${source}"]`).click();
+        const scope = page.locator('.feature-index-scope');
+        await scope.locator('summary').click();
+        const refresh = async () => {
+            const started = page.waitForResponse(response => response.url().endsWith('/api') && response.request().postDataJSON()?.action === 'session-index-refresh');
+            await page.locator('.session-features').getByRole('button', { name: '更新索引', exact: true }).click();
+            await started;
+            await page.waitForFunction(() => document.querySelector('.session-features .feature-status')?.dataset.status === 'success');
+        };
+        await chooseSource('codex'); await refresh();
+        const savedTime = (await api('session-index-status')).updatedAt;
+        assert.match(await time.innerText(), new RegExp(savedTime.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+        await chooseSource('gemini');
+        if (width === 1440) await scope.locator('.feature-index-unknown').waitFor();
+        await refresh();
+        for (const source of ['codex', 'gemini', 'codex']) {
+            await chooseSource(source);
+            assert.equal(await scope.locator('.feature-index-coverage').count(), 1);
+            assert.match(await scope.locator('.feature-index-coverage').innerText(), source === 'codex' ? /Codex/ : /Gemini/);
+        }
+        await chooseSource('all'); assert.equal(await scope.locator('.feature-index-coverage').count(), 2);
+        assert.equal(await scope.evaluate(element => element.scrollWidth <= element.clientWidth + 1), true, 'coverage must fit target container');
+        await chooseSource('gemini');
+        const form = page.locator('.session-features .feature-search-form');
+        await form.locator('input').fill('Gemini snapshot needle'); await form.locator('button').click();
+        const result = page.locator('.session-features .feature-record').filter({ hasText: 'Gemini snapshot needle' });
+        await result.waitFor(); await result.getByRole('button', { name: '查看原文', exact: true }).click();
+        await page.locator('.feature-focus pre').filter({ hasText: 'Gemini snapshot needle' }).waitFor();
+        const beforeReload = (await api('session-index-status')).updatedAt;
+        await page.reload(); await page.locator('.session-features .feature-tabs button').filter({ hasText: '全文索引' }).click();
+        await page.locator('.feature-index-time').waitFor();
+        assert.ok((await page.locator('.feature-index-time').innerText()).includes(beforeReload), 'reload retains catalog timestamp');
+        await page.close();
+    }
+    assert.equal(digest(await fs.readFile(file)), digest(Buffer.from(original)), 'Gemini records and index scans must not modify the session');
+    console.log('PASS: Gemini JSON API/CLI/CSV totals, cache subset, unknown cache creation; final bundle; index UTC time, source round-trip, unknown coverage, exact node, reload and desktop/compact bounds');
+}
+
 async function main() {
     const home = await fs.mkdtemp(path.join(os.tmpdir(), 'usage-records-acceptance-'));
     const today = new Date().toISOString().slice(0, 10);
@@ -146,6 +221,7 @@ async function main() {
         await validation.waitForFunction(() => document.querySelector('#usage-records-report .usage-kpi-value')?.textContent.trim() === '236'
             && !document.querySelector('#usage-records-report [role=alert]'));
         await validation.close();
+        await checkIndexAndGemini({ context, api, base, home, fixtures, today, yesterday, env });
         for (const [file, original] of fixtures) assert.equal(digest(await fs.readFile(file)), digest(Buffer.from(original)), 'report must not modify sessions');
         console.log('PASS: desktop/compact disclosure, range round-trip, reload, bounded table, append refresh, partial failure and unchanged source files');
     } finally {

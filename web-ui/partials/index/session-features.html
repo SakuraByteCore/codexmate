@@ -20,12 +20,18 @@
         <div v-if="indexReport" class="feature-meta" role="status">
             <span class="feature-status" :data-status="indexReport.job.status">{{ t('features.status.' + indexReport.job.status) }}</span>
             <span>{{ t('features.indexStatus', { count: indexReport.indexed, processed: indexReport.job.processed, total: indexReport.job.candidates }) }}</span>
+            <span class="feature-index-time">{{ t('features.indexCatalogTime', { time: indexCatalogTime }) }}</span>
         </div>
         <form class="feature-actions feature-search-form" @submit.prevent="searchSessionIndex">
             <input v-model="indexQuery" :aria-label="t('features.search')" :placeholder="t('features.search')">
             <button class="btn-mini feature-primary" :disabled="featureBusy || !indexQuery.trim() || !indexReport?.updatedAt">{{ t('features.search') }}</button>
         </form>
-        <details class="feature-disclosure"><summary>{{ t('features.searchScope') }}</summary><p class="feature-hint">{{ t('features.indexScope') }}</p></details>
+        <details class="feature-disclosure feature-index-scope">
+            <summary>{{ t('features.searchScope') }}</summary>
+            <p class="feature-hint">{{ t('features.indexScope') }}</p>
+            <p v-for="entry in indexSourceCoverage" :key="entry.source" class="feature-hint feature-index-coverage">{{ t('features.indexSourceCoverage', { source: t('sessions.source.' + entry.source), count: entry.candidates ?? t('features.indexUnknown'), limit: entry.discoveryLimit ?? t('features.indexUnknown') }) }}</p>
+            <p v-if="!indexSourceCoverage.length" class="feature-hint feature-index-unknown">{{ t('features.indexCoverageUnknown') }}</p>
+        </details>
         <p v-if="indexReport?.failures.length" class="form-error" role="alert">{{ t('features.indexFailures', { count: indexReport.failures.length }) }}</p>
         <p v-if="featureBusy" class="feature-loading" role="status">{{ t('features.loading') }}</p>
         <template v-if="indexResults">

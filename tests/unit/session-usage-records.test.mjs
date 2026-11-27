@@ -115,3 +115,28 @@ test('unknown totals, unsupported sources and duplicate partial snapshots never 
     await assert.rejects(controller.read({ from: '2026-05-01T12:00:00Z' }), /YYYY-MM-DD/);
     assert.match(parseAnalyticsExportArgs(['--attribution']).error, /attribution/);
 });
+
+test('Gemini JSON messages preserve totals, cache subsets, UTC dates and missing usage', () => {
+    const ledger = createSessionUsageLedger({ source: 'gemini', model: 'fallback' });
+    const record = { type: 'gemini', id: 'gemini-request', model: 'gemini-test', timestamp: '2026-05-02T01:00:00+02:00',
+        tokens: { input: 100, output: 10, cached: 40, thoughts: 7, tool: 3, total: 120 } };
+    ledger.add({ ...record, type: 'user' });
+    ledger.add(record); ledger.add(record);
+    ledger.add({ ...record, timestamp: '2026-05-02T00:01:00Z', tokens: { ...record.tokens, output: 15, total: 125 } });
+    const report = ledger.finish();
+    assert.equal(report.supported, true);
+    assert.deepEqual(report.rows.map(row => [row.date, row.totalTokens, row.cachedInputTokens, row.outputTokens, row.usageEvents]),
+        [['2026-05-01', 120, 40, 10, 1], ['2026-05-02', 5, 0, 5, 1]]);
+    assert.equal(report.rows[0].inputTokens, 100, 'cached tokens remain an input subset');
+    assert.equal(report.rows[0].cacheCreationInputTokens, null, 'Gemini does not report cache creation');
+    assert.equal(report.rows[0].model, 'gemini-test');
+    const missing = createSessionUsageLedger({ source: 'gemini' });
+    missing.add({ type: 'gemini', id: 'no-usage' });
+    assert.equal(missing.finish().observedRecords, 0);
+    missing.add({ type: 'gemini', id: 'partial', model: 'other-model', tokens: { input: 10, output: 5, cached: 4 } });
+    const [partial] = missing.finish().rows;
+    assert.equal(partial.date, '', 'do not infer record dates from session update time');
+    assert.equal(partial.totalTokens, null, 'do not infer totals that omit reasoning and tool tokens');
+    assert.equal(partial.model, 'other-model');
+    assert.equal(partial.cachedInputTokens, 4);
+});

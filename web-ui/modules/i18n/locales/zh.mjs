@@ -127,7 +127,11 @@ const zh = Object.freeze({
     "features.index": "全文索引",
     "features.refreshIndex": "更新索引",
     "features.indexStatus": "已索引 {count} 条会话；本轮 {processed}/{total}",
-    "features.indexScope": "仅覆盖已发现候选；沿用上方来源、项目与角色筛选。新消息需更新索引。",
+    "features.indexCatalogTime": "索引目录更新时间（UTC）：{time}",
+    "features.indexSourceCoverage": "{source}：发现 {count} 个候选；发现上限 {limit}",
+    "features.indexUnknown": "未知",
+    "features.indexCoverageUnknown": "当前来源没有覆盖记录；请更新索引。",
+    "features.indexScope": "仅搜索已索引候选，不代表全部历史或最新消息。目录时间不代表每个来源的同步时间。沿用上方来源、项目与角色筛选；新消息需更新索引。",
     "features.indexFailures": "{count} 项读取失败；结果未覆盖这些记录",
     "features.coverage": "已查 {scanned}/{total} 条已索引会话",
     "features.partial": "结果未完整覆盖当前范围；最多展示 100 条命中",
@@ -1133,7 +1137,7 @@ const zh = Object.freeze({
 
     // Usage panel
     "usage.records.title": "用量记录明细",
-    "usage.records.scope": "记录按 UTC 日期归属；Codex 使用累计计数增量，Claude/Pi 使用助手用量记录。旧图表仍按会话更新时间归属。完整已保存文本估算单列，不计入记录总量，不代表费用。",
+    "usage.records.scope": "记录按 UTC 日期归属；Codex 使用累计计数增量，Claude/Pi 使用助手用量，Gemini 使用既有 JSON 会话的 tokens。Gemini 总量含思考与工具 Token，缓存是输入子集；未提供分项保持未知。旧图表仍按会话更新时间归属。完整文本估算单列，不代表费用。",
     "usage.records.coverage": "已扫描 {scanned}/{candidates} 个候选会话；无用量记录 {unreported}，未支持逐记录来源 {unsupported}。",
     "usage.records.failed": "读取失败 {count} 个会话，当前结果不完整；刷新后重试。",
     "usage.records.total": "记录 Token",

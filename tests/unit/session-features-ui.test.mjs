@@ -136,3 +136,37 @@ test('settings diagnostics use scoped settings typography, flat controls and a r
     const reduced = rules.find(rule => rule.selector === '#panel-settings .feature-diagnostics-chevron' && rule.parent.params === '(prefers-reduced-motion: reduce)');
     assert.equal(reduced.nodes.find(node => node.prop === 'transition').value, 'none');
 });
+
+test('index catalog time and coverage follow source selection without claiming freshness', async () => {
+    const { mountContextHealth } = await import('./helpers/context-health-render.mjs');
+    const { DICT } = await import('../../web-ui/modules/i18n.dict.mjs');
+    const template = require('fs').readFileSync('web-ui/partials/index/session-features.html', 'utf8');
+    const status = template.match(/<div v-if="indexReport"[\s\S]*?<\/div>/)[0];
+    const scope = template.match(/<details class="feature-disclosure feature-index-scope"[\s\S]*?<\/details>/)[0];
+    const harness = mountContextHealth(`<div>${status}${scope}</div>`, { mixins: [sessionFeaturesMixin],
+        data: () => ({ featureView: 'search', sessionFilterSource: 'all',
+            indexReport: { job: { status: 'idle', processed: 0, candidates: 0 }, indexed: 0, failures: [], coverage: [], updatedAt: '' } }),
+        methods: { t: (key, params = {}) => (DICT.zh[key] || key).replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '') } });
+    const text = className => harness.find(node => node.props.class?.includes(className)).map(node => node.text);
+    try {
+        assert.deepEqual(text('feature-index-time'), ['索引目录更新时间（UTC）：未知']);
+        assert.equal(text('feature-index-unknown').length, 1);
+        harness.vm.indexReport = { ...harness.vm.indexReport, updatedAt: '2026-05-01T12:00:00+08:00',
+            coverage: [{ source: 'codex', candidates: 2, discoveryLimit: 3000 }, { source: 'gemini', candidates: 1, discoveryLimit: 3000 }] };
+        await harness.flush();
+        assert.deepEqual(text('feature-index-time'), ['索引目录更新时间（UTC）：2026-05-01T04:00:00.000Z']);
+        assert.equal(text('feature-index-coverage').length, 2);
+        for (const source of ['codex', 'gemini', 'codex']) {
+            harness.vm.sessionFilterSource = source; await harness.flush();
+            assert.deepEqual(harness.vm.indexSourceCoverage.map(entry => entry.source), [source]);
+            assert.equal(text('feature-index-coverage').length, 1);
+        }
+        harness.vm.sessionFilterSource = 'zed'; await harness.flush();
+        assert.equal(text('feature-index-unknown').length, 1);
+        harness.vm.indexReport.updatedAt = 'invalid'; await harness.flush();
+        assert.deepEqual(text('feature-index-time'), ['索引目录更新时间（UTC）：未知']);
+        for (const dictionary of Object.values(DICT)) {
+            for (const key of ['features.indexCatalogTime', 'features.indexSourceCoverage', 'features.indexUnknown', 'features.indexCoverageUnknown']) assert.ok(dictionary[key], key);
+        }
+    } finally { harness.unmount(); }
+});

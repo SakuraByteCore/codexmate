@@ -158,12 +158,21 @@ function localizeBuiltinPromptTemplate(item, t) {
 
 import { pluginsRegistry } from '../registry.mjs';
 
+const PLUGIN_TAB_ORDER = new Map([
+    ['prompt-templates', 0],
+    ['text-tools', 1],
+    ['file-sharing', 2]
+]);
+
 export function createPromptTemplatesComputed() {
     return {
         pluginsCatalog() {
             return pluginsRegistry
                 .map((entry) => entry && entry.meta)
                 .filter(Boolean)
+                .sort((left, right) =>
+                    (PLUGIN_TAB_ORDER.get(left.id) ?? PLUGIN_TAB_ORDER.size)
+                    - (PLUGIN_TAB_ORDER.get(right.id) ?? PLUGIN_TAB_ORDER.size))
                 .map((meta) => localizePluginMeta(meta, this.t));
         },
 

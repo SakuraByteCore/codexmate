@@ -6,11 +6,13 @@
 
 | 功能 | 状态 | 说明 |
 | --- | --- | --- |
-| Provider 管理 | ✅ | Codex / Claude / OpenCode / KiloCode / OpenClaw 的 provider/model 切换 |
-| 模型分配（路由组） | ✅ | Codex / Claude / OpenAI Chat 主力与备用、模型排序、主力优先、轮流使用；显式启用，不运行任务 |
+| Provider 管理 | ✅ | Codex / Claude / OpenCode / KiloCode / OpenClaw / Pi 的 provider/model 切换 |
+| 模型分配（路由组） | ✅ | 后端保留 Codex / Claude / OpenAI Chat 主力、备用与分配；Web 已移除组设置入口，模型测试直接调用选定模型 |
 | 实时同步 | ✅ | Codex / Claude 配置与状态实时监控 |
 | 会话浏览 | ✅ | 集中浏览 Codex / Claude Code / Gemini CLI / CodeBuddy Code / WorkBuddy / Pi / OpenCode / Zed 的本地会话；操作差异与验证边界见[会话指南](/guide/sessions) |
 | 用量分析 | ✅ | 消息趋势与项目排行可视化 |
+| 用量记录明细 | ✅ | Codex / Claude / Pi / Gemini JSON 记录按 UTC 归属；缓存、未知与文本估算单列，不计算费用 |
+| 会话工作台 | ✅ | 收藏、全文索引、项目聚合与带来源证据的交接草稿；展示目录更新时间与来源候选范围 |
 | 本地 Skills Market | ✅ | 跨 agent 应用导入导出 skills |
 | 任务队列 | ✅ | 基于 DAG 的任务执行与日志 |
 | OpenAI 桥 | ✅ | Codex Responses API 转标准 OpenAI 格式,并在内置转换中补齐/规范化 Codex 指纹头 |

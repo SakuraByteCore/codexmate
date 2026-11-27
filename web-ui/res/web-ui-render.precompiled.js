@@ -4885,7 +4885,8 @@ return function render(_ctx, _cache) {
                                   class: "feature-status",
                                   "data-status": _ctx.indexReport.job.status
                                 }, _toDisplayString(_ctx.t('features.status.' + _ctx.indexReport.job.status)), 9 /* TEXT, PROPS */, ["data-status"]),
-                                _createElementVNode("span", null, _toDisplayString(_ctx.t('features.indexStatus', { count: _ctx.indexReport.indexed, processed: _ctx.indexReport.job.processed, total: _ctx.indexReport.job.candidates })), 1 /* TEXT */)
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('features.indexStatus', { count: _ctx.indexReport.indexed, processed: _ctx.indexReport.job.processed, total: _ctx.indexReport.job.candidates })), 1 /* TEXT */),
+                                _createElementVNode("span", { class: "feature-index-time" }, _toDisplayString(_ctx.t('features.indexCatalogTime', { time: _ctx.indexCatalogTime })), 1 /* TEXT */)
                               ]))
                             : _createCommentVNode("v-if", true),
                           _createElementVNode("form", {
@@ -4904,9 +4905,21 @@ return function render(_ctx, _cache) {
                               disabled: _ctx.featureBusy || !_ctx.indexQuery.trim() || !_ctx.indexReport?.updatedAt
                             }, _toDisplayString(_ctx.t('features.search')), 9 /* TEXT, PROPS */, ["disabled"])
                           ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
-                          _createElementVNode("details", { class: "feature-disclosure" }, [
+                          _createElementVNode("details", { class: "feature-disclosure feature-index-scope" }, [
                             _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.searchScope')), 1 /* TEXT */),
-                            _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('features.indexScope')), 1 /* TEXT */)
+                            _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('features.indexScope')), 1 /* TEXT */),
+                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.indexSourceCoverage, (entry) => {
+                              return (_openBlock(), _createElementBlock("p", {
+                                key: entry.source,
+                                class: "feature-hint feature-index-coverage"
+                              }, _toDisplayString(_ctx.t('features.indexSourceCoverage', { source: _ctx.t('sessions.source.' + entry.source), count: entry.candidates ?? _ctx.t('features.indexUnknown'), limit: entry.discoveryLimit ?? _ctx.t('features.indexUnknown') })), 1 /* TEXT */))
+                            }), 128 /* KEYED_FRAGMENT */)),
+                            (!_ctx.indexSourceCoverage.length)
+                              ? (_openBlock(), _createElementBlock("p", {
+                                  key: 0,
+                                  class: "feature-hint feature-index-unknown"
+                                }, _toDisplayString(_ctx.t('features.indexCoverageUnknown')), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true)
                           ]),
                           (_ctx.indexReport?.failures.length)
                             ? (_openBlock(), _createElementBlock("p", {
