@@ -53,6 +53,8 @@ Tests use Codex UA/Originator or Pi SDK headers, with configured UA overrides ta
 
 The session page adds message bookmarks with notes and tags, an incremental local full-text index, evidence-linked handoff drafts, a read-only project workspace, and model-window references. Bookmarks do not modify source sessions. The index covers discovered candidates only; refresh it for new messages. Historical text ratios are not actual request utilization. Settings offers local diagnostics and redacted JSON/Markdown exports. Only selected checks probe the current Codex route or start selected MCP servers; no write tools are called. See the [session guide](https://sakurabytecore.github.io/codexmate/guide/sessions).
 
+Build cross-session evidence packs from indexed selections, verify source hashes, and download Markdown; reload clears only the new in-memory basket. Usage offers a separate cost reference using a bundled versioned snapshot from [Wei-Shaw/model-price-repo](https://github.com/Wei-Shaw/model-price-repo), with unknown rows separate from known subtotals, not a bill and no automatic network updates. The project workspace adds read-only Git state and commit file statistics; associations within 24 hours are time-based candidates, not causation. These features do not call models or send sessions automatically. Pricing excludes tiers, service levels, cache durations, tool and multimodal extras.
+
 ---
 
 > [!TIP]

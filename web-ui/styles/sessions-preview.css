@@ -353,12 +353,17 @@
 
 .session-msg-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: var(--spacing-xs);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-size: var(--font-size-caption);
     color: var(--color-text-tertiary);
+}
+
+.session-msg-header .session-feature-controls {
+    /* Use the card padding and body gap to preserve 44px targets in a 28px row. */
+    margin-block: -8px;
 }
 
 .session-msg-meta {
@@ -382,44 +387,55 @@
 }
 
 .session-msg-copy {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    border: 1px solid var(--color-border-soft);
-    background: var(--color-surface-alt);
-    color: var(--color-text-secondary);
-    width: 24px;
-    height: 24px;
+    /* Reuse the message header's hit-target space without increasing its height. */
+    margin-block: -8px;
+    margin-inline-end: -8px;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
     border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    background: transparent;
+    color: var(--color-text-secondary);
+    display: grid;
+    place-items: center;
     cursor: pointer;
-    flex-shrink: 0;
-    transition: all var(--transition-fast) var(--ease-spring);
+    transition: color var(--transition-fast) var(--ease-spring), background-color var(--transition-fast) var(--ease-spring);
 }
 
 .session-msg-copy:hover {
-    border-color: var(--color-brand);
-    background: var(--color-surface);
+    background: var(--color-surface-alt);
     color: var(--color-brand);
-    transform: translateY(-1px);
 }
 
 .session-msg-copy:active {
-    transform: translateY(0);
+    background: var(--color-brand-light);
+}
+
+.session-msg-copy:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: -2px;
 }
 
 .session-msg-copy svg {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
-.session-msg.user .session-msg-content {
-    padding-right: 36px;
+@media (max-width: 720px) {
+    .session-msg.user > .session-msg-header,
+    .session-msg.user .session-msg-meta {
+        gap: 4px;
+    }
+
+    .session-msg-copy {
+        margin-inline-end: -16px;
+    }
 }
 
 .session-msg-content {
+    border-top: 1px solid var(--color-border-strong);
     font-size: var(--font-size-secondary);
     line-height: 1.6;
     color: var(--color-text-primary);

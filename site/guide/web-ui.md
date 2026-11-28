@@ -67,7 +67,11 @@ curl -H "X-CodexMate-Token: <访问令牌>" http://<本机局域网IP>:<端口>/
 
 ## 用量记录明细
 
-在 Usage 页展开明细，查看 UTC 记录分布、缓存分项与单列的完整文本估算。旧图表保持会话更新时间口径。当前逐记录适配 Codex、Claude、Pi；未知与失败单列，不冒充账单。支持 `codexmate analytics export --attribution records`；详见[会话指南](/guide/sessions#用量记录明细)。开发验收使用 `npm run test:usage-records`，同样需要可用 Chromium。
+在 Usage 页展开明细，查看 UTC 记录分布、缓存分项与单列的完整文本估算。旧图表保持会话更新时间口径。当前逐记录适配 Codex、Claude、Pi、Gemini JSON；未知与失败单列，不冒充账单。支持 `codexmate analytics export --attribution records`；详见[会话指南](/guide/sessions#用量记录明细)。开发验收使用 `npm run test:usage-records`，同样需要可用 Chromium。
+
+## 工作台新增入口
+
+会话全文索引提供[跨会话证据包](/guide/sessions#跨会话证据包)，只生成可核对的历史摘录。Usage 单独提供[费用参考](/guide/sessions#费用参考-usd)，采用内置模型价格快照，不作为账单。项目工作台可展开[Git 改动关联](/guide/sessions#git-改动关联-只读)，只读当前仓库，时间候选不等于因果。
 
 ## 能办的事
 

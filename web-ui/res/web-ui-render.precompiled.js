@@ -4969,7 +4969,15 @@ return function render(_ctx, _cache) {
                                         type: "button",
                                         class: "btn-mini",
                                         onClick: $event => (_ctx.openIndexedMessage(result))
-                                      }, _toDisplayString(_ctx.t('features.source')), 9 /* TEXT, PROPS */, ["onClick"])
+                                      }, _toDisplayString(_ctx.t('features.source')), 9 /* TEXT, PROPS */, ["onClick"]),
+                                      _createElementVNode("label", { class: "evidence-select" }, [
+                                        _createElementVNode("input", {
+                                          type: "checkbox",
+                                          checked: _ctx.isEvidenceSelected(result),
+                                          onChange: $event => (_ctx.toggleEvidence(result))
+                                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                                        _createTextVNode(_toDisplayString(_ctx.t('evidence.select')), 1 /* TEXT */)
+                                      ])
                                     ]),
                                     _createElementVNode("details", { class: "feature-disclosure" }, [
                                       _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.context')), 1 /* TEXT */),
@@ -4982,9 +4990,77 @@ return function render(_ctx, _cache) {
                             : _createCommentVNode("v-if", true)
                         ]))
                       : _createCommentVNode("v-if", true),
+                    (_ctx.evidenceSelections.length)
+                      ? (_openBlock(), _createElementBlock("section", {
+                          key: 2,
+                          class: "evidence-basket",
+                          "aria-label": _ctx.t('evidence.title')
+                        }, [
+                          _createElementVNode("div", { class: "feature-section-heading" }, [
+                            _createElementVNode("h3", null, _toDisplayString(_ctx.t('evidence.title')), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "feature-count" }, _toDisplayString(_ctx.evidenceSelections.length) + "/100", 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('evidence.memory')), 1 /* TEXT */),
+                          _createElementVNode("ol", { class: "evidence-list" }, [
+                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.evidenceSelections, (item) => {
+                              return (_openBlock(), _createElementBlock("li", {
+                                key: _ctx.evidenceKey(item)
+                              }, [
+                                _createElementVNode("span", null, [
+                                  _createElementVNode("strong", null, _toDisplayString(item.session.title || item.session.sessionId), 1 /* TEXT */),
+                                  _createElementVNode("small", { class: "feature-meta" }, _toDisplayString(item.session.source) + " · " + _toDisplayString(item.nodeId), 1 /* TEXT */)
+                                ]),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini",
+                                  onClick: $event => (_ctx.toggleEvidence(item))
+                                }, _toDisplayString(_ctx.t('evidence.remove')), 9 /* TEXT, PROPS */, ["onClick"])
+                              ]))
+                            }), 128 /* KEYED_FRAGMENT */))
+                          ]),
+                          _createElementVNode("form", {
+                            class: "feature-actions feature-search-form",
+                            onSubmit: _withModifiers(_ctx.generateEvidencePack, ["prevent"])
+                          }, [
+                            _withDirectives(_createElementVNode("input", {
+                              "onUpdate:modelValue": $event => ((_ctx.evidenceGoal) = $event),
+                              "aria-label": _ctx.t('evidence.goal'),
+                              placeholder: _ctx.t('evidence.goal')
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label", "placeholder"]), [
+                              [_vModelText, _ctx.evidenceGoal]
+                            ]),
+                            _createElementVNode("button", {
+                              class: "btn-mini feature-primary",
+                              disabled: _ctx.evidenceBusy
+                            }, _toDisplayString(_ctx.evidenceBusy ? _ctx.t('features.loading') : _ctx.t('evidence.generate')), 9 /* TEXT, PROPS */, ["disabled"])
+                          ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
+                          (_ctx.evidenceError)
+                            ? (_openBlock(), _createElementBlock("p", {
+                                key: 0,
+                                class: "form-error",
+                                role: "alert"
+                              }, _toDisplayString(_ctx.evidenceError), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.evidencePack)
+                            ? (_openBlock(), _createElementBlock("details", {
+                                key: 1,
+                                class: "feature-disclosure evidence-preview",
+                                open: ""
+                              }, [
+                                _createElementVNode("summary", null, _toDisplayString(_ctx.t('evidence.preview', { count: _ctx.evidencePack.length })), 1 /* TEXT */),
+                                _createElementVNode("pre", null, _toDisplayString(_ctx.evidencePack), 1 /* TEXT */),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini",
+                                  onClick: _ctx.downloadEvidencePack
+                                }, _toDisplayString(_ctx.t('evidence.download')), 9 /* TEXT, PROPS */, ["onClick"])
+                              ]))
+                            : _createCommentVNode("v-if", true)
+                        ], 8 /* PROPS */, ["aria-label"]))
+                      : _createCommentVNode("v-if", true),
                     (_ctx.featureView === 'projects')
                       ? (_openBlock(), _createElementBlock("div", {
-                          key: 2,
+                          key: 3,
                           class: "feature-content"
                         }, [
                           _createElementVNode("div", { class: "feature-section-heading" }, [
@@ -5049,6 +5125,99 @@ return function render(_ctx, _cache) {
                                             key: 0,
                                             class: "feature-hint"
                                           }, _toDisplayString(_ctx.t('features.partial')), 1 /* TEXT */))
+                                        : _createCommentVNode("v-if", true),
+                                      (_ctx.projectSelected)
+                                        ? (_openBlock(), _createElementBlock("details", {
+                                            key: 1,
+                                            class: "feature-disclosure project-git",
+                                            onToggle: $event => (_ctx.toggleProjectGit($event))
+                                          }, [
+                                            _createElementVNode("summary", null, _toDisplayString(_ctx.t('git.title')), 1 /* TEXT */),
+                                            _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('git.scope')), 1 /* TEXT */),
+                                            (_ctx.projectGitError)
+                                              ? (_openBlock(), _createElementBlock("p", {
+                                                  key: 0,
+                                                  class: "form-error",
+                                                  role: "alert"
+                                                }, _toDisplayString(_ctx.projectGitError), 1 /* TEXT */))
+                                              : _createCommentVNode("v-if", true),
+                                            (_ctx.projectGitBusy)
+                                              ? (_openBlock(), _createElementBlock("p", {
+                                                  key: 1,
+                                                  role: "status"
+                                                }, _toDisplayString(_ctx.t('features.loading')), 1 /* TEXT */))
+                                              : _createCommentVNode("v-if", true),
+                                            (_ctx.projectGit)
+                                              ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
+                                                  _createElementVNode("p", { class: "feature-meta" }, _toDisplayString(_ctx.t('git.status.' + _ctx.projectGit.status)) + " · " + _toDisplayString(_ctx.t('features.readAt', { time: _ctx.projectGit.readAt })), 1 /* TEXT */),
+                                                  (_ctx.projectGit.root)
+                                                    ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                                                        _createElementVNode("p", { class: "feature-path" }, _toDisplayString(_ctx.projectGit.root), 1 /* TEXT */),
+                                                        _createElementVNode("p", { class: "feature-meta" }, [
+                                                          _createTextVNode(_toDisplayString(_ctx.projectGit.branch || _ctx.t('git.detached')) + " · ", 1 /* TEXT */),
+                                                          _createElementVNode("code", null, _toDisplayString(_ctx.projectGit.head || _ctx.t('git.noHead')), 1 /* TEXT */),
+                                                          _createTextVNode(" · " + _toDisplayString(_ctx.t('git.changes', { count: _ctx.projectGit.changedFiles })), 1 /* TEXT */)
+                                                        ]),
+                                                        _createElementVNode("ul", { class: "git-change-list" }, [
+                                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectGit.changes, (change) => {
+                                                            return (_openBlock(), _createElementBlock("li", {
+                                                              key: change.path
+                                                            }, [
+                                                              _createElementVNode("code", null, _toDisplayString(change.status), 1 /* TEXT */),
+                                                              _createTextVNode(" " + _toDisplayString(change.path), 1 /* TEXT */)
+                                                            ]))
+                                                          }), 128 /* KEYED_FRAGMENT */))
+                                                        ]),
+                                                        (_ctx.projectGit.changesTruncated || _ctx.projectGit.commitsTruncated)
+                                                          ? (_openBlock(), _createElementBlock("p", {
+                                                              key: 0,
+                                                              class: "feature-hint"
+                                                            }, _toDisplayString(_ctx.t('git.truncated')), 1 /* TEXT */))
+                                                          : _createCommentVNode("v-if", true),
+                                                        _createElementVNode("ol", { class: "git-commit-list" }, [
+                                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectGit.commits, (commit) => {
+                                                            return (_openBlock(), _createElementBlock("li", {
+                                                              key: commit.sha
+                                                            }, [
+                                                              _createElementVNode("button", {
+                                                                type: "button",
+                                                                class: "btn-mini",
+                                                                onClick: $event => (_ctx.loadProjectGitCommit(commit.sha)),
+                                                                disabled: _ctx.projectGitBusy
+                                                              }, [
+                                                                _createElementVNode("code", null, _toDisplayString(commit.sha.slice(0, 8)), 1 /* TEXT */),
+                                                                _createTextVNode(" " + _toDisplayString(commit.subject), 1 /* TEXT */)
+                                                              ], 8 /* PROPS */, ["onClick", "disabled"]),
+                                                              _createElementVNode("small", { class: "feature-meta" }, _toDisplayString(commit.timestamp), 1 /* TEXT */),
+                                                              _createElementVNode("div", { class: "feature-link-list" }, [
+                                                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(commit.candidates, (session) => {
+                                                                  return (_openBlock(), _createElementBlock("button", {
+                                                                    key: session.source + session.sessionId,
+                                                                    type: "button",
+                                                                    onClick: $event => (_ctx.selectSession(session))
+                                                                  }, _toDisplayString(_ctx.t('git.candidate')) + ": " + _toDisplayString(session.source) + " · " + _toDisplayString(session.title || session.sessionId), 9 /* TEXT, PROPS */, ["onClick"]))
+                                                                }), 128 /* KEYED_FRAGMENT */))
+                                                              ])
+                                                            ]))
+                                                          }), 128 /* KEYED_FRAGMENT */))
+                                                        ]),
+                                                        (_ctx.projectGitCommit)
+                                                          ? (_openBlock(), _createElementBlock("pre", {
+                                                              key: 1,
+                                                              class: "feature-code git-commit-stat"
+                                                            }, _toDisplayString(_ctx.projectGitCommit.sha) + "\n" + _toDisplayString(_ctx.projectGitCommit.stat), 1 /* TEXT */))
+                                                          : _createCommentVNode("v-if", true)
+                                                      ], 64 /* STABLE_FRAGMENT */))
+                                                    : _createCommentVNode("v-if", true)
+                                                ], 64 /* STABLE_FRAGMENT */))
+                                              : _createCommentVNode("v-if", true),
+                                            _createElementVNode("button", {
+                                              type: "button",
+                                              class: "btn-mini",
+                                              onClick: _ctx.loadProjectGit,
+                                              disabled: _ctx.projectGitBusy
+                                            }, _toDisplayString(_ctx.t('git.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                          ], 40 /* PROPS, NEED_HYDRATION */, ["onToggle"]))
                                         : _createCommentVNode("v-if", true),
                                       _createElementVNode("div", { class: "feature-project-sessions" }, [
                                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.projectReport.detail.sessions, (session) => {
@@ -5117,7 +5286,7 @@ return function render(_ctx, _cache) {
                                       ]),
                                       (_ctx.projectSelected)
                                         ? (_openBlock(), _createElementBlock("details", {
-                                            key: 1,
+                                            key: 2,
                                             class: "feature-disclosure"
                                           }, [
                                             _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.projectMapping')), 1 /* TEXT */),
@@ -5147,7 +5316,7 @@ return function render(_ctx, _cache) {
                       : _createCommentVNode("v-if", true),
                     (_ctx.featureView === 'bookmarks')
                       ? (_openBlock(), _createElementBlock("div", {
-                          key: 3,
+                          key: 4,
                           class: "feature-content"
                         }, [
                           _createElementVNode("div", { class: "feature-section-heading" }, [
@@ -5623,21 +5792,7 @@ return function render(_ctx, _cache) {
                                                 title: _ctx.parseSessionTitleInfo(session).location
                                               }, _toDisplayString(_ctx.parseSessionTitleInfo(session).location), 9 /* TEXT, PROPS */, ["title"]))
                                             : _createCommentVNode("v-if", true)
-                                        ]),
-                                        _createElementVNode("span", { class: "session-count-badge" }, _toDisplayString(session.messageCount == null ? '...' : session.messageCount), 1 /* TEXT */),
-                                        (session.match && session.match.hit)
-                                          ? (_openBlock(), _createElementBlock("span", {
-                                              key: 0,
-                                              class: "session-match-badge"
-                                            }, _toDisplayString(session.match.count), 1 /* TEXT */))
-                                          : _createCommentVNode("v-if", true),
-                                        (_ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)] && _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent > 0)
-                                          ? (_openBlock(), _createElementBlock("span", {
-                                              key: 1,
-                                              class: _normalizeClass(['session-context-badge', 'session-context-' + _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].level]),
-                                              title: 'Context: ' + _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent + '%'
-                                            }, _toDisplayString(_ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent) + "% ", 11 /* TEXT, CLASS, PROPS */, ["title"]))
-                                          : _createCommentVNode("v-if", true)
+                                        ])
                                       ]),
                                       _createElementVNode("div", { class: "session-item-actions" }, [
                                         _createElementVNode("button", {
@@ -5704,15 +5859,29 @@ return function render(_ctx, _cache) {
                                         "data-source": session.source
                                       }, _toDisplayString(session.sourceLabel), 9 /* TEXT, PROPS */, ["data-source"]),
                                       _createElementVNode("span", { class: "session-item-time" }, _toDisplayString(session.updatedAtLabel || session.updatedAt || _ctx.t('sessions.unknownTime')), 1 /* TEXT */),
-                                      (_ctx.getSessionHotLabel(session))
+                                      _createElementVNode("span", { class: "session-count-badge" }, _toDisplayString(session.messageCount == null ? '...' : session.messageCount), 1 /* TEXT */),
+                                      (session.match && session.match.hit)
                                         ? (_openBlock(), _createElementBlock("span", {
                                             key: 0,
+                                            class: "session-match-badge"
+                                          }, _toDisplayString(session.match.count), 1 /* TEXT */))
+                                        : _createCommentVNode("v-if", true),
+                                      (_ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)] && _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent > 0)
+                                        ? (_openBlock(), _createElementBlock("span", {
+                                            key: 1,
+                                            class: _normalizeClass(['session-context-badge', 'session-context-' + _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].level]),
+                                            title: 'Context: ' + _ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent + '%'
+                                          }, _toDisplayString(_ctx.sessionContextUtilization[_ctx.getSessionExportKey(session)].percent) + "% ", 11 /* TEXT, CLASS, PROPS */, ["title"]))
+                                        : _createCommentVNode("v-if", true),
+                                      (_ctx.getSessionHotLabel(session))
+                                        ? (_openBlock(), _createElementBlock("span", {
+                                            key: 2,
                                             class: "session-item-hot"
                                           }, _toDisplayString(_ctx.getSessionHotLabel(session)), 1 /* TEXT */))
                                         : _createCommentVNode("v-if", true),
                                       (session.match && session.match.snippets && session.match.snippets.length)
                                         ? (_openBlock(), _createElementBlock("div", {
-                                            key: 1,
+                                            key: 3,
                                             class: "session-match-snippets"
                                           }, [
                                             (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(session.match.snippets.slice(0, 2), (snip, si) => {
@@ -6672,38 +6841,38 @@ return function render(_ctx, _cache) {
                                                           _createElementVNode("div", { class: "session-msg-meta" }, [
                                                             _createElementVNode("span", { class: "session-msg-role" }, _toDisplayString(msg.roleLabel || (msg.normalizedRole === 'user' ? _ctx.t('sessions.roleLabel.user') : (msg.normalizedRole === 'system' ? _ctx.t('sessions.roleLabel.system') : _ctx.t('sessions.roleLabel.assistant')))), 1 /* TEXT */),
                                                             _createElementVNode("span", { class: "session-msg-time" }, _toDisplayString(msg.timestamp || ''), 1 /* TEXT */)
-                                                          ])
+                                                          ]),
+                                                          (msg.normalizedRole === 'user')
+                                                            ? (_openBlock(), _createElementBlock("button", {
+                                                                key: 0,
+                                                                type: "button",
+                                                                class: "session-msg-copy",
+                                                                onClick: $event => (_ctx.copySessionMessage(msg)),
+                                                                "aria-label": _ctx.t('sessions.preview.copyMessage'),
+                                                                title: _ctx.t('sessions.preview.copyMessage')
+                                                              }, [
+                                                                (_openBlock(), _createElementBlock("svg", {
+                                                                  viewBox: "0 0 24 24",
+                                                                  fill: "none",
+                                                                  stroke: "currentColor",
+                                                                  "stroke-width": "2"
+                                                                }, [
+                                                                  _createElementVNode("rect", {
+                                                                    x: "8",
+                                                                    y: "8",
+                                                                    width: "12",
+                                                                    height: "12",
+                                                                    rx: "2"
+                                                                  }),
+                                                                  _createElementVNode("path", { d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" })
+                                                                ]))
+                                                              ], 8 /* PROPS */, ["onClick", "aria-label", "title"]))
+                                                            : _createCommentVNode("v-if", true)
                                                         ]),
                                                         _createElementVNode("div", {
                                                           class: "session-msg-content",
                                                           innerHTML: msg.text || ''
-                                                        }, null, 8 /* PROPS */, ["innerHTML"]),
-                                                        (msg.normalizedRole === 'user')
-                                                          ? (_openBlock(), _createElementBlock("button", {
-                                                              key: 0,
-                                                              type: "button",
-                                                              class: "session-msg-copy",
-                                                              onClick: $event => (_ctx.copySessionMessage(msg)),
-                                                              "aria-label": _ctx.t('sessions.preview.copyMessage'),
-                                                              title: _ctx.t('sessions.preview.copyMessage')
-                                                            }, [
-                                                              (_openBlock(), _createElementBlock("svg", {
-                                                                viewBox: "0 0 24 24",
-                                                                fill: "none",
-                                                                stroke: "currentColor",
-                                                                "stroke-width": "2"
-                                                              }, [
-                                                                _createElementVNode("rect", {
-                                                                  x: "8",
-                                                                  y: "8",
-                                                                  width: "12",
-                                                                  height: "12",
-                                                                  rx: "2"
-                                                                }),
-                                                                _createElementVNode("path", { d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" })
-                                                              ]))
-                                                            ], 8 /* PROPS */, ["onClick", "aria-label", "title"]))
-                                                          : _createCommentVNode("v-if", true)
+                                                        }, null, 8 /* PROPS */, ["innerHTML"])
                                                       ], 10 /* CLASS, PROPS */, ["data-message-key"]))
                                                       _item.memo = _memo
                                                       return _item
@@ -6982,6 +7151,89 @@ return function render(_ctx, _cache) {
                     onClick: $event => (_ctx.loadUsageRecords({ forceRefresh: true }))
                   }, _toDisplayString(_ctx.t('usage.refresh')), 9 /* TEXT, PROPS */, ["onClick"]))
                 : _createCommentVNode("v-if", true)
+            ], 40 /* PROPS, NEED_HYDRATION */, ["onToggle"]),
+            _createElementVNode("details", {
+              class: "usage-card usage-pricing",
+              id: "usage-price-reference",
+              onToggle: $event => (_ctx.toggleUsagePricing($event))
+            }, [
+              _createElementVNode("summary", null, _toDisplayString(_ctx.t('pricing.title')), 1 /* TEXT */),
+              _createElementVNode("p", { class: "usage-list-meta" }, _toDisplayString(_ctx.t('pricing.scope')), 1 /* TEXT */),
+              (_ctx.usagePricingBusy)
+                ? (_openBlock(), _createElementBlock("p", {
+                    key: 0,
+                    role: "status"
+                  }, _toDisplayString(_ctx.t('usage.loading')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.usagePricingError)
+                ? (_openBlock(), _createElementBlock("p", {
+                    key: 1,
+                    role: "alert"
+                  }, _toDisplayString(_ctx.usagePricingError), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.usagePricing)
+                ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
+                    _createElementVNode("p", { class: "usage-price-total" }, _toDisplayString(_ctx.t('pricing.total')) + ": " + _toDisplayString(_ctx.formatPriceUsd(_ctx.usagePricing.summary.estimatedUsd)), 1 /* TEXT */),
+                    _createElementVNode("p", { class: "usage-list-meta" }, _toDisplayString(_ctx.t('pricing.coverage', { known: _ctx.usagePricing.summary.pricedRows, unknown: _ctx.usagePricing.summary.unknownRows, failed: _ctx.usagePricing.summary.failedSessions, unreported: _ctx.usagePricing.summary.unreportedSessions, unsupported: _ctx.usagePricing.summary.unsupportedSessions })) + " · " + _toDisplayString(_ctx.t('pricing.subtotal')) + ": " + _toDisplayString(_ctx.formatPriceUsd(_ctx.usagePricing.summary.knownSubtotalUsd)), 1 /* TEXT */),
+                    _createElementVNode("p", { class: "usage-list-meta" }, [
+                      _createElementVNode("a", {
+                        href: _ctx.usagePricing.priceSource.repository,
+                        target: "_blank",
+                        rel: "noopener noreferrer"
+                      }, "Wei-Shaw/model-price-repo", 8 /* PROPS */, ["href"]),
+                      _createTextVNode(" · " + _toDisplayString(_ctx.usagePricing.priceSource.sourceUpdatedAt) + " · ", 1 /* TEXT */),
+                      _createElementVNode("code", null, _toDisplayString(_ctx.usagePricing.priceSource.commit.slice(0, 12)), 1 /* TEXT */)
+                    ]),
+                    _createElementVNode("div", { class: "usage-records-table" }, [
+                      _createElementVNode("table", null, [
+                        _createElementVNode("thead", null, [
+                          _createElementVNode("tr", null, [
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.date')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.source')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('usage.records.model')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('pricing.total')), 1 /* TEXT */),
+                            _createElementVNode("th", null, _toDisplayString(_ctx.t('pricing.basis')), 1 /* TEXT */)
+                          ])
+                        ]),
+                        _createElementVNode("tbody", null, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.usagePricing.rows, (row) => {
+                            return (_openBlock(), _createElementBlock("tr", {
+                              key: row.date + ':' + row.source + ':' + row.model
+                            }, [
+                              _createElementVNode("td", null, _toDisplayString(row.date || _ctx.t('usage.records.unknown')), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(row.source), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(row.model), 1 /* TEXT */),
+                              _createElementVNode("td", null, _toDisplayString(_ctx.formatPriceUsd(row.estimatedUsd)), 1 /* TEXT */),
+                              _createElementVNode("td", null, [
+                                _createTextVNode(_toDisplayString(_ctx.t('pricing.reason.' + row.reason)), 1 /* TEXT */),
+                                (row.rates)
+                                  ? (_openBlock(), _createElementBlock("span", {
+                                      key: 0,
+                                      class: "usage-price-rates"
+                                    }, _toDisplayString(_ctx.t('pricing.rates', { input: _ctx.formatTokenRate(row.rates.input_cost_per_token), output: _ctx.formatTokenRate(row.rates.output_cost_per_token), cached: _ctx.formatTokenRate(row.rates.cache_read_input_token_cost), created: _ctx.formatTokenRate(row.rates.cache_creation_input_token_cost) })), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true)
+                              ])
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ])
+                      ])
+                    ]),
+                    (!_ctx.usagePricing.rows.length)
+                      ? (_openBlock(), _createElementBlock("p", { key: 0 }, _toDisplayString(_ctx.t('usage.empty')), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    _createElementVNode("button", {
+                      type: "button",
+                      class: "btn-mini",
+                      onClick: _ctx.downloadUsagePricing
+                    }, _toDisplayString(_ctx.t('pricing.download')), 9 /* TEXT, PROPS */, ["onClick"])
+                  ], 64 /* STABLE_FRAGMENT */))
+                : _createCommentVNode("v-if", true),
+              _createElementVNode("button", {
+                type: "button",
+                class: "btn-mini",
+                onClick: _ctx.loadUsagePricing,
+                disabled: _ctx.usagePricingBusy
+              }, _toDisplayString(_ctx.t('usage.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
             ], 40 /* PROPS, NEED_HYDRATION */, ["onToggle"]),
             (_ctx.sessionsUsageLoading && !_ctx.sessionsUsageList.length)
               ? (_openBlock(), _createElementBlock("div", {

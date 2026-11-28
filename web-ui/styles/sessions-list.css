@@ -801,3 +801,77 @@
 .btn-tool-batch-delete:not(:disabled) {
     color: var(--color-error);
 }
+
+/* Record rows share theme tokens; keep overrides local to the browser, not trash cards. */
+#panel-sessions .session-list > .session-item {
+    border-color: transparent;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+#panel-sessions .session-list > .session-item::before { content: none; display: none; }
+#panel-sessions .session-list > .session-item:hover {
+    background: color-mix(in oklch, var(--color-text-primary) 4%, var(--color-surface));
+    transform: none;
+}
+#panel-sessions .session-list > .session-item.active,
+#panel-sessions .session-list > .session-item.batch-selected {
+    background: color-mix(in oklch, var(--color-brand-dark) 8%, var(--color-surface));
+}
+#panel-sessions .session-list > .session-item:active { transform: none; }
+#panel-sessions .session-list > .session-item:focus-visible {
+    outline: 2px solid var(--color-brand-dark);
+    outline-offset: -2px;
+}
+#panel-sessions .session-item-header { margin: 0; gap: 8px; }
+#panel-sessions .session-item-main { align-items: center; }
+#panel-sessions .session-item-title { font-weight: var(--font-weight-primary); }
+#panel-sessions .session-item-location { color: var(--color-text-secondary); }
+#panel-sessions .session-item-actions { gap: 0; }
+#panel-sessions .session-item-copy {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    padding: 0; border: 0; border-radius: 8px;
+    background: transparent; color: var(--color-text-secondary);
+    transform: none; opacity: 1;
+    transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+#panel-sessions .session-item-copy:hover:not(:disabled) { background: var(--color-surface-alt); color: var(--color-brand-dark); transform: none; }
+#panel-sessions .session-item-copy:active:not(:disabled) { background: var(--color-brand-light); }
+#panel-sessions .session-item-copy:focus-visible { outline: 2px solid var(--color-brand-dark); outline-offset: -2px; }
+#panel-sessions .session-item-copy:disabled { opacity: 0.5; }
+#panel-sessions .session-item-copy svg { width: 16px; height: 16px; color: currentColor; }
+#panel-sessions .session-item.pinned .session-item-pin { background: var(--color-brand-light); color: var(--color-brand-dark); }
+#panel-sessions .session-item-meta { margin: 0; gap: 4px 8px; }
+#panel-sessions .session-item .session-count-badge { background: transparent; box-shadow: none; color: var(--color-text-secondary); padding: 0 4px; }
+#panel-sessions .session-item-hot { background: var(--color-surface-alt); color: var(--color-text-secondary); }
+#panel-sessions .session-item .session-batch-check {
+    min-width: 44px;
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    margin-inline-end: 0;
+    padding: 0;
+}
+#panel-sessions .session-item .session-batch-check-mark {
+    position: relative;
+    pointer-events: none;
+}
+#panel-sessions .session-batch-check input:focus-visible + .session-batch-check-mark {
+    outline: 2px solid var(--color-brand-dark);
+    outline-offset: 2px;
+}
+#panel-sessions .session-match-snippets { flex: 0 0 100%; min-width: 0; }
+#panel-sessions .session-match-snippet { border: 0; }
+@media (max-width: 720px) {
+    #panel-sessions .session-list > .session-item { height: auto; padding-block: 4px; }
+    #panel-sessions .session-item-meta { gap: 4px; }
+    #panel-sessions .session-item-meta > span { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #panel-sessions .session-list > .session-item, #panel-sessions .session-item-copy { transition: none; }
+}

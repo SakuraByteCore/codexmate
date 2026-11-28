@@ -256,3 +256,24 @@
     #panel-settings .feature-diagnostics-chevron { transition: none; }
     .session-features button, .context-window-reference button, .session-feature-controls button { transition: none; }
 }
+
+.evidence-basket { margin-block: 16px; min-width: 0; }
+.evidence-select { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.evidence-select input { accent-color: var(--color-brand-dark); }
+.evidence-list { padding-inline-start: 24px; margin-block: 8px; }
+.evidence-list li { padding-block: 4px; }
+.evidence-list li > span { display: inline-flex; flex-direction: column; max-width: calc(100% - 80px); vertical-align: middle; overflow-wrap: anywhere; }
+.evidence-list .btn-mini { margin-inline-start: 8px; min-height: 44px; }
+.evidence-preview pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 480px; overflow-y: auto; font-family: var(--font-family-mono, monospace); }
+.evidence-select:focus-within { outline: 2px solid var(--color-brand-dark); outline-offset: 4px; }
+
+.usage-pricing .usage-price-total { margin-block: 16px 8px; font-size: var(--font-size-h3, 20px); font-weight: var(--font-weight-primary); }
+.usage-price-rates { display: block; margin-block-start: 4px; font-size: var(--font-size-small, 12px); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.usage-pricing code { overflow-wrap: anywhere; }
+
+.git-change-list, .git-commit-list { padding-inline-start: 24px; overflow-wrap: anywhere; }
+.git-commit-list > li { padding-block: 8px; }
+.git-commit-list > li > small { display: block; margin-block: 4px; }
+.git-commit-list .btn-mini { min-height: 44px; text-align: start; white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+.git-commit-stat { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow-y: auto; }
+.project-git code { overflow-wrap: anywhere; }

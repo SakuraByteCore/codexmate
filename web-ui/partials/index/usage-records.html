@@ -23,3 +23,19 @@
                         </template>
                         <button v-if="!usageRecordsLoading" type="button" class="btn-mini" @click="loadUsageRecords({ forceRefresh: true })">{{ t('usage.refresh') }}</button>
                     </details>
+
+                    <details class="usage-card usage-pricing" id="usage-price-reference" @toggle="toggleUsagePricing($event)">
+                        <summary>{{ t('pricing.title') }}</summary>
+                        <p class="usage-list-meta">{{ t('pricing.scope') }}</p>
+                        <p v-if="usagePricingBusy" role="status">{{ t('usage.loading') }}</p>
+                        <p v-if="usagePricingError" role="alert">{{ usagePricingError }}</p>
+                        <template v-if="usagePricing">
+                            <p class="usage-price-total">{{ t('pricing.total') }}: {{ formatPriceUsd(usagePricing.summary.estimatedUsd) }}</p>
+                            <p class="usage-list-meta">{{ t('pricing.coverage', { known: usagePricing.summary.pricedRows, unknown: usagePricing.summary.unknownRows, failed: usagePricing.summary.failedSessions, unreported: usagePricing.summary.unreportedSessions, unsupported: usagePricing.summary.unsupportedSessions }) }} · {{ t('pricing.subtotal') }}: {{ formatPriceUsd(usagePricing.summary.knownSubtotalUsd) }}</p>
+                            <p class="usage-list-meta"><a :href="usagePricing.priceSource.repository" target="_blank" rel="noopener noreferrer">Wei-Shaw/model-price-repo</a> · {{ usagePricing.priceSource.sourceUpdatedAt }} · <code>{{ usagePricing.priceSource.commit.slice(0, 12) }}</code></p>
+                            <div class="usage-records-table"><table><thead><tr><th>{{ t('usage.records.date') }}</th><th>{{ t('usage.records.source') }}</th><th>{{ t('usage.records.model') }}</th><th>{{ t('pricing.total') }}</th><th>{{ t('pricing.basis') }}</th></tr></thead><tbody><tr v-for="row in usagePricing.rows" :key="row.date + ':' + row.source + ':' + row.model"><td>{{ row.date || t('usage.records.unknown') }}</td><td>{{ row.source }}</td><td>{{ row.model }}</td><td>{{ formatPriceUsd(row.estimatedUsd) }}</td><td>{{ t('pricing.reason.' + row.reason) }}<span v-if="row.rates" class="usage-price-rates">{{ t('pricing.rates', { input: formatTokenRate(row.rates.input_cost_per_token), output: formatTokenRate(row.rates.output_cost_per_token), cached: formatTokenRate(row.rates.cache_read_input_token_cost), created: formatTokenRate(row.rates.cache_creation_input_token_cost) }) }}</span></td></tr></tbody></table></div>
+                            <p v-if="!usagePricing.rows.length">{{ t('usage.empty') }}</p>
+                            <button type="button" class="btn-mini" @click="downloadUsagePricing">{{ t('pricing.download') }}</button>
+                        </template>
+                        <button type="button" class="btn-mini" @click="loadUsagePricing" :disabled="usagePricingBusy">{{ t('usage.refresh') }}</button>
+                    </details>

@@ -45,7 +45,7 @@ async function checkIndexAndGemini({ context, api, base, home, fixtures, today, 
         const navigate = id => page.locator(width === 1440 ? `#side-tab-${id}` : `#tab-${id}`).click();
         await navigate('usage');
         const usage = page.locator('#usage-records-report'); await usage.locator('summary').click();
-        await page.waitForFunction(total => document.querySelector('#usage-records-report .usage-kpi-value')?.textContent.trim() === String(total), 236 + expectedTotal);
+        await page.waitForFunction(total => document.querySelector('#usage-records-report .usage-kpi-value')?.textContent.trim() === String(total), 236 + expectedTotal).catch(async error => { console.error('USAGE_STATE', await usage.innerText()); throw error; });
         assert.match(await usage.innerText(), /Gemini/);
         await navigate('sessions');
         await page.locator('.session-features .feature-tabs button').filter({ hasText: '全文索引' }).click();
@@ -55,10 +55,15 @@ async function checkIndexAndGemini({ context, api, base, home, fixtures, today, 
         const scope = page.locator('.feature-index-scope');
         await scope.locator('summary').click();
         const refresh = async () => {
+            const previousCatalogTime = await time.innerText();
             const started = page.waitForResponse(response => response.url().endsWith('/api') && response.request().postDataJSON()?.action === 'session-index-refresh');
             await page.locator('.session-features').getByRole('button', { name: '更新索引', exact: true }).click();
             await started;
-            await page.waitForFunction(() => document.querySelector('.session-features .feature-status')?.dataset.status === 'success');
+            await page.waitForFunction(previousTime => {
+                const catalogTime = document.querySelector('.feature-index-time')?.textContent.trim();
+                const status = document.querySelector('.session-features .feature-status')?.dataset.status;
+                return status === 'success' && catalogTime && catalogTime !== previousTime;
+            }, previousCatalogTime.trim());
         };
         await chooseSource('codex'); await refresh();
         const savedTime = (await api('session-index-status')).updatedAt;

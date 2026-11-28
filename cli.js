@@ -10037,6 +10037,7 @@ const { readSessionContextHealth, readSessionContextNode, iterateSessionContextN
 const sessionUsageReport = createSessionUsageReportController({ fs, listSessionUsage, iterateSessionUsageRecords });
 
 const sessionFeatures = createSessionFeatures({ root: path.join(CODEXMATE_DIR, 'session-features'),
+    usageReport: sessionUsageReport,
     readNode: readSessionContextNode, nodes: iterateSessionContextNodes,
     diagnostics: {
         home: os.homedir(),
@@ -15201,9 +15202,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'session-diagnostics-cancel':
                         case 'session-feature-settings-get':
                         case 'session-feature-settings-save':
+                        case 'session-project-git':
+                        case 'session-project-git-commit':
                         case 'session-projects':
                         case 'session-project-map':
                         case 'session-project-prompt':
+                        case 'session-usage-pricing':
                         case 'session-handoff-draft':
                         case 'session-index-status':
                         case 'session-index-refresh':

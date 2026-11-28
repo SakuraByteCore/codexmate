@@ -42,11 +42,19 @@
                 <header class="feature-record-heading"><h4>{{ result.session.title || result.session.sessionId }}</h4><span class="feature-source">{{ result.session.source }}</span></header>
                 <small class="feature-path" :title="result.session.cwd">{{ result.session.cwd }}</small>
                 <pre class="feature-excerpt">{{ result.snippet }}</pre>
-                <div class="feature-record-actions"><button type="button" class="btn-mini" @click="openIndexedMessage(result)">{{ t('features.source') }}</button></div>
+                <div class="feature-record-actions"><button type="button" class="btn-mini" @click="openIndexedMessage(result)">{{ t('features.source') }}</button><label class="evidence-select"><input type="checkbox" :checked="isEvidenceSelected(result)" @change="toggleEvidence(result)">{{ t('evidence.select') }}</label></div>
                 <details class="feature-disclosure"><summary>{{ t('features.context') }}</summary><pre>{{ result.before }}</pre><pre>{{ result.after }}</pre></details>
             </article>
         </template>
     </div>
+    <section v-if="evidenceSelections.length" class="evidence-basket" :aria-label="t('evidence.title')">
+        <div class="feature-section-heading"><h3>{{ t('evidence.title') }}</h3><span class="feature-count">{{ evidenceSelections.length }}/100</span></div>
+        <p class="feature-hint">{{ t('evidence.memory') }}</p>
+        <ol class="evidence-list"><li v-for="item in evidenceSelections" :key="evidenceKey(item)"><span><strong>{{ item.session.title || item.session.sessionId }}</strong><small class="feature-meta">{{ item.session.source }} · {{ item.nodeId }}</small></span><button type="button" class="btn-mini" @click="toggleEvidence(item)">{{ t('evidence.remove') }}</button></li></ol>
+        <form class="feature-actions feature-search-form" @submit.prevent="generateEvidencePack"><input v-model="evidenceGoal" :aria-label="t('evidence.goal')" :placeholder="t('evidence.goal')"><button class="btn-mini feature-primary" :disabled="evidenceBusy">{{ evidenceBusy ? t('features.loading') : t('evidence.generate') }}</button></form>
+        <p v-if="evidenceError" class="form-error" role="alert">{{ evidenceError }}</p>
+        <details v-if="evidencePack" class="feature-disclosure evidence-preview" open><summary>{{ t('evidence.preview', { count: evidencePack.length }) }}</summary><pre>{{ evidencePack }}</pre><button type="button" class="btn-mini" @click="downloadEvidencePack">{{ t('evidence.download') }}</button></details>
+    </section>
     <div v-if="featureView === 'projects'" class="feature-content">
         <div class="feature-section-heading"><h3>{{ t('features.projects') }}</h3><small v-if="projectReport" class="feature-meta">{{ t('features.readAt', { time: projectReport.readAt }) }}</small></div>
         <p class="feature-hint">{{ t('features.projectHistory') }}</p>
@@ -62,6 +70,25 @@
             <template v-if="projectReport.detail">
                 <div class="feature-section-heading feature-project-heading"><h4 class="feature-path" :title="projectReport.detail.cwd">{{ projectReport.detail.cwd || t('features.unassigned') }}</h4></div>
                 <p v-if="projectReport.detail.truncated" class="feature-hint">{{ t('features.partial') }}</p>
+                <details v-if="projectSelected" class="feature-disclosure project-git" @toggle="toggleProjectGit($event)">
+                    <summary>{{ t('git.title') }}</summary>
+                    <p class="feature-hint">{{ t('git.scope') }}</p>
+                    <p v-if="projectGitError" class="form-error" role="alert">{{ projectGitError }}</p>
+                    <p v-if="projectGitBusy" role="status">{{ t('features.loading') }}</p>
+                    <template v-if="projectGit">
+                        <p class="feature-meta">{{ t('git.status.' + projectGit.status) }} · {{ t('features.readAt', { time: projectGit.readAt }) }}</p>
+                        <template v-if="projectGit.root">
+                            <p class="feature-path">{{ projectGit.root }}</p>
+                            <p class="feature-meta">{{ projectGit.branch || t('git.detached') }} · <code>{{ projectGit.head || t('git.noHead') }}</code> · {{ t('git.changes', { count: projectGit.changedFiles }) }}</p>
+                            <ul class="git-change-list"><li v-for="change in projectGit.changes" :key="change.path"><code>{{ change.status }}</code> {{ change.path }}</li></ul>
+                            <p v-if="projectGit.changesTruncated || projectGit.commitsTruncated" class="feature-hint">{{ t('git.truncated') }}</p>
+                            <ol class="git-commit-list"><li v-for="commit in projectGit.commits" :key="commit.sha"><button type="button" class="btn-mini" @click="loadProjectGitCommit(commit.sha)" :disabled="projectGitBusy"><code>{{ commit.sha.slice(0, 8) }}</code> {{ commit.subject }}</button><small class="feature-meta">{{ commit.timestamp }}</small><div class="feature-link-list"><button v-for="session in commit.candidates" :key="session.source + session.sessionId" type="button" @click="selectSession(session)">{{ t('git.candidate') }}: {{ session.source }} · {{ session.title || session.sessionId }}</button></div></li></ol>
+                            <pre v-if="projectGitCommit" class="feature-code git-commit-stat">{{ projectGitCommit.sha }}
+{{ projectGitCommit.stat }}</pre>
+                        </template>
+                    </template>
+                    <button type="button" class="btn-mini" @click="loadProjectGit" :disabled="projectGitBusy">{{ t('git.refresh') }}</button>
+                </details>
                 <div class="feature-project-sessions">
                     <article v-for="session in projectReport.detail.sessions" :key="session.source + session.sessionId" class="feature-session-row">
                         <button type="button" @click="selectSession(session)">{{ session.title || session.sessionId }}</button>

@@ -53,6 +53,8 @@ Yêu cầu kiểm thử dùng UA/Originator của Codex hoặc header SDK của 
 
 Trang phiên bổ sung dấu trang tin nhắn với ghi chú và nhãn, chỉ mục toàn văn cục bộ cập nhật tăng dần, bản nháp bàn giao có bằng chứng, không gian dự án chỉ đọc và tham chiếu cửa sổ mô hình. Dấu trang không sửa phiên gốc. Chỉ mục chỉ bao gồm phiên đã phát hiện; cần cập nhật để tìm tin nhắn mới. Tỷ lệ văn bản lịch sử không phải mức sử dụng thực tế của yêu cầu. Cài đặt cung cấp chẩn đoán cục bộ và xuất JSON/Markdown đã ẩn bí mật. Chỉ mục kiểm tra được chọn mới truy cập tuyến Codex hiện tại hoặc khởi động MCP; không gọi công cụ ghi. Xem [hướng dẫn phiên](https://sakurabytecore.github.io/codexmate/guide/sessions).
 
+Tạo gói bằng chứng liên phiên từ kết quả chỉ mục, kiểm tra hash nguồn và tải Markdown; tải lại chỉ xóa giỏ tài liệu trong bộ nhớ. Usage có tham khảo chi phí riêng từ bản giá tích hợp có phiên bản của [Wei-Shaw/model-price-repo](https://github.com/Wei-Shaw/model-price-repo), tách dòng chưa rõ khỏi tổng đã biết, không phải hóa đơn và không tự cập nhật qua mạng. Không gian dự án bổ sung trạng thái Git chỉ đọc và thống kê tệp của commit; liên kết trong 24 giờ chỉ là ứng viên theo thời gian, không chứng minh nguyên nhân. Các tính năng không gọi mô hình hay tự gửi phiên. Giá không gồm bậc giá, tầng dịch vụ, thời hạn bộ nhớ đệm, công cụ hoặc đa phương thức.
+
 ---
 
 > [!TIP]

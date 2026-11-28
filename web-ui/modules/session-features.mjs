@@ -1,4 +1,7 @@
 import { api } from './api.mjs';
+import { sessionEvidenceMixin } from './session-evidence.mjs';
+import { usagePricingMixin } from './usage-pricing.mjs';
+import { sessionGitMixin } from './session-git.mjs';
 import { contextWindowReference } from '../logic.context-window.mjs';
 const SessionMessageActions = {
     props: { message: { type: Object, required: true } },
@@ -20,6 +23,7 @@ const SessionMessageActions = {
     }
 };
 export const sessionFeaturesMixin = {
+    mixins: [sessionEvidenceMixin, usagePricingMixin, sessionGitMixin],
     components: { SessionMessageActions },
     data() {
         return { featureView: '', featureBusy: false, featureError: '', bookmarks: [], bookmarkRevision: '',
