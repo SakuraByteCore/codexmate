@@ -1,5 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
+const { checkCollections, checkStories } = require('./workbench-collections-stories.cjs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const http = require('node:http');
@@ -128,7 +129,7 @@ async function main() {
     const probe = http.createServer(); await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve)); const port = probe.address().port; await new Promise(resolve => probe.close(resolve));
     const env = { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: '', CLAUDE_HOME: '', CLAUDE_CONFIG_DIR: '', PI_HOME: '',
         CODEBUDDY_HOME: '', CODEBUDDY_CODE_HOME_DIR: '', WORKBUDDY_HOME: '', WORKBUDDY_AI_HOME_DIR: '', XDG_CONFIG_HOME: '', XDG_DATA_HOME: path.join(home, '.local/share'), OPENCODE_DATA_HOME: '', OPENCODE_DATA_DIR: '', ZED_DATA_DIR: path.join(home, 'zed'), CODEXMATE_HTTP_TOKEN: TOKEN, CODEXMATE_PORT: String(port), CODEXMATE_NO_BROWSER: '1' };
-    const app = spawn(process.execPath, ['cli.js', 'run', '--no-browser', '--host=127.0.0.1'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+    let app = spawn(process.execPath, ['cli.js', 'run', '--no-browser', '--host=127.0.0.1'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
     let serverLog = ''; app.stdout.on('data', chunk => { serverLog += chunk; }); app.stderr.on('data', chunk => { serverLog += chunk; });
     const base = `http://127.0.0.1:${port}`;
     const api = async (action, params = {}) => { const response = await fetch(base + '/api', { method: 'POST', headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, params }) }); assert.equal(response.status, 200); const result = await response.json(); assert.equal(result.error, undefined, JSON.stringify(result)); return result; };
@@ -136,22 +137,74 @@ async function main() {
     try {
         let ready; for (let attempt = 0; attempt < 80; attempt++) { ready = await fetch(base + '/?token=' + TOKEN).catch(() => null); if (ready?.ok) break; await delay(100); }
         assert.ok(ready?.ok, serverLog); assert.equal(await (await fetch(base + '/web-ui/app.js')).text(), require('../../web-ui/source-bundle.cjs').readExecutableBundledWebUiScript(), 'instance loads final bundle');
+        assert.equal(await (await fetch(base + '/web-ui/styles.css')).text(), require('../../web-ui/source-bundle.cjs').readBundledWebUiCss(), 'instance loads final bundled CSS');
         await api('session-index-refresh', { source: 'all' }); let status; do { await delay(50); status = await api('session-index-status'); } while (status.job.status === 'running'); assert.equal(status.job.status, 'success');
+        for (const action of ['session-collections-list', 'session-collection-open', 'session-collection-save', 'session-collection-remove', 'session-stories-list', 'session-story-save', 'session-story-remove']) {
+            const denied = await fetch(base + '/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, params: {} }) });
+            assert.equal(denied.status, 401, 'new actions retain authentication');
+        }
         browser = await chromium.launch({ executablePath: process.env.CHROME_EXECUTABLE || undefined, args: android ? ['--no-zygote', '--single-process', '--disable-dev-shm-usage'] : [] });
-        const context = await browser.newContext({ acceptDownloads: true });
+        const context = await browser.newContext({ acceptDownloads: true }); context.setDefaultTimeout(8000);
         for (const width of [1440, 390]) {
             const page = await context.newPage(); await page.setViewportSize({ width, height: 900 });
             const actions = []; const errors = []; page.on('pageerror', error => errors.push(error.message));
             page.on('request', request => { if (request.url().endsWith('/api') && request.method() === 'POST') actions.push(request.postDataJSON()?.action); });
             await page.goto(base + '/?token=' + TOKEN); const navigate = tab => page.locator(width === 1440 ? '#side-tab-' + tab : '#tab-' + tab).click();
             try {
-                await navigate('sessions'); await checkEvidence({ page, api, originals, codexFile }); await checkPricing({ page, api, navigate, originals, piFile: [...originals.keys()].find(file => file.includes('/.pi/')) }); await checkGit({ page, navigate, first, second });
+                await navigate('sessions');
+                if (process.env.WORKBENCH_ACCEPTANCE_FOCUS === 'stories') {
+                    await page.locator('.session-features .feature-tabs button').filter({ hasText: '项目工作台' }).click();
+                    await page.locator('.feature-project-picker button').filter({ hasText: first }).click(); await page.locator('.project-git > summary').click();
+                } else {
+                    await checkEvidence({ page, api, originals, codexFile }); await checkCollections({ page, api, originals, codexFile, width });
+                    await checkPricing({ page, api, navigate, originals, piFile: [...originals.keys()].find(file => file.includes('/.pi/')) });
+                    if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'collections') await checkGit({ page, navigate, first, second });
+                }
+                if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'collections') await checkStories({ page, api, first, second, width });
             } catch (error) {
-                console.error('PAGE_ERRORS', errors); console.error('LAST_ACTIONS', actions.slice(-15));
+                console.error('PAGE_ERRORS', errors); console.error('LAST_ACTIONS', actions.slice(-15)); console.error('FEATURE_ACTIONS', actions.filter(action => /session-project|session-stor/.test(action))); console.error('VM_STATE', await page.evaluate(() => { const vm = document.querySelector('#app')?.__vue_app__?._instance?.proxy || document.querySelector('#app')?._vnode?.component?.proxy; return vm ? { view: vm.featureView, sequence: vm.featureRequestSeq, busy: vm.featureBusy, project: vm.projectSelected, report: vm.projectReport, error: vm.featureError, git: vm.projectGitCommit, stories: vm.stories, storyError: vm.storyError } : 'no-vm'; }));
                 console.error('VISIBLE_STATE', (await page.locator('#app').innerText()).slice(-6500)); throw error;
             }
             assert.deepEqual(errors, [], 'no runtime errors'); assert.equal(actions.some(action => /model-test|thread-handoff-create|session-diagnostics-start/.test(action)), false, 'no model calls, automatic handoff or MCP start');
             await page.close(); console.log('PASS loaded desktop/compact entry', width);
+        }
+        if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'collections') {
+            if (process.env.WORKBENCH_ACCEPTANCE_FOCUS === 'stories') {
+                const result = await api('session-index-search', { query: 'evidence needle', role: 'user' });
+                await api('session-collection-save', { name: '重启恢复专题', goal: '', references: result.results, revision: '' });
+            }
+            const savedCollections = (await api('session-collections-list')).items;
+            const savedStories = (await api('session-stories-list', { project: first })).items;
+            const stopped = new Promise(resolve => app.once('exit', resolve)); app.kill('SIGTERM'); await stopped;
+            app = spawn(process.execPath, ['cli.js', 'run', '--no-browser', '--host=127.0.0.1'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+            app.stdout.on('data', chunk => { serverLog += chunk; }); app.stderr.on('data', chunk => { serverLog += chunk; });
+            let restarted; for (let attempt = 0; attempt < 80; attempt++) { restarted = await fetch(base + '/?token=' + TOKEN).catch(() => null); if (restarted?.ok) break; await delay(100); }
+            assert.ok(restarted?.ok, serverLog); assert.equal(await (await fetch(base + '/web-ui/app.js')).text(), require('../../web-ui/source-bundle.cjs').readExecutableBundledWebUiScript(), 'restarted instance loads final bundle');
+            assert.deepEqual((await api('session-collections-list')).items, savedCollections);
+            assert.deepEqual((await api('session-stories-list', { project: first })).items, savedStories);
+            const restored = await context.newPage(); await restored.setViewportSize({ width: 390, height: 900 }); await restored.goto(base + '/?token=' + TOKEN);
+            await restored.locator('#tab-sessions').click(); await restored.locator('.evidence-collections > summary').click();
+            await restored.getByRole('button', { name: /^重启恢复专题/ }).first().click(); await restored.locator('.evidence-basket [data-state="ready"]').first().waitFor();
+            await restored.locator('.session-features .feature-tabs button').filter({ hasText: '项目工作台' }).click();
+            await restored.locator('.feature-project-picker button').filter({ hasText: first }).click(); await restored.locator('.project-git > summary').click();
+            await restored.locator('.git-commit-list > li > button').first().click(); await restored.locator('.story-record').filter({ hasText: '重启后的故事' }).waitFor();
+            const palettes = await restored.evaluate(async () => {
+                const root = document.documentElement; const original = root.getAttribute('data-theme'); const results = [];
+                for (const theme of ['light', 'dark', 'ocean', 'violet']) {
+                    if (theme === 'light') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
+                    // Sample after the existing 160ms color transition, not during interpolation.
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    const collection = document.querySelector('.collection-list button[aria-pressed="true"]'); const tab = document.querySelector('.feature-tabs button[aria-expanded="true"]');
+                    const chosen = getComputedStyle(collection); const navigation = getComputedStyle(tab);
+                    results.push({ theme, matches: chosen.color === navigation.color && chosen.backgroundColor === navigation.backgroundColor,
+                        chosen: [chosen.color, chosen.backgroundColor], navigation: [navigation.color, navigation.backgroundColor],
+                        fits: [...document.querySelectorAll('.evidence-collections,.project-stories')].every(element => element.scrollWidth <= element.clientWidth + 1) });
+                }
+                if (original === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', original);
+                return results;
+            }); console.log('POLISH themes', palettes); assert.ok(palettes.every(result => result.matches && result.fits), 'four themes retain shared selected colors and bounded layouts');
+            await restored.close();
+            console.log('PASS real service restart: saved collections/stories preserved and reopened through visible entries');
         }
         for (const [file, original] of originals) assert.equal(digest(await fs.readFile(file)), digest(Buffer.from(original)), 'original session unchanged');
         for (const [cwd, hash] of indexes) assert.equal(digest(await fs.readFile(path.join(cwd, '.git/index'))), hash, 'Git index unchanged');

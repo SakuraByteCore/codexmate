@@ -15202,6 +15202,13 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                         case 'session-diagnostics-cancel':
                         case 'session-feature-settings-get':
                         case 'session-feature-settings-save':
+                        case 'session-collections-list':
+                        case 'session-collection-open':
+                        case 'session-collection-save':
+                        case 'session-collection-remove':
+                        case 'session-stories-list':
+                        case 'session-story-save':
+                        case 'session-story-remove':
                         case 'session-project-git':
                         case 'session-project-git-commit':
                         case 'session-projects':

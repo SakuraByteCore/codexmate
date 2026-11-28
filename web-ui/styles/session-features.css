@@ -277,3 +277,37 @@
 .git-commit-list .btn-mini { min-height: 44px; text-align: start; white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
 .git-commit-stat { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow-y: auto; }
 .project-git code { overflow-wrap: anywhere; }
+
+.collection-list { padding: 0; margin-block: var(--spacing-sm); max-width: 72ch; list-style: none; }
+.collection-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--spacing-xs); padding-block: var(--spacing-xs); min-width: 0; }
+.collection-list li + li { border-top: 1px solid var(--color-border-soft); }
+.collection-list li > button:first-child { min-width: 0; padding: 8px 12px; border-color: transparent; background: transparent; text-align: start; white-space: normal; overflow-wrap: anywhere; font-size: var(--font-size-body); font-weight: var(--font-weight-secondary); line-height: var(--line-height-normal); }
+.collection-list li > button[aria-pressed="true"], .collection-list li > button[aria-pressed="true"]:hover:not(:disabled) { background: var(--color-brand-light); color: var(--color-brand-dark); }
+.evidence-collections > summary { font-size: var(--font-size-body); font-weight: var(--font-weight-primary); }
+.collection-list .feature-count { color: var(--color-text-secondary); text-align: end; white-space: nowrap; }
+.collection-editor { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--spacing-sm); margin-block: var(--spacing-md) var(--spacing-sm); }
+.collection-editor > .feature-actions { flex-wrap: nowrap; }
+.evidence-list li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs); }
+.evidence-list li > span { flex: 1 1 180px; min-width: 0; max-width: 100%; }
+.evidence-list .btn-mini { margin-inline-start: 0; flex-shrink: 0; }
+.collection-source-state { color: var(--color-text-secondary); }
+.collection-source-state[data-state="changed"], .collection-source-state[data-state="unavailable"] { color: var(--color-error); }
+.project-stories { margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border-soft); min-width: 0; }
+.project-stories > h4 { margin: 0; font-size: var(--font-size-large); font-weight: var(--font-weight-primary); line-height: var(--line-height-normal); }
+.story-record { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--spacing-sm); row-gap: 4px; padding-block: var(--spacing-sm); overflow-wrap: anywhere; }
+.story-record + .story-record { border-top: 1px solid var(--color-border-soft); }
+.story-record > .feature-meta { grid-column: 1; margin: 0; }
+.story-record > button:not(.feature-quiet) { grid-column: 1; justify-self: start; padding: 8px 0; border-color: transparent; background: transparent; font-size: var(--font-size-body); font-weight: var(--font-weight-primary); text-align: start; white-space: normal; line-height: var(--line-height-normal); }
+.story-record > .feature-hint { grid-column: 1; margin: 0; }
+.story-record > .feature-note { grid-column: 1; margin: 0; white-space: pre-wrap; line-height: 1.65; }
+.story-record > .feature-note:empty { display: none; }
+.story-record > .feature-quiet { grid-column: 2; grid-row: 2; align-self: start; white-space: nowrap; }
+.story-editor { max-width: 72ch; padding-top: var(--spacing-sm); margin-top: var(--spacing-xs); border-top: 1px solid var(--color-border-soft); }
+.collection-editor label, .story-editor label { font-weight: var(--font-weight-secondary); }
+@media (max-width: 640px) {
+    .collection-editor { grid-template-columns: minmax(0, 1fr); }
+    .collection-list li { column-gap: 4px; }
+    .collection-list li > button:first-child { padding-inline: 8px; }
+    .collection-list .feature-quiet { padding-inline: 8px; }
+    .story-record { column-gap: var(--spacing-xs); }
+}

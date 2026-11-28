@@ -55,6 +55,8 @@ Trang phiên bổ sung dấu trang tin nhắn với ghi chú và nhãn, chỉ m�
 
 Tạo gói bằng chứng liên phiên từ kết quả chỉ mục, kiểm tra hash nguồn và tải Markdown; tải lại chỉ xóa giỏ tài liệu trong bộ nhớ. Usage có tham khảo chi phí riêng từ bản giá tích hợp có phiên bản của [Wei-Shaw/model-price-repo](https://github.com/Wei-Shaw/model-price-repo), tách dòng chưa rõ khỏi tổng đã biết, không phải hóa đơn và không tự cập nhật qua mạng. Không gian dự án bổ sung trạng thái Git chỉ đọc và thống kê tệp của commit; liên kết trong 24 giờ chỉ là ứng viên theo thời gian, không chứng minh nguyên nhân. Các tính năng không gọi mô hình hay tự gửi phiên. Giá không gồm bậc giá, tầng dịch vụ, thời hạn bộ nhớ đệm, công cụ hoặc đa phương thức.
 
+Bộ sưu tập bằng chứng lưu tham chiếu nguồn có tên khi người dùng chọn lưu. Sau khi tải lại, mở thủ công để kiểm tra nguồn; giỏ tạm vẫn bị xóa và không sao lưu toàn bộ phiên. Chi tiết commit có câu chuyện phát triển để liên kết phiên và lý do thay đổi, tách biệt từng dự án. Chỉ ghi siêu dữ liệu cục bộ; không đổi Git, không chứng minh nguồn tạo mã hay kiểm thử đạt. Xem [hướng dẫn phiên](https://sakurabytecore.github.io/codexmate/guide/sessions).
+
 ---
 
 > [!TIP]

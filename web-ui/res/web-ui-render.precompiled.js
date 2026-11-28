@@ -4990,6 +4990,94 @@ return function render(_ctx, _cache) {
                             : _createCommentVNode("v-if", true)
                         ]))
                       : _createCommentVNode("v-if", true),
+                    _createElementVNode("details", {
+                      class: "feature-disclosure evidence-collections",
+                      open: _ctx.collectionsOpen,
+                      onToggle: $event => (_ctx.toggleCollections($event))
+                    }, [
+                      _createElementVNode("summary", null, _toDisplayString(_ctx.t('collections.title')), 1 /* TEXT */),
+                      _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('collections.scope')), 1 /* TEXT */),
+                      (_ctx.collectionError)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 0,
+                            class: "form-error",
+                            role: "alert"
+                          }, _toDisplayString(_ctx.collectionError), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                      (_ctx.collectionBusy)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 1,
+                            role: "status"
+                          }, _toDisplayString(_ctx.t('features.loading')), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                      _createElementVNode("ol", { class: "collection-list" }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.collections, (item) => {
+                          return (_openBlock(), _createElementBlock("li", {
+                            key: item.id
+                          }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-mini",
+                              onClick: $event => (_ctx.openEvidenceCollection(item)),
+                              disabled: _ctx.collectionBusy || _ctx.evidenceBusy,
+                              "aria-pressed": _ctx.collectionId === item.id
+                            }, _toDisplayString(item.name), 9 /* TEXT, PROPS */, ["onClick", "disabled", "aria-pressed"]),
+                            _createElementVNode("span", { class: "feature-count" }, _toDisplayString(item.references.length) + "/100", 1 /* TEXT */),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-mini feature-quiet",
+                              onClick: $event => (_ctx.removeEvidenceCollection(item)),
+                              disabled: _ctx.collectionBusy
+                            }, _toDisplayString(_ctx.t('collections.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                          ]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ]),
+                      (!_ctx.collectionBusy && !_ctx.collections.length)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 2,
+                            class: "feature-hint"
+                          }, _toDisplayString(_ctx.t('collections.empty')), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                      (_ctx.evidenceSelections.length)
+                        ? (_openBlock(), _createElementBlock("form", {
+                            key: 3,
+                            class: "feature-editor collection-editor",
+                            onSubmit: _withModifiers($event => (_ctx.saveEvidenceCollection(false)), ["prevent"])
+                          }, [
+                            _createElementVNode("label", null, [
+                              _createTextVNode(_toDisplayString(_ctx.t('collections.name')), 1 /* TEXT */),
+                              _withDirectives(_createElementVNode("input", {
+                                "onUpdate:modelValue": $event => ((_ctx.collectionName) = $event),
+                                maxlength: "160",
+                                required: ""
+                              }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                [_vModelText, _ctx.collectionName]
+                              ])
+                            ]),
+                            _createElementVNode("div", { class: "feature-actions" }, [
+                              _createElementVNode("button", {
+                                class: "btn-mini",
+                                disabled: _ctx.collectionBusy || _ctx.evidenceBusy || !_ctx.collectionName.trim()
+                              }, _toDisplayString(_ctx.t('collections.save')), 9 /* TEXT, PROPS */, ["disabled"]),
+                              (_ctx.collectionId)
+                                ? (_openBlock(), _createElementBlock("button", {
+                                    key: 0,
+                                    type: "button",
+                                    class: "btn-mini feature-quiet",
+                                    onClick: $event => (_ctx.saveEvidenceCollection(true)),
+                                    disabled: _ctx.collectionBusy || _ctx.evidenceBusy || !_ctx.collectionName.trim()
+                                  }, _toDisplayString(_ctx.t('collections.saveAs')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]))
+                                : _createCommentVNode("v-if", true)
+                            ])
+                          ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]))
+                        : _createCommentVNode("v-if", true),
+                      _createElementVNode("button", {
+                        type: "button",
+                        class: "btn-mini feature-quiet",
+                        onClick: _ctx.loadEvidenceCollections,
+                        disabled: _ctx.collectionBusy
+                      }, _toDisplayString(_ctx.t('collections.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                    ], 40 /* PROPS, NEED_HYDRATION */, ["open", "onToggle"]),
                     (_ctx.evidenceSelections.length)
                       ? (_openBlock(), _createElementBlock("section", {
                           key: 2,
@@ -5008,8 +5096,20 @@ return function render(_ctx, _cache) {
                               }, [
                                 _createElementVNode("span", null, [
                                   _createElementVNode("strong", null, _toDisplayString(item.session.title || item.session.sessionId), 1 /* TEXT */),
-                                  _createElementVNode("small", { class: "feature-meta" }, _toDisplayString(item.session.source) + " · " + _toDisplayString(item.nodeId), 1 /* TEXT */)
+                                  _createElementVNode("small", { class: "feature-meta" }, _toDisplayString(item.session.source) + " · " + _toDisplayString(item.nodeId), 1 /* TEXT */),
+                                  (item.state)
+                                    ? (_openBlock(), _createElementBlock("small", {
+                                        key: 0,
+                                        class: "collection-source-state",
+                                        "data-state": item.state
+                                      }, _toDisplayString(_ctx.t('collections.state.' + item.state)), 9 /* TEXT, PROPS */, ["data-state"]))
+                                    : _createCommentVNode("v-if", true)
                                 ]),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini feature-quiet",
+                                  onClick: $event => (_ctx.openIndexedMessage(item))
+                                }, _toDisplayString(_ctx.t('features.source')), 9 /* TEXT, PROPS */, ["onClick"]),
                                 _createElementVNode("button", {
                                   type: "button",
                                   class: "btn-mini",
@@ -5206,6 +5306,98 @@ return function render(_ctx, _cache) {
                                                               key: 1,
                                                               class: "feature-code git-commit-stat"
                                                             }, _toDisplayString(_ctx.projectGitCommit.sha) + "\n" + _toDisplayString(_ctx.projectGitCommit.stat), 1 /* TEXT */))
+                                                          : _createCommentVNode("v-if", true),
+                                                        (_ctx.projectGitCommit)
+                                                          ? (_openBlock(), _createElementBlock("section", {
+                                                              key: 2,
+                                                              class: "project-stories",
+                                                              "aria-label": _ctx.t('stories.title')
+                                                            }, [
+                                                              _createElementVNode("h4", null, _toDisplayString(_ctx.t('stories.title')), 1 /* TEXT */),
+                                                              _createElementVNode("p", { class: "feature-hint" }, _toDisplayString(_ctx.t('stories.scope')), 1 /* TEXT */),
+                                                              (_ctx.storyError)
+                                                                ? (_openBlock(), _createElementBlock("p", {
+                                                                    key: 0,
+                                                                    class: "form-error",
+                                                                    role: "alert"
+                                                                  }, _toDisplayString(_ctx.storyError), 1 /* TEXT */))
+                                                                : _createCommentVNode("v-if", true),
+                                                              (_ctx.storyBusy)
+                                                                ? (_openBlock(), _createElementBlock("p", {
+                                                                    key: 1,
+                                                                    role: "status"
+                                                                  }, _toDisplayString(_ctx.t('features.loading')), 1 /* TEXT */))
+                                                                : _createCommentVNode("v-if", true),
+                                                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.commitStories, (item) => {
+                                                                return (_openBlock(), _createElementBlock("article", {
+                                                                  key: item.id,
+                                                                  class: "story-record"
+                                                                }, [
+                                                                  _createElementVNode("p", { class: "feature-meta" }, _toDisplayString(_ctx.t('stories.linked')) + " · " + _toDisplayString(item.session.source), 1 /* TEXT */),
+                                                                  (item.available)
+                                                                    ? (_openBlock(), _createElementBlock("button", {
+                                                                        key: 0,
+                                                                        type: "button",
+                                                                        class: "btn-mini",
+                                                                        onClick: $event => (_ctx.selectSession(item.session))
+                                                                      }, _toDisplayString(item.session.title || item.session.sessionId), 9 /* TEXT, PROPS */, ["onClick"]))
+                                                                    : (_openBlock(), _createElementBlock("p", {
+                                                                        key: 1,
+                                                                        class: "feature-hint"
+                                                                      }, _toDisplayString(item.session.title || item.session.sessionId) + " · " + _toDisplayString(_ctx.t('stories.unavailable')), 1 /* TEXT */)),
+                                                                  _createElementVNode("p", { class: "feature-note" }, _toDisplayString(item.note), 1 /* TEXT */),
+                                                                  _createElementVNode("button", {
+                                                                    type: "button",
+                                                                    class: "btn-mini feature-quiet",
+                                                                    onClick: $event => (_ctx.removeProjectStory(item)),
+                                                                    disabled: _ctx.storyBusy
+                                                                  }, _toDisplayString(_ctx.t('stories.remove')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                                                ]))
+                                                              }), 128 /* KEYED_FRAGMENT */)),
+                                                              _createElementVNode("form", {
+                                                                class: "feature-editor story-editor",
+                                                                onSubmit: _withModifiers(_ctx.saveProjectStory, ["prevent"])
+                                                              }, [
+                                                                _createElementVNode("label", null, [
+                                                                  _createTextVNode(_toDisplayString(_ctx.t('stories.session')), 1 /* TEXT */),
+                                                                  _withDirectives(_createElementVNode("select", {
+                                                                    "onUpdate:modelValue": $event => ((_ctx.storySession) = $event),
+                                                                    disabled: _ctx.storyBusy
+                                                                  }, [
+                                                                    _createElementVNode("option", { value: "" }, _toDisplayString(_ctx.t('stories.choose')), 1 /* TEXT */),
+                                                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.storySessions, (session) => {
+                                                                      return (_openBlock(), _createElementBlock("option", {
+                                                                        key: _ctx.storySessionKey(session),
+                                                                        value: _ctx.storySessionKey(session)
+                                                                      }, _toDisplayString(session.source) + " · " + _toDisplayString(session.title || session.sessionId), 9 /* TEXT, PROPS */, ["value"]))
+                                                                    }), 128 /* KEYED_FRAGMENT */))
+                                                                  ], 8 /* PROPS */, ["onUpdate:modelValue", "disabled"]), [
+                                                                    [_vModelSelect, _ctx.storySession]
+                                                                  ])
+                                                                ]),
+                                                                _createElementVNode("label", null, [
+                                                                  _createTextVNode(_toDisplayString(_ctx.t('stories.note')), 1 /* TEXT */),
+                                                                  _withDirectives(_createElementVNode("textarea", {
+                                                                    "onUpdate:modelValue": $event => ((_ctx.storyNote) = $event),
+                                                                    maxlength: "4000"
+                                                                  }, null, 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                                                                    [_vModelText, _ctx.storyNote]
+                                                                  ])
+                                                                ]),
+                                                                _createElementVNode("div", { class: "feature-actions" }, [
+                                                                  _createElementVNode("button", {
+                                                                    class: "btn-mini",
+                                                                    disabled: _ctx.storyBusy || !_ctx.storySession
+                                                                  }, _toDisplayString(_ctx.t('stories.save')), 9 /* TEXT, PROPS */, ["disabled"]),
+                                                                  _createElementVNode("button", {
+                                                                    type: "button",
+                                                                    class: "btn-mini feature-quiet",
+                                                                    onClick: _ctx.loadProjectStories,
+                                                                    disabled: _ctx.storyBusy
+                                                                  }, _toDisplayString(_ctx.t('stories.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                                                ])
+                                                              ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"])
+                                                            ], 8 /* PROPS */, ["aria-label"]))
                                                           : _createCommentVNode("v-if", true)
                                                       ], 64 /* STABLE_FRAGMENT */))
                                                     : _createCommentVNode("v-if", true)

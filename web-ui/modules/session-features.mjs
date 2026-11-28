@@ -60,7 +60,7 @@ export const sessionFeaturesMixin = {
             void this.loadContextPreferences();
         },
         contextSelectedModel() { if (this.sessionContextHealth) void this.loadContextPreferences(); },
-        handoffSessionKey() { this.contextWindowInput = ''; this.contextSelectedModel = ''; this.selectedContextIds = []; this.handoffDraftEvidence = []; this.handoffUnverified = []; this.featureFocus = null; this.featureRequestSeq++; this.featureBusy = false; }
+        handoffSessionKey() { this.contextWindowInput = ''; this.contextSelectedModel = ''; this.selectedContextIds = []; this.handoffDraftEvidence = []; this.handoffUnverified = []; this.featureFocus = null; this.featureBusy = false; }
     },
     methods: {
         featureErrorText(error) {

@@ -1,4 +1,6 @@
+import { sessionStoriesMixin } from './session-stories.mjs';
 export const sessionGitMixin = {
+    mixins: [sessionStoriesMixin],
     data() { return { projectGitOpen: false, projectGit: null, projectGitCommit: null, projectGitBusy: false, projectGitError: '', projectGitSequence: 0 }; },
     beforeUnmount() { this.projectGitSequence++; },
     watch: {

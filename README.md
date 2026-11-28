@@ -55,6 +55,8 @@ The session page adds message bookmarks with notes and tags, an incremental loca
 
 Build cross-session evidence packs from indexed selections, verify source hashes, and download Markdown; reload clears only the new in-memory basket. Usage offers a separate cost reference using a bundled versioned snapshot from [Wei-Shaw/model-price-repo](https://github.com/Wei-Shaw/model-price-repo), with unknown rows separate from known subtotals, not a bill and no automatic network updates. The project workspace adds read-only Git state and commit file statistics; associations within 24 hours are time-based candidates, not causation. These features do not call models or send sessions automatically. Pricing excludes tiers, service levels, cache durations, tool and multimodal extras.
 
+Evidence collections explicitly save named source references. Reopen them after reload to recheck originals; the temporary basket still clears, and full sessions are not backed up. Commit details add development stories: manually link sessions and reasons for changes, with project isolation. Only local metadata is written; Git is unchanged, and links do not prove authorship or passing tests. See the [session guide](https://sakurabytecore.github.io/codexmate/guide/sessions).
+
 ---
 
 > [!TIP]

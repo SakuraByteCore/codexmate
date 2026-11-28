@@ -47,10 +47,30 @@
             </article>
         </template>
     </div>
+    <details class="feature-disclosure evidence-collections" :open="collectionsOpen" @toggle="toggleCollections($event)">
+        <summary>{{ t('collections.title') }}</summary>
+        <p class="feature-hint">{{ t('collections.scope') }}</p>
+        <p v-if="collectionError" class="form-error" role="alert">{{ collectionError }}</p>
+        <p v-if="collectionBusy" role="status">{{ t('features.loading') }}</p>
+        <ol class="collection-list"><li v-for="item in collections" :key="item.id">
+            <button type="button" class="btn-mini" @click="openEvidenceCollection(item)" :disabled="collectionBusy || evidenceBusy" :aria-pressed="collectionId === item.id">{{ item.name }}</button>
+            <span class="feature-count">{{ item.references.length }}/100</span>
+            <button type="button" class="btn-mini feature-quiet" @click="removeEvidenceCollection(item)" :disabled="collectionBusy">{{ t('collections.remove') }}</button>
+        </li></ol>
+        <p v-if="!collectionBusy && !collections.length" class="feature-hint">{{ t('collections.empty') }}</p>
+        <form v-if="evidenceSelections.length" class="feature-editor collection-editor" @submit.prevent="saveEvidenceCollection(false)">
+            <label>{{ t('collections.name') }}<input v-model="collectionName" maxlength="160" required></label>
+            <div class="feature-actions">
+                <button class="btn-mini" :disabled="collectionBusy || evidenceBusy || !collectionName.trim()">{{ t('collections.save') }}</button>
+                <button v-if="collectionId" type="button" class="btn-mini feature-quiet" @click="saveEvidenceCollection(true)" :disabled="collectionBusy || evidenceBusy || !collectionName.trim()">{{ t('collections.saveAs') }}</button>
+            </div>
+        </form>
+        <button type="button" class="btn-mini feature-quiet" @click="loadEvidenceCollections" :disabled="collectionBusy">{{ t('collections.refresh') }}</button>
+    </details>
     <section v-if="evidenceSelections.length" class="evidence-basket" :aria-label="t('evidence.title')">
         <div class="feature-section-heading"><h3>{{ t('evidence.title') }}</h3><span class="feature-count">{{ evidenceSelections.length }}/100</span></div>
         <p class="feature-hint">{{ t('evidence.memory') }}</p>
-        <ol class="evidence-list"><li v-for="item in evidenceSelections" :key="evidenceKey(item)"><span><strong>{{ item.session.title || item.session.sessionId }}</strong><small class="feature-meta">{{ item.session.source }} · {{ item.nodeId }}</small></span><button type="button" class="btn-mini" @click="toggleEvidence(item)">{{ t('evidence.remove') }}</button></li></ol>
+        <ol class="evidence-list"><li v-for="item in evidenceSelections" :key="evidenceKey(item)"><span><strong>{{ item.session.title || item.session.sessionId }}</strong><small class="feature-meta">{{ item.session.source }} · {{ item.nodeId }}</small><small v-if="item.state" class="collection-source-state" :data-state="item.state">{{ t('collections.state.' + item.state) }}</small></span><button type="button" class="btn-mini feature-quiet" @click="openIndexedMessage(item)">{{ t('features.source') }}</button><button type="button" class="btn-mini" @click="toggleEvidence(item)">{{ t('evidence.remove') }}</button></li></ol>
         <form class="feature-actions feature-search-form" @submit.prevent="generateEvidencePack"><input v-model="evidenceGoal" :aria-label="t('evidence.goal')" :placeholder="t('evidence.goal')"><button class="btn-mini feature-primary" :disabled="evidenceBusy">{{ evidenceBusy ? t('features.loading') : t('evidence.generate') }}</button></form>
         <p v-if="evidenceError" class="form-error" role="alert">{{ evidenceError }}</p>
         <details v-if="evidencePack" class="feature-disclosure evidence-preview" open><summary>{{ t('evidence.preview', { count: evidencePack.length }) }}</summary><pre>{{ evidencePack }}</pre><button type="button" class="btn-mini" @click="downloadEvidencePack">{{ t('evidence.download') }}</button></details>
@@ -85,6 +105,24 @@
                             <ol class="git-commit-list"><li v-for="commit in projectGit.commits" :key="commit.sha"><button type="button" class="btn-mini" @click="loadProjectGitCommit(commit.sha)" :disabled="projectGitBusy"><code>{{ commit.sha.slice(0, 8) }}</code> {{ commit.subject }}</button><small class="feature-meta">{{ commit.timestamp }}</small><div class="feature-link-list"><button v-for="session in commit.candidates" :key="session.source + session.sessionId" type="button" @click="selectSession(session)">{{ t('git.candidate') }}: {{ session.source }} · {{ session.title || session.sessionId }}</button></div></li></ol>
                             <pre v-if="projectGitCommit" class="feature-code git-commit-stat">{{ projectGitCommit.sha }}
 {{ projectGitCommit.stat }}</pre>
+                            <section v-if="projectGitCommit" class="project-stories" :aria-label="t('stories.title')">
+                                <h4>{{ t('stories.title') }}</h4>
+                                <p class="feature-hint">{{ t('stories.scope') }}</p>
+                                <p v-if="storyError" class="form-error" role="alert">{{ storyError }}</p>
+                                <p v-if="storyBusy" role="status">{{ t('features.loading') }}</p>
+                                <article v-for="item in commitStories" :key="item.id" class="story-record">
+                                    <p class="feature-meta">{{ t('stories.linked') }} · {{ item.session.source }}</p>
+                                    <button v-if="item.available" type="button" class="btn-mini" @click="selectSession(item.session)">{{ item.session.title || item.session.sessionId }}</button>
+                                    <p v-else class="feature-hint">{{ item.session.title || item.session.sessionId }} · {{ t('stories.unavailable') }}</p>
+                                    <p class="feature-note">{{ item.note }}</p>
+                                    <button type="button" class="btn-mini feature-quiet" @click="removeProjectStory(item)" :disabled="storyBusy">{{ t('stories.remove') }}</button>
+                                </article>
+                                <form class="feature-editor story-editor" @submit.prevent="saveProjectStory">
+                                    <label>{{ t('stories.session') }}<select v-model="storySession" :disabled="storyBusy"><option value="">{{ t('stories.choose') }}</option><option v-for="session in storySessions" :key="storySessionKey(session)" :value="storySessionKey(session)">{{ session.source }} · {{ session.title || session.sessionId }}</option></select></label>
+                                    <label>{{ t('stories.note') }}<textarea v-model="storyNote" maxlength="4000"></textarea></label>
+                                    <div class="feature-actions"><button class="btn-mini" :disabled="storyBusy || !storySession">{{ t('stories.save') }}</button><button type="button" class="btn-mini feature-quiet" @click="loadProjectStories" :disabled="storyBusy">{{ t('stories.refresh') }}</button></div>
+                                </form>
+                            </section>
                         </template>
                     </template>
                     <button type="button" class="btn-mini" @click="loadProjectGit" :disabled="projectGitBusy">{{ t('git.refresh') }}</button>

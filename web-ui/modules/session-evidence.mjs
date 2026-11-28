@@ -1,7 +1,9 @@
+import { sessionCollectionsMixin } from './session-collections.mjs';
 const MAX_SELECTIONS = 100;
 const selectionKey = result => JSON.stringify([result.session.source, result.session.sessionId, result.session.filePath, result.nodeId]);
 
 export const sessionEvidenceMixin = {
+    mixins: [sessionCollectionsMixin],
     data() {
         return { evidenceSelections: [], evidenceGoal: '', evidencePack: '', evidenceBusy: false, evidenceError: '', evidenceSequence: 0 };
     },
