@@ -1,6 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
+const { checkArtifacts } = require('./session-artifacts-acceptance.cjs');
 const LONG_NAME = '故障复盘专题'.repeat(14);
 
 async function checkCollections({ page, api, originals, codexFile, width }) {
@@ -41,6 +42,7 @@ async function checkCollections({ page, api, originals, codexFile, width }) {
     const content = await basket.locator('.evidence-preview pre').innerText(); const downloading = page.waitForEvent('download');
     await basket.getByRole('button', { name: '下载 Markdown', exact: true }).click();
     assert.equal(await fs.readFile(await (await downloading).path(), 'utf8'), '\uFEFF' + content + (content.endsWith('\n') ? '' : '\n'));
+    await checkArtifacts({ page, originals, codexFile, width, restored: true });
     await name.fill(LONG_NAME); await collections.getByRole('button', { name: '另存专题', exact: true }).click(); await collections.getByRole('button', { name: LONG_NAME, exact: true }).waitFor();
     const bounds = await collections.evaluate(element => ({ width: element.clientWidth, scroll: element.scrollWidth,
         controls: [...element.querySelectorAll('button,input')].filter(control => control.getBoundingClientRect().height).map(control => {

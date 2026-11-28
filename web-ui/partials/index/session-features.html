@@ -71,7 +71,16 @@
         <div class="feature-section-heading"><h3>{{ t('evidence.title') }}</h3><span class="feature-count">{{ evidenceSelections.length }}/100</span></div>
         <p class="feature-hint">{{ t('evidence.memory') }}</p>
         <ol class="evidence-list"><li v-for="item in evidenceSelections" :key="evidenceKey(item)"><span><strong>{{ item.session.title || item.session.sessionId }}</strong><small class="feature-meta">{{ item.session.source }} · {{ item.nodeId }}</small><small v-if="item.state" class="collection-source-state" :data-state="item.state">{{ t('collections.state.' + item.state) }}</small></span><button type="button" class="btn-mini feature-quiet" @click="openIndexedMessage(item)">{{ t('features.source') }}</button><button type="button" class="btn-mini" @click="toggleEvidence(item)">{{ t('evidence.remove') }}</button></li></ol>
-        <form class="feature-actions feature-search-form" @submit.prevent="generateEvidencePack"><input v-model="evidenceGoal" :aria-label="t('evidence.goal')" :placeholder="t('evidence.goal')"><button class="btn-mini feature-primary" :disabled="evidenceBusy">{{ evidenceBusy ? t('features.loading') : t('evidence.generate') }}</button></form>
+        <form class="feature-actions feature-search-form evidence-generator" @submit.prevent="generateEvidencePack">
+            <input v-model="evidenceGoal" :aria-label="t('evidence.goal')" :placeholder="t('evidence.goal')">
+            <select v-model="evidenceFormat" :aria-label="t('artifacts.format')">
+                <option value="evidence">{{ t('evidence.title') }}</option>
+                <option value="receipt">{{ t('artifacts.receipt') }}</option>
+                <option value="relay">{{ t('artifacts.relay') }}</option>
+            </select>
+            <textarea v-if="evidenceFormat !== 'evidence'" v-model="evidenceNote" class="evidence-generator-note" rows="3" maxlength="4000" :aria-label="t('artifacts.note')" :placeholder="t('artifacts.notePlaceholder')"></textarea>
+            <button class="btn-mini feature-primary" :disabled="evidenceBusy">{{ evidenceBusy ? t('features.loading') : evidenceFormat === 'evidence' ? t('evidence.generate') : t('artifacts.generate.' + evidenceFormat) }}</button>
+        </form>
         <p v-if="evidenceError" class="form-error" role="alert">{{ evidenceError }}</p>
         <details v-if="evidencePack" class="feature-disclosure evidence-preview" open><summary>{{ t('evidence.preview', { count: evidencePack.length }) }}</summary><pre>{{ evidencePack }}</pre><button type="button" class="btn-mini" @click="downloadEvidencePack">{{ t('evidence.download') }}</button></details>
     </section>

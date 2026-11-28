@@ -28,7 +28,7 @@ export const sessionCollectionsMixin = {
                 const report = await this.featureCall('session-collection-open', { id: item.id });
                 if (sequence !== this.collectionSequence) return;
                 this.evidenceSequence++; this.evidencePack = ''; this.evidenceError = '';
-                this.evidenceSelections = report.items; this.evidenceGoal = report.item.goal;
+                this.evidenceSelections = report.items; this.evidenceGoal = report.item.goal; this.evidenceNote = '';
                 this.collectionId = report.item.id; this.collectionName = report.item.name; this.collectionRevision = report.revision;
             } catch (error) { if (sequence === this.collectionSequence) this.collectionError = this.featureErrorText(error); }
             finally { if (sequence === this.collectionSequence) this.collectionBusy = false; }

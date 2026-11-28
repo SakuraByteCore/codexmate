@@ -1,16 +1,23 @@
 import { sessionCollectionsMixin } from './session-collections.mjs';
+import { renderSessionArtifact, sessionArtifactFilename } from '../logic.session-artifacts.mjs';
 const MAX_SELECTIONS = 100;
 const selectionKey = result => JSON.stringify([result.session.source, result.session.sessionId, result.session.filePath, result.nodeId]);
 
 export const sessionEvidenceMixin = {
     mixins: [sessionCollectionsMixin],
     data() {
-        return { evidenceSelections: [], evidenceGoal: '', evidencePack: '', evidenceBusy: false, evidenceError: '', evidenceSequence: 0 };
+        return { evidenceSelections: [], evidenceGoal: '', evidencePack: '', evidenceBusy: false, evidenceError: '', evidenceSequence: 0,
+            evidenceFormat: 'evidence', evidenceNote: '', evidenceGeneratedFormat: 'evidence' };
     },
     beforeUnmount() { this.evidenceSequence++; },
-    watch: { evidenceGoal() { this.evidenceSequence++; this.evidencePack = ''; } },
+    watch: {
+        evidenceGoal() { this.invalidateEvidenceArtifact(); },
+        evidenceFormat() { this.invalidateEvidenceArtifact(); },
+        evidenceNote() { this.invalidateEvidenceArtifact(); }
+    },
     methods: {
         evidenceKey: selectionKey,
+        invalidateEvidenceArtifact() { this.evidenceSequence++; this.evidencePack = ''; },
         isEvidenceSelected(result) { return this.evidenceSelections.some(item => selectionKey(item) === selectionKey(result)); },
         toggleEvidence(result) {
             this.evidenceSequence++;
@@ -26,6 +33,9 @@ export const sessionEvidenceMixin = {
         async generateEvidencePack() {
             if (this.evidenceBusy || !this.evidenceSelections.length) return;
             const sequence = ++this.evidenceSequence;
+            const format = this.evidenceFormat;
+            const goal = this.evidenceGoal;
+            const note = this.evidenceNote;
             const selections = [...this.evidenceSelections];
             const groups = new Map();
             for (const item of selections) {
@@ -37,7 +47,7 @@ export const sessionEvidenceMixin = {
             try {
                 const evidence = new Map();
                 for (const group of groups.values()) {
-                    const draft = await this.featureCall('session-handoff-draft', { ...group[0].session, goal: this.evidenceGoal,
+                    const draft = await this.featureCall('session-handoff-draft', { ...group[0].session, goal,
                         selections: group.map(item => item.nodeId) });
                     if (sequence !== this.evidenceSequence) return;
                     for (const item of group) {
@@ -46,21 +56,26 @@ export const sessionEvidenceMixin = {
                         evidence.set(selectionKey(item), found);
                     }
                 }
-                const lines = [`# ${this.t('evidence.title')}`, '', this.t('evidence.scope'), '', this.evidenceGoal.trim()];
-                for (const [index, item] of selections.entries()) {
-                    const found = evidence.get(selectionKey(item));
-                    lines.push('', `## ${index + 1}. ${item.session.title || item.session.sessionId}`, '',
-                        `${item.session.source} · ${item.session.sessionId} · ${found.nodeId}`,
-                        `${this.t('evidence.path')}: ${JSON.stringify(item.session.filePath || item.session.cwd || '')}`,
-                        `SHA-256: ${found.textHash}`, `${this.t('evidence.status')}: ${this.t('evidence.' + found.status)}`, '',
-                        ...found.excerpt.split('\n').map(line => '> ' + line));
+                if (format !== 'evidence') {
+                    this.evidencePack = renderSessionArtifact({ format, goal, note, selections, evidence, translate: key => this.t(key) });
+                } else {
+                    const lines = [`# ${this.t('evidence.title')}`, '', this.t('evidence.scope'), '', goal.trim()];
+                    for (const [index, item] of selections.entries()) {
+                        const found = evidence.get(selectionKey(item));
+                        lines.push('', `## ${index + 1}. ${item.session.title || item.session.sessionId}`, '',
+                            `${item.session.source} · ${item.session.sessionId} · ${found.nodeId}`,
+                            `${this.t('evidence.path')}: ${JSON.stringify(item.session.filePath || item.session.cwd || '')}`,
+                            `SHA-256: ${found.textHash}`, `${this.t('evidence.status')}: ${this.t('evidence.' + found.status)}`, '',
+                            ...found.excerpt.split('\n').map(line => '> ' + line));
+                    }
+                    this.evidencePack = lines.join('\n').trim() + '\n';
                 }
-                this.evidencePack = lines.join('\n').trim() + '\n';
+                this.evidenceGeneratedFormat = format;
             } catch (error) { if (sequence === this.evidenceSequence) this.evidenceError = error.message; }
             finally { this.evidenceBusy = false; }
         },
         downloadEvidencePack() {
-            if (this.evidencePack) this.downloadTextFile('codexmate-evidence.md', this.evidencePack);
+            if (this.evidencePack) this.downloadTextFile(sessionArtifactFilename(this.evidenceGeneratedFormat), this.evidencePack);
         }
     }
 };

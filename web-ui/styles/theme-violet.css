@@ -823,6 +823,12 @@
 [data-theme="violet"] .session-batch-check input:checked + .session-batch-check-mark::after {
     border:solid var(--color-border);
 }
+[data-theme="violet"] #panel-sessions .session-list > .session-item {
+    box-shadow:none;
+}
+[data-theme="violet"] #panel-sessions .session-item .session-count-badge {
+    box-shadow:none;
+}
 [data-theme="violet"] .session-preview-header {
     background-color:color-mix(in oklch, var(--color-surface) 92%, transparent);
 }
@@ -889,9 +895,6 @@
 }
 [data-theme="violet"] #panel-sessions .thread-handoff {
     box-shadow:none;
-}
-[data-theme="violet"] #panel-sessions .thread-handoff-submit {
-    color:var(--color-surface-elevated);
 }
 [data-theme="violet"] .usage-range-group {
     background-image:none; background-color:color-mix(in oklch, var(--color-surface) 90%, transparent);

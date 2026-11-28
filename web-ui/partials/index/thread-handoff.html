@@ -1,62 +1,73 @@
-                                <details v-if="activeSession" :key="handoffSessionKey" class="session-workspace thread-handoff" :open="handoffExpanded" @toggle="toggleThreadHandoff" aria-label="会话交接">
-                                    <summary class="thread-handoff-summary"><span>会话交接</span><span class="thread-handoff-summary-hint">{{ handoffExpanded ? '收起' : '填写交接 · 查看历史' }}</span></summary>
-                                    <div v-if="handoffExpanded" class="thread-handoff-body">
-                                        <div class="session-workspace-header session-workspace-card-wide">
-                                            <p class="session-workspace-subtitle">草稿在切换会话后保留，刷新后清空。</p>
-                                            <button class="btn-mini" type="button" @click="loadThreadHandoffs" :disabled="handoffLoading || handoffBusy">{{ handoffLoading ? '刷新中…' : '刷新历史' }}</button>
-                                        </div>
-                                        <form @submit.prevent="createThreadHandoff" class="thread-handoff-form">
-                                            <label class="thread-handoff-field">
-                                                <span class="session-workspace-card-title">交给谁 <small>必填</small></span>
-                                                <input v-model="handoffDraft.target" class="session-query-input" required :disabled="handoffBusy" placeholder="目标代理标识，例如 claude">
-                                            </label>
-                                            <label class="thread-handoff-field">
-                                                <span class="session-workspace-card-title">接下来做什么 <small>必填</small></span>
-                                                <textarea v-model="handoffDraft.goal" class="session-query-input" rows="3" required :disabled="handoffBusy" placeholder="描述下一步任务、预期结果或验收标准"></textarea>
-                                            </label>
-                                            <details class="thread-handoff-optional">
-                                                <summary class="thread-handoff-optional-summary">补充上下文</summary>
-                                                <div class="session-workspace-grid">
-                                                    <label v-for="field in handoffFields" :key="field.key" class="thread-handoff-field">
-                                                        <span class="session-workspace-card-title">{{ field.label }}（可选）</span>
-                                                        <textarea v-model="handoffDraft[field.key]" class="session-query-input" rows="3" :disabled="handoffBusy" placeholder="每行填写一项"></textarea>
-                                                    </label>
-                                                </div>
-                                            </details>
-                                            <div class="thread-handoff-actions">
-                                                <button class="btn-mini thread-handoff-submit" type="submit" :disabled="handoffBusy || handoffLoading || !handoffDraft.target.trim() || !handoffDraft.goal.trim()">{{ handoffBusy ? '处理中…' : '生成交接' }}</button>
-                                            </div>
-                                        </form>
-                                        <p v-if="handoffError" class="state-message error session-workspace-card-wide" role="alert">{{ handoffError }}</p>
-                                        <p v-if="handoffNotice" class="state-message session-workspace-card-wide" role="status" aria-live="polite">{{ handoffNotice }}</p>
-                                        <label v-if="handoffCopyText" class="session-workspace-card session-workspace-card-wide">
-                                            <span class="session-workspace-card-title">卡片文本（未发送，可手动复制）</span>
-                                            <textarea class="session-query-input" rows="6" readonly :value="handoffCopyText" @focus="$event.target.select()"></textarea>
-                                        </label>
-                                        <p class="session-workspace-subtitle session-workspace-card-wide">复制不会自动发送。读取确认由目标代理通过 CLI ack 提交。</p>
-                                        <div class="feature-actions"><button type="button" class="btn-mini" @click="generateSelectedHandoff" :disabled="featureBusy || !selectedContextIds.length">{{ t('features.generateDraft', { count: selectedContextIds.length }) }}</button></div>
-                                        <p v-if="handoffDraftEvidence.length">{{ t('features.draftReview') }}</p>
-                                        <details v-if="handoffUnverified.length"><summary>{{ t('features.unverified', { count: handoffUnverified.length }) }}</summary><pre v-for="(text, index) in handoffUnverified" :key="index">{{ text }}</pre></details>
-                                        <ul v-if="handoffDraftEvidence.length"><li v-for="item in handoffDraftEvidence" :key="item.nodeId"><button type="button" class="btn-mini" @click="locateDraftEvidence(item)">{{ item.nodeId }} · {{ t('features.evidence.' + item.status) }}</button></li></ul>
-                                        <p v-if="handoffLoading" class="session-workspace-card-wide" role="status">正在加载交接历史…</p>
-                                        <p v-else-if="!handoffError && !handoffRecords.length" class="session-workspace-empty session-workspace-card-wide">暂无交接记录</p>
-                                        <ol v-if="handoffRecords.length" class="session-workspace-list session-workspace-card-wide">
-                                            <li v-for="record in handoffRecords" :key="record.id" class="session-workspace-card">
-                                                <div class="session-workspace-card-title">{{ record.target }} · {{ handoffStatusLabel(record.status) }}</div>
-                                                <div>交接标识：<code>{{ record.id }}</code></div>
-                                                <div>创建时间：{{ record.createdAt }} · 投递耗时：{{ record.durationMs }} 毫秒 · 写入耗时：{{ record.writeDurationMs || 0 }} 毫秒</div>
-                                                <div>交接路径：{{ record.route === 'mcp' ? 'MCP 工具' : '文件级' }} · 文件回退：{{ record.fallback ? '是' : '否' }}</div>
-                                                <div v-if="record.mcp">服务：{{ record.mcp.server }} · 工具：{{ record.mcp.tool }}</div>
-                                                <div>写入结果：{{ record.writeResult === 'written' ? '已写入' : (record.writeResult === 'failed_or_unconfirmed' ? '失败或结果未确认（不重试）' : '未执行写入') }}</div>
-                                                <div v-if="record.filePath">文件位置：<code>{{ record.filePath }}</code></div>
-                                                <div v-if="record.reason">原因：{{ record.reason }}</div>
-                                                <div v-if="record.readConfirmation">
-                                                    <div>读取代理：{{ record.readConfirmation.agent }} · 确认时间：{{ record.readConfirmation.at }}</div>
-                                                    <div>读取证据：{{ record.readConfirmation.evidence }}</div>
-                                                </div>
-                                                <div v-for="(warning, index) in record.discoveryWarnings || []" :key="index">探测提示：{{ warning.source }} · {{ warning.reason }}</div>
-                                                <button class="btn-mini" type="button" @click="copyThreadHandoff(record)" :disabled="handoffBusy || handoffLoading">{{ record.route === 'mcp' ? '回退文件并复制卡片' : '复制卡片' }}</button>
-                                            </li>
-                                        </ol>
-                                    </div>
-                                </details>
+<details v-if="activeSession" :key="handoffSessionKey" class="session-workspace thread-handoff" :open="handoffExpanded" @toggle="toggleThreadHandoff" aria-label="会话交接">
+    <summary class="thread-handoff-summary"><span>会话交接</span><span class="thread-handoff-summary-hint">{{ handoffExpanded ? '收起' : '填写交接 · 查看历史' }}</span></summary>
+    <div v-if="handoffExpanded" class="thread-handoff-body">
+        <div class="session-workspace-header session-workspace-card-wide">
+            <p class="session-workspace-subtitle">草稿在切换会话后保留，刷新后清空。</p>
+            <button class="btn-mini" type="button" @click="loadThreadHandoffs" :disabled="handoffLoading || handoffBusy">{{ handoffLoading ? '刷新中…' : '刷新历史' }}</button>
+        </div>
+        <form @submit.prevent="createThreadHandoff" class="thread-handoff-form">
+            <label class="thread-handoff-field">
+                <span class="session-workspace-card-title">交给谁 <small>必填</small></span>
+                <input v-model="handoffDraft.target" class="session-query-input" required :disabled="handoffBusy" placeholder="目标代理标识，例如 claude">
+            </label>
+            <label class="thread-handoff-field">
+                <span class="session-workspace-card-title">接下来做什么 <small>必填</small></span>
+                <textarea v-model="handoffDraft.goal" class="session-query-input" rows="3" required :disabled="handoffBusy" placeholder="描述下一步任务、预期结果或验收标准"></textarea>
+            </label>
+            <details class="thread-handoff-optional">
+                <summary class="thread-handoff-optional-summary">补充上下文</summary>
+                <div class="session-workspace-grid">
+                    <label v-for="field in handoffFields" :key="field.key" class="thread-handoff-field">
+                        <span class="session-workspace-card-title">{{ field.label }}（可选）</span>
+                        <textarea v-model="handoffDraft[field.key]" class="session-query-input" rows="3" :disabled="handoffBusy" placeholder="每行填写一项"></textarea>
+                    </label>
+                </div>
+            </details>
+            <div class="thread-handoff-actions">
+                <button class="btn-mini thread-handoff-submit" type="submit" :disabled="handoffBusy || handoffLoading || !handoffDraft.target.trim() || !handoffDraft.goal.trim()">{{ handoffBusy ? '处理中…' : '生成交接' }}</button>
+            </div>
+        </form>
+        <p v-if="handoffError" class="state-message error session-workspace-card-wide" role="alert">{{ handoffError }}</p>
+        <p v-if="handoffNotice" class="state-message session-workspace-card-wide" role="status" aria-live="polite">{{ handoffNotice }}</p>
+        <label v-if="handoffCopyText" class="thread-handoff-copy session-workspace-card-wide">
+            <span class="session-workspace-card-title">卡片文本（未发送，可手动复制）</span>
+            <textarea class="session-query-input" rows="6" readonly :value="handoffCopyText" @focus="$event.target.select()"></textarea>
+        </label>
+        <p class="session-workspace-subtitle session-workspace-card-wide">复制不会自动发送。读取确认由目标代理通过 CLI ack 提交。</p>
+        <div v-if="selectedContextIds.length" class="feature-actions"><button type="button" class="btn-mini" @click="generateSelectedHandoff" :disabled="featureBusy || !selectedContextIds.length">{{ t('features.generateDraft', { count: selectedContextIds.length }) }}</button></div>
+        <p v-if="handoffDraftEvidence.length">{{ t('features.draftReview') }}</p>
+        <details v-if="handoffUnverified.length" class="thread-handoff-audit"><summary>{{ t('features.unverified', { count: handoffUnverified.length }) }}</summary><pre v-for="(text, index) in handoffUnverified" :key="index">{{ text }}</pre></details>
+        <ul v-if="handoffDraftEvidence.length" class="thread-handoff-evidence"><li v-for="item in handoffDraftEvidence" :key="item.nodeId"><button type="button" class="btn-mini" @click="locateDraftEvidence(item)">{{ item.nodeId }} · {{ t('features.evidence.' + item.status) }}</button></li></ul>
+        <section class="thread-handoff-history session-workspace-card-wide" aria-label="交接历史">
+            <h3>交接历史</h3>
+            <p v-if="handoffLoading" class="session-workspace-card-wide" role="status">正在加载交接历史…</p>
+            <p v-else-if="!handoffError && !handoffRecords.length" class="session-workspace-empty session-workspace-card-wide">暂无交接记录</p>
+            <ol v-if="handoffRecords.length" class="session-workspace-list session-workspace-card-wide">
+                <li v-for="record in handoffRecords" :key="record.id" class="session-workspace-card thread-handoff-record">
+                    <div class="thread-handoff-record-heading">
+                        <div class="thread-handoff-record-title"><strong>{{ record.target }}</strong><span class="thread-handoff-record-status">{{ handoffStatusLabel(record.status) }}</span></div>
+                        <button class="btn-mini" type="button" @click="copyThreadHandoff(record)" :disabled="handoffBusy || handoffLoading">{{ record.route === 'mcp' ? '回退文件并复制卡片' : '复制卡片' }}</button>
+                    </div>
+                    <p class="thread-handoff-record-route">{{ record.route === 'mcp' ? 'MCP 工具' : '文件级' }} · {{ record.writeResult === 'written' ? '已写入' : (record.writeResult === 'failed_or_unconfirmed' ? '失败或结果未确认（不重试）' : '未执行写入') }}</p>
+                    <p v-if="record.reason" class="thread-handoff-record-reason">原因：{{ record.reason }}</p>
+                    <p v-if="record.readConfirmation" class="thread-handoff-read-proof">读取证据：<span>{{ record.readConfirmation.evidence }}</span></p>
+                    <details class="thread-handoff-audit">
+                        <summary>投递详情</summary>
+                        <dl>
+                            <div><dt>交接标识</dt><dd><code>{{ record.id }}</code></dd></div>
+                            <div><dt>创建时间</dt><dd>{{ record.createdAt }}</dd></div>
+                            <div><dt>投递耗时</dt><dd>{{ record.durationMs }} 毫秒</dd></div>
+                            <div><dt>写入耗时</dt><dd>{{ record.writeDurationMs || 0 }} 毫秒</dd></div>
+                            <div><dt>文件回退</dt><dd>{{ record.fallback ? '是' : '否' }}</dd></div>
+                            <div v-if="record.mcp"><dt>MCP 服务</dt><dd>{{ record.mcp.server }} · {{ record.mcp.tool }}</dd></div>
+                            <div v-if="record.filePath"><dt>文件位置</dt><dd><code>{{ record.filePath }}</code></dd></div>
+                            <div v-if="record.readConfirmation"><dt>读取代理</dt><dd>{{ record.readConfirmation.agent }}</dd></div>
+                            <div v-if="record.readConfirmation"><dt>确认时间</dt><dd>{{ record.readConfirmation.at }}</dd></div>
+                            <div v-for="(warning, index) in record.discoveryWarnings || []" :key="index"><dt>探测提示</dt><dd>{{ warning.source }} · {{ warning.reason }}</dd></div>
+                        </dl>
+                    </details>
+                </li>
+            </ol>
+        </section>
+    </div>
+</details>

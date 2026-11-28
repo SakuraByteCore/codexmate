@@ -57,6 +57,8 @@ Tạo gói bằng chứng liên phiên từ kết quả chỉ mục, kiểm tra 
 
 Bộ sưu tập bằng chứng lưu tham chiếu nguồn có tên khi người dùng chọn lưu. Sau khi tải lại, mở thủ công để kiểm tra nguồn; giỏ tạm vẫn bị xóa và không sao lưu toàn bộ phiên. Chi tiết commit có câu chuyện phát triển để liên kết phiên và lý do thay đổi, tách biệt từng dự án. Chỉ ghi siêu dữ liệu cục bộ; không đổi Git, không chứng minh nguồn tạo mã hay kiểm thử đạt. Xem [hướng dẫn phiên](https://sakurabytecore.github.io/codexmate/guide/sessions).
 
+Giỏ tài liệu cũng tạo phiếu phát triển và gói tiếp sức đa Agent. Chọn định dạng, nhập mục tiêu và ghi chú tùy chọn, kiểm tra nguồn rồi tải Markdown. Chỉ tổng hợp tài liệu lịch sử: không gọi mô hình, chạy lệnh hay tự gửi; phiên bản hiện tại vẫn cần nghiệm thu. Ghi chú không lưu vào bộ sưu tập và bị xóa khi mở bộ sưu tập.
+
 ---
 
 > [!TIP]

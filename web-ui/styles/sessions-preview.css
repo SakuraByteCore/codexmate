@@ -809,48 +809,45 @@
     display: block;
     padding: 0;
     border: 0;
-    border-radius: 12px;
+    border-radius: var(--radius-sm);
     background: var(--color-surface-alt);
     box-shadow: none;
     overflow: hidden;
+    container: handoff / inline-size;
 }
 .thread-handoff-summary {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--spacing-xs);
     min-height: 56px;
-    padding: 12px 20px;
+    padding: var(--spacing-sm);
     cursor: pointer;
     list-style: none;
-    font-size: 14px;
+    font-size: var(--font-size-large);
     font-weight: 600;
     color: var(--color-text-primary);
-    transition: background 160ms ease;
+    transition: background-color 160ms var(--ease-out-expo);
 }
 .thread-handoff-summary::-webkit-details-marker { display: none; }
 .thread-handoff-summary::before {
     content: '';
     width: 6px;
     height: 6px;
+    flex-shrink: 0;
     border-right: 1.5px solid currentColor;
     border-bottom: 1.5px solid currentColor;
     transform: rotate(-45deg);
-    transition: transform 160ms ease;
+    transition: transform 160ms var(--ease-out-expo);
 }
 .thread-handoff[open] > .thread-handoff-summary::before { transform: rotate(45deg); }
-.thread-handoff-summary-hint {
-    margin-left: auto;
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--color-text-tertiary);
-}
-.thread-handoff-body { display: grid; gap: 20px; padding: 0 20px 20px; }
-.thread-handoff-body .session-workspace-header { align-items: center; }
-.thread-handoff-body .session-workspace-subtitle { margin: 0; }
-.thread-handoff-form { display: grid; gap: 20px; min-width: 0; }
-.thread-handoff-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.thread-handoff-field .session-workspace-card-title { margin: 0; font-size: 13px; }
-.thread-handoff small { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--color-text-tertiary); }
+.thread-handoff-summary-hint { margin-left: auto; font-size: max(14px, var(--font-size-secondary)); font-weight: 400; color: var(--color-text-secondary); }
+.thread-handoff-body { display: grid; gap: var(--spacing-sm); padding: 0 var(--spacing-sm) var(--spacing-sm); min-width: 0; }
+.thread-handoff-body .session-workspace-header { align-items: center; gap: var(--spacing-xs); }
+.thread-handoff-body .session-workspace-subtitle { margin: 0; max-width: 72ch; font-size: max(14px, var(--font-size-secondary)); color: var(--color-text-secondary); line-height: 1.6; }
+.thread-handoff-form { display: grid; grid-template-columns: minmax(160px, .7fr) minmax(0, 1.3fr); gap: var(--spacing-sm); min-width: 0; }
+.thread-handoff-field { display: flex; flex-direction: column; align-self: start; gap: var(--spacing-xs); min-width: 0; }
+.thread-handoff-field .session-workspace-card-title, .thread-handoff-copy .session-workspace-card-title { margin: 0; font-size: max(14px, var(--font-size-secondary)); font-weight: 600; }
+.thread-handoff small { margin-left: var(--spacing-xs); font-size: inherit; font-weight: 400; color: var(--color-text-secondary); }
 #panel-sessions .thread-handoff .session-query-input {
     width: 100%;
     max-width: none;
@@ -858,41 +855,66 @@
     min-height: 44px;
     box-sizing: border-box;
     padding: 12px;
-    border-radius: 8px;
-    font-size: 13px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: max(16px, var(--font-size-body));
     background: var(--color-surface);
 }
-#panel-sessions .thread-handoff textarea.session-query-input { min-height: 96px; resize: vertical; line-height: 1.6; }
-.thread-handoff-optional-summary {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+#panel-sessions .thread-handoff textarea.session-query-input { min-height: 104px; resize: vertical; line-height: 1.6; }
+.thread-handoff-optional, .thread-handoff-actions { grid-column: 1 / -1; }
+.thread-handoff-optional-summary, .thread-handoff-audit > summary {
+    display: list-item;
+    width: fit-content;
+    max-width: 100%;
     min-height: 44px;
+    align-content: center;
     cursor: pointer;
-    font-size: 13px;
+    font-size: max(14px, var(--font-size-secondary));
     color: var(--color-text-secondary);
 }
-.thread-handoff-optional[open] .session-workspace-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-    margin-top: 12px;
-    gap: 16px;
-}
-.thread-handoff-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.thread-handoff .btn-mini { min-height: 44px; padding: 8px 16px; transition: background 160ms ease, color 160ms ease; }
-#panel-sessions .thread-handoff-submit { background: var(--color-brand); color: #fff; border-color: transparent; }
-#panel-sessions .thread-handoff-submit:hover:not(:disabled) { background: var(--color-brand-dark); }
-#panel-sessions .thread-handoff-submit:disabled { opacity: .45; cursor: not-allowed; }
+.thread-handoff-optional[open] .session-workspace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--spacing-xs); gap: var(--spacing-sm); }
+.thread-handoff-actions { display: flex; justify-content: flex-end; gap: var(--spacing-sm); }
+.thread-handoff .btn-mini { min-height: 44px; min-width: 44px; padding: 8px 16px; font-size: max(14px, var(--font-size-secondary)); transition: background-color 160ms var(--ease-out-expo), color 160ms var(--ease-out-expo), opacity 160ms var(--ease-out-expo); }
+.thread-handoff .btn-mini:not(.thread-handoff-submit) { border-color: transparent; background: transparent; color: var(--color-text-secondary); }
+.thread-handoff .btn-mini:not(.thread-handoff-submit):hover:not(:disabled) { background: var(--color-surface); color: var(--color-text-primary); }
+#panel-sessions .thread-handoff-submit { background: var(--color-text-primary); color: var(--color-surface); border-color: transparent; }
+#panel-sessions .thread-handoff-submit:hover:not(:disabled) { background: var(--color-text-secondary); }
+.thread-handoff .btn-mini:active:not(:disabled) { opacity: .76; }
+.thread-handoff .btn-mini:disabled { opacity: .45; cursor: not-allowed; }
 .thread-handoff-summary:hover { background: var(--color-brand-light); }
 .thread-handoff-summary:active { background: var(--color-brand-subtle); }
-.thread-handoff summary:focus-visible, .thread-handoff button:focus-visible {
-    outline: 2px solid var(--color-brand); outline-offset: -2px;
+.thread-handoff :is(summary, button, input, textarea):focus-visible { outline: 2px solid var(--color-brand); outline-offset: -2px; }
+.thread-handoff-copy { display: grid; gap: var(--spacing-xs); min-width: 0; }
+#panel-sessions .thread-handoff-copy textarea.session-query-input { max-height: 240px; font-family: var(--font-family-mono); font-size: max(14px, var(--font-size-secondary)); }
+.thread-handoff-body .state-message { margin: 0; overflow-wrap: anywhere; font-size: max(14px, var(--font-size-secondary)); }
+.thread-handoff-history { min-width: 0; }
+.thread-handoff-history h3 { margin: 0 0 var(--spacing-xs); font-size: var(--font-size-body); font-weight: 600; }
+.thread-handoff-history .session-workspace-list { padding: 0; gap: 0; list-style: none; font-size: max(14px, var(--font-size-secondary)); line-height: 1.6; }
+.thread-handoff-history .session-workspace-card { padding: var(--spacing-sm) 0; border: 0; border-radius: 0; background: transparent; font-size: max(14px, var(--font-size-secondary)); }
+.thread-handoff-record + .thread-handoff-record { border-top: 1px solid var(--color-border-soft); }
+.thread-handoff-record-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--spacing-xs); }
+.thread-handoff-record-title { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.thread-handoff-record-title strong { font-size: var(--font-size-body); font-weight: 600; color: var(--color-text-primary); }
+.thread-handoff-record-status { font-size: max(14px, var(--font-size-secondary)); color: var(--color-text-secondary); }
+.thread-handoff-record-route, .thread-handoff-record-reason, .thread-handoff-read-proof { margin: var(--spacing-xs) 0 0; overflow-wrap: anywhere; }
+.thread-handoff-record-reason { max-width: 72ch; }
+.thread-handoff-audit { min-width: 0; }
+.thread-handoff-audit dl { display: grid; gap: var(--spacing-xs); margin: var(--spacing-xs) 0 0; }
+.thread-handoff-audit dl > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--spacing-xs); }
+.thread-handoff-audit dt { color: var(--color-text-secondary); font-weight: 400; }
+.thread-handoff-audit dd { margin: 0; min-width: 0; overflow-wrap: anywhere; color: var(--color-text-primary); }
+.thread-handoff-audit code { font-size: inherit; }
+.thread-handoff-audit pre { max-height: 240px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.thread-handoff-evidence { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.thread-handoff-history .session-workspace-empty { margin: 0; padding: var(--spacing-xs) 0; font-size: max(14px, var(--font-size-secondary)); color: var(--color-text-secondary); }
+@container handoff (max-width: 560px) {
+    .thread-handoff-form, .thread-handoff-optional[open] .session-workspace-grid { grid-template-columns: minmax(0, 1fr); }
+    .thread-handoff-body .session-workspace-header { align-items: flex-start; flex-wrap: wrap; }
+    .thread-handoff-actions > button { width: 100%; }
 }
-@media (max-width: 640px) {
-    .thread-handoff-summary { padding: 12px 16px; }
-    .thread-handoff-body { padding: 0 16px 16px; gap: 16px; }
-    .thread-handoff-body .session-workspace-header { align-items: flex-start; }
-    .thread-handoff-actions { align-items: stretch; flex-direction: column; gap: 12px; }
-    .thread-handoff-optional-summary small { width: 100%; margin: 4px 0 8px; }
+@media (prefers-reduced-motion: reduce) {
+    .thread-handoff-summary, .thread-handoff-summary::before, .thread-handoff .btn-mini { transition: none; }
 }
 
 /* Keep the session tab close to the viewport edge without changing other tabs. */

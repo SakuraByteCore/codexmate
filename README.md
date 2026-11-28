@@ -57,6 +57,8 @@ Build cross-session evidence packs from indexed selections, verify source hashes
 
 Evidence collections explicitly save named source references. Reopen them after reload to recheck originals; the temporary basket still clears, and full sessions are not backed up. Commit details add development stories: manually link sessions and reasons for changes, with project isolation. Only local metadata is written; Git is unchanged, and links do not prove authorship or passing tests. See the [session guide](https://sakurabytecore.github.io/codexmate/guide/sessions).
 
+The material basket also generates development receipts and multi-agent relay packs. Choose a format, supply a goal and optional notes, then verify sources and download Markdown. Historical material only: no model calls, command execution or automatic delivery; the current version still needs acceptance. Notes are not saved in collections and clear when a collection opens.
+
 ---
 
 > [!TIP]

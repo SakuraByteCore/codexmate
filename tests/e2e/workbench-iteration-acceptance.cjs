@@ -1,6 +1,8 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { checkCollections, checkStories } = require('./workbench-collections-stories.cjs');
+const { checkArtifacts } = require('./session-artifacts-acceptance.cjs');
+const { checkHandoffUi } = require('./thread-handoff-ui.cjs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const http = require('node:http');
@@ -46,6 +48,7 @@ async function checkEvidence({ page, api, originals, codexFile }) {
     const content = await preview.innerText(); assert.match(content, /codex/); assert.match(content, /pi/); assert.match(content, /SHA-256/); assert.match(content, /当前版本/);
     const download = page.waitForEvent('download'); await basket.getByRole('button', { name: '下载 Markdown', exact: true }).click();
     assert.equal(await fs.readFile(await (await download).path(), 'utf8'), '\uFEFF' + content + (content.endsWith('\n') ? '' : '\n'));
+    await checkArtifacts({ page, originals, codexFile, width: page.viewportSize().width });
     const indexed = await api('session-index-search', { query: 'evidence needle', role: 'user' });
     await page.locator('.feature-record').filter({ hasText: 'evidence needle codex-one' }).getByRole('button', { name: '查看原文', exact: true }).click();
     await page.locator('.feature-focus pre').filter({ hasText: 'evidence needle codex-one' }).waitFor();
@@ -138,6 +141,8 @@ async function main() {
         let ready; for (let attempt = 0; attempt < 80; attempt++) { ready = await fetch(base + '/?token=' + TOKEN).catch(() => null); if (ready?.ok) break; await delay(100); }
         assert.ok(ready?.ok, serverLog); assert.equal(await (await fetch(base + '/web-ui/app.js')).text(), require('../../web-ui/source-bundle.cjs').readExecutableBundledWebUiScript(), 'instance loads final bundle');
         assert.equal(await (await fetch(base + '/web-ui/styles.css')).text(), require('../../web-ui/source-bundle.cjs').readBundledWebUiCss(), 'instance loads final bundled CSS');
+        assert.equal((await api('status')).version, require('../../package.json').version, 'running backend reports package version');
+        console.log('PASS running version', require('../../package.json').version);
         await api('session-index-refresh', { source: 'all' }); let status; do { await delay(50); status = await api('session-index-status'); } while (status.job.status === 'running'); assert.equal(status.job.status, 'success');
         for (const action of ['session-collections-list', 'session-collection-open', 'session-collection-save', 'session-collection-remove', 'session-stories-list', 'session-story-save', 'session-story-remove']) {
             const denied = await fetch(base + '/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, params: {} }) });
@@ -152,23 +157,27 @@ async function main() {
             await page.goto(base + '/?token=' + TOKEN); const navigate = tab => page.locator(width === 1440 ? '#side-tab-' + tab : '#tab-' + tab).click();
             try {
                 await navigate('sessions');
-                if (process.env.WORKBENCH_ACCEPTANCE_FOCUS === 'stories') {
+                if (process.env.WORKBENCH_ACCEPTANCE_FOCUS === 'handoff') {
+                    await checkHandoffUi({ page, api, width });
+                } else if (process.env.WORKBENCH_ACCEPTANCE_FOCUS === 'stories') {
                     await page.locator('.session-features .feature-tabs button').filter({ hasText: '项目工作台' }).click();
                     await page.locator('.feature-project-picker button').filter({ hasText: first }).click(); await page.locator('.project-git > summary').click();
                 } else {
                     await checkEvidence({ page, api, originals, codexFile }); await checkCollections({ page, api, originals, codexFile, width });
+                    if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'artifacts') {
                     await checkPricing({ page, api, navigate, originals, piFile: [...originals.keys()].find(file => file.includes('/.pi/')) });
-                    if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'collections') await checkGit({ page, navigate, first, second });
+                    }
+                    if (!['collections', 'artifacts', 'handoff'].includes(process.env.WORKBENCH_ACCEPTANCE_FOCUS)) await checkGit({ page, navigate, first, second });
                 }
-                if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'collections') await checkStories({ page, api, first, second, width });
+                if (!['collections', 'artifacts', 'handoff'].includes(process.env.WORKBENCH_ACCEPTANCE_FOCUS)) await checkStories({ page, api, first, second, width });
             } catch (error) {
                 console.error('PAGE_ERRORS', errors); console.error('LAST_ACTIONS', actions.slice(-15)); console.error('FEATURE_ACTIONS', actions.filter(action => /session-project|session-stor/.test(action))); console.error('VM_STATE', await page.evaluate(() => { const vm = document.querySelector('#app')?.__vue_app__?._instance?.proxy || document.querySelector('#app')?._vnode?.component?.proxy; return vm ? { view: vm.featureView, sequence: vm.featureRequestSeq, busy: vm.featureBusy, project: vm.projectSelected, report: vm.projectReport, error: vm.featureError, git: vm.projectGitCommit, stories: vm.stories, storyError: vm.storyError } : 'no-vm'; }));
                 console.error('VISIBLE_STATE', (await page.locator('#app').innerText()).slice(-6500)); throw error;
             }
-            assert.deepEqual(errors, [], 'no runtime errors'); assert.equal(actions.some(action => /model-test|thread-handoff-create|session-diagnostics-start/.test(action)), false, 'no model calls, automatic handoff or MCP start');
+            assert.deepEqual(errors, [], 'no runtime errors'); assert.equal(actions.some(action => /model-test|session-diagnostics-start/.test(action) || (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'handoff' && action === 'thread-handoff-create')), false, 'no model calls, automatic handoff or MCP start');
             await page.close(); console.log('PASS loaded desktop/compact entry', width);
         }
-        if (process.env.WORKBENCH_ACCEPTANCE_FOCUS !== 'collections') {
+        if (!['collections', 'artifacts', 'handoff'].includes(process.env.WORKBENCH_ACCEPTANCE_FOCUS)) {
             if (process.env.WORKBENCH_ACCEPTANCE_FOCUS === 'stories') {
                 const result = await api('session-index-search', { query: 'evidence needle', role: 'user' });
                 await api('session-collection-save', { name: '重启恢复专题', goal: '', references: result.results, revision: '' });

@@ -5119,7 +5119,7 @@ return function render(_ctx, _cache) {
                             }), 128 /* KEYED_FRAGMENT */))
                           ]),
                           _createElementVNode("form", {
-                            class: "feature-actions feature-search-form",
+                            class: "feature-actions feature-search-form evidence-generator",
                             onSubmit: _withModifiers(_ctx.generateEvidencePack, ["prevent"])
                           }, [
                             _withDirectives(_createElementVNode("input", {
@@ -5129,10 +5129,33 @@ return function render(_ctx, _cache) {
                             }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label", "placeholder"]), [
                               [_vModelText, _ctx.evidenceGoal]
                             ]),
+                            _withDirectives(_createElementVNode("select", {
+                              "onUpdate:modelValue": $event => ((_ctx.evidenceFormat) = $event),
+                              "aria-label": _ctx.t('artifacts.format')
+                            }, [
+                              _createElementVNode("option", { value: "evidence" }, _toDisplayString(_ctx.t('evidence.title')), 1 /* TEXT */),
+                              _createElementVNode("option", { value: "receipt" }, _toDisplayString(_ctx.t('artifacts.receipt')), 1 /* TEXT */),
+                              _createElementVNode("option", { value: "relay" }, _toDisplayString(_ctx.t('artifacts.relay')), 1 /* TEXT */)
+                            ], 8 /* PROPS */, ["onUpdate:modelValue", "aria-label"]), [
+                              [_vModelSelect, _ctx.evidenceFormat]
+                            ]),
+                            (_ctx.evidenceFormat !== 'evidence')
+                              ? _withDirectives((_openBlock(), _createElementBlock("textarea", {
+                                  key: 0,
+                                  "onUpdate:modelValue": $event => ((_ctx.evidenceNote) = $event),
+                                  class: "evidence-generator-note",
+                                  rows: "3",
+                                  maxlength: "4000",
+                                  "aria-label": _ctx.t('artifacts.note'),
+                                  placeholder: _ctx.t('artifacts.notePlaceholder')
+                                }, null, 8 /* PROPS */, ["onUpdate:modelValue", "aria-label", "placeholder"])), [
+                                  [_vModelText, _ctx.evidenceNote]
+                                ])
+                              : _createCommentVNode("v-if", true),
                             _createElementVNode("button", {
                               class: "btn-mini feature-primary",
                               disabled: _ctx.evidenceBusy
-                            }, _toDisplayString(_ctx.evidenceBusy ? _ctx.t('features.loading') : _ctx.t('evidence.generate')), 9 /* TEXT, PROPS */, ["disabled"])
+                            }, _toDisplayString(_ctx.evidenceBusy ? _ctx.t('features.loading') : _ctx.evidenceFormat === 'evidence' ? _ctx.t('evidence.generate') : _ctx.t('artifacts.generate.' + _ctx.evidenceFormat)), 9 /* TEXT, PROPS */, ["disabled"])
                           ], 40 /* PROPS, NEED_HYDRATION */, ["onSubmit"]),
                           (_ctx.evidenceError)
                             ? (_openBlock(), _createElementBlock("p", {
@@ -6214,7 +6237,7 @@ return function render(_ctx, _cache) {
                                                 (_ctx.handoffCopyText)
                                                   ? (_openBlock(), _createElementBlock("label", {
                                                       key: 2,
-                                                      class: "session-workspace-card session-workspace-card-wide"
+                                                      class: "thread-handoff-copy session-workspace-card-wide"
                                                     }, [
                                                       _createElementVNode("span", { class: "session-workspace-card-title" }, "卡片文本（未发送，可手动复制）"),
                                                       _createElementVNode("textarea", {
@@ -6227,19 +6250,27 @@ return function render(_ctx, _cache) {
                                                     ]))
                                                   : _createCommentVNode("v-if", true),
                                                 _createElementVNode("p", { class: "session-workspace-subtitle session-workspace-card-wide" }, "复制不会自动发送。读取确认由目标代理通过 CLI ack 提交。"),
-                                                _createElementVNode("div", { class: "feature-actions" }, [
-                                                  _createElementVNode("button", {
-                                                    type: "button",
-                                                    class: "btn-mini",
-                                                    onClick: _ctx.generateSelectedHandoff,
-                                                    disabled: _ctx.featureBusy || !_ctx.selectedContextIds.length
-                                                  }, _toDisplayString(_ctx.t('features.generateDraft', { count: _ctx.selectedContextIds.length })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                                                ]),
+                                                (_ctx.selectedContextIds.length)
+                                                  ? (_openBlock(), _createElementBlock("div", {
+                                                      key: 3,
+                                                      class: "feature-actions"
+                                                    }, [
+                                                      _createElementVNode("button", {
+                                                        type: "button",
+                                                        class: "btn-mini",
+                                                        onClick: _ctx.generateSelectedHandoff,
+                                                        disabled: _ctx.featureBusy || !_ctx.selectedContextIds.length
+                                                      }, _toDisplayString(_ctx.t('features.generateDraft', { count: _ctx.selectedContextIds.length })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                                    ]))
+                                                  : _createCommentVNode("v-if", true),
                                                 (_ctx.handoffDraftEvidence.length)
-                                                  ? (_openBlock(), _createElementBlock("p", { key: 3 }, _toDisplayString(_ctx.t('features.draftReview')), 1 /* TEXT */))
+                                                  ? (_openBlock(), _createElementBlock("p", { key: 4 }, _toDisplayString(_ctx.t('features.draftReview')), 1 /* TEXT */))
                                                   : _createCommentVNode("v-if", true),
                                                 (_ctx.handoffUnverified.length)
-                                                  ? (_openBlock(), _createElementBlock("details", { key: 4 }, [
+                                                  ? (_openBlock(), _createElementBlock("details", {
+                                                      key: 5,
+                                                      class: "thread-handoff-audit"
+                                                    }, [
                                                       _createElementVNode("summary", null, _toDisplayString(_ctx.t('features.unverified', { count: _ctx.handoffUnverified.length })), 1 /* TEXT */),
                                                       (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffUnverified, (text, index) => {
                                                         return (_openBlock(), _createElementBlock("pre", { key: index }, _toDisplayString(text), 1 /* TEXT */))
@@ -6247,7 +6278,10 @@ return function render(_ctx, _cache) {
                                                     ]))
                                                   : _createCommentVNode("v-if", true),
                                                 (_ctx.handoffDraftEvidence.length)
-                                                  ? (_openBlock(), _createElementBlock("ul", { key: 5 }, [
+                                                  ? (_openBlock(), _createElementBlock("ul", {
+                                                      key: 6,
+                                                      class: "thread-handoff-evidence"
+                                                    }, [
                                                       (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffDraftEvidence, (item) => {
                                                         return (_openBlock(), _createElementBlock("li", {
                                                           key: item.nodeId
@@ -6261,67 +6295,125 @@ return function render(_ctx, _cache) {
                                                       }), 128 /* KEYED_FRAGMENT */))
                                                     ]))
                                                   : _createCommentVNode("v-if", true),
-                                                (_ctx.handoffLoading)
-                                                  ? (_openBlock(), _createElementBlock("p", {
-                                                      key: 6,
-                                                      class: "session-workspace-card-wide",
-                                                      role: "status"
-                                                    }, "正在加载交接历史…"))
-                                                  : (!_ctx.handoffError && !_ctx.handoffRecords.length)
+                                                _createElementVNode("section", {
+                                                  class: "thread-handoff-history session-workspace-card-wide",
+                                                  "aria-label": "交接历史"
+                                                }, [
+                                                  _createElementVNode("h3", null, "交接历史"),
+                                                  (_ctx.handoffLoading)
                                                     ? (_openBlock(), _createElementBlock("p", {
-                                                        key: 7,
-                                                        class: "session-workspace-empty session-workspace-card-wide"
-                                                      }, "暂无交接记录"))
-                                                    : _createCommentVNode("v-if", true),
-                                                (_ctx.handoffRecords.length)
-                                                  ? (_openBlock(), _createElementBlock("ol", {
-                                                      key: 8,
-                                                      class: "session-workspace-list session-workspace-card-wide"
-                                                    }, [
-                                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffRecords, (record) => {
-                                                        return (_openBlock(), _createElementBlock("li", {
-                                                          key: record.id,
-                                                          class: "session-workspace-card"
-                                                        }, [
-                                                          _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(record.target) + " · " + _toDisplayString(_ctx.handoffStatusLabel(record.status)), 1 /* TEXT */),
-                                                          _createElementVNode("div", null, [
-                                                            _createTextVNode("交接标识："),
-                                                            _createElementVNode("code", null, _toDisplayString(record.id), 1 /* TEXT */)
-                                                          ]),
-                                                          _createElementVNode("div", null, "创建时间：" + _toDisplayString(record.createdAt) + " · 投递耗时：" + _toDisplayString(record.durationMs) + " 毫秒 · 写入耗时：" + _toDisplayString(record.writeDurationMs || 0) + " 毫秒", 1 /* TEXT */),
-                                                          _createElementVNode("div", null, "交接路径：" + _toDisplayString(record.route === 'mcp' ? 'MCP 工具' : '文件级') + " · 文件回退：" + _toDisplayString(record.fallback ? '是' : '否'), 1 /* TEXT */),
-                                                          (record.mcp)
-                                                            ? (_openBlock(), _createElementBlock("div", { key: 0 }, "服务：" + _toDisplayString(record.mcp.server) + " · 工具：" + _toDisplayString(record.mcp.tool), 1 /* TEXT */))
-                                                            : _createCommentVNode("v-if", true),
-                                                          _createElementVNode("div", null, "写入结果：" + _toDisplayString(record.writeResult === 'written' ? '已写入' : (record.writeResult === 'failed_or_unconfirmed' ? '失败或结果未确认（不重试）' : '未执行写入')), 1 /* TEXT */),
-                                                          (record.filePath)
-                                                            ? (_openBlock(), _createElementBlock("div", { key: 1 }, [
-                                                                _createTextVNode("文件位置："),
-                                                                _createElementVNode("code", null, _toDisplayString(record.filePath), 1 /* TEXT */)
-                                                              ]))
-                                                            : _createCommentVNode("v-if", true),
-                                                          (record.reason)
-                                                            ? (_openBlock(), _createElementBlock("div", { key: 2 }, "原因：" + _toDisplayString(record.reason), 1 /* TEXT */))
-                                                            : _createCommentVNode("v-if", true),
-                                                          (record.readConfirmation)
-                                                            ? (_openBlock(), _createElementBlock("div", { key: 3 }, [
-                                                                _createElementVNode("div", null, "读取代理：" + _toDisplayString(record.readConfirmation.agent) + " · 确认时间：" + _toDisplayString(record.readConfirmation.at), 1 /* TEXT */),
-                                                                _createElementVNode("div", null, "读取证据：" + _toDisplayString(record.readConfirmation.evidence), 1 /* TEXT */)
-                                                              ]))
-                                                            : _createCommentVNode("v-if", true),
-                                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(record.discoveryWarnings || [], (warning, index) => {
-                                                            return (_openBlock(), _createElementBlock("div", { key: index }, "探测提示：" + _toDisplayString(warning.source) + " · " + _toDisplayString(warning.reason), 1 /* TEXT */))
-                                                          }), 128 /* KEYED_FRAGMENT */)),
-                                                          _createElementVNode("button", {
-                                                            class: "btn-mini",
-                                                            type: "button",
-                                                            onClick: $event => (_ctx.copyThreadHandoff(record)),
-                                                            disabled: _ctx.handoffBusy || _ctx.handoffLoading
-                                                          }, _toDisplayString(record.route === 'mcp' ? '回退文件并复制卡片' : '复制卡片'), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                                                        ]))
-                                                      }), 128 /* KEYED_FRAGMENT */))
-                                                    ]))
-                                                  : _createCommentVNode("v-if", true)
+                                                        key: 0,
+                                                        class: "session-workspace-card-wide",
+                                                        role: "status"
+                                                      }, "正在加载交接历史…"))
+                                                    : (!_ctx.handoffError && !_ctx.handoffRecords.length)
+                                                      ? (_openBlock(), _createElementBlock("p", {
+                                                          key: 1,
+                                                          class: "session-workspace-empty session-workspace-card-wide"
+                                                        }, "暂无交接记录"))
+                                                      : _createCommentVNode("v-if", true),
+                                                  (_ctx.handoffRecords.length)
+                                                    ? (_openBlock(), _createElementBlock("ol", {
+                                                        key: 2,
+                                                        class: "session-workspace-list session-workspace-card-wide"
+                                                      }, [
+                                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.handoffRecords, (record) => {
+                                                          return (_openBlock(), _createElementBlock("li", {
+                                                            key: record.id,
+                                                            class: "session-workspace-card thread-handoff-record"
+                                                          }, [
+                                                            _createElementVNode("div", { class: "thread-handoff-record-heading" }, [
+                                                              _createElementVNode("div", { class: "thread-handoff-record-title" }, [
+                                                                _createElementVNode("strong", null, _toDisplayString(record.target), 1 /* TEXT */),
+                                                                _createElementVNode("span", { class: "thread-handoff-record-status" }, _toDisplayString(_ctx.handoffStatusLabel(record.status)), 1 /* TEXT */)
+                                                              ]),
+                                                              _createElementVNode("button", {
+                                                                class: "btn-mini",
+                                                                type: "button",
+                                                                onClick: $event => (_ctx.copyThreadHandoff(record)),
+                                                                disabled: _ctx.handoffBusy || _ctx.handoffLoading
+                                                              }, _toDisplayString(record.route === 'mcp' ? '回退文件并复制卡片' : '复制卡片'), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                                            ]),
+                                                            _createElementVNode("p", { class: "thread-handoff-record-route" }, _toDisplayString(record.route === 'mcp' ? 'MCP 工具' : '文件级') + " · " + _toDisplayString(record.writeResult === 'written' ? '已写入' : (record.writeResult === 'failed_or_unconfirmed' ? '失败或结果未确认（不重试）' : '未执行写入')), 1 /* TEXT */),
+                                                            (record.reason)
+                                                              ? (_openBlock(), _createElementBlock("p", {
+                                                                  key: 0,
+                                                                  class: "thread-handoff-record-reason"
+                                                                }, "原因：" + _toDisplayString(record.reason), 1 /* TEXT */))
+                                                              : _createCommentVNode("v-if", true),
+                                                            (record.readConfirmation)
+                                                              ? (_openBlock(), _createElementBlock("p", {
+                                                                  key: 1,
+                                                                  class: "thread-handoff-read-proof"
+                                                                }, [
+                                                                  _createTextVNode("读取证据："),
+                                                                  _createElementVNode("span", null, _toDisplayString(record.readConfirmation.evidence), 1 /* TEXT */)
+                                                                ]))
+                                                              : _createCommentVNode("v-if", true),
+                                                            _createElementVNode("details", { class: "thread-handoff-audit" }, [
+                                                              _createElementVNode("summary", null, "投递详情"),
+                                                              _createElementVNode("dl", null, [
+                                                                _createElementVNode("div", null, [
+                                                                  _createElementVNode("dt", null, "交接标识"),
+                                                                  _createElementVNode("dd", null, [
+                                                                    _createElementVNode("code", null, _toDisplayString(record.id), 1 /* TEXT */)
+                                                                  ])
+                                                                ]),
+                                                                _createElementVNode("div", null, [
+                                                                  _createElementVNode("dt", null, "创建时间"),
+                                                                  _createElementVNode("dd", null, _toDisplayString(record.createdAt), 1 /* TEXT */)
+                                                                ]),
+                                                                _createElementVNode("div", null, [
+                                                                  _createElementVNode("dt", null, "投递耗时"),
+                                                                  _createElementVNode("dd", null, _toDisplayString(record.durationMs) + " 毫秒", 1 /* TEXT */)
+                                                                ]),
+                                                                _createElementVNode("div", null, [
+                                                                  _createElementVNode("dt", null, "写入耗时"),
+                                                                  _createElementVNode("dd", null, _toDisplayString(record.writeDurationMs || 0) + " 毫秒", 1 /* TEXT */)
+                                                                ]),
+                                                                _createElementVNode("div", null, [
+                                                                  _createElementVNode("dt", null, "文件回退"),
+                                                                  _createElementVNode("dd", null, _toDisplayString(record.fallback ? '是' : '否'), 1 /* TEXT */)
+                                                                ]),
+                                                                (record.mcp)
+                                                                  ? (_openBlock(), _createElementBlock("div", { key: 0 }, [
+                                                                      _createElementVNode("dt", null, "MCP 服务"),
+                                                                      _createElementVNode("dd", null, _toDisplayString(record.mcp.server) + " · " + _toDisplayString(record.mcp.tool), 1 /* TEXT */)
+                                                                    ]))
+                                                                  : _createCommentVNode("v-if", true),
+                                                                (record.filePath)
+                                                                  ? (_openBlock(), _createElementBlock("div", { key: 1 }, [
+                                                                      _createElementVNode("dt", null, "文件位置"),
+                                                                      _createElementVNode("dd", null, [
+                                                                        _createElementVNode("code", null, _toDisplayString(record.filePath), 1 /* TEXT */)
+                                                                      ])
+                                                                    ]))
+                                                                  : _createCommentVNode("v-if", true),
+                                                                (record.readConfirmation)
+                                                                  ? (_openBlock(), _createElementBlock("div", { key: 2 }, [
+                                                                      _createElementVNode("dt", null, "读取代理"),
+                                                                      _createElementVNode("dd", null, _toDisplayString(record.readConfirmation.agent), 1 /* TEXT */)
+                                                                    ]))
+                                                                  : _createCommentVNode("v-if", true),
+                                                                (record.readConfirmation)
+                                                                  ? (_openBlock(), _createElementBlock("div", { key: 3 }, [
+                                                                      _createElementVNode("dt", null, "确认时间"),
+                                                                      _createElementVNode("dd", null, _toDisplayString(record.readConfirmation.at), 1 /* TEXT */)
+                                                                    ]))
+                                                                  : _createCommentVNode("v-if", true),
+                                                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(record.discoveryWarnings || [], (warning, index) => {
+                                                                  return (_openBlock(), _createElementBlock("div", { key: index }, [
+                                                                    _createElementVNode("dt", null, "探测提示"),
+                                                                    _createElementVNode("dd", null, _toDisplayString(warning.source) + " · " + _toDisplayString(warning.reason), 1 /* TEXT */)
+                                                                  ]))
+                                                                }), 128 /* KEYED_FRAGMENT */))
+                                                              ])
+                                                            ])
+                                                          ]))
+                                                        }), 128 /* KEYED_FRAGMENT */))
+                                                      ]))
+                                                    : _createCommentVNode("v-if", true)
+                                                ])
                                               ]))
                                             : _createCommentVNode("v-if", true)
                                         ], 40 /* PROPS, NEED_HYDRATION */, ["open", "onToggle"]))

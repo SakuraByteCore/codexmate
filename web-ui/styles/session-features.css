@@ -311,3 +311,11 @@
     .collection-list .feature-quiet { padding-inline: 8px; }
     .story-record { column-gap: var(--spacing-xs); }
 }
+
+.evidence-generator { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); align-items: start; }
+.evidence-generator-note, .evidence-generator > button { grid-column: 1 / -1; }
+.evidence-generator-note { resize: vertical; }
+.evidence-generator > button { justify-self: start; }
+@media (max-width: 640px) {
+    .evidence-generator { grid-template-columns: minmax(0, 1fr); }
+}
