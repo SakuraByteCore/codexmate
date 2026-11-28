@@ -10757,7 +10757,7 @@ return function render(_ctx, _cache) {
               ]))
             : _createCommentVNode("v-if", true),
           _createCommentVNode(" 加载状态 "),
-          (_ctx.loading && _ctx.mainTab !== 'usage')
+          (_ctx.loading && _ctx.mainTab !== 'usage' && _ctx.mainTab !== 'prompts')
             ? (_openBlock(), _createElementBlock("div", {
                 key: 4,
                 class: "state-message app-loading-state"

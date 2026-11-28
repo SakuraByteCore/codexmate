@@ -13,6 +13,7 @@
 - Codex 的 `AGENTS.md` 与 OpenCode 的 `~/.config/opencode/AGENTS.md` 分页签独立编辑。
 - 共享 preset 池复用提示词。
 - 应用 preset 仅更新编辑器内容,**保存才写文件**——不会未经确认改盘。
+- 提示词页只显示编辑器自身的加载状态；配置加载完成不会移除额外占位而使页面回跳。
 
 > 区分:Prompt 模板是带变量的可复用提示词插件;Prompt 文件编辑器是给全局/项目级文件做编辑与 preset 应用。
 
